@@ -1181,11 +1181,14 @@ public class MainController {
 		return "redirect:/main/logistics/international";
 	}
 	
+	@RequestMapping("/main/chat")
+	public String chat() {
+		return "chat";
+	}
+	
 	@RequestMapping("/main/test")
 	public String test() {
-		System.out.println(distances.size());
-		System.out.println(distances.get("1"));
-		return "redirect:/main";
+		return null;
 	}
 	
 	@RequestMapping("/main/test2")
@@ -1202,8 +1205,7 @@ public class MainController {
 	
 	
 	@RequestMapping("/main/js")
-	public String javaScript(Model model, HttpSession session, HttpServletRequest request) {
-	
+	public String javaScript(Model model, HttpSession session, HttpServletRequest request) {	
 		return "jsPage";
 	}
 

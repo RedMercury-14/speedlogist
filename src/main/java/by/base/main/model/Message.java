@@ -2,19 +2,16 @@ package by.base.main.model;
 
 import java.util.Objects;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-
-@Data
-@Builder
 public class Message {
 	
 	private String fromUser;
 	private String toUser;
 	private String text;
+	private String idRoute;
 	private String status;
+	private String companyName;
+	
+	
 	public String getFromUser() {
 		return fromUser;
 	}
@@ -40,6 +37,19 @@ public class Message {
 		this.status = status;
 	}
 	
+	public String getIdRoute() {
+		return idRoute;
+	}
+	public void setIdRoute(String idRoute) {
+		this.idRoute = idRoute;
+	}
+	
+	public String getCompanyName() {
+		return companyName;
+	}
+	public void setCompanyName(String companyName) {
+		this.companyName = companyName;
+	}
 	@Override
 	public int hashCode() {
 		return Objects.hash(fromUser, status, text, toUser);
@@ -58,7 +68,11 @@ public class Message {
 	}
 	@Override
 	public String toString() {
-		return "Message [fromUser=" + fromUser + ", toUser=" + toUser + ", text=" + text + ", status=" + status + "]";
+		return "Message [fromUser=" + fromUser + ", toUser=" + toUser + ", text=" + text + ", idRoute=" + idRoute
+				+ ", status=" + status + ", companyName=" + companyName + "]";
 	}
+	
+	
+	
 	
 }

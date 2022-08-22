@@ -9,8 +9,6 @@
 <head>
 <meta charset="UTF-8">
 <title>Insert title here</title>
-<title>Insert title here</title>
-<link rel="stylesheet" type="text/css" href="<c:url value="/resources/css/style.css"/>"/>
 <!-- Latest compiled and minified CSS -->
 <link rel="stylesheet"
 	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
@@ -59,7 +57,7 @@
 				</tr>
 				<c:set var="rate" value="${user.rate}"/>
 			</thead>
-					 <form:form method="post" action="./tenderUpdate" >
+					 <form:form method="get" action="./tenderOffer" >
 					 <input type="hidden" value="${route.idRoute}" name="id" />
 					<tr>
 						<td>${route.routeDirection}</td>
@@ -72,22 +70,8 @@
 						<c:choose><c:when test="${route.startPrice != null}"><td>${route.startPrice}</td></c:when></c:choose>
 						<td><input name="cost" size="3" required="true"> EUR</td>
 						<td>
-						<c:choose>
-							<c:when test="${route.user != null}">
-							</c:when>
-							<c:otherwise>
-								<c:choose>
-									<c:when test="${route.finishPrice != null}">	
-										<input type="submit" value="предложить скидку в %" name="agree">
-										<input value="${route.finishPrice+5}" name="price" size = "1"/>%
-									</c:when>							
-								<c:otherwise>								
-										<input type="submit" value="поддержать цену" name="agree">
-										<input type="hidden" value="0" name="price" size = "1"/>
-								</c:otherwise>
-								</c:choose>	
-							</c:otherwise>
-						</c:choose>					
+							<input type="submit" value="поддержать цену" name="agree" class= "agree">
+							<input type="hidden" value="0" name="price" size = "1"/>				
 						</td>
 						
 						<tr><th>Номер точки</th><c:forEach var="point" items="${route.roteHasShop}">																
@@ -185,5 +169,6 @@
 			<form:form method="get" action="./" ><input type="submit" value="Назад"></form:form>
 </div>
 </div>
+<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/tenderpage.js"></script>
 </body>
 </html>

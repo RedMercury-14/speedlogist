@@ -22,7 +22,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.google.gson.Gson;
+
 import by.base.main.controller.MainController;
+import by.base.main.model.Message;
 import by.base.main.model.Rates;
 import by.base.main.model.Route;
 import by.base.main.model.RouteHasShop;
@@ -30,12 +33,15 @@ import by.base.main.model.User;
 import by.base.main.service.RatesService;
 import by.base.main.service.RouteService;
 import by.base.main.service.UserService;
+import by.base.main.util.ChatEnpoint;
 
 @RestController
 @RequestMapping("api")
 public class MainRestController {
 	
 	public Route route;
+	
+	Gson gson = new Gson();
 
 	@Autowired
 	RouteService routeService;
@@ -45,6 +51,9 @@ public class MainRestController {
 	
 	@Autowired
 	UserService userService;
+	
+	@Autowired
+	ChatEnpoint chatEnpoint;
 
 	@GetMapping ("/route")
 	public Set<Route> getListRoute() {
@@ -189,8 +198,23 @@ public class MainRestController {
 		HashMap<String, String> map = new HashMap<String, String>();
 		map.put("message", "УСПЕХ");
 		return new JSONObject(map);
-		
-				
+	}
+	
+	
+	@GetMapping("/info/message/numroute/{idRoute}")
+	public String getSizeMessageByRoute(@PathVariable String idRoute) {
+		List <Message> messagesList = new ArrayList<Message>();		
+		chatEnpoint.internationalMessegeList.stream()
+			.filter(mes->mes.getIdRoute().equals(idRoute+"")).forEach(mes-> messagesList.add(mes));		
+		return messagesList.size()+"";		
+	}
+	
+	@GetMapping("/info/message/routes/{idRoute}")
+	public List<Message> getListMessegRouteById(@PathVariable String idRoute) {
+		List <Message> messagesList = new ArrayList<Message>();		
+		ChatEnpoint.internationalMessegeList.stream()
+			.filter(mes->mes.getIdRoute().equals(idRoute+"")).forEach(mes-> messagesList.add(mes));		
+		return messagesList;		
 	}
 
 	private Route addCostForRoute(Route route) {

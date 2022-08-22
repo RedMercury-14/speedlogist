@@ -35,6 +35,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import by.base.main.controller.ajax.MainRestController;
 import by.base.main.model.Feedback;
+import by.base.main.model.Message;
 import by.base.main.model.Rates;
 import by.base.main.model.Role;
 import by.base.main.model.Route;
@@ -54,6 +55,7 @@ import by.base.main.service.UserService;
 import by.base.main.service.util.POIExcel;
 import by.base.main.service.util.TenderTimer;
 import by.base.main.service.util.TimerList;
+import by.base.main.util.ChatEnpoint;
 
 @Controller
 @RequestMapping("/")
@@ -1181,14 +1183,42 @@ public class MainController {
 		return "redirect:/main/logistics/international";
 	}
 	
+	@GetMapping("/main/logistics/international/tenderOffer")
+	public String internationalTenderOfferGet(Model model, HttpServletRequest request,
+			@RequestParam(value = "idRoute", required = false) Integer idRoute) {
+		request.setAttribute("idRoute", idRoute);
+		return "tenderOffer";
+	}
+	
+	@GetMapping("/main/carrier/tender/tenderOffer")
+	public String carrierTenderOfferGet(Model model, HttpServletRequest request) {
+		return "redirect:/main/carrier/tender";
+	}
+	
 	@RequestMapping("/main/chat")
 	public String chat() {
 		return "chat";
 	}
 	
+	
+	@RequestMapping("/main/logistics/international/confrom")
+	public String confromCost(Model model,
+			@RequestParam("login") String login,
+			@RequestParam("cost") Integer cost,
+			@RequestParam("idRoute") Integer idRoute) {
+		Route route = routeService.getRouteById(idRoute);
+		User user = userService.getUserByLogin(login);
+		route.setFinishPrice(cost);
+		route.setUser(user);
+		route.setStatusRoute("4");
+		routeService.saveOrUpdateRoute(route);
+		return "redirect:/main/logistics/international";
+	}
+	
 	@RequestMapping("/main/test")
 	public String test() {
-		return null;
+		System.out.println(ChatEnpoint.sessionList.size());
+		return "redirect:/main";
 	}
 	
 	@RequestMapping("/main/test2")

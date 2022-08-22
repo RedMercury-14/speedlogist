@@ -25,7 +25,7 @@ console.log("hi2");
 startBtn.addEventListener("mousedown", () => {
 	var name = nameInput.value;
 	ws = new WebSocket("ws://localhost:8080/speedlogist/chat");
-	ws.onopen = () => this.onOpenSock(name);
+	ws.onopen = () => this.onOpenSock();
 	ws.onmessage = (e) => this.onMessage(JSON.parse(e.data));
 	ws.onclose = (e) => this.onClose();		
 	startbox.style.display = "none";
@@ -48,13 +48,10 @@ function send(){
 };
 
 
-function onOpenSock(){
-	console.log(name);
-	name1=name;
+function onOpenSock(){	
 };
 
 function onMessage(msg){
-	console.log(msg);
 	let msgBlock = document.createElement("div");
 	msgBlock.className = "message";
 	let fromBlock = document.createElement("div");

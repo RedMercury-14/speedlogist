@@ -1,5 +1,39 @@
 contextMenu();
+onNumberMessage();
 var route;
+var num;
+let ws = new WebSocket("ws://localhost:8080/speedlogist/chat");
+ws.onmessage = (e) => this.onMessage(JSON.parse(e.data));
+function onNumberMessage() {
+	var routeItem = document.querySelectorAll('tr');
+	for (i = 1; i < routeItem.length; i++) {
+		var routeItemI = routeItem[i];
+		let coll = routeItemI.querySelector('.coll');
+		getNumMessege(routeItemI.querySelector('#idRoute').innerHTML, coll)
+	}
+}
+
+function onMessage(msg) {
+	if (msg.idRoute != null) {
+		var routeItem = document.querySelectorAll('tr');
+		for (i = 1; i < routeItem.length; i++) {			
+			var routeItemI = routeItem[i];
+			if (routeItemI.querySelector("#idRoute").innerHTML == msg.idRoute) {				
+				let coll = routeItemI.querySelector('.coll');
+				setTimeout(()=>getNumMessege(msg.idRoute, coll), 500);
+				
+			}
+		}
+	}
+};
+function getNumMessege(idRoute, coll) {
+	fetch(`../../api/info/message/numroute/${idRoute}`).then(function(response) {
+		response.text().then(function(text) {
+			coll.innerText = "(" + text + ")";
+		});
+	});
+}
+
 function contextMenu() {
 	(function() {
 		var routeItem = document.querySelectorAll('tr');
@@ -7,7 +41,7 @@ function contextMenu() {
 			var routeItemI = routeItem[i];
 			contextMenuListner(routeItemI);
 		}
-		const menu = document.querySelector(".right-click-menu");		
+		const menu = document.querySelector(".right-click-menu");
 		function contextMenuListner(el) {
 			el.addEventListener("contextmenu", event => {
 				event.preventDefault();

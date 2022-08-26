@@ -70,6 +70,14 @@ public class RouteHasShop implements Serializable{
 	@Column(name = "address")
 	private String address;
 	
+	@Column(name = "cargo")
+	private String cargo;
+	
+	@Column (name = "position")
+	private String position;
+	
+	@Column(name = "volume")
+	private String volume;
 	
 	@ManyToOne(fetch = FetchType.EAGER, cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH,
 			CascadeType.REFRESH })
@@ -155,6 +163,36 @@ public class RouteHasShop implements Serializable{
 	public void setAddress(String adress) {
 		this.address = adress;
 	}
+	
+	
+	public String getCargo() {
+		return cargo;
+	}
+
+
+	public void setCargo(String cargo) {
+		this.cargo = cargo;
+	}
+
+
+	public String getPosition() {
+		return position;
+	}
+
+
+	public void setPosition(String position) {
+		this.position = position;
+	}
+
+
+	public String getVolume() {
+		return volume;
+	}
+
+
+	public void setVolume(String volume) {
+		this.volume = volume;
+	}
 
 
 	@Override
@@ -178,12 +216,10 @@ public class RouteHasShop implements Serializable{
 
 	@Override
 	public String toString() {
-		return "RouteHasShop [idRouteHasShop=" + idRouteHasShop + ", order=" + order + ", shop=" + shop + "]";
+		return "RouteHasShop [idRouteHasShop=" + idRouteHasShop + ", order=" + order + ", pall=" + pall + ", weight="
+				+ weight + ", status=" + status + ", address=" + address + ", cargo=" + cargo + ", position=" + position
+				+ ", shop=" + shop + "]";
 	}
 
-
-	
-
-	
 	
 }

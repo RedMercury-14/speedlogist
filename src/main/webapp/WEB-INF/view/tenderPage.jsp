@@ -8,6 +8,14 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<style>
+.raz { 
+  -moz-appearance: textfield;
+}
+.raz::-webkit-inner-spin-button { 
+  display: none;
+}
+</style>
 <title>Insert title here</title>
 <!-- Latest compiled and minified CSS -->
 <link rel="stylesheet"
@@ -68,11 +76,19 @@
 						<td>${route.totalLoadPall}</td>
 						<td>${route.totalCargoWeight}</td>						
 						<c:choose><c:when test="${route.startPrice != null}"><td>${route.startPrice}</td></c:when></c:choose>
-						<td><input name="cost" size="3" required="true"> EUR</td>
-						<td>
-							<input type="submit" value="поддержать цену" name="agree" class= "agree">
-							<input type="hidden" value="0" name="price" size = "1"/>				
-						</td>
+						<c:choose>
+							<c:when test="${flag}">
+								<td>Ваше предложение ${userCost} EUR</td>
+							</c:when>
+							<c:otherwise>
+								<td><input type="number" name="cost" size="5" required="true" class="raz"> EUR</td>
+								<td>
+									<input type="submit" value="поддержать цену" name="agree" class= "agree">
+									<input type="hidden" value="0" name="price" size = "1"/>				
+								</td>
+							</c:otherwise>
+						</c:choose>
+						
 						
 						<tr><th>Номер точки</th><c:forEach var="point" items="${route.roteHasShop}">																
 				<td>${point.order}</td>                
@@ -165,8 +181,7 @@
 			</table>
 </c:otherwise>
 </c:choose>
-			
-			<form:form method="get" action="./" ><input type="submit" value="Назад"></form:form>
+<input type="button" onclick="history.back();" value="Назад"/>
 </div>
 </div>
 <script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/tenderpage.js"></script>

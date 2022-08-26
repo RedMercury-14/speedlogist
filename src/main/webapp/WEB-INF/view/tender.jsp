@@ -8,8 +8,15 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<style type="text/css">
+	.none{
+		display: none;
+	}
+	.activRow{
+		background: #c4ffe1db;
+	}
+</style>
 <title>Insert title here</title>
-<link rel="stylesheet" type="text/css" href="<c:url value="/resources/css/style.css"/>"/>
 <!-- Latest compiled and minified CSS -->
 <link rel="stylesheet"
 	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
@@ -38,7 +45,7 @@
 					<th>Название маршрута</th>
 					<th>Дата загрузки</th>
 					<th>Время загрузки (планируемое)</th>
-					<th>Санобработка</th>
+					<th>Ваше предложение</th>
 					<th>Температура</th>
 					<th>Общее колличество паллет</th>
 					<th>Общий вес</th>					
@@ -54,15 +61,16 @@
 					 	<c:param name="routeId" value="${route.idRoute}" />					
 					</c:url>		
 					<tr>
+						<td class="none">${route.idRoute}</td>
 						<td> <a href="${showTenderPage}">${route.routeDirection}</a></td>
-						<td>${route.dateLoadPreviously}</td>
-						<td>${route.timeLoadPreviously}</td>
-						<td>${route.isSanitization}</td>
+						<td width="100">${route.dateLoadPreviously}</td>
+						<td width="50">${route.timeLoadPreviously}</td>
+						<td width="100"><div id="offer"></div></td>
 						<td>${route.temperature}</td>
 						<td>${route.totalLoadPall}</td>
 						<td>${route.totalCargoWeight}</td>						
 						<td>${route.cost[rate]}</td>
-						<td>${route.numPoint}</td>	
+						<td width="100">${route.numPoint}</td>	
 					</tr>
            			</form:form>        
 			</c:forEach>			
@@ -70,5 +78,6 @@
 			<form:form action="${pageContext.request.contextPath}/main/carrier" ><input type="submit" value="Назад"></form:form>
 </div>
 </div>
+<script	src="${pageContext.request.contextPath}/resources/js/tender.js"></script>
 </body>
 </html>

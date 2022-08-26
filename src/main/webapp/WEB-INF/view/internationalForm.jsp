@@ -10,6 +10,14 @@
 <meta charset="UTF-8">
 <meta name="${_csrf.parameterName}" content="${_csrf.token}" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+.raz { 
+  -moz-appearance: textfield;
+}
+.raz::-webkit-inner-spin-button { 
+  display: none;
+}
+</style>
 <title>Insert title here</title>
 <link rel="stylesheet" type="text/css" href="<c:url value="/resources/css/other.css"/>"/>
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
@@ -23,7 +31,7 @@
 <div id="content" class="form-group"></div>
 <div class="form-group">
 <div id = "message"></div>
-			<input id="button" type="button" value="Добавить точку">  <input id="next" type="button" value="Создать маршрут">
+			<input id="button" type="button" value="Добавить точку выгрузки"> <input id="button2" type="button" value="Добавить точку загрузки"> <input id="next" type="button" value="Создать маршрут">
 			</div>
 </div>
 <script	src="${pageContext.request.contextPath}/resources/js/internationalForm.js"></script>

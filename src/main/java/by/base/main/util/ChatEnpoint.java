@@ -1,6 +1,8 @@
 package by.base.main.util;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -14,6 +16,7 @@ import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.server.standard.SpringConfigurator;
 
@@ -52,17 +55,23 @@ public class ChatEnpoint {
 	}
 	
 	@OnMessage
-	public void onMessage(Session session, Message message) {	
+	public void onMessage(Session session, Message message) {
+		DateTimeFormatter formatter1 = DateTimeFormatter.ofPattern("d-MM-yyyy; HH:mm:ss");
+		message.setDatetime(LocalDateTime.now().format(formatter1));
 		if(message.getIdRoute() != null) {
-			String login = this.session.getUserPrincipal().getName();
-			message.setFromUser(login);
-			message.setCompanyName(userService.getUserByLogin(login).getCompanyName());
+			if (message.getFromUser() == null) {
+				String login = this.session.getUserPrincipal().getName();
+				message.setFromUser(login);
+				message.setCompanyName(userService.getUserByLogin(login).getCompanyName());
+			}
 		}else {
 			message.setFromUser(this.session.getUserPrincipal().getName());
 		}		
 		sessionList.forEach(s->{
 			if(s == this.session) {
-				internationalMessegeList.add(message);
+				if (!message.getFromUser().equals("system")) {
+					internationalMessegeList.add(message);
+				}				
 				return;}
 			try {			
 				s.getBasicRemote().sendObject(message);

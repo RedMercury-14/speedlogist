@@ -2,14 +2,43 @@ package by.base.main.model;
 
 import java.util.Objects;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+@Entity
+@Table(name = "message")
 public class Message {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "idMessage")
+	private Integer idMessage;
 	
+	@Column(name = "fromUser")
 	private String fromUser;
+	
+	@Column(name = "toUser")
 	private String toUser;
+	
+	@Column(name = "text")
 	private String text;
+	
+	@Column(name = "idRoute")
 	private String idRoute;
+	
+	@Column(name = "status")
 	private String status;
+	
+	@Column(name = "companyName")
 	private String companyName;
+	
+	@Column(name = "comment")
+	private String comment;
+	
+	@Column(name = "datetime")
+	private String datetime;
 	
 	
 	public String getFromUser() {
@@ -49,6 +78,27 @@ public class Message {
 	}
 	public void setCompanyName(String companyName) {
 		this.companyName = companyName;
+	}
+	
+	public String getComment() {
+		return comment;
+	}
+	public void setComment(String comment) {
+		this.comment = comment;
+	}
+	
+	public Integer getIdMessage() {
+		return idMessage;
+	}
+	public void setIdMessage(Integer idMessage) {
+		this.idMessage = idMessage;
+	}
+	
+	public String getDatetime() {
+		return datetime;
+	}
+	public void setDatetime(String datetime) {
+		this.datetime = datetime;
 	}
 	@Override
 	public int hashCode() {

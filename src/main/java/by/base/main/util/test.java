@@ -25,9 +25,6 @@ public class test {
 	System.out.println("======decoding======");
 	Message decodingMessage = gson.fromJson(json, Message.class);
 	Message decodingMessageTest = gson.fromJson(jsonTest, Message.class);
-	System.out.println(decodingMessage);
-	System.out.println(decodingMessageTest);
-	System.out.println(decodingMessageTest.getText());
 	}
 
 }

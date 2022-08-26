@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.transaction.Transactional;
 
@@ -24,6 +25,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -45,6 +48,7 @@ import by.base.main.model.Tender;
 import by.base.main.model.Truck;
 import by.base.main.model.User;
 import by.base.main.service.FeedbackService;
+import by.base.main.service.MessageService;
 import by.base.main.service.RatesService;
 import by.base.main.service.RouteHasShopService;
 import by.base.main.service.RouteService;
@@ -56,6 +60,7 @@ import by.base.main.service.util.POIExcel;
 import by.base.main.service.util.TenderTimer;
 import by.base.main.service.util.TimerList;
 import by.base.main.util.ChatEnpoint;
+import lombok.val;
 
 @Controller
 @RequestMapping("/")
@@ -87,6 +92,12 @@ public class MainController {
 	
 	@Autowired
 	private RatesService ratesService;
+	
+	@Autowired
+	private ChatEnpoint chatEnpoint;
+	
+	@Autowired
+	private MessageService messageService;
 	
 	public static final Map<String,String> distances = new HashMap<String, String>();
 
@@ -463,7 +474,8 @@ public class MainController {
 		}
 		Set<Route> routes = new HashSet<Route>();
 		routeService.getRouteListAsDate((Date)session.getAttribute("dateStart"), (Date)session.getAttribute("dateFinish")).stream()
-				.forEach(r -> routes.add(r));
+				.filter(r->r.getComments() == null || !r.getComments().equals("international"))// ой шляпа тут ====================================================== затычка
+				.forEach(r -> routes.add(r));		
 		request.setAttribute("dateNow", (Date)session.getAttribute("dateStart"));
 		request.setAttribute("dateTomorrow", (Date)session.getAttribute("dateFinish"));
 		Set<Route>res = new HashSet<Route>();		
@@ -596,8 +608,17 @@ public class MainController {
 			routeId = (Integer) session.getAttribute("idRoute");
 		}
 		Route route = routeService.getRouteById(routeId);
+		boolean flag = false;		
 		if (route.getComments() != null && route.getComments().equals("international")) {
+			for (Message message : ChatEnpoint.internationalMessegeList) {
+				if (message.getIdRoute().equals(routeId.toString()) && message.getFromUser().equals(name)) {
+					flag = true;
+					request.setAttribute("userCost", message.getText());
+					break;
+				}
+			}
 			model.addAttribute("route", route);
+			request.setAttribute("flag", flag);
 		}else {
 			model.addAttribute("route", addCostForRoute(route));
 		}		
@@ -1115,28 +1136,30 @@ public class MainController {
 	
 	//Менеджер международных маршрутов GET
 	@GetMapping("/main/logistics/international")
-	public String internationalGet(HttpServletRequest request, HttpSession session, Model model) {
-		getTimeNow(request);
-		getTimeNowPlusDay(request);
-		Date ds = Date.valueOf(LocalDate.now());
-		Date df = Date.valueOf(LocalDate.now().plusDays(1));
-		session.setAttribute("dateStart", ds);
-		session.setAttribute("dateFinish", df);
-		Set<Route> routes = new HashSet<Route>();
-		routeService.getRouteListAsDate(ds, df).stream()
-			.filter(r-> r.getComments() != null && r.getComments().equals("international"))
-			.forEach(r -> routes.add(r)); // проверяет созданы ли точки вручную, и отдаёт только международные маршруты
-		model.addAttribute("routes", routes);
-		return "internationalManager";
-	}
-	
-	@PostMapping("/main/logistics/international")
-	public String internationalPost(Model model, HttpServletRequest request, HttpSession session, @RequestParam("dateStart") Date dateStart,
-			@RequestParam("dateFinish") Date dateFinish) throws ServiceException {
-		request.setAttribute("dateNow", dateStart);
-		session.setAttribute("dateStart", dateStart);
-		request.setAttribute("dateTomorrow", dateFinish);
-		session.setAttribute("dateFinish", dateFinish);
+	public String internationalGet(HttpServletRequest request, HttpSession session, Model model,
+			@RequestParam( value = "dateStart", required = false) Date dateStart,
+			@RequestParam( value = "dateFinish", required = false) Date dateFinish) {
+		if(dateStart == null || dateFinish == null) {
+			if (session.getAttribute("dateStart") !=null || session.getAttribute("dateFinish")!=null) {
+				dateStart = (Date) session.getAttribute("dateStart");
+				dateFinish = (Date) session.getAttribute("dateFinish");
+				request.setAttribute("dateNow", session.getAttribute("dateStart"));
+				request.setAttribute("dateTomorrow", session.getAttribute("dateFinish"));
+			}else {
+				getTimeNow(request);
+				getTimeNowPlusDay(request);
+				dateStart = Date.valueOf(LocalDate.now());
+				dateFinish = Date.valueOf(LocalDate.now().plusDays(1));
+				session.setAttribute("dateStart", dateStart);
+				session.setAttribute("dateFinish", dateFinish);
+			}			
+		}else {
+			// тут я заменил метот пост, на метод гет, в форме задание даты отображения
+			request.setAttribute("dateNow", dateStart);
+			session.setAttribute("dateStart", dateStart);
+			request.setAttribute("dateTomorrow", dateFinish);
+			session.setAttribute("dateFinish", dateFinish);			
+		}
 		Set<Route> routes = new HashSet<Route>();
 		routeService.getRouteListAsDate(dateStart, dateFinish).stream()
 			.filter(r-> r.getComments() != null && r.getComments().equals("international"))
@@ -1144,6 +1167,21 @@ public class MainController {
 		model.addAttribute("routes", routes);
 		return "internationalManager";
 	}
+	//на всякий случай
+//	@PostMapping("/main/logistics/international")
+//	public String internationalPost(Model model,HttpServletResponse response, HttpServletRequest request, HttpSession session, @RequestParam("dateStart") Date dateStart,
+//			@RequestParam("dateFinish") Date dateFinish) throws ServiceException {
+//		request.setAttribute("dateNow", dateStart);
+//		session.setAttribute("dateStart", dateStart);
+//		request.setAttribute("dateTomorrow", dateFinish);
+//		session.setAttribute("dateFinish", dateFinish);
+//		Set<Route> routes = new HashSet<Route>();
+//		routeService.getRouteListAsDate(dateStart, dateFinish).stream()
+//			.filter(r-> r.getComments() != null && r.getComments().equals("international"))
+//			.forEach(r -> routes.add(r)); // проверяет созданы ли точки вручную, и отдаёт только международные маршруты
+//		model.addAttribute("routes", routes);
+//		return "internationalManager";
+//	}
 	
 	@RequestMapping("/main/logistics/international/add")
 	public String internationalAddGet() {
@@ -1195,6 +1233,14 @@ public class MainController {
 		return "redirect:/main/carrier/tender";
 	}
 	
+//	@GetMapping("/main/logistics/international/tenderHistory")
+//	public String internationalTenderHistoryGet(Model model, HttpServletRequest request,
+//			@RequestParam(value = "idRoute", required = false) Integer idRoute) {
+//		request.setAttribute("idRoute", idRoute);
+//		return "tenderHistory";
+//	}
+	
+	
 	@RequestMapping("/main/chat")
 	public String chat() {
 		return "chat";
@@ -1212,6 +1258,14 @@ public class MainController {
 		route.setUser(user);
 		route.setStatusRoute("4");
 		routeService.saveOrUpdateRoute(route);
+		List<Message> messages = new ArrayList<Message>();		
+		ChatEnpoint.internationalMessegeList.stream()
+			.filter(mes->mes.getIdRoute().equals(idRoute.toString()) && !mes.getFromUser().equals("system"))
+			.forEach(mes-> messages.add(mes));
+		messages.stream().forEach(mes->{
+			chatEnpoint.internationalMessegeList.remove(mes);
+			messageService.saveOrUpdateMessage(mes);
+		});
 		return "redirect:/main/logistics/international";
 	}
 	

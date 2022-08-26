@@ -25,6 +25,7 @@
 <body>
 	<jsp:include page="header.jsp" />	
 	<input type="hidden" value="${idRoute}" id="idRoute">
+	<input type="hidden" value="<sec:authentication property="principal.authorities" />" id="role">
 	
 	<div class="container">
 	<h2>Активные предложения</h2>

@@ -27,11 +27,7 @@ import javax.persistence.Transient;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.OptBoolean;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 @DynamicUpdate
 @DynamicInsert
@@ -118,6 +114,9 @@ public class Route implements Serializable{
 	
 	@Column(name = "statusStock")
 	private String statusStock;
+	
+	@Column(name = "typePrailer")
+	private String typePrailer;
 	
 	@ManyToOne(fetch = FetchType.EAGER, 
 			cascade = { CascadeType.PERSIST, 
@@ -410,6 +409,14 @@ public class Route implements Serializable{
 
 	public void setCost(Map<String, String> cost) {
 		this.cost = cost;
+	}
+
+	public String getTypePrailer() {
+		return typePrailer;
+	}
+
+	public void setTypePrailer(String typePrailer) {
+		this.typePrailer = typePrailer;
 	}
 
 	@Override

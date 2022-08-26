@@ -15,6 +15,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,6 +31,7 @@ import by.base.main.model.Rates;
 import by.base.main.model.Route;
 import by.base.main.model.RouteHasShop;
 import by.base.main.model.User;
+import by.base.main.service.MessageService;
 import by.base.main.service.RatesService;
 import by.base.main.service.RouteService;
 import by.base.main.service.UserService;
@@ -50,10 +52,14 @@ public class MainRestController {
 	private RatesService ratesService;
 	
 	@Autowired
-	UserService userService;
+	private UserService userService;
 	
 	@Autowired
-	ChatEnpoint chatEnpoint;
+	private ChatEnpoint chatEnpoint;
+	
+	@Autowired
+	private MessageService messageService;
+	
 
 	@GetMapping ("/route")
 	public Set<Route> getListRoute() {
@@ -163,24 +169,20 @@ public class MainRestController {
 	public String time() {
 		return LocalDateTime.now().toString();		
 	}
-	
+	//переписать с использованием gson!
 	@PostMapping("/route/addpoints")
 	public JSONObject postRoadPoints(@RequestBody String str) throws ParseException {
 		StringBuilder sb = new StringBuilder(str);
 		sb.deleteCharAt(0);
-		sb.deleteCharAt(str.length()-2);
+		sb.deleteCharAt(str.length()-2);		
 		StringBuilder nsb = new StringBuilder(sb.toString());
 		char[]task = sb.toString().toCharArray();
-		int j = 0;
 		for (int i = 0; i < task.length; i++) {			
-			if (task[i] == ',') {
-				j++;
-				if (j%4 == 0) {
-					nsb.setCharAt(i, '&');
-				}				
+			if (task[i] == '}' && i !=task.length-1) {
+				nsb.setCharAt(i+1, '&');				
 			}			
 		}
-		String[] points = nsb.toString().split("&");
+		String[] points = nsb.toString().split("&");		
 		route = new Route();
 		Set<RouteHasShop> routeHasShops = new HashSet<RouteHasShop>();		
 		for (String string : points) {
@@ -192,6 +194,8 @@ public class MainRestController {
 			routeHasShop.setPall((String) jsonpObject.get("pall"));
 			routeHasShop.setWeight((String) jsonpObject.get("weight"));
 			routeHasShop.setAddress((String) jsonpObject.get("address"));
+			routeHasShop.setCargo((String)jsonpObject.get("cargo"));
+			routeHasShop.setPosition((String)jsonpObject.get("position"));
 			routeHasShops.add(routeHasShop);
 		}
 		route.setRoteHasShop(routeHasShops);	
@@ -201,7 +205,7 @@ public class MainRestController {
 	}
 	
 	
-	@GetMapping("/info/message/numroute/{idRoute}")
+	@GetMapping("/info/message/numroute/{idRoute}") // отдаёт колличество предложений по id маршруту
 	public String getSizeMessageByRoute(@PathVariable String idRoute) {
 		List <Message> messagesList = new ArrayList<Message>();		
 		chatEnpoint.internationalMessegeList.stream()
@@ -209,11 +213,27 @@ public class MainRestController {
 		return messagesList.size()+"";		
 	}
 	
-	@GetMapping("/info/message/routes/{idRoute}")
+	@GetMapping("/info/message/routes/{idRoute}") // отдаёт сообщения где есть id маршрута из кеша!!!
 	public List<Message> getListMessegRouteById(@PathVariable String idRoute) {
 		List <Message> messagesList = new ArrayList<Message>();		
 		ChatEnpoint.internationalMessegeList.stream()
 			.filter(mes->mes.getIdRoute().equals(idRoute+"")).forEach(mes-> messagesList.add(mes));		
+		return messagesList;		
+	}
+	
+	@GetMapping("/info/message/routes/from_me") // отдаёт сообщения, на которые есть предложения от данного юзера из кеша
+	public List<Message> getIdRouteByTargetCarrier() {
+		List <Message> result = new ArrayList<Message>();
+		String login = SecurityContextHolder.getContext().getAuthentication().getName();	
+		ChatEnpoint.internationalMessegeList.stream()
+			.filter(mes->mes.getFromUser().equals(login)).forEach(mes-> result.add(mes));	
+		return result;
+	}
+	
+	@GetMapping("/memory/message/routes/{idRoute}") // отдаёт сообщения где есть id маршрута из БД!!!
+	public List<Message> getListMessegRouteByIdFromBase(@PathVariable String idRoute) {
+		List <Message> messagesList = new ArrayList<Message>();		
+		messagesList = messageService.getListMessageByIdRoute(idRoute);
 		return messagesList;		
 	}
 

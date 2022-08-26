@@ -47,6 +47,18 @@
 .right-click-menu li:hover {
 	background: #ffffff73;
 }
+.none{
+	display: none;
+}
+.activRow{
+		background: #494f5252;
+	}
+.finishRow{
+		background: #c4ffe1db;
+	}
+.attentionRow{
+		background: #dce37266;
+}
 </style>
 <title>Менеджер международных маршрутов</title>
 <link rel="stylesheet" type="text/css"
@@ -66,7 +78,7 @@
 		<h3>Менеджер международных маршрутов</h3>
 	</div>
 	<div class="container">
-		<form:form method="post">
+		<form:form method="get">
 			<label>Выберите дни:</label>				
 			C <input type="date" name="dateStart"
 				value="<c:out value="${dateNow}" />" />
@@ -86,14 +98,13 @@
 				id="sort">
 				<thead class="text-center">
 					<tr>
-						<th><p class="text-center">Номер маршрута</p></th>
+						<th>Название маршрута</th>
 						<th>Дата загрузки</th>
 						<th>Время загрузки (планируемое)</th>
 						<th>Выставляемая стоимость</th>
 						<th>Температура</th>
 						<th>Общее колличество паллет</th>
-						<th>Общий вес</th>
-						<th>Название маршрута</th>
+						<th>Общий вес</th>						
 						<th>Начальные стоимости перевозки</th>
 						<th>Статус</th>
 
@@ -106,19 +117,21 @@
 					</c:url>
 					<form:form method="post">
 						<input type="hidden" value="${route.idRoute}" name="id" />
-						<tr>
-							<td id="idRoute">${route.idRoute}</td>
+						<sec:csrfInput />
+						<tr>				
+							<td id="idRoute" class="none">${route.idRoute}</td>
+							<td>${route.routeDirection}</td>
 							<td>${route.dateLoadPreviously}</td>
 							<td id="timeLoadPreviously">${route.timeLoadPreviously}</td>
 							<td>${route.finishPrice} EUR</td>
 							<td id="temperature">${route.temperature}</td>
 							<td>${route.totalLoadPall}</td>
-							<td>${route.totalCargoWeight}</td>
-							<td>${route.routeDirection}</td>
+							<td>${route.totalCargoWeight}</td>							
 							<td id="cost"><c:forEach var="cost" items="${route.cost}">
 						${cost} руб;
 						</c:forEach></td>
-							<td><c:choose>
+						
+							<td id="status"><c:choose>
 									<c:when test="${route.statusRoute == 1}">	
 										Маршрут на бирже. <div class="resp"><a href="${showOffer}">Просмотреть предложения</a>
 									<div class="coll"></div>
@@ -135,7 +148,7 @@
 				</c:forEach>
 			</table>
 			<ul class="right-click-menu">
-				<li id="l1">test</li>
+				<li id="l1">Истоия предложений</li>
 				<li id="l2">Отправить тендер</li>
 				<li id="l3">Показать точки выгрузок</li>
 				<li id="l4">Редактор маршрутов</li>

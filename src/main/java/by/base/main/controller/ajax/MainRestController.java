@@ -41,7 +41,7 @@ import by.base.main.util.ChatEnpoint;
 @RequestMapping("api")
 public class MainRestController {
 	
-	public Route route;
+	private Route route;
 	
 	Gson gson = new Gson();
 
@@ -61,13 +61,38 @@ public class MainRestController {
 	private MessageService messageService;
 	
 
+	public Route getRoute() {
+		return route;
+	}
+
+	public void setRoute(Route route) {
+		this.route = route;
+	}
+
 	@GetMapping ("/route")
 	public Set<Route> getListRoute() {
 		Set<Route> res = new HashSet<Route>(); // расчёт стоимости!
 		for (Route route : routeService.getRouteList()) { // расчёт стоимости!
-			res.add(addCostForRoute(route)); // расчёт стоимости!
+			boolean flag = false;
+			Set <RouteHasShop> routeHasShops = route.getRoteHasShop();
+			for (RouteHasShop routeHasShop : routeHasShops) {
+				if(routeHasShop.getShop() == null) {
+					flag = true;
+					break;
+				}
+			}
+			if (!flag) {
+				res.add(addCostForRoute(route)); // расчёт стоимости!
+			}else {
+				res.add(route);
+			}			
 		}
 		return res;
+	}
+	
+	@GetMapping ("/simpleroute")
+	public List<Route> getListSimpleRoute() {		
+		return routeService.getRouteList();
 	}
 
 	@GetMapping("/route/{id}")

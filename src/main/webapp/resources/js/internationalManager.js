@@ -82,7 +82,7 @@ function contextMenu() {
 			window.location.href = url;
 		}, false);
 		document.querySelector("#l3").addEventListener("click", () => {
-			var url = `../carrier/tender/tenderpage?routeId=${route}`			
+			var url = `../logistics/international/routeShow?idRoute=${route}`			
 			window.location.href = url;
 		}, false);
 		document.querySelector("#l4").addEventListener("click", () => {

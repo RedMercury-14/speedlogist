@@ -1193,7 +1193,7 @@ public class MainController {
 	
 	@RequestMapping("/main/logistics/international/addRoute")
 	public String internationalAddRouteGet(Model model) {
-		model.addAttribute("route", mainRestController.route);
+		model.addAttribute("route", mainRestController.getRoute());
 		return "routeForm";
 	}
 	
@@ -1215,8 +1215,9 @@ public class MainController {
 		route.setTotalCargoWeight(target.getTotalCargoWeight());
 		route.setRouteDirection(target.getRouteDirection());
 		route.setStartPrice(target.getStartPrice());
-		mainRestController.route.getRoteHasShop().stream().forEach(s-> s.setRoute(route));
-		mainRestController.route.getRoteHasShop().stream().forEach(s-> routeHasShopService.saveOrUpdateRouteHasShop(s));
+		route.setTypeTrailer(target.getTypeTrailer());
+		mainRestController.getRoute().getRoteHasShop().stream().forEach(s-> s.setRoute(route));
+		mainRestController.getRoute().getRoteHasShop().stream().forEach(s-> routeHasShopService.saveOrUpdateRouteHasShop(s));
 			
 		return "redirect:/main/logistics/international";
 	}
@@ -1233,12 +1234,12 @@ public class MainController {
 		return "redirect:/main/carrier/tender";
 	}
 	
-//	@GetMapping("/main/logistics/international/tenderHistory")
-//	public String internationalTenderHistoryGet(Model model, HttpServletRequest request,
-//			@RequestParam(value = "idRoute", required = false) Integer idRoute) {
-//		request.setAttribute("idRoute", idRoute);
-//		return "tenderHistory";
-//	}
+	@GetMapping("/main/logistics/international/routeShow")
+	public String internationalRouteShowGet(Model model, HttpServletRequest request,
+			@RequestParam(value = "idRoute", required = false) Integer idRoute) {		
+		request.setAttribute("route", routeService.getRouteById(idRoute));
+		return "routeForm";
+	}
 	
 	
 	@RequestMapping("/main/chat")

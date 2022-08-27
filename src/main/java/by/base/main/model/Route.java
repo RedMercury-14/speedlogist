@@ -115,8 +115,8 @@ public class Route implements Serializable{
 	@Column(name = "statusStock")
 	private String statusStock;
 	
-	@Column(name = "typePrailer")
-	private String typePrailer;
+	@Column(name = "typeTrailer")
+	private String typeTrailer;
 	
 	@ManyToOne(fetch = FetchType.EAGER, 
 			cascade = { CascadeType.PERSIST, 
@@ -411,12 +411,12 @@ public class Route implements Serializable{
 		this.cost = cost;
 	}
 
-	public String getTypePrailer() {
-		return typePrailer;
+	public String getTypeTrailer() {
+		return typeTrailer;
 	}
 
-	public void setTypePrailer(String typePrailer) {
-		this.typePrailer = typePrailer;
+	public void setTypeTrailer(String typeTrailer) {
+		this.typeTrailer = typeTrailer;
 	}
 
 	@Override

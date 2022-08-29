@@ -97,7 +97,13 @@ public class MainRestController {
 
 	@GetMapping("/route/{id}")
 	public Route getRoute(@PathVariable int id) {
-		return addCostForRoute(routeService.getRouteById(id));
+		Route route = routeService.getRouteById(id);
+		if (route.getComments() != null && route.getComments().equals("international")) {
+			return route;
+		}else {
+			return addCostForRoute(route);
+		}
+		
 		
 	}
 
@@ -238,6 +244,14 @@ public class MainRestController {
 		return messagesList.size()+"";		
 	}
 	
+	@GetMapping("/info/message/routes") // отдаёт все сообщения, которые имеются в кеше, по маршрутам
+	public List <Message> getListMessegRoute() {
+		List <Message> messagesList = new ArrayList<Message>();		
+		chatEnpoint.internationalMessegeList.stream()
+			.filter(mes->mes.getIdRoute()!= null).forEach(mes-> messagesList.add(mes));		
+		return messagesList;		
+	}
+	
 	@GetMapping("/info/message/routes/{idRoute}") // отдаёт сообщения где есть id маршрута из кеша!!!
 	public List<Message> getListMessegRouteById(@PathVariable String idRoute) {
 		List <Message> messagesList = new ArrayList<Message>();		
@@ -260,6 +274,14 @@ public class MainRestController {
 		List <Message> messagesList = new ArrayList<Message>();		
 		messagesList = messageService.getListMessageByIdRoute(idRoute);
 		return messagesList;		
+	}
+	
+	@GetMapping("/info/message/participants/{idRoute}") // отдаёт колличество участников торгов по id маршрута
+	public String getParticipantsByRoute(@PathVariable String idRoute) {
+		Set <String> messagesList = new HashSet<String>();		
+		chatEnpoint.internationalMessegeList.stream()
+			.filter(mes->mes.getIdRoute().equals(idRoute+"")).forEach(mes-> messagesList.add(mes.getCompanyName()));		
+		return messagesList.size()+"";		
 	}
 
 	private Route addCostForRoute(Route route) {

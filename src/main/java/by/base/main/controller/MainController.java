@@ -456,7 +456,12 @@ public class MainController {
 			System.out.println("Ошибка статуса склада");//on page
 		}
 		if (statRoute != null) {
-			route.setStatusRoute(statRoute);
+			if (Integer.parseInt(route.getStatusRoute().trim()) >= 1) {
+				//вставить обработчик
+			}else {
+				route.setStatusRoute(statRoute);
+			}
+			
 		}else {
 			System.out.println("Ошибка статуса тендера");//on page
 		}
@@ -1209,7 +1214,7 @@ public class MainController {
 		}		
 		route.setStatusRoute("0");
 		route.setStatusStock("0");
-		route.setComments("international");
+		route.setComments("international");	
 		route.setTemperature(target.getTemperature());
 		route.setTotalLoadPall(target.getTotalLoadPall());
 		route.setTotalCargoWeight(target.getTotalCargoWeight());

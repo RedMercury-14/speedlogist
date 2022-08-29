@@ -62,15 +62,14 @@ function onMessage(msg) {
 };
 var mincost = null;
 function onButton(row) {	
-	console.log("start " + mincost)
 	if (row != null) {
 		if (mincost == null) {
 			mincost = row.querySelector("#cost").innerHTML
-		} else if (mincost > row.querySelector("#cost").innerHTML) {
+		} else if (parseInt(mincost) > parseInt(row.querySelector("#cost").innerHTML)) {
 			mincost = row.querySelector("#cost").innerHTML
 		}
 		row.querySelector("input[type=button]").addEventListener("mousedown", event => {
-			if(event.target.className + " EUR">mincost){
+			if(parseInt(event.target.className) > parseInt(mincost)){
 					if(document.querySelector('#role').value == '[ROLE_ADMIN]' || document.querySelector('#role').value == '[ROLE_TOPMANAGER]' ){
 						alert("Выбрана не самая оптимальная цена");
 						confrom(event.target.id, event.target.className, idRoute)
@@ -87,11 +86,11 @@ function onButton(row) {
 			var routeItemI = routeItem[i];
 			if (mincost == null) {
 				mincost = routeItemI.querySelector("#cost").innerHTML
-			} else if (mincost > routeItemI.querySelector("#cost").innerHTML) {
+			} else if (parseInt(mincost) > parseInt(routeItemI.querySelector("#cost").innerHTML)) {
 				mincost = routeItemI.querySelector("#cost").innerHTML
 			}
 			routeItemI.querySelector("input[type=button]").addEventListener("mousedown", event => {
-				if(event.target.className + " EUR">mincost){
+				if(parseInt(event.target.className) > parseInt(mincost)){
 					if(document.querySelector('#role').value == '[ROLE_ADMIN]' || document.querySelector('#role').value == '[ROLE_TOPMANAGER]' ){
 						alert("Выбрана не самая оптимальная цена");
 						confrom(event.target.id, event.target.className, idRoute)

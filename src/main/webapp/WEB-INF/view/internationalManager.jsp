@@ -127,10 +127,7 @@
 							<td id="temperature">${route.temperature}</td>
 							<td>${route.totalLoadPall}</td>
 							<td>${route.totalCargoWeight}</td>							
-							<td id="cost"><c:forEach var="cost" items="${route.cost}">
-						${cost} руб;
-						</c:forEach></td>
-						
+							<td id="cost">${route.startPrice}</td>						
 							<td id="status"><c:choose>
 									<c:when test="${route.statusRoute == 1}">	
 										Маршрут на бирже. <div class="resp"><a href="${showOffer}">Просмотреть предложения</a>

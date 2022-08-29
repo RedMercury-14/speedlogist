@@ -15,6 +15,9 @@
 .raz::-webkit-inner-spin-button { 
   display: none;
 }
+.none { 
+  display: none;
+}
 </style>
 <title>Insert title here</title>
 <!-- Latest compiled and minified CSS -->
@@ -35,10 +38,11 @@
 </head>
 <body>
 <jsp:include page="header.jsp"/>
+<input type="hidden" value="<sec:authentication property="principal.username" />" id="login">
 <div class="container">
 <div class="row">
 <c:choose>
-<c:when test="${route.comments == 'international'}">
+<c:when test="${route.comments == 'international' && route.startPrice == null}">
 <div class="container"> <h3>Международный маршрут №${route.idRoute} ${route.routeDirection}</h3></div>
 <table  class="table table-bordered border-primary table-hover table-condensed">
 			<thead class="text-center">
@@ -65,7 +69,7 @@
 				</tr>
 				<c:set var="rate" value="${user.rate}"/>
 			</thead>
-					 <form:form method="get" action="./tenderOffer" >
+					 <form:form method="get" action="./tenderOffer">
 					 <input type="hidden" value="${route.idRoute}" name="id" />
 					<tr>
 						<td>${route.routeDirection}</td>
@@ -83,27 +87,108 @@
 							<c:otherwise>
 								<td><input type="number" name="cost" size="5" required="true" class="raz"> EUR</td>
 								<td>
-									<input type="submit" value="поддержать цену" name="agree" class= "agree">
+									<input type="submit" value="поддержать цену" name="agree" class= "agreeinternational">
 									<input type="hidden" value="0" name="price" size = "1"/>				
 								</td>
 							</c:otherwise>
 						</c:choose>
-						
-						
-						<tr><th>Номер точки</th><c:forEach var="point" items="${route.roteHasShop}">																
-				<td>${point.order}</td>                
-				</c:forEach></tr>
-							<tr><th>Вес</th><c:forEach var="point" items="${route.roteHasShop}">																
-				<td>${point.weight}</td>                
-				</c:forEach></tr>
-							<tr><th>Паллеты</th><c:forEach var="point" items="${route.roteHasShop}">																
-				<td>${point.pall}</td>                
-				</c:forEach></tr>
-							
-							<tr><th>Адрес</th><c:forEach var="point" items="${route.roteHasShop}">																
-				<td>${point.address}				
-				</td></c:forEach></tr>
+						</form:form>             			
+			</table><br>
+			<label><h3>Данные по точкам</h3></label>
+			<table  class="table table-bordered border-primary table-hover table-condensed">
+			<thead class="text-center">
+				<tr>
+					<th>Номер точки</th>
+					<th>Вес</th>
+					<th>Паллеты</th>
+					<th>Адрес</th>				
+				</tr>
+			</thead>
+			<form:form modelAttribute="route" method="post">
+					<c:forEach var="point" items="${route.roteHasShop}">
+					<tr>
+					<td>${point.position}</td> 
+					<td>${point.weight}</td> 
+					<td>${point.pall}</td>
+					<td>${point.address}</td>
+					</tr>
+					</c:forEach>				
+            </form:form>   			
+			</table>
+           			
+</c:when>
+<c:when test="${route.startPrice != null}">
+<div class="container"> <h3>Международный маршрут №${route.idRoute} ${route.routeDirection}</h3></div>
+<table  class="table table-bordered border-primary table-hover table-condensed">
+			<thead class="text-center">
+				<tr>
+					<th>Название маршрута</th>
+					<th>Дата загрузки</th>
+					<th>Время загрузки (планируемое)</th>
+					<th>Санобработка</th>
+					<th>Температура</th>
+					<th>Общее колличество паллет</th>
+					<th>Общий вес</th>					
+					<th>Последняя предложенная цена</th>
+					<th>Колличество участников биржи</th>
+					<th>
+					<c:choose>
+							<c:when test="${route.user != null}">
+							</c:when>
+						<c:otherwise>								
+								Предложение
+						</c:otherwise>
+						</c:choose>
+						</th>
+					
+				</tr>
+				<c:set var="rate" value="${user.rate}"/>
+			</thead>
+					 <form:form method="get" action="./tenderOffer">
+					 <input type="hidden" value="${route.idRoute}" name="id" />
+					<tr>
+						<td class="none">${route.startPrice}</td>
+						<td>${route.routeDirection}</td>
+						<td>${route.dateLoadPreviously}</td>
+						<td>${route.timeLoadPreviously}</td>
+						<td>${route.isSanitization}</td>
+						<td>${route.temperature}</td>
+						<td>${route.totalLoadPall}</td>
+						<td>${route.totalCargoWeight}</td>						
+						<td class="lastCost"></td>
+						<td class="numUsers"></td>
+						<td><input type="number" name="cost" size="5" required="true" class="raz"> EUR</td>
+						<td>
+						<c:choose>
+							<c:when test="${route.user != null}">
+							</c:when>
+							<c:otherwise>	
+								<input type="submit" value="предложить цену" class="agreeinternational">										
+							</c:otherwise>
+						</c:choose>					
+						</td>
            			</form:form>             			
+			</table><br>
+			<label><h3>Данные по точкам</h3></label>
+			<table  class="table table-bordered border-primary table-hover table-condensed">
+			<thead class="text-center">
+				<tr>
+					<th>Номер точки</th>
+					<th>Вес</th>
+					<th>Паллеты</th>
+					<th>Адрес</th>				
+				</tr>
+			</thead>
+			<form:form modelAttribute="route" method="post">
+					<c:forEach var="point" items="${route.roteHasShop}">
+					<tr>
+					<td>${point.position}</td> 
+					<td>${point.weight}</td> 
+					<td>${point.pall}</td>
+					<td>${point.address}</td>
+					</tr>
+					</c:forEach>				
+            </form:form>   			
 			</table>
 </c:when>
 <c:otherwise>
@@ -163,27 +248,34 @@
 							</c:otherwise>
 						</c:choose>					
 						</td>
-						
-						<tr><th>Номер точки</th><c:forEach var="point" items="${route.roteHasShop}">																
-				<td>${point.order}</td>                
-				</c:forEach></tr>
-							<tr><th>Вес</th><c:forEach var="point" items="${route.roteHasShop}">																
-				<td>${point.weight}</td>                
-				</c:forEach></tr>
-							<tr><th>Паллеты</th><c:forEach var="point" items="${route.roteHasShop}">																
-				<td>${point.pall}</td>                
-				</c:forEach></tr>
-							
-							<tr><th>Адрес</th><c:forEach var="point" items="${route.roteHasShop}">																
-				<td>${point.shop.address}				
-				</td></c:forEach></tr>
            			</form:form>             			
+			</table><br>
+			<label><h3>Данные по точкам</h3></label>
+			<table  class="table table-bordered border-primary table-hover table-condensed">
+			<thead class="text-center">
+				<tr>
+					<th>Номер точки</th>
+					<th>Вес</th>
+					<th>Паллеты</th>
+					<th>Адрес</th>				
+				</tr>
+			</thead>
+			<form:form modelAttribute="route" method="post">
+					<c:forEach var="point" items="${route.roteHasShop}">
+					<tr>
+					<td>${point.order}</td> 
+					<td>${point.weight}</td> 
+					<td>${point.pall}</td>
+					<td>${point.address}</td>
+					</tr>
+					</c:forEach>				
+            </form:form>   			
 			</table>
 </c:otherwise>
 </c:choose>
 <input type="button" onclick="history.back();" value="Назад"/>
 </div>
 </div>
-<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/tenderpage.js"></script>
+<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/tenderPage.js"></script>
 </body>
 </html>

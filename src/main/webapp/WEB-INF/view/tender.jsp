@@ -49,7 +49,7 @@
 					<th>Температура</th>
 					<th>Общее колличество паллет</th>
 					<th>Общий вес</th>					
-					<th>Стоимость перевозки</th>
+					<th>Предложенная цена за перевозку</th>
 					<th>Колличество точек выгрузок</th>
 					<c:set var="rate" value="${user.rate}"/>
 				</tr>
@@ -68,9 +68,18 @@
 						<td width="100"><div id="offer"></div></td>
 						<td>${route.temperature}</td>
 						<td>${route.totalLoadPall}</td>
-						<td>${route.totalCargoWeight}</td>						
-						<td>${route.cost[rate]}</td>
-						<td width="100">${route.numPoint}</td>	
+						<td>${route.totalCargoWeight}</td>
+						<c:choose>
+							<c:when test="${route.comments == 'international'}">
+								<td class="targetCost"></td>
+							</c:when>
+							<c:otherwise>
+								<td>${route.cost[rate]}</td>
+							</c:otherwise>
+						</c:choose>
+					
+						<td width="100">${route.numPoint}</td>
+							
 					</tr>
            			</form:form>        
 			</c:forEach>			

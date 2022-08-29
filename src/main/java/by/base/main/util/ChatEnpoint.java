@@ -63,6 +63,8 @@ public class ChatEnpoint {
 				String login = this.session.getUserPrincipal().getName();
 				message.setFromUser(login);
 				message.setCompanyName(userService.getUserByLogin(login).getCompanyName());
+			}else {
+				message.setCompanyName(userService.getUserByLogin(message.getFromUser()).getCompanyName());
 			}
 		}else {
 			message.setFromUser(this.session.getUserPrincipal().getName());

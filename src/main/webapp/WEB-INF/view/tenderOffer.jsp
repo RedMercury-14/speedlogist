@@ -33,6 +33,7 @@
 			id="sort">
 			
 		</table>
+	<form action="${pageContext.request.contextPath}/main/logistics/international" ><input type="submit" value="Назад"></form>
 	</div>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/tenderOffer.js"></script>
 	<script

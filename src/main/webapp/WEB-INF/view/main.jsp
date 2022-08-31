@@ -36,8 +36,8 @@
 <p>Доп инфа
 <br>
 <div class = "container">
-<a href="main/js"><h1>Tестовая страница</h1></a>
-<a href="main/chat"><h2>Чатик</h2></a>
+<!-- <a href="main/js"><h1>Tестовая страница</h1></a> -->
+<!-- <a href="main/chat"><h2>Чатик</h2></a> -->
 </div>
 	<div id="wrapper">
 	<c:out value="${param.message}" />			

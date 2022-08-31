@@ -70,6 +70,7 @@
 			
 		</div>
 		<textarea class="text"></textarea>
+		<input type="button" value="Отправить" id="send">
 	</div>
 </div>
 

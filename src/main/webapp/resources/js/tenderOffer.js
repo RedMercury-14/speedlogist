@@ -1,4 +1,4 @@
-let ws = new WebSocket("ws://localhost:8080/speedlogist/chat");
+let ws = new WebSocket("ws://192.168.123.39:8080/speedlogist/chat");
 ws.onmessage = (e) => this.onMessage(JSON.parse(e.data));
 let idRoute = document.querySelector('#idRoute').value;
 setTimeout(() => onButton(null), 500);
@@ -61,7 +61,7 @@ function onMessage(msg) {
 	onButton(row);
 };
 var mincost = null;
-function onButton(row) {	
+function onButton(row) {
 	if (row != null) {
 		if (mincost == null) {
 			mincost = row.querySelector("#cost").innerHTML
@@ -69,16 +69,20 @@ function onButton(row) {
 			mincost = row.querySelector("#cost").innerHTML
 		}
 		row.querySelector("input[type=button]").addEventListener("mousedown", event => {
-			if(parseInt(event.target.className) > parseInt(mincost)){
-					if(document.querySelector('#role').value == '[ROLE_ADMIN]' || document.querySelector('#role').value == '[ROLE_TOPMANAGER]' ){
-						alert("Выбрана не самая оптимальная цена");
+			if (parseInt(event.target.className) > parseInt(mincost)) {
+				if (document.querySelector('#role').value == '[ROLE_ADMIN]' || document.querySelector('#role').value == '[ROLE_TOPMANAGER]') {
+					if (confirm("Выбрана не самая оптимальная цена, Вы уверены?")) {
+						alert("Цена принета");
 						confrom(event.target.id, event.target.className, idRoute)
-					}else{
-						alert("Выбрана не самая оптимальная цена. Недостаточно прав для подтверждения");
+					} else {
+
 					}
-				}else{
-					confrom(event.target.id, event.target.className, idRoute)
+				} else {
+					alert("Выбрана не самая оптимальная цена. Недостаточно прав для подтверждения");
 				}
+			} else {
+				confrom(event.target.id, event.target.className, idRoute)
+			}
 		})
 	} else {
 		var routeItem = document.querySelectorAll('tr');
@@ -90,14 +94,18 @@ function onButton(row) {
 				mincost = routeItemI.querySelector("#cost").innerHTML
 			}
 			routeItemI.querySelector("input[type=button]").addEventListener("mousedown", event => {
-				if(parseInt(event.target.className) > parseInt(mincost)){
-					if(document.querySelector('#role').value == '[ROLE_ADMIN]' || document.querySelector('#role').value == '[ROLE_TOPMANAGER]' ){
-						alert("Выбрана не самая оптимальная цена");
-						confrom(event.target.id, event.target.className, idRoute)
-					}else{
+				if (parseInt(event.target.className) > parseInt(mincost)) {
+					if (document.querySelector('#role').value == '[ROLE_ADMIN]' || document.querySelector('#role').value == '[ROLE_TOPMANAGER]') {
+						if (confirm("Выбрана не самая оптимальная цена, Вы уверены?")) {
+							alert("Цена принята");
+							confrom(event.target.id, event.target.className, idRoute)
+						} else {
+
+						}
+					} else {
 						alert("Выбрана не самая оптимальная цена. Недостаточно прав для подтверждения");
 					}
-				}else{
+				} else {
 					confrom(event.target.id, event.target.className, idRoute)
 				}
 			})

@@ -102,7 +102,7 @@
 						<th>Дата загрузки</th>
 						<th>Время загрузки (планируемое)</th>
 						<th>Выставляемая стоимость</th>
-						<th>Температура</th>
+						<th>Перевозчик</th>
 						<th>Общее колличество паллет</th>
 						<th>Общий вес</th>						
 						<th>Начальные стоимости перевозки</th>
@@ -123,8 +123,8 @@
 							<td>${route.routeDirection}</td>
 							<td>${route.dateLoadPreviously}</td>
 							<td id="timeLoadPreviously">${route.timeLoadPreviously}</td>
-							<td>${route.finishPrice} EUR</td>
-							<td id="temperature">${route.temperature}</td>
+							<td>${route.finishPrice} руб</td>
+							<td>${route.user.companyName}</td>
 							<td>${route.totalLoadPall}</td>
 							<td>${route.totalCargoWeight}</td>							
 							<td id="cost">${route.startPrice}</td>						
@@ -149,6 +149,7 @@
 				<li id="l2">Отправить тендер</li>
 				<li id="l3">Показать точки выгрузок</li>
 				<li id="l4">Редактор маршрутов</li>
+				<li id="l5">Просмотреть данные по машине и водителю</li>
 			</ul>
 		</div>
 	</div>

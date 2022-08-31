@@ -2,7 +2,7 @@ contextMenu();
 onNumberMessage();
 var route;
 var num;
-let ws = new WebSocket("ws://localhost:8080/speedlogist/chat");
+let ws = new WebSocket("ws://192.168.123.39:8080/speedlogist/chat");
 ws.onmessage = (e) => this.onMessage(JSON.parse(e.data));
 
 
@@ -87,6 +87,9 @@ function contextMenu() {
 		}, false);
 		document.querySelector("#l4").addEventListener("click", () => {
 			alert("В доступе отказано");
+		}, false);
+		document.querySelector("#l5").addEventListener("click", () => {
+			alert("В разработке. Будет готово через неделю!");
 		}, false);
 	})();
 }

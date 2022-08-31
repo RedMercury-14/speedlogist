@@ -10,7 +10,6 @@ var ws;
 var name1;
 init()
 function init() {
-	console.log("hi");
 	startbox = document.querySelector(".start");
 	chatbox = document.querySelector(".chat");
 	nameInput = startbox.querySelector("input");
@@ -21,10 +20,9 @@ function init() {
 };
 
 
-console.log("hi2");
 startBtn.addEventListener("mousedown", () => {
 	var name = nameInput.value;
-	ws = new WebSocket("ws://localhost:8080/speedlogist/chat");
+	ws = new WebSocket("ws://192.168.123.39:8080/speedlogist/chat");
 	ws.onopen = () => this.onOpenSock();
 	ws.onmessage = (e) => this.onMessage(JSON.parse(e.data));
 	ws.onclose = (e) => this.onClose();		
@@ -38,7 +36,10 @@ textArea.addEventListener("keyup", (e)=>{
 		send();
 	}
 }) // метод обработки нажатия CTRL+ENTER!
-
+document.querySelector('#send').addEventListener("mousedown", (e) =>{
+	e.preventDefault();
+		send();
+})
 function send(){
 	sendMessage({
 		fromUser : this.name.value,

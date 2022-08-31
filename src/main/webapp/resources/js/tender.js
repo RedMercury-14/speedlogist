@@ -1,4 +1,4 @@
-let ws = new WebSocket("ws://localhost:8080/speedlogist/chat");
+let ws = new WebSocket("ws://192.168.123.39:8080/speedlogist/chat");
 ws.onmessage = (e) => this.onMessage(JSON.parse(e.data));
 $.getJSON('../../api/info/message/routes/from_me', function(data) {
 	$.each(data, function(key, val) {
@@ -31,10 +31,16 @@ function process(routeItemI, idRoute) {
 		response.json().then(function(text) {
 			if (text.length != 0) {
 				routeItemI.querySelector('.targetCost').innerHTML = text[text.length - 1].text;
-			}else{
+			} else {
 				$.getJSON(`../../api/route/${idRoute}`, function(data) {
 					routeItemI.querySelector('.targetCost').innerHTML = data.startPrice;
 				});
+			}
+			var target = routeItemI;
+			if (routeItemI.querySelector('#offer').innerHTML == '') {				
+				target.classList.add("");
+			} else if (routeItemI.querySelector('#offer').innerHTML != routeItemI.querySelector('.targetCost').innerHTML) {
+				target.classList.add("attentionRow");
 			}
 		});
 	});

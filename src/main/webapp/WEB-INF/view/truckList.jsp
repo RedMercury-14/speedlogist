@@ -30,8 +30,8 @@
 <div class="container">
 		<div class="row">	
 		<c:choose>
-		<c:when test="${authenticated == false && check == null || check == 'step3' }">
-		<h1>Текущий автопарк</h1>
+		<c:when test="${authenticated == false && check == null || check == 'step3' || check != 'international'}">
+		<h1>Текущий автопарк ${user.check}</h1>
 			<table  class="table">
 				<tr>
 					<th>Госномер тягача</th>
@@ -146,10 +146,15 @@
 						</td>
 					</tr>
 				</c:forEach>
-			</table>			
-			<form:form action="trucklist" method="post">
-			<input type="submit" value="Подтвердить автопарк">
-			</form:form>					
+			</table>	
+			<c:choose>
+			<c:when test="${check != 'international'}">
+				<form:form action="trucklist" method="post">
+					<input type="submit" value="Подтвердить автопарк">
+				</form:form>
+			</c:when>
+			</c:choose>		
+								
 		</c:otherwise>
 		</c:choose>							
 		</div>

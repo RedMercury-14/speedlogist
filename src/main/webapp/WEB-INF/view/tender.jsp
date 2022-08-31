@@ -15,6 +15,9 @@
 	.activRow{
 		background: #c4ffe1db;
 	}
+	.attentionRow{
+		background: #dce37266;
+}
 </style>
 <title>Insert title here</title>
 <!-- Latest compiled and minified CSS -->
@@ -36,7 +39,7 @@
 <body>
 <jsp:include page="header.jsp"/>
 
-<div class="container-fluid">
+<div class="container">
 <div class="table-responsive">
 <h1>Текущие заказы</h1>
 <table  class="table table-bordered border-primary table-hover table-condensed">
@@ -45,12 +48,13 @@
 					<th>Название маршрута</th>
 					<th>Дата загрузки</th>
 					<th>Время загрузки (планируемое)</th>
-					<th>Ваше предложение</th>
-					<th>Температура</th>
 					<th>Общее колличество паллет</th>
-					<th>Общий вес</th>					
+					<th>Общий вес</th>
+					<th>Температура</th>
 					<th>Предложенная цена за перевозку</th>
-					<th>Колличество точек выгрузок</th>
+					<th>Ваше предложение</th>
+					
+								
 					<c:set var="rate" value="${user.rate}"/>
 				</tr>
 			</thead>
@@ -65,21 +69,23 @@
 						<td> <a href="${showTenderPage}">${route.routeDirection}</a></td>
 						<td width="100">${route.dateLoadPreviously}</td>
 						<td width="50">${route.timeLoadPreviously}</td>
-						<td width="100"><div id="offer"></div></td>
-						<td>${route.temperature}</td>
 						<td>${route.totalLoadPall}</td>
 						<td>${route.totalCargoWeight}</td>
+						<td>${route.temperature}</td>
 						<c:choose>
-							<c:when test="${route.comments == 'international'}">
+							<c:when test="${route.comments == 'international' && route.startPrice != null}">
 								<td class="targetCost"></td>
+							</c:when>
+							<c:when test="${route.comments == 'international' && route.startPrice == null}">
+								<td>Ваше предложение</td>
 							</c:when>
 							<c:otherwise>
 								<td>${route.cost[rate]}</td>
 							</c:otherwise>
 						</c:choose>
-					
-						<td width="100">${route.numPoint}</td>
-							
+						<td width="100"><div id="offer"></div></td>
+						
+												
 					</tr>
            			</form:form>        
 			</c:forEach>			

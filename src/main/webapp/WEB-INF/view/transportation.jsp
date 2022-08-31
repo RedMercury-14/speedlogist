@@ -93,7 +93,7 @@
 						<td>${route.temperature}</td>
 						<td>${route.totalLoadPall}</td>
 						<td>${route.totalCargoWeight}</td>						
-						<td>${route.startPrice} руб</td>
+						<td>${route.finishPrice} руб</td>
 						<td>${route.numPoint}</td>	
 						<td><input type="submit" value="Обновить" name="update"></td>
 					</tr>

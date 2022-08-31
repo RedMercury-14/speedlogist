@@ -674,7 +674,12 @@ public class MainController {
 	}
 	@GetMapping("/main/carrier/controlpark/trucklist")
 	public String truckListGet(Model model, HttpServletRequest request, HttpSession session) {
-		if (session.getAttribute("check") == null || userService.getUserByLogin(SecurityContextHolder.getContext().getAuthentication().getName()).getCheck() == null) {
+		if(session.getAttribute("check") == null && userService.getUserByLogin(SecurityContextHolder.getContext().getAuthentication().getName()).getCheck().equals("international")){
+			List<Truck> trucks = truckService.getTruckListByUser();
+			model.addAttribute("trucks", trucks);
+			request.setAttribute("check", "international");
+			return "truckList";
+		}else if (session.getAttribute("check") == null || userService.getUserByLogin(SecurityContextHolder.getContext().getAuthentication().getName()).getCheck() == null) {
 			List<Truck> trucks = truckService.getTruckListByUser();
 			model.addAttribute("trucks", trucks);
 			return "truckList";	
@@ -1154,7 +1159,7 @@ public class MainController {
 				getTimeNow(request);
 				getTimeNowPlusDay(request);
 				dateStart = Date.valueOf(LocalDate.now());
-				dateFinish = Date.valueOf(LocalDate.now().plusDays(1));
+				dateFinish = Date.valueOf(LocalDate.now().plusDays(5));
 				session.setAttribute("dateStart", dateStart);
 				session.setAttribute("dateFinish", dateFinish);
 			}			

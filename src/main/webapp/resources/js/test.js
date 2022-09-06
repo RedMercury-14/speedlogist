@@ -80,7 +80,7 @@ document.querySelector("#dateStart").onchange = function() {
 function contextMenu() {
 	(function() {
 		var routeItem = document.querySelectorAll('tr');
-		for (i = 0; i < routeItem.length; i++) {
+		for (let i = 0; i < routeItem.length; i++) {
 			var routeItemI = routeItem[i];
 			contextMenuListner(routeItemI);
 		}

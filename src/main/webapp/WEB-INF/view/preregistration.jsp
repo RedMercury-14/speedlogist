@@ -36,6 +36,6 @@
 
 
 <c:out value="${errorMessage}" />
-<script	src="${pageContext.request.contextPath}/resources/js/preregistration.js"></script>
+<script	src="${pageContext.request.contextPath}/resources/js/preregistration.js" type="module"></script>
 </body>
 </html>

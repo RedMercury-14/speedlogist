@@ -93,6 +93,6 @@
 			<form:form action="${pageContext.request.contextPath}/main/carrier" ><input type="submit" value="Назад"></form:form>
 </div>
 </div>
-<script	src="${pageContext.request.contextPath}/resources/js/tender.js"></script>
+<script	src="${pageContext.request.contextPath}/resources/js/tender.js" type="module"></script>
 </body>
 </html>

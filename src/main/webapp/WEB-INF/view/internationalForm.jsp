@@ -34,6 +34,6 @@
 			<input id="button" type="button" value="Добавить точку выгрузки"> <input id="button2" type="button" value="Добавить точку загрузки"> <input id="next" type="button" value="Создать маршрут">
 			</div>
 </div>
-<script	src="${pageContext.request.contextPath}/resources/js/internationalForm.js"></script>
+<script	src="${pageContext.request.contextPath}/resources/js/internationalForm.js" type="module"></script>
 </body>
 </html>

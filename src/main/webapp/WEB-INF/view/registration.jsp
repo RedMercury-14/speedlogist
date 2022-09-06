@@ -83,7 +83,7 @@
 						<td><input type="submit" value="Зарегистрироваться" class="save" id="send" /></td>		
 		</form:form>
 		
-		<script charset="utf-8" src="${pageContext.request.contextPath}/resources/js/registration.js"></script>
+		<script charset="utf-8" src="${pageContext.request.contextPath}/resources/js/registration.js" type="module"></script>
 		
 </div>
 </body>

@@ -1,14 +1,14 @@
-let ws = new WebSocket("ws://192.168.123.39:8080/speedlogist/chat");
-ws.onmessage = (e) => this.onMessage(JSON.parse(e.data));
+import {ws} from './global.js';
+ws.onmessage = (e) => onMessage(JSON.parse(e.data));
 $.getJSON('../../api/info/message/routes/from_me', function(data) {
 	$.each(data, function(key, val) {
 		var rowItem = document.querySelectorAll('tr');
-		for (i = 1; i < rowItem.length; i++) {
+		for (let i = 1; i < rowItem.length; i++) {
 			var rowItemI = rowItem[i];
 			var target = rowItemI.querySelector('.none').innerHTML;
 			if (target == val.idRoute) {
 				rowItemI.classList.add("activRow");
-				rowItemI.querySelector('#offer').innerHTML = val.text;
+				rowItemI.querySelector('#offer').innerHTML = val.text + " BYN";
 			}
 		}
 	})
@@ -19,7 +19,7 @@ function onMessage(msg) {
 changeCost()
 function changeCost() {
 	var routeItem = document.querySelectorAll('tr');
-	for (i = 1; i < routeItem.length; i++) {
+	for (let i = 1; i < routeItem.length; i++) {
 		var routeItemI = routeItem[i];
 		var idRoute = routeItemI.querySelector('.none').innerHTML;
 		process(routeItemI, idRoute);

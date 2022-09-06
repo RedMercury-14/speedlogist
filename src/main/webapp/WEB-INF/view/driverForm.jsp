@@ -28,9 +28,43 @@
 <body>
 <jsp:include page="header.jsp"/>
 <div class="container">
-		<div class="row">
-		<h1>Редaктирование водителя</h1>
-		</div>		
+<c:choose>
+		<c:when test="${check == 'international'}">
+		<h1>Добавить водителя</h1>				
+		<form:form modelAttribute="user" method="POST" action="./save">
+		<input type="hidden" value="${user.idUser}" name="id"/>
+			<div class="form-group">
+				<label>Введите имя:</label>
+				<form:input  path="name" class="form-control" required="true" />
+			</div>
+			<div class="form-group">
+				<label>Введите фамилию:</label>
+				<form:input path="surname" class="form-control" required="true"/>				
+			</div>
+			<div class="form-group">
+				<label>Введите отчество:</label>
+				<form:input path="patronymic" class="form-control" required="true"/>				
+			</div>
+			<div class="form-group">
+				<label>Введите данные паспорта:</label>
+				<form:textarea path="numPass" class="form-control" required="true" placeholder="Номер паспорта; личный номер; срок действия; когда и кем выдан"/>
+			</div>
+									
+			<div class="form-group">
+				<label>Введите номер мобильного телефона:</label>
+				<form:input path="telephone" class="form-control" required="true"/>
+			</div>
+			<div class="form-group">
+			<c:out value="${errorMessage}" />
+			</div>
+			<br>
+						<td><input type="submit" value="Сохранить" class="save" /></td>
+		
+		</form:form>
+		</c:when>
+		
+		<c:otherwise>
+		<h1>Редaктирование водителя</h1>				
 		<form:form modelAttribute="user" method="POST" action="./save">
 		<input type="hidden" value="${user.idUser}" name="id"/>
 			<div class="form-group">
@@ -81,6 +115,8 @@
 						<td><input type="submit" value="Сохранить" class="save" /></td>
 		
 		</form:form>
+		</c:otherwise>
+</c:choose>
 </div>
 
 </body>

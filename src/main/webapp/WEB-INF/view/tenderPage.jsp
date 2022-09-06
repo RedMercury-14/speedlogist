@@ -82,10 +82,10 @@
 						<c:choose><c:when test="${route.startPrice != null}"><td>${route.startPrice}</td></c:when></c:choose>
 						<c:choose>
 							<c:when test="${flag}">
-								<td>Ваше предложение ${userCost} руб</td>
+								<td>Ваше предложение ${userCost} BYN</td>
 							</c:when>
 							<c:otherwise>
-								<td><input type="number" name="cost" size="5" required="true" class="raz"> руб</td>
+								<td><input type="number" name="cost" size="5" required="true" class="raz"> BYN</td>
 								<td>
 									<input type="submit" value="поддержать цену" name="agree" class= "agreeinternational">
 									<input type="hidden" value="0" name="price" size = "1"/>				
@@ -160,7 +160,7 @@
 						<td>${route.totalCargoWeight}</td>						
 						<td class="lastCost"></td>
 						<td class="numUsers"></td>
-						<td><input type="number" name="cost" size="5" required="true" class="raz"> руб</td>
+						<td><input type="number" name="cost" size="5" required="true" class="raz"> BYN</td>
 						<td>
 						<c:choose>
 							<c:when test="${route.user != null}">
@@ -253,20 +253,21 @@
 			<label><h3>Статусы маршрута</h3></label></div>
 			<table class="table table-bordered border-primary table-hover table-condensed">
 				<thead class="text-center">
+<!-- 				внимание на disposition.js -->
 				<tr>
-					<th><input type="button" value="Подача машины"></th>
-					<th><input type="button" value="На месте зазгрузки"></th>
-					<th><input type="button" value="Начали загружать"></th>
-					<th><input type="button" value="Загружена"></th>
-					<th><input type="button" value="На таможне отправления"></th>
-					<th><input type="button" value="Затаможена"></th>
+					<th><input type="button" value="Подача машины" name="Подача_машины"></th>
+					<th><input type="button" value="На месте зазгрузки" name="На_месте_зазгрузки"></th>
+					<th><input type="button" value="Начали загружать" name="Начали_загружать"></th>
+					<th><input type="button" value="Загружена" name="Загружена"></th>
+					<th><input type="button" value="На таможне отправления" name="На_таможне_отправления"></th>
+					<th><input type="button" value="Затаможена" name="Затаможена"></th>
 				</tr>
 				<tr>
-					<th><input type="button" value="В пути"></th>
-					<th><input type="button" value="Проходит границу"></th>
-					<th><input type="button" value="На таможне назначения"></th>
-					<th><input type="button" value="Растаможена"></th>					
-					<th><input type="button" value="На выгрузке"></th>				
+					<th><input type="button" value="В пути" name="В_пути"></th>
+					<th><input type="button" value="Проходит границу" name="Проходит_границу"></th>
+					<th><input type="button" value="На таможне назначения" name="На_таможне_назначения"></th>
+					<th><input type="button" value="Растаможена" name="Растаможена"></th>					
+					<th><input type="button" value="На выгрузке" name="На_выгрузке"></th>				
 				</tr>
 			</thead>
 			</table>
@@ -360,6 +361,6 @@
 </c:otherwise>
 </c:choose>
 <div class="container"><input type="button" onclick="history.back();" value="Назад"/></div>
-<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/tenderPage.js"></script>
+<script type="module" src="${pageContext.request.contextPath}/resources/js/tenderPage.js"></script>
 </body>
 </html>

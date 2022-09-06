@@ -1,8 +1,10 @@
 package by.base.main.controller.ajax;
 
 import java.sql.Date;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,6 +38,7 @@ import by.base.main.service.RatesService;
 import by.base.main.service.RouteService;
 import by.base.main.service.UserService;
 import by.base.main.util.ChatEnpoint;
+import by.base.main.util.MainChat;
 
 @RestController
 @RequestMapping("api")
@@ -43,10 +46,10 @@ public class MainRestController {
 	
 	private Route route;
 	
-	Gson gson = new Gson();
+	private Gson gson = new Gson();
 
 	@Autowired
-	RouteService routeService;
+	private RouteService routeService;
 
 	@Autowired
 	private RatesService ratesService;
@@ -59,6 +62,9 @@ public class MainRestController {
 	
 	@Autowired
 	private MessageService messageService;
+	
+	@Autowired
+	private MainChat mainChat;
 	
 
 	public Route getRoute() {
@@ -168,6 +174,15 @@ public class MainRestController {
 		return routeService.getRouteListAsDate(targetDateStart, targetDateFinish);
 	}
 	
+	@GetMapping("/route/disposition")
+	public List<Route> getListRouteInternationalDispo() {
+		List<Route> routes = new ArrayList<Route>();
+		routeService.getRouteListAsStatus("4", "4").stream()
+			.filter(r-> r.getComments().equals("international"))
+			.forEach(r-> routes.add(r));
+		return routes;
+	}
+	
 	@GetMapping ("/user")
 	public List<User> homePage() {
 		return userService.getUserList();		
@@ -200,6 +215,15 @@ public class MainRestController {
 	public String time() {
 		return LocalDateTime.now().toString();		
 	}
+	
+	@GetMapping("/message/disposition/{idRoute}")
+	public List<Message> getListMEssageInternationalDispo(@PathVariable String idRoute) {
+		List<Message> messages = new ArrayList<Message>();
+		messageService.getListMessageByIdRoute(idRoute).stream()
+			.filter(m-> m.getToUser() != null && m.getToUser().equals("disposition")).forEach(m-> messages.add(m));
+		return messages;
+	}
+	
 	//переписать с использованием gson!
 	@PostMapping("/route/addpoints")
 	public JSONObject postRoadPoints(@RequestBody String str) throws ParseException {
@@ -283,7 +307,45 @@ public class MainRestController {
 			.filter(mes->mes.getIdRoute().equals(idRoute+"")).forEach(mes-> messagesList.add(mes.getCompanyName()));		
 		return messagesList.size()+"";		
 	}
+	
+	@GetMapping("/mainchat/messages") // отдаёт число сообщений
+	public String getNumMessage() {		
+		return mainChat.messegeList.size()+"";		
+	}
+	
+	@GetMapping("/mainchat/messagesList") // отдаёт лист сообщений из mainChat
+	public List<Message> getNumMessageList() {		
+		return mainChat.messegeList;		
+	}
 
+	@PostMapping("/mainchat/massage/add")// сохраняет сообщение в бд, если есть сообщение, то не сохзраняет
+	public JSONObject postSaveDBMessage(@RequestBody String str) throws ParseException {
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d-MM-yyyy; HH:mm:ss");		
+		Message message = gson.fromJson(str, Message.class);
+		mainChat.messegeList.remove(message);
+		message.setStatus(LocalDateTime.now().format(formatter));
+		messageService.singleSaveMessage(message);
+		HashMap<String, String> map = new HashMap<String, String>();
+		map.put("message", "УСПЕХ");
+		return new JSONObject(map);
+	}
+	
+	@GetMapping("/mainchat/massages/getfromdb") // отдаёт сообщения к системе за последние 5 дней
+	public List<Message> getDBMessage() throws ParseException {		
+		List<Message> result = new ArrayList<Message>();
+		DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("d-MM-yyyy");
+		String now = LocalDate.now().format(dateFormatter);
+		messageService.getListMessageByToUser("system").stream()
+			.filter(mes-> mes.getDatetime().split(";")[0].equals(now) ||
+					mes.getDatetime().split(";")[0].equals(LocalDate.now().minusDays(1).format(dateFormatter)) ||
+					mes.getDatetime().split(";")[0].equals(LocalDate.now().minusDays(2).format(dateFormatter)) ||
+					mes.getDatetime().split(";")[0].equals(LocalDate.now().minusDays(3).format(dateFormatter)) ||
+					mes.getDatetime().split(";")[0].equals(LocalDate.now().minusDays(4).format(dateFormatter)) ||
+					mes.getDatetime().split(";")[0].equals(LocalDate.now().minusDays(5).format(dateFormatter))).
+				forEach(mes->result.add(mes));
+		return result;
+	}
+	
 	private Route addCostForRoute(Route route) {
 		Set<RouteHasShop> routeHasShops = new HashSet<RouteHasShop>();
 		for (RouteHasShop routeHasShop : route.getRoteHasShop()) {

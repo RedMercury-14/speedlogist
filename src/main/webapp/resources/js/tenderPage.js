@@ -1,29 +1,30 @@
 var idRoute = document.querySelector('input[name=id]').value;
 changeCost();
-let ws = new WebSocket("ws://192.168.123.39:8080/speedlogist/chat");
-ws.onopen = () => this.onOpenSock();
-ws.onmessage = (e) => this.onMessage(JSON.parse(e.data));
-ws.onclose = (e) => this.onClose();
-function send() {
+import {ws} from './global.js';
+ws.onopen = () => onOpenSock();
+ws.onmessage = (e) => onMessage(JSON.parse(e.data));
+ws.onclose = (e) => onClose();
+function sendCost() {
 	sendMessage({
-		fromUser: document.querySelector('input[id=login]').value, 
+		fromUser: document.querySelector('input[id=login]').value,
 		text: document.querySelector('input[name=cost]').value,
 		idRoute: idRoute,
 		status: "1"
 	})
 };
-document.querySelector('.agreeinternational').addEventListener("mousedown", (event) => {
-	console.log(document.querySelector('input[name=cost]').value);
-	if (document.querySelector('.none') != null) {
-		if(parseInt(document.querySelector('.lastCost').innerHTML)>parseInt(document.querySelector('input[name=cost]').value)){
-			send();
-		}else{
-			alert('Недопустимое цена! Ваша цена должна быть меньше последней предложенной');
+try {
+	document.querySelector('.agreeinternational').addEventListener("mousedown", (event) => {
+		if (document.querySelector('.none') != null) {
+			if (parseInt(document.querySelector('.lastCost').innerHTML) > parseInt(document.querySelector('input[name=cost]').value)) {
+				sendCost();
+			} else {
+				alert('Недопустимое цена! Ваша цена должна быть меньше последней предложенной');
+			}
+		} else {
+			sendCost();
 		}
-	} else {
-		send();
-	}
-})
+	})
+} catch (e) { };
 
 function onOpenSock() {
 };
@@ -33,7 +34,7 @@ function onMessage(msg) {
 };
 
 function onClose() {
-console.log('stop!')
+	console.log('stop!')
 };
 
 function sendMessage(message) {
@@ -43,7 +44,10 @@ function changeCost() {
 	$.getJSON(`../../../api/info/message/routes/${idRoute}`, function(data) {
 		if (data.length == 0) {
 			$.getJSON(`../../../api/route/${idRoute}`, function(data) {
-				document.querySelector('.lastCost').innerHTML = data.startPrice;
+				try {
+					document.querySelector('.lastCost').innerHTML = data.startPrice;
+				} catch (e) { }
+
 			});
 		} else {
 
@@ -59,10 +63,30 @@ function changeCost() {
 		}
 
 	});
-		fetch(`../../../api/info/message/participants/${idRoute}`).then(function(response) {
+	fetch(`../../../api/info/message/participants/${idRoute}`).then(function(response) {
 		response.text().then(function(text) {
-			document.querySelector('.numUsers').innerText = text;			
+			try {
+				document.querySelector('.numUsers').innerText = text;
+			} catch (e) { };
 		});
 	});
-	
+}
+function sendStatus(text) {
+	sendMessage({
+		fromUser: document.querySelector('input[id=login]').value,
+		toUser: 'disposition',
+		text: text,
+		idRoute: idRoute,
+		status: "1"
+	})
+};
+
+var buttons = document.querySelectorAll('input[type=button]')
+for (let j = 0; j < buttons.length; j++) {
+	let button = buttons[j];
+	button.addEventListener("mousedown", (event) => {
+		if (event.target.value != 'Назад') {
+			sendStatus(event.target.name);
+		}
+	})
 }

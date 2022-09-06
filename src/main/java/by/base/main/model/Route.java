@@ -438,8 +438,16 @@ public class Route implements Serializable{
 
 	@Override
 	public String toString() {
-		return "Route [idRoute=" + idRoute + ", roteHasShop=" + roteHasShop + "]";
+		return "Route [idRoute=" + idRoute + ", dateLoadPreviously=" + dateLoadPreviously + ", timeLoadPreviously="
+				+ timeLoadPreviously + ", timeLoadPreviouslyStock=" + timeLoadPreviouslyStock + ", actualTimeArrival="
+				+ actualTimeArrival + ", temperature=" + temperature + ", totalLoadPall=" + totalLoadPall
+				+ ", totalCargoWeight=" + totalCargoWeight + ", comments=" + comments + ", routeDirection="
+				+ routeDirection + ", startPrice=" + startPrice + ", finishPrice=" + finishPrice + ", time=" + time
+				+ ", statusRoute=" + statusRoute + ", statusStock=" + statusStock + ", typeTrailer=" + typeTrailer
+				+ "]";
 	}
+
+	
 
 
 	

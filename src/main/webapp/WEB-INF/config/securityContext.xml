@@ -16,7 +16,8 @@
 			<security:logout logout-url="/logout" logout-success-url="/main/signin?logout=true" />			
 			<security:intercept-url pattern="/main/signin"	access="hasRole('ROLE_ANONYMOUS')" />
 			<security:intercept-url pattern="/main/registration" access="hasAnyRole('ROLE_ANONYMOUS', 'ROLE_ADMIN')" />	
-			<security:intercept-url pattern="/main" access="hasAnyRole('ROLE_ANONYMOUS', 'ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_SHOP', 'ROLE_CARRIER', 'ROLE_STOCK')" />						
+			<security:intercept-url pattern="/main" access="hasAnyRole('ROLE_ANONYMOUS', 'ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_SHOP', 'ROLE_CARRIER', 'ROLE_STOCK')" />	
+			<security:intercept-url pattern="/main/message" access="!isAnonymous()" />					
 			<security:intercept-url pattern="/main/who"	access="!isAnonymous()" />			
 			<security:intercept-url pattern="/main/admin/**" access="hasRole('ROLE_ADMIN')" />
 			<security:intercept-url	pattern="/main/logistics/**" access="hasAnyRole('ROLE_MANAGER', 'ROLE_ADMIN')" />

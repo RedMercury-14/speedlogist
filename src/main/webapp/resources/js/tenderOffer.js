@@ -1,5 +1,5 @@
-let ws = new WebSocket("ws://192.168.123.39:8080/speedlogist/chat");
-ws.onmessage = (e) => this.onMessage(JSON.parse(e.data));
+import { ws } from './global.js';
+ws.onmessage = (e) => onMessage(JSON.parse(e.data));
 let idRoute = document.querySelector('#idRoute').value;
 setTimeout(() => onButton(null), 500);
 $.getJSON(`../../../api/info/message/routes/${idRoute}`, function(data) {
@@ -86,7 +86,7 @@ function onButton(row) {
 		})
 	} else {
 		var routeItem = document.querySelectorAll('tr');
-		for (i = 0; i < routeItem.length; i++) {
+		for (let i = 0; i < routeItem.length; i++) {
 			var routeItemI = routeItem[i];
 			if (mincost == null) {
 				mincost = routeItemI.querySelector("#cost").innerHTML
@@ -133,7 +133,8 @@ function history() {
 		let Trow = document.createElement("tr");
 		Trow.innerHTML = 'История предложений';
 		document.querySelector("#sort").appendChild(Trow);
-		$.each(data, function(key, val) {
+		let target = getMessage(data);
+		target.forEach(function(val) {
 			let row = document.createElement("tr");
 			let td1 = document.createElement("td");
 			td1.innerText = "Предложение от: " + val.companyName;
@@ -150,6 +151,15 @@ function history() {
 			row.appendChild(td2);
 			row.appendChild(td3);
 			document.querySelector("#sort").appendChild(row);
-		})
-	});
+		});
+	})
+	}
+function getMessage(data) {
+	let target = new Set();
+	data.forEach(function(item) {
+		if (item.toUser == null) {
+			target.add(item);
+		}
+	})
+	return target;
 }

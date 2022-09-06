@@ -1,4 +1,5 @@
-	var token = $("meta[name='_csrf']").attr("content");
+var token = $("meta[name='_csrf']").attr("content");
+import { ws } from './global.js';
 
 //	$('#login').change(function() {
 //		var str = document.querySelector('input[name=login]').value;
@@ -18,18 +19,37 @@
 //			}
 //		})
 //	});
-	
-		
-		
-		$('#routeDirection').change(function(){
-			document.querySelector('#message').innerHTML = '';
-			var target = document.querySelector('#routeDirection').value;
-			$.getJSON('../../../api/simpleroute', function(data) {
-			$.each(data, function(key, val) {
-				if(val.routeDirection == target){
-					document.querySelector('#message').innerHTML = 'Маршрут с данным названием уже соществует!';
-				};
-				
-			})
+
+
+
+$('#routeDirection').change(function() {
+	document.querySelector('#message').innerHTML = '';
+	var target = document.querySelector('#routeDirection').value;
+	$.getJSON('../../../api/simpleroute', function(data) {
+		$.each(data, function(key, val) {
+			if (val.routeDirection == target) {
+				document.querySelector('#message').innerHTML = 'Маршрут с данным названием уже соществует!';
+			};
+
 		})
-		})
+	})
+})
+
+function sendMessage(message) {
+	ws.send(JSON.stringify(message));
+}
+
+function sendStatus(text) {
+	sendMessage({
+		fromUser: document.querySelector('input[id=login]').value,
+		toUser: 'disposition',
+		text: text,
+		idRoute: document.querySelector('input[id=idRoute]').value,
+		status: "1"
+	})
+};
+
+document.querySelector('input[name=На_выгрузке]').addEventListener('mousedown', (event) => {
+	sendStatus(event.target.name);
+
+})

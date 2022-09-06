@@ -1,47 +1,101 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
-    pageEncoding="UTF-8"%>
-    <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
-	<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form"%>
-	<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec" %>
-	<%@ taglib uri="http://www.springframework.org/tags" prefix="spring"%>
+	pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form"%>
+<%@ taglib uri="http://www.springframework.org/security/tags"
+	prefix="sec"%>
+<%@ taglib uri="http://www.springframework.org/tags" prefix="spring"%>
 <!DOCTYPE html>
 <html>
 <head>
-<style type="text/css">
-	.chat{
-		display: none;
-	}
-	.messsages{
-		background-color: #65baf1;
-		width: 500px;
-		padding: 20px;		
-	}
-	.messsages .message{
-		background-color: #fff;
-		border-radius: 10px;
-		margin-bottom: 10px;
-		overflow: hidden;
-	}
-	.messsages .message .fromUser{
-		background-color: #396;
-		line-height: 30px;
-		text-align: center;
-		color: white;
-	}
-	.messsages .message .text{
-		padding: 10px;
-		
-	}
-	textarea.text {
-		width: 500px;
-		padding: 10px;
-		resize: none;
-		border: none;
-		box-shadow: 2px 2px 5px 0 inset;
-		
-	}	
-</style>
 <meta charset="UTF-8">
+<meta name="${_csrf.parameterName}" content="${_csrf.token}" />
+<style type="text/css">
+.container-message {
+	border: 2px solid #dedede;
+	background-color: #f1f1f1;
+	border-radius: 5px;
+	padding: 10px;
+	margin: 10px 0;
+}
+
+.darker {
+	border-color: #ccc;
+	background-color: #ddd;
+}
+
+.container-message::after {
+	content: "";
+	clear: both;
+	display: table;
+}
+
+.container-message img {
+	float: left;
+	max-width: 60px;
+	width: 100%;
+	margin-right: 20px;
+	border-radius: 50%;
+}
+
+.container-message img.right {
+	float: right;
+	margin-left: 20px;
+	margin-right: 0;
+}
+
+.time-right {
+	float: right;
+	color: #aaa;
+}
+
+.time-left {
+	float: left;
+	color: #999;
+}
+
+.right {
+	float: right;
+}
+/* аккордеон */
+.accordion {
+	background-color: #ff000063;
+	color: #444;
+	cursor: pointer;
+	padding: 18px;
+	width: 100%;
+	border: none;
+	text-align: left;
+	outline: none;
+	font-size: 15px;
+	transition: 0.4s;
+}
+
+.accordion_old {
+	background-color: #eee;
+	color: #444;
+	cursor: pointer;
+	padding: 18px;
+	width: 100%;
+	border: none;
+	text-align: left;
+	outline: none;
+	font-size: 15px;
+	transition: 0.4s;
+}
+
+.active, .accordion:hover {
+	background-color: #ccc;
+}
+
+.panel {
+	padding: 0 18px;
+	display: none;
+	background-color: white;
+	overflow: hidden;
+	border: #0000004a;
+}
+</style>
 <title>Чат</title>
 <link rel="stylesheet"
 	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
@@ -57,23 +111,22 @@
 <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.3"></script>
 </head>
 <body>
-<h2>Типо чат</h2>
-<!--  <div id="app"></div>-->
-<div class="container">
-	<div class="start">
-		<input type="text" class="userName" placeholder="введите имя...">
-		<button id="start" class="btn">Start</button>
+	<jsp:include page="header.jsp" />
+	<sec:authorize access="isAuthenticated()">
+		<strong><sec:authentication property="principal.authorities"
+				var="roles" /></strong>
+	</sec:authorize>
+	<input type="hidden" value="${roles}" id="role">
+	<h2 class="container">Входящие сообщения</h2>
+	<div class="container">
+	<div class="right">
+		<input type="button" onclick="history.back();" value="Назад" />
+	</div>
 	</div>
 	<br>
-	<div class="chat">
-		<div class="messages">
-			
-		</div>
-		<textarea class="text"></textarea>
-		<input type="button" value="Отправить" id="send">
-	</div>
-</div>
-
-<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/chatTest.js"></script>
+	
+	<div id="list" class="container"></div>
+	<script type="module"
+		src="${pageContext.request.contextPath}/resources/js/chat.js"></script>
 </body>
 </html>

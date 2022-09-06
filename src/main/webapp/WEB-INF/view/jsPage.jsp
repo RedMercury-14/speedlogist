@@ -78,7 +78,7 @@
             <li id="l3">Показать точки выгрузок</li>
             <li id="l4">Редактор маршрутов</li>
         </ul>
-<script	src="${pageContext.request.contextPath}/resources/js/test.js"></script>
+<script	src="${pageContext.request.contextPath}/resources/js/test.js" type="module"></script>
 <script
 	src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 

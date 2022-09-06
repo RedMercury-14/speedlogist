@@ -10,6 +10,8 @@ public interface MessageDAO {
 	
 	void saveOrUpdateMessage(Message message);
 	
+	void singleSaveMessage(Message message);
+	
 	Message getMessageById(Integer id);
 	
 	List<Message> getListMessageByFromUser(String login);

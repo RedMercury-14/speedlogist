@@ -146,7 +146,7 @@
             <li id="l3">Показать точки выгрузок</li>
             <li id="l4">Редактор маршрутов</li>
         </ul>
-<script	src="${pageContext.request.contextPath}/resources/js/routeManager.js"></script>
+<script	src="${pageContext.request.contextPath}/resources/js/routeManager.js" type="module"></script>
 
 <script src="${pageContext.request.contextPath}/resources/tablesort/src/tablesort.js"></script>
 <script src="${pageContext.request.contextPath}/resources/tablesort/test/tape.js"></script>

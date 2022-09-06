@@ -2,6 +2,7 @@ package by.base.main.util;
 
 import java.sql.Date;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 import com.google.gson.Gson;
 
@@ -10,6 +11,9 @@ import by.base.main.model.Message;
 public class test {
 
 	public static void main(String[] args) {
+		DateTimeFormatter formatter1 = DateTimeFormatter.ofPattern("d-MM-yyyy");
+		System.out.println(LocalDate.now().format(formatter1));
+		
 		
 	Gson gson = new Gson();
 	Message message = new Message();

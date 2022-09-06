@@ -117,8 +117,8 @@ public class Truck implements Serializable{
 		return status;
 	}
 
-	public void setStatus(String telephoneDriver) {
-		this.status = telephoneDriver;
+	public void setStatus(String status) {
+		this.status = status;
 	}
 
 	public String getCargoCapacity() {

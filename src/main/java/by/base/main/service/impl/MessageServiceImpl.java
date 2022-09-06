@@ -61,4 +61,10 @@ public class MessageServiceImpl implements MessageService{
 		return messageDAO.getListMessageByIdRoute(idRoute);
 	}
 
+	@Override
+	public void singleSaveMessage(Message message) {
+		messageDAO.singleSaveMessage(message);
+		
+	}
+
 }

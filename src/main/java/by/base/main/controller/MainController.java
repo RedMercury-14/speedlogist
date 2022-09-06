@@ -14,7 +14,6 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.transaction.Transactional;
 
@@ -25,8 +24,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -60,7 +57,6 @@ import by.base.main.service.util.POIExcel;
 import by.base.main.service.util.TenderTimer;
 import by.base.main.service.util.TimerList;
 import by.base.main.util.ChatEnpoint;
-import lombok.val;
 
 @Controller
 @RequestMapping("/")
@@ -85,7 +81,7 @@ public class MainController {
 	private ShopService shopService;
 
 	@Autowired
-	FeedbackService feedbackService;
+	private FeedbackService feedbackService;
 	
 	@Autowired
 	private POIExcel poiExcel;
@@ -98,6 +94,9 @@ public class MainController {
 	
 	@Autowired
 	private MessageService messageService;
+	
+	@Autowired
+	private MainRestController mainRestController;
 	
 	public static final Map<String,String> distances = new HashMap<String, String>();
 
@@ -139,7 +138,9 @@ public class MainController {
 
 	@GetMapping("/main/admin/userlist")
 	public String userListPage(Model model) {
-		List<User> userList = userService.getUserList();
+		List<User> userList = new ArrayList<User>();
+		userService.getUserList().stream().filter(u->u.getCompanyName().equals("Доброном"))
+			.forEach(u-> userList.add(u));
 		model.addAttribute("userlist", userList);
 		return "userList";
 	}
@@ -615,7 +616,7 @@ public class MainController {
 		Route route = routeService.getRouteById(routeId);
 		boolean flag = false;		
 		if (route.getComments() != null && route.getComments().equals("international")) {
-			for (Message message : ChatEnpoint.internationalMessegeList) {
+			for (Message message : chatEnpoint.internationalMessegeList) {
 				if (message.getIdRoute().equals(routeId.toString()) && message.getFromUser().equals(name)) {
 					flag = true;
 					request.setAttribute("userCost", message.getText());
@@ -761,7 +762,10 @@ public class MainController {
 	@RequestMapping("/main/carrier/controlpark/driverlist/add")
 	public String addDriver(Model model, HttpServletRequest request) {	
 		User driver = new User();
+		String name = SecurityContextHolder.getContext().getAuthentication().getName();
+		User user = userService.getUserByLogin(name);
 		model.addAttribute("user", driver);
+		request.setAttribute("check", user.getCheck());
 		return "driverForm";
 	}
 	
@@ -810,6 +814,7 @@ public class MainController {
 			request.setAttribute("errorMessage", "данный водитель уже зарегистрирован");			
 			return addDriver(model, request);
 		}else {
+			user.setStatus("0");
 			userService.saveOrUpdateUser(user, 6);
 		}
 		return "redirect:/main/carrier/controlpark/driverlist";
@@ -818,8 +823,13 @@ public class MainController {
 	//получение страницы с маршрутами перевозчика!
 	@RequestMapping("/main/carrier/transportation")
 	public String transportationGet(Model model, HttpServletRequest request, HttpSession session) {	
+		String name = SecurityContextHolder.getContext().getAuthentication().getName();
+		User user = userService.getUserByLogin(name);
+		model.addAttribute("user", user);
 		List<Route> routes = routeService.getRouteListByUser();
-		model.addAttribute("routes", routes);
+		List<Route> resultRoutes = new ArrayList<Route>();
+		routes.stream().filter(r-> Integer.parseInt(r.getStatusRoute())<=4).forEach(r->resultRoutes.add(r));
+		model.addAttribute("routes", resultRoutes);
 		List<Truck> trucks = truckService.getTruckListByUser();
 		Set<Truck> freeTrucks = new HashSet<Truck>();
 		trucks.stream().filter(t->t.getStatus() == null || t.getStatus().equals("1") || t.getStatus().equals("0")).forEach(t->freeTrucks.add(t));
@@ -838,40 +848,59 @@ public class MainController {
 	
 	@RequestMapping("/main/carrier/transportation/update")
 	public String transportationUpdate(Model model, HttpServletRequest request, HttpSession session,
-			@RequestParam("isTruck") int idTruck,
-			@RequestParam("isDriver") int idDriver,
-			@RequestParam("id") int idRoute) {
+			@RequestParam(value ="isTruck", required = false) Integer idTruck,
+			@RequestParam(value ="isDriver", required = false) Integer idDriver,
+			@RequestParam("id") int idRoute,
+			@RequestParam(value = "revers", required = false) String revers) {	
 		Route route = routeService.getRouteById(idRoute);
-		User driver = userService.getUserById(idDriver);
-		Truck truck = truckService.getTruckById(idTruck);
-		double weightHasTruck = Double.parseDouble(truck.getCargoCapacity());
-		double weightHasRoute = Double.parseDouble(route.getTotalCargoWeight());
-		double pallHasTruck = Double.parseDouble(truck.getPallCapacity());
-		double pallHasRoute = Double.parseDouble(route.getTotalLoadPall());
-		if (weightHasRoute >= weightHasTruck || pallHasRoute > pallHasTruck) {
-			session.setAttribute("errorMessage", "данная машина не может быть поставлена на этот маршрут");			
-			return "redirect:/main/carrier/transportation";
-		}else {
-			if (driver.getStatus() == null) {
-				driver.setStatus("1");
-			}else {
-				int status = Integer.parseInt(driver.getStatus());
-				status = status++;
-				driver.setStatus(status+"");
-			}
-			if(truck.getStatus() == null) {
-				truck.setStatus("1");
-			}else {
-				int status = Integer.parseInt(truck.getStatus());
-				status = status++;
-				truck.setStatus(status+"");
-			}
+		if(revers != null) {
+			User driver = route.getDriver();
+			Truck truck = route.getTruck();
+			int statusNew = Integer.parseInt(driver.getStatus())-1;
+			driver.setStatus(statusNew+"");
+			int statusTrNew = Integer.parseInt(truck.getStatus())-1;
+			truck.setStatus(statusTrNew+"");
 			userService.saveOrUpdateUser(driver, 0);
-			route.setDriver(driver);
-			route.setTruck(truck);
-			route.setStatusRoute("4");
+			truckService.saveOrUpdateTruck(truck);
+			route.setDriver(null);
+			route.setTruck(null);
 			routeService.saveOrUpdateRoute(route);
-		}		
+		}else {			
+			User driver = userService.getUserById(idDriver);
+			Truck truck = truckService.getTruckById(idTruck);
+			double weightHasTruck = Double.parseDouble(truck.getCargoCapacity());
+			double weightHasRoute = Double.parseDouble(route.getTotalCargoWeight());
+			double pallHasTruck = Double.parseDouble(truck.getPallCapacity());
+			double pallHasRoute = Double.parseDouble(route.getTotalLoadPall());
+			if (weightHasRoute > weightHasTruck || pallHasRoute >= pallHasTruck) {
+				System.out.println(weightHasRoute+" <=  "+weightHasTruck);
+				System.out.println(pallHasRoute+" >=  "+pallHasTruck);
+				
+				session.setAttribute("errorMessage", "данная машина не может быть поставлена на этот маршрут");			
+				return "redirect:/main/carrier/transportation";
+			}else {
+				if (driver.getStatus() == null || driver.getStatus().equals("0")) {
+					driver.setStatus("1");
+				}else {
+					int status = Integer.parseInt(driver.getStatus());
+					status = status + 1;
+					driver.setStatus(status+"");
+				}
+				if(truck.getStatus() == null || truck.getStatus().equals("0")) {
+					truck.setStatus("1");
+				}else {
+					int status = Integer.parseInt(truck.getStatus());
+					status = status + 1;
+					truck.setStatus(status+"");
+				}
+				userService.saveOrUpdateUser(driver, 0);
+				truckService.saveOrUpdateTruck(truck);
+				route.setDriver(driver);
+				route.setTruck(truck);
+				route.setStatusRoute("4");
+				routeService.saveOrUpdateRoute(route);
+			}
+		}				
 		return "redirect:/main/carrier/transportation";
 	}
 	
@@ -1198,14 +1227,13 @@ public class MainController {
 		return "internationalForm";
 	}
 	
-	@Autowired
-	private MainRestController mainRestController;
 	
 	@RequestMapping("/main/logistics/international/addRoute")
 	public String internationalAddRouteGet(Model model) {
 		model.addAttribute("route", mainRestController.getRoute());
 		return "routeForm";
 	}
+	
 	
 	@PostMapping("/main/logistics/international/addRoute")
 	public String internationalAddRoutePost(Model model,
@@ -1232,6 +1260,36 @@ public class MainController {
 		return "redirect:/main/logistics/international";
 	}
 	
+	@GetMapping("/main/logistics/international/editRoute")
+	public String internationalEditRouteGet(Model model, HttpServletRequest request,
+			@RequestParam(value = "idRoute", required = false) Integer idRoute) {
+		Route route = routeService.getRouteById(idRoute);
+		model.addAttribute("route", route);
+		request.setAttribute("edit", true);
+		return "routeForm";
+	}
+	@PostMapping("/main/logistics/international/editRoute")
+	public String internationalEditRoutePost(Model model, HttpServletRequest request,
+			@ModelAttribute("route") Route route,
+			@RequestParam(value = "edit", required = false) String edit,
+			@RequestParam(value = "delite", required = false) String delite,
+			@RequestParam(value = "date", required = false) Date dateStart,
+			@RequestParam(value = "timeOfLoad", required = false) LocalTime time) {
+		if (edit != null) {
+			Route oldRoute = routeService.getRouteById(route.getIdRoute());
+			route.setUser(oldRoute.getUser());
+			route.setTruck(oldRoute.getTruck());
+			route.setDriver(oldRoute.getDriver());
+			route.setTimeLoadPreviously(time);
+			route.setDateLoadPreviously(dateStart);
+			routeService.saveOrUpdateRoute(route);
+		}else if(delite != null) {
+			routeService.deleteRouteById(route.getIdRoute());
+		}
+		
+		return "redirect:/main/logistics/international";
+	}
+	
 	@GetMapping("/main/logistics/international/tenderOffer")
 	public String internationalTenderOfferGet(Model model, HttpServletRequest request,
 			@RequestParam(value = "idRoute", required = false) Integer idRoute) {
@@ -1251,9 +1309,29 @@ public class MainController {
 		return "routeForm";
 	}
 	
+	@GetMapping("/main/logistics/international/routeEnd")
+	public String internationalRouteEndGet(Model model, HttpServletRequest request,
+			@RequestParam(value = "idRoute", required = false) Integer idRoute) {
+		Route route = routeService.getRouteById(idRoute);
+		if (Integer.parseInt(route.getStatusRoute())>=5) {
+			return "redirect:/main/logistics/international";
+		}
+		route.setStatusRoute("6");
+		User driver = route.getDriver();
+		int statusNew = Integer.parseInt(driver.getStatus())-1;
+		driver.setStatus(statusNew+"");
+		Truck truck = route.getTruck();
+		int statusTrNew = Integer.parseInt(truck.getStatus())-1;
+		truck.setStatus(statusTrNew+"");
+		userService.saveOrUpdateUser(driver, 0);
+		truckService.saveOrUpdateTruck(truck);
+		routeService.saveOrUpdateRoute(route);
+		return "redirect:/main/logistics/international";
+	}
 	
-	@RequestMapping("/main/chat")
-	public String chat() {
+	
+	@RequestMapping("/main/message")
+	public String chat(HttpServletRequest request, Model driver, HttpSession session) {
 		return "chat";
 	}
 	
@@ -1270,7 +1348,7 @@ public class MainController {
 		route.setStatusRoute("4");
 		routeService.saveOrUpdateRoute(route);
 		List<Message> messages = new ArrayList<Message>();		
-		ChatEnpoint.internationalMessegeList.stream()
+		chatEnpoint.internationalMessegeList.stream()
 			.filter(mes->mes.getIdRoute().equals(idRoute.toString()) && !mes.getFromUser().equals("system"))
 			.forEach(mes-> messages.add(mes));
 		messages.stream().forEach(mes->{
@@ -1280,9 +1358,20 @@ public class MainController {
 		return "redirect:/main/logistics/international";
 	}
 	
+	@GetMapping("/main/logistics/international/disposition")
+	public String dispositionGet(Model model, HttpServletRequest request,
+			@RequestParam(value = "idRoute", required = false) Integer idRoute) {	
+		List<Route> routes = new ArrayList<Route>();
+		routeService.getRouteListAsStatus("4", "4").stream()
+			.filter(r-> r.getComments().equals("international"))
+			.forEach(r-> routes.add(r));
+		request.setAttribute("routes", routes);
+		return "disposition";
+	}
+	
 	@RequestMapping("/main/test")
 	public String test() {
-		System.out.println(ChatEnpoint.sessionList.size());
+		System.out.println(chatEnpoint.sessionList.size());
 		return "redirect:/main";
 	}
 	

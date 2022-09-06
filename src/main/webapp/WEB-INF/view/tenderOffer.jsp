@@ -28,14 +28,14 @@
 	<input type="hidden" value="<sec:authentication property="principal.authorities" />" id="role">
 	
 	<div class="container">
-	<h2>Активные предложения</h2>
+	<h2>Предложения</h2>
 		<table	class="table table-bordered border-primary table-hover table-condensed"
 			id="sort">
 			
 		</table>
 	<form action="${pageContext.request.contextPath}/main/logistics/international" ><input type="submit" value="Назад"></form>
 	</div>
-	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/tenderOffer.js"></script>
+	<script type="module" src="${pageContext.request.contextPath}/resources/js/tenderOffer.js"></script>
 	<script
 	src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 </body>

@@ -32,11 +32,11 @@
 <jsp:include page="header.jsp" />
 	<div class="container">
 	<c:out value="${errorMessage}" /><br>
-	<a href="<spring:url value="/main/admin/userlist" />">Отдел логистики</a><br>
-	<a href="<spring:url value="/main/admin/shoplist" />">Управление магазинами</a><br>
-	<a href="<spring:url value="/main/admin/tender" />">Текущие тендеры</a><br>
-	<a href="<spring:url value="/main/admin/carrier" />">Управление перевозчиками</a><br>
-	<a href="<spring:url value="/main/admin/cost" />">Управление системой расчёта стоимости</a><br>
+	<h3><a href="<spring:url value="/main/admin/userlist" />">Управление персоналом и доступом</a></h3>
+	<h3><a href="<spring:url value="/main/admin/shoplist" />">Управление магазинами</a></h3>
+	<h3><a href="<spring:url value="/main/admin/tender" />">Текущие тендеры</a></h3>
+	<h3><a href="<spring:url value="/main/admin/carrier" />">Управление перевозчиками (региональными)</a></h3>
+	<h3><a href="<spring:url value="/main/admin/cost" />">Управление системой расчёта стоимости</a></h3>
 </div>
 </body>
 </html>

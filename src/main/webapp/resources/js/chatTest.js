@@ -22,7 +22,7 @@ function init() {
 
 startBtn.addEventListener("mousedown", () => {
 	var name = nameInput.value;
-	ws = new WebSocket("ws://192.168.123.39:8080/speedlogist/chat");
+	ws = new WebSocket("ws://localhost:8080/speedlogist/chat");
 	ws.onopen = () => this.onOpenSock();
 	ws.onmessage = (e) => this.onMessage(JSON.parse(e.data));
 	ws.onclose = (e) => this.onClose();		

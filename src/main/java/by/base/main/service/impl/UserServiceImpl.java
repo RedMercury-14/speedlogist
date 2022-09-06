@@ -65,7 +65,9 @@ public class UserServiceImpl implements UserService{
 			String name = SecurityContextHolder.getContext().getAuthentication().getName();	
 			String companyName = userDAO.getUserByLogin(name).getCompanyName();			
 			user.setCompanyName(companyName);
-			user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+			if (user.getPassword() != null) {				
+				user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+			}
 			break;
 		case 4:
 			user.setEnablet(true);

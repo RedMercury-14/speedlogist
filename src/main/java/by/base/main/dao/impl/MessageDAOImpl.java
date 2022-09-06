@@ -111,4 +111,18 @@ public class MessageDAOImpl implements MessageDAO{
 		return objects;
 	}
 
+	private static final String queryGetObject = "select idRoute from Message where idRoute=:idRoute AND text=:disposition";
+	@Override
+	@Transactional
+	public void singleSaveMessage(Message message) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query query = currentSession.createQuery(queryGetObject);
+		query.setParameter("idRoute", message.getIdRoute()); 
+		query.setParameter("disposition",message.getText());
+		if (query.list().isEmpty()) {
+			currentSession.saveOrUpdate(message);
+		}  
+		
+	}
+
 }

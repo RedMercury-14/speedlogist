@@ -24,7 +24,7 @@ sort.onmouseout = function(event) {
 //контекстное меню
 (function() {
 	var routeItem = document.querySelectorAll('#idRoute');
-	for (i = 0; i < routeItem.length; i++) {
+	for (let i = 0; i < routeItem.length; i++) {
 		var routeItemI = routeItem[i];
 		contextMenuListner(routeItemI);
 	}
@@ -77,7 +77,7 @@ sort.onmouseout = function(event) {
 //	$.getJSON('../../route', function(data) {
 //		console.log(data.users[3].idRoute);
 ////		setInterval(() => {
-////		for (i = 0; i < routeItem.length; i++) {
+////		for (let i = 0; i < routeItem.length; i++) {
 ////			var routeItemI = routeItem[i];
 ////			var numStockInem = numStock[i];
 ////

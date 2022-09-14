@@ -8,7 +8,7 @@ $.getJSON('../../api/info/message/routes/from_me', function(data) {
 			var target = rowItemI.querySelector('.none').innerHTML;
 			if (target == val.idRoute) {
 				rowItemI.classList.add("activRow");
-				rowItemI.querySelector('#offer').innerHTML = val.text + " BYN";
+				rowItemI.querySelector('#offer').innerHTML = val.text + " "+val.currency;
 			}
 		}
 	})

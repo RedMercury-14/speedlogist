@@ -9,6 +9,7 @@ function sendCost() {
 		fromUser: document.querySelector('input[id=login]').value,
 		text: document.querySelector('input[name=cost]').value,
 		idRoute: idRoute,
+		currency: document.querySelector('select[id=currency]').value,
 		status: "1"
 	})
 };

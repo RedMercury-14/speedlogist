@@ -221,7 +221,7 @@ body {font-family: Arial, Helvetica, sans-serif;}
 						<sec:csrfInput />
 						<tr>				
 							<td id="idRoute" class="none">${route.idRoute}</td>
-							<td>${route.routeDirection}</td>
+							<td id="routeDirection">${route.routeDirection}</td>
 							<td>${route.dateLoadPreviously}</td>
 							<td id="timeLoadPreviously">${route.timeLoadPreviously}</td>
 							<td>${route.finishPrice} руб</td>
@@ -271,6 +271,7 @@ body {font-family: Arial, Helvetica, sans-serif;}
 				<li id="l3">Показать точки выгрузок</li>
 				<li id="l4">Редактор маршрутов</li>
 				<li id="l5">Завершить маршрут</li>
+				<li id="l6">Копировать маршрут</li>
 			</ul>
 		</div>
 	</div>

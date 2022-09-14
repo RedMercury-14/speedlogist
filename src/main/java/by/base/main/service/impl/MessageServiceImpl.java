@@ -67,4 +67,9 @@ public class MessageServiceImpl implements MessageService{
 		
 	}
 
+	@Override
+	public List<Message> getListMessageByComment(String comment) {
+		return messageDAO.getListMessageByComment(comment);
+	}
+
 }

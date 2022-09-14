@@ -28,7 +28,7 @@
 </head>
 <body>
 <jsp:include page="header.jsp"/>
-<input type="button" value="Я региональный перевозчик, развожу по РБ" id="but1">
+<!-- <input type="button" value="Я региональный перевозчик, развожу по РБ" id="but1"> -->
 <input type="button" value="Я международный перевозчик или экспедиция" id="but2">
 <form:form method="post" action="./registration" >
 <div class="content"></div>

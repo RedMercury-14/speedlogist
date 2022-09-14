@@ -32,16 +32,13 @@
 			<form:hidden path="enablet" />	
 			<table>
 				<tbody>
-					<c:url var="updateRoles" value="/main/showFormForUpdate/roles">
-						<c:param name="id" value="${idUser}" />
-					</c:url>
 					<tr>
-						<td><label>логин:</label></td>
-						<td><form:input path="login" /></td>
+						<td><label>Логин:</label></td>
+						<td id="login"><form:input path="login" /></td>
 					</tr>
 				
 					<tr>
-						<td><label>пароль:</label></td>
+						<td><label>Пароль:</label></td>
 						<td><form:input path="password" /></td>
 					</tr>
 
@@ -51,48 +48,52 @@
 					</tr>
 
 					<tr>
-						<td><label>Введите surname</label></td>
+						<td><label>Введите фамилию</label></td>
 						<td><form:input path="surname" /></td>
 					</tr>
 					
 					<tr>
-						<td><label>Введите telephone</label></td>
+						<td><label>Введите отчество</label></td>
+						<td><form:input path="patronymic" /></td>
+					</tr>
+					
+					<tr>
+						<td><label>Введите номер телефона</label></td>
 						<td><form:input path="telephone" /></td>
 					</tr>
 					
 					<tr>
-						<td><label>Введите address</label></td>
+						<td><label>Введите адрес проживания</label></td>
 						<td><form:input path="address" /></td>
 					</tr>
 					
 					<tr>
-						<td><label>Введите company</label></td>
-						<td><form:input path="companyName" /></td>
+						<td><label>Введите компанию</label></td>
+						<td><form:input path="companyName" value = "Доброном" /></td>
 					</tr>
 					
 					<tr>
-						<td><label>Введите depart</label></td>
+						<td><label>Введите должность</label></td>
 						<td><form:input path="department" /></td>
 					</tr>
 					
 					
 					<tr>
-					<td><label>ROLE</label></td>
-					<form:form modelAttribute="role">
-						<form:hidden path="idRole" />
-						<form:hidden path="authority" />
-						<td>${role.authority}</td>
-					</form:form>
+					<td><label>Права доступа (роли)</label></td>
+					<td><select name="role" required="true">
+ 						<option>${role.authority}</option>
+  						<option value="1">Администратор</option>
+  						<option value="2">Топ менеджер</option>
+  						<option value="3">Менеджер</option>
+  						<option value="4">Магазин</option>
+  						<option value="6">Склад</option>
+ 						</select></td>
 					</tr>
 			
 					
 					<tr>
 						<td><label></label></td>
 						<td><input type="submit" value="Save" class="save" /></td>
-					</tr>
-					<tr>
-						<td><label></label></td>
-						<td><a href="${updateRoles}">UpdateRoles</a></td>
 					</tr>
 					
 				</tbody>

@@ -82,10 +82,16 @@
 						<c:choose><c:when test="${route.startPrice != null}"><td>${route.startPrice}</td></c:when></c:choose>
 						<c:choose>
 							<c:when test="${flag}">
-								<td>Ваше предложение ${userCost} BYN</td>
+								<td>Ваше предложение ${userCost} ${route.startCurrency}</td>
 							</c:when>
 							<c:otherwise>
-								<td><input type="number" name="cost" size="5" required="true" class="raz"> BYN</td>
+								<td><input type="number" name="cost" size="5" required="true" class="raz"> <select id="currency">
+  						<option>BYN</option>
+  						<option>USD</option>
+  						<option>EUR</option>
+  						<option>RUB</option>
+  						<option>KZT</option>
+ 						</select></td>
 								<td>
 									<input type="submit" value="поддержать цену" name="agree" class= "agreeinternational">
 									<input type="hidden" value="0" name="price" size = "1"/>				
@@ -160,7 +166,13 @@
 						<td>${route.totalCargoWeight}</td>						
 						<td class="lastCost"></td>
 						<td class="numUsers"></td>
-						<td><input type="number" name="cost" size="5" required="true" class="raz"> BYN</td>
+						<td><input type="number" name="cost" size="5" required="true" class="raz"> <select id="currency">
+  						<option>BYN</option>
+  						<option>USD</option>
+  						<option>EUR</option>
+  						<option>RUB</option>
+  						<option>KZT</option>
+ 						</select></td>
 						<td>
 						<c:choose>
 							<c:when test="${route.user != null}">

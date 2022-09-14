@@ -6,6 +6,7 @@ import java.sql.Date;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,6 +19,7 @@ import javax.servlet.http.HttpSession;
 import javax.transaction.Transactional;
 
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.hibernate.internal.build.AllowSysOut;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -139,7 +141,9 @@ public class MainController {
 	@GetMapping("/main/admin/userlist")
 	public String userListPage(Model model) {
 		List<User> userList = new ArrayList<User>();
-		userService.getUserList().stream().filter(u->u.getCompanyName().equals("Доброном"))
+//		userList = userService.getUserList();
+//		userList.forEach(u->System.out.println(u.toString()));
+		userService.getUserList().stream().filter(u->u.getCompanyName() !=null && u.getCompanyName().equals("Доброном"))
 			.forEach(u-> userList.add(u));
 		model.addAttribute("userlist", userList);
 		return "userList";
@@ -291,7 +295,8 @@ public class MainController {
 	}
 	
 	@RequestMapping(value = "/main/registration", method = RequestMethod.GET)
-	public String getPreRegistration(Model model) {		
+	public String getPreRegistration(Model model) {	
+
 		return "preregistration";
 	}
 	
@@ -355,10 +360,39 @@ public class MainController {
 		model.addAttribute("role", role);
 		return "editUser";
 	}
+	
+	@GetMapping("/main/admin/userlist/add")
+	public String addWorkerGet(Model model) {
+		User user = new User();
+		model.addAttribute("user", user);
+		return "registrationWorker";
+
+	}
+	
+	@PostMapping("/main/admin/userlist/save")
+	public String addWorkerPost(Model model,
+			@ModelAttribute ("user") User user,
+			@RequestParam ("role") String role) {
+		userService.saveOrUpdateUser(user, Integer.parseInt(role));
+		return "redirect:/main/admin/userlist";
+	}
+	
+	@RequestMapping("/main/admin/userlist/delete")
+	public String deleteWorker(Model model,
+			@RequestParam ("idUser") Integer id) {
+		userService.deleteUserById(id);
+		return "redirect:/main/admin/userlist";
+	}
 
 	@PostMapping("/main/admin/userlist/saveUser")
-	public String saveUser(@ModelAttribute("user") User user) {
-		userService.saveOrUpdateUser(user , 1);
+	public String saveUser(@ModelAttribute("user") User user,
+			@RequestParam(value = "role", required = false) String role) {
+		if (role.length()<=2) {
+			userService.saveOrUpdateUser(user , Integer.parseInt(role));
+		}else {
+			userService.saveOrUpdateUser(user , 0);
+		}
+		
 		return "redirect:/main/admin/userlist";
 	}
 
@@ -807,7 +841,7 @@ public class MainController {
 			target.setTelephone(user.getTelephone());
 			target.setLogin(user.getLogin());
 			target.setPassword(user.getPassword());
-			userService.saveOrUpdateUser(target, 6);
+			userService.saveOrUpdateUser(target, 8);
 			System.out.println("fsdjofofaijopisfjaisfjoijohjfaoijoasifhopfsh");
 		}else if(userService.getUserByDriverCard(user.getNumDriverCard()) != null && !userService.getUserByDriverCard(user.getNumDriverCard()).getLogin().isEmpty()){	
 			System.out.println("данный водитель уже зарегистрирован");
@@ -815,7 +849,7 @@ public class MainController {
 			return addDriver(model, request);
 		}else {
 			user.setStatus("0");
-			userService.saveOrUpdateUser(user, 6);
+			userService.saveOrUpdateUser(user, 8);
 		}
 		return "redirect:/main/carrier/controlpark/driverlist";
 	}
@@ -979,6 +1013,35 @@ public class MainController {
 		carriers.stream().filter(c-> c.getCheck() == null).forEach(c-> checkCarriers.add(c));
 		model.addAttribute("carriers", checkCarriers);
 		return "adminCarrier";
+	}
+	@RequestMapping("/main/logistics/internationalCarrier")
+	public String internationalCarrierListForManager(Model model, HttpServletRequest request, HttpSession session) {
+		List<User> carriers = userService.getCarrierList();
+		Set<User> checkCarriers = new HashSet<User>();
+		carriers.stream().filter(c->c.getCheck() != null &&c.getCheck().equals("international")).forEach(c-> checkCarriers.add(c));
+		model.addAttribute("carriers", checkCarriers);
+		return "adminCarrier";
+	}
+	@GetMapping("/main/logistics/carrier/update") 
+	public String internationalCarrierUpdateGet(Model model, HttpServletRequest request, HttpSession session,
+			@RequestParam("carrierId") int carrierId) {
+		User carrier = userService.getUserById(carrierId);
+		model.addAttribute("carrier", carrier);
+		return "editCarrier";
+	}
+	@PostMapping("/main/logistics/carrier/update") 
+	public String internationalCarrierUpdatePost(Model model, HttpServletRequest request, HttpSession session,
+			@ModelAttribute("carreir") User carrier) {
+		User oldCarrier = userService.getUserById(carrier.getIdUser());
+		oldCarrier.setAddress(carrier.getAddress());
+		oldCarrier.setCompanyName(carrier.getCompanyName());
+		oldCarrier.setSurname(carrier.getSurname());
+		oldCarrier.setName(carrier.getName());
+		oldCarrier.setPatronymic(carrier.getPatronymic());
+		oldCarrier.setNumYNP(carrier.getNumYNP());
+		oldCarrier.setTelephone(carrier.getTelephone());
+		userService.saveOrUpdateUser(oldCarrier, 0);		
+		return "redirect:/main/logistics/internationalCarrier";
 	}
 	@GetMapping("/main/admin/carrier/update") 
 	public String carrieUpdateGet(Model model, HttpServletRequest request, HttpSession session,
@@ -1229,8 +1292,26 @@ public class MainController {
 	
 	
 	@RequestMapping("/main/logistics/international/addRoute")
-	public String internationalAddRouteGet(Model model) {
-		model.addAttribute("route", mainRestController.getRoute());
+	public String internationalAddRouteGet(Model model, HttpServletRequest request,
+			@RequestParam(value = "routeDirection", required = false) String routeDirection,
+			@RequestParam(value = "idRoute", required = false) Integer idRoute) {
+		if (routeDirection != null) {
+			Route route = mainRestController.getRoute();
+			route.setRouteDirection(routeDirection);
+			model.addAttribute("route", route);
+			RouteHasShop routeHasShop = route.getRoteHasShop().stream().findFirst().get();
+			request.setAttribute("pall", routeHasShop.getPall());
+			request.setAttribute("weight", routeHasShop.getWeight());
+		}else if (idRoute != null) {
+			Route route = routeService.getRouteById(idRoute);
+			route.setIdRoute(null);
+			route.setTimeLoadPreviously(null);
+			model.addAttribute("route", route);
+			RouteHasShop routeHasShop = route.getRoteHasShop().stream().findFirst().get();
+			request.setAttribute("pall", routeHasShop.getPall());
+			request.setAttribute("weight", routeHasShop.getWeight());
+		}
+		
 		return "routeForm";
 	}
 	
@@ -1240,7 +1321,7 @@ public class MainController {
 			@ModelAttribute("route") Route target,
 			@RequestParam(value = "date", required = false) Date dateStart,
 			@RequestParam(value = "timeOfLoad", required = false) LocalTime time) {
-		
+		System.out.println(target.getRouteDirection());
 		Route route = poiExcel.creatureEmptyRoute(dateStart);
 		if (time != null) {
 			route.setTimeLoadPreviously(time);
@@ -1251,7 +1332,8 @@ public class MainController {
 		route.setTemperature(target.getTemperature());
 		route.setTotalLoadPall(target.getTotalLoadPall());
 		route.setTotalCargoWeight(target.getTotalCargoWeight());
-		route.setRouteDirection(target.getRouteDirection());
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d-MM-yyyy");
+		route.setRouteDirection(target.getRouteDirection()+" ["+dateStart.toLocalDate().format(formatter)+"] №"+route.getIdRoute());
 		route.setStartPrice(target.getStartPrice());
 		route.setTypeTrailer(target.getTypeTrailer());
 		mainRestController.getRoute().getRoteHasShop().stream().forEach(s-> s.setRoute(route));
@@ -1293,7 +1375,9 @@ public class MainController {
 	@GetMapping("/main/logistics/international/tenderOffer")
 	public String internationalTenderOfferGet(Model model, HttpServletRequest request,
 			@RequestParam(value = "idRoute", required = false) Integer idRoute) {
+		Route route = routeService.getRouteById(idRoute);
 		request.setAttribute("idRoute", idRoute);
+		request.setAttribute("routeDirection", route.getRouteDirection());
 		return "tenderOffer";
 	}
 	
@@ -1349,7 +1433,7 @@ public class MainController {
 		routeService.saveOrUpdateRoute(route);
 		List<Message> messages = new ArrayList<Message>();		
 		chatEnpoint.internationalMessegeList.stream()
-			.filter(mes->mes.getIdRoute().equals(idRoute.toString()) && !mes.getFromUser().equals("system"))
+			.filter(mes->mes.getIdRoute().equals(idRoute.toString()))
 			.forEach(mes-> messages.add(mes));
 		messages.stream().forEach(mes->{
 			chatEnpoint.internationalMessegeList.remove(mes);

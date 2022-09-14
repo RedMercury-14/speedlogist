@@ -110,8 +110,19 @@ public class MessageDAOImpl implements MessageDAO{
 		List<Message> objects = theObject.getResultList();	
 		return objects;
 	}
+	
+	private static final String queryGetListObjComment = "from Message where comment=:comment";
+	@Override
+	@Transactional
+	public List<Message> getListMessageByComment(String comment) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Message> theObject = currentSession.createQuery(queryGetListObjComment, Message.class);
+		theObject.setParameter("comment", comment);
+		List<Message> objects = theObject.getResultList();	
+		return objects;
+	}
 
-	private static final String queryGetObject = "select idRoute from Message where idRoute=:idRoute AND text=:disposition";
+	private static final String queryGetObject = "select idRoute from Message where idRoute=:idRoute AND text=:disposition AND comment=:comment AND datetime=:datetime";
 	@Override
 	@Transactional
 	public void singleSaveMessage(Message message) {
@@ -119,10 +130,11 @@ public class MessageDAOImpl implements MessageDAO{
 		Query query = currentSession.createQuery(queryGetObject);
 		query.setParameter("idRoute", message.getIdRoute()); 
 		query.setParameter("disposition",message.getText());
+		query.setParameter("comment",message.getComment());
+		query.setParameter("datetime",message.getDatetime());
 		if (query.list().isEmpty()) {
 			currentSession.saveOrUpdate(message);
 		}  
 		
 	}
-
 }

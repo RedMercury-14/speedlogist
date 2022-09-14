@@ -1,39 +1,32 @@
 var token = $("meta[name='_csrf']").attr("content");
 import { ws } from './global.js';
 
-//	$('#login').change(function() {
-//		var str = document.querySelector('input[name=login]').value;
-//		var jsonData = { Login: str };
-//		$.ajax({
-//			type: "POST",
-//			url: "../api/user/isexists",
-//			headers: { "X-CSRF-TOKEN": token },
-//			data: JSON.stringify(jsonData),
-//			contentType: 'application/json',
-//			dataType: 'json',
-//			success: function(html) {
-//					document.querySelector('#messageLogin').innerHTML = html.message;				
-//			},
-//			error: function(err){
-//				$('#messageLogin').html("");
-//			}
-//		})
-//	});
 
+//$.ajax({
+//	type: "GET",
+//    url : "https://www.avtodispetcher.ru/distance/?from=Орел&to=Минск",
+//    success : function(result){
+//        console.log(result);
+//    }
+//});
 
+//var xmlhttp = new XMLHttpRequest();
+//
+//xmlhttp.onreadystatechange = function() {
+//    if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+//        console.log(xmlhttp.responseText);
+//    }
+//}
+//xmlhttp.open("GET", "https://www.avtodispetcher.ru/distance/?from=Орел&to=Минск", true);
+//xmlhttp.send();
 
-$('#routeDirection').change(function() {
-	document.querySelector('#message').innerHTML = '';
-	var target = document.querySelector('#routeDirection').value;
-	$.getJSON('../../../api/simpleroute', function(data) {
-		$.each(data, function(key, val) {
-			if (val.routeDirection == target) {
-				document.querySelector('#message').innerHTML = 'Маршрут с данным названием уже соществует!';
-			};
-
-		})
-	})
-})
+//fetch('https://www.avtodispetcher.ru/distance/?from=Орел&to=Минск"'), {
+//  method: 'GET',
+//	mode: 'no-cors'
+//}
+//  .then((response) => {
+//   console.log(response);
+//  })
 
 function sendMessage(message) {
 	ws.send(JSON.stringify(message));

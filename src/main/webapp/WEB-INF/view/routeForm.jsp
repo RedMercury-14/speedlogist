@@ -9,6 +9,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="${_csrf.parameterName}" content="${_csrf.token}"/>
+<style type="text/css">
+.none{
+display: none;
+}
+</style>
 <title>Insert title here</title>
 <link rel="stylesheet" type="text/css" href="<c:url value="/resources/css/other.css"/>"/>
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
@@ -21,7 +26,7 @@
 <input type="hidden" value="<sec:authentication property="principal.username" />" id="login">
 <div class="container">
 <c:choose>
-	<c:when test="${route.routeDirection != null && edit == null}">
+	<c:when test="${route.timeLoadPreviously != null && edit == null}">
 		<label><h3>Просмотр маршрута</h3></label>
 <div class="table-responsive">
 			<table  class="table table-bordered border-primary table-hover table-condensed" id = "sort">
@@ -74,7 +79,7 @@
 			</div>
 			<div class="container"><input type="button" onclick="history.back();" value="Назад"/></div>
 	</c:when>
-	<c:when test="${route.routeDirection != null && edit == true}">
+	<c:when test="${route.timeLoadPreviously != null && edit == true}">
 				<label><h3>Редактор маршрута</h3></label>
 <div class="table-responsive">
 			<table  class="table table-bordered border-primary table-hover table-condensed" id = "sort">			
@@ -148,7 +153,7 @@
 			<div class="container"><input type="button" onclick="history.back();" value="Назад"/></div>
 	</c:when>
 	<c:otherwise>
-	<label><h3>Шапка тендера</h3></label>
+	<label><h3>Создание маршрута</h3></label>
 <div class="table-responsive">
 			<table  class="table table-bordered border-primary table-hover table-condensed" id = "sort">
 			<thead class="text-center">
@@ -160,7 +165,7 @@
 					<th>Вес</th>
 					<th>Название маршрута</th>
 					<th>Тип транспорта</th>
-					<th>Начальные стоимости перевозки</th>
+					<th class="none">Начальные стоимости перевозки</th>
 					
 				</tr>
 			</thead>
@@ -169,11 +174,9 @@
 						<td><input type = "date" name="date" value="${route.dateLoadPreviously}" required="true" /></td>
 						<td><input type = "time" name="timeOfLoad" value="${route.timeLoadPreviously}" required="true"/></td>
 						<td><form:input path="temperature" value="${route.temperature}" size="2"/></td>
-						<td><form:input path="totalLoadPall" value="${route.totalLoadPall}" size="2"/></td>
-						<td><form:input path="totalCargoWeight" value="${route.totalCargoWeight}" size="2"/></td>
-						<td><form:input path="routeDirection" value="${route.routeDirection}" required="true" id="routeDirection"/>
-						<br><div id="message"></div>
-						</td>
+						<td><form:input path="totalLoadPall" value="${pall}" size="2"/></td>
+						<td><form:input path="totalCargoWeight" value="${weight}" size="2"/></td>
+						<td>${route.routeDirection}</td>
 						<td><p><form:select path="typeTrailer" required="true">
  						<option></option>
   						<option>Открытый</option>
@@ -182,7 +185,7 @@
   						<option>Мебельный фургон</option>
  						<option>Рефрижератор</option>
  						</form:select></p></td>
-						<td><form:input path="startPrice" value="${route.startPrice}" size="2"/></td>
+						<td class="none"><form:input path="startPrice" value="${route.startPrice}" size="2" /></td>
 							<input type="submit" value="Создать маршрут">				
             </form:form>   			
 			</table><br>	

@@ -64,10 +64,10 @@
 				<label>Адрес:</label>
 				<form:input path="address" class="form-control" required="true"/>
 			</div>
-			<div class="form-group">
-				<label>Тариф:</label>
-				<form:input path="rate" class="form-control" required="true"/>
-			</div>
+<!-- 			<div class="form-group"> -->
+<!-- 				<label>Тариф:</label> -->
+<%-- 				<form:input path="rate" class="form-control" required="true"/> --%>
+<!-- 			</div> -->
 						
 			<div class="form-group">
 			<c:out value="${errorMessage}" />

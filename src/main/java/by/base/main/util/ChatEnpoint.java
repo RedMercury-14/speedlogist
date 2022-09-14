@@ -79,7 +79,7 @@ public class ChatEnpoint {
 		sessionList.forEach(s->{
 			if(s == this.session) {
 				if (message.getFromUser().equals("system")) {
-					
+					//не записываем сообщение от системы
 				}else if (message.getToUser() != null && message.getToUser().equals("disposition")) {
 					
 				}

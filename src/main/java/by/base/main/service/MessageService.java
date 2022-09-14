@@ -24,5 +24,7 @@ public interface MessageService {
 	
 	List<Message> getListMessageByCompanyName(String companyName);
 	
+	List<Message> getListMessageByComment(String comment);
+	
 	void deleteMessageById(Integer id);
 }

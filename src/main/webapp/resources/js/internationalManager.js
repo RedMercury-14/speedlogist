@@ -1,7 +1,9 @@
 contextMenu();
 onNumberMessage();
 var route;
+var routeDirection;
 import { ws } from './global.js';
+import { wsHead } from './global.js';
 ws.onmessage = (e) => onMessage(JSON.parse(e.data));
 var role = document.querySelector('input[id=role]').value;
 
@@ -48,6 +50,10 @@ function getNumMessege(idRoute, coll, routeItemI) {
 	});
 }
 
+function sendMessage(message) {
+	wsHead.send(JSON.stringify(message));
+}
+
 function contextMenu() {
 	(function() {
 		var routeItem = document.querySelectorAll('tr');
@@ -63,6 +69,7 @@ function contextMenu() {
 				menu.style.left = `${event.clientX}px`;
 				menu.classList.add("active");
 				route = el.querySelector('#idRoute').innerHTML;
+				routeDirection = el.querySelector('#routeDirection').innerHTML;
 			}, false);
 		}
 		document.addEventListener("click", event => {
@@ -82,6 +89,13 @@ function contextMenu() {
 		document.querySelector("#l2").addEventListener("click", () => {
 			var url = `../logistics/rouadUpdate?id=${route}&statRoute=1&comment=international`
 			window.location.href = url;
+			sendMessage({
+				fromUser: "logist",
+				toUser: "international",
+				text: 'Маршрут ' + routeDirection + ' доступен для торгов',
+				idRoute: route,
+				status: "1"
+			})
 		}, false);
 		document.querySelector("#l3").addEventListener("click", () => {
 			var url = `../logistics/international/routeShow?idRoute=${route}`
@@ -112,6 +126,10 @@ function contextMenu() {
 					}
 				});
 			});
+		}, false);
+		document.querySelector("#l6").addEventListener("click", () => {
+			var url = `/speedlogist/main/logistics/international/addRoute?idRoute=${route}`
+			window.location.href = url;
 		}, false);
 	})();
 }

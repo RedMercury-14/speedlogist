@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.google.gson.Gson;
+import com.mysql.cj.x.protobuf.MysqlxResultset.FetchSuspendedOrBuilder;
 
 import by.base.main.controller.MainController;
 import by.base.main.model.Message;
@@ -314,15 +315,47 @@ public class MainRestController {
 	}
 	
 	@GetMapping("/mainchat/messagesList") // отдаёт лист сообщений из mainChat
-	public List<Message> getNumMessageList() {		
-		return mainChat.messegeList;		
+	public List<Message> getNumMessageList() {			
+		return mainChat.messegeList;
+	}
+	
+	@GetMapping("/mainchat/messagesList&{login}") // отдаёт лист непрочитанных сообщений из mainChat
+	public List<Message> getNumMessageListByLogin(@PathVariable String login) {
+		List<Message> messages = new ArrayList<Message>();
+		messages.addAll(mainChat.messegeList);
+		List<Message> result = new ArrayList<Message>();
+		DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("d-MM-yyyy");
+		String now = LocalDate.now().format(dateFormatter);
+		messageService.getListMessageByComment(login).stream()
+		.filter(mes-> mes.getDatetime().split(";")[0].equals(now) ||
+				mes.getDatetime().split(";")[0].equals(LocalDate.now().minusDays(1).format(dateFormatter)) ||
+				mes.getDatetime().split(";")[0].equals(LocalDate.now().minusDays(2).format(dateFormatter)) ||
+				mes.getDatetime().split(";")[0].equals(LocalDate.now().minusDays(3).format(dateFormatter)) ||
+				mes.getDatetime().split(";")[0].equals(LocalDate.now().minusDays(4).format(dateFormatter)) ||
+				mes.getDatetime().split(";")[0].equals(LocalDate.now().minusDays(5).format(dateFormatter))).
+			forEach(mes->result.add(mes));
+		for (Message message : result) {
+			message.setIdMessage(null);
+			message.setStatus("1");
+			message.setComment(null);			
+			messages.remove(message);
+		}
+		return messages;
+	}
+	
+	@GetMapping("/mainchat/messagesList/{fromUser}&{toUser}") // отдаёт list с сообщениями отопредиленного юзера к опредиленному юзеру 
+	public List <Message> getMessagesListFromTo(@PathVariable String fromUser, @PathVariable String toUser) {
+		List <Message> messagesList = new ArrayList<Message>();		
+		mainChat.messegeList.stream()
+			.filter(mes->mes.getFromUser().equals(fromUser) && mes.getToUser().equals(toUser))
+			.forEach(mes-> messagesList.add(mes));		
+		return messagesList;		
 	}
 
 	@PostMapping("/mainchat/massage/add")// сохраняет сообщение в бд, если есть сообщение, то не сохзраняет
 	public JSONObject postSaveDBMessage(@RequestBody String str) throws ParseException {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d-MM-yyyy; HH:mm:ss");		
 		Message message = gson.fromJson(str, Message.class);
-		mainChat.messegeList.remove(message);
 		message.setStatus(LocalDateTime.now().format(formatter));
 		messageService.singleSaveMessage(message);
 		HashMap<String, String> map = new HashMap<String, String>();
@@ -330,12 +363,12 @@ public class MainRestController {
 		return new JSONObject(map);
 	}
 	
-	@GetMapping("/mainchat/massages/getfromdb") // отдаёт сообщения к системе за последние 5 дней
-	public List<Message> getDBMessage() throws ParseException {		
+	@GetMapping("/mainchat/massages/getfromdb&{login}") // отдаёт сообщения к системе за последние 5 дней
+	public List<Message> getDBMessage(@PathVariable String login) throws ParseException {		
 		List<Message> result = new ArrayList<Message>();
 		DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("d-MM-yyyy");
 		String now = LocalDate.now().format(dateFormatter);
-		messageService.getListMessageByToUser("system").stream()
+		messageService.getListMessageByComment(login).stream()
 			.filter(mes-> mes.getDatetime().split(";")[0].equals(now) ||
 					mes.getDatetime().split(";")[0].equals(LocalDate.now().minusDays(1).format(dateFormatter)) ||
 					mes.getDatetime().split(";")[0].equals(LocalDate.now().minusDays(2).format(dateFormatter)) ||

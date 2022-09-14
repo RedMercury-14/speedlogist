@@ -54,7 +54,8 @@
 	<br>
    <input type="submit" value="Отправить"></p>   
   </form:form>  
-  <a href = "<spring:url value="/main/logistics/routemanager"/>">Менеджер маршрутов</a>
+<%--   <a href = "<spring:url value="/main/logistics/routemanager"/>">Менеджер маршрутов</a> --%><br>
+<a href = "<spring:url value="/main/logistics/internationalCarrier"/>">Список международных перевозчиков</a>
   <br>
   <a href = "<spring:url value="/main/logistics/international"/>">Менеджер международных маршрутов</a>
 </body>

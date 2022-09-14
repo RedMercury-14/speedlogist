@@ -11,6 +11,11 @@
 <meta charset="UTF-8">
 <meta name="${_csrf.parameterName}" content="${_csrf.token}" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+.none {
+	display: none;
+}
+</style>
 <title>Insert title here</title>
 <link rel="stylesheet" type="text/css"
 	href="<c:url value="/resources/css/other.css"/>" />
@@ -23,20 +28,28 @@
 
 </head>
 <body>
-	<jsp:include page="header.jsp" />	
+	<jsp:include page="header.jsp" />
 	<input type="hidden" value="${idRoute}" id="idRoute">
-	<input type="hidden" value="<sec:authentication property="principal.authorities" />" id="role">
-	
+	<input type="hidden" value="${routeDirection}" id="routeDirection">
+	<input type="hidden"
+		value="<sec:authentication property="principal.authorities" />"
+		id="role">
+
 	<div class="container">
-	<h2>Предложения</h2>
-		<table	class="table table-bordered border-primary table-hover table-condensed"
+		<h2>Предложения</h2>
+		<table
+			class="table table-bordered border-primary table-hover table-condensed"
 			id="sort">
-			
+
 		</table>
-	<form action="${pageContext.request.contextPath}/main/logistics/international" ><input type="submit" value="Назад"></form>
+		<form
+			action="${pageContext.request.contextPath}/main/logistics/international">
+			<input type="submit" value="Назад">
+		</form>
 	</div>
-	<script type="module" src="${pageContext.request.contextPath}/resources/js/tenderOffer.js"></script>
+	<script type="module"
+		src="${pageContext.request.contextPath}/resources/js/tenderOffer.js"></script>
 	<script
-	src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+		src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 </body>
 </html>

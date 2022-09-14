@@ -43,7 +43,7 @@ public class Route implements Serializable{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "idroute")
-	private int idRoute;
+	private Integer idRoute;
 	
 	@Column(name = "numStock")
 	private Integer numStock;
@@ -118,6 +118,9 @@ public class Route implements Serializable{
 	@Column(name = "typeTrailer")
 	private String typeTrailer;
 	
+	@Column(name = "startCurrency")
+	private String startCurrency;
+	
 	@ManyToOne(fetch = FetchType.EAGER, 
 			cascade = { CascadeType.PERSIST, 
 						CascadeType.MERGE, 
@@ -154,11 +157,11 @@ public class Route implements Serializable{
 	 * окончательная цена.
 	 */
 	
-	public int getIdRoute() {
+	public Integer getIdRoute() {
 		return idRoute;
 	}
 
-	public void setIdRoute(int idRoute) {
+	public void setIdRoute(Integer idRoute) {
 		this.idRoute = idRoute;
 	}
 
@@ -417,6 +420,14 @@ public class Route implements Serializable{
 
 	public void setTypeTrailer(String typeTrailer) {
 		this.typeTrailer = typeTrailer;
+	}
+	
+	public String getStartCurrency() {
+		return startCurrency;
+	}
+
+	public void setStartCurrency(String startCurrency) {
+		this.startCurrency = startCurrency;
 	}
 
 	@Override

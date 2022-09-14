@@ -85,6 +85,7 @@ body {
 						<p class="navbar-text">
 							Welcome
 							<sec:authentication property="name" />
+							<input type="hidden" value="<sec:authentication property="name" />" id="login">
 							<a id="logout" href="#"> Выход</a>
 						</p>
 						<form id="logout-form" action="<c:url value="/logout"/>"
@@ -93,9 +94,9 @@ body {
 						</form>
 
 					</li>
-					<li><a href="<spring:url value="/home/userpage"/>">Кабинет
-							пользователя</a> 
-					</li>
+<%-- 					<li><a href="<spring:url value="/home/userpage"/>">Кабинет --%>
+<!-- 							пользователя</a>  -->
+<!-- 					</li> -->
 					<li>
 					<a href="<spring:url value="/main/message" />" class="notification"> <span>Входящие</span>
 							<span class="badge"></span>

@@ -22,7 +22,7 @@ window.onload = function() {
 			contentType: 'application/json',
 			dataType: 'json',
 			success: function(html) {
-					document.querySelector('#messageLogin').innerHTML = html.message;				
+					document.querySelector('#messageLogin').innerHTML = "юзер с таким именем существует";				
 			},
 			error: function(err){
 				$('#messageLogin').html("");

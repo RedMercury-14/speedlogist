@@ -116,6 +116,8 @@
 		<strong><sec:authentication property="principal.authorities"
 				var="roles" /></strong>
 	</sec:authorize>
+	<sec:authorize access="authenticated" var="authenticated" />
+	<input type="hidden" value="<sec:authentication property="name" />" id="login">
 	<input type="hidden" value="${roles}" id="role">
 	<h2 class="container">Входящие сообщения</h2>
 	<div class="container">

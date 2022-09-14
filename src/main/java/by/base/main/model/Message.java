@@ -40,6 +40,9 @@ public class Message {
 	@Column(name = "datetime")
 	private String datetime;
 	
+	@Column(name = "currency")
+	private String currency;
+	
 	
 	public String getFromUser() {
 		return fromUser;
@@ -99,10 +102,16 @@ public class Message {
 	}
 	public void setDatetime(String datetime) {
 		this.datetime = datetime;
+	}	
+	public String getCurrency() {
+		return currency;
+	}
+	public void setCurrency(String currency) {
+		this.currency = currency;
 	}
 	@Override
 	public int hashCode() {
-		return Objects.hash(fromUser, status, text, toUser);
+		return Objects.hash(comment, companyName, datetime, fromUser, idMessage, idRoute, status, text, toUser);
 	}
 	@Override
 	public boolean equals(Object obj) {
@@ -113,14 +122,19 @@ public class Message {
 		if (getClass() != obj.getClass())
 			return false;
 		Message other = (Message) obj;
-		return Objects.equals(fromUser, other.fromUser) && Objects.equals(status, other.status)
-				&& Objects.equals(text, other.text) && Objects.equals(toUser, other.toUser);
+		return Objects.equals(comment, other.comment) && Objects.equals(companyName, other.companyName)
+				&& Objects.equals(datetime, other.datetime) && Objects.equals(fromUser, other.fromUser)
+				&& Objects.equals(idMessage, other.idMessage) && Objects.equals(idRoute, other.idRoute)
+				&& Objects.equals(status, other.status) && Objects.equals(text, other.text)
+				&& Objects.equals(toUser, other.toUser);
 	}
 	@Override
 	public String toString() {
-		return "Message [fromUser=" + fromUser + ", toUser=" + toUser + ", text=" + text + ", idRoute=" + idRoute
-				+ ", status=" + status + ", companyName=" + companyName + "]";
+		return "Message [idMessage=" + idMessage + ", fromUser=" + fromUser + ", toUser=" + toUser + ", text=" + text
+				+ ", idRoute=" + idRoute + ", status=" + status + ", companyName=" + companyName + ", comment="
+				+ comment + ", datetime=" + datetime + ", currency=" + currency + "]";
 	}
+	
 	
 	
 	

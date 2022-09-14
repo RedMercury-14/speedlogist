@@ -25,4 +25,6 @@ public interface UserService {
 	List<User> getCarrierList();
 	
 	List<User> getDesableCarrierList();
+	
+	void echo();
 }

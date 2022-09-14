@@ -45,29 +45,32 @@ public class UserServiceImpl implements UserService{
 		Set<Role> rolest = new HashSet<Role>();
 		Role role;
 		switch (idRole) {
-		case 7:
+		case 1:
 			user.setEnablet(true);
 			user.setIsDriver(false);
-			role = roleDAO.getRole(7);
-			rolest.add(role);
-			user.setRoles(rolest);
-			if(user.getCheck() == null) {
-				user.setCheck("step1");
-			}			
-			user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
-			break;
-		case 6:
-			user.setEnablet(true);
-			user.setIsDriver(true);
-			role = roleDAO.getRole(6);
+			user.setStatus("0");
+			role = roleDAO.getRole(1);
 			rolest.add(role);
 			user.setRoles(rolest);			
-			String name = SecurityContextHolder.getContext().getAuthentication().getName();	
-			String companyName = userDAO.getUserByLogin(name).getCompanyName();			
-			user.setCompanyName(companyName);
-			if (user.getPassword() != null) {				
-				user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
-			}
+			user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+			break;
+		case 2:
+			user.setEnablet(true);
+			user.setIsDriver(false);
+			user.setStatus("0");
+			role = roleDAO.getRole(2);
+			rolest.add(role);
+			user.setRoles(rolest);			
+			user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+			break;
+		case 3:
+			user.setEnablet(true);
+			user.setIsDriver(false);
+			user.setStatus("0");
+			role = roleDAO.getRole(3);
+			rolest.add(role);
+			user.setRoles(rolest);			
+			user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
 			break;
 		case 4:
 			user.setEnablet(true);
@@ -80,6 +83,41 @@ public class UserServiceImpl implements UserService{
 			user.setCompanyName(company);
 			user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
 			break;
+		case 6:
+			user.setEnablet(true);
+			user.setIsDriver(false);
+			user.setStatus("0");
+			role = roleDAO.getRole(6);
+			rolest.add(role);
+			user.setRoles(rolest);			
+			user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+			break;
+		case 7:
+			user.setEnablet(true);
+			user.setIsDriver(false);
+			user.setStatus("0");
+			role = roleDAO.getRole(7);
+			rolest.add(role);
+			user.setRoles(rolest);
+			if(user.getCheck() == null) {
+				user.setCheck("step1");
+			}			
+			user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+			break;
+		case 8:
+			user.setEnablet(true);
+			user.setIsDriver(true);
+			user.setStatus("0");
+			role = roleDAO.getRole(8);
+			rolest.add(role);
+			user.setRoles(rolest);			
+			String name = SecurityContextHolder.getContext().getAuthentication().getName();	
+			String companyName = userDAO.getUserByLogin(name).getCompanyName();			
+			user.setCompanyName(companyName);
+			if (user.getPassword() != null) {				
+				user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+			}
+			break;		
 		default:
 			break;
 		}
@@ -140,6 +178,11 @@ public class UserServiceImpl implements UserService{
 	@Override
 	public List<User> getDesableCarrierList() {
 		return userDAO.getDesableCarrierList();
+	}
+
+	@Override
+	public void echo() {
+		System.out.println("UserService -- echo");		
 	}
 
 }

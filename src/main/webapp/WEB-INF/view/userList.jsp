@@ -10,6 +10,11 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<style type="text/css">
+.right {
+	float: right;
+}
+</style>
 <title>Insert title here</title>
 <link rel="stylesheet" type="text/css"
 	href="<c:url value="/resources/css/other.css"/>" />
@@ -32,8 +37,9 @@
 	</div>
 
 	<div class="container-fluid">
+	<div class="right"><input type="button" onclick="history.back();" value="Назад"/></div>
 		<div class="table-responsive">
-			<input type="button" value="Add Customer" onclick="window.location.href='showFormForAdd'; return false;" class="add-button" />
+			<input type="button" value="Создать аккаунт" onclick="window.location.href='userlist/add'; return false;" class="add-button" />
 
 			<table class="table table-bordered border-primary table-hover table-condensed">
 				<tr>
@@ -57,8 +63,8 @@
 					</c:url>
 
 					<!-- construct an "delete" link with customer id -->
-					<c:url var="deleteLink" value="/customer/delete">
-						<c:param name="customerId" value="${tempUser.login}" />
+					<c:url var="deleteLink" value="/main/admin/userlist/delete">
+						<c:param name="idUser" value="${tempUser.idUser}" />
 					</c:url>
 
 					<tr>	
@@ -80,7 +86,7 @@
 					</tr>
 				</c:forEach>
 			</table>
-			</div>
+			</div>			
 		</div>
 
 

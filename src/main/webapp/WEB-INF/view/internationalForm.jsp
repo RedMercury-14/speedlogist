@@ -17,6 +17,67 @@
 .raz::-webkit-inner-spin-button { 
   display: none;
 }
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font: 16px Arial;  
+}
+
+/* контейнер должен быть расположен относительно друг друга: */
+.autocomplete {
+  position: relative;
+  display: inline-block;
+}
+
+input {
+  border: 1px solid transparent;
+  background-color: #f1f1f1;
+  padding: 10px;
+  font-size: 16px;
+}
+
+input[type=text] {
+  background-color: #f1f1f1;
+  width: 100%;
+}
+
+input[type=submit] {
+  background-color: DodgerBlue;
+  color: #fff;
+  cursor: pointer;
+}
+
+.autocomplete-items {
+  position: absolute;
+  border: 1px solid #d4d4d4;
+  border-bottom: none;
+  border-top: none;
+  z-index: 99;
+  /* расположите элементы автозаполнения на той же ширине, что и контейнер: */
+  top: 100%;
+  left: 0;
+  right: 0;
+}
+
+.autocomplete-items div {
+  padding: 10px;
+  cursor: pointer;
+  background-color: #fff; 
+  border-bottom: 1px solid #d4d4d4; 
+}
+
+/* при наведении курсора на элемент: */
+.autocomplete-items div:hover {
+  background-color: #e9e9e9; 
+}
+
+/* при навигации по элементам используйте клавиши со стрелками: */
+.autocomplete-active {
+  background-color: DodgerBlue !important; 
+  color: #ffffff; 
+}
 </style>
 <title>Insert title here</title>
 <link rel="stylesheet" type="text/css" href="<c:url value="/resources/css/other.css"/>"/>
@@ -32,6 +93,28 @@
 <div class="form-group">
 <div id = "message"></div>
 			<input id="button" type="button" value="Добавить точку выгрузки"> <input id="button2" type="button" value="Добавить точку загрузки"> <input id="next" type="button" value="Создать маршрут">
+			<select name="staticRoute">
+ 						<option></option>
+  						<option id="312">Минский КХП</option>
+  						<option id="312">Кристалл Минск</option>
+ 						<option id="312">Кристалл Барановичи</option>
+  						<option id="312">МЗВВ</option>
+ 						<option id="312">МЗИВ</option>
+ 						<option id="312">МЗИВ Промышленная</option>
+ 						<option id="312">Криница</option>
+ 						<option id="312">Криница Добрада</option>
+ 						<option id="344">Криница Прошленная</option>
+ 						<option id="412">Берталсервис Смолевичи</option>
+ 						<option id="412">Берталсервис Черницы</option>
+ 						<option id="217">Пакхаус</option>
+ 						<option id="412">Борисовский КХП</option>
+ 						<option id="412">Винторг Рованичи</option>
+ 						<option id="312">БелВинГрупп</option>
+ 						<option id="312">Энерго-Оил</option>
+ 						<option id="312">Джапан</option>
+ 						<option id="217">Банан</option>
+ 						<option id="312">Энерджи Групп</option>
+ 						</select>
 			</div>
 </div>
 <script	src="${pageContext.request.contextPath}/resources/js/internationalForm.js" type="module"></script>

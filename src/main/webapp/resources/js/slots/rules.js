@@ -146,6 +146,7 @@ function confirmMethodAccessRules(order, currentLogin, currentRole) {
 
 
 export function colorRules(order, currentLogin, currentRole) {
+	window.lastOrder = order
 	const orderLogin = order.loginManager.toLowerCase()
 	return isAdmin(currentRole)
 			|| !isAnotherUser(orderLogin, currentLogin)

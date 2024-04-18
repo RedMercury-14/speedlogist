@@ -3230,6 +3230,7 @@ public class MainRestController {
 		
 		//костыль для фруктов
 		boolean flag = true;
+		System.err.println(order.getManager());
 		if(order.getManager().split(";")[1].trim().equals("ShelestovA@dobronom.by")
 				|| order.getManager().split(";")[1].trim().equals("MarkevichK@dobronom.by")
 				|| order.getManager().split(";")[1].trim().equals("SickoO@dobronom.by")
@@ -3247,14 +3248,12 @@ public class MainRestController {
 				order.setStatus(15); // статус башкирова
 			}else {
 	//			order.setStatus(20);
-				if(order.getStatus() == 6  && flag) {
-					System.out.println("ожидаем слоты");
-//					System.err.println("17 STATUS!!!!");
-//					order.setStatus(17); // статус карины
+				if(!flag) {
+					order.setStatus(20);
+					System.out.println("Фрукты!");
 				}else {
-					System.out.println("без слотов");
-//					order.setStatus(20);
-				}				
+					System.out.println("Ожидаем слоты");
+				}
 			}
 		}
 		
@@ -3319,7 +3318,7 @@ public class MainRestController {
 		response.put("message", "Заявка создана");
 		//отправляем на почту к логистам в отдельных потоках
 		String text = "Создана заявка №" + order.getIdOrder() + " " + order.getCounterparty() + " от менеджера " + order.getManager()+"\nНаправление: " + order.getWay();
-		if(order.getWay().equals("РБ") && flag && order.getStatus() == 20 ) {
+		if(order.getWay().equals("РБ") && !flag && order.getStatus() == 20 ) {
 			//отправляем не в отдельном потоке!
 			String textForSupport = "Создана заявка №" + order.getIdOrder() + " " + order.getCounterparty() + " от менеджера " + order.getManager()+"\nНаправление: " + order.getWay() + 
 					"\nНеобходимо назначить слот на выгрузку";
@@ -3403,6 +3402,7 @@ public class MainRestController {
 		
 		//костыль для фруктов
 		boolean flag = true;
+		
 		if(order.getManager().split(";")[1].trim().equals("ShelestovA@dobronom.by")
 				|| order.getManager().split(";")[1].trim().equals("MarkevichK@dobronom.by")
 				|| order.getManager().split(";")[1].trim().equals("SickoO@dobronom.by")
@@ -3419,12 +3419,13 @@ public class MainRestController {
 				order.setNeedUnloadPoint("true");
 				order.setStatus(15); // статус башкирова
 			}else {
-				if(order.getStatus() == 6  && flag) {
-					System.out.println("ожидаем слоты");
+	//			order.setStatus(20);
+				if(!flag) {
+					order.setStatus(20);
+					System.out.println("Фрукты!");
 				}else {
-					System.out.println("без слотов");
-//					order.setStatus(20);
-				}				
+					System.out.println("Ожидаем слоты");
+				}
 			}
 		}
 		
@@ -3523,7 +3524,7 @@ public class MainRestController {
 		response.put("message", "Заявка создана");
 		//отправляем на почту к логистам в отдельных потоках
 		String text = "Создана заявка №" + order.getIdOrder() + " " + order.getCounterparty() + " от менеджера " + order.getManager()+"\nНаправление: " + order.getWay();
-		if(order.getWay().equals("РБ") && flag && order.getStatus() == 20) {
+		if(order.getWay().equals("РБ") && !flag && order.getStatus() == 20) {
 			//отправляем не в отдельном потоке!
 			String textForSupport = "Создана заявка №" + order.getIdOrder() + " " + order.getCounterparty() + " от менеджера " + order.getManager()+"\nНаправление: " + order.getWay() + 
 					"\nНеобходимо назначить слот на выгрузку";

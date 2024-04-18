@@ -31,6 +31,7 @@ const columnDefs = [
 	{ headerName: 'Дата создания заявки', field: 'dateCreateToView', comparator: dateComparator, },
 	{ headerName: 'Дата загрузки (первая)', field: 'loadDateToView', comparator: dateComparator, },
 	{ headerName: 'Дата выгрузки (последняя)', field: 'unloadDateToView', comparator: dateComparator, },
+	{ headerName: 'Слот на выгрузку', field: 'timeDeliveryToView', },
 	// { headerName: 'Дата и время выгрузки', field: 'unloadWindowToView', width: 200, },
 	// { headerName: 'Продолжительность выгрузки', field: 'onloadTime', width: 200, },
 	{ headerName: 'Тип маршрута', field: 'way', },
@@ -264,6 +265,8 @@ function getMappingData(data) {
 
 		const routeInfo = getRouteInfo(order)
 
+		const timeDeliveryToView = order.timeDelivery ? convertToDayMonthTime(order.timeDelivery) : ''
+
 		return {
 			...order,
 			dateCreateToView,
@@ -278,6 +281,7 @@ function getMappingData(data) {
 			stackingToView,
 			logistToView,
 			routeInfo,
+			timeDeliveryToView,
 		}
 	})
 }
@@ -387,4 +391,15 @@ function saveFilterState() {
 }
 function restoreFilterState() {
 	gridFilterLocalState.restoreState(gridOptions, LOCAL_STORAGE_KEY)
+}
+
+function convertToDayMonthTime(eventDateStr) {
+	const date = new Date(eventDateStr)
+	const formatter = new Intl.DateTimeFormat('ru', {
+		day: '2-digit',
+		month: 'long', 
+		hour: '2-digit',
+		minute: '2-digit'
+	})
+	return formatter.format(date)
 }

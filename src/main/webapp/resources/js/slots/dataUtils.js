@@ -24,11 +24,13 @@ export function getMinUnloadDateForManager(now, order) {
 }
 // расчет минимальной даты слота для закаов от поставщика (8 статус)
 export function getMinUnloadDateForSupplierOrder(now, order) {
-	// + 1 день от сегодня (пн на вт)
-	const dateDelivery = order.dateDelivery
-	const next = new Date(now + dateHelper.DAYS_TO_MILLISECONDS)
-	const nextDay = next.setHours(0, 0, 0, 0)
-	return nextDay > dateDelivery ? nextDay : dateDelivery
+	// // + 1 день от сегодня (пн на вт)
+	// const dateDelivery = order.dateDelivery
+	// const next = new Date(now + dateHelper.DAYS_TO_MILLISECONDS)
+	// const nextDay = next.setHours(0, 0, 0, 0)
+	// return nextDay > dateDelivery ? nextDay : dateDelivery
+
+	return now
 }
 // расчет минимальной даты слота для логистов
 export function getMinUnloadDateForLogist(now, order) {

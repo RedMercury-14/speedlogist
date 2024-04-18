@@ -1,0 +1,254 @@
+.none {
+    display: none !important;
+}
+.text-red {
+    color: red;
+}
+
+.navbar {
+    background-color: #0e377b !important;
+}
+.my-container {
+    margin: 100px 0;
+}
+
+#orderForm {
+    font-family: var(--font-family-sans-serif);
+}
+.form-container {
+    padding: 0 20px;
+    display: flex;
+    gap: 25px;
+}
+.separationLine {
+    border: 1px solid #c5d3e0;
+    margin: 0 0 0 0;
+}
+.form-section {
+    width: 100%;
+}
+.form-section.left {
+    flex: 3;
+}
+.form-section.right {
+    flex: 2;
+}
+@media (max-width: 1023px) {
+    .form-container {
+        flex-direction: column;
+        padding: 0 5px;
+    }
+    .separationLine {
+        display: none;
+    }
+}
+
+.input-row-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.input-row-container span {
+    text-wrap: nowrap;
+}
+
+.point-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+@media (max-width: 1023px) {
+    .point-container .card-body {
+        padding: 10px;
+    }
+}
+.row-container {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+.info-container label {
+    text-wrap: nowrap;
+}
+.info-container .pointDate {
+    flex: 1;
+}
+.info-container .cargoName {
+    flex: 2;
+}
+.info-container .cargoPall,
+.info-container .cargoWeight,
+.info-container .cargoVolume {
+    flex: 1;
+}
+ .timeFrame-container {
+    flex: 1;
+}
+ .contact-container {
+    flex: 3;
+}
+.address-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.address-container .autocomplete {
+    flex: 2;
+}
+.address-container .address-input {
+    flex: 7;
+}
+.address-flex-elem {
+    flex: 5;
+}
+.customsAddress-flex-elem {
+    flex: 3;
+}
+#orderForm input::-webkit-outer-spin-button,
+#orderForm input::-webkit-inner-spin-button,
+.modal input::-webkit-outer-spin-button,
+.modal input::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+#orderForm input[type=number],
+.modal input[type=number] {
+	appearance: textfield;
+	-moz-appearance: textfield;
+}
+#orderForm input::placeholder,
+.modal input::placeholder {
+	color: rgb(179, 179, 179);
+}
+
+#orderForm input::placeholder {
+    color: rgb(179, 179, 179);
+}
+#orderForm .card-footer {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+}
+#orderForm button.btn-lg {
+    width: 30%;
+    padding: 0.5rem 1rem;
+    font-size: 1.25rem;
+    border-radius: 0.3rem;
+}
+@media (max-width: 1023px) {
+    #orderForm button.btn-lg {
+        width: auto;
+        padding: 0.3rem 0.75rem;
+        font-size: 1.3rem;
+        border-radius: 0.3rem;
+    }
+}
+
+footer.to-bottom {
+    margin-top: 51px;
+    position: fixed;
+}
+
+.status-info-label {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 25px;
+	height: 25px;
+	border: 3px solid #80808093;
+	border-radius: 50%;
+	font-weight: bold;
+	font-family: var(--font-family-sans-serif);
+	color: #80808093;
+	cursor: pointer;
+}
+.status-info-label:hover {
+	border: 3px solid #808080e0;
+	color: #808080e0;
+}
+.status-info {
+	position: absolute;
+	visibility: hidden;
+	opacity: 0;
+    width: 300px;
+    top: 35px;
+    left: 5px;
+    z-index: 5;
+    background: #fff;
+    border: 2px solid #0e377b;
+    border-radius: 5px;
+    padding: 10px;
+	font-size: 12px;
+	transition: all 0.3s ease-in-out 0s;
+}
+.status-info.show {
+	visibility: visible;
+	opacity: 1;
+}
+
+select option:disabled {
+	background-color: rgb(194, 194, 194);
+	color: rgb(78, 78, 78);
+}
+
+.my-link {
+    display: inline-block;
+    color: #003369;
+    text-decoration: none;
+}
+.my-link:hover,
+.my-link:focus {
+    color: #0057b3;
+    text-decoration: none;
+}
+.my-link::after {
+    content: '';
+    display: block;
+    width: 0;
+    height: 2px;
+    background: #000;
+    transition: width .5s;
+}
+
+.my-link:hover::after {
+    width: 100%;
+    /* transition: width .3s; */
+}
+
+.info-text {
+	font-size: 1.2rem;
+}
+
+.modal {
+	font-family: var(--font-family-sans-serif);
+}
+.modal .close {
+	float: right;
+	font-size: 1.5rem;
+	font-weight: 700;
+	line-height: 1;
+	color: #000;
+	text-shadow: 0 1px 0 #fff;
+	opacity: .5;
+}
+
+.error-message {
+	color: red;
+	padding-bottom: 10px;
+	margin-top: -5px;
+}
+
+.modal-buttons {
+	display: flex;
+	flex-direction: row;
+	gap: 5px;
+	justify-content: center;
+}
+.modal-buttons button {
+	flex: 30%;
+}
+
+.whiteOverlay {
+	opacity: 1 !important;
+	background-color: #fff !important;
+}

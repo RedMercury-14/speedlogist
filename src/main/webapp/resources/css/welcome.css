@@ -1,0 +1,108 @@
+body {
+    background-color: #0e377b !important;
+}
+.my-content-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: max(100vh, 950px);
+}
+.bg-container {
+    width: 100%;
+    height: min(635px, 70vh);
+    position: relative;
+    z-index: 1;
+    background-image: url('../../resources/mainPage/img/images/home-slider-7.jpg');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+}
+.info-container {
+    position: relative;
+    margin-top: 160px;
+    padding-top: 30px;
+    padding-bottom: 30px;
+}
+.info-container .subtitle {
+    width: 60%;
+    font-size: 1.4rem;
+    line-height: 1.8em;
+    font-weight: 500;
+    letter-spacing: 2px;
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0 auto;
+}
+.info-container .title {
+    font-size: 2.2rem;
+    line-height: 1.2em;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 30px;
+    color: #FFF;
+}
+.info-container p {
+    width: 60%;
+    font-size: 1.2rem;
+    text-align: center;
+    color: #FFF;
+    margin: 5px auto;
+    font-weight: bold;
+}
+.info-container .title,
+.info-container .subtitle {
+    text-align: center;
+}
+.sb-thumb {
+    border: 4px solid #795548;
+}
+.btn.link-btn {
+    color: #FFF;
+    background-color: #081f45;
+    border-color: #6c757d;
+    border-width: 2px;
+}
+.btn.link-btn.focus,
+.btn.link-btn:focus {
+    color: #fff;
+    background-color: #2626a8;
+    border-color: #545b62;
+    box-shadow: 0 0 0 0.2rem rgba(130,138,145,.5);
+}
+.btn.link-btn:hover {
+    color: #fff;
+    background-color: #2626a8;
+    border-color: #545b62;
+}
+.btn.link-btn:not(:disabled):not(.disabled).active,
+.btn.link-btn:not(:disabled):not(.disabled):active {
+    color: #fff;
+    background-color: #545b62;
+    border-color: #4e555b;
+}
+
+@media (max-width: 767px) {
+    .my-content-container {
+        height: max(100vh, 660px);
+    }
+    .bg-container {
+        height: min(635px, 45vh);
+    }
+    .info-container {
+        margin-top: 40px;
+    }
+    .info-container .subtitle {
+        width: 100%;
+        font-size: 1.1rem;
+        line-height: 1.1em;
+        font-weight: 500;
+        letter-spacing: 2px;
+    }
+    .info-container .title {
+        font-size: 1.4rem;
+        margin-bottom: 10px;
+    }
+    .info-container p {
+        width: 100%;
+        font-size: 0.9rem;
+    }
+}

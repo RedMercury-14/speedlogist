@@ -1,0 +1,166 @@
+.none {
+    display: none;
+}
+.active {
+    background: #c4ffe1db;
+}
+.navbar {
+    background-color: #0e377b !important;
+}
+.error-message {
+    color: red;
+    font-size: 12px;
+    padding-left: 10px;
+}
+#sort {
+    font-family: var(--font-family-sans-serif);
+    margin-bottom: 60px;
+}
+#sort th {
+    font-weight: bold;
+}
+#sort input[name=update],
+#status, #option {
+    width: 190px;
+    padding-left: 12px;
+    padding-right: 12px;
+}
+#isTruck, #isDriver {
+    padding-left: 8px;
+    padding-right: 8px;
+}
+.info-cell div {
+    padding-bottom: 10px;
+}
+.info-cell div:last-child {
+    padding-bottom: 0;
+}
+.name-col {
+    width: 250px;
+}
+.price-col {
+    width: 130px;
+}
+.date-col {
+    width: 150px;
+}
+.control-col {
+    width: 200px;
+}
+#createTruckForm,
+#createDriverForm {
+    font-family: var(--font-family-sans-serif);
+}
+.form-container {
+    padding: 0 20px;
+    display: flex;
+    gap: 15px;
+}
+.form-container .modal-body {
+    flex: 1;
+}
+.separationLine {
+    border: 1px solid #c5d3e0;
+    margin: 25px 0;
+}
+.row-container {
+    display: flex;
+    gap: 10px;
+}
+
+.dimensions-container .form-control {
+    padding-left: 8px;
+    padding-right: 8px;
+}
+.info-container {
+    display: flex;
+    align-items: center;
+    gap: 10px 20px;
+    flex-wrap: wrap;
+}
+.date-label {
+    align-self: center;
+}
+.remark {
+    margin-left: 10px;
+    font-size: 12px;
+}
+#createTruckForm .form-check {
+    padding-left: 0;
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 7px;
+}
+#createTruckForm .form-check-input {
+    position: relative;
+    margin-top: 0;
+    margin-left: 0;
+    width: 20px;
+    height: 20px;
+}
+#createTruckForm .form-check-input,
+#createTruckForm .form-check-label {
+    cursor: pointer;
+}
+.modal input::-webkit-outer-spin-button,
+.modal input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.modal input[type=number] {
+    -moz-appearance: textfield;
+}
+.modal .close {
+    float: right;
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1;
+    color: #000;
+    text-shadow: 0 1px 0 #fff;
+    opacity: .5;
+}
+.modal input[type=date] {
+    padding-right: 30px;
+}
+.modal input[type=file] {
+    height: inherit;
+}
+
+#truckImageContainer img,
+#driverImageContainer img {
+    width: 120px;
+    height: 90px;
+    object-fit: cover;
+}
+
+footer.to-bottom {
+    margin-top: 51px;
+    position: fixed;
+}
+
+@media (max-width: 1160px) {
+    .table-scroll {
+        overflow-x: scroll;
+    }
+
+    #sort {
+        margin-bottom: 110px;
+    }
+}
+@media (max-width: 992px) {
+    .form-container {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .separationLine {
+        display: none;
+    }
+}
+@media (max-width: 500px) {
+    footer.to-bottom {
+        position: relative;
+    }
+}

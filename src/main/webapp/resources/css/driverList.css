@@ -1,0 +1,216 @@
+/* .none {
+    display: none;
+}
+
+.my-container {
+    margin-top: 100px;
+    margin-bottom: 100px;
+    font-family: var(--font-family-sans-serif);
+} */
+.none {
+    display: none !important;
+}
+.grid-container {
+    margin-top: 64px;
+    padding: 0 5px;
+    font-family: var(--font-family-sans-serif);
+}
+.navbar {
+    background-color: #0e377b !important;
+}
+footer.to-bottom {
+    position: fixed;
+}
+
+/* .navbar {
+    background-color: #0e377b !important;
+}
+
+.table th {
+    font-weight: bold;
+    text-align: center;
+}
+
+.table .controls-container .btn {
+    padding: 0.375rem 0.75rem;
+}
+
+footer.to-bottom {
+    position: fixed;
+} */
+
+#createDriverForm {
+    font-family: var(--font-family-sans-serif);
+}
+.form-container {
+    padding: 0 20px;
+    display: flex;
+    gap: 15px;
+}
+.form-container .modal-body {
+    flex: 1;
+}
+.row-container {
+    display: flex;
+    gap: 10px;
+}
+
+.date-label {
+    align-self: center;
+}
+.modal input::-webkit-outer-spin-button,
+.modal input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.modal input[type=number] {
+    -moz-appearance: textfield;
+}
+.modal .close {
+    float: right;
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1;
+    color: #000;
+    text-shadow: 0 1px 0 #fff;
+    opacity: .5;
+}
+.modal input[type=date] {
+    padding-right: 30px;
+}
+.modal input[type=file] {
+    height: inherit;
+}
+#driverImageContainer img {
+    width: 120px;
+    height: 90px;
+    object-fit: cover;
+}
+@media (max-width: 992px) {
+    .form-container {
+        flex-direction: column;
+        gap: 0;
+    }
+}
+
+.title-container, 
+.toolbar {
+	min-height: 30px;
+	border-left: 1px solid #babfc7;
+	border-right: 1px solid #babfc7;
+	background-color: lightsteelblue;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	padding: 1px 10px;
+}
+.title-container {
+	position: relative;
+	align-items: center;
+	border-top: 1px solid #babfc7;
+	background-color: rgb(167, 186, 211) !important;
+}
+.title-container h3 {
+	margin-bottom: 0;
+	font-size: 22px;
+	color: #393737;
+}
+.toolbar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 2px 0;
+}
+.toolbar label {
+    text-wrap: nowrap;
+}
+.toolbar .form-control,
+.toolbar .btn {
+    padding: 0 8px;
+    height: 30px;
+}
+.toolbar input[type="date"] {
+    width: 120px;
+}
+.toolbar input[type="text"] {
+    width: 260px;
+}
+.toolbar .tools-btn {
+    padding: 0 0.75rem;
+    border: 2px solid rgb(202, 212, 224);
+    border-radius: 0px;
+    font-family: 'Open Sans', sans-serif;
+    letter-spacing: 0.5px;
+}
+.toolbar .tools-btn:hover {
+    border: 2px solid #0e377b;
+}
+.toolbar .tools-btn:focus {
+    box-shadow: none
+}
+.toolbar .tools-btn.active {
+    border: 2px solid lightsteelblue;
+    background-color: #8394af;
+    color: white;
+    font-weight: bold;
+}
+
+
+#myGrid {
+    width: 100%;
+    height: calc(100vh - 190px);
+}
+.ag-theme-alpine {
+    --ag-cell-horizontal-border: var(--ag-row-border-width) var(--ag-row-border-style) var(--ag-row-border-color);
+    --ag-control-panel-background-color: var(--control-panel-bg-color:);
+    --ag-cell-horizontal-padding: calc(var(--ag-grid-size)*1.5);
+    --ag-header-column-resize-handle-color: #0e377b;
+    --ag-odd-row-background-color: var(--white-color);
+}
+.ag-header-cell-filtered {
+    background-color: #0e377b !important;
+    color: var(--white-color) !important;
+}
+.ag-header-cell-filtered span {
+    color: var(--white-color) !important;
+}
+.ag-header-cell-label {
+    justify-content: center;
+    text-align: center;
+}
+.text-center .ag-cell-wrapper {
+    text-align: center;
+}
+
+#myGrid .ag-cell-value {
+	line-height: 20px !important;
+	word-break: normal;
+	padding-top: 10px;
+	padding-bottom: 10px;
+}
+#myGrid .ag-cell-value.group-cell,
+#myGrid .ag-cell-value.checkbox-value {
+	padding-top: 0;
+	padding-bottom: 0;
+}
+#myGrid .ag-cell-value.checkbox-value .ag-checkbox-cell {
+    justify-content: center;
+}
+#myGrid .ag-cell-value.group-cell .ag-group-value{
+	padding-top: 10px;
+	padding-bottom: 10px;
+}
+#myGrid .cell-wrap-text {
+	white-space: normal !important;
+}
+#myGrid .grey-row {
+	background-color: rgba(204, 204, 204, 0.3);
+}
+@media (max-width: 767px) {
+    #myGrid {
+        height: calc(100vh - 240px);
+    }
+    .grid-container {
+        margin-top: 60px
+    }
+}

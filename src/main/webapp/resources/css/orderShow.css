@@ -1,0 +1,152 @@
+.none {
+    display: none !important;
+}
+.text-red {
+    color: red;
+}
+
+.navbar {
+    background-color: #0e377b !important;
+}
+.my-container {
+    margin: 100px 0;
+    font-family: var(--font-family-sans-serif);
+}
+
+.order-container {
+    padding: 0 20px;
+    display: flex;
+    gap: 25px;
+}
+.my-container .card-body {
+    padding: 0.5rem 1.25rem;
+}
+.order-section {
+    width: 100%;
+    font-size: 1.2rem;
+}
+.order-section.left {
+    flex: 3;
+}
+.order-section.right {
+    flex: 2;
+}
+.text-container {
+    padding: 3px 0;
+}
+.comment-container {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+.comment-container span:not(:first-child) {
+    font-size: 1rem;
+    text-align: justify;
+}
+.order-section .text-container {
+    padding: 8px 0;
+}
+.row-container {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+}
+
+.point-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-column-gap: 10px;
+    grid-row-gap: 10px;
+}
+.point-container .card-header {
+    padding: 0.3rem 1rem;
+}
+.accordion-title {
+    display: flex;
+    justify-content: space-between;
+}
+.accordion-title>div {
+    font-size: 22px;
+}
+.accordion .accordion-btn {
+	position: relative;
+	display: inline-block;
+	text-align: center;
+	width: auto;
+	padding: 0;
+	color: #7288a2;
+	font-size: 1.15rem;
+	font-weight: 400;
+	border: none;
+	background: none;
+	outline: none;
+}
+.accordion .accordion-btn:hover {
+	color: #495a6e;
+}
+#accordion .card-body {
+    background-color: #f9f9f9;
+}
+
+.routes-container {
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+}
+
+@media (max-width: 992px) {
+    .container.my-container {
+        margin: 60px auto 120px auto;
+        padding-right: 0;
+        padding-left: 0;
+    }
+    .order-container {
+        flex-direction: column;
+        gap: 0;
+        padding: 0 5px;
+    }
+    .point-container {
+        display: grid;
+        grid-template-columns: repeat(1, 1fr);
+        grid-column-gap: 10px;
+        grid-row-gap: 10px;
+    }
+    .point-container .card-body {
+        padding: 10px;
+    }
+    .row-container {
+        display: block;
+    }
+    .accordion-title>div {
+        font-size: 16px;
+    }
+}
+
+footer.to-bottom {
+    margin-top: 51px;
+    position: fixed;
+}
+
+.my-link {
+    display: inline-block;
+    color: #003369;
+    text-decoration: none;
+}
+.my-link:hover,
+.my-link:focus {
+    color: #0057b3;
+    text-decoration: none;
+}
+.my-link::after {
+    content: '';
+    display: block;
+    width: 0;
+    height: 2px;
+    background: #000;
+    transition: width .5s;
+}
+
+.my-link:hover::after {
+    width: 100%;
+    /* transition: width .3s; */
+}

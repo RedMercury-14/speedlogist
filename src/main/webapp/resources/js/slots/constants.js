@@ -1,0 +1,49 @@
+export const Draggable = FullCalendar.Draggable
+
+export const userMessages = {
+	start: 'Для начала работы выберите склад',
+	dateDropError: (unloadDate) => `Невозможно установить заказ на эту дату! Минимальная дата выгрузки ${unloadDate}`,
+	pallDropError: 'Невозможно установить поставку: паллетовместимость склада превышена!',
+	eventRemove: 'Поставка удалена с рампы склада. Можете установить поставку снова',
+	checkEventId: 'Заказ с таким номером уже добавлен!',
+	orderNotFound: 'Заказ с таким номером не найден!',
+	actionNotCompleted: 'Не удалось выполнить действие, обновите страницу!',
+	operationNotAllowed: 'Данная операция запрещена, недостаточно прав!',
+	messageLogistIsShort: 'Сообщение должно быть не менее 10 символов!',
+}
+
+export const eventColors = {
+	disabled: '#65979f',
+	default: '#0195ae',
+	borderColor: '#0e377b',
+}
+
+export const roles = ['manager', 'admin']
+export const adminLogins = [ "catalina!%ricoh" ]
+
+export const getOrdersForSlotsBaseUrl = '../api/manager/getOrdersForSlots/'
+export const loadOrderUrl = `../api/slot/load`
+export const updateOrderUrl = `../api/slot/update`
+export const deleteOrderUrl = `../api/slot/delete`
+export const confirmSlotUrl = `../api/slot/save`
+
+export const messagePattern = {
+	idMessage: null,
+	fromUser: null,
+	toUser: null,
+	text: null,
+	idRoute: null,
+	idOrder: null,
+	status: '300',
+	companyName: null,
+	comment: null,
+	datetime: null,
+	currency: null,
+	url: null,
+	nds: null,
+	fullName: null,
+	ynp: null,
+	date: null,
+	action: null,
+	payload: null
+}

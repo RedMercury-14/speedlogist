@@ -1,0 +1,345 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form" %>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec" %>
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta name="${_csrf.parameterName}" content="${_csrf.token}" />
+	<title>Заявка</title>
+	<link rel="icon" href="${pageContext.request.contextPath}/resources/img/favicon.ico">
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/orderShow.css">
+</head>
+<body>
+	<jsp:include page="headerNEW.jsp" />
+	<input type="hidden" value="<sec:authentication property="principal.username" />" id="login">
+	<div class="container my-container">
+		<div class="card">
+			<div class="card-header d-flex justify-content-between">
+				<h3 class="mb-0">Заявка № ${order.idOrder}</h3>
+			</div>
+			<div class="card-body">
+				<div class="order-container">
+					<div class="order-section left">
+						<div class="text-container">
+							<span class="text-muted font-weight-bold">Наименование контрагента: </span>
+							<span>${order.counterparty}</span>
+						</div>
+						<div class="text-container">
+							<span class="text-muted font-weight-bold">Контактное лицо контрагента: </span>
+							<span>${order.contact}</span>
+						</div>
+						<div class="text-container">
+							<span class="text-muted font-weight-bold">Сверка УКЗ: </span>
+							<span>
+								<c:choose>
+									<c:when test="${order.control == true}">
+										Да, сверять УКЗ
+									</c:when>
+									<c:otherwise>
+										Нет, не сверять УКЗ
+									</c:otherwise>
+								</c:choose>
+							</span>
+						</div>
+						<div class="text-container">
+							<span class="text-muted font-weight-bold">Тип маршрута: </span>
+							<span>${order.way}</span>
+						</div>
+						<div class="text-container">
+							<span class="text-muted font-weight-bold">Номер заказа из Маркета: </span>
+							<span>${order.marketNumber}</span>
+						</div>
+						<div class="text-container comment-container">
+							<span class="text-muted font-weight-bold">Комментарии:</span>
+							<span>${order.comment}</span>
+						</div>
+					</div>
+					<div class="order-section right">
+						<div class="text-container">
+							<span class="text-muted font-weight-bold">Тип загрузки: </span>
+							<span>${order.typeLoad}</span>
+						</div>
+						<div class="text-container">
+							<span class="text-muted font-weight-bold">Способ загрузки: </span>
+							<span>${order.methodLoad}</span>
+						</div>
+						<div class="text-container">
+							<span class="text-muted font-weight-bold">Тип кузова: </span>
+							<span>${order.typeTruck}</span>
+						</div>
+						<c:choose>
+							<c:when test="${order.typeTruck == 'Контейнер 20 футов' || order.typeTruck == 'Контейнер 40 футов'}">
+								<div class="text-container">
+									<span class="text-muted font-weight-bold">
+										<a class="my-link" href="/speedlogist/api/procurement/downdoad/incoterms" download>
+											Условия поставки:
+										</a>
+									</span>
+									<span>${order.incoterms}</span>
+								</div>
+							</c:when>
+						</c:choose>
+						<div class="text-container">
+							<span class="text-muted font-weight-bold">Груз: </span>
+							<span>${order.cargo}</span>
+						</div>
+						<div class="text-container">
+							<span class="text-muted font-weight-bold">Штабелирование: </span>
+							<c:choose>
+								<c:when test="${order.stacking == true}">
+									Да
+								</c:when>
+								<c:otherwise>
+									Нет
+								</c:otherwise>
+							</c:choose>
+						</div>
+						<c:choose>
+							<c:when test="${point.temperature != null}">
+								<div class="text-container">
+									<span class="text-muted font-weight-bold">Температура:</span>
+									<span>${order.temperature}</span>
+								</div>
+							</c:when>
+						</c:choose>
+					</div>
+				</div>
+				<h4 class="mt-3 mb-1 text-center">Точки маршрута:</h4>
+				<div class="point-container">
+					<c:forEach var="point" items="${order.addressesToView}" varStatus="loop">
+						<div class="card">
+							<div class="card-header">
+								<c:choose>
+									<c:when test="${point.pointNumber != null}">
+										<h5 class="d-flex align-items-center mb-0">Точка ${point.pointNumber}: ${point.type} </h5>
+									</c:when>
+									<c:otherwise>
+										<h5 class="d-flex align-items-center mb-0">Точка ${loop.index + 1}: ${point.type} </h5>
+									</c:otherwise>
+								</c:choose>
+							</div>
+							<div class="card-body">
+								<div class="text-container text-muted">
+									<span class="col-form-label font-weight-bold">Дата: </span>
+									<c:choose>
+										<c:when test="${point.date != null}">
+											<span>${point.date}</span>
+											<c:choose>
+												<c:when test="${point.time != null}">
+													<span>&#8226;</span>
+													<span>${point.time}</span>
+												</c:when>
+											</c:choose>
+										</c:when>
+										<c:otherwise>
+											Не назначена
+										</c:otherwise>
+									</c:choose>
+								</div>
+								<div class="text-container text-muted">
+									<span class="col-form-label font-weight-bold">Информация о грузе: </span>
+									<span>${point.cargo}</span>
+									<c:choose>
+										<c:when test="${point.pall != null}">
+											<span>&#8226;</span>
+											<span>${point.pall}</span>
+											<span> палл.</span>
+										</c:when>
+									</c:choose>
+									<c:choose>
+										<c:when test="${point.weight != null}">
+											<span>&#8226;</span>
+											<span>${point.weight}</span>
+											<span> кг</span>
+										</c:when>
+									</c:choose> 
+									<c:choose>
+										<c:when test="${point.volume != null}">
+											<span>&#8226;</span>
+											<span>${point.volume}</span>
+											<span> м.куб.</span>
+										</c:when>
+									</c:choose>
+								</div>
+								<c:choose>
+									<c:when test="${point.type == 'Загрузка'}">
+										<div class="text-container text-muted">
+											<span class="col-form-label font-weight-bold">Коды ТН ВЭД: </span>
+											<span>${point.tnvd}</span>
+										</div>
+									</c:when>
+								</c:choose>
+								<div class="text-container text-muted">
+									<span class="col-form-label font-weight-bold">Адрес склада: </span>
+									<span>${point.bodyAddress}</span>
+								</div>
+								<div class="row-container">
+									<c:choose>
+										<c:when test="${point.timeFrame != null}">
+											<div class="text-container text-muted">
+												<span class="col-form-label font-weight-bold">Время работы склада: </span>
+												<span>${point.timeFrame}</span>
+											</div>
+										</c:when>
+									</c:choose>
+									<c:choose>
+										<c:when test="${point.contact != null}">
+											<div class="text-container text-muted">
+												<span class="col-form-label font-weight-bold">Контактное лицо на складе: </span>
+												<span>${point.contact}</span>
+											</div>
+										</c:when>
+									</c:choose>
+								</div>
+								<c:choose>
+									<c:when test="${point.customsAddress != null}">
+										<div class="text-container text-muted">
+											<span class="col-form-label font-weight-bold">Адрес таможенного пункта: </span>
+											<span>${point.customsAddress}</span>
+										</div>
+									</c:when>
+								</c:choose>
+							</div>
+						</div>
+					</c:forEach>
+				</div>
+			</div>
+			<div class="accordion" id="accordion">
+				<div class="card">
+					<div class="card-header" id="headingOne">
+						<h2 class="mb-0 accordion-title">
+							<div>Старые точки маршрута</div>
+							<button class="accordion-btn" type="button" data-toggle="collapse" data-target="#collapse" aria-expanded="true" aria-controls="collapse">
+								Показать/скрыть
+							</button>
+						</h2>
+					</div>
+					<div id="collapse" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
+						<div class="card-body">
+							<div class="point-container">
+								<c:forEach var="point" items="${order.addresses}" varStatus="loop">
+									<c:choose>
+										<c:when test="${point.isCorrect == false}">
+											<div class="card">
+												<div class="card-header">
+													<h5 class="d-flex align-items-center mb-0">${point.type} </h5>
+												</div>
+												<div class="card-body">
+													<div class="text-container text-muted">
+														<span class="col-form-label font-weight-bold">Дата: </span>
+														<c:choose>
+															<c:when test="${point.date != null}">
+																<span>${point.date}</span>
+																<c:choose>
+																	<c:when test="${point.time != null}">
+																		<span>&#8226;</span>
+																		<span>${point.time}</span>
+																	</c:when>
+																</c:choose>
+															</c:when>
+															<c:otherwise>
+																Не назначена
+															</c:otherwise>
+														</c:choose>
+													</div>
+													<div class="text-container text-muted">
+														<span class="col-form-label font-weight-bold">Информация о грузе: </span>
+														<span>${point.cargo}</span>
+														<c:choose>
+															<c:when test="${point.pall != null}">
+																<span>&#8226;</span>
+																<span>${point.pall}</span>
+																<span> палл.</span>
+															</c:when>
+														</c:choose>
+														<c:choose>
+															<c:when test="${point.weight != null}">
+																<span>&#8226;</span>
+																<span>${point.weight}</span>
+																<span> кг</span>
+															</c:when>
+														</c:choose> 
+														<c:choose>
+															<c:when test="${point.volume != null}">
+																<span>&#8226;</span>
+																<span>${point.volume}</span>
+																<span> м.куб.</span>
+															</c:when>
+														</c:choose>
+													</div>
+													<c:choose>
+														<c:when test="${point.type == 'Загрузка'}">
+															<div class="text-container text-muted">
+																<span class="col-form-label font-weight-bold">Коды ТН ВЭД: </span>
+																<span>${point.tnvd}</span>
+															</div>
+														</c:when>
+													</c:choose>
+													<div class="text-container text-muted">
+														<span class="col-form-label font-weight-bold">Адрес склада: </span>
+														<span>${point.bodyAddress}</span>
+													</div>
+													<div class="row-container">
+														<c:choose>
+															<c:when test="${point.timeFrame != null}">
+																<div class="text-container text-muted">
+																	<span class="col-form-label font-weight-bold">Время работы склада: </span>
+																	<span>${point.timeFrame}</span>
+																</div>
+															</c:when>
+														</c:choose>
+														<c:choose>
+															<c:when test="${point.contact != null}">
+																<div class="text-container text-muted">
+																	<span class="col-form-label font-weight-bold">Контактное лицо на складе: </span>
+																	<span>${point.contact}</span>
+																</div>
+															</c:when>
+														</c:choose>
+													</div>
+													<c:choose>
+														<c:when test="${point.customsAddress != null}">
+															<div class="text-container text-muted">
+																<span class="col-form-label font-weight-bold">Адрес таможенного пункта: </span>
+																<span>${point.customsAddress}</span>
+															</div>
+														</c:when>
+													</c:choose>
+												</div>
+											</div>
+										</c:when>
+									</c:choose>
+								</c:forEach>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="accordion" id="accordionTwo">
+				<div class="card">
+					<div class="card-header" id="headingTwo">
+						<h2 class="mb-0 accordion-title">
+							<div>Маршруты</div>
+							<button class="accordion-btn" type="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapse">
+								Показать/скрыть
+							</button>
+						</h2>
+					</div>
+					<div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionTwo">
+						<div class="card-body">
+							<div class="routes-container">
+								
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<jsp:include page="footer.jsp" />
+	<script charset="utf-8" src="${pageContext.request.contextPath}/resources/js/orderShow.js" type="module"></script>
+	<script src='${pageContext.request.contextPath}/resources/mainPage/js/nav-fixed-top.js'></script>
+</body>
+</html>

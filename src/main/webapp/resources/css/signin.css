@@ -1,0 +1,87 @@
+.lowercase {
+    text-transform: lowercase;
+}
+body {
+    height: 100vh;
+    background-image: url('../../resources/mainPage/img/images/bg.webp') !important;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position:center;
+    background-color: #0e377b !important;
+}
+.center {
+    display: flex;
+    justify-content: center;
+}
+.my-card {
+    margin-top: 15vh;
+    padding: 40px;
+    width: 30vw;
+    background-color: white;
+    box-shadow: 10px 10px 12px 0px rgb(26 30 33 / 30%);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+@media (max-width: 1440px) {
+    .my-card {
+        width: 40vw;
+    }
+}
+@media (max-width: 900px) {
+    .my-card {
+        width: 70vw;
+        padding: 30px;
+    }
+}
+@media (max-width: 600px) {
+    .my-card {
+        margin-top: 120px;
+        width: 80vw;
+        padding: 15px;
+    }
+    .my-card h1 {
+        margin: 0;
+    }
+}
+.my-input input {
+    background-color: #fff;
+}
+.my-btn {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    outline: none;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: normal;
+    vertical-align: middle;
+    color: rgb(255 255 255);
+    text-align: center;
+    border-radius: 4px 4px;
+    background-color: #081f45;;
+    line-height: 16px;
+    padding: 10px 20px;
+    box-sizing: border-box;
+    border: none;
+    margin: 0;
+    transition: background-color 0.2s;
+}
+.signin-btn:hover,
+.signin-btn:focus {
+    box-shadow: 0 0 0 2px white, 0 0 0 3px #081f45;
+}
+.signin-btn:active {
+    background-color: #0b2958;
+}
+.submit-container {
+    display: flex;
+    justify-content: end;
+}
+.error-message {
+    color: red;
+}
+footer.to-bottom {
+    margin-top: 71px;
+    position: fixed;
+}

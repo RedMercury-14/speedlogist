@@ -1,0 +1,198 @@
+import { dateHelper, isAdmin, isLogist} from "../utils.js"
+import { adminLogins } from "./constants.js"
+import {
+	getMinUnloadDateForLogist,
+	getMinUnloadDateForManager,
+	getMinUnloadDateForSupplierOrder,
+} from "./dataUtils.js"
+
+// проверка, является ли пользователь админом приложения
+export function isAdminForCalendar(login) {
+	return adminLogins.includes(login.toLowerCase())
+}
+
+
+// проверка редактирования ивента по логину
+export function editableRules(order, currentLogin, currentRole) {
+	const now = new Date().getTime()
+	const orderLogin = order.loginManager.toLowerCase()
+	const status = order.status
+	const isPickupOrder = status === 7
+	const isSupplierOrder = status === 8
+
+	if (
+		(
+			isAdmin(currentRole)
+			&& !isNotEditableStatuses(status)
+			&& isEditableDate(now, order)
+		)
+		|| (
+			!isAnotherUser(orderLogin, currentLogin) 
+			&& isPickupOrder
+			&& isManagerEditableDate(now, order)
+		)
+		|| (
+			!isAnotherUser(orderLogin, currentLogin)
+			&& isSupplierOrder
+			&& isSupplierOrderEditableDate(now, order)
+		)
+		|| (
+			isLogist(currentRole)
+			&& isLogistEditableStatuses(status)
+			&& isLogistEditableDate(now, order))
+	) {
+		return true
+	} else {
+		return false
+	}
+}
+
+// проверка доступа к функции подтверждения слота
+export function editableRulesToConfirmBtn(order, currentLogin, currentRole) {
+	const now = new Date().getTime()
+	const orderLogin = order.loginManager.toLowerCase()
+	const status = order.status
+	const isPickupOrder = status === 7
+	const isSupplierOrder = status === 8 || status === 100
+
+	return (
+			isAdmin(currentRole)
+			&& (isPickupOrder || isSupplierOrder)
+			&& isEditableDate(now, order)
+		)
+		|| (
+			!isAnotherUser(orderLogin, currentLogin) 
+			&& isPickupOrder
+			&& isManagerEditableDate(now, order)
+		)
+		|| (
+			!isAnotherUser(orderLogin, currentLogin)
+			&& isSupplierOrder
+			&& isSupplierOrderEditableDate(now, order)
+		)
+}
+
+
+// правила для менеджеров (закупки)
+export function isManagerEditableStatuses(status) {
+	return status === 7 || status === 8
+}
+export function isManagerEditableDate(nowMs, order) {
+	const timeDelivery = order.timeDelivery
+	const minUnloadDate = getMinUnloadDateForManager(nowMs, order)
+	const eventDate = new Date(timeDelivery).getTime()
+	return eventDate >= minUnloadDate
+}
+
+
+// правила для логистов
+export function isLogistEditableStatuses(status) {
+	return status >= 20 && status <= 60
+}
+export function isLogistEditableDate(nowMs, order) {
+	const timeDelivery = order.timeDelivery
+	const minUnloadDate = getMinUnloadDateForLogist(nowMs, order)
+	const eventDate = new Date(timeDelivery).getTime()
+	return eventDate >= minUnloadDate
+}
+
+
+// правила для заказов от поставщика
+export function isSupplierOrderEditableDate(nowMs, order) {
+	const timeDelivery = order.timeDelivery
+	const minUnloadDate = getMinUnloadDateForSupplierOrder(nowMs, order)
+	const eventDate = new Date(timeDelivery).getTime()
+	return eventDate >= minUnloadDate
+}
+
+
+// общие правила
+export function isNotEditableStatuses(status) {
+	return status === 70 || status === 100
+}
+export function isEditableDate(nowMs, order) {
+	const timeDelivery = order.timeDelivery
+	const eventDate = new Date(timeDelivery).getTime()
+	return eventDate >= nowMs
+}
+
+
+// правила доступа к методам работы с БД
+export function methodAccessRules(method, order, currentLogin, currentRole) {
+	switch (method) {
+		case 'load': return loadMethodAccessRules(order, currentLogin, currentRole)
+		case 'update': return updateMethodAccessRules(order, currentLogin, currentRole)
+		case 'delete': return deleteMethodAccessRules(order, currentLogin, currentRole)
+		case 'confirm': return confirmMethodAccessRules(order, currentLogin, currentRole)
+		default: return true
+	}
+}
+function loadMethodAccessRules(order, currentLogin, currentRole) {
+	const orderLogin = order.loginManager.toLowerCase()
+	return !isLogist(currentRole) && (!isAnotherUser(orderLogin, currentLogin) || isAdmin(currentRole))
+}
+function updateMethodAccessRules(order, currentLogin, currentRole) {
+	const orderLogin = order.loginManager.toLowerCase()
+	return !isAnotherUser(orderLogin, currentLogin) || isAdmin(currentRole) || isLogist(currentRole)
+}
+function deleteMethodAccessRules(order, currentLogin, currentRole) {
+	const orderLogin = order.loginManager.toLowerCase()
+	return !isLogist(currentRole) && (!isAnotherUser(orderLogin, currentLogin) || isAdmin(currentRole))
+}
+function confirmMethodAccessRules(order, currentLogin, currentRole) {
+	const orderLogin = order.loginManager.toLowerCase()
+	return !isLogist(currentRole) && (!isAnotherUser(orderLogin, currentLogin) || isAdmin(currentRole))
+}
+
+
+export function colorRules(order, currentLogin, currentRole) {
+	const orderLogin = order.loginManager.toLowerCase()
+	return isAdmin(currentRole)
+			|| !isAnotherUser(orderLogin, currentLogin)
+			|| isLogist(currentRole)
+}
+
+
+// проверка разных логинов
+export function isAnotherUser(login, currentLogin) {
+	if (!currentLogin) return true
+	if (!login) return false
+	return login.toLowerCase() !== currentLogin
+}
+
+// проверка наличия в слотах заказа с указанным номером из маркета (id)
+export function checkEventId(id, stocks, dropeZone) {
+	let res = false
+
+	stocks.forEach(stock => {
+		const event = stock.events.find(event => event.id === id)
+		event && (res = true)
+	})
+
+	const event = dropeZone.find(order => order.marketNumber === id)
+	event && (res = true)
+
+	return res
+}
+
+// проверка даты начала ивента на корректность
+export function isInvalidEventDate(info, minUnloadDate) {
+	const { event: fcEvent } = info
+	const newDate = new Date(fcEvent.startStr)
+	return newDate < minUnloadDate
+}
+
+// проверка паллетовместимости склада
+export function checkPallCount(numberOfPalls, maxPall) {
+	const pallCountElem = document.querySelector('#pallCount')
+	const maxPallElem = document.querySelector('#maxPall')
+
+	if (!pallCountElem || !maxPallElem) {
+		return false
+	}
+
+	const currentPallCount = Number(pallCountElem.innerText)
+	const newPallCount = currentPallCount + numberOfPalls
+
+	return newPallCount <= maxPall
+}

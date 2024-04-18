@@ -545,6 +545,9 @@ export function isManager(role) {
 export function isProcurement(role) {
 	return role === '[ROLE_PROCUREMENT]'
 }
+export function isSlotsObserver(role) {
+	return role === '[ROLE_SLOTOBSERVER]'
+}
 
 export function disableButton(button) {
 	button.setAttribute('disabled', true)

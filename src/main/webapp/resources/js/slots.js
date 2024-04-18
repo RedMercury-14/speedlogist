@@ -30,7 +30,7 @@ import {
 	addSmallHeaderClass,
 	updateDropZone,
 } from "./slots/calendarUtils.js"
-import { debounce, getData, isAdmin, isLogist } from "./utils.js"
+import { debounce, getData, isAdmin, isLogist, isSlotsObserver } from "./utils.js"
 import { uiIcons } from "./uiIcons.js"
 import { wsSlotUrl } from "./global.js"
 import { ajaxUtils } from "./ajaxUtils.js"
@@ -42,7 +42,7 @@ import {
 	wsSlotOnMessageHandler,
 	wsSlotOnOpenHandler,
 } from "./slots/wsHandlers.js"
-import { checkEventId, checkPallCount, isAnotherUser, isInvalidEventDate, methodAccessRules } from "./slots/rules.js"
+import { checkEventId, checkPallCount, isAnotherUser, isInvalidEventDate, isOldSupplierOrder, methodAccessRules } from "./slots/rules.js"
 import { convertToDayMonthTime, getDatesToSlotsFetch, getMinUnloadDate, getOrderDataForAjax } from "./slots/dataUtils.js"
 
 const debouncedEventsSetHandler = debounce(eventsSetHandler, 200)
@@ -230,7 +230,7 @@ function getContextMenuItemsForOrderTable(params) {
 
 	const result = [
 		{
-			disabled: !!idRamp || status !== 6 || isLogist(role) || isAdmin(role),
+			disabled: !!idRamp || status !== 6 || isLogist(role) || isAdmin(role) || isSlotsObserver(role),
 			name: `Создать слот заказа на самовывоз`,
 			action: () => {
 				const eventContainer = document.querySelector("#external-events")
@@ -239,7 +239,7 @@ function getContextMenuItemsForOrderTable(params) {
 			icon: uiIcons.clickBoadrPlus
 		},
 		{
-			disabled: !!idRamp || status !== 5 || isLogist(role) || isAdmin(role),
+			disabled: !!idRamp || status !== 5 || isLogist(role) || isAdmin(role) || isSlotsObserver(role),
 			name: `Создать слот заказа от поставщика`,
 			action: () => {
 				const eventContainer = document.querySelector("#external-events")
@@ -295,7 +295,7 @@ function stockSelectOnChangeHandler(e, calendar) {
 	store.setCurrentStock(selectedStock)
 	slots = selectedStock.ramps
 
-	if (!isAdmin(role) && !isLogist(role)) {
+	if (!isAdmin(role) && !isLogist(role) && !isSlotsObserver(role)) {
 		const addNewOrderButton = document.querySelector("#addNewOrder")
 		addNewOrderButton.removeAttribute("disabled")
 	}
@@ -355,8 +355,10 @@ function eventsHandler(info, successCallback, failureCallback) {
 	successCallback(events)
 }
 function eventContentHandler(info) {
+	const login = store.getLogin()
 	const eventElem = createEventElement(info)
-	const closeBtn = info.isDraggable ? createCloseEventButton(info) : ''
+	const showBtn = isOldSupplierOrder(info, login)
+	const closeBtn = info.isDraggable || showBtn ? createCloseEventButton(info, showBtn) : ''
 	const popupBtn = createPopupButton(info)
 
 	// костыль чтобы избежать отображения подсказки до встраивания в календарь
@@ -369,7 +371,7 @@ function eventContentHandler(info) {
 	// }
 
 	return {
-		domNodes: info.isDraggable
+		domNodes: info.isDraggable || showBtn
 			? [ eventElem, closeBtn, popupBtn ]
 			: [ eventElem, popupBtn ]
 	}
@@ -475,7 +477,7 @@ function eventClickHandler(info) {
 	}
 }
 function eventsSetHandler(info) {
-	console.log('ivents: ', info)
+	// console.log('ivents: ', info)
 }
 
 

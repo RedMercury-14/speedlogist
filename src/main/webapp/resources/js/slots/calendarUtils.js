@@ -89,10 +89,10 @@ export function createEventElement(info) {
 }
 
 // функция создания кнопки закрытия ивента календаря
-export function createCloseEventButton(info) {
+export function createCloseEventButton(info, showBtn) {
 	const closeBtn = document.createElement('button')
 	closeBtn.type = 'button'
-	closeBtn.disabled = !info.isDraggable
+	closeBtn.disabled = !info.isDraggable && !showBtn
 	closeBtn.className = 'close'
 	closeBtn.ariaLabel = 'Закрыть'
 	closeBtn.innerHTML = '&times;'

@@ -92,6 +92,7 @@
   						<option value="6">Склад(Пока что тест карты)</option>
   						<option value="99">Отдел закупок</option>
   						<option value="10">Отдел сопровождения закупок</option>
+  						<option value="11">Слот наблюдатель</option>
  						</select>
 				</c:when>
 			</c:choose>

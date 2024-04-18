@@ -133,15 +133,17 @@ html, body {
 }
 .status-info ul {
 	display: flex;
+	align-items: center;
 	margin-bottom: 7px;
 }
 .status-info ul:last-child {
 	margin-bottom: 0;
 }
+
 .status-info .led {
 	display: inline-block;
-	width: 12px;
-	height: 12px;
+	width: 20px;
+	height: 20px;
 	margin-right: 5px;
 	border: 1px solid black;
 	border-radius: 50%;
@@ -152,7 +154,7 @@ html, body {
 .left-sidebar {
 	position: relative;
 	background-color: white;
-	width: 640px;
+	width: 540px;
 	padding: 15px 15px 10px 15px;
 	display: flex;
 	flex-direction: column;
@@ -177,10 +179,12 @@ html, body {
 #calendar {
 	background: #fff;
 	padding: 5px;
-	margin-right: 45px;
 }
 #calendar .fc-license-message {
 	visibility: hidden;
+}
+.fc .fc-view-harness {
+	margin-right: 45px;
 }
 .fc-timegrid-slot-label {
 	font-size: 70%;
@@ -279,7 +283,7 @@ html, body {
 	flex-wrap: wrap;
 	align-content: flex-start;
 	gap: 0.5rem;
-	height: calc(100vh - 380px);
+	height: calc(100vh - 350px);
 	overflow-y: scroll;
 }
 #external-events .fc-event {
@@ -297,6 +301,12 @@ html, body {
 	margin: 0;
 	padding: 5px;
 	font-weight: bold;
+}
+#external-events .single-slot {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+	font-size: 0.9rem;
 }
 
 
@@ -411,7 +421,7 @@ svg:not(:root) {
 	display: none;
 }
 .sidebar {
-	padding-top: 83px;
+	margin-top: 135px;
 	display: flex;
 	gap: 0;
 	position: absolute;
@@ -426,7 +436,7 @@ svg:not(:root) {
 	height: 100%;
 }
 .sidebar.smallHeader {
-	padding-top: 64px;
+	margin-top: 135px;
 }
 .active-sidebar .sidebar {
 	max-width: 760px;
@@ -436,7 +446,7 @@ svg:not(:root) {
 	.sidebar {
 		top: 0px;
 		right: 0px;
-		height: calc(100%);
+		height: calc(100% - 135px);
 		border: 2px solid rgba(0, 0, 0, 0.2);
 		transition: width 500ms;
 	}
@@ -472,14 +482,10 @@ svg:not(:root) {
 	position: absolute;
 	content: "";
 	z-index: -1;
-	top: 83px;
 	left: 44px;
 	width: 100%;
 	height: 40px;
 	background: var(--secondary-color);
-}
-.sidebar.smallHeader::before {
-	top: 64px;
 }
 .active-sidebar .sidebar::before {
 	left: 42px;
@@ -543,7 +549,7 @@ svg:not(:root) {
 	width: 100%;
 	opacity: 0;
 	pointer-events: none;
-	margin-bottom: 15px;
+	/* margin-bottom: 15px; */
 	transition: opacity 500ms;
 	overflow: hidden;
 }

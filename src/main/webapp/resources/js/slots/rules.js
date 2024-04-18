@@ -1,4 +1,4 @@
-import { dateHelper, isAdmin, isLogist} from "../utils.js"
+import { dateHelper, isAdmin, isLogist, isSlotsObserver} from "../utils.js"
 import { adminLogins } from "./constants.js"
 import {
 	getMinUnloadDateForLogist,
@@ -19,6 +19,8 @@ export function editableRules(order, currentLogin, currentRole) {
 	const status = order.status
 	const isPickupOrder = status === 7
 	const isSupplierOrder = status === 8
+
+	if (isSlotsObserver(currentRole)) return false
 
 	if (
 		(
@@ -54,6 +56,8 @@ export function editableRulesToConfirmBtn(order, currentLogin, currentRole) {
 	const status = order.status
 	const isPickupOrder = status === 7
 	const isSupplierOrder = status === 8 || status === 100
+
+	if (isSlotsObserver(currentRole)) return false
 
 	return (
 			isAdmin(currentRole)
@@ -129,18 +133,22 @@ export function methodAccessRules(method, order, currentLogin, currentRole) {
 }
 function loadMethodAccessRules(order, currentLogin, currentRole) {
 	const orderLogin = order.loginManager.toLowerCase()
+	if (isSlotsObserver(currentRole)) return false
 	return !isLogist(currentRole) && (!isAnotherUser(orderLogin, currentLogin) || isAdmin(currentRole))
 }
 function updateMethodAccessRules(order, currentLogin, currentRole) {
 	const orderLogin = order.loginManager.toLowerCase()
+	if (isSlotsObserver(currentRole)) return false
 	return !isAnotherUser(orderLogin, currentLogin) || isAdmin(currentRole) || isLogist(currentRole)
 }
 function deleteMethodAccessRules(order, currentLogin, currentRole) {
 	const orderLogin = order.loginManager.toLowerCase()
+	if (isSlotsObserver(currentRole)) return false
 	return !isLogist(currentRole) && (!isAnotherUser(orderLogin, currentLogin) || isAdmin(currentRole))
 }
 function confirmMethodAccessRules(order, currentLogin, currentRole) {
 	const orderLogin = order.loginManager.toLowerCase()
+	if (isSlotsObserver(currentRole)) return false
 	return !isLogist(currentRole) && (!isAnotherUser(orderLogin, currentLogin) || isAdmin(currentRole))
 }
 
@@ -151,6 +159,7 @@ export function colorRules(order, currentLogin, currentRole) {
 	return isAdmin(currentRole)
 			|| !isAnotherUser(orderLogin, currentLogin)
 			|| isLogist(currentRole)
+			|| isSlotsObserver(currentRole)
 }
 
 
@@ -196,4 +205,17 @@ export function checkPallCount(numberOfPalls, maxPall) {
 	const newPallCount = currentPallCount + numberOfPalls
 
 	return newPallCount <= maxPall
+}
+
+// проверка на старый заказ текущего пользователя от поставщика 
+export function isOldSupplierOrder(info, currentLogin) {
+	const nowMs = Date.now()
+	const { event: fcEvent } = info
+	const eventDate = new Date(fcEvent.startStr).getTime()
+	const order = fcEvent.extendedProps.data
+	const orderLogin = order.loginManager.toLowerCase()
+	const status = order.status
+	const isSupplierOrder = status === 8 || status === 100
+
+	return (isSupplierOrder) && !isAnotherUser(orderLogin, currentLogin) && eventDate < nowMs
 }

@@ -33,14 +33,14 @@
 		<div class="left-sidebar">
 			<div class="">
 				<p class="left-sidebar-title">1: выберите склад</p>
-				<select class="form-control form-control-lg" name="stockNumber" id="stockNumber">
+				<select class="form-control" name="stockNumber" id="stockNumber">
 					<option selected disabled value="">Выберите склад</option>
 				</select>
 			</div>
 
 			<div>
 				<p class="left-sidebar-title">2: добавьте заказ по номеру из Маркета</p>
-				<button id="addNewOrder" class="btn btn-primary btn-lg w-100" disabled>+ Добавить заказ</button>
+				<button id="addNewOrder" class="btn btn-primary w-100" disabled>+ Добавить заказ</button>
 			</div>
 
 			<div class="d-flex flex-column">
@@ -94,7 +94,7 @@
 						<ul><span class="led led-red"></span><span>40 - Маршрут на самовывоз отменен</span></ul>
 						<ul><span class="led led-light-green"></span><span>50 - Маршрут на самовывоз (на бирже)</span></ul>
 						<ul><span class="led led-dark-green"></span><span>60 - Машина на самовывоз найдена</span></ul>
-						<ul><span class="led led-blue"></span><span>70 -Маршрут на самовывоз завершен</span></ul>
+						<ul><span class="led led-blue"></span><span>70 - Маршрут на самовывоз завершен</span></ul>
 						<ul><span class="led led-purple"></span><span>100 - Слот от поставщика, подтвержден</span></ul>
 					</div>
 				</div>

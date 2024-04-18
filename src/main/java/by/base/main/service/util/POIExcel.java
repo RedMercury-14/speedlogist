@@ -580,6 +580,10 @@ public class POIExcel {
 
         for (int i = 3; i < sheet.getLastRowNum() + 1; i++) {
             XSSFRow rowI = sheet.getRow(i);
+            XSSFRow rowBack = null;
+            if(i != 3) {
+            	rowBack = sheet.getRow(i-1);
+            }
             XSSFRow rowNext = null;
             if(sheet.getLastRowNum() + 1 != i) {
                 rowNext = sheet.getRow(i+1);
@@ -588,6 +592,7 @@ public class POIExcel {
             XSSFCell cellNameСounterparty487 = rowI.getCell(nameСounterparty487);
             XSSFCell cellCodeOrder487 = rowI.getCell(codeOrder487);
             XSSFCell cellCodeOrder487NEXT = rowNext == null ? null : rowNext.getCell(codeOrder487);
+            XSSFCell cellCodeOrder487BACK = rowBack == null ? null : rowBack.getCell(codeOrder487);
             XSSFCell cellDate487 = rowI.getCell(date487);
             XSSFCell cellNumStock487 = rowI.getCell(numStock487);
             XSSFCell cellCodeProduct487 = rowI.getCell(codeProduct487);
@@ -618,6 +623,8 @@ public class POIExcel {
             cellCountInPack487.setCellType(CellType.STRING);
             cellCountInPall487.setCellType(CellType.STRING);
 
+          
+            
             //Смотрим статус: если не 50 - то пропускаем
             if(!cellStatusOrderMarcet487.toString().trim().equals("50")) {
                 continue;
@@ -628,7 +635,7 @@ public class POIExcel {
                 numOrderMarket = Integer.parseInt(cellCodeOrder487.toString().trim());
                 if(order == null) {
                     order = new Order();
-                    order.setMarketNumber(numOrderMarket.toString());
+                    order.setMarketNumber(numOrderMarket.toString());                   
                     order.setCounterparty(cellNameСounterparty487.toString().trim());
                     Date dateDelivery;
                     try {
@@ -685,7 +692,7 @@ public class POIExcel {
                     order.setSku(sku);
                 }else {
                     if(Double.parseDouble(cellCountProduct487.toString().trim()) == 0.0 && order!= null) {
-                    	if(i == sheet.getLastRowNum() && order != null) { //принудительная загрузка
+                    	if(i == sheet.getLastRowNum() && order != null) { //принудительная загрузка если последняя строка во всём по потребности равна 0
 //            				System.err.println("Сохраняем заказ в базе");
                             //перед сохранение просчитываем время на выгрузку, пока костыльно, т.е. 6 мин на паллету!
                             Integer minute = Integer.parseInt(order.getPall()) * 6;
@@ -721,6 +728,39 @@ public class POIExcel {
                             numOrderMarket= null;
                             sku = 0;
                     		break;
+                    	}
+                    	if(numOrderMarket != Integer.parseInt(cellCodeOrder487NEXT.toString().trim())) {//принудительная загрузка если послендняя строка в заказа равна 0, а дальше есть новый заказ
+//                    		System.err.println("Сохраняем заказ в базе");
+                            //перед сохранение просчитываем время на выгрузку, пока костыльно, т.е. 6 мин на паллету!
+                            Integer minute = Integer.parseInt(order.getPall()) * 6;
+                            
+                            order.setStatus(5);
+
+                            Integer pallMono = Integer.valueOf(order.getMonoPall());
+                            Integer pallMix = Integer.valueOf(order.getMixPall());
+                            Integer skuTotal = Integer.valueOf(order.getSku());
+                            
+//                            Расчет времени выгрузки авто в минутах.
+//                            =10мин+ МОНО*2мин.+MIX*3мин.+((SKU-1мин)*3мин)
+//                            Разъяснение:
+//                            10 мин.= не зависимо от объема поставки есть действия специалиста требующие временных затрат.
+//                            МОНО -количество моно паллет в заказе
+//                            MIX - количество микс паллет в заказе
+//                            SKU-1 – каждое SKU более одной требует дополнительных временных затрат.
+                            Integer minutesUnload = 10 + pallMono * 2 + pallMix * 3 + ((skuTotal - 1) * 3);
+                            System.out.println(order.getMarketNumber() + " <---MARKET");
+                            try {
+                            	order.setTimeUnload(Time.valueOf(LocalTime.ofSecondOfDay(minutesUnload*60)));
+            				} catch (Exception e) {
+            					 return "Ошибка расчёта времени выгрузки! В номере из маркета " + order.getMarketNumber() + " рассчитано " + minutesUnload + " минут! \nРАСЧЁТ ЗАВЕРШЕН С ОШИБКОЙ!";
+            				}
+                            
+                            message = message + " \n " + orderService.saveOrderFromExcel(order); // здесь происходит пролверка и запись заявки
+                            createOrders++;
+                            order = null;
+                            numOrderMarket= null;
+                            sku = 0;
+                            continue;
                     	}
                         continue;
                     }
@@ -779,11 +819,9 @@ public class POIExcel {
                     order.setSku(sku);
                 }
             }
-            
+                        
             if(cellCodeOrder487NEXT == null || numOrderMarket != Integer.parseInt(cellCodeOrder487NEXT.toString().trim())) {
 //				System.err.println("Сохраняем заказ в базе");
-                //перед сохранение просчитываем время на выгрузку, пока костыльно, т.е. 6 мин на паллету!
-                Integer minute = Integer.parseInt(order.getPall()) * 6;
                 
                 order.setStatus(5);
 
@@ -810,12 +848,16 @@ public class POIExcel {
 //                System.err.println(order);
                 
                 
+              
+                
                 message = message + " \n " + orderService.saveOrderFromExcel(order); // здесь происходит пролверка и запись заявки
                 createOrders++;
                 order = null;
-                numOrderMarket= null;
-                sku = 0;
+                numOrderMarket = null;
+                sku = 0; 
+                continue;
             }
+            
         }
         message = message + "\n Строк с 50 статусом: " + (numRow50Status) + "\n ";
         message = message + "Всего считано маршрутов: " + (createOrders) + "\n ";

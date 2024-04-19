@@ -250,10 +250,10 @@ public class MainController {
 		}
 		
 		//телеграмм бот!
-		if(telegramBot.isRunning == false) {
-			new BotInitializer(telegramBot).init();
-		}
-//		System.err.println("ТЕЛЕГРАММ БОТ ОТКЛЮЧЕН!");
+//		if(telegramBot.isRunning == false) {
+//			new BotInitializer(telegramBot).init();
+//		}
+		System.err.println("ТЕЛЕГРАММ БОТ ОТКЛЮЧЕН!");
 		
 		
 		try {
@@ -878,8 +878,10 @@ public class MainController {
 				Set<Order> orders2 = route.getOrders();
 				if(orders2 != null && orders2.size() != 0) {
 					for (Order o : orders2) {
-						o.setStatus(40);
-						orderService.updateOrder(o);
+						if(o.getStatus() != 10) {
+							o.setStatus(40);
+							orderService.updateOrder(o);
+						}
 					}						
 				}
 				break;

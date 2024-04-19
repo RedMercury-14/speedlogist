@@ -40,7 +40,8 @@
 		<h3 class="container">
 			<!-- <a class="my-link" href="<spring:url value="/main/logistics/routemanager" />">Менеджер маршрутов (развоз по магазинам)</a>
 			<br> -->
-			<a class="my-link" href="<spring:url value="/main/logistics/internationalCarrier" />">Список международных перевозчиков</a>
+			
+<a href="mailto:gg@asf.ru?subject=%D0%A2%D0%B5%D0%BC%D0%B0%20%D0%BF%D0%B8%D1%81%D1%8C%D0%BC%D0%B0&body=%D0%91%D0%BB%D1%8F%20%D0%B1%D0%BB%D1%8F%20%D0%B1%D0%BB%D1%8F%20%D0%B1%D0%BB%D1%8F%20%D1%89%D0%BA%D0%BF%D1%80%D1%89%D0%BF%D1%83%D0%BA%D0%B3%D1%80">Создать письмо</a>			<a class="my-link" href="<spring:url value="/main/logistics/internationalCarrier" />">Список международных перевозчиков</a>
 			<br>
 			<a class="my-link" href="<spring:url value="/main/logistics/international" />">Менеджер международных маршрутов</a>
 			<br>

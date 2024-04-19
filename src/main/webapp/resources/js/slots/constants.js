@@ -10,6 +10,7 @@ export const userMessages = {
 	actionNotCompleted: 'Не удалось выполнить действие, обновите страницу!',
 	operationNotAllowed: 'Данная операция запрещена, недостаточно прав!',
 	messageLogistIsShort: 'Сообщение должно быть не менее 10 символов!',
+	shiftChangeError: 'Невозможно установить заказ на эту дату! Время выгрузки заказа пересекается со временем пересменки склада!',
 }
 
 export const eventColors = {

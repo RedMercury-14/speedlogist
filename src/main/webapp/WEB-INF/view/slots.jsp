@@ -62,7 +62,7 @@
 			</div>
 		</div>
 
-		<div style="width: calc(100% - 100px);" id='calendar'></div>
+		<div style="width: calc(100% - 100px);" id='calendar' data-stock=""></div>
 
 		<div class="sidebar">
 			<button aria-label="close sidebar" type="button" class="close-button">
@@ -84,12 +84,12 @@
 				<div class="status-info-container">
 					<span id="statusInfoLabel" class="status-info-label">?</span>
 					<div id="statusInfo" class="status-info">
-						<ul><span class="led"></span><span>5 - виртуальный заказ</span></ul>
+						<ul><span class="led"></span><span>5 - Виртуальный заказ</span></ul>
 						<ul><span class="led led-orange"></span><span>6 - Заказ на самовывоз</span></ul>
 						<ul><span class="led led-turquoise"></span><span>7 - Слот на самовывоз, не подтвержден</span></ul>
 						<ul><span class="led led-light-purple"></span><span>8 - Слот от поставщика, не подтвержден</span></ul>
 						<ul><span class="led led-grey"></span><span>10 - Заказ на самовывоз отменен</span></ul>
-						<ul><span class="led led-dark-turquoise"></span><span>20 - Подтвержденный слот на самовывоз</span></ul>
+						<ul><span class="led led-dark-turquoise"></span><span>20 - Слот на самовывоз, подтвержден</span></ul>
 						<ul><span class="led led-yellow"></span><span>30 - Маршрут на самовывоз (нет на бирже)</span></ul>
 						<ul><span class="led led-red"></span><span>40 - Маршрут на самовывоз отменен</span></ul>
 						<ul><span class="led led-light-green"></span><span>50 - Маршрут на самовывоз (на бирже)</span></ul>
@@ -130,8 +130,13 @@
 	<div class="modal fade" id="eventInfoModal" tabindex="-1" aria-labelledby="eventInfoModalLabel" aria-hidden="true">
 		<div class="modal-dialog">
 			<div class="modal-content">
-				<div class="modal-header">
-					<h5 class="modal-title" id="eventInfoModalLabel">Информация о заказе</h5>
+				<div class="modal-header align-items-center">
+					<h5 class="modal-title" id="eventInfoModalLabel">Информация о слоте</h5>
+					<button id="copySlotInfo" type="button" class="btn ml-1" title="Копировать данные для письма">
+						<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-files" viewBox="0 0 16 16">
+							<path d="M13 0H6a2 2 0 0 0-2 2 2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2 2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zm0 13V4a2 2 0 0 0-2-2H5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1zM3 4a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4z"/>
+						</svg>
+					</button>
 					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 						<span aria-hidden="true">&times;</span>
 					</button>

@@ -366,9 +366,9 @@ export function showUnloadTime(addUnloadPointForm) {
 
 export function getStockAddress(stockNumber) {
 	switch (stockNumber) {
-		case '1700': return 'Склад Прилесье'
-		case '1200': return 'Склад, Оптовый, Хатежинский с/с, 1 (скоропорт)'
-		case '1250': return 'Склад 9-ый км'
+		case '1700': return 'Склад Адрес: 223065, Беларусь, Луговослободской с/с,Минский р-н,Минская обл., РАД М4, 18км. 2а, склад W05'
+		case '1200': return 'Склад 223039, Республика Беларусь, Минская область, Минский район, Хатежинский с/с, 1'
+		case '1250': return 'Склад Адрес: 223050, Республика Беларусь, Минская область, Минский р-н, 9-ый км Московского шоссе'
 		default: return ''
 	}
 }
@@ -378,6 +378,9 @@ export function getOrderStatusByStockDelivery(numStockDelivery) {
 		case '1700':
 		case '1200':
 		case '1250':
+		case 1700:
+		case 1200:
+		case 1250:
 			return 6
 		default:
 			return 20

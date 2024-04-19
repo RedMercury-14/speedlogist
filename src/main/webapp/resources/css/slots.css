@@ -196,6 +196,78 @@ html, body {
 	font-size: 85%;
 	opacity: 1;
 }
+#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="08:00:00"],
+#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="20:00:00"] {
+	border-top: none;
+	border-bottom: none;
+	background: repeating-linear-gradient(
+		45deg,
+		#ffffff,
+		#ffffff 10px,
+		#f44336 10px,
+		#f44336 20px
+	);
+}
+#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="08:10:00"],
+#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="20:10:00"] {
+	border-top: none;
+	border-bottom: none;
+	background: repeating-linear-gradient(
+		45deg,
+		#f44336 4.15px,
+		#f44336 14.15px,
+		#ffffff 14.15px,
+		#ffffff 24.15px
+	);
+}
+#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="08:20:00"],
+#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="20:20:00"] {
+	border-top: none;
+	border-bottom: none;
+	background: repeating-linear-gradient(
+		45deg,
+		#f44336 18.30px,
+		#f44336 28.30px,
+		#ffffff 28.30px,
+		#ffffff 38.30px
+	);
+}
+#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="08:30:00"],
+#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="20:30:00"] {
+	border-top: none;
+	border-bottom: none;
+	background: repeating-linear-gradient(
+		45deg,
+		#ffffff 2.45px,
+		#ffffff 12.45px,
+		#f44336 12.45px,
+		#f44336 22.45px
+	);
+}
+#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="08:40:00"],
+#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="20:40:00"] {
+	border-top: none;
+	border-bottom: none;
+	background: repeating-linear-gradient(
+		45deg,
+		#f44336 6.6px,
+		#f44336 16.6px,
+		#ffffff 16.6px,
+		#ffffff 26.6px
+	);
+}
+#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="08:50:00"],
+#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="20:50:00"] {
+	border-top: none;
+	border-bottom: none;
+	background: repeating-linear-gradient(
+		45deg,
+		#f44336 20.75px,
+		#f44336 30.75px,
+		#ffffff 30.75px,
+		#ffffff 40.75px
+	);
+}
 .fc-timegrid-slots table tr {
 	transition: all .15s ease;
 }

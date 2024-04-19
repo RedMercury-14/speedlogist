@@ -1,6 +1,6 @@
 import { snackbar } from "../snackbar/snackbar.js"
 import { Draggable, eventColors, userMessages } from "./constants.js"
-import { convertToDDMMYYYY, getEventBGColor } from "./dataUtils.js"
+import { convertToDDMMYYYY, convertToDayMonthTime, getEventBGColor, getSlotStatus } from "./dataUtils.js"
 import { editableRulesToConfirmBtn } from "./rules.js"
 
 export function addNewStockOption(select, stock) {
@@ -139,7 +139,7 @@ export function showEventInfoPopup(fcEvent, currentLogin, currentRole) {
 
 	const eventInfo = document.querySelector('#eventInfo')
 	const confirmSlotBtn = document.querySelector('#confirmSlot')
-	eventInfo.innerHTML = createEventInfoHTML(data)
+	eventInfo.innerHTML = createEventInfoHTML(fcEvent)
 	confirmSlotBtn.innerText = text
 	confirmSlotBtn.dataset.action = action
 	confirmSlotBtn.disabled = !editableRulesToConfirmBtn(data, currentLogin, currentRole)
@@ -151,17 +151,31 @@ export function hideEventInfoPopup() {
 }
 
 // функция создания контента модального окна с информацией об ивенте
-function createEventInfoHTML(data) {
-	const { marketNumber, dateDelivery, timeUnload, cargo, counterparty, loginManager } = data
+function createEventInfoHTML(fcEvent) {
+	const order = fcEvent.extendedProps.data
+	const { marketNumber, dateDelivery, timeUnload, cargo, counterparty, loginManager, idRamp, idOrder, status } = order
+	const statusToView = getSlotStatus(status)
+	const stock = `${idRamp}`.slice(0, -2)
+	const ramp = `${idRamp}`.slice(-2)
 	const [h,m] = timeUnload.split(":")
 	const dateDeliveryView = convertToDDMMYYYY(dateDelivery)
+	const eventStartDate = convertToDayMonthTime(fcEvent.startStr)
 
 	return `
-		<div class="event-info__id">Номер из Маркета: ${marketNumber}</div>
-		<div class="event-info__id">Дата доставки: ${dateDeliveryView}</div>
+		<div class="event-info__status">
+			<p class="mb-1 font-weight-bold">Статус заказа: ${statusToView}</p>
+		</div>
+		<div class="event-info__ramp">
+			Склад: ${stock}
+			Рампа: ${ramp}
+		</div>
+		<div class="event-info__id">Начало выгрузки: ${eventStartDate}</div>
+		<div class="event-info__duration">Длительность выгрузки: ${h} ч ${m} мин</div>
+		<div class="event-info__id">ID заказа: ${idOrder}</div>
+		<div class="event-info__marketNumber">Номер из Маркета: ${marketNumber}</div>
+		<div class="event-info__dateDelivery">Дата доставки: ${dateDeliveryView}</div>
 		<div class="event-info__cargo">Контрагент: ${counterparty}</div>
 		<div class="event-info__price">Груз: ${cargo}</div>
-		<div class="event-info__duration">Длительность выгрузки: ${h} ч ${m} мин</div>
 		<div class="event-info__manager">Менеджер: ${loginManager}</div>
 	`
 }
@@ -297,5 +311,8 @@ export function addSmallHeaderClass() {
 }
 
 
-
-
+// копирование информации о слоте в буфер обмена
+export function copyToClipboard(text) {
+	navigator.clipboard.writeText(text)
+	snackbar.show('Информация о слоте скопирована в буфер обмена')
+}

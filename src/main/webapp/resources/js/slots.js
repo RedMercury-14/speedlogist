@@ -29,8 +29,9 @@ import {
 	hideEventInfoPopup,
 	addSmallHeaderClass,
 	updateDropZone,
+	copyToClipboard,
 } from "./slots/calendarUtils.js"
-import { debounce, getData, isAdmin, isLogist, isSlotsObserver } from "./utils.js"
+import { dateHelper, debounce, getData, isAdmin, isLogist, isSlotsObserver } from "./utils.js"
 import { uiIcons } from "./uiIcons.js"
 import { wsSlotUrl } from "./global.js"
 import { ajaxUtils } from "./ajaxUtils.js"
@@ -42,8 +43,8 @@ import {
 	wsSlotOnMessageHandler,
 	wsSlotOnOpenHandler,
 } from "./slots/wsHandlers.js"
-import { checkEventId, checkPallCount, isAnotherUser, isInvalidEventDate, isOldSupplierOrder, methodAccessRules } from "./slots/rules.js"
-import { convertToDayMonthTime, getDatesToSlotsFetch, getMinUnloadDate, getOrderDataForAjax } from "./slots/dataUtils.js"
+import { checkEventId, checkPallCount, isAnotherUser, isInvalidEventDate, isOldSupplierOrder, isOverlapWithShiftChange, methodAccessRules } from "./slots/rules.js"
+import { convertToDayMonthTime, getDatesToSlotsFetch, getMinUnloadDate, getOrderDataForAjax, getSlotInfoToCopy } from "./slots/dataUtils.js"
 
 const debouncedEventsSetHandler = debounce(eventsSetHandler, 200)
 const orderTableGridOption = {
@@ -179,6 +180,10 @@ window.onload = async function() {
 	const reloadWindowButton = document.querySelector('#reloadWindowButton')
 	reloadWindowButton.addEventListener('click', (e) => window.location.reload())
 
+	// кнопка копирования информации о слоте
+	const copySlotInfoBtn = document.querySelector('#copySlotInfo')
+	copySlotInfoBtn.addEventListener('click', copySlotInfoBtnClickHandler)
+
 	const statusInfoLabel = document.querySelector('#statusInfoLabel')
 	const statusInfo = document.querySelector('#statusInfo')
 	statusInfoLabel.addEventListener('mouseover', (e) => statusInfo.classList.add('show'))
@@ -295,10 +300,15 @@ function stockSelectOnChangeHandler(e, calendar) {
 	store.setCurrentStock(selectedStock)
 	slots = selectedStock.ramps
 
+	// отключаем кнопку "Добавить заказ" для логиста, админа и наблюдателя
 	if (!isAdmin(role) && !isLogist(role) && !isSlotsObserver(role)) {
 		const addNewOrderButton = document.querySelector("#addNewOrder")
 		addNewOrderButton.removeAttribute("disabled")
 	}
+
+	// добавляем для календаря текущий склад в атрибуты
+	const calendarElem = document.querySelector('#calendar')
+	calendarElem.dataset.stock = selectedStock.id
 
 	snackbar.show(`Выбран ${selectedStock.name}`)
 
@@ -327,6 +337,14 @@ function confirmSlotBtnClickHandler(e) {
 	const status = fcEvent.extendedProps.data.status
 	if (action === 'unSave' && status === 20) return
 	confirmSlot(fcEvent, action)
+}
+
+// обработчик нажатия на кнопку копирования информации о слоте
+function copySlotInfoBtnClickHandler(e) {
+	const fcEvent = store.getSlotToConfirm()
+	const currentStock = store.getCurrentStock()
+	const slotInfo = getSlotInfoToCopy(fcEvent, currentStock)
+	copyToClipboard(slotInfo)
 }
 
 
@@ -407,6 +425,15 @@ function eventDropHandler(info) {
 		return
 	}
 
+	// проверка пересечения с пересменкой
+	const currentStock = store.getCurrentStock()
+	const shiftChange = currentStock.shiftChange
+	if (isOverlapWithShiftChange(info, shiftChange)) {
+		info.revert()
+		snackbar.show(userMessages.shiftChangeError)
+		return
+	}
+
 	updateOrder(info, false)
 }
 function eventReceiveHandler(info) {
@@ -430,6 +457,14 @@ function eventReceiveHandler(info) {
 	if (!checkPallCount(numberOfPalls, maxPall)) {
 		info.revert()
 		snackbar.show(userMessages.pallDropError)
+		return
+	}
+
+	// проверка пересечения с пересменкой
+	const shiftChange = currentStock.shiftChange
+	if (isOverlapWithShiftChange(info, shiftChange)) {
+		info.revert()
+		snackbar.show(userMessages.shiftChangeError)
 		return
 	}
 

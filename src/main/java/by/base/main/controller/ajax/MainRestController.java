@@ -122,6 +122,8 @@ public class MainRestController {
 	
 	private static FileInputStream fileInputStream = null;
 	private static Properties properties = null;
+	
+	private static Map<Integer, Integer> stockLimits = null;
 
 	private Gson gson = new Gson();
 
@@ -292,9 +294,10 @@ public class MainRestController {
 	 * @param str
 	 * @return
 	 * @throws ParseException
+	 * @throws IOException 
 	 */
 	@PostMapping("/slot/delete")
-	public Map<String, String> postSlotDelete(HttpServletRequest request, @RequestBody String str) throws ParseException {
+	public Map<String, String> postSlotDelete(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
 		java.util.Date t1 = new java.util.Date();
 		User user = getThisUser();
 		Map<String, String> response = new HashMap<String, String>();
@@ -373,10 +376,19 @@ public class MainRestController {
 	 * @param str
 	 * @return
 	 * @throws ParseException
+	 * @throws IOException 
 	 */
 	@PostMapping("/slot/update")
-	public Map<String, String> postSlotUpdate(HttpServletRequest request, @RequestBody String str) throws ParseException {
+	public Map<String, String> postSlotUpdate(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
 		java.util.Date t1 = new java.util.Date();
+		//проверяем, прогружен-ли кеш с лимитами по складам
+//		String appPath = request.getServletContext().getRealPath("");
+//		if(stockLimits == null) {
+//			FileInputStream fileInputStream = new FileInputStream(appPath + "resources/properties/stock.properties");
+//			Properties propertiesStock = new Properties();
+//			propertiesStock.load(fileInputStream);
+//		}
+		
 		User user = getThisUser();
 		String role = user.getRoles().stream().findFirst().get().getAuthority();
 		Map<String, String> response = new HashMap<String, String>();
@@ -414,7 +426,7 @@ public class MainRestController {
 			order.setSlotInfo(fullMessageTopManager);
 			break;
 		}
-		String errorMessage = orderService.updateOrderForSlots(order);//проверка на пересечение со временим других слотов
+		String errorMessage = orderService.updateOrderForSlots(order);//проверка на пересечение со временим других слотов и лимит складов
 		java.util.Date t2 = new java.util.Date();
 		System.out.println(t2.getTime()-t1.getTime() + " ms - update" );
 		if(errorMessage!=null) {

@@ -178,6 +178,38 @@ export function getEventBGColor(status) {
 }
 
 
+export function getSlotStatus(status) {
+	switch (status) {
+		case 5:
+			return 'Виртуальный заказ'
+		case 6:
+			return 'Заказ на самовывоз'
+		case 7:
+			return 'Слот на самовывоз, не подтвержден'
+		case 8:
+			return 'Слот от поставщика, не подтвержден'
+		case 100:
+			return 'Слот от поставщика, подтвержден'
+		case 10:
+			return 'Заказ на самовывоз отменен'
+		case 20:
+			return 'Слот на самовывоз, подтвержден'
+		case 30:
+			return 'Маршрут на самовывоз (нет на бирже)'
+		case 40:
+			return 'Маршрут на самовывоз отменен'
+		case 50:
+			return 'Маршрут на самовывоз (на бирже)'
+		case 60:
+			return 'Машина на самовывоз найдена'
+		case 70:
+			return 'Маршрут на самовывоз завершен'
+		default:
+			return 'Неизвестный статус'
+	}
+}
+
+
 // проверка отображения склада
 export function stockIsVisible(stockId) {
 	const currentStock = store.getCurrentStock()
@@ -205,4 +237,32 @@ export function getDatesToSlotsFetch(dayCount) {
 		startDateStr: startDate.toISOString().split('T')[0],
 		endDateStr: endDate.toISOString().split('T')[0],
 	}
+}
+
+// получение данных слота для копирования
+export function getSlotInfoToCopy(fcEvent, currentStock) {
+	const order = fcEvent.extendedProps.data
+	const [ date, time ] = fcEvent.startStr.split('T')
+	const dateToView = dateHelper.changeFormatToView(date)
+	const timeToView = time.slice(0, 5)
+	const { counterparty, } = order
+
+	const {address, contact} = currentStock
+
+	const text = `
+Подтверждение заказа «ЗАО Доброном»
+
+Зарегистрированный поставщик: ${counterparty}
+
+Дата отгрузки на РЦ: ${dateToView}
+
+Плановое время выгрузки: ${timeToView} (слот на выгрузку на складе - необходимо стать на выгрузку в это время!)
+
+Адрес склада выгрузки: ${address}
+
+Контактный телефон приемки: ${contact}
+
+ВНИМАНИЕ!!! Прибытие на РЦ и передача документов на склад не менее, чем за 30 (тридцать) минут до назначенного времени выгрузки, но не ранее, чем за 2 (два часа).
+	`
+	return text
 }

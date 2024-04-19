@@ -192,6 +192,66 @@ export function isInvalidEventDate(info, minUnloadDate) {
 	return newDate < minUnloadDate
 }
 
+// проверка попадания ивента на пересменку. Пример shiftChangeArray: ['08:00', '09:00', '20:00', '21:00']
+export function isOverlapWithShiftChange(info, shiftChangeArray) {
+	if(!shiftChangeArray || shiftChangeArray.length === 0) return false
+	const shiftChangeCount = shiftChangeArray.length / 2
+	if (shiftChangeCount === 0) return false
+
+	const { event: fcEvent } = info
+	const currentDate = new Date(fcEvent.startStr)
+	const eventStartMs = new Date(fcEvent.start).getTime()
+	const eventEndMs = new Date(fcEvent.end).getTime()
+
+	// одна пересменка в сутки
+	if (shiftChangeCount === 1) {
+		const [ SH1startH, SH1startM ] = shiftChangeArray[0].split(':')
+		const [ SH1endH, SH1endM ] = shiftChangeArray[1].split(':')
+		// время начала и конца пересменки
+		const shiftСhangeStartMs = currentDate.setUTCHours(SH1startH, SH1startM,0, 0)
+		const shiftСhangeEndMs = currentDate.setUTCHours(SH1endH, SH1endM,0, 0)
+
+		// если ивент начинается раньше и заканчивается в течение получаса пересменки
+		if (eventStartMs < shiftСhangeStartMs
+			&& eventEndMs <= shiftСhangeStartMs + (dateHelper.MILLISECONDS_IN_HOUR / 2)
+		) return false
+
+		// если ивент начинается после пересменки
+		if (eventStartMs >= shiftСhangeEndMs) return false
+	}
+
+	// две пересменки в сутки
+	if (shiftChangeCount === 2) {
+		const [ SH1startH, SH1startM ] = shiftChangeArray[0].split(':')
+		const [ SH1endH, SH1endM ] = shiftChangeArray[1].split(':')
+		const [ SH2startH, SH2startM ] = shiftChangeArray[2].split(':')
+		const [ SH2endH, SH2endM ] = shiftChangeArray[3].split(':')
+		// время начала и конца утренней пересменки
+		const morningShiftСhangeStartMs = currentDate.setUTCHours(SH1startH, SH1startM, 0, 0)
+		const morningShiftСhangeEndMs = currentDate.setUTCHours(SH1endH, SH1endM, 0, 0)
+		// время начала и конца вечерней пересменки
+		const eveningShiftСhangeStartMs = currentDate.setUTCHours(SH2startH, SH2startM, 0, 0)
+		const eveningShiftСhangeEndMs = currentDate.setUTCHours(SH2endH, SH2endM, 0, 0)
+
+		// если ивент начинается раньше утренней пересменки и заканчивается в течение получаса утренней пересменки
+		if (eventStartMs < morningShiftСhangeStartMs
+			&& eventEndMs <= morningShiftСhangeStartMs + (dateHelper.MILLISECONDS_IN_HOUR / 2)
+		) return false
+
+		// если ивент начинается позже утренней пересменки и раньше вечерней пересменки,
+		// а заканчивается в течение получаса вечерней пересменки
+		if (eventStartMs >= morningShiftСhangeEndMs
+			&& eventStartMs < eveningShiftСhangeStartMs
+			&& eventEndMs <= eveningShiftСhangeStartMs + (dateHelper.MILLISECONDS_IN_HOUR / 2)
+		) return false
+
+		// если ивент начинается после вечерней пересменки
+		if (eventStartMs >= eveningShiftСhangeEndMs) return false
+	}
+
+	return true
+}
+
 // проверка паллетовместимости склада
 export function checkPallCount(numberOfPalls, maxPall) {
 	const pallCountElem = document.querySelector('#pallCount')

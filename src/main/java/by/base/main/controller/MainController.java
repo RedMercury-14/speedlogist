@@ -253,7 +253,7 @@ public class MainController {
 //		if(telegramBot.isRunning == false) {
 //			new BotInitializer(telegramBot).init();
 //		}
-		System.err.println("ТЕЛЕГРАММ БОТ ОТКЛЮЧЕН!");
+		System.err.println("ТЕЛЕГРАММ БОТ ОТКЛЮЧЕН!");//jnrk
 		
 		
 		try {

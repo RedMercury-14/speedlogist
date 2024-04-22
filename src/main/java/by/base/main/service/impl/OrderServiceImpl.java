@@ -7,6 +7,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -155,6 +157,28 @@ public class OrderServiceImpl implements OrderService {
 		}else {
 			return "Обнаружено пересечение слотов!";
 		}		
+	}
+	
+	@Override
+	public Integer getSummPallInStock(Order order) {
+		Timestamp dateTimeStart = order.getTimeDelivery();
+		String numStock = null;
+		if(order.getIdRamp().toString().length() < 5) {
+			System.err.println("Ошибка в названии склада. Склад не может быть двухзначным");
+		}
+		if(order.getIdRamp().toString().length() < 6) { // проверка на будующее если будет учавстовать склад с трехзначным индексом
+			numStock = order.getIdRamp().toString().substring(0, 3);
+		}else {
+			numStock = order.getIdRamp().toString().substring(0, 4);
+		}
+		Date dateTarget = Date.valueOf(dateTimeStart.toLocalDateTime().toLocalDate());
+		Set<Order> ordersSet = orderDAO.getOrderListHasDateAndStockFromSlots(dateTarget, numStock); // получаем список всех заказов на данном складе на текущий день
+		List<Order> orders = ordersSet.stream().filter(o-> !o.getMarketNumber().equals(order.getMarketNumber())).collect(Collectors.toList()); // убираем таргетный зака, если он есть
+		Integer summPall = 0;
+		for (Order order2 : orders) {
+			summPall = summPall + Integer.parseInt(order2.getPall().trim());
+		}
+		return summPall;
 	}
 	
 	/**

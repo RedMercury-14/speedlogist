@@ -381,13 +381,11 @@ public class MainRestController {
 	@PostMapping("/slot/update")
 	public Map<String, String> postSlotUpdate(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
 		java.util.Date t1 = new java.util.Date();
-		//проверяем, прогружен-ли кеш с лимитами по складам
-//		String appPath = request.getServletContext().getRealPath("");
-//		if(stockLimits == null) {
-//			FileInputStream fileInputStream = new FileInputStream(appPath + "resources/properties/stock.properties");
-//			Properties propertiesStock = new Properties();
-//			propertiesStock.load(fileInputStream);
-//		}
+		
+		String appPath = request.getServletContext().getRealPath("");
+		FileInputStream fileInputStream = new FileInputStream(appPath + "resources/properties/stock.properties");
+		Properties propertiesStock = new Properties();
+		propertiesStock.load(fileInputStream);
 		
 		User user = getThisUser();
 		String role = user.getRoles().stream().findFirst().get().getAuthority();
@@ -426,6 +424,16 @@ public class MainRestController {
 			order.setSlotInfo(fullMessageTopManager);
 			break;
 		}
+		//главные проверки
+		//проверка на лимит приемки паллет
+		Integer summPall = orderService.getSummPallInStock(order);
+		Integer summPallNew =  summPall + Integer.parseInt(order.getPall().trim());
+		String propKey = "limit." + getTrueStock(order);
+		if(summPallNew > Integer.parseInt(propertiesStock.getProperty(propKey))) {
+			response.put("status", "100");
+			response.put("message", "Ошибка. Превышен лимит по паллетам на текущую дату");
+			return response;
+		}
 		String errorMessage = orderService.updateOrderForSlots(order);//проверка на пересечение со временим других слотов и лимит складов
 		java.util.Date t2 = new java.util.Date();
 		System.out.println(t2.getTime()-t1.getTime() + " ms - update" );
@@ -451,15 +459,40 @@ public class MainRestController {
 	}
 	
 	/**
+	 * Метод возвращает номер склада из idRump
+	 * @param order
+	 * @return
+	 */
+	private String getTrueStock(Order order) {
+		String numStock = null;
+		if(order.getIdRamp().toString().length() < 5) {
+			System.err.println("Ошибка в названии склада. Склад не может быть двухзначным");
+		}
+		if(order.getIdRamp().toString().length() < 6) { // проверка на будующее если будет учавстовать склад с трехзначным индексом
+			numStock = order.getIdRamp().toString().substring(0, 3);
+		}else {
+			numStock = order.getIdRamp().toString().substring(0, 4);
+		}
+		return numStock;		
+	}
+	
+	/**
 	 * Метод добавления ивента / слота на рампу
 	 * @param request
 	 * @param str
 	 * @return
 	 * @throws ParseException
+	 * @throws IOException 
 	 */
 	@PostMapping("/slot/load")
-	public Map<String, String> postSlotLoad(HttpServletRequest request, @RequestBody String str) throws ParseException {
+	public Map<String, String> postSlotLoad(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
 		java.util.Date t1 = new java.util.Date();
+		
+		String appPath = request.getServletContext().getRealPath("");
+		FileInputStream fileInputStream = new FileInputStream(appPath + "resources/properties/stock.properties");
+		Properties propertiesStock = new Properties();
+		propertiesStock.load(fileInputStream);
+		
 		User user = getThisUser();	
 		Map<String, String> response = new HashMap<String, String>();
 		String role = user.getRoles().stream().findFirst().get().getAuthority();
@@ -487,6 +520,16 @@ public class MainRestController {
 		order.setIdRamp(idRamp);
 		order.setLoginManager(user.getLogin());
 		order.setStatus(jsonMainObject.get("status") == null ? 7 : Integer.parseInt(jsonMainObject.get("status").toString()));
+		
+		//проверка на лимит приемки паллет
+				Integer summPall = orderService.getSummPallInStock(order);
+				Integer summPallNew =  summPall + Integer.parseInt(order.getPall().trim());
+				String propKey = "limit." + getTrueStock(order);
+				if(summPallNew > Integer.parseInt(propertiesStock.getProperty(propKey))) {
+					response.put("status", "100");
+					response.put("message", "Ошибка. Превышен лимит по паллетам на текущую дату");
+					return response;
+				}
 		String errorMessage = orderService.updateOrderForSlots(order);//проверка на пересечение со временим других слотов
 		java.util.Date t2 = new java.util.Date();
 		System.out.println(t2.getTime()-t1.getTime() + " ms - load" );

@@ -3,6 +3,7 @@ package by.base.main.dao;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Set;
 
 import by.base.main.model.Order;
 import by.base.main.model.Route;
@@ -63,6 +64,15 @@ public interface OrderDAO {
 	 * @return
 	 */
 	Order getOrderAfterTimeDeliveryHasStockAndRamp(Order order);
+	
+	/**
+	 * Возвращает список заявок, проставленных на таргетном складе, согласно дате
+	 * Для поиска по складу использует метод LIKE 
+	 * @param dateTarget дата перемещения
+	 * @param stockTarget номер склада в стринге
+	 * @return
+	 */
+	Set<Order> getOrderListHasDateAndStockFromSlots (Date dateTarget, String stockTarget);
 	
 	Integer saveOrder (Order order);
 	

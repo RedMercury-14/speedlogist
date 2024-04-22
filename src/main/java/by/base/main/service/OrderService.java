@@ -70,6 +70,13 @@ public interface OrderService {
 	 */
 	String updateOrderForSlots (Order order);
 	
+	/**
+	 * Возвращает суммарное кол-во паллет на текущий момент времени на складе
+	 * @param order
+	 * @return
+	 */
+	Integer getSummPallInStock (Order order);
+	
 	int updateOrderFromStatus (Order order);
 	
 	List<Order> getOrderByPeriodCreateAndCounterparty(Date dateStart, Date dateEnd, String counterparty);

@@ -315,4 +315,24 @@ public class OrderDAOImpl implements OrderDAO{
 		return trucks.stream().collect(Collectors.toList());
 	}
 
+	@Transactional
+	@Override
+	public Set<Order> getOrderListHasDateAndStockFromSlots(Date dateTarget, String stockTarget) {
+		final String queryGetSummPallInStock = "from Order o LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH o.addresses a LEFT JOIN FETCH r.truck t LEFT JOIN FETCH r.roteHasShop rhs where o.timeDelivery BETWEEN :dateStart and :dateEnd and o.status !=10 AND o.idRamp LIKE '%"+stockTarget+"%'";
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Order> theObject = currentSession.createQuery(queryGetSummPallInStock, Order.class);
+		LocalDateTime start = LocalDateTime.of(dateTarget.toLocalDate(), LocalTime.of(00, 00, 00));
+		LocalDateTime finish = LocalDateTime.of(dateTarget.toLocalDate(), LocalTime.of(23, 59, 59));
+		theObject.setParameter("dateStart", Timestamp.valueOf(start), TemporalType.TIMESTAMP);
+		theObject.setParameter("dateEnd", Timestamp.valueOf(finish), TemporalType.TIMESTAMP);
+		Set<Order> trucks = theObject.getResultList().stream().collect(Collectors.toSet());
+		if(!trucks.isEmpty()) {
+			return trucks;
+		}else {
+			return null;
+		}
+		
+	}
+
+
 }

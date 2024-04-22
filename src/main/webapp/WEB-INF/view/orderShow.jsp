@@ -51,6 +51,10 @@
 							<span class="text-muted font-weight-bold">Номер заказа из Маркета: </span>
 							<span>${order.marketNumber}</span>
 						</div>
+						<div class="text-container">
+							<span class="text-muted font-weight-bold">Погрузочный номер: </span>
+							<span>${order.loadNumber}</span>
+						</div>
 						<div class="text-container comment-container">
 							<span class="text-muted font-weight-bold">Комментарии:</span>
 							<span>${order.comment}</span>

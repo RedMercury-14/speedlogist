@@ -173,6 +173,9 @@ public class OrderServiceImpl implements OrderService {
 		}
 		Date dateTarget = Date.valueOf(dateTimeStart.toLocalDateTime().toLocalDate());
 		Set<Order> ordersSet = orderDAO.getOrderListHasDateAndStockFromSlots(dateTarget, numStock); // получаем список всех заказов на данном складе на текущий день
+		if(ordersSet == null) {
+			return 0;
+		}
 		List<Order> orders = ordersSet.stream().filter(o-> !o.getMarketNumber().equals(order.getMarketNumber())).collect(Collectors.toList()); // убираем таргетный зака, если он есть
 		Integer summPall = 0;
 		for (Order order2 : orders) {

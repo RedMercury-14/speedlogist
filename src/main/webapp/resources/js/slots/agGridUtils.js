@@ -37,6 +37,7 @@ export const gridOptions = {
 	},
 	getRowId: (params) => params.data.idOrder,
 	suppressRowClickSelection: true,
+	suppressDragLeaveHidesColumns: true,
 	enableBrowserTooltips: true,
 	localeText: AG_GRID_LOCALE_RU,
 }

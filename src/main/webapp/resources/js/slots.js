@@ -20,7 +20,6 @@ import {
 	setCalendarWidth,
 	showMobileTooltop,
 	setPallInfo,
-	getPallCount,
 	createDraggableElement,
 	customErrorCallback,
 	showReloadWindowModal,
@@ -43,15 +42,42 @@ import {
 	wsSlotOnMessageHandler,
 	wsSlotOnOpenHandler,
 } from "./slots/wsHandlers.js"
-import { checkEventId, checkPallCount, isAnotherUser, isInvalidEventDate, isOldSupplierOrder, isOverlapWithShiftChange, methodAccessRules } from "./slots/rules.js"
-import { convertToDayMonthTime, getDatesToSlotsFetch, getMinUnloadDate, getOrderDataForAjax, getSlotInfoToCopy } from "./slots/dataUtils.js"
+import {
+	checkEventId,
+	checkPallCount,
+	isInvalidEventDate,
+	isOldSupplierOrder,
+	isOverlapWithShiftChange,
+	methodAccessRules,
+} from "./slots/rules.js"
+import {
+	convertToDayMonthTime,
+	getDatesToSlotsFetch,
+	getMinUnloadDate,
+	getOrderDataForAjax,
+	getPallCount,
+	getSlotInfoToCopy,
+} from "./slots/dataUtils.js"
+import { gridColumnLocalState } from "./AG-Grid/ag-grid-utils.js"
+
+
+const LOCAL_STORAGE_KEY = 'AG_Grid_column_settings_to_Slots'
 
 const debouncedEventsSetHandler = debounce(eventsSetHandler, 200)
+const debouncedSaveColumnState = debounce(saveColumnState, 300)
+
+// опции таблицы
 const orderTableGridOption = {
 	...gridOptions,
 	getContextMenuItems: getContextMenuItemsForOrderTable,
+	onSortChanged: debouncedSaveColumnState,
+	onColumnResized: debouncedSaveColumnState,
+	onColumnMoved: debouncedSaveColumnState,
+	onColumnVisible: debouncedSaveColumnState,
+	onColumnPinned: debouncedSaveColumnState,
 }
 
+// вебсокет
 const wsSlot = new WebSocket(wsSlotUrl)
 wsSlot.onopen = wsSlotOnOpenHandler
 wsSlot.onclose = wsSlotOnCloseHandler
@@ -218,9 +244,12 @@ window.onload = async function() {
 	// обновляем ивенты календаря при изменении стора
 	store.subscribe(() => calendar.refetchEvents())
 
-	// рендеринг салендаря и таблицы
+	// рендеринг календаря и таблицы
 	calendar.render()
 	renderTable(gridDiv, orderTableGridOption, [])
+
+	// получаем настройки колонок таблицы
+	restoreColumnState()
 
 	bootstrap5overlay.hideOverlay()
 }
@@ -680,4 +709,13 @@ function confirmSlot(fcEvent, action) {
 			bootstrap5overlay.hideOverlay()
 		}
 	})
+}
+
+
+// функции управления состоянием колонок
+function saveColumnState() {
+	gridColumnLocalState.saveState(orderTableGridOption, LOCAL_STORAGE_KEY)
+}
+function restoreColumnState() {
+	gridColumnLocalState.restoreState(orderTableGridOption, LOCAL_STORAGE_KEY)
 }

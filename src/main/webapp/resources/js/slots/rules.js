@@ -4,6 +4,7 @@ import {
 	getMinUnloadDateForLogist,
 	getMinUnloadDateForManager,
 	getMinUnloadDateForSupplierOrder,
+	getPallCount,
 } from "./dataUtils.js"
 
 // проверка, является ли пользователь админом приложения
@@ -265,6 +266,16 @@ export function checkPallCount(numberOfPalls, maxPall) {
 	const newPallCount = currentPallCount + numberOfPalls
 
 	return newPallCount <= maxPall
+}
+
+// проверка паллетовместимости склада на соседние даты
+export function checkPallCountForComingDates(currentStock, oldEventDateStr, eventDateStr, numberOfPalls) {
+	const maxPall = currentStock.maxPall
+	if (oldEventDateStr !== eventDateStr) {
+		const pallCountOfSelectedDay = getPallCount(currentStock, eventDateStr)
+		return pallCountOfSelectedDay + numberOfPalls <= maxPall
+	}
+	return true
 }
 
 // проверка на старый заказ текущего пользователя от поставщика 

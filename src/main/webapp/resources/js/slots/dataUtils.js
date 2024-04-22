@@ -111,6 +111,17 @@ export function getOrderDataForAjax(info, currentStock, currentLogin, currentRol
 }
 
 
+/* ------------ расчет паллетовместимости ------------ */
+export function getPallCount(stock, dateStr) {
+	return stock.events
+		.filter(event => event.start.split('T')[0] === dateStr)
+		.reduce((acc, event) => {
+			const numberOfPall = Number(event.extendedProps.data.pall)
+			return acc + numberOfPall
+		}, 0)
+}
+
+
 // группировка заказов по номеру склада доставки
 export function groupeByNumStockDelyvery(data) {
 	const grouped = data.reduce((acc, curr) => {

@@ -205,15 +205,7 @@ export function isMobileDevice() {
 }
 
 
-/* ------------ расчет паллетовместимости ------------ */
-export function getPallCount(stock, dateStr) {
-	return stock.events
-		.filter(event => event.start.split('T')[0] === dateStr)
-		.reduce((acc, event) => {
-			const numberOfPall = Number(event.extendedProps.data.pall)
-			return acc + numberOfPall
-		}, 0)
-}
+// обновление информации о паллетовместимости
 export function setPallInfo(pallCount, maxPall) {
 	const pallCountElem = document.querySelector('#pallCount')
 	const maxPallElem = document.querySelector('#maxPall')

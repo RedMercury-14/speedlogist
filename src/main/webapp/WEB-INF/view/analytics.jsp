@@ -11,11 +11,7 @@
 			background-color: #0e377b !important;
 		}
 		.my-container {
-			margin-top: 64px;
-		}
-		.list-container {
-			min-width: 400px;
-			max-width: 600px;
+			margin-top: 83px;
 		}
 	</style>
 	<meta charset="UTF-8">
@@ -26,40 +22,24 @@
 </head>
 <body>
 	<jsp:include page="headerNEW.jsp" />
-	<div class="container my-container">
-		<br>
-		<div class="px-5 d-flex align-items-center justify-content-between">
-			<h3 class="mb-2">Аналитика</h3>
+	<div class="fluid-container my-container">
+		<div class=" px-5 d-flex align-items-center justify-content-between">
+			<h3 class="mb-2">Нехватка товара на РЦ 2</h3>
 			<div>
 				<p class="mb-1">Логин: SologubA@dobronom.by</p>
 				<p class="mb-1">Пароль: 14A26B19c4</p>
 			</div>
 		</div>
 		<br>
-		<br>
-		<div class="list-container">
-			<ul class="list-group">
-				<li class="list-group-item">
-					<div class="d-flex align-items-center justify-content-between">
-						<span>Нехватка товара на РЦ 2</span>
-						<a
-							target="_blank"
-							href="https://app.fabric.microsoft.com/reportEmbed?reportId=5f4a775a-276a-4ec5-80ad-371e1ccef0c1&autoAuth=true&ctid=898331df-b42e-494c-b68e-d7245f2daef3">
-							<button class="btn btn-outline-primary">Посмотреть</button>
-						</a>
-					</div>
-				</li>
-			</ul>
-		</div>
-		<!-- <div class="frame-container">
+		<div class="frame-container">
 			<iframe
 				title="Нехватка товара на РЦ 2"
-				width="100%" height="800px"
+				width="100%" height="780px"
 				src="https://app.fabric.microsoft.com/reportEmbed?reportId=5f4a775a-276a-4ec5-80ad-371e1ccef0c1&autoAuth=true&ctid=898331df-b42e-494c-b68e-d7245f2daef3"
 				frameborder="0"
 				allowFullScreen="true">
 			</iframe>
-		</div> -->
+		</div>
 	</div>
 	<script src='${pageContext.request.contextPath}/resources/mainPage/js/nav-fixed-top.js'></script>
 </body>

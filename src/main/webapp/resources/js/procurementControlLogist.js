@@ -131,6 +131,7 @@ const columnDefs = [
 	{ headerName: 'Груз', field: 'cargo', },
 	{ headerName: 'Температурные условия', field: 'temperature', },
 	{ headerName: 'Штабелирование', field: 'stackingToView', },
+	{ headerName: 'Склад доставки (из Маркета)', field: 'numStockDelivery', },
 ]
 const gridOptions = {
 	columnDefs: columnDefs,

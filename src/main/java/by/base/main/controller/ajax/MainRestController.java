@@ -517,7 +517,7 @@ public class MainRestController {
 		if(order.getStatus() == 6 && Integer.parseInt(jsonMainObject.get("status").toString()) == 8) {
 			//означает что манагер заранее создал маршрут с 8 статусом а потом создал заявку на него
 			response.put("status", "100");
-			response.put("message", "Вы пытаетесь слот от поставщика, как слот на самовывоз. Обновите страницу!");
+			response.put("message", "Вы пытаетесь установить слот от поставщика как слот на самовывоз.");
 			return response;
 		}
 		Timestamp timestamp = Timestamp.valueOf(jsonMainObject.get("timeDelivery").toString());

@@ -93,6 +93,7 @@
   						<option value="99">Отдел закупок</option>
   						<option value="10">Отдел сопровождения закупок</option>
   						<option value="11">Слот наблюдатель</option>
+  						<option value="12">Аналитик</option>
  						</select>
 				</c:when>
 			</c:choose>

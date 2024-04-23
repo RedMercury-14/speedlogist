@@ -10,6 +10,7 @@
 .navbar .navbar-brand {
   width: 180px;
   margin-left: 15px;
+  min-width: 60px;
 }
 
 .navbar .navbar-brand h3 {
@@ -84,6 +85,7 @@
   font-weight: 400;
   text-transform: uppercase;
   margin-left: 10px;
+  text-align: center;
 }
 
 .navbar-dark .navbar-nav .nav-link:focus {

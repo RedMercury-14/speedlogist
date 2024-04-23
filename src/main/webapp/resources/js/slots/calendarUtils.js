@@ -1,7 +1,7 @@
 import { snackbar } from "../snackbar/snackbar.js"
 import { Draggable, eventColors, userMessages } from "./constants.js"
 import { convertToDDMMYYYY, convertToDayMonthTime, getEventBGColor, getSlotStatus } from "./dataUtils.js"
-import { editableRulesToConfirmBtn } from "./rules.js"
+import { editableRulesToConfirmBtn, isAnotherUser } from "./rules.js"
 
 export function addNewStockOption(select, stock) {
 	const option = document.createElement("option")
@@ -95,17 +95,25 @@ export function createCloseEventButton(info, showBtn) {
 	closeBtn.disabled = !info.isDraggable && !showBtn
 	closeBtn.className = 'close'
 	closeBtn.ariaLabel = 'Закрыть'
+	closeBtn.dataset.action = 'close'
 	closeBtn.innerHTML = '&times;'
 
 	return closeBtn
 }
 
 // функция создания кнопки вызова попапа с информацией
-export function createPopupButton(info) {
+export function createPopupButton(info, currentLogin) {
+	const order = info.event.extendedProps.data
+	const status = order && order.status
+	const orderLogin = order && order.loginManager
+	const isConfirmedSlot = status > 8
+	const isNotAnimated = isConfirmedSlot || isAnotherUser(orderLogin, currentLogin)
+
 	const popupBtn = document.createElement('button')
 	popupBtn.type = 'button'
-	popupBtn.className = 'popup'
+	popupBtn.className = isNotAnimated ? 'popup' : 'popup text-danger border-danger animation__big-pulse'
 	popupBtn.ariaLabel = 'Информация'
+	popupBtn.dataset.action = 'popup'
 	popupBtn.innerHTML = `i`
 
 	return popupBtn
@@ -133,14 +141,17 @@ export function showEventInfoPopup(fcEvent, currentLogin, currentRole) {
 	const { extendedProps } = fcEvent
 	const { data } = extendedProps
 	const status = data.status
+	const orderLogin = data.loginManager
 	const isConfirmedSlot = status > 8 
 	const text = isConfirmedSlot ? 'Снять подтверждение слота' : 'Подтвердить слот'
+	const isNotAnimated = isConfirmedSlot || isAnotherUser(orderLogin, currentLogin)
 	const action = isConfirmedSlot ? 'unSave' : 'save'
 
 	const eventInfo = document.querySelector('#eventInfo')
 	const confirmSlotBtn = document.querySelector('#confirmSlot')
 	eventInfo.innerHTML = createEventInfoHTML(fcEvent)
 	confirmSlotBtn.innerText = text
+	confirmSlotBtn.className = isNotAnimated ? 'btn btn-secondary' : 'btn btn-secondary animation__small-pulse'
 	confirmSlotBtn.dataset.action = action
 	confirmSlotBtn.disabled = !editableRulesToConfirmBtn(data, currentLogin, currentRole)
 
@@ -171,7 +182,7 @@ function createEventInfoHTML(fcEvent) {
 		</div>
 		<div class="event-info__id">Начало выгрузки: ${eventStartDate}</div>
 		<div class="event-info__duration">Длительность выгрузки: ${h} ч ${m} мин</div>
-		<div class="event-info__id">ID заказа: ${idOrder}</div>
+		<div class="event-info__id">ID заявки: ${idOrder}</div>
 		<div class="event-info__marketNumber">Номер из Маркета: ${marketNumber}</div>
 		<div class="event-info__dateDelivery">Дата доставки: ${dateDeliveryView}</div>
 		<div class="event-info__cargo">Контрагент: ${counterparty}</div>
@@ -231,7 +242,7 @@ export function updatePallInfo(numberOfPalls, action) {
 	const maxPallElem = document.querySelector('#maxPall')
 
 	if (!pallCountElem || !maxPallElem) {
-		return false
+		return
 	}
 
 	const maxPall = Number(maxPallElem.innerText)
@@ -243,7 +254,7 @@ export function updatePallInfo(numberOfPalls, action) {
 		newPallCount = currentPallCount + numberOfPalls
 	} else if (action === 'decrement') {
 		newPallCount = currentPallCount - numberOfPalls
-	}
+	} else return
 
 	pallCountElem.innerText = newPallCount
 

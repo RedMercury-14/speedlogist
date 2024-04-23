@@ -13,7 +13,6 @@ import { gridOptions, renderTable, updateTableData } from "./slots/agGridUtils.j
 import { addOnClickToMenuItemListner, closeSidebar } from "./slots/sidebar.js"
 import {
 	addNewStockOption,
-	addTooltip,
 	createCloseEventButton,
 	createEventElement,
 	isMobileDevice,
@@ -406,16 +405,7 @@ function eventContentHandler(info) {
 	const eventElem = createEventElement(info)
 	const showBtn = isOldSupplierOrder(info, login)
 	const closeBtn = info.isDraggable || showBtn ? createCloseEventButton(info, showBtn) : ''
-	const popupBtn = createPopupButton(info)
-
-	// костыль чтобы избежать отображения подсказки до встраивания в календарь
-	// if (!info.isDraggable) {
-	// 	addTooltip(eventElem, info)
-	// } else {
-	// 	setTimeout(() => {
-	// 		addTooltip(eventElem, info)
-	// 	}, 5000)
-	// }
+	const popupBtn = createPopupButton(info, login)
 
 	return {
 		domNodes: info.isDraggable || showBtn
@@ -518,7 +508,7 @@ function eventClickHandler(info) {
 	}
 
 	// обработчик нажатия на кнопку удаления события
-	if (jsEvent.target.className === 'close') {
+	if (jsEvent.target.dataset.action === 'close') {
 		// для логиста и админа - сложный апдейт
 		if (isAdmin(role) || isLogist(role)) {
 			const method = 'update'
@@ -533,7 +523,7 @@ function eventClickHandler(info) {
 		return
 	}
 
-	if (jsEvent.target.className === 'popup') {
+	if (jsEvent.target.dataset.action === 'popup') {
 		// обработчик клика на кнопку информации
 		store.setslotToConfirm(fcEvent)
 		showEventInfoPopup(fcEvent, login, role)

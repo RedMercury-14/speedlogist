@@ -303,6 +303,11 @@ public class MainController {
 		return "slots";
 	}
 	
+	@GetMapping("/main/analytics")
+	public String getAnalyticsPage(Model model, HttpServletRequest request) {
+		return "analytics";
+	}
+	
 	@GetMapping("/main/procurement")
 	public String getProcurementPage(Model model, HttpServletRequest request) {
 		return "procurement";

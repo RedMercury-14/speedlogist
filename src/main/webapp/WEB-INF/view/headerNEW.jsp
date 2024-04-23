@@ -68,6 +68,7 @@
 										<a class="dropdown-item" href="<spring:url value="/main/procurement/orders" />">Контроль заявок</a>
 									</div>
 								</li>
+								<li><a class="nav-item nav-link" href="<spring:url value="/main/analytics" />">Аналитика</a></li>
 								<li class="dropdown">
 									<a href="#" class="nav-item nav-link" data-toggle="dropdown">Cопровождение заказов</a>
 									<div class="dropdown-menu">
@@ -115,6 +116,9 @@
 							</c:when>	
 							<c:when test="${roles == '[ROLE_STOCK]'}">				
 								
+							</c:when>
+							<c:when test="${roles == '[ROLE_ANALYTICS]'}">
+								<li><a class="nav-item nav-link" href="<spring:url value="/main/analytics" />">Аналитика</a></li>
 							</c:when>
 							<c:when test="${roles == '[ROLE_SLOTOBSERVER]'}">				
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/slots" />">Слоты</a></li>

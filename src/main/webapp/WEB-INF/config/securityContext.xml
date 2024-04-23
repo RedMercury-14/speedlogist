@@ -16,12 +16,13 @@
 			<security:logout logout-url="/logout" logout-success-url="/main/signin?logout=true" />			
 			<security:intercept-url pattern="/main/signin"	access="hasRole('ROLE_ANONYMOUS')" />
 			<security:intercept-url pattern="/main/registration" access="hasAnyRole('ROLE_ANONYMOUS', 'ROLE_ADMIN')" />	
-			<security:intercept-url pattern="/main" access="hasAnyRole('ROLE_ANONYMOUS', 'ROLE_ADMIN', 'ROLE_MANAGER','ROLE_TOPMANAGER', 'ROLE_SHOP', 'ROLE_CARRIER', 'ROLE_STOCK', 'ROLE_PROCUREMENT', 'ROLE_ORDERSUPPORT', 'ROLE_STOCKSUPPORT', 'ROLE_SLOTOBSERVER')" />	
+			<security:intercept-url pattern="/main" access="hasAnyRole('ROLE_ANONYMOUS', 'ROLE_ADMIN', 'ROLE_MANAGER','ROLE_TOPMANAGER', 'ROLE_SHOP', 'ROLE_CARRIER', 'ROLE_STOCK', 'ROLE_PROCUREMENT', 'ROLE_ORDERSUPPORT', 'ROLE_STOCKSUPPORT', 'ROLE_SLOTOBSERVER', 'ROLE_ANALYTICS')" />	
 			<security:intercept-url pattern="/main/message" access="!isAnonymous()" />					
 			<security:intercept-url pattern="/main/who"	access="!isAnonymous()" />
 			<security:intercept-url pattern="/main/admin/**" access="hasAnyRole('ROLE_ADMIN', 'ROLE_TOPMANAGER')" />
 			<security:intercept-url	pattern="/main/logistics/**" access="hasAnyRole('ROLE_MANAGER','ROLE_TOPMANAGER', 'ROLE_ADMIN')" />
 			<security:intercept-url pattern="/main/shop/**" access="hasAnyRole('ROLE_ADMIN', 'ROLE_SHOP')"/>
+			<security:intercept-url pattern="/main/analytics/**" access="hasAnyRole('ROLE_ADMIN', 'ROLE_ANALYTICS')"/>
 			<security:intercept-url pattern="/main/carrier/**" access="hasAnyRole('ROLE_ADMIN', 'ROLE_CARRIER')"/>
 			<security:intercept-url pattern="/main/order-support/**" access="hasAnyRole('ROLE_ADMIN', 'ROLE_ORDERSUPPORT')"/>
 			<security:intercept-url pattern="/main/stock-support/**" access="hasAnyRole('ROLE_ADMIN', 'ROLE_STOCKSUPPORT')"/>

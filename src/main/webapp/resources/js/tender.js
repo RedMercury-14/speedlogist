@@ -1,7 +1,7 @@
 import { ws } from './global.js';
 import { AG_GRID_LOCALE_RU } from '../js/AG-Grid/ag-grid-locale-RU.js'
 import { cookieHelper, debounce, getData } from './utils.js';
-import { gridFilterLocalState } from './AG-Grid/ag-grid-utils.js';
+import { dateComparator, gridFilterLocalState } from './AG-Grid/ag-grid-utils.js';
 
 const getActiveTendersUrl = `../../api/carrier/getActiveInternationalTenders`
 const getMessagesBaseUrl = `../../api/info/message/routes/`
@@ -30,6 +30,11 @@ const rowClassRules = {
 }
 
 const columnDefs = [
+	{
+		headerName: "Дата загрузки", field: 'dateToView',
+		cellClass: 'px-2 text-center',
+		comparator: dateComparator,
+	},
 	{ 
 		headerName: "Название тендера", field: "routeDirection",
 		tooltipField: 'routeDirection',
@@ -42,9 +47,9 @@ const columnDefs = [
 			return params.value
 		}
 	},
-	{ headerName: "Направление", field: "way", cellClass: 'font-weight-bold text-center', },
-	{ headerName: "Предложенная цена", field: "price", cellClass: 'font-weight-bold text-center', },
-	{ headerName: "Ваше предложение", field: "myOffer", cellClass: 'font-weight-bold text-center', }
+	{ headerName: "Направление", field: "way", cellClass: 'px-2 font-weight-bold text-center', },
+	{ headerName: "Предложенная цена", field: "price", cellClass: 'px-2 font-weight-bold text-center', },
+	{ headerName: "Ваше предложение", field: "myOffer", cellClass: 'px-2 font-weight-bold text-center', }
 ]
 const gridOptions = {
 	columnDefs: columnDefs,
@@ -233,7 +238,7 @@ async function getMappingData(data, messages, user) {
 		const temp = tender.temperature ? `Температура: ${tender.temperature} °C; ` : ''
 		const vol = rhsItem && rhsItem.volume ? `Объем: ${rhsItem.volume}` : ''
 		const info = type + temp + vol
-		const dateToView = tender.dateLoadPreviously.split('-').reverse().join('.')
+		const dateToView = tender.dateLoadPreviously ? tender.dateLoadPreviously.split('-').reverse().join('.') : ''
 		const loadDate = `${dateToView},  ${tender.timeLoadPreviously}`
 		const myMessage = messages.find(m => m.idRoute === idRoute.toString()) || null
 
@@ -251,6 +256,7 @@ async function getMappingData(data, messages, user) {
 
 		return {
 			...tender,
+			dateToView,
 			loadDate,
 			cargo,
 			info,

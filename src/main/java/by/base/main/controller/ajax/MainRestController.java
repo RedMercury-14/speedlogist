@@ -514,6 +514,12 @@ public class MainRestController {
 			response.put("message", "Ошибка доступа. Заказ не зафиксирован. Данный заказ уже поставлен другим пользователем");
 			return response;
 		}
+		if(order.getStatus() == 6 && Integer.parseInt(jsonMainObject.get("status").toString()) == 8) {
+			//означает что манагер заранее создал маршрут с 8 статусом а потом создал заявку на него
+			response.put("status", "100");
+			response.put("message", "Вы пытаетесь установить слот от поставщика как слот на самовывоз.");
+			return response;
+		}
 		Timestamp timestamp = Timestamp.valueOf(jsonMainObject.get("timeDelivery").toString());
 		Integer idRamp = Integer.parseInt(jsonMainObject.get("idRamp").toString());
 		order.setTimeDelivery(timestamp);

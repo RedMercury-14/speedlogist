@@ -502,23 +502,20 @@ public class ColossusProcessorANDRestrictions2 {
 					}
 					// создаём матрицу расстояний от первого магазина
 					Map<Double, Shop> radiusMap = new TreeMap<Double, Shop>();
-					radiusMap = getDistanceMatrixHasMin(shopsForOptimization, firstShop);
+					
 					// создаём порядок точек
 					List<Shop> points = new ArrayList<Shop>();
 					points.add(targetStock);
 					points.add(firstShop);
-					stackTrace = stackTrace + "МАТРИЦА МАГАЗИНА " + firstShop.getNumshop() + "\n";
-					for (Map.Entry<Double, Shop> entry : radiusMap.entrySet()) {
-						stackTrace = stackTrace + entry.getKey() + " - " + entry.getValue().getNumshop() + "\n";
-					}
-					stackTrace = stackTrace + "==============\n";
+					
 					
 					//тут возможен вариант того, что потребность магаза будет превышеть возможности допустимых авто! поэтому делаем обработку как в первом пункте
 					if(trucksBeforeRestr.isEmpty()) {
 						stackTrace = stackTrace + "Закончились машины для чернового распределения!\n";
 						System.err.println("ColossusProcessorANDRestrictions2.run: Закончились машины для чернового распределения!");
 					}
-					if(firstShop.getNeedPall() >= trucksBeforeRestr.get(0).getPall()) {
+					System.out.println("-----> "+ firstShop);
+					if(firstShop.getNeedPall() >= trucksBeforeRestr.get(0).getPall()) {//логика для разбиений магазинов когда паллет изначально больше!
 						double oneWidthPall = (double) (firstShop.getWeight()/firstShop.getNeedPall());
 						double widthNewShop = oneWidthPall*trucksBeforeRestr.get(0).getPall();
 						if (firstShop.getNeedPall() == trucksBeforeRestr.get(0).getPall()) { 
@@ -583,6 +580,15 @@ public class ColossusProcessorANDRestrictions2 {
 								points.add(targetStock);
 								VehicleWay vehicleWay = new VehicleWay(points, 0.0, 40, targetTruck);
 								whiteWay.add(vehicleWay);
+								if (!shopsForAddNewNeedPall.isEmpty()) {
+									for (Shop shop : shopsForAddNewNeedPall) {
+										if (!shopsForOptimization.contains(shop)) {
+											shopsForOptimization.add(shop);
+										}
+									}
+//									shopsForAddNewNeedPall.clear();
+									shopsForOptimization.sort(shopComparatorDistanceMain); // сортируем обновлённый список
+								}
 								continue;
 							}else {
 								System.err.println("Распределяем магазин c ограничениями по весу, при том что паллет больше, после идеальных маршрутов (доп идеальные)!");
@@ -608,11 +614,82 @@ public class ColossusProcessorANDRestrictions2 {
 								points1.add(targetStock);
 								VehicleWay vehicleWay = new VehicleWay(points1, 0.0, 40, targetTruck);
 								whiteWay.add(vehicleWay);
+								// после каждого цикла добавляем новые магазы, если есть
+								if (!shopsForAddNewNeedPall.isEmpty()) {
+									for (Shop shop : shopsForAddNewNeedPall) {
+										if (!shopsForOptimization.contains(shop)) {
+											shopsForOptimization.add(shop);
+										}
+									}
+//									shopsForAddNewNeedPall.clear();
+									shopsForOptimization.sort(shopComparatorDistanceMain); // сортируем обновлённый список
+								}
 								continue;
 							}
-							
 						}
+					}else { // тут мы знаем что паллет меньше. Далее проверям по весу
+						double oneWidthPall = (double) (firstShop.getWeight()/firstShop.getNeedPall());
+						double widthNewShop = oneWidthPall*trucksBeforeRestr.get(0).getPall();
+						if(firstShop.getWeight() <= trucksBeforeRestr.get(0).getWeigth()) {
+							System.err.println("Распределяем магазин БЕЗ ограничений по весу, при том что паллет МЕНЬШЕ чем может поместиться в одну машину, после идеальных маршрутов (доп идеальные)!");
+							Vehicle targetTruck = trucksBeforeRestr.remove(0);
+							trucks.remove(targetTruck);
+							targetTruck.setTargetPall(firstShop.getNeedPall()); // загружаем машину полностью
+							targetTruck.setTargetWeigth(firstShop.getWeight()); // загружаем машину по весу
+							points.add(targetStock);
+							VehicleWay vehicleWay = new VehicleWay(points, 0.0, 40, targetTruck);
+							shopsForOptimization.remove(firstShop);
+							whiteWay.add(vehicleWay);							
+//							continue;
+						}else {
+							System.err.println("Распределяем магазин c ограничениями по весу, при том что паллет МЕНЬШЕ чем может поместиться в одну машину, после идеальных маршрутов (доп идеальные)!");
+							Vehicle targetTruck = trucksBeforeRestr.remove(0);
+							trucks.remove(targetTruck);
+							int newNeedPall = targetTruck.getWeigth()/(int) oneWidthPall; // определяем сколько паллет (по ср. весу) поместится в эту машину
+							targetTruck.setTargetPall(newNeedPall); // загружаем этим колличеством паллет
+							Integer newNeedPallForShop = firstShop.getNeedPall() - newNeedPall;
+							Integer finalWidthFOrTruck = (int) ((int) newNeedPall*oneWidthPall);
+							targetTruck.setTargetWeigth(finalWidthFOrTruck);
+							Integer newNeedWeigthForShop = firstShop.getWeight() - finalWidthFOrTruck;
+							Shop newShopHasPall = new Shop(firstShop.getNumshop(), firstShop.getAddress(), firstShop.getLat(),
+									firstShop.getLng(), firstShop.getLength(), firstShop.getWidth(), firstShop.getHeight(), firstShop.getMaxPall());
+							newShopHasPall.setWeight(newNeedWeigthForShop);
+							newShopHasPall.setNeedPall(newNeedPallForShop);
+							newShopHasPall.setDistanceFromStock(firstShop.getDistanceFromStock());
+							List<Shop> points1 = new ArrayList<Shop>();
+							shopsForDelite.add(firstShop);
+							shopsForAddNewNeedPall.add(newShopHasPall);
+							firstShop.setNeedPall(targetTruck.getTargetPall()); // указываем текущую потребность магазина для этой фуры
+							points1.add(targetStock);
+							points1.add(firstShop);
+							points1.add(targetStock);
+							VehicleWay vehicleWay = new VehicleWay(points1, 0.0, 40, targetTruck);
+							whiteWay.add(vehicleWay);
+							// после каждого цикла добавляем новые магазы, если есть
+							if (!shopsForAddNewNeedPall.isEmpty()) {
+								for (Shop shop : shopsForAddNewNeedPall) {
+									if (!shopsForOptimization.contains(shop)) {
+										shopsForOptimization.add(shop);
+									}
+								}
+//								shopsForAddNewNeedPall.clear();
+								shopsForOptimization.sort(shopComparatorDistanceMain); // сортируем обновлённый список
+							}
+							continue;
+						}
+						
 					}
+					//остановился тут! сюда ни один из предыдущих методов не проходит
+					
+					radiusMap = getDistanceMatrixHasMin(shopsForOptimization, firstShop);
+					stackTrace = stackTrace + "МАТРИЦА МАГАЗИНА " + firstShop.getNumshop() + "\n";
+					for (Map.Entry<Double, Shop> entry : radiusMap.entrySet()) {
+						stackTrace = stackTrace + entry.getKey() + " - " + entry.getValue().getNumshop() + "\n";
+//						System.out.println(entry.getKey() + " - " + entry.getValue().getNumshop());
+					}
+					stackTrace = stackTrace + "==============\n";
+					
+					
 					
 					for (Map.Entry<Double, Shop> entry : radiusMap.entrySet()) {
 						Shop shop2 = entry.getValue();
@@ -689,16 +766,20 @@ public class ColossusProcessorANDRestrictions2 {
 								vehicleForDelete.add(truck);
 								break;
 							}else {
-								System.err.println("нужна машина побольше");
+								System.err.println("нужна машина побольше вер 1");
 							}
 							
 						}
 					}
+					
 					if (vehicleWayVirtual.getVehicle() == null) {
 						// подбираем и ставим машину в виртуальный маршрут
+						System.out.println(trucksBeforeRestr.size() + " <---------------------------");
 						for (Vehicle truck : trucksBeforeRestr) { // недогруженная машина
 							Integer pallHasWay = calcPallHashHsop(vehicleWayVirtual.getWay(), targetStock);
 							Integer weightHasWay= calcWeightHashHsop(vehicleWayVirtual.getWay(), targetStock);
+							System.out.print(pallHasWay + " pallHasWay ");
+							System.out.println(weightHasWay + " weightHasWay ");
 							if (truck.getPall() > pallHasWay) {
 								if(weightHasWay <= truck.getWeigth()) {
 									truck.setTargetPall(pallHasWay);
@@ -707,7 +788,7 @@ public class ColossusProcessorANDRestrictions2 {
 									vehicleForDelete.add(truck);
 									break;
 								}else {
-									System.err.println("нужна машина побольше");
+									System.err.println("нужна машина побольше вер 2");
 								}
 								
 							}

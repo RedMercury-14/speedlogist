@@ -46,7 +46,7 @@ import {
 import optimizeRouteConfig from "./map/agGridOptimizeRouteConfig.js"
 import distanceControlConfig from "./map/agGridDistanceControlConfig.js"
 
-const testOptimizationUrl = `../api/map/myoptimization2`
+const testOptimizationUrl = `../api/map/myoptimization3`
 
 const getAllShopsUrl = '../api/manager/getAllShops'
 const getAllPolygonsUrl = '../api/map/getAllPolygons'

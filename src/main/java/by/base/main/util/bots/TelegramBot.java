@@ -269,8 +269,8 @@ public class TelegramBot extends TelegramLongPollingBot{
 			try {
 				execute(sendMessage);
 			} catch (TelegramApiException e) {
-				e.printStackTrace();
-				
+				System.err.println("Сработала ошибка в методе: TelegramBot.sendMessageHasSubscription. IdUser = " + id);
+//				e.printStackTrace();				
 			}
 		}
 	}

@@ -24,13 +24,11 @@ export function getMinUnloadDateForManager(now, order) {
 }
 // расчет минимальной даты слота для закаов от поставщика (8 статус)
 export function getMinUnloadDateForSupplierOrder(now, order) {
-	// // + 1 день от сегодня (пн на вт)
-	// const dateDelivery = order.dateDelivery
-	// const next = new Date(now + dateHelper.DAYS_TO_MILLISECONDS)
-	// const nextDay = next.setHours(0, 0, 0, 0)
-	// return nextDay > dateDelivery ? nextDay : dateDelivery
-
-	return now
+	// + 1 день от сегодня (пн на вт)
+	const dateDelivery = order.dateDelivery
+	const next = new Date(now + dateHelper.DAYS_TO_MILLISECONDS)
+	const nextDay = next.setHours(0, 0, 0, 0)
+	return nextDay > dateDelivery ? nextDay : dateDelivery
 }
 // расчет минимальной даты слота для логистов
 export function getMinUnloadDateForLogist(now, order) {
@@ -77,6 +75,7 @@ export function getLastLoadDateTime(order) {
 // получение данных для запроса на сервер
 export function getOrderDataForAjax(info, currentStock, currentLogin, currentRole, method) {
 	const { event: fcEvent } = info
+	const oldEvent = info.oldEvent ? info.oldEvent : ''
 	const stockId = currentStock.id
 	const eventId = fcEvent.id
 	const idRamp = fcEvent._def.resourceIds[0]
@@ -107,6 +106,7 @@ export function getOrderDataForAjax(info, currentStock, currentLogin, currentRol
 		fcEvent,
 		status,
 		messageLogist,
+		oldEvent,
 	}
 }
 
@@ -119,6 +119,18 @@ export function getPallCount(stock, dateStr) {
 			const numberOfPall = Number(event.extendedProps.data.pall)
 			return acc + numberOfPall
 		}, 0)
+}
+
+
+// получение action для метода обновления паллетовместимости на странице
+export function getPallCoutnAction(eventDateStr, oldEventDateStr) {
+	const eventDate = new Date(eventDateStr)
+	const oldEventDate = new Date(oldEventDateStr)
+	const diff = eventDate - oldEventDate
+
+	if (diff < 0) return 'decrement'
+	if (diff > 0) return 'increment'
+	return ''
 }
 
 
@@ -222,16 +234,13 @@ export function getSlotStatus(status) {
 
 
 // проверка отображения склада
-export function stockIsVisible(stockId) {
-	const currentStock = store.getCurrentStock()
+export function stockIsVisible(currentStock, stockId) {
 	if (!currentStock) return false
 	return currentStock.id === stockId
 }
 
 // проверка отображения склада и даты
-export function stockAndDayIsVisible(stockId, eventDate) {
-	const currentStock = store.getCurrentStock()
-	const currentDate = store.getCurrentDate()
+export function stockAndDayIsVisible(currentStock, currentDate, stockId, eventDate) {
 	if (!currentStock || !currentDate) return false
 	return currentStock.id === stockId && currentDate === eventDate
 }

@@ -3,16 +3,19 @@ import { isAdmin, isLogist } from "../utils.js"
 import { updateTableData, updateTableRow } from "./agGridUtils.js"
 import { createDraggableElement, updatePallInfo } from "./calendarUtils.js"
 import { userMessages } from "./constants.js"
-import { stockAndDayIsVisible, stockIsVisible } from "./dataUtils.js"
+import { getPallCoutnAction, stockAndDayIsVisible, stockIsVisible } from "./dataUtils.js"
 import { store } from "./store.js"
 
 /* -------------- методы для управления иветнтами ------------------ */
 export function addCalendarEvent(gridOptions, orderData, isAnotherUser) {
 	// обновляем количество паллет для склада
+	const currentStock = store.getCurrentStock()
+	const currentDate = store.getCurrentDate()
 	const stockId = orderData.stockId
 	const eventDate = orderData.startDateStr.split('T')[0]
-	if (stockAndDayIsVisible(stockId, eventDate)) {
-		updatePallInfo(orderData.numberOfPalls, 'increment')
+	if (stockAndDayIsVisible(currentStock, currentDate, stockId, eventDate)) {
+		const maxPall = store.getCurrentMaxPall()
+		updatePallInfo(orderData.numberOfPalls, maxPall, 'increment')
 	}
 	// обновляем заказ в сторе
 	const updatedOrder = store.updateOrder(orderData)
@@ -37,6 +40,20 @@ export function updateCalendarEvent(gridOptions, orderData, isAnotherUser) {
 	updateTableRow(gridOptions, updatedOrder)
 	// обновляем ивент в виртуальном складе
 	store.updateEvent(orderData, updatedOrder)
+
+	// обновляем количество паллет для склада
+	// (работает только с круглосуточным складом)
+	const oldEvent = orderData.oldEvent
+	if (!isAnotherUser && oldEvent) {
+		const oldEventDateStr = oldEvent.startStr.split('T')[0]
+		const eventDateStr = orderData.fcEvent.startStr.split('T')[0]
+		if (oldEventDateStr !== eventDateStr) {
+			const numberOfPall = Number(orderData.numberOfPalls)
+			const maxPall = store.getCurrentMaxPall()
+			const action = getPallCoutnAction(eventDateStr, oldEventDateStr)
+			updatePallInfo(numberOfPall, maxPall, action)
+		}
+	}
 }
 export function deleteCalendarEvent(gridOptions, orderData, isAnotherUser) {
 	const login = store.getLogin()
@@ -55,10 +72,12 @@ export function deleteCalendarEvent(gridOptions, orderData, isAnotherUser) {
 	// удаляем ивент из стора
 	store.removeEvent(orderData.stockId, orderData.fcEvent)
 	// обновляем количество паллет для склада
+	const currentDate = store.getCurrentDate()
 	const stockId = orderData.stockId
 	const eventDate = orderData.startDateStr.split('T')[0]
-	if (stockAndDayIsVisible(stockId, eventDate)) {
-		updatePallInfo(orderData.numberOfPalls, 'decrement')
+	if (stockAndDayIsVisible(currentStock, currentDate, stockId, eventDate)) {
+		const maxPall = store.getCurrentMaxPall()
+		updatePallInfo(orderData.numberOfPalls, maxPall, 'decrement')
 	}
 
 	if (!isAnotherUser && currentStock) {
@@ -77,14 +96,16 @@ export function deleteCalendarEventFromTable(gridOptions, orderData) {
 	// удаляем ивент из стора
 	store.removeEvent(orderData.stockId, orderData.fcEvent)
 
+	const currentStock = store.getCurrentStock()
 	const stockId = orderData.stockId
 	const eventDate = orderData.startDateStr.split('T')[0]
 	// обновляем заказ в таблице
-	if (stockIsVisible(stockId)) {
+	if (stockIsVisible(currentStock, stockId)) {
 		updateTableData(gridOptions, store.getCurrentStockOrders())
 	}
 	// обновляем количество паллет для склада
 	if (stockAndDayIsVisible(stockId, eventDate)) {
-		updatePallInfo(orderData.numberOfPalls, 'decrement')
+		const maxPall = store.getCurrentMaxPall()
+		updatePallInfo(orderData.numberOfPalls, maxPall, 'decrement')
 	}
 }

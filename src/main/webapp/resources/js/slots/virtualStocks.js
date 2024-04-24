@@ -8,7 +8,7 @@ export const stocks = [
 		workingHoursStart: '00:00',
 		workingHoursEnd: '24:00',
 		shiftChange: ['08:00', '09:00', '20:00', '21:00'],
-		maxPall: 1300,
+		maxPall: 1600,
 		weekends: [],
 		ramps: [
 			{ id: "170001", title: "Рампа 1", businessHours: { startTime: '00:00', endTime: '24:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
@@ -28,7 +28,7 @@ export const stocks = [
 		workingHoursStart: '08:00',
 		workingHoursEnd: '21:00',
 		shiftChange: [],
-		maxPall: 500,
+		maxPall: 600,
 		weekends: [],
 		ramps: [
 			{ id: "120001", title: "Рампа 1", businessHours: { startTime: '09:00', endTime: '20:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },

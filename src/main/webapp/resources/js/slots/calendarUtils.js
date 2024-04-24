@@ -62,11 +62,11 @@ function createSingleSlotHTML(order) {
 
 	return `
 		<div class="single-slot">
-			<div class="single-slot__id">Номер из Маркета: ${order.marketNumber}</div>
-			<div class="single-slot__id">Дата доставки: ${dateDelivery}</div>
-			<div class="single-slot__cargo">Контрагент: ${order.counterparty}</div>
-			<div class="single-slot__price">Груз: ${order.cargo}</div>
-			<div class="single-slot__duration">Длительность выгрузки: ${h} ч ${m} мин</div>
+			<div class="single-slot__id">ID: ${order.idOrder}</div>
+			<div class="single-slot__marketNumber">Номер из Маркета: ${order.marketNumber}</div>
+			<div class="single-slot__dateDelivery">Дата доставки: ${dateDelivery}</div>
+			<div class="single-slot__counterparty">Контрагент: ${order.counterparty}</div>
+			<div class="single-slot__info">${order.cargo} ● ${order.pall} палл ● ${h} ч ${m} мин</div>
 		</div>
 	`
 }
@@ -237,15 +237,9 @@ export function setPallInfo(pallCount, maxPall) {
 
 	changePallCountElemColor(pallCountElem, pallCount, currentMaxPall)
 }
-export function updatePallInfo(numberOfPalls, action) {
+export function updatePallInfo(numberOfPalls, maxPall, action) {
 	const pallCountElem = document.querySelector('#pallCount')
-	const maxPallElem = document.querySelector('#maxPall')
-
-	if (!pallCountElem || !maxPallElem) {
-		return
-	}
-
-	const maxPall = Number(maxPallElem.innerText)
+	if (!pallCountElem) return
 	const currentPallCount = Number(pallCountElem.innerText)
 
 	let newPallCount

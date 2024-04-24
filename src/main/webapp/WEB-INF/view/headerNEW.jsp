@@ -115,7 +115,7 @@
 								<!-- <li><a class="nav-item nav-link" href="<spring:url value="/main/shop" />">Магазин</a></li> -->
 							</c:when>	
 							<c:when test="${roles == '[ROLE_STOCK]'}">				
-								
+								<li><a class="nav-item nav-link" href="<spring:url value="/main/depot" />">Маршрутизатор</a></li>
 							</c:when>
 							<c:when test="${roles == '[ROLE_ANALYTICS]'}">
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/analytics" />">Аналитика</a></li>

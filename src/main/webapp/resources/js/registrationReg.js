@@ -22,7 +22,7 @@ $(document).ready(function() {
 	// проверка логина и номера УНП
 	const messageLoginElem = document.querySelector("#messageLogin")
 	const messageYnpElem = document.querySelector("#messageYNP")
-	$("#login").change((e) => checkLogin(e.target.value, token, messageLoginElem))
+	$("#userLogin").change((e) => checkLogin(e.target.value, token, messageLoginElem))
 	$("#numYNP").change((e) => checkNumYNP(e.target.value, token, messageYnpElem))
 
 	// форма и подзаголовок формы
@@ -30,7 +30,7 @@ $(document).ready(function() {
 	const formInfo = $('#form-info')
 
 	// инпуты шага 1
-	const loginInput = $('#login')
+	const loginInput = $('#userLogin')
 	const passwordInput = $('#password')
 	const nameInput = $('#name')
 	const telInput = $('#tel')

@@ -44,6 +44,7 @@ import {
 import {
 	checkEventId,
 	checkPallCount,
+	checkPallCountForComingDates,
 	isInvalidEventDate,
 	isOldSupplierOrder,
 	isOverlapWithShiftChange,
@@ -58,6 +59,49 @@ import {
 	getSlotInfoToCopy,
 } from "./slots/dataUtils.js"
 import { gridColumnLocalState } from "./AG-Grid/ag-grid-utils.js"
+
+const tempMaxPallRestrictions = [
+	{
+		stockId: '1700',
+		date: '2024-04-24',
+		maxPall: 1300,
+	},
+	{
+		stockId: '1700',
+		date: '2024-04-25',
+		maxPall: 1300,
+	},
+	{
+		stockId: '1700',
+		date: '2024-04-26',
+		maxPall: 1600,
+	},
+	{
+		stockId: '1700',
+		date: '2024-04-27',
+		maxPall: 1600,
+	},
+	{
+		stockId: '1700',
+		date: '2024-04-28',
+		maxPall: 1600,
+	},
+	{
+		stockId: '1700',
+		date: '2024-04-29',
+		maxPall: 1300,
+	},
+	{
+		stockId: '1700',
+		date: '2024-04-30',
+		maxPall: 1300,
+	},
+	{
+		stockId: '1700',
+		date: '2024-05-01',
+		maxPall: 1300,
+	},
+]
 
 
 const LOCAL_STORAGE_KEY = 'AG_Grid_column_settings_to_Slots'
@@ -231,6 +275,9 @@ window.onload = async function() {
 	// добавляем ивенты на виртуальные склады
 	store.setStockEvents()
 
+	// сохраняем ограничения паллет
+	store.setMaxPallRestrictions(tempMaxPallRestrictions)
+
 	// добавляем склады в селект и вешаем обработчик
 	const stocks = store.getStocks()
 	stockSelect.value = ''
@@ -381,16 +428,19 @@ function resourcesHandler(info, successCallback, failureCallback) {
 	successCallback(slots)
 }
 function dateSetHandler(info) {
-	const [ currentDateStr ] = info.startStr.split('T')
+	const currentDateStr= info.startStr.split('T')[0]
 	const currentStock = store.getCurrentStock()
 
-	const currentDate = info.startStr.split('T')[0]
-	store.setCurrendDate(currentDate)
+	store.setCurrendDate(currentDateStr)
 
 	// изменение информации о паллетах для данного склада
 	if (currentStock) {
+		const maxPall = store.getMaxPallByDate(currentStock.id, currentDateStr)
 		const pallCount = getPallCount(currentStock, currentDateStr)
-		setPallInfo(pallCount, currentStock.maxPall)
+		// сохраняем в стор данные о паллетовместимости на текущем складе
+		store.setCurrentMaxPall(maxPall)
+		// изменяем данные по паллетовместимости у пользователя
+		setPallInfo(pallCount, maxPall)
 	}
 }
 function eventsHandler(info, successCallback, failureCallback) {
@@ -453,12 +503,22 @@ function eventDropHandler(info) {
 		return
 	}
 
+	// проверка паллетовместимости склада на соседние даты
+	const eventDateStr = fcEvent.startStr.split('T')[0]
+	const maxPall = store.getMaxPallByDate(currentStock.id, eventDateStr)
+	if (!checkPallCountForComingDates(info, currentStock, maxPall)) {
+		info.revert()
+		snackbar.show(userMessages.pallDropError)
+		return
+	}
+
 	updateOrder(info, false)
 }
 function eventReceiveHandler(info) {
 	const role = store.getRole()
 	const { event: fcEvent } = info
 	const order = fcEvent.extendedProps.data
+	const eventDateStr = fcEvent.startStr.split('T')[0]
 	
 	// проверка даты начала ивента
 	const minUnloadDate = getMinUnloadDate(order, role)
@@ -470,10 +530,9 @@ function eventReceiveHandler(info) {
 	}
 
 	// проверка паллетовместимости склада
-	const numberOfPalls = Number(order.pall)
 	const currentStock = store.getCurrentStock()
-	const maxPall = currentStock.maxPall
-	if (!checkPallCount(numberOfPalls, maxPall)) {
+	const maxPall = store.getMaxPallByDate(currentStock.id, eventDateStr)
+	if (!checkPallCount(info, currentStock, maxPall)) {
 		info.revert()
 		snackbar.show(userMessages.pallDropError)
 		return

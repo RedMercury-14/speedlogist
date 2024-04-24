@@ -41,7 +41,7 @@
 										<h2 class="fs-title">Информация об аккаунте</h2>
 										<div class="form-group">
 										</div>
-										<input name="login" placeholder="Логин (по нему будет происходить вход в систему)" class="form-control" id="login" required />
+										<input name="login" placeholder="Логин (по нему будет происходить вход в систему)" class="form-control" id="userLogin" required />
 										<div class="error-message" id="messageLogin"></div>
 					
 										<div class="pass-container">

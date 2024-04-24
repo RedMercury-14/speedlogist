@@ -254,23 +254,26 @@ export function isOverlapWithShiftChange(info, shiftChangeArray) {
 }
 
 // проверка паллетовместимости склада
-export function checkPallCount(numberOfPalls, maxPall) {
-	const pallCountElem = document.querySelector('#pallCount')
-	const maxPallElem = document.querySelector('#maxPall')
-
-	if (!pallCountElem || !maxPallElem) {
-		return false
-	}
-
-	const currentPallCount = Number(pallCountElem.innerText)
+export function checkPallCount(info, currentStock, maxPall) {
+	const { event: fcEvent } = info
+	const order = fcEvent.extendedProps.data
+	const eventDateStr = fcEvent.startStr.split('T')[0]
+	const numberOfPalls = Number(order.pall)
+	const currentPallCount = getPallCount(currentStock, eventDateStr)
 	const newPallCount = currentPallCount + numberOfPalls
 
 	return newPallCount <= maxPall
 }
 
 // проверка паллетовместимости склада на соседние даты
-export function checkPallCountForComingDates(currentStock, oldEventDateStr, eventDateStr, numberOfPalls) {
-	const maxPall = currentStock.maxPall
+export function checkPallCountForComingDates(info, currentStock, maxPall) {
+	const { event: fcEvent } = info
+	const oldEvent = info.oldEvent
+	const order = fcEvent.extendedProps.data
+	const eventDateStr = fcEvent.startStr.split('T')[0]
+	const oldEventDateStr = oldEvent.startStr.split('T')[0]
+	const numberOfPalls = Number(order.pall)
+	
 	if (oldEventDateStr !== eventDateStr) {
 		const pallCountOfSelectedDay = getPallCount(currentStock, eventDateStr)
 		return pallCountOfSelectedDay + numberOfPalls <= maxPall
@@ -278,9 +281,12 @@ export function checkPallCountForComingDates(currentStock, oldEventDateStr, even
 	return true
 }
 
-// проверка на старый заказ текущего пользователя от поставщика 
+// проверка на старый заказ текущего пользователя от поставщика
+// (старым считается и сегодняшний заказ - т.е. заказ с датой начала меньше,
+// чем 00:00 завтрашнего дня)
 export function isOldSupplierOrder(info, currentLogin) {
-	const nowMs = Date.now()
+	// const nowMs = Date.now()
+	const tomorrowMs = new Date().setHours(24, 0, 0, 0)
 	const { event: fcEvent } = info
 	const eventDate = new Date(fcEvent.startStr).getTime()
 	const order = fcEvent.extendedProps.data
@@ -288,5 +294,5 @@ export function isOldSupplierOrder(info, currentLogin) {
 	const status = order.status
 	const isSupplierOrder = status === 8 || status === 100
 
-	return (isSupplierOrder) && !isAnotherUser(orderLogin, currentLogin) && eventDate < nowMs
+	return (isSupplierOrder) && !isAnotherUser(orderLogin, currentLogin) && eventDate < tomorrowMs
 }

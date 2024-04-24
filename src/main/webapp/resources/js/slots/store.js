@@ -18,6 +18,8 @@ export const store = {
 		orders: null,
 		currentStock: null,
 		currentDate: null,
+		maxPallRestrictions: null,
+		currentMaxPall: 0,
 	},
 	_callSubscriber(state) {
 		console.log('subscriber is not defind')
@@ -43,6 +45,34 @@ export const store = {
 	getSlotToConfirm() {
 		return this._state.slotToConfirm
 	},
+
+	setMaxPallRestrictions(maxPallRestrictionsList) {
+		const grouped = maxPallRestrictionsList.reduce((acc, curr) => {
+			const key = curr.stockId
+			if (!acc[key]) acc[key] = []
+			acc[key].push(curr)
+			return acc
+		}, {})
+		this._state.maxPallRestrictions = grouped
+	},
+	getMaxPallRestrictions() {
+		return this._state.maxPallRestrictions
+	},
+	getMaxPallByDate(stockId, dateStr) {
+		const maxPallRestrictionStock = this._state.maxPallRestrictions[stockId]
+		if (!maxPallRestrictionStock) return this._state.stocks.find(({ id }) => id === stockId).maxPall
+		const maxPallRestriction = maxPallRestrictionStock.find(({ date }) => date === dateStr)
+		if (!maxPallRestriction) return this._state.stocks.find(({ id }) => id === stockId).maxPall
+		return maxPallRestriction.maxPall
+	},
+
+	setCurrentMaxPall(currentMaxPall) {
+		this._state.currentMaxPall = Number(currentMaxPall)
+	},
+	getCurrentMaxPall() {
+		return this._state.currentMaxPall
+	},
+
 
 	getOrders() {
 		return this._state.orders

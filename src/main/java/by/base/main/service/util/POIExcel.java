@@ -625,8 +625,8 @@ public class POIExcel {
 
           
             
-            //Смотрим статус: если не 50 - то пропускаем
-            if(!cellStatusOrderMarcet487.toString().trim().equals("50")) {
+            //Смотрим статус: если не 50 и не 51 - то пропускаем
+            if(!cellStatusOrderMarcet487.toString().trim().equals("50") || !cellStatusOrderMarcet487.toString().trim().equals("51")) {
                 continue;
             }
             numRow50Status++;

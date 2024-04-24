@@ -565,7 +565,7 @@ public class POIExcel {
      * @throws IOException
      */
     public String loadOrderHasExcel(File file, HttpServletRequest request) throws ServiceException, InvalidFormatException, IOException {
-        String message;
+        String message = "СЧИТКА 50 и 51 СТАТУСОВ \n";
         XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
         XSSFSheet sheet = wb.getSheetAt(0);
 
@@ -575,7 +575,7 @@ public class POIExcel {
         int createOrders = 0;
         int sku = 0;
 
-        message = " Всего строк: " + (sheet.getLastRowNum() + 1) + " строк \n";
+        message = message + " Всего строк: " + (sheet.getLastRowNum() + 1) + " строк \n";
         boolean flag = false;
 
         for (int i = 3; i < sheet.getLastRowNum() + 1; i++) {
@@ -624,9 +624,8 @@ public class POIExcel {
             cellCountInPall487.setCellType(CellType.STRING);
 
           
-            
             //Смотрим статус: если не 50 и не 51 - то пропускаем
-            if(!cellStatusOrderMarcet487.toString().trim().equals("50") || !cellStatusOrderMarcet487.toString().trim().equals("51")) {
+            if(!cellStatusOrderMarcet487.toString().trim().equals("50") && !cellStatusOrderMarcet487.toString().trim().equals("51")) {
                 continue;
             }
             numRow50Status++;

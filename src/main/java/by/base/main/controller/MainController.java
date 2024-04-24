@@ -250,10 +250,10 @@ public class MainController {
 		}
 		
 		//телеграмм бот!
-		if(telegramBot.isRunning == false) {
-			new BotInitializer(telegramBot).init();
-		}
-//		System.err.println("ТЕЛЕГРАММ БОТ ОТКЛЮЧЕН!");//jnrk
+//		if(telegramBot.isRunning == false) {
+//			new BotInitializer(telegramBot).init();
+//		}
+		System.err.println("ТЕЛЕГРАММ БОТ ОТКЛЮЧЕН!");
 		
 		
 		try {

@@ -79,4 +79,19 @@ public interface RouteDAO {
 	 */
 	Integer saveRouteAndReturnId(Route route);
 
+	/**
+	 * Получаем маршруты, в которых участвовал юзер (выйграл и нет!)
+	 * @param route
+	 * @return
+	 */
+	List<Route> getRouteListParticipated(User user);
+	
+	/**
+	 * Получаем маршруты по перевозу за период
+	 * @param user
+	 * @param start
+	 * @param end
+	 * @return
+	 */
+	List<Route> getRouteListByUserHasPeriod(User user, LocalDate start, LocalDate end);
 }

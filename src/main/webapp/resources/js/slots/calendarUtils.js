@@ -164,7 +164,7 @@ export function hideEventInfoPopup() {
 // функция создания контента модального окна с информацией об ивенте
 function createEventInfoHTML(fcEvent) {
 	const order = fcEvent.extendedProps.data
-	const { marketNumber, dateDelivery, timeUnload, cargo, counterparty, loginManager, idRamp, idOrder, status } = order
+	const { marketNumber, dateDelivery, timeUnload, cargo, counterparty, loginManager, idRamp, idOrder, status, pall } = order
 	const statusToView = getSlotStatus(status)
 	const stock = `${idRamp}`.slice(0, -2)
 	const ramp = `${idRamp}`.slice(-2)
@@ -180,13 +180,14 @@ function createEventInfoHTML(fcEvent) {
 			Склад: ${stock}
 			Рампа: ${ramp}
 		</div>
-		<div class="event-info__id">Начало выгрузки: ${eventStartDate}</div>
+		<div class="event-info__start">Начало выгрузки: ${eventStartDate}</div>
 		<div class="event-info__duration">Длительность выгрузки: ${h} ч ${m} мин</div>
 		<div class="event-info__id">ID заявки: ${idOrder}</div>
 		<div class="event-info__marketNumber">Номер из Маркета: ${marketNumber}</div>
 		<div class="event-info__dateDelivery">Дата доставки: ${dateDeliveryView}</div>
-		<div class="event-info__cargo">Контрагент: ${counterparty}</div>
-		<div class="event-info__price">Груз: ${cargo}</div>
+		<div class="event-info__counterparty">Контрагент: ${counterparty}</div>
+		<div class="event-info__cargo">Груз: ${cargo}</div>
+		<div class="event-info__pall">Паллеты: ${pall}</div>
 		<div class="event-info__manager">Менеджер: ${loginManager}</div>
 	`
 }

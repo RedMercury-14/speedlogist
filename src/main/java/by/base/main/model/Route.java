@@ -39,6 +39,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.itextpdf.text.pdf.PdfStructTreeController.returnType;
 
 @DynamicUpdate
 @DynamicInsert
@@ -551,7 +552,12 @@ public class Route implements Serializable{
 	}
 	
 	public String getNumPoint() {
-		return getRoteHasShop().size()+"";
+		if(getRoteHasShop() !=null) {
+			return getRoteHasShop().size()+"";
+		}else {
+			return null;
+		}
+		
 	}
 
 	public void setUser(User userManager) {

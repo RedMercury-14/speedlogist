@@ -2,6 +2,7 @@ package by.base.main.service.impl;
 
 import java.sql.Date;
 import java.sql.Time;
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -174,6 +175,18 @@ public class RouteServiceImpl implements RouteService{
 	@Override
 	public Integer saveRouteAndReturnId(Route route) {
 		return routeDAO.saveRouteAndReturnId(route);
+	}
+
+	@Override
+	public List<Route> getRouteListParticipated(User user) {
+		// TODO Auto-generated method stub
+		return routeDAO.getRouteListParticipated(user);
+	}
+
+	@Override
+	public List<Route> getRouteListByUserHasPeriod(User user, LocalDate start, LocalDate end) {
+		// TODO Auto-generated method stub
+		return routeDAO.getRouteListByUserHasPeriod(user, start, end);
 	}
 	
 }

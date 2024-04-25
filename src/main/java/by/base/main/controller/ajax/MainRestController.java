@@ -202,6 +202,59 @@ public class MainRestController {
 	public static final Comparator<Address> comparatorAddressId = (Address e1, Address e2) -> (e1.getIdAddress() - e2.getIdAddress());
 	public static final Comparator<Address> comparatorAddressIdForView = (Address e1, Address e2) -> (e2.getType().charAt(0) - e1.getType().charAt(0));
 	
+	@GetMapping("/carrier/getStatusTenderForMe")
+	public List<Route> test(HttpServletRequest request) {
+		User user = getThisUser();
+		List<Route> result = new ArrayList<Route>();
+		List<Route> vin = routeService.getRouteListByUserHasPeriod(user, LocalDate.now().minusDays(15), LocalDate.now().plusDays(15)); // получаем выйгранные тендеры
+		List<Route> routeListParticipated = routeService.getRouteListParticipated(user); // получаем список всех тендеров, выгранных и не выйгранных
+		List<Route> fall = new ArrayList<Route>();
+		List<Route> inProcess = new ArrayList<Route>();
+		routeListParticipated.stream().filter(r-> !vin.contains(r) && r.getUser() == null).forEach(r-> inProcess.add(r)); // заполняем список еще не выйгранных никем
+		routeListParticipated.stream().filter(r-> !vin.contains(r) && r.getUser() != null).forEach(r-> fall.add(r)); // заполняем список проигравших
+		vin.forEach(r->{
+			r.setOptimalCost(null);
+			r.setCostWay(null);
+			r.setRoteHasShop(null);
+			r.setTruck(null);
+			r.setCost(null);
+			r.setStatusRoute("green");
+			r.setCustomer(null);
+			r.setStartCurrency(null);
+			r.setFinishPrice(0);
+			result.add(r);
+		});
+		fall.forEach(r->{
+			r.setOptimalCost(null);
+			r.setCostWay(null);
+			r.setRoteHasShop(null);
+			r.setTruck(null);
+			r.setCost(null);
+			r.setStatusRoute("red");
+			r.setCustomer(null);
+			r.setStartCurrency(null);
+			r.setFinishPrice(0);
+			if(!result.contains(r)) {
+				result.add(r);
+			}			
+		});
+		inProcess.forEach(r->{
+			r.setOptimalCost(null);
+			r.setCostWay(null);
+			r.setRoteHasShop(null);
+			r.setTruck(null);
+			r.setCost(null);
+			r.setStatusRoute("white");
+			r.setCustomer(null);
+			r.setStartCurrency(null);
+			r.setFinishPrice(0);
+			if(!result.contains(r)) {
+				result.add(r);
+			}		
+		});
+		return result;
+	}
+	
 	@GetMapping("/message")
 	public List<Order> message(HttpServletRequest request) {
 		LocalDate dateNow = LocalDate.now().plusDays(1);

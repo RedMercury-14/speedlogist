@@ -1,7 +1,7 @@
 import { AG_GRID_LOCALE_RU } from "../AG-Grid/ag-grid-locale-RU.js"
 import { dateComparator } from "../AG-Grid/ag-grid-utils.js"
 import { dateHelper, rowClassRules } from "../utils.js"
-import { convertToDayMonthTime } from "./dataUtils.js"
+import { convertToDayMonthTime, getEndTime } from "./dataUtils.js"
 
 const columnDefs = [
 	{ headerName: "Дата доставки", field: "dateDeliveryToView", width: 80, comparator: dateComparator, },
@@ -77,10 +77,7 @@ function mapCallback(order) {
 	let timeDeliveryInfo
 
 	if (order.timeDelivery) {
-		const min = Number(order.pall) * 7
-		const ms = min * 60 * 1000
-		const start = new Date(order.timeDelivery)
-		const end = new Date(start.getTime() + ms)
+		const end = getEndTime(order.timeDelivery, order.timeUnload)
 		timeDeliveryInfo =  `Старт: ${convertToDayMonthTime(order.timeDelivery)} \n Конец: ${convertToDayMonthTime(end)}`
 	} else {
 		timeDeliveryInfo = ''

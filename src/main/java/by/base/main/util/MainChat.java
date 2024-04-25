@@ -65,10 +65,15 @@ public class MainChat {
 		//отвечает за работу уведомлений и сообщений перевозам
 			DateTimeFormatter formatter1 = DateTimeFormatter.ofPattern("d-MM-yyyy; HH:mm:ss");
 			message.setDatetime(LocalDateTime.now().format(formatter1));
+			System.out.println(message);
 			sessionList.forEach(s -> {
 				if (s == this.session) {
+					
 					if (!message.getFromUser().equals("system")) {
-						messegeList.add(message);
+						if(!message.getToUser().equals("international")) {//в доп блоке откоючаю запись сообщений о том что маршрут доступен для торгов для последующего отображения
+							messegeList.add(message);
+						}
+						
 					}
 				}
 				try {

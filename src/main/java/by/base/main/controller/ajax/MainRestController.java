@@ -202,10 +202,15 @@ public class MainRestController {
 	public static final Comparator<Address> comparatorAddressId = (Address e1, Address e2) -> (e1.getIdAddress() - e2.getIdAddress());
 	public static final Comparator<Address> comparatorAddressIdForView = (Address e1, Address e2) -> (e2.getType().charAt(0) - e1.getType().charAt(0));
 	
+	@GetMapping("/carrier/test")
+	public String test(HttpServletRequest request) {
+		return MainChat.messegeList.size() + "";		
+	}
+	
 	@GetMapping("/carrier/getStatusTenderForMe")
-	public List<Route> test(HttpServletRequest request) {
+	public Set<Route> getStatusTenderForMe(HttpServletRequest request) {
 		User user = getThisUser();
-		List<Route> result = new ArrayList<Route>();
+		Set<Route> result = new HashSet<Route>();
 		List<Route> vin = routeService.getRouteListByUserHasPeriod(user, LocalDate.now().minusDays(15), LocalDate.now().plusDays(15)); // получаем выйгранные тендеры
 		List<Route> routeListParticipated = routeService.getRouteListParticipated(user); // получаем список всех тендеров, выгранных и не выйгранных
 		List<Route> fall = new ArrayList<Route>();
@@ -230,13 +235,15 @@ public class MainRestController {
 			r.setRoteHasShop(null);
 			r.setTruck(null);
 			r.setCost(null);
-			r.setStatusRoute("red");
+			r.setStatusRoute("green");
 			r.setCustomer(null);
 			r.setStartCurrency(null);
 			r.setFinishPrice(0);
 			if(!result.contains(r)) {
+				r.setStatusRoute("red");
 				result.add(r);
-			}			
+			}	
+						
 		});
 		inProcess.forEach(r->{
 			r.setOptimalCost(null);
@@ -248,9 +255,7 @@ public class MainRestController {
 			r.setCustomer(null);
 			r.setStartCurrency(null);
 			r.setFinishPrice(0);
-			if(!result.contains(r)) {
-				result.add(r);
-			}		
+			result.add(r);		
 		});
 		return result;
 	}

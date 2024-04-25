@@ -17,51 +17,11 @@
 .none {
     display: none;
 }
-.card.activRow {
-    background-color: #c4ffe1db;
-}
-.card.attentionRow {
-    background-color: #dce37266;
-}
+
 .columns {
     float: left;
     width: 100%;
     padding: 8px;
-    font-size: 200%;
-}
-.price {
-    list-style-type: none;
-    border: 1px solid #eee;
-    margin: 0;
-    padding: 0;
-    -webkit-transition: 0.3s;
-    transition: 0.3s;
-}
-.price:hover {
-    box-shadow: 0 8px 12px 0 rgba(0, 0, 0, 0.2)
-}
-.price .header {
-    background-color: #111;
-    color: white;
-    font-size: 200%;
-}
-.header-activ {
-    background-color: #00e571db;
-    color: white;
-    font-size: 200%;
-}
-.header-attention {
-    background-color: #dce37266;
-    color: white;
-    font-size: 200%;
-}
-.price li {
-    border-bottom: 1px solid #eee;
-    padding: 15px;
-    text-align: center;
-}
-.price .grey {
-    background-color: #eee;
     font-size: 200%;
 }
 
@@ -72,11 +32,11 @@ footer.to-bottom {
 
 #myGrid {
     width: 100%;
-    height: calc(100vh - 255px);
+    height: calc(100vh - 215px);
 }
 @media (max-width: 1023px) {
     #myGrid {
-        height: calc(100vh - 292px);
+        height: calc(100vh - 160px);
     }
 }
 @media (max-width: 767px) {
@@ -92,6 +52,10 @@ footer.to-bottom {
     }
     .tender-message {
         font-size: 14px;
+    }
+    footer.to-bottom {
+        margin-top: 60px;
+        position: relative;
     }
 }
 
@@ -140,11 +104,11 @@ footer.to-bottom {
 	white-space: normal !important;
 }
 
-#myGrid .activRow {
+#myGrid .greenRow {
     background-color: #c4ffe1db;
 }
-#myGrid .attentionRow {
-    background-color: #dce37266;
+#myGrid .redRow {
+    background-color: #e3727266;
 }
 
 #filterTextBox {
@@ -154,18 +118,6 @@ footer.to-bottom {
 }
 #filterTextBox:focus-visible {
     outline: #1f71fa auto 1px;
-}
-.modal {
-    font-family: var(--font-family-sans-serif);
-}
-.modal .close {
-	float: right;
-	font-size: 1.5rem;
-	font-weight: 700;
-	line-height: 1;
-	color: #000;
-	text-shadow: 0 1px 0 #fff;
-	opacity: .5;
 }
 
 .title-container {

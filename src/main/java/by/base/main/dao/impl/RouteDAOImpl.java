@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import javax.persistence.TemporalType;
 import javax.transaction.Transactional;
 
+import org.glassfish.grizzly.utils.ArraySet;
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.Session;
@@ -25,6 +26,7 @@ import by.base.main.model.Message;
 import by.base.main.model.Route;
 import by.base.main.model.Truck;
 import by.base.main.model.User;
+import by.base.main.util.ChatEnpoint;
 
 @Repository
 public class RouteDAOImpl implements RouteDAO {
@@ -300,6 +302,7 @@ public class RouteDAOImpl implements RouteDAO {
 		query1.setParameter("todate", finish, TemporalType.DATE);
 		Set<String> idRoutes = new HashSet<String>();
 		List<Message> objects = query1.getResultList();
+		ChatEnpoint.internationalMessegeList.stream().filter(m->m.getFromUser().equals(user.getLogin())).forEach(m-> idRoutes.add(m.getIdRoute())); // получаем idRoute что находятся в кеше
 		objects.forEach(m-> idRoutes.add(m.getIdRoute()));
 		Set<Route> routes = new HashSet<Route>();
 		for (String idStr : idRoutes) {
@@ -318,6 +321,10 @@ public class RouteDAOImpl implements RouteDAO {
 		theObject.setParameter("todate", Date.valueOf(end), TemporalType.DATE);
 		theObject.setParameter("user", user);
 		List<Route> objects = theObject.getResultList();
+		Set<Route> objectsSet = new HashSet<Route>();
+		objectsSet = objects.stream().collect(Collectors.toSet());
+		objects.clear();
+		objects.addAll(objectsSet);
 		return objects;
 	}
 }

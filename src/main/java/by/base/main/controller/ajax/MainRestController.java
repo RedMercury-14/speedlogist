@@ -213,10 +213,6 @@ public class MainRestController {
 		Set<Route> result = new HashSet<Route>();
 		List<Route> vin = routeService.getRouteListByUserHasPeriod(user, LocalDate.now().minusDays(15), LocalDate.now().plusDays(15)); // получаем выйгранные тендеры
 		List<Route> routeListParticipated = routeService.getRouteListParticipated(user); // получаем список всех тендеров, выгранных и не выйгранных
-		List<Route> fall = new ArrayList<Route>();
-		List<Route> inProcess = new ArrayList<Route>();
-		routeListParticipated.stream().filter(r-> !vin.contains(r) && r.getUser() == null).forEach(r-> inProcess.add(r)); // заполняем список еще не выйгранных никем
-		routeListParticipated.stream().filter(r-> !vin.contains(r) && r.getUser() != null).forEach(r-> fall.add(r)); // заполняем список проигравших
 		vin.forEach(r->{
 			r.setOptimalCost(null);
 			r.setCostWay(null);
@@ -229,33 +225,30 @@ public class MainRestController {
 			r.setFinishPrice(0);
 			result.add(r);
 		});
-		fall.forEach(r->{
-			r.setOptimalCost(null);
-			r.setCostWay(null);
-			r.setRoteHasShop(null);
-			r.setTruck(null);
-			r.setCost(null);
-			r.setStatusRoute("green");
-			r.setCustomer(null);
-			r.setStartCurrency(null);
-			r.setFinishPrice(0);
-			if(!result.contains(r)) {
+		routeListParticipated.forEach(r->{
+			if(r.getUser() != null && !r.getUser().equals(user)) {
+				r.setOptimalCost(null);
+				r.setCostWay(null);
+				r.setRoteHasShop(null);
+				r.setTruck(null);
+				r.setCost(null);
 				r.setStatusRoute("red");
+				r.setCustomer(null);
+				r.setStartCurrency(null);
+				r.setFinishPrice(0);
 				result.add(r);
-			}	
-						
-		});
-		inProcess.forEach(r->{
-			r.setOptimalCost(null);
-			r.setCostWay(null);
-			r.setRoteHasShop(null);
-			r.setTruck(null);
-			r.setCost(null);
-			r.setStatusRoute("white");
-			r.setCustomer(null);
-			r.setStartCurrency(null);
-			r.setFinishPrice(0);
-			result.add(r);		
+			}else if(r.getUser() == null){
+				r.setOptimalCost(null);
+				r.setCostWay(null);
+				r.setRoteHasShop(null);
+				r.setTruck(null);
+				r.setCost(null);
+				r.setStatusRoute("white");
+				r.setCustomer(null);
+				r.setStartCurrency(null);
+				r.setFinishPrice(0);
+				result.add(r);
+			}
 		});
 		return result;
 	}

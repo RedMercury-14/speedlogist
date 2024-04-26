@@ -39,6 +39,11 @@ export function debounce(callee, timeoutMs) {
 	}
 }
 
+export function isMobileDevice() {
+	return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i
+			.test(navigator.userAgent)
+}
+
 export const dateHelper = {
 	DAYS_TO_MILLISECONDS: 86400000,
 	MILLISECONDS_IN_HOUR: 3600000,

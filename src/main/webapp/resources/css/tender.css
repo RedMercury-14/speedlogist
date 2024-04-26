@@ -5,7 +5,7 @@
     background-color: #0e377b !important;
 }
 .my-container {
-    margin-top: 83px;
+    margin-top: 66px;
 }
 .title {
     margin-bottom: 5px;
@@ -72,11 +72,11 @@ footer.to-bottom {
 
 #myGrid {
     width: 100%;
-    height: calc(100vh - 255px);
+    height: calc(100vh - 238px);
 }
 @media (max-width: 1023px) {
     #myGrid {
-        height: calc(100vh - 292px);
+        height: calc(100vh - 220px);
     }
 }
 @media (max-width: 767px) {
@@ -92,6 +92,10 @@ footer.to-bottom {
     }
     .tender-message {
         font-size: 14px;
+    }
+    footer.to-bottom {
+        margin-top: 60px;
+        position: relative;
     }
 }
 

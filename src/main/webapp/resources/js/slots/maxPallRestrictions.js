@@ -4,16 +4,6 @@
 export const tempMaxPallRestrictions = [
 	{
 		stockId: '1700',
-		date: '2024-04-24',
-		maxPall: 1300,
-	},
-	{
-		stockId: '1700',
-		date: '2024-04-25',
-		maxPall: 1300,
-	},
-	{
-		stockId: '1700',
 		date: '2024-04-26',
 		maxPall: 1600,
 	},
@@ -35,22 +25,22 @@ export const tempMaxPallRestrictions = [
 	{
 		stockId: '1700',
 		date: '2024-04-30',
-		maxPall: 1300,
+		maxPall: 1600,
 	},
 	{
 		stockId: '1700',
 		date: '2024-05-01',
-		maxPall: 1300,
+		maxPall: 1700,
 	},
 	{
 		stockId: '1700',
 		date: '2024-05-02',
-		maxPall: 1300,
+		maxPall: 1800,
 	},
 	{
 		stockId: '1700',
 		date: '2024-05-03',
-		maxPall: 1300,
+		maxPall: 1800,
 	},
 	{
 		stockId: '1700',

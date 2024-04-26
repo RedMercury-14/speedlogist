@@ -42,16 +42,48 @@ export function updateCalendarEvent(gridOptions, orderData, isAnotherUser) {
 	store.updateEvent(orderData, updatedOrder)
 
 	// обновляем количество паллет для склада
-	// (работает только с круглосуточным складом)
 	const oldEvent = orderData.oldEvent
-	if (!isAnotherUser && oldEvent) {
+	if (!oldEvent) return
+
+	const currentStock = store.getCurrentStock()
+	const currentDate = store.getCurrentDate()
+	const maxPall = store.getCurrentMaxPall()
+	const numberOfPall = Number(orderData.numberOfPalls)
+	const eventDateStr = orderData.startDateStr.split('T')[0]
+
+	// для текущего пользователя
+	if (!isAnotherUser) {
 		const oldEventDateStr = oldEvent.startStr.split('T')[0]
-		const eventDateStr = orderData.fcEvent.startStr.split('T')[0]
-		if (oldEventDateStr !== eventDateStr) {
-			const numberOfPall = Number(orderData.numberOfPalls)
-			const maxPall = store.getCurrentMaxPall()
-			const action = getPallCoutnAction(eventDateStr, oldEventDateStr)
-			updatePallInfo(numberOfPall, maxPall, action)
+
+		// если даты совпадают, то не обновляем паллетовместимость
+		if (oldEventDateStr === eventDateStr) return
+
+		const action = getPallCoutnAction(eventDateStr, oldEventDateStr)
+		updatePallInfo(numberOfPall, maxPall, action)
+		return
+	}
+
+	// для других пользователей
+	if (isAnotherUser) {
+		const oldStockId = oldEvent.extendedProps.data.numStockDelivery
+		const oldEventDateStr = oldEvent.start.split('T')[0]
+		const stockId = orderData.stockId
+
+		// если даты и склады совпадают, то не обновляем паллетовместимость
+		if ((oldEventDateStr === eventDateStr) && (stockId === oldStockId)) {
+			return
+		}
+
+		// если виден склад и дата старого ивента
+		if (stockAndDayIsVisible(currentStock, currentDate, oldStockId, oldEventDateStr)) {
+			updatePallInfo(numberOfPall, maxPall, 'decrement')
+			return
+		}
+
+		// если виден склад и дата нового ивента
+		if (stockAndDayIsVisible(currentStock, currentDate, stockId, eventDateStr)) {
+			updatePallInfo(numberOfPall, maxPall, 'increment')
+			return
 		}
 	}
 }

@@ -134,6 +134,7 @@
 										<a class="dropdown-item" href="<spring:url value="/main/carrier/controlpark/driverlist"/>">Управление персоналом</a>
 										<a class="dropdown-item" href="<spring:url value="/main/carrier/transportation/routecontrole"/>">Акты</a>
 										<a class="dropdown-item" href="<spring:url value="/main/carrier/transportation/archive"/>">Архив перевозок</a>
+										<a class="dropdown-item" href="<spring:url value="/main/carrier/tender/history"/>">История тендеров</a>
 									</div>
 								</li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/carrier/exchange"/>">О бирже</a></li>

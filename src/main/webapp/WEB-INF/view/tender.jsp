@@ -26,7 +26,12 @@
 			Telegram бот с уведомлениями о новых тендерах: 
 			<a href="http://t.me/speedlogist_bot" target="_blank">@speedlogist_bot</a>
 		</p>
-		<input type="text" id="filterTextBox" placeholder="Поиск тендера...">
+		<div class="d-flex">
+			<input type="text" id="filterTextBox" placeholder="Поиск тендера...">
+			<a href="/speedlogist/main/carrier/tender/history">
+				<button class="ml-1 text-nowrap">Проверить тендеры</button>
+			</a>
+		</div>
 		<div id="myGrid" class="ag-theme-alpine"></div>
 	</div>
 

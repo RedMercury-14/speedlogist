@@ -30,33 +30,47 @@ const rowClassRules = {
 }
 
 const columnDefs = [
-	{
-		headerName: "Дата загрузки", field: 'dateToView',
-		cellClass: 'px-2 text-center',
-		comparator: dateComparator,
-	},
 	{ 
 		headerName: "Название тендера", field: "routeDirection",
 		tooltipField: 'routeDirection',
+		wrapText: true, autoHeight: true,
+		flex: 6, minWidth: 260,
 		cellRenderer: 'agGroupCellRenderer',
 		cellRendererParams: {
 			innerRenderer: routeLinkRenderer,
 		},
-		flex: 3,
-		getQuickFilterText: params => {
-			return params.value
-		}
+		getQuickFilterText: params => params.value
 	},
-	{ headerName: "Направление", field: "way", cellClass: 'px-2 font-weight-bold text-center', },
-	{ headerName: "Предложенная цена", field: "price", cellClass: 'px-2 font-weight-bold text-center', },
-	{ headerName: "Ваше предложение", field: "myOffer", cellClass: 'px-2 font-weight-bold text-center', }
+	{
+		headerName: "Загрузка", field: 'dateToView',
+		cellClass: 'px-1 text-center', minWidth: 80,
+		comparator: dateComparator,
+	},
+	// {
+	// 	headerName: "Выгрузка", field: 'dateToView',
+	// 	cellClass: 'px-1 text-center', minWidth: 80,
+	// 	comparator: dateComparator,
+	// },
+	{ headerName: "Направление", field: "way", cellClass: 'px-1 font-weight-bold text-center', minWidth: 60, },
+	{ 
+		headerName: "Предложенная цена", field: "price",
+		cellClass: 'px-1 font-weight-bold text-center',
+		minWidth: 60,
+		wrapText: true, autoHeight: true,
+	},
+	{ 
+		headerName: "Ваше предложение", field: "myOffer",
+		cellClass: 'px-1 font-weight-bold text-center',
+		minWidth: 60,
+		wrapText: true, autoHeight: true,
+	}
 ]
 const gridOptions = {
 	columnDefs: columnDefs,
 	rowClassRules: rowClassRules,
 	defaultColDef: {
-		headerClass: 'px-2',
-		cellClass: 'px-2',
+		headerClass: 'px-1',
+		cellClass: 'px-1',
 		flex: 1,
 		resizable: true,
 		sortable: true,
@@ -120,89 +134,13 @@ window.onload = async () => {
 
 	tgBotModal()
 
-	ws.onmessage = (e) => onMessage(JSON.parse(e.data));
-	// $.getJSON('../../api/info/message/routes/from_me', function(data) {
-	// 	$.each(data, function(key, val) {
-	// 		var rowItem = document.querySelectorAll('.tenders-item');
-	// 		for (let i = 0; i < rowItem.length; i++) {
-	// 			var rowItemI = rowItem[i];
-	// 			var target = rowItemI.querySelector('.none').innerHTML;
-	// 			if (target == val.idRoute) {
-	// 				rowItemI.classList.add("activRow");
-	// 				rowItemI.querySelector('#offer').innerHTML = val.text + " " + val.currency;
-	// 			}
-	// 		}
-	// 	})
-	// });
+	ws.onmessage = (e) => onMessage(JSON.parse(e.data))
+
 	function onMessage(msg) {
 		if (msg.currency) {
 			updateTable(gridOptions, tenders, myMessages, user)
 		}
-		// setTimeout(() => changeCost(), 100);
-	};
-	// setTimeout(() => changeCost(), 300);
-
-	// function changeCost() {
-	// 	var routeItem = document.querySelectorAll('.tenders-item');
-	// 	for (let i = 0; i < routeItem.length; i++) {
-	// 		var routeItemI = routeItem[i];
-	// 		var idRoute = routeItemI.querySelector('.none').innerHTML;
-	// 		process(routeItemI, idRoute);
-	// 	}
-	// }
-	
-	
-	//временно!
-	//подсвечивает для регионалов уже принятые тендеры
-	// var routeItem = document.querySelectorAll('.tenders-item');
-	// for (let i = 0; i < routeItem.length; i++) {
-	// 	var routeItemI = routeItem[i];
-	// 	var idRoute = routeItemI.querySelector('.none').innerHTML;
-	// 	var regionalTenderButtonAgreeStat = localStorage.getItem('regionalTenderButtonAgree?'+idRoute);
-	// 	if(regionalTenderButtonAgreeStat != null){
-	// 		processForRegional(routeItemI, idRoute, regionalTenderButtonAgreeStat)
-	// 	}
-	// }	
-	// function processForRegional(routeItemI, idRoute, regionalTenderButtonAgreeStat){
-	// 	routeItemI.classList.add("activRow");
-	// 	routeItemI.querySelector('#offer').innerHTML = regionalTenderButtonAgreeStat+'%'
-	// }
-
-
-
-
-	// function process(routeItemI, idRoute) {
-	// 	fetch(`../../api/info/message/routes/${idRoute}`).then(function(response) {
-	// 		response.json().then(function(message) {
-	// 			const targetCost = routeItemI.querySelector('.targetCost')
-	// 			const currentCost = routeItemI.querySelector('.currentCost')
-	// 			const offer = routeItemI.querySelector('#offer')
-	// 			if (message.length != 0) {
-	// 				if (targetCost) targetCost.innerHTML = message[message.length - 1].text + " BYN"
-	// 				if (currentCost) currentCost.innerHTML = message[message.length - 1].text + " BYN"
-	// 			} else {
-	// 				$.getJSON(`../../api/route/${idRoute}`, function(data) {
-	// 					if (targetCost)
-	// 					if (targetCost != null) {
-	// 						targetCost.innerHTML = data.startPrice + " BYN";
-	// 					}
-
-	// 				});
-	// 			}
-	// 			var target = routeItemI;
-	// 			if (offer.innerHTML == '') {
-
-	// 			} else if (
-	// 				(targetCost && offer.innerHTML != targetCost.innerHTML)
-	// 				|| (currentCost && offer.innerHTML != currentCost.innerHTML)
-	// 			) {
-	// 				target.classList.add("attentionRow");
-	// 				console.log(target);
-	// 			}
-
-	// 		});
-	// 	});
-	// }
+	}
 }
 
 async function renderTable(gridDiv, gridOptions, data, messages, user) {
@@ -242,6 +180,15 @@ async function getMappingData(data, messages, user) {
 		const loadDate = `${dateToView},  ${tender.timeLoadPreviously}`
 		const myMessage = messages.find(m => m.idRoute === idRoute.toString()) || null
 
+		const loadPoints = tender.roteHasShop
+			.filter(point => point.position === "Загрузка")
+			.map((point, i) => `${i + 1}) ${point.address}`)
+			.join(' ')
+		const unloadPoints = tender.roteHasShop
+			.filter(point => point.position === "Выгрузка")
+			.map((point, i) => `${i + 1}) ${point.address}`)
+			.join(' ')
+
 		const routeMessages = await getData(getMessagesBaseUrl + idRoute)
 
 		const price = routeMessages && routeMessages.length !== 0
@@ -262,7 +209,9 @@ async function getMappingData(data, messages, user) {
 			info,
 			myMessage,
 			myOffer,
-			price
+			price,
+			loadPoints,
+			unloadPoints,
 		}
 	}))
 }

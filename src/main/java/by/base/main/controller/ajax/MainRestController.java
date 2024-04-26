@@ -202,6 +202,57 @@ public class MainRestController {
 	public static final Comparator<Address> comparatorAddressId = (Address e1, Address e2) -> (e1.getIdAddress() - e2.getIdAddress());
 	public static final Comparator<Address> comparatorAddressIdForView = (Address e1, Address e2) -> (e2.getType().charAt(0) - e1.getType().charAt(0));
 	
+	@GetMapping("/carrier/test")
+	public String test(HttpServletRequest request) {
+		return MainChat.messegeList.size() + "";		
+	}
+	
+	@GetMapping("/carrier/getStatusTenderForMe")
+	public Set<Route> getStatusTenderForMe(HttpServletRequest request) {
+		User user = getThisUser();
+		Set<Route> result = new HashSet<Route>();
+		List<Route> vin = routeService.getRouteListByUserHasPeriod(user, LocalDate.now().minusDays(15), LocalDate.now().plusDays(15)); // получаем выйгранные тендеры
+		List<Route> routeListParticipated = routeService.getRouteListParticipated(user); // получаем список всех тендеров, выгранных и не выйгранных
+		vin.forEach(r->{
+			r.setOptimalCost(null);
+			r.setCostWay(null);
+			r.setRoteHasShop(null);
+			r.setTruck(null);
+			r.setCost(null);
+			r.setStatusRoute("green");
+			r.setCustomer(null);
+			r.setStartCurrency(null);
+			r.setFinishPrice(0);
+			result.add(r);
+		});
+		routeListParticipated.forEach(r->{
+			if(r.getUser() != null && !r.getUser().equals(user)) {
+				r.setOptimalCost(null);
+				r.setCostWay(null);
+				r.setRoteHasShop(null);
+				r.setTruck(null);
+				r.setCost(null);
+				r.setStatusRoute("red");
+				r.setCustomer(null);
+				r.setStartCurrency(null);
+				r.setFinishPrice(0);
+				result.add(r);
+			}else if(r.getUser() == null){
+				r.setOptimalCost(null);
+				r.setCostWay(null);
+				r.setRoteHasShop(null);
+				r.setTruck(null);
+				r.setCost(null);
+				r.setStatusRoute("white");
+				r.setCustomer(null);
+				r.setStartCurrency(null);
+				r.setFinishPrice(0);
+				result.add(r);
+			}
+		});
+		return result;
+	}
+	
 	@GetMapping("/message")
 	public List<Order> message(HttpServletRequest request) {
 		LocalDate dateNow = LocalDate.now().plusDays(1);

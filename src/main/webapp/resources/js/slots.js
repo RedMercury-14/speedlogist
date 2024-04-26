@@ -59,49 +59,7 @@ import {
 	getSlotInfoToCopy,
 } from "./slots/dataUtils.js"
 import { gridColumnLocalState } from "./AG-Grid/ag-grid-utils.js"
-
-const tempMaxPallRestrictions = [
-	{
-		stockId: '1700',
-		date: '2024-04-24',
-		maxPall: 1300,
-	},
-	{
-		stockId: '1700',
-		date: '2024-04-25',
-		maxPall: 1300,
-	},
-	{
-		stockId: '1700',
-		date: '2024-04-26',
-		maxPall: 1600,
-	},
-	{
-		stockId: '1700',
-		date: '2024-04-27',
-		maxPall: 1600,
-	},
-	{
-		stockId: '1700',
-		date: '2024-04-28',
-		maxPall: 1600,
-	},
-	{
-		stockId: '1700',
-		date: '2024-04-29',
-		maxPall: 1300,
-	},
-	{
-		stockId: '1700',
-		date: '2024-04-30',
-		maxPall: 1300,
-	},
-	{
-		stockId: '1700',
-		date: '2024-05-01',
-		maxPall: 1300,
-	},
-]
+import { tempMaxPallRestrictions } from "./slots/maxPallRestrictions.js"
 
 
 const LOCAL_STORAGE_KEY = 'AG_Grid_column_settings_to_Slots'

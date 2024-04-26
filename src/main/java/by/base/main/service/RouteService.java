@@ -2,6 +2,7 @@ package by.base.main.service;
 
 import java.sql.Date;
 import java.sql.Time;
+import java.time.LocalDate;
 import java.util.List;
 
 import by.base.main.model.Route;
@@ -82,4 +83,20 @@ public interface RouteService {
 	 * @return
 	 */
 	Integer saveRouteAndReturnId(Route route);
+	
+	/**
+	 * Получаем маршруты, в которых участвовал юзер (выйграл и нет!)
+	 * @param route
+	 * @return
+	 */
+	List<Route> getRouteListParticipated(User user);
+	
+	/**
+	 * Получаем маршруты по перевозу за период
+	 * @param user
+	 * @param start
+	 * @param end
+	 * @return
+	 */
+	List<Route> getRouteListByUserHasPeriod(User user, LocalDate start, LocalDate end);
 }

@@ -1051,6 +1051,12 @@ public class MainController {
 		
 	}
 	
+	
+	@RequestMapping("/main/carrier/tender/history")
+	public String tenderHistoryGetPage(Model model, HttpSession session, HttpServletRequest request) {
+		return "tenderHistory";
+	}
+	
 	@PostMapping("/main/carrier/updateUserData")
 	public String postSaveDataUser(Model model, HttpServletRequest request,
 			@RequestParam(value = "numContract", required = false) String numContract,

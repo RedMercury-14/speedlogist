@@ -2,11 +2,16 @@ package by.base.main.dao.impl;
 
 import java.sql.Date;
 import java.sql.Time;
+import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.TemporalType;
 import javax.transaction.Transactional;
 
+import org.glassfish.grizzly.utils.ArraySet;
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.Session;
@@ -17,9 +22,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import by.base.main.dao.RouteDAO;
+import by.base.main.model.Message;
 import by.base.main.model.Route;
 import by.base.main.model.Truck;
 import by.base.main.model.User;
+import by.base.main.util.ChatEnpoint;
 
 @Repository
 public class RouteDAOImpl implements RouteDAO {
@@ -280,5 +287,44 @@ public class RouteDAOImpl implements RouteDAO {
 		Session currentSession = sessionFactory.getCurrentSession();
 		currentSession.save(route);
 		return Integer.parseInt(currentSession.getIdentifier(route).toString());
+	}
+
+	private static final String queryGetObjByCompanyNameMessage = "from Message where status=1 AND companyName=:companuName AND date BETWEEN :frmdate and :todate";
+	@Transactional
+	@Override
+	public List<Route> getRouteListParticipated(User user) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Date start = Date.valueOf(LocalDate.now().minusDays(15));
+		Date finish = Date.valueOf(LocalDate.now().plusDays(15));
+		Query query1 = currentSession.createQuery(queryGetObjByCompanyNameMessage, Message.class);
+		query1.setParameter("companuName", user.getCompanyName());
+		query1.setParameter("frmdate", start, TemporalType.DATE);
+		query1.setParameter("todate", finish, TemporalType.DATE);
+		Set<String> idRoutes = new HashSet<String>();
+		List<Message> objects = query1.getResultList();
+		ChatEnpoint.internationalMessegeList.stream().filter(m->m.getFromUser().equals(user.getLogin())).forEach(m-> idRoutes.add(m.getIdRoute())); // получаем idRoute что находятся в кеше
+		objects.forEach(m-> idRoutes.add(m.getIdRoute()));
+		Set<Route> routes = new HashSet<Route>();
+		for (String idStr : idRoutes) {
+			routes.add(getRouteById(Integer.parseInt(idStr)));
+		}
+		return routes.stream().collect(Collectors.toList());
+	}
+
+	private static final String queryПetRouteListByUserHasPeriod = "from Route r LEFT JOIN FETCH r.orders LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d where r.user =:user AND r.dateLoadPreviously BETWEEN :frmdate and :todate";
+	@Transactional
+	@Override
+	public List<Route> getRouteListByUserHasPeriod(User user, LocalDate start, LocalDate end) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Route> theObject = currentSession.createQuery(queryПetRouteListByUserHasPeriod, Route.class);
+		theObject.setParameter("frmdate", Date.valueOf(start), TemporalType.DATE);
+		theObject.setParameter("todate", Date.valueOf(end), TemporalType.DATE);
+		theObject.setParameter("user", user);
+		List<Route> objects = theObject.getResultList();
+		Set<Route> objectsSet = new HashSet<Route>();
+		objectsSet = objects.stream().collect(Collectors.toSet());
+		objects.clear();
+		objects.addAll(objectsSet);
+		return objects;
 	}
 }

@@ -81,6 +81,23 @@ public class YardManagementRestController {
 		});
 		return orders;
 	}
+	
+	@GetMapping("/loadPlanNow")
+	public List<Order> loadPlanNow(HttpServletRequest request) {
+		LocalDate dateNow = LocalDate.now();
+		
+		List<Order> orders = orderService.getOrderByTimeDelivery(java.sql.Date.valueOf(dateNow), java.sql.Date.valueOf(dateNow));
+		List<Order> result = new ArrayList<Order>();
+		orders.forEach(o->{
+			o.setChangeStatus(null);
+			o.setAddresses(null);
+			o.setRoutes(null);
+			o.setMailInfo(null);
+			o.setSlotInfo(null);
+			result.add(o);
+		});
+		return orders;
+	}
  
 	/**
 	 * Метод отдаёт csrf токен для пост методов от двора

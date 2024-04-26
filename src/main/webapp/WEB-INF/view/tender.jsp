@@ -17,7 +17,7 @@
 </head>
 <body>
 	<jsp:include page="headerNEW.jsp" />
-	<div class="my-container container">
+	<div class="my-container container-fluid">
 		<div class="title-container mt-1">
 			<h1 class="title mt-0">Текущие тендеры</h1>
 			<button id="resetTableFilters" class="btn btn-secondary">Сбросить фильтры</button>

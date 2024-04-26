@@ -1,6 +1,6 @@
 import { ws } from './global.js';
 import { AG_GRID_LOCALE_RU } from '../js/AG-Grid/ag-grid-locale-RU.js'
-import { cookieHelper, debounce, getData } from './utils.js';
+import { cookieHelper, debounce, getData, isMobileDevice } from './utils.js';
 import { dateComparator, gridFilterLocalState } from './AG-Grid/ag-grid-utils.js';
 
 const getActiveTendersUrl = `../../api/carrier/getActiveInternationalTenders`
@@ -29,10 +29,12 @@ const rowClassRules = {
 	}
 }
 
-const columnDefs = [
+const isMobileView = isMobileDevice() || (window.innerWidth < 768)
+
+const columnDefsForMobile = [
 	{ 
 		headerName: "Название тендера", field: "routeDirection",
-		tooltipField: 'routeDirection',
+		cellClass: 'px-0',
 		wrapText: true, autoHeight: true,
 		flex: 6, minWidth: 260,
 		cellRenderer: 'agGroupCellRenderer',
@@ -43,7 +45,7 @@ const columnDefs = [
 	},
 	{
 		headerName: "Загрузка", field: 'dateToView',
-		cellClass: 'px-1 text-center', minWidth: 80,
+		cellClass: 'px-0 text-center', minWidth: 80,
 		comparator: dateComparator,
 	},
 	// {
@@ -51,7 +53,7 @@ const columnDefs = [
 	// 	cellClass: 'px-1 text-center', minWidth: 80,
 	// 	comparator: dateComparator,
 	// },
-	{ headerName: "Направление", field: "way", cellClass: 'px-1 font-weight-bold text-center', minWidth: 60, },
+	{ headerName: "Направление", field: "way", cellClass: 'px-1 font-weight-bold text-center', minWidth: 63, },
 	{ 
 		headerName: "Предложенная цена", field: "price",
 		cellClass: 'px-1 font-weight-bold text-center',
@@ -65,43 +67,95 @@ const columnDefs = [
 		wrapText: true, autoHeight: true,
 	}
 ]
+const columnDefsForPC = [
+	{ 
+		headerName: "Название тендера", field: "routeDirection",
+		flex: 6, minWidth: 260,
+		cellRenderer: 'agGroupCellRenderer',
+		cellRendererParams: {
+			innerRenderer: routeLinkRenderer,
+		},
+		getQuickFilterText: params => params.value
+	},
+	{
+		headerName: "Загрузка", field: 'dateToView',
+		cellClass: 'px-2 text-center', minWidth: 80,
+		comparator: dateComparator,
+	},
+	// {
+	// 	headerName: "Выгрузка", field: 'dateToView',
+	// 	cellClass: 'px-2 text-center', minWidth: 80,
+	// 	comparator: dateComparator,
+	// },
+	{ headerName: "Направление", field: "way", cellClass: 'px-2 font-weight-bold text-center', minWidth: 63, },
+	{ headerName: "Дата загрузки", field: 'loadDate', flex: 1, minWidth: 85, },
+	{
+		headerName: "Машина", field: 'carInfo',
+		flex: 2, minWidth: 160,
+	},
+	{
+		headerName: "Груз", field: 'cargoInfo',
+		flex: 2, minWidth: 160,
+	},
+	{ 
+		headerName: "Предложенная цена", field: "price",
+		cellClass: 'px-2 font-weight-bold text-center',
+		minWidth: 60,
+	},
+	{ 
+		headerName: "Ваше предложение", field: "myOffer",
+		cellClass: 'px-2 font-weight-bold text-center',
+		minWidth: 60,
+	},
+
+]
+const columnDefs = isMobileView ? columnDefsForMobile : columnDefsForPC
 const gridOptions = {
 	columnDefs: columnDefs,
 	rowClassRules: rowClassRules,
 	defaultColDef: {
-		headerClass: 'px-1',
-		cellClass: 'px-1',
+		headerClass: 'px-2',
+		cellClass: 'px-2',
 		flex: 1,
 		resizable: true,
 		sortable: true,
 		suppressMenu: true,
 		filter: true,
 		floatingFilter: true,
+		wrapText: true, autoHeight: true,
 	},
 	onFilterChanged: debouncedSaveFilterState,
 	suppressRowClickSelection: true,
+	suppressDragLeaveHidesColumns: true,
 	enableBrowserTooltips: true,
 	localeText: AG_GRID_LOCALE_RU,
-	masterDetail: true,
-	detailRowHeight: 215,
+	masterDetail: isMobileView,
+	detailRowHeight: 230,
 	detailCellRendererParams: {
 		detailGridOptions: {
 			columnDefs: [
-				{ headerName: "Дата загрузки", field: 'loadDate', flex: 2, },
-				{ headerName: "Груз", field: 'cargo', flex: 2, },
-				{ headerName: "Паллеты", field: 'totalLoadPall', flex: 1, },
-				{ headerName: "Масса", field: 'totalCargoWeight', flex: 1, },
-				{ headerName: "Дополнительная информация", field: 'info', tooltipField: 'info', cellRenderer: textInColumnRenderer },
+				{ headerName: "Дата загрузки", field: 'loadDate', flex: 2, minWidth: 85, },
+				{
+					headerName: "Машина", field: 'carInfo',
+					flex: 2, minWidth: 160,
+				},
+				{
+					headerName: "Груз", field: 'cargoInfo',
+					wrapText: true, autoHeight: true,
+					flex: 2, minWidth: 160,
+				},
 			],
 			defaultColDef: {
+				cellClass: 'px-1',
 				wrapText: true,
 				autoHeight: true,
 				resizable: true,
-				flex: 3,
+				flex: 1,
 				suppressMenu: true,
 				wrapHeaderText: true,
 				autoHeaderHeight: true,
 			},
+			suppressDragLeaveHidesColumns: true,
 			enableBrowserTooltips: true,
 			localeText: AG_GRID_LOCALE_RU,
 		},
@@ -172,10 +226,8 @@ async function getMappingData(data, messages, user) {
 		const idRoute = tender.idRoute
 		const rhsItem = tender.roteHasShop[0]
 		const cargo = rhsItem && rhsItem.cargo ? rhsItem.cargo : ''
-		const type = tender.typeTrailer ? `Тип прицепа: ${tender.typeTrailer}; ` : ''
-		const temp = tender.temperature ? `Температура: ${tender.temperature} °C; ` : ''
-		const vol = rhsItem && rhsItem.volume ? `Объем: ${rhsItem.volume}` : ''
-		const info = type + temp + vol
+		const temp = tender.temperature ? `${tender.temperature} °C; ` : ''
+		const vol = rhsItem && rhsItem.volume ? `${rhsItem.volume} м³` : ''
 		const dateToView = tender.dateLoadPreviously ? tender.dateLoadPreviously.split('-').reverse().join('.') : ''
 		const loadDate = `${dateToView},  ${tender.timeLoadPreviously}`
 		const myMessage = messages.find(m => m.idRoute === idRoute.toString()) || null
@@ -201,17 +253,21 @@ async function getMappingData(data, messages, user) {
 			: myMessage
 				? `${myMessage.text} ${myMessage.currency}` : ''
 
+		const cargoInfo = `${cargo} ● ${tender.totalLoadPall} палл ● ${tender.totalCargoWeight} кг ● ${vol}`
+		const carInfo = `${tender.typeTrailer} ● ${temp}`
+
 		return {
 			...tender,
 			dateToView,
 			loadDate,
 			cargo,
-			info,
 			myMessage,
 			myOffer,
 			price,
 			loadPoints,
 			unloadPoints,
+			cargoInfo,
+			carInfo,
 		}
 	}))
 }

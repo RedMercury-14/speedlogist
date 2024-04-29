@@ -3436,7 +3436,7 @@ public class MainRestController {
 					"\nНеобходимо назначить слот на выгрузку";
 			mailService.sendSimpleEmailTwiceUsers(request, "Новая заявка", text, properties.getProperty("email.addNewProcurement.rb.1"), properties.getProperty("email.addNewProcurement.rb.2"));
 //			mailService.sendSimpleEmailTwiceUsers(request, "Новая заявка", textForSupport, properties.getProperty("email.orderSupport.1"), properties.getProperty("email.orderSupport.2"));
-		}else if(order.getWay().equals("Импорт") || order.getWay().equals("Экспорт") && order.getStatus() == 20 ){
+		}else if(order.getWay().equals("Импорт") && order.getStatus() == 20 || order.getWay().equals("Экспорт") && order.getStatus() == 20 ){
 			mailService.sendSimpleEmailTwiceUsers(request, "Новая заявка", text, properties.getProperty("email.addNewProcurement.import.1"), properties.getProperty("email.addNewProcurement.import.2"));
 		}			
 		return response;

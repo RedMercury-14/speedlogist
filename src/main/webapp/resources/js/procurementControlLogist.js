@@ -1,6 +1,6 @@
 import { AG_GRID_LOCALE_RU } from './AG-Grid/ag-grid-locale-RU.js'
 import { ResetStateToolPanel, dateComparator, gridColumnLocalState, gridFilterLocalState } from './AG-Grid/ag-grid-utils.js'
-import { debounce, getData, dateHelper, getStatus, changeGridTableMarginTop, rowClassRules, disableButton, enableButton } from './utils.js'
+import { debounce, getData, dateHelper, getStatus, changeGridTableMarginTop, rowClassRules, disableButton, enableButton, isAdmin } from './utils.js'
 import { snackbar } from './snackbar/snackbar.js'
 import { ajaxUtils } from './ajaxUtils.js'
 import { uiIcons } from './uiIcons.js'
@@ -10,7 +10,7 @@ import {
 	changeTnvdInputRequired,
 	showIncotermsInput,
 } from "./procurementFormUtils.js"
-import { excelStyles, getPointToView, getRouteInfo, pointSorting, procurementExcelExportParams } from './procurementControlUtils.js'
+import { excelStyles, getPointToView, getRouteInfo, getRoutePrice, pointSorting, procurementExcelExportParams } from './procurementControlUtils.js'
 import { autocomplete } from './autocomplete/autocomplete.js'
 import { countries } from './global.js'
 
@@ -121,6 +121,7 @@ const columnDefs = [
 		wrapText: true, autoHeight: true,
 	},
 	{ headerName: 'Маршруты', field: 'routeInfo', wrapText: true, autoHeight: true,},
+	{ headerName: 'Цена маршрута', field: 'routePrice', wrapText: true, autoHeight: true,},
 	{ headerName: 'Логист', field: 'logistToView', },
 	{ headerName: 'Контактное лицо контрагента', field: 'contact', wrapText: true, autoHeight: true, },
 	{ headerName: 'Сверка УКЗ', field: 'controlToView', width: 100, },
@@ -244,6 +245,14 @@ window.onload = async () => {
 
 	const { dateStart, dateEnd } = dateHelper.getDatesToFetch(DATES_KEY)
 	const orders = await getData(`${getOrderBaseUrl}${dateStart}&${dateEnd}`)
+
+	const role = document.querySelector("#role").value
+	if (isAdmin(role)) {
+		gridOptions.columnDefs.push({
+			headerName: 'Изменения статуса', field: 'changeStatus',
+			wrapText: true, autoHeight: true,
+		})
+	}
 
 	// изменение отступа для таблицы
 	changeGridTableMarginTop()
@@ -421,6 +430,8 @@ function getMappingData(data) {
 			}, 0)
 
 		const routeInfo = getRouteInfo(order)
+		const routePrice = getRoutePrice(order)
+
 
 		return {
 			...order,
@@ -441,6 +452,7 @@ function getMappingData(data) {
 			summVolume: summVolume ? summVolume : null,
 			summWeight: summWeight ? summWeight : null,
 			routeInfo,
+			routePrice,
 		}
 	})
 }

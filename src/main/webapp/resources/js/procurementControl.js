@@ -1,6 +1,6 @@
 import { AG_GRID_LOCALE_RU } from '../js/AG-Grid/ag-grid-locale-RU.js'
 import { ResetStateToolPanel, dateComparator, gridColumnLocalState, gridFilterLocalState } from './AG-Grid/ag-grid-utils.js'
-import { debounce, getData, dateHelper, getStatus, changeGridTableMarginTop, rowClassRules, isAdminByLogin } from './utils.js'
+import { debounce, getData, dateHelper, getStatus, changeGridTableMarginTop, rowClassRules, isAdminByLogin, isAdmin } from './utils.js'
 import { snackbar } from './snackbar/snackbar.js'
 import { uiIcons } from './uiIcons.js'
 import { excelStyles, getPointToView, getRouteInfo, pointSorting, procurementExcelExportParams } from "./procurementControlUtils.js"
@@ -168,7 +168,8 @@ window.onload = async () => {
 	const { dateStart, dateEnd } = dateHelper.getDatesToFetch(DATES_KEY)
 	const orders = await getData(`${getOrderBaseUrl}${dateStart}&${dateEnd}`)
 
-	if (isAdminByLogin()) {
+	const role = document.querySelector("#role").value
+	if (isAdmin(role)) {
 		gridOptions.columnDefs.push({
 			headerName: 'Изменения статуса', field: 'changeStatus',
 			wrapText: true, autoHeight: true,

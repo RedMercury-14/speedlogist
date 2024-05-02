@@ -203,7 +203,8 @@ public class Route implements Serializable{
 						CascadeType.DETACH,
 						CascadeType.REFRESH })
 	@JoinColumn(name = "user_iduser_manager") // перевозчик
-	//@JsonBackReference
+//	@JsonBackReference
+//	@JsonManagedReference
 	@JsonIgnore
 	private User user;
 	
@@ -212,10 +213,10 @@ public class Route implements Serializable{
 			   cascade= {CascadeType.ALL})
 	private Set<RouteHasShop> roteHasShop;
 	
-	@OneToOne(cascade=CascadeType.ALL)
+	@OneToOne(cascade=CascadeType.ALL) // не просто так не стоит fetch=FetchType.LAZY
 	@JoinColumn(name="user_iduser_driver")
-	//@JsonBackReference
-	@JsonIgnore
+//	@JsonBackReference
+//	@JsonIgnore // СТАЛ ПОКАЗЫВАТЬ DRIVER!!!!!!!!!!!!!!
 	private User driver;
 	
 	@ManyToMany(fetch = FetchType.LAZY, 

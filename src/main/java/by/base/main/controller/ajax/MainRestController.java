@@ -207,6 +207,23 @@ public class MainRestController {
 		return MainChat.messegeList.size() + "";		
 	}
 	
+	/**
+	 * отдаёт все маршруты для новой страницы менеджер международных маршрутов
+	 * @param request
+	 * @param dateStart 2024-03-15
+	 * @param dateFinish 2024-03-15
+	 * @return
+	 */
+	@GetMapping("/manager/getRouteForInternational//{dateStart}&{dateFinish}")
+	public Set<Route> getRouteForInternational(HttpServletRequest request, @PathVariable Date dateStart, @PathVariable Date dateFinish) {
+		Set<Route> routes = new HashSet<Route>();
+		List<Route>targetRoutes = routeService.getRouteListAsDate(dateStart, dateFinish);
+		targetRoutes.stream()
+			.filter(r-> r.getComments() != null && r.getComments().equals("international") && Integer.parseInt(r.getStatusRoute())<=8)
+			.forEach(r -> routes.add(r)); // проверяет созданы ли точки вручную, и отдаёт только международные маршруты		
+		return routes;
+	}
+	
 	@GetMapping("/carrier/getStatusTenderForMe")
 	public Set<Route> getStatusTenderForMe(HttpServletRequest request) {
 		User user = getThisUser();

@@ -2191,7 +2191,14 @@ public class MainController {
 		return "redirect:/main/admin/cost/rates";
 	}
 
-	//Менеджер международных маршрутов GET
+	//Менеджер международных маршрутов NEW GET
+	@GetMapping("/main/logistics/internationalNew")
+	public String internationalGetNEW(HttpServletRequest request, HttpSession session, Model model,HttpServletResponse response) throws IOException {
+			
+		return "internationalManagerNew";
+	}
+	
+	
 	@GetMapping("/main/logistics/international")
 	public String internationalGet(HttpServletRequest request, HttpSession session, Model model,HttpServletResponse response,
 			@RequestParam( value = "dateStart", required = false) Date dateStart,

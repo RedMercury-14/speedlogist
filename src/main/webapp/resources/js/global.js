@@ -1,9 +1,10 @@
-export let ws = new WebSocket("ws://10.10.1.73:8080/speedlogist/chat");
-export let wsHead = new WebSocket("ws://10.10.1.73:8080/speedlogist/system");
-export const wsSlotUrl = "ws://10.10.1.73:8080/speedlogist/slot"
-//export let ws = new WebSocket("ws://localhost:8080/speedlogist/chat");
-//export let wsHead = new WebSocket("ws://localhost:8080/speedlogist/system");
-//export const wsSlotUrl = "ws://localhost:8080/speedlogist/slot"
+//export let ws = new WebSocket("ws://93.125.114.112:8080/speedlogist/chat");
+//export let wsHead = new WebSocket("ws://93.125.114.112:8080/speedlogist/system");
+export let ws = new WebSocket("ws://localhost:8080/speedlogist/chat");
+export let wsHead = new WebSocket("ws://localhost:8080/speedlogist/system");
+export const wsSlotUrl = "ws://localhost:8080/speedlogist/slot"
+//export let ws = new WebSocketServer("wss://localhost:8080/speedlogist/chat");
+//export let wsHead = new WebSocketServer("wss://localhost:8080/speedlogist/system")
 export let USD = '431';
 export let RUB = '456';
 export let EUR = '451';

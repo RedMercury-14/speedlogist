@@ -27,12 +27,22 @@
     background-color: #0e377b !important;
 }
 
-#myGridToViewOrder {
+.my-container {
+    margin-top: 85px;
+}
+.my-container.smallHeader {
+	margin-top: 64px;
+}
+
+#myGrid {
     width: 100%;
     height: calc(100vh - 199px);
 }
+#myGrid.smallHeader {
+	height: calc(100vh - 178px);
+}
 @media (max-width: 768px) {
-	#myGridToViewOrder {
+	#myGrid {
 		margin-bottom: 53px;
 	}
 }

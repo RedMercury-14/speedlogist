@@ -49,7 +49,7 @@
 	<div class="container my-container">
 		<h2>Предложения</h2>
 		<table
-			class="table table-bordered border-primary table-hover table-condensed"
+			class="table table-bordered table-hover table-condensed"
 			id="sort">
 			<c:choose>
 				<c:when test="${isAdmin}">

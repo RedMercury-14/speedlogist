@@ -265,6 +265,36 @@ export const dateHelper = {
 		return { dateStart, dateEnd }
 	},
 
+
+	getDatesToRoutesFetch(datesKey, dayNumber = 5, ) {
+		const savedDatesStr = localStorage.getItem(datesKey)
+		const now = Date.now()
+
+		/* Этот блок кода проверяет, сохранены ли даты в localStorage. Если есть сохраненные даты, он проверяет,
+		не старше ли сохраненные даты 3 часов. Если сохраненные даты не старые, он возвращает сохраненные даты.
+		Если сохраненных дат нет или сохраненные даты старые, он вычисляет новый диапазон дат на основе текущей
+		даты и указанного количества дней и возвращает новый диапазон дат. */
+		if (savedDatesStr) {
+			const savedDates = JSON.parse(savedDatesStr)
+			const isOldDates = (now - savedDates.timestamp) > this.MILLISECONDS_IN_HOUR * 3
+
+			if (!isOldDates) {
+				return savedDates.dates
+			}
+		}
+
+		const currentDate = new Date(now)
+		const currentDateMonth = this.pad(currentDate.getMonth() + 1)
+		const currentDateDay = this.pad(currentDate.getDate())
+		const newDate = new Date(now + this.DAYS_TO_MILLISECONDS * dayNumber)
+		const newDateMonth = this.pad(newDate.getMonth() + 1)
+		const newDateDay = this.pad(newDate.getDate())
+		const dateStart = `${currentDate.getFullYear()}-${currentDateMonth}-${currentDateDay}`
+		const dateEnd = `${newDate.getFullYear()}-${newDateMonth}-${newDateDay}`
+		return { dateStart, dateEnd }
+	},
+
+
 	/**
 	 * Метод `setDatesToFetch` устанавливает даты начала и окончания выборки данных
 	 * и сохраняет их в `localStorage`.

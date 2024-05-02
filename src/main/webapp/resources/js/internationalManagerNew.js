@@ -7,12 +7,12 @@ import { snackbar } from "./snackbar/snackbar.js"
 import { uiIcons } from "./uiIcons.js"
 
 const token = $("meta[name='_csrf']").attr("content")
-const PAGE_NAME = 'internationalManager'
+const PAGE_NAME = 'internationalManagerNew'
 const LOCAL_STORAGE_KEY = `AG_Grid_settings_to_${PAGE_NAME}`
 const DATES_KEY = `searchDates_to_${PAGE_NAME}`
 const ROW_INDEX_KEY = `AG_Grid_rowIndex_to_${PAGE_NAME}`
 
-const getOrderBaseUrl ='../../api/manager/getOrdersForLogist/'
+const getRouteBaseUrl = '../../api/manager/getRouteForInternational/'
 const getRouteMessageBaseUrl = `../../api/info/message/numroute/`
 
 export const rowClassRules = {
@@ -22,7 +22,7 @@ export const rowClassRules = {
 	'endRow': params => params.node.data.statusRoute === '6',
 	'oncePersonRoute': params => params.node.data.statusRoute === '8',
 	'activRow': params => params.node.data.offerCount !== 0,
-
+	'savedRow': params => params.node.data.isSavedRow === true,
 }
 
 const debouncedSaveColumnState = debounce(saveColumnState, 300)
@@ -39,38 +39,33 @@ const columnDefs = [
 		suppressMovable: true, suppressMenu: true,
 		resizable: false, sortable: false, filter: false,
 	},
-	{ headerName: 'ID', field: 'idRoute', },
-	{ headerName: 'Тип', field: 'simpleWay', width: 50, },
-	{ headerName: 'Название маршрута', field: 'routeDirection', width: 240, wrapText: true, autoHeight: true, },
+	{ headerName: 'ID', field: 'idRoute', minWidth: 60, width: 80, },
+	{ headerName: 'Тип', field: 'simpleWay', minWidth: 50, width: 50, },
+	{ headerName: 'Название маршрута', field: 'routeDirection', minWidth: 240, width: 640, wrapText: true, autoHeight: true, },
 	{ headerName: 'Дата загрузки', field: 'simpleDateStart', comparator: dateComparator, },
 	{ headerName: 'Время загрузки (планируемое)', field: 'timeLoadPreviously', },
-	{ headerName: 'Дата выгрузки', field: 'dateUnloadPreviouslyStock', comparator: dateComparator, },
-	{ headerName: 'Время выгрузки', field: 'timeUnloadPreviouslyStock', },
-	{ headerName: 'Выставляемая стоимость', field: 'finishPrice', },
-	{ headerName: 'Экономия', field: '', },
-	{ headerName: 'Перевозчик', field: '', },
-	{ headerName: 'Номер машины', field: '', },
-	{ headerName: 'Данные по водителю', field: '', },
-	{ headerName: 'Заказчик', field: 'customer', wrapText: true, autoHeight: true, },
-	{ headerName: 'Паллеты/Объем', field: 'totalLoadPall', },
-	{ headerName: 'Общий вес', field: 'totalCargoWeight', },
-	{ headerName: 'Комментарии', field: 'userComments', wrapText: true, autoHeight: true, },
-	{ headerName: 'Начальные стоимости перевозки', field: 'startPrice', },
+	{ headerName: 'Дата и время выгрузки', field: 'unloadToView', wrapText: true, autoHeight: true, },
+	{ headerName: 'Выставляемая стоимость', field: 'finishPriceToView', },
+	// { headerName: 'Экономия', field: 'economy', },
+	{ headerName: 'Перевозчик', field: 'carrier', wrapText: true, autoHeight: true, },
 	{
-		headerName: 'Статус и предложения', field: 'offerCount',
+		headerName: 'Номер машины / прицепа', field: 'truckInfo',
+		wrapText: true, autoHeight: true,
+		cellRenderer: truckInfoRenderer,
+	},
+	{ headerName: 'Данные по водителю', field: 'driverInfo',  wrapText: true, autoHeight: true,},
+	{ headerName: 'Заказчик', field: 'customer', wrapText: true, autoHeight: true, minWidth: 160, width: 160, },
+	{ headerName: 'Паллеты/Объем', field: 'cargoInfo', },
+	{ headerName: 'Общий вес', field: 'totalCargoWeight', valueFormatter: params => params.value + ' кг' },
+	{ headerName: 'Комментарии', field: 'userComments', wrapText: true, autoHeight: true, minWidth: 240, width: 640, },
+	{ headerName: 'Начальная стоимость перевозки', field: 'startRouteCostInfo', wrapText: true, autoHeight: true, },
+	{
+		headerName: 'Статус и предложения', field: 'statusRoute',
+		minWidth: 160, width: 160,
 		wrapText: true, autoHeight: true,
 		cellRenderer: tenderStatusRenderer,
+		valueGetter: params => getRouteStatus(params.data.statusRoute),
 	},
-	{
-		headerName: 'Статус', field: 'statusRoute', hide: true,
-		wrapText: true, autoHeight: true,
-		valueFormatter: (params) => getRouteStatus(params.value),
-	},
-	// {
-	// 	headerName: 'Предложения', field: 'offerCount',
-	// 	wrapText: true, autoHeight: true,
-	// 	cellRenderer: tenderLinkRenderer,
-	// },
 ]
 const gridOptions = {
 	columnDefs: columnDefs,
@@ -84,6 +79,8 @@ const gridOptions = {
 		suppressMenu: true,
 		filter: true,
 		floatingFilter: true,
+		wrapHeaderText: true,
+		autoHeaderHeight: true,
 	},
 	// номер маршрута используется как ID строки
 	// в таблице для транзакций с изменениями
@@ -97,6 +94,17 @@ const gridOptions = {
 	onColumnVisible: debouncedSaveColumnState,
 	onColumnPinned: debouncedSaveColumnState,
 	onFilterChanged: debouncedSaveFilterState,
+
+	// отображение сохраненной строки таблицы
+	onRowDataUpdated: event => {
+		// console.log("🚀 ~ event:", event)
+		// const rowNode = displaySavedRowId(event, ROW_INDEX_KEY)
+		// // отображаем строку ещё раз после установки ширины строк
+		// setTimeout(() => {
+		// 	event.api.ensureNodeVisible(rowNode, 'top')
+		// }, 200)
+	},
+
 	rowSelection: 'multiple',
 	suppressRowClickSelection: true,
 	suppressDragLeaveHidesColumns: true,
@@ -140,33 +148,25 @@ const gridOptions = {
 
 
 window.addEventListener("load", async () => {
-	const orderSearchForm = document.querySelector('#orderSearchForm')
+	const routeSearchForm = document.querySelector('#routeSearchForm')
 	const date_fromInput = document.querySelector('#date_from')
 	const date_toInput = document.querySelector('#date_to')
 	const gridDiv = document.querySelector('#myGrid')
 	gridDiv.addEventListener('click', gridTableClickHandler)
 
-	const testTransaction = document.querySelector('#testTransaction')
-	testTransaction && testTransaction.addEventListener('click', () => {
-
-	})
-
-	const { dateStart, dateEnd } = dateHelper.getDatesToFetch(DATES_KEY)
+	const { dateStart, dateEnd } = dateHelper.getDatesToRoutesFetch(DATES_KEY)
 
 	// автозаполнение полей дат в форме поиска заявок
 	date_fromInput.value = dateStart
 	date_toInput.value = dateEnd
 
 	// листнер на отправку формы поиска заявок
-	orderSearchForm.addEventListener('submit', searchFormSubmitHandler)
+	routeSearchForm.addEventListener('submit', searchFormSubmitHandler)
 
 	// изменение отступа для таблицы
 	changeGridTableMarginTop()
 
-	const orders = await getData(`${getOrderBaseUrl}${dateStart}&${dateEnd}`)
-	const routes = orders
-		.map(order => order.routes[0])
-		.filter(route => route)
+	const routes = await getData(`${getRouteBaseUrl}${dateStart}&${dateEnd}`)
 
 	// отрисовка таблицы
 	await renderTable(gridDiv, gridOptions, routes)
@@ -176,7 +176,7 @@ window.addEventListener("load", async () => {
 	restoreFilterState()
 
 	// отображение сохраненной строки таблицы
-	displaySavedRowNode()
+	displaySavedRowId(gridOptions, ROW_INDEX_KEY)
 
 	// обработчик получения сообщений о предложениях
 	ws.onmessage = onMessageHandler
@@ -210,6 +210,11 @@ async function onMessageHandler(e) {
 	}
 }
 
+function sendHeadMessage(message) {
+	wsHead.send(JSON.stringify(message))
+}
+
+
 // обработчик кликов в таблице
 function gridTableClickHandler(e) {
 	const target = e.target
@@ -219,9 +224,96 @@ function gridTableClickHandler(e) {
 		const idRoute = target.dataset.idroute
 		const status = target.dataset.status
 		displayTenderOffer(idRoute, status)
+		return
+	}
+
+	if (target.id === 'truckInfoLink') {
+		e.preventDefault()
+		const idRoute = target.dataset.idroute
+		const rowNode = gridOptions.api.getRowNode(idRoute)
+		const route = rowNode.data
+		showRouteInfoPopup(route)
+		return
 	}
 }
 
+// отображение модального окна с информацией об ивенте
+function showRouteInfoPopup(route) {
+	const routeInfo = document.querySelector('#routeInfo')
+	routeInfo.innerHTML = createRouteInfoHTML(route)
+
+	$('#routeInfoModal').modal('show')
+}
+function createRouteInfoHTML(route) {
+	const {
+		routeDirection,
+		truck,
+		truckInfo,
+		truckOwner,
+		carrier,
+		driver,
+		driverInfo,
+		dateLoadActuallySimple,
+		timeLoadActually,
+		dateUnloadActuallySimple,
+		timeUnloadActually,
+		finishPrice,
+		startCurrency,
+	} = route
+
+	const brandTruck = truck ? truck.brandTruck : ''
+	const brandTrailer = truck ? truck.brandTrailer : ''
+	const numPass = driver ? driver.numPass : ''
+	const telephone = driver ? driver.telephone : ''
+	const timeLoadActuallyToView = timeLoadActually ? timeLoadActually.replace('-', ':') : ''
+	const timeUnloadActuallyToView = timeUnloadActually ? timeUnloadActually.replace('-', ':') : ''
+
+	return `
+			<h5>${routeDirection}</h5>
+			<div class="routeInfo-item text-muted mb-2">
+				<span class="font-weight-bold">Перевозчик: </span>
+				<span>${carrier}</span>
+			</div>
+			<div class="routeInfo-item text-muted mb-2">
+				<span class="font-weight-bold">Подвижной состав: </span>
+				<span>${truckInfo},</span>
+				<span>${brandTruck}</span>
+				<span> / </span>
+				<span>${brandTrailer}</span>
+			</div>
+			<div class="routeInfo-item text-muted mb-2">
+				<span class="font-weight-bold">Принадлежность транспорта: </span>
+				<span>${truckOwner}</span>
+			</div>
+			<h6 class="mt-4 mb-1">Данные по водителю: </h6>
+			<p class="mb-2">${driverInfo}</p>
+			<div class="routeInfo-item text-muted mb-2">
+				<span class="font-weight-bold">Паспортные данные: </span>
+				<span>${numPass}</span>
+			</div>
+			<div class="routeInfo-item text-muted mb-2">
+				<span class="font-weight-bold">Номер телефона: </span>
+				<span>${telephone}</span>
+			</div>
+			<br />
+			<div class="routeInfo-item text-muted mb-2">
+				<span class="font-weight-bold">Дата подачи машины на загрузку: </span>
+				<span>${dateLoadActuallySimple}; </span>
+				<span class="font-weight-bold">время: </span>
+				<span>${timeLoadActuallyToView}</span>
+			</div>
+			<div class="routeInfo-item text-muted mb-2">
+				<span class="font-weight-bold">Дата прибытия авто под выгрузку: </span>
+				<span>${dateUnloadActuallySimple}; </span>
+				<span class="font-weight-bold">время: </span>
+				<span>${timeUnloadActuallyToView}</span>
+			</div>
+			<div class="routeInfo-item text-muted mb-2">
+				<span class="font-weight-bold">Стоимость перевозки: </span>
+				<span>${finishPrice} ${startCurrency}</span>
+			</div>
+		`
+}
 
 // -------------------------------------------------------------------------------//
 // ----------------------- Функции для таблицы AG-Grid ---------------------------//
@@ -237,7 +329,6 @@ async function renderTable(gridDiv, gridOptions, data) {
 	}
 
 	const mappingData = await getMappingData(data)
-	console.log("🚀 ~ renderTable ~ mappingData:", mappingData)
 
 	gridOptions.api.setRowData(mappingData)
 	gridOptions.api.hideOverlay()
@@ -246,23 +337,20 @@ async function renderTable(gridDiv, gridOptions, data) {
 async function updateTable() {
 	gridOptions.api.showLoadingOverlay()
 
-	const orderSearchForm = document.querySelector('#orderSearchForm')
+	const routeSearchForm = document.querySelector('#routeSearchForm')
 
-	const dateStart = orderSearchForm.date_from.value
-	const dateEnd = orderSearchForm.date_to.value
+	const dateStart = routeSearchForm.date_from.value
+	const dateEnd = routeSearchForm.date_to.value
 
-	const orders = await getData(`${getOrderBaseUrl}${dateStart}&${dateEnd}`)
-	const routes = orders
-		.map(order => order.routes[0])
-		.filter(route => route)
+	const routes = await getData(`${getRouteBaseUrl}${dateStart}&${dateEnd}`)
 
-	if (!orders || !orders.length) {
+	if (!routes || !routes.length) {
 		gridOptions.api.setRowData([])
 		gridOptions.api.showNoRowsOverlay()
 		return
 	}
 
-	const mappingData = getMappingData(routes)
+	const mappingData = await getMappingData(routes)
 
 	gridOptions.api.setRowData(mappingData)
 	gridOptions.api.hideOverlay()
@@ -271,20 +359,36 @@ async function updateTable() {
 async function getMappingData(data) {
 	return await Promise.all(data.map( async (route) => {
 		const idRoute = route.idRoute
-		const rhsItem = route.roteHasShop[0]
-		const cargo = rhsItem && rhsItem.cargo ? rhsItem.cargo : ''
-		const type = route.typeTrailer ? `Тип прицепа: ${route.typeTrailer}; ` : ''
-		const temp = route.temperature ? `Температура: ${route.temperature} °C; ` : ''
-		const vol = rhsItem && rhsItem.volume ? `Объем: ${rhsItem.volume}` : ''
-		const info = type + temp + vol
-		const dateToView = route.dateLoadPreviously.split('-').reverse().join('.')
-		const loadDate = `${dateToView},  ${route.timeLoadPreviously}`
+
+		const unloadToView = getUnloadToView(route)
+		const finishPriceToView = getFinishPriceToView(route)
+		const economy = getEconomy(route)
+		const carrier = getCarrier(route)
+		const truckOwner = getTruckOwner(route)
+		const truckInfo = getTruckInfo(route)
+		const driverInfo = getDriverInfo(route)
+		const cargoInfo = getCargoInfo(route)
+		const startRouteCostInfo = getStartRouteCostInfo(route)
+		const statusRouteToView = getRouteStatus(route.statusRoute)
 
 		const offerCount = await getData(getRouteMessageBaseUrl + idRoute)
 
+		const isSavedRow = false
+
 		return {
 			...route,
-			offerCount
+			offerCount,
+			isSavedRow,
+			unloadToView,
+			finishPriceToView,
+			economy,
+			carrier,
+			truckOwner,
+			truckInfo,
+			driverInfo,
+			cargoInfo,
+			startRouteCostInfo,
+			statusRouteToView,
 		}
 	}))
 }
@@ -295,6 +399,10 @@ function getContextMenuItems(params) {
 	const routeData = params.node.data
 	const idRoute = routeData.idRoute
 	const routeDirection = routeData.routeDirection
+	const status = routeData.statusRoute
+
+	const selectedRowsData = params.api.getSelectedRows()
+	const isVerifySelectedRoutes = !selectedRowsData.filter(route => route.statusRoute !== '0').length
 
 	const result = [
 		{
@@ -306,27 +414,30 @@ function getContextMenuItems(params) {
 		},
 		{
 			name: `Отправить тендер`,
-			icon: uiIcons.sendObject,
+			disabled: status !== '0',
 			action: () => {
 				sendTender(idRoute, routeDirection)
 			},
 		},
 		{
 			name: `Отправить выделенные тендеры`,
-			disabled: true,
+			disabled: !selectedRowsData.length || !isVerifySelectedRoutes,
 			action: () => {
-
+				// ВРЕМЕННОЕ РЕШЕНИЕ ПО МАССОВОЙ ОТПРАВКЕ ТЕНДЕРОВ
+				Promise.allSettled(selectedRowsData.map(route => {
+					sendTender(route.idRoute, route.routeDirection)
+				}))
 			},
 		},
 		{
 			name: `Показать точки выгрузок`,
-			disabled: true,
 			action: () => {
-				
+				showUnloadPoints(idRoute)
 			},
 		},
 		{
 			name: `Завершить маршрут`,
+			disabled: status !== '4',
 			icon: uiIcons.checkObject,
 			action: () => {
 				completeRoute(idRoute)
@@ -334,6 +445,7 @@ function getContextMenuItems(params) {
 		},
 		{
 			name: `Отменить тендер`,
+			disabled: status === '5',
 			icon: uiIcons.cancel,
 			action: () => {
 				cancelTender(idRoute)
@@ -344,6 +456,15 @@ function getContextMenuItems(params) {
 	]
 
 	return result
+}
+
+// рендерер информации о машине
+function truckInfoRenderer(params) {
+	const data = params.node.data
+	const idRoute = data.idRoute
+	const truckInfo = data.truckInfo
+	const truckInfoHTML = `<a class="text-primary" data-idroute="${idRoute}" id="truckInfoLink" href="">${truckInfo}</a>`
+	return truckInfoHTML
 }
 
 // рендерер статуса маршрута для таблицы
@@ -393,13 +514,19 @@ function highlightRow(rowNode) {
 }
 
 // отображение сохраненной в locacstorage строки таблицы
-function displaySavedRowNode() {
-	const rowId = localStorage.getItem(ROW_INDEX_KEY)
+function displaySavedRowId(gridOptions, key) {
+	const rowId = localStorage.getItem(key)
 	if (!rowId) return
 
 	const rowNode = gridOptions.api.getRowNode(rowId)
+	gridOptions.api.applyTransaction({ update: [{ ...rowNode.data, isSavedRow: true} ] })
 	gridOptions.api.ensureNodeVisible(rowNode, 'top')
-	localStorage.removeItem(ROW_INDEX_KEY)
+	localStorage.removeItem(key)
+	return rowNode
+}
+// сохранение строки таблицы в locacstorage
+function saveRowId(key, rowId) {
+	localStorage.setItem(key, rowId)
 }
 
 // функции управления состоянием колонок
@@ -427,7 +554,7 @@ function displayTenderOffer(idRoute, status) {
 	const url = status === '8'
 		? `../admin/international/tenderOffer?idRoute=${idRoute}`
 		: `./international/tenderOffer?idRoute=${idRoute}`
-	localStorage.setItem(ROW_INDEX_KEY, idRoute)
+	saveRowId(ROW_INDEX_KEY, idRoute)
 	window.location.href = url
 }
 function sendTender(idRoute, routeDirection) {
@@ -447,14 +574,14 @@ function sendTender(idRoute, routeDirection) {
 	fetch(url)
 		.then(res => {
 			updateCellData(idRoute, columnName, newValue)
+			snackbar.show('Тендер отправлен на биржу')
 			sendHeadMessage(headMessage)
 		})
 		.catch(errorCallback)
 }
 function showUnloadPoints(idRoute) {
 	var url = `../logistics/international/routeShow?idRoute=${idRoute}`;
-	localStorage.setItem("mouseX", mouseX);
-	localStorage.setItem("mouseY", mouseY);
+	saveRowId(ROW_INDEX_KEY, idRoute)
 	window.location.href = url;
 }
 async function completeRoute(idRoute) {
@@ -470,7 +597,10 @@ async function completeRoute(idRoute) {
 
 	if (isRouteCompleted) {
 		fetch(url)
-			.then(res => updateCellData(idRoute, columnName, newValue))
+			.then(res => {
+				updateCellData(idRoute, columnName, newValue)
+				snackbar.show('Маршрут завершен')
+			})
 			.catch(errorCallback)
 	} else {
 		snackbar.show('Маршрут не может быть завершен, т.к. авто не прибыло на место разгрузки')
@@ -482,17 +612,83 @@ function cancelTender(idRoute) {
 	const newValue = '5'
 
 	fetch(url)
-		.then(res => updateCellData(idRoute, columnName, newValue))
+		.then(res => {
+			updateCellData(idRoute, columnName, newValue)			
+			snackbar.show('Маршрут отменен')
+		})
 		.catch(errorCallback)
 }
-
-function sendHeadMessage(message) {
-	wsHead.send(JSON.stringify(message))
-}
-
-
-
 function errorCallback(error) {
 	console.error(error)
 	snackbar.show('Возникла ошибка - обновите страницу!')
-} 
+}
+
+
+// функции получения данных для таблицы
+function getUnloadToView(route) {
+	if (!route) return ''
+	const dateUnload = route.dateUnloadPreviouslyStock ? route.dateUnloadPreviouslyStock : ''
+	const timeUnload = route.timeUnloadPreviouslyStock ? route.timeUnloadPreviouslyStock.slice(0,5) : ''
+	return `${dateUnload} ${timeUnload}`
+}
+function getFinishPriceToView(route) {
+	if (!route) return ''
+	const finishPrice = route.finishPrice ? route.finishPrice : ''
+	const currency = route.startCurrency ? route.startCurrency : ''
+	return `${finishPrice} ${currency}`
+}
+function getEconomy(route) {
+	return ''
+}
+function getCarrier(route) {
+	if (!route) return ''
+	const driver = route.driver ? route.driver : ''
+	if (!driver) return ''
+	return driver.companyName ? driver.companyName : ''
+}
+function getTruckOwner(route) {
+	if (!route) return ''
+	const truck = route.truck ? route.truck : ''
+	if (!truck) return ''
+	return truck.ownerTruck ? truck.ownerTruck : ''
+}
+function getTruckInfo(route) {
+	if (!route) return ''
+	const truck = route.truck ? route.truck : ''
+	if (!truck) return ''
+	const numTruck = truck.numTruck ? truck.numTruck : ''
+	const numTrailer = truck.numTrailer ? truck.numTrailer : ''
+	const typeTrailer = truck.typeTrailer ? truck.typeTrailer : ''
+	return `${numTruck} / ${numTrailer},  ${typeTrailer}`
+}
+function getDriverInfo(route) {
+	if (!route) return ''
+	const driver = route.driver ? route.driver : ''
+	if (!driver) return ''
+	const name = driver.name ? driver.name : ''
+	const surname = driver.surname ? driver.surname : ''
+	const patronymic = driver.patronymic ? driver.patronymic : ''
+	return `${surname} ${name} ${patronymic}`
+}
+function getCargoInfo(route) {
+	if (!route) return ''
+	const rhsItem = route.roteHasShop[0]
+	if (!rhsItem) return ''
+	const pall = route.totalLoadPall ? route.totalLoadPall : ''
+	const volume = rhsItem.volume ? rhsItem.volume : ''
+	return `${pall} / ${volume}`
+}
+function getStartRouteCostInfo(route) {
+	if (!route) return ''
+	const currency = route.startCurrency ? route.startCurrency : 'BYN'
+	const startPrice = route.startPrice ? route.startPrice : ''
+	const optimalCost = route.optimalCost ? route.optimalCost : ''
+
+	const res = startPrice
+		? `${startPrice} ${currency}`
+		: optimalCost
+			? `${optimalCost} ${currency} - оптимальная`
+			: ''
+
+	return res
+}

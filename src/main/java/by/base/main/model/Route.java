@@ -216,7 +216,8 @@ public class Route implements Serializable{
 	@OneToOne(cascade=CascadeType.ALL) // не просто так не стоит fetch=FetchType.LAZY
 	@JoinColumn(name="user_iduser_driver")
 //	@JsonBackReference
-//	@JsonIgnore // СТАЛ ПОКАЗЫВАТЬ DRIVER!!!!!!!!!!!!!!
+//	@JsonIgnore 
+	// СТАЛ ПОКАЗЫВАТЬ DRIVER!!!!!!!!!!!!!!
 	private User driver;
 	
 	@ManyToMany(fetch = FetchType.LAZY, 

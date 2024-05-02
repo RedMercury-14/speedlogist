@@ -12,12 +12,16 @@ footer.to-bottom {
 	position: fixed;
 }
 
+.modal {
+	font-family: var(--font-family-sans-serif);
+}
+
 .title-container,
 .search-form-container {
 	min-height: 30px;
 	border-left: 1px solid #babfc7;
 	border-right: 1px solid #babfc7;
-	background-color: rgb(222, 176, 176);
+	background-color: #f9d196;
 	display: flex;
 	flex-wrap: wrap;
 	gap: 10px;
@@ -27,7 +31,7 @@ footer.to-bottom {
 	position: relative;
 	align-items: center;
 	border-top: 1px solid #babfc7;
-	background-color: rgb(211, 167, 167) !important;
+	background-color: #fdc169 !important;
 }
 .title-container h3 {
 	margin-bottom: 0;
@@ -85,11 +89,10 @@ footer.to-bottom {
 
 #myGrid {
 	width: 100%;
-	height: calc(100vh - 208px);
-	margin-bottom: 50px;
+	height: calc(100vh - 157px);
 }
 #myGrid.smallHeader {
-	height: calc(100vh - 183px);
+	height: calc(100vh - 138px);
 }
 @media (min-width: 992px) {
 	.search-form-container form.collapse {
@@ -183,6 +186,9 @@ footer.to-bottom {
 }
 #myGrid .cancelRow {
 	background-color: #e3444466;
+}
+#myGrid .savedRow {
+	border: 2px solid #06bed5;
 }
 
 .none {
@@ -281,19 +287,19 @@ footer.to-bottom {
  .contact-container {
 	flex: 3;
 }
-.modal form input::-webkit-outer-spin-button,
-.modal form input::-webkit-inner-spin-button {
+.modal input::-webkit-outer-spin-button,
+.modal input::-webkit-inner-spin-button {
 	-webkit-appearance: none;
 	margin: 0;
 }
-.modal form input[type=number] {
+.modal input[type=number] {
 	appearance: textfield;
 	-moz-appearance: textfield;
 }
-.modal form input::placeholder {
+.modal input::placeholder {
 	color: rgb(179, 179, 179);
 }
-.modal form .card-footer {
+.modal .card-footer {
 	display: flex;
 	justify-content: center;
 	gap: 5px;
@@ -337,22 +343,6 @@ footer.to-bottom {
 	gap: 10px;
 }
 
-#map {
-	width: 100%;
-	height: 100%;
-	border: 2px solid lightgrey;
-	transition: transform ease-in-out 300ms 300ms;
-}
-#map .leaflet-control-attribution svg {
-	visibility: hidden;
-}
-
-#routeBtn {
-	position: absolute;
-	bottom: 0;
-	z-index: 999;
-}
-
 .my-link {
     display: inline-block;
     color: #003369;
@@ -379,4 +369,10 @@ footer.to-bottom {
 
 .ag-cell.needEdit {
 	border: 3px solid #22ac45;
+}
+
+.routeInfo-item {
+	display: flex;
+	gap: 5px;
+	align-items: center;
 }

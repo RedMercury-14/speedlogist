@@ -229,6 +229,7 @@ public class User implements Serializable{
 	private String confirmPassword;
 	
 	@Transient
+	@JsonIgnore // закрыл потому что ломает запрос от Route к User 
 	private int numCar;
 	
 	

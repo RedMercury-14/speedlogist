@@ -199,11 +199,11 @@ export const dateHelper = {
 		const day = now.getDay()
 		const noonToday = this.getNoon(now)
 
-		// // если пятница, после 12:00, то на среду
-		// if (day === 5 &&  now > noonToday) {
-		// 	const monday = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 5)
-		// 	return this.getDateForInput(monday)
-		// }
+		// если пятница, после 12:00, то на вторник
+		if (day === 5 &&  now > noonToday) {
+			const monday = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 4)
+			return this.getDateForInput(monday)
+		}
 
 		// если суббота, то на среду
 		if (day === 6) {

@@ -60,10 +60,16 @@ const columnDefs = [
 	{ headerName: 'Комментарии', field: 'userComments', wrapText: true, autoHeight: true, minWidth: 240, width: 640, },
 	{ headerName: 'Начальная стоимость перевозки', field: 'startRouteCostInfo', wrapText: true, autoHeight: true, },
 	{
-		headerName: 'Статус и предложения', field: 'statusRoute',
+		headerName: 'Статус и предложения', field: 'offerCount',
 		minWidth: 160, width: 160,
 		wrapText: true, autoHeight: true,
 		cellRenderer: tenderStatusRenderer,
+		filterValueGetter: params => getRouteStatus(params.data.statusRoute),
+	},
+	{
+		headerName: 'Статус', field: 'statusRoute', hide: true,
+		minWidth: 160, width: 160,
+		wrapText: true, autoHeight: true,
 		valueGetter: params => getRouteStatus(params.data.statusRoute),
 	},
 ]
@@ -97,12 +103,11 @@ const gridOptions = {
 
 	// отображение сохраненной строки таблицы
 	onRowDataUpdated: event => {
-		// console.log("🚀 ~ event:", event)
-		// const rowNode = displaySavedRowId(event, ROW_INDEX_KEY)
-		// // отображаем строку ещё раз после установки ширины строк
-		// setTimeout(() => {
-		// 	event.api.ensureNodeVisible(rowNode, 'top')
-		// }, 200)
+		const rowNode = displaySavedRowId(event, ROW_INDEX_KEY)
+		// отображаем строку ещё раз после установки ширины строк
+		setTimeout(() => {
+			event.api.ensureNodeVisible(rowNode, 'top')
+		}, 300)
 	},
 
 	rowSelection: 'multiple',
@@ -174,9 +179,6 @@ window.addEventListener("load", async () => {
 	// получение настроек таблицы из localstorage
 	restoreColumnState()
 	restoreFilterState()
-
-	// отображение сохраненной строки таблицы
-	displaySavedRowId(gridOptions, ROW_INDEX_KEY)
 
 	// обработчик получения сообщений о предложениях
 	ws.onmessage = onMessageHandler
@@ -613,7 +615,7 @@ function cancelTender(idRoute) {
 
 	fetch(url)
 		.then(res => {
-			updateCellData(idRoute, columnName, newValue)			
+			updateCellData(idRoute, columnName, newValue)
 			snackbar.show('Маршрут отменен')
 		})
 		.catch(errorCallback)

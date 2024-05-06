@@ -31,14 +31,14 @@ const debouncedSaveFilterState = debounce(saveFilterState, 300)
 let table
 
 const columnDefs = [
-	{
-		field: '', colId: 'selectionRow',
-		width: 30,
-		pinned: 'left', lockPinned: true,
-		checkboxSelection: true,
-		suppressMovable: true, suppressMenu: true,
-		resizable: false, sortable: false, filter: false,
-	},
+	// {
+	// 	field: '', colId: 'selectionRow',
+	// 	width: 30,
+	// 	pinned: 'left', lockPinned: true,
+	// 	checkboxSelection: true,
+	// 	suppressMovable: true, suppressMenu: true,
+	// 	resizable: false, sortable: false, filter: false,
+	// },
 	{ headerName: 'ID', field: 'idRoute', minWidth: 60, width: 80, },
 	{ headerName: 'Тип', field: 'simpleWay', minWidth: 50, width: 50, },
 	{ headerName: 'Название маршрута', field: 'routeDirection', minWidth: 240, width: 640, wrapText: true, autoHeight: true, },
@@ -60,17 +60,17 @@ const columnDefs = [
 	{ headerName: 'Комментарии', field: 'userComments', wrapText: true, autoHeight: true, minWidth: 240, width: 640, },
 	{ headerName: 'Начальная стоимость перевозки', field: 'startRouteCostInfo', wrapText: true, autoHeight: true, },
 	{
-		headerName: 'Статус и предложения', field: 'offerCount',
-		minWidth: 160, width: 160,
-		wrapText: true, autoHeight: true,
-		cellRenderer: tenderStatusRenderer,
-		filterValueGetter: params => getRouteStatus(params.data.statusRoute),
-	},
-	{
-		headerName: 'Статус', field: 'statusRoute', hide: true,
+		headerName: 'Статус', field: 'statusRoute',
+		cellClass: 'px-2 text-center font-weight-bold',
 		minWidth: 160, width: 160,
 		wrapText: true, autoHeight: true,
 		valueGetter: params => getRouteStatus(params.data.statusRoute),
+	},
+	{
+		headerName: 'Предложения', field: 'offerCount',
+		minWidth: 160, width: 160,
+		wrapText: true, autoHeight: true,
+		cellRenderer: offerCountRenderer,
 	},
 ]
 const gridOptions = {
@@ -423,7 +423,8 @@ function getContextMenuItems(params) {
 		},
 		{
 			name: `Отправить выделенные тендеры`,
-			disabled: !selectedRowsData.length || !isVerifySelectedRoutes,
+			// disabled: !selectedRowsData.length || !isVerifySelectedRoutes,
+			disabled: true,
 			action: () => {
 				// ВРЕМЕННОЕ РЕШЕНИЕ ПО МАССОВОЙ ОТПРАВКЕ ТЕНДЕРОВ
 				Promise.allSettled(selectedRowsData.map(route => {
@@ -469,7 +470,7 @@ function truckInfoRenderer(params) {
 	return truckInfoHTML
 }
 
-// рендерер статуса маршрута для таблицы
+// рендерер статуса и предложений маршрута
 function tenderStatusRenderer(params) {
 	const data = params.node.data
 	const idRoute = data.idRoute
@@ -478,15 +479,37 @@ function tenderStatusRenderer(params) {
 	const statusText = getRouteStatus(status)
 
 	if (status === '8') {
-		const link = `../admin/international/tenderOffer?idRoute=${idRoute}`
+		const link = `../admin/internationalNew/tenderOffer?idRoute=${idRoute}`
 		const linkHTML = `<a class="text-primary" id="tenderOfferLink" data-idroute="${idRoute}" data-status="${status}" href="${link}">Посмотреть предложение</a>`
 		return `${statusText} ${linkHTML}`
 	} else if (status === '1') {
-		const link = `./international/tenderOffer?idRoute=${idRoute}`
+		const link = `./internationalNew/tenderOffer?idRoute=${idRoute}`
 		const linkHTML = `<a class="text-primary" id="tenderOfferLink" data-idroute="${idRoute}" data-status="${status}" href="${link}">Посмотреть предложения (${offerCount})</a>`
 		return `${statusText} ${linkHTML}`
 	} else {
 		return statusText
+	}
+}
+
+// рендерер количества предложений
+function offerCountRenderer(params) {
+	const data = params.node.data
+	const idRoute = data.idRoute
+	const offerCount = data.offerCount
+	const status = data.statusRoute
+
+	if (status === '8') {
+		const link = `../admin/internationalNew/tenderOffer?idRoute=${idRoute}`
+		const linkHTML = `<a class="text-primary" id="tenderOfferLink" data-idroute="${idRoute}" data-status="${status}" href="${link}">Подтвердить предложение</a>`
+		return `${linkHTML}`
+	} else if (status === '1') {
+		const link = `./internationalNew/tenderOffer?idRoute=${idRoute}`
+		const linkHTML = `<a class="text-primary" id="tenderOfferLink" data-idroute="${idRoute}" data-status="${status}" href="${link}">Посмотреть предложения (${offerCount})</a>`
+		return `${linkHTML}`
+	} else {
+		const link = `../admin/internationalNew/tenderOffer?idRoute=${idRoute}`
+		const linkHTML = `<a class="text-primary" id="tenderOfferLink" data-idroute="${idRoute}" data-status="${status}" href="${link}">История предложений</a>`
+		return `${linkHTML}`
 	}
 }
 
@@ -554,8 +577,8 @@ function restoreFilterState() {
 // функции для контекстного меню
 function displayTenderOffer(idRoute, status) {
 	const url = status === '8'
-		? `../admin/international/tenderOffer?idRoute=${idRoute}`
-		: `./international/tenderOffer?idRoute=${idRoute}`
+		? `../admin/internationalNew/tenderOffer?idRoute=${idRoute}`
+		: `./internationalNew/tenderOffer?idRoute=${idRoute}`
 	saveRowId(ROW_INDEX_KEY, idRoute)
 	window.location.href = url
 }

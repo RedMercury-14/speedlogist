@@ -2646,6 +2646,29 @@ public class MainController {
 		return "tenderOffer";
 	}
 	
+	@GetMapping("/main/logistics/internationalNew/tenderOffer")
+	public String internationalTenderOfferGetNew(Model model, HttpServletRequest request,
+			@RequestParam(value = "idRoute", required = false) Integer idRoute) {
+		Route route = routeService.getRouteById(idRoute);
+		request.setAttribute("idRoute", idRoute);
+		request.setAttribute("routeDirection", route.getRouteDirection());
+		return "tenderOffer";
+	}
+	
+	//лист тендеров для подтверждения админа
+	@GetMapping("/main/admin/internationalNew/tenderOffer")
+	public String internationalTenderOfferForAdminGetNew(Model model, HttpServletRequest request,
+			@RequestParam(value = "idRoute", required = false) Integer idRoute) {
+		Route route = routeService.getRouteById(idRoute);
+		request.setAttribute("idRoute", idRoute);
+		request.setAttribute("routeDirection", route.getRouteDirection());
+		request.setAttribute("isAdmin", true);
+		request.setAttribute("loginUser", route.getUser().getLogin());
+		request.setAttribute("thisUser", getThisUser().getLogin());
+		
+		return "tenderOffer";
+	}
+	
 	@GetMapping("/main/carrier/tender/tenderOffer")
 	public String carrierTenderOfferGet(Model model, HttpServletRequest request,
 			@RequestParam(value = "notagree", required = false) String notagree) {
@@ -2757,6 +2780,66 @@ public class MainController {
 		return "redirect:/main/logistics/international";
 	}
 	
+	//подтверждение цены маршрута new
+		@RequestMapping("/main/logistics/internationalNew/confrom")
+		public String confromCostNew(Model model, HttpServletRequest request,
+				@RequestParam("login") String login,
+				@RequestParam("cost") Integer cost,
+				@RequestParam("idRoute") Integer idRoute,
+				@RequestParam("currency") String currency,
+				@RequestParam(name = "status", required = false) String status) {
+			User user = userService.getUserByLogin(login);
+			if (status == null) {
+				status = "4";
+				routeService.updateRouteInBase(idRoute, cost, currency, user, status);
+			}else {
+				routeService.updateRouteInBase(idRoute, cost, currency, user, status);
+				Route route = routeService.getRouteById(idRoute);
+				User userHasCarrier = userService.getUserByLogin(login);
+				java.util.Date t2 = new java.util.Date();
+				String message = "На маршрут "+route.getRouteDirection()+" принят единственный заявившийся перевозчик: " + userHasCarrier.getCompanyName() 
+						+ ". Заявленная стоимость перевозки составляет "+ route.getFinishPrice() + " "+ route.getStartCurrency() + ". \nОптимальная стоимость составляет " + route.getOptimalCost()+" BYN";
+				mailService.sendSimpleEmail(request, "Подтверждение единственного перевозчика", message, "YakubovE@dobronom.by");
+			}
+			List<Message> messages = new ArrayList<Message>();		
+			chatEnpoint.internationalMessegeList.stream()
+				.filter(mes->mes.getIdRoute().equals(idRoute.toString()))
+				.forEach(mes-> messages.add(mes));
+			messages.stream().forEach(mes->{
+				chatEnpoint.internationalMessegeList.remove(mes);
+				messageService.saveOrUpdateMessage(mes);
+			});
+			//аварийная сериализация кеша, на случай если сервер упадёт
+			try {
+				FileOutputStream fos =
+	                     new FileOutputStream(path + "resources/others/hashmap.ser");
+	                  ObjectOutputStream oos = new ObjectOutputStream(fos);
+	                  oos.writeObject(chatEnpoint.internationalMessegeList);
+	                  oos.close();
+	                  fos.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			//меняем статус у Order если имеется
+			Route routeTarget = routeService.getRouteById(idRoute);
+			Set <Order> orders = routeTarget.getOrders();
+			if(orders != null && orders.size() != 0) {
+				orders.forEach(o->{
+					o.setStatus(60);
+					o.setChangeStatus(o.getChangeStatus() + "\nМаршрут "+idRoute+" выйгран  " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy hh:MM:ss")));
+					orderService.updateOrder(o);
+//					orderService.updateOrderFromStatus(o);
+				});			
+			}
+			
+			Set<Message> messagesJustDelete = new HashSet<Message>();
+			mainChat.messegeList.stream()
+				.filter(m-> m.getIdRoute() != null && m.getIdRoute().equals(idRoute) && m.getToUser().equals("international"))
+				.forEach(m-> messagesJustDelete.add(m));
+			messagesJustDelete.stream().forEach(m->mainChat.messegeList.remove(m));
+			return "redirect:/main/logistics/internationalNew";
+		}
+	
 	//подтверждение цены маршрута ДЛЯ АДМИНА
 		@RequestMapping("/main/admin/international/confrom")
 		public String confromCostAdmin(Model model,
@@ -2771,6 +2854,21 @@ public class MainController {
 				});			
 			}
 			return "redirect:/main/logistics/international";
+		}
+		
+		@RequestMapping("/main/admin/internationalNew/confrom")
+		public String confromCostAdminNew(Model model,
+				@RequestParam("idRoute") Integer idRoute) {			
+			routeService.updateRouteInBase(idRoute, "4");
+			Route routeTarget = routeService.getRouteById(idRoute);
+			Set <Order> orders = routeTarget.getOrders();
+			if(orders != null && orders.size() != 0) {
+				orders.forEach(o->{
+					o.setStatus(60);
+					orderService.updateOrderFromStatus(o);
+				});			
+			}
+			return "redirect:/main/logistics/internationalNew";
 		}
 	
 	@GetMapping("/main/logistics/international/disposition")

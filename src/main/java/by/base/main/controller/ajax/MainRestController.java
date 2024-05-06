@@ -2916,7 +2916,13 @@ public class MainRestController {
 			}
 			orders.add(order);			
 		}
-		Order order = orders.stream().findFirst().get();
+		Order order = orders.stream().findFirst().get();	
+		//проверяем не отменена ли заявка
+		if(order.getStatus() == 10) {
+			response.put("status", "100");
+			response.put("message", "Заявка " + order.getCounterparty() + " отменена!");
+			return response;
+		}
 
 		Route route = new Route();
 		User thisUser = getThisUser();
@@ -2978,23 +2984,11 @@ public class MainRestController {
 		}
 
 		if(order.getTimeDelivery() == null) {
-
-
 			route.setDateUnloadPreviouslyStock(order.getOnloadWindowDate() == null ? null : order.getOnloadWindowDate().toLocalDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
-
-
 			route.setTimeUnloadPreviouslyStock(order.getOnloadWindowTime() == null ? null : order.getOnloadTime().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")));
-
-
 			}else {
-
-
 			route.setDateUnloadPreviouslyStock(order.getTimeDelivery().toLocalDateTime().toLocalDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
-
-
 			route.setTimeUnloadPreviouslyStock(order.getTimeDelivery().toLocalDateTime().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")));
-
-
 			}
 		Integer summPall = 0;
 		Integer summWeight = 0;

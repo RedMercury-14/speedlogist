@@ -3406,12 +3406,14 @@ public class MainRestController {
 					: (String) jsonpObject.get("customsAddress"));
 			address.setTnvd(jsonpObject.get("tnvd") != null ? jsonpObject.get("tnvd").toString() : null);
 			address.setPointNumber(jsonpObject.get("pointNumber") != null ? Integer.parseInt(jsonpObject.get("pointNumber").toString()) : null);
+			
+			
 			if (!jsonpObject.get("time").toString().isEmpty()) {
 				address.setTime(Time.valueOf(
 						LocalTime.of(Integer.parseInt((String) jsonpObject.get("time").toString().split(":")[0]),
 								Integer.parseInt((String) jsonpObject.get("time").toString().split(":")[1]))));
 
-				LocalDate targetDate = address.getDate().toLocalDate();
+//				LocalDate targetDate = address.getDate().toLocalDate();
 
 				// реализация проверки по валидности даты ввода загрузки
 //				if (dateTimeNow.getHour() >= 12) {

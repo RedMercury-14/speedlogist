@@ -228,9 +228,9 @@ display: none;
  							</c:otherwise>
  						</c:choose>
 													
-<!-- 							<input type="submit" value="Редактировать маршрут" name="edit"/> | 	 -->
-<!-- 							<input type="submit" value="Удалить маршрут" name="delite" onclick="if (!(confirm('Вы действительно хотите удалить маршрут?'))) return false"/> |  -->
-<!-- 							<input type="button" value="Отметить прибытие авто" name="На_выгрузке"/> | -->
+							<input type="submit" value="Редактировать маршрут" name="edit"/> | 	
+							<input type="submit" value="Удалить маршрут" name="delite" onclick="if (!(confirm('Вы действительно хотите удалить маршрут?'))) return false"/> | 
+							<input type="button" value="Отметить прибытие авто" name="На_выгрузке"/> |
 							<input type="submit" value="Отменить проставленное время и авто" name="offCar"/>
 										
             </form:form>   			

@@ -439,6 +439,13 @@ function getContextMenuItems(params) {
 			},
 		},
 		{
+			name: `Редактировать маршрут`,
+			icon: uiIcons.pencil,
+			action: () => {
+				editRoute(idRoute)
+			},
+		},
+		{
 			name: `Завершить маршрут`,
 			disabled: status !== '4',
 			icon: uiIcons.checkObject,
@@ -608,6 +615,12 @@ function showUnloadPoints(idRoute) {
 	var url = `../logistics/international/routeShow?idRoute=${idRoute}`;
 	saveRowId(ROW_INDEX_KEY, idRoute)
 	window.location.href = url;
+}
+async function editRoute(idRoute) {
+	const url = `./international/editRoute?idRoute=${idRoute}`;
+	saveRowId(ROW_INDEX_KEY, idRoute)
+	window.location.href = url
+	
 }
 async function completeRoute(idRoute) {
 	const url = `/speedlogist/main/logistics/international/routeEnd?idRoute=${idRoute}`

@@ -39,7 +39,7 @@ const columnDefs = [
 	// 	suppressMovable: true, suppressMenu: true,
 	// 	resizable: false, sortable: false, filter: false,
 	// },
-	{ headerName: 'ID', field: 'idRoute', minWidth: 60, width: 80, },
+	{ headerName: 'ID', field: 'idRoute', minWidth: 60, width: 80, pinned: 'left',},
 	{ headerName: 'Тип', field: 'simpleWay', minWidth: 50, width: 50, },
 	{ headerName: 'Название маршрута', field: 'routeDirection', minWidth: 240, width: 640, wrapText: true, autoHeight: true, },
 	{ headerName: 'Дата загрузки', field: 'simpleDateStart', comparator: dateComparator, },

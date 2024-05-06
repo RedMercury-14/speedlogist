@@ -101,7 +101,7 @@
 							</c:choose>
 						</div>
 						<c:choose>
-							<c:when test="${point.temperature != null}">
+							<c:when test="${order.temperature != null}">
 								<div class="text-container">
 									<span class="text-muted font-weight-bold">Температура:</span>
 									<span>${order.temperature}</span>

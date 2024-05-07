@@ -199,11 +199,11 @@ export const dateHelper = {
 		const day = now.getDay()
 		const noonToday = this.getNoon(now)
 
-		// // если пятница, после 12:00, то на среду
-		// if (day === 5 &&  now > noonToday) {
-		// 	const monday = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 5)
-		// 	return this.getDateForInput(monday)
-		// }
+		// если пятница, после 12:00, то на вторник
+		if (day === 5 &&  now > noonToday) {
+			const monday = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 4)
+			return this.getDateForInput(monday)
+		}
 
 		// если суббота, то на среду
 		if (day === 6) {
@@ -264,6 +264,36 @@ export const dateHelper = {
 		const dateEnd = `${currentDate.getFullYear()}-${currentDateMonth}-${currentDateDay}`
 		return { dateStart, dateEnd }
 	},
+
+
+	getDatesToRoutesFetch(datesKey, dayNumber = 5, ) {
+		const savedDatesStr = localStorage.getItem(datesKey)
+		const now = Date.now()
+
+		/* Этот блок кода проверяет, сохранены ли даты в localStorage. Если есть сохраненные даты, он проверяет,
+		не старше ли сохраненные даты 3 часов. Если сохраненные даты не старые, он возвращает сохраненные даты.
+		Если сохраненных дат нет или сохраненные даты старые, он вычисляет новый диапазон дат на основе текущей
+		даты и указанного количества дней и возвращает новый диапазон дат. */
+		if (savedDatesStr) {
+			const savedDates = JSON.parse(savedDatesStr)
+			const isOldDates = (now - savedDates.timestamp) > this.MILLISECONDS_IN_HOUR * 3
+
+			if (!isOldDates) {
+				return savedDates.dates
+			}
+		}
+
+		const currentDate = new Date(now)
+		const currentDateMonth = this.pad(currentDate.getMonth() + 1)
+		const currentDateDay = this.pad(currentDate.getDate())
+		const newDate = new Date(now + this.DAYS_TO_MILLISECONDS * dayNumber)
+		const newDateMonth = this.pad(newDate.getMonth() + 1)
+		const newDateDay = this.pad(newDate.getDate())
+		const dateStart = `${currentDate.getFullYear()}-${currentDateMonth}-${currentDateDay}`
+		const dateEnd = `${newDate.getFullYear()}-${newDateMonth}-${newDateDay}`
+		return { dateStart, dateEnd }
+	},
+
 
 	/**
 	 * Метод `setDatesToFetch` устанавливает даты начала и окончания выборки данных

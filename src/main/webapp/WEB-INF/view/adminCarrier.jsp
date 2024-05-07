@@ -22,7 +22,7 @@
 <body>
 	<jsp:include page="headerNEW.jsp"/>
 
-	<div class="container-fluid px-1" style="margin-top: 85px;">
+	<div class="my-container container-fluid px-1">
 		<div class="title-container">
 			<strong><p>Таблица перевозчиков</p></strong>
 		</div>
@@ -33,7 +33,7 @@
 			<button id="blockedUsers" class="btn tools-btn">Заблокированные</button>
 			<button id="unblockedUsers" class="btn tools-btn">Разблокированные</button>
 		</div>
-		<div id="myGridToViewOrder" class="ag-theme-alpine"></div>
+		<div id="myGrid" class="ag-theme-alpine"></div>
 		<div id="snackbar"></div>
 
 		<div class="modal fade" id="fileModal" tabindex="-1" aria-labelledby="fileModalLabel" aria-hidden="true">

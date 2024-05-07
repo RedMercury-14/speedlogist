@@ -24,7 +24,7 @@
 	<jsp:include page="headerNEW.jsp" />
 	<div class="fluid-container my-container">
 		<div class=" px-5 d-flex align-items-center justify-content-between">
-			<h3 class="mb-2">Нехватка товара на РЦ 2</h3>
+			<h3 class="mb-2">Нехватка товара на РЦ</h3>
 			<div>
 				<p class="mb-1">Логин: SologubA@dobronom.by</p>
 				<p class="mb-1">Пароль: 14A26B19c4</p>

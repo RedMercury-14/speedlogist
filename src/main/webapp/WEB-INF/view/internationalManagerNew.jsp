@@ -15,7 +15,7 @@
 	<title>Менеджер международных маршрутов</title>
 	<script src="${pageContext.request.contextPath}/resources/js/AG-Grid/ag-grid-enterprise.min.js"></script>
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/variables.css">
-	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/internationalManager.css">
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/internationalManagerNew.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/snackbar.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/bootstrap5overlay.css">
 </head>
@@ -34,9 +34,12 @@
 		<div class="title-container">
 			<strong><h3>Менеджер международных маршрутов</h3></strong>
 		</div>
-		<div class="toolbar">
+		<div class="accordion">
 			<div class="search-form-container">
-				<form class="collapse" action="" id="orderSearchForm">
+				<button class="accordion-btn collapsed" data-toggle="collapse" href="#orderSearchForm" role="button" aria-expanded="true" aria-controls="orderSearchForm">
+					Поиск заявок
+				</button>
+				<form class="collapse" action="" id="routeSearchForm">
 					<div class="input-row-container">
 						<label class="text-muted font-weight-bold">С</label>
 						<input class="form-control" type="date" name="date_from" id="date_from" required>
@@ -48,7 +51,6 @@
 					<!-- <input class="form-control" type="text" name="searchName" id="searchName" placeholder="Наименование контрагента..."> -->
 					<button class="btn btn-outline-secondary" type="submit">Отобразить</button>
 				</form>
-				<!-- <button id="testTransaction">TEST</button> -->
 			</div>
 		</div>
 	
@@ -57,8 +59,27 @@
 		<div id="snackbar"></div>
 	</div>
 
-	<jsp:include page="footer.jsp" />
+	<!-- Модальное окно с основной информацией о маршруте -->
+	<div class="modal fade" id="routeInfoModal" tabindex="-1" aria-labelledby="routeInfoModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-xl">
+			<div class="modal-content">
+				<div class="modal-header align-items-center bg-primary text-white">
+					<h5 class="modal-title" id="routeInfoModalLabel">Основная информация</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<div id="routeInfo"></div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
 	<script src='${pageContext.request.contextPath}/resources/mainPage/js/nav-fixed-top.js'></script>
-	<script	src="${pageContext.request.contextPath}/resources/js/internationalManagerGrid.js" type="module"></script>
+	<script	src="${pageContext.request.contextPath}/resources/js/internationalManagerNew.js" type="module"></script>
 </body>
 </html>

@@ -110,3 +110,16 @@ export function getRouteInfo(order) {
 		.map((route, i) => `${i + 1}) Маршрут ${route.routeDirection}`)
 		.join(' ************** ')
 }
+
+export function getRoutePrice(order) {
+	const routes = order.routes
+	if (!routes || !routes.length) return ''
+
+	const successRoutes = routes
+		.sort((a, b) => b.idRoute - a.idRoute)
+		.filter(route => route.statusRoute === '4' || route.statusRoute === '6' || route.statusRoute === '8')
+
+	if (!successRoutes.length) return ''
+
+	return successRoutes[0].finishPrice + ' ' + successRoutes[0].startCurrency
+}

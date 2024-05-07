@@ -207,6 +207,23 @@ public class MainRestController {
 		return MainChat.messegeList.size() + "";		
 	}
 	
+	/**
+	 * отдаёт все маршруты для новой страницы менеджер международных маршрутов
+	 * @param request
+	 * @param dateStart 2024-03-15
+	 * @param dateFinish 2024-03-15
+	 * @return
+	 */
+	@GetMapping("/manager/getRouteForInternational//{dateStart}&{dateFinish}")
+	public Set<Route> getRouteForInternational(HttpServletRequest request, @PathVariable Date dateStart, @PathVariable Date dateFinish) {
+		Set<Route> routes = new HashSet<Route>();
+		List<Route>targetRoutes = routeService.getRouteListAsDate(dateStart, dateFinish);
+		targetRoutes.stream()
+			.filter(r-> r.getComments() != null && r.getComments().equals("international") && Integer.parseInt(r.getStatusRoute())<=8)
+			.forEach(r -> routes.add(r)); // проверяет созданы ли точки вручную, и отдаёт только международные маршруты		
+		return routes;
+	}
+	
 	@GetMapping("/carrier/getStatusTenderForMe")
 	public Set<Route> getStatusTenderForMe(HttpServletRequest request) {
 		User user = getThisUser();
@@ -2899,7 +2916,13 @@ public class MainRestController {
 			}
 			orders.add(order);			
 		}
-		Order order = orders.stream().findFirst().get();
+		Order order = orders.stream().findFirst().get();	
+		//проверяем не отменена ли заявка
+		if(order.getStatus() == 10) {
+			response.put("status", "100");
+			response.put("message", "Заявка " + order.getCounterparty() + " отменена!");
+			return response;
+		}
 
 		Route route = new Route();
 		User thisUser = getThisUser();
@@ -2961,23 +2984,11 @@ public class MainRestController {
 		}
 
 		if(order.getTimeDelivery() == null) {
-
-
 			route.setDateUnloadPreviouslyStock(order.getOnloadWindowDate() == null ? null : order.getOnloadWindowDate().toLocalDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
-
-
 			route.setTimeUnloadPreviouslyStock(order.getOnloadWindowTime() == null ? null : order.getOnloadTime().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")));
-
-
 			}else {
-
-
 			route.setDateUnloadPreviouslyStock(order.getTimeDelivery().toLocalDateTime().toLocalDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
-
-
 			route.setTimeUnloadPreviouslyStock(order.getTimeDelivery().toLocalDateTime().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")));
-
-
 			}
 		Integer summPall = 0;
 		Integer summWeight = 0;
@@ -3395,12 +3406,14 @@ public class MainRestController {
 					: (String) jsonpObject.get("customsAddress"));
 			address.setTnvd(jsonpObject.get("tnvd") != null ? jsonpObject.get("tnvd").toString() : null);
 			address.setPointNumber(jsonpObject.get("pointNumber") != null ? Integer.parseInt(jsonpObject.get("pointNumber").toString()) : null);
+			
+			
 			if (!jsonpObject.get("time").toString().isEmpty()) {
 				address.setTime(Time.valueOf(
 						LocalTime.of(Integer.parseInt((String) jsonpObject.get("time").toString().split(":")[0]),
 								Integer.parseInt((String) jsonpObject.get("time").toString().split(":")[1]))));
 
-				LocalDate targetDate = address.getDate().toLocalDate();
+//				LocalDate targetDate = address.getDate().toLocalDate();
 
 				// реализация проверки по валидности даты ввода загрузки
 //				if (dateTimeNow.getHour() >= 12) {
@@ -3436,7 +3449,7 @@ public class MainRestController {
 					"\nНеобходимо назначить слот на выгрузку";
 			mailService.sendSimpleEmailTwiceUsers(request, "Новая заявка", text, properties.getProperty("email.addNewProcurement.rb.1"), properties.getProperty("email.addNewProcurement.rb.2"));
 //			mailService.sendSimpleEmailTwiceUsers(request, "Новая заявка", textForSupport, properties.getProperty("email.orderSupport.1"), properties.getProperty("email.orderSupport.2"));
-		}else if(order.getWay().equals("Импорт") || order.getWay().equals("Экспорт") && order.getStatus() == 20 ){
+		}else if(order.getWay().equals("Импорт") && order.getStatus() == 20 || order.getWay().equals("Экспорт") && order.getStatus() == 20 ){
 			mailService.sendSimpleEmailTwiceUsers(request, "Новая заявка", text, properties.getProperty("email.addNewProcurement.import.1"), properties.getProperty("email.addNewProcurement.import.2"));
 		}			
 		return response;

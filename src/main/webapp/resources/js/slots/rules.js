@@ -26,7 +26,6 @@ export function editableRules(order, currentLogin, currentRole) {
 	if (
 		(
 			isAdmin(currentRole)
-			&& !isNotEditableStatuses(status)
 			&& isEditableDate(now, order)
 		)
 		|| (
@@ -92,7 +91,7 @@ export function isManagerEditableDate(nowMs, order) {
 
 // правила для логистов
 export function isLogistEditableStatuses(status) {
-	return status >= 20 && status <= 60
+	return status >= 20 && status <= 70
 }
 export function isLogistEditableDate(nowMs, order) {
 	const timeDelivery = order.timeDelivery
@@ -113,7 +112,7 @@ export function isSupplierOrderEditableDate(nowMs, order) {
 
 // общие правила
 export function isNotEditableStatuses(status) {
-	return status === 70 || status === 100
+	return status === 100
 }
 export function isEditableDate(nowMs, order) {
 	const timeDelivery = order.timeDelivery

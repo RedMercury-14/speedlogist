@@ -52,6 +52,7 @@
 									</a>
 									<div class="dropdown-menu">
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/international" />">Менеджер международных маршрутов</a>
+										<a class="dropdown-item" href="<spring:url value="/main/logistics/internationalNew" />">New Менеджер международных маршрутов</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/internationalCarrier" />">Список перевозчиков</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/ordersLogist" />">Менеджер заявок</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/documentflow" />">Документооборот</a>
@@ -86,6 +87,7 @@
 									</a>
 									<div class="dropdown-menu">
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/international" />">Менеджер международных маршрутов</a>
+										<a class="dropdown-item" href="<spring:url value="/main/logistics/internationalNew" />">New Менеджер международных маршрутов</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/internationalCarrier" />">Список перевозчиков</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/ordersLogist" />">Менеджер заявок</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/documentflow" />">Документооборот</a>
@@ -102,6 +104,7 @@
 									</a>
 									<div class="dropdown-menu">
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/international" />">Менеджер международных маршрутов</a>
+										<a class="dropdown-item" href="<spring:url value="/main/logistics/internationalNew" />">New Менеджер международных маршрутов</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/internationalCarrier" />">Список перевозчиков</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/ordersLogist" />">Менеджер заявок</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/documentflow" />">Документооборот</a>

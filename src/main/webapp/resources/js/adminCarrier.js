@@ -2,7 +2,7 @@ import { AG_GRID_LOCALE_RU } from '../js/AG-Grid/ag-grid-locale-RU.js'
 import { gridColumnLocalState, gridFilterSessionState } from './AG-Grid/ag-grid-utils.js'
 import { ajaxUtils } from './ajaxUtils.js'
 import { snackbar } from './snackbar/snackbar.js'
-import { debounce, getData } from './utils.js'
+import { changeGridTableMarginTop, debounce, getData } from './utils.js'
 
 const changeNumContractUrl = `../../api/manager/changeNumDocument`
 const changeIsBlockedBaseUrl = `../../api/manager/blockCarrier/`
@@ -152,7 +152,7 @@ const gridOptions = {
 }
 
 window.onload = async function() {
-	const gridDiv = document.querySelector('#myGridToViewOrder')
+	const gridDiv = document.querySelector('#myGrid')
 	const allUsersBtn = document.querySelector("#allUsers")
 	const confirmedUsersBtn = document.querySelector("#confirmedUsers")
 	const unconfirmedUsersBtn = document.querySelector("#unconfirmedUsers")
@@ -166,6 +166,9 @@ window.onload = async function() {
 	if (!localData.length) {
 		localData = carrier
 	}
+
+	// изменение отступа для таблицы
+	changeGridTableMarginTop()
 
 	renderTable(gridDiv, gridOptions, carrier)
 	restoreColumnState()

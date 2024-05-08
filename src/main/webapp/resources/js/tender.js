@@ -1,6 +1,6 @@
 import { ws } from './global.js';
 import { AG_GRID_LOCALE_RU } from '../js/AG-Grid/ag-grid-locale-RU.js'
-import { cookieHelper, debounce, getData, isMobileDevice } from './utils.js';
+import { cookieHelper, dateHelper, debounce, getData, isMobileDevice } from './utils.js';
 import { dateComparator, gridFilterLocalState } from './AG-Grid/ag-grid-utils.js';
 
 const getActiveTendersUrl = `../../api/carrier/getActiveInternationalTenders`
@@ -44,15 +44,15 @@ const columnDefsForMobile = [
 		getQuickFilterText: params => params.value
 	},
 	{
-		headerName: "Загрузка", field: 'dateToView',
+		headerName: "Загрузка", field: 'loadDateToView',
 		cellClass: 'px-0 text-center', minWidth: 80,
 		comparator: dateComparator,
 	},
-	// {
-	// 	headerName: "Выгрузка", field: 'dateToView',
-	// 	cellClass: 'px-1 text-center', minWidth: 80,
-	// 	comparator: dateComparator,
-	// },
+	{
+		headerName: "Выгрузка", field: 'unloadDateToView',
+		cellClass: 'px-1 text-center', minWidth: 80,
+		comparator: dateComparator,
+	},
 	{ headerName: "Направление", field: "way", cellClass: 'px-1 font-weight-bold text-center', minWidth: 63, },
 	{ 
 		headerName: "Предложенная цена", field: "price",
@@ -78,20 +78,16 @@ const columnDefsForPC = [
 		getQuickFilterText: params => params.value
 	},
 	{
-		headerName: "Загрузка", field: 'dateToView',
+		headerName: "Загрузка", field: 'loadDateToView',
 		cellClass: 'px-2 text-center', minWidth: 80,
 		comparator: dateComparator,
 	},
-	// {
-	// 	headerName: "Выгрузка", field: 'dateToView',
-	// 	cellClass: 'px-2 text-center', minWidth: 80,
-	// 	comparator: dateComparator,
-	// },
 	{ headerName: "Направление", field: "way", cellClass: 'px-2 font-weight-bold text-center', minWidth: 63, },
-	{ headerName: "Дата загрузки", field: 'loadDate', flex: 1, minWidth: 85, },
+	{ headerName: "Дата загрузки", field: 'loadDateTimeToView', flex: 1, minWidth: 85, },
+	{ headerName: "Дата выгрузки", field: 'unloadDateTimeToView', flex: 1, minWidth: 85, },
 	{
 		headerName: "Машина", field: 'carInfo',
-		flex: 2, minWidth: 160,
+		flex: 1, minWidth: 160,
 	},
 	{
 		headerName: "Груз", field: 'cargoInfo',
@@ -125,6 +121,7 @@ const gridOptions = {
 		wrapText: true, autoHeight: true,
 	},
 	onFilterChanged: debouncedSaveFilterState,
+	suppressContextMenu: true,
 	suppressRowClickSelection: true,
 	suppressDragLeaveHidesColumns: true,
 	enableBrowserTooltips: true,
@@ -134,7 +131,7 @@ const gridOptions = {
 	detailCellRendererParams: {
 		detailGridOptions: {
 			columnDefs: [
-				{ headerName: "Дата загрузки", field: 'loadDate', flex: 2, minWidth: 85, },
+				{ headerName: "Дата загрузки", field: 'loadDateTimeToView', flex: 2, minWidth: 85, },
 				{
 					headerName: "Машина", field: 'carInfo',
 					flex: 2, minWidth: 160,
@@ -155,6 +152,7 @@ const gridOptions = {
 				wrapHeaderText: true,
 				autoHeaderHeight: true,
 			},
+			suppressContextMenu: true,
 			suppressDragLeaveHidesColumns: true,
 			enableBrowserTooltips: true,
 			localeText: AG_GRID_LOCALE_RU,
@@ -228,8 +226,8 @@ async function getMappingData(data, messages, user) {
 		const cargo = rhsItem && rhsItem.cargo ? rhsItem.cargo : ''
 		const temp = tender.temperature ? `${tender.temperature} °C; ` : ''
 		const vol = rhsItem && rhsItem.volume ? `${rhsItem.volume} м³` : ''
-		const dateToView = tender.dateLoadPreviously ? tender.dateLoadPreviously.split('-').reverse().join('.') : ''
-		const loadDate = `${dateToView},  ${tender.timeLoadPreviously}`
+		const loadDateToView = tender.dateLoadPreviously ? tender.dateLoadPreviously.split('-').reverse().join('.') : ''
+		const loadDateTimeToView = `${loadDateToView},  ${tender.timeLoadPreviously}`
 		const myMessage = messages.find(m => m.idRoute === idRoute.toString()) || null
 
 		const loadPoints = tender.roteHasShop
@@ -253,13 +251,15 @@ async function getMappingData(data, messages, user) {
 			: myMessage
 				? `${myMessage.text} ${myMessage.currency}` : ''
 
-		const cargoInfo = `${cargo} ● ${tender.totalLoadPall} палл ● ${tender.totalCargoWeight} кг ● ${vol}`
-		const carInfo = `${tender.typeTrailer} ● ${temp}`
+		const carInfo = getCarInfo(tender)
+		const cargoInfo = getCargoInfo(tender)
+		const unloadDateToView = getUnloadDateToView(tender)
+		const unloadDateTimeToView = getUnloadDateTimeToView(tender)
 
 		return {
 			...tender,
-			dateToView,
-			loadDate,
+			loadDateToView,
+			loadDateTimeToView,
 			cargo,
 			myMessage,
 			myOffer,
@@ -268,6 +268,8 @@ async function getMappingData(data, messages, user) {
 			unloadPoints,
 			cargoInfo,
 			carInfo,
+			unloadDateToView,
+			unloadDateTimeToView,
 		}
 	}))
 }
@@ -334,4 +336,47 @@ function restoreFilterState() {
 }
 function resetFilterState() {
 	gridFilterLocalState.resetState(gridOptions, LOCAL_STORAGE_KEY)
+}
+
+function getCargoInfo(tender) {
+	if (!tender) return ''
+	const rhsItem = tender.roteHasShop[0]
+	const cargo = rhsItem && rhsItem.cargo ? rhsItem.cargo : ''
+	const totalLoadPall = tender.totalLoadPall ? `${tender.totalLoadPall} палл` : ''
+	const totalCargoWeight = tender.totalCargoWeight ? `${tender.totalCargoWeight} кг` : ''
+	const volume = rhsItem && rhsItem.volume ? `${rhsItem.volume} м³` : ''
+	return [ cargo, totalLoadPall, totalCargoWeight, volume ].filter(item => item).join(' ● ')
+}
+function getCarInfo(tender) {
+	if (!tender) return ''
+	const typeTrailer = tender.typeTrailer ? tender.typeTrailer : ''
+	const temp = tender.temperature ? `${tender.temperature} °C; ` : ''
+	return [ typeTrailer, temp ].filter(item => item).join(' ● ')
+}
+function getUnloadDateToView(tender) {
+	if (!tender) return ''
+	const slotDate = tender.dateUnloadPreviouslyStock ? dateHelper.changeFormatToView(tender.dateUnloadPreviouslyStock) : ''
+	const dateUnloadActuallySimple = tender.dateUnloadActuallySimple ? tender.dateUnloadActuallySimple : ''
+
+	if (slotDate) return slotDate
+	if (dateUnloadActuallySimple) return dateUnloadActuallySimple
+	return ''
+}
+function getUnloadDateTimeToView(tender) {
+	if (!tender) return ''
+	const slotDate = tender.dateUnloadPreviouslyStock ? dateHelper.changeFormatToView(tender.dateUnloadPreviouslyStock) : ''
+	const slotTime = tender.timeUnloadPreviouslyStock ? tender.timeUnloadPreviouslyStock.slice(0,5) : ''
+
+	const dateUnloadActuallySimple = tender.dateUnloadActuallySimple ? tender.dateUnloadActuallySimple : ''
+	const timeUnloadActually = tender.timeUnloadActually ? tender.timeUnloadActually.replace('-', ':') : ''
+
+	if (slotDate) {
+		return [ slotDate, slotTime ].filter(item => item).join(', ')
+	}
+
+	if (dateUnloadActuallySimple) {
+		return [ dateUnloadActuallySimple, timeUnloadActually ].filter(item => item).join(', ')
+	}
+
+	return ''
 }

@@ -308,6 +308,11 @@ public class MainController {
 		return "analytics";
 	}
 	
+	@GetMapping("/main/logistics/analytics")
+	public String getAnalyticsLogistPage(Model model, HttpServletRequest request) {
+		return "analyticsLogist";
+	}
+	
 	@GetMapping("/main/procurement")
 	public String getProcurementPage(Model model, HttpServletRequest request) {
 		return "procurement";

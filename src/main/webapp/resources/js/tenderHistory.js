@@ -50,6 +50,7 @@ const gridOptions = {
 		floatingFilter: true,
 	},
 	onFilterChanged: debouncedSaveFilterState,
+	suppressContextMenu: true,
 	suppressRowClickSelection: true,
 	suppressDragLeaveHidesColumns: true,
 	enableBrowserTooltips: true,

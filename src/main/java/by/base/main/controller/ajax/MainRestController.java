@@ -2737,6 +2737,7 @@ public class MainRestController {
 			order.setCargo((String) jsonMainObject.get("cargo"));
 			order.setTypeLoad((String) jsonMainObject.get("typeLoad"));
 			order.setMethodLoad((String) jsonMainObject.get("methodLoad"));
+			order.setMarketInfo(jsonMainObject.get("marketInfo") != null ? jsonMainObject.get("marketInfo").toString() : null);
 			order.setTypeTruck((String) jsonMainObject.get("typeTruck"));
 			order.setTemperature((String) jsonMainObject.get("temperature"));
 			order.setLoadNumber(jsonMainObject.get("loadNumber") != null ? jsonMainObject.get("loadNumber").toString() : null);

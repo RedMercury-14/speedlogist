@@ -115,6 +115,7 @@ public class OrderServiceImpl implements OrderService {
 				oldOrder.setDateCreateMarket(order.getDateCreateMarket());
 				oldOrder.setMixPall(order.getMixPall());
 				oldOrder.setMonoPall(order.getMonoPall());
+				oldOrder.setMarketInfo(order.getMarketInfo());
 				orderDAO.updateOrder(oldOrder);
 				return "Обновлён заказ " +  order.getMarketNumber();
 			case 10:

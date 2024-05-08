@@ -174,6 +174,9 @@ public class Order {
 	@Column(name = "date_create_market")
 	private Date dateCreateMarket;
 	
+	@Column(name = "market_info")
+	private String marketInfo;
+	
 	@Transient
 	private List<Address> addressesSort;
 	
@@ -288,6 +291,12 @@ public class Order {
 		this.typeLoad = typeLoad;
 	}
 
+	public String getMarketInfo() {
+		return marketInfo;
+	}
+	public void setMarketInfo(String marketInfo) {
+		this.marketInfo = marketInfo;
+	}
 	public String getPall() {
 		return pall;
 	}

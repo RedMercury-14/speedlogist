@@ -36,7 +36,7 @@
 		</div>
 		<div class="accordion">
 			<div class="search-form-container">
-				<button class="accordion-btn collapsed" data-toggle="collapse" href="#orderSearchForm" role="button" aria-expanded="true" aria-controls="orderSearchForm">
+				<button class="accordion-btn collapsed" data-toggle="collapse" href="#routeSearchForm" role="button" aria-expanded="true" aria-controls="routeSearchForm">
 					Поиск заявок
 				</button>
 				<form class="collapse" action="" id="routeSearchForm">

@@ -208,6 +208,29 @@ public class MainRestController {
 	}
 	
 	/**
+	 * Метод редактирования поля "Информация" в заявке, для таблицы слотов.
+	 * @param request
+	 * @param idOrder
+	 * @param text
+	 * @return
+	 */
+	@GetMapping("/manager/editMarketInfo/{idOrder}&{text}")
+	public Map<String, String> getEditMarketInfo(HttpServletRequest request, @PathVariable String idOrder, @PathVariable String text) {
+		Map<String, String> response = new HashMap<String, String>();
+		Order order = orderService.getOrderById(Integer.parseInt(idOrder.trim()));
+		if(order == null) {
+			response.put("status", "100");
+			response.put("message", "Заказ не найден");
+			return response;
+		}
+		order.setMarketInfo(cleanXSS(text));
+		orderService.updateOrder(order);
+		response.put("status", "200");
+		response.put("message", "Комментарий изменен");
+		return response;
+	}
+	
+	/**
 	 * отдаёт все маршруты для новой страницы менеджер международных маршрутов
 	 * @param request
 	 * @param dateStart 2024-03-15
@@ -646,7 +669,7 @@ public class MainRestController {
 //			return response;
 //		}
 		//основной метод создания заказов со статусом 5
-		text = poiExcel.loadOrderHasExcel(file1, request);
+		text = poiExcel.loadOrderHasExcelV2(file1, request);
 		
 		
 		response.put("200", text);
@@ -3317,6 +3340,7 @@ public class MainRestController {
 		order.setMethodLoad((String) jsonMainObject.get("methodLoad"));
 		order.setTypeTruck((String) jsonMainObject.get("typeTruck"));
 		order.setTemperature((String) jsonMainObject.get("temperature"));
+		order.setMarketInfo(jsonMainObject.get("marketInfo") != null ? jsonMainObject.get("marketInfo").toString() : null);
 		order.setControl((boolean) jsonMainObject.get("control").toString().equals("true") ? true : false);
 		order.setComment((String) jsonMainObject.get("comment"));
 		order.setDateCreate(Date.valueOf(LocalDate.now()));
@@ -3508,6 +3532,7 @@ public class MainRestController {
 		order.setStacking(jsonMainObject.get("stacking").toString().equals("true") ? true : false);
 		order.setIncoterms(jsonMainObject.get("incoterms") == null ? null : jsonMainObject.get("incoterms").toString());
 		order.setIsInternalMovement(jsonMainObject.get("isInternalMovement") == null ? null : jsonMainObject.get("isInternalMovement").toString());
+		order.setMarketInfo(jsonMainObject.get("marketInfo") != null ? jsonMainObject.get("marketInfo").toString() : null);
 		
 		if(order.getIsInternalMovement().equals("true")) {// костыльно ставим время выгрузки для перемещения 1 час
 			order.setTimeUnload(Time.valueOf(LocalTime.of(1, 0)));

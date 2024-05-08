@@ -42,6 +42,7 @@ const columnDefs = [
 	{ headerName: 'ID', field: 'idRoute', minWidth: 60, width: 80, pinned: 'left',},
 	{ headerName: 'Тип', field: 'simpleWay', minWidth: 50, width: 50, },
 	{ headerName: 'Название маршрута', field: 'routeDirection', minWidth: 240, width: 640, wrapText: true, autoHeight: true, },
+	{ headerName: 'Контрагент', field: 'counterparty', wrapText: true, autoHeight: true, },
 	{ headerName: 'Дата загрузки', field: 'simpleDateStart', comparator: dateComparator, },
 	{ headerName: 'Время загрузки (планируемое)', field: 'timeLoadPreviously', },
 	{ headerName: 'Дата и время выгрузки', field: 'unloadToView', wrapText: true, autoHeight: true, },
@@ -373,6 +374,8 @@ async function getMappingData(data) {
 		const startRouteCostInfo = getStartRouteCostInfo(route)
 		const statusRouteToView = getRouteStatus(route.statusRoute)
 
+		const counterparty = getCounterparty(route)
+
 		const offerCount = await getData(getRouteMessageBaseUrl + idRoute)
 
 		const isSavedRow = false
@@ -391,6 +394,7 @@ async function getMappingData(data) {
 			cargoInfo,
 			startRouteCostInfo,
 			statusRouteToView,
+			counterparty,
 		}
 	}))
 }
@@ -729,4 +733,12 @@ function getStartRouteCostInfo(route) {
 			: ''
 
 	return res
+}
+function getCounterparty(route) {
+	if (!route) return ''
+	const routeDirection = route.routeDirection ? route.routeDirection : ''
+	const array = routeDirection.split('>')
+	if (array.length < 2) return ''
+	const counterparty = array[0].replace('<', '')
+	return counterparty
 }

@@ -5,7 +5,7 @@ public class MarketPacketDto {
 	private String JWT;
 	private String MethodName;
 	private String ServiceNumber;
-	private MarketDataDto Data;
+	private Object Data;
 	
 	
 	
@@ -22,7 +22,7 @@ public class MarketPacketDto {
 	 * @param serviceNumber
 	 * @param data
 	 */
-	public MarketPacketDto(String jWT, String methodName, String serviceNumber, MarketDataDto data) {
+	public MarketPacketDto(String jWT, String methodName, String serviceNumber, Object data) {
 		super();
 		JWT = jWT;
 		MethodName = methodName;
@@ -47,10 +47,10 @@ public class MarketPacketDto {
 	public void setServiceNumber(String serviceNumber) {
 		ServiceNumber = serviceNumber;
 	}
-	public MarketDataDto getData() {
+	public Object getData() {
 		return Data;
 	}
-	public void setData(MarketDataDto data) {
+	public void setData(MarketDataForLoginDto data) {
 		Data = data;
 	}
 	@Override

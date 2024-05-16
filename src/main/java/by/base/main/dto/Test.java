@@ -7,9 +7,11 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.sql.Date;
 
 import com.google.gson.Gson;
 
+import by.base.main.model.Order;
 import by.base.main.service.util.CustomJSONParser;
 
 public class Test {
@@ -78,7 +80,7 @@ public class Test {
 //		System.err.println(gson.toJson(requestDto2));
 //		System.out.println(marketOrder);
 		
-		MarketDataForRequestDto dataDto3 = new MarketDataForRequestDto("19480223");
+		MarketDataForRequestDto dataDto3 = new MarketDataForRequestDto("19480222");
 		MarketPacketDto packetDto3 = new MarketPacketDto(jwt, "SpeedLogist.GetOrderBuyInfo", "CD6AE87C-2477-4852-A4E7-8BA5BD01C156", dataDto3);
 		MarketRequestDto requestDto3 = new MarketRequestDto("", packetDto3);
 		String marketOrder2 = postRequest(url, gson.toJson(requestDto3));
@@ -93,6 +95,29 @@ public class Test {
 		System.out.println(orderBuyGroupDTO);
 		System.out.println();
 		orderBuyGroupDTO.getOrderBuy().forEach(o->System.out.println(o));
+		
+		//cчитаем время и создаём Order
+		Order order = new Order();
+		order.setMarketNumber(orderBuyGroupDTO.getOrderBuyGroupId().toString());                   
+        order.setCounterparty(orderBuyGroupDTO.getContractorNameShort().trim());
+        //добавить номер контрагента (код поставщика)
+        // добавить Тип контракта
+        // добавить Код  контракта
+        // добавить Номер контракта
+        Date dateDelivery = Date.valueOf(orderBuyGroupDTO.getDeliveryDate().toLocalDateTime().toLocalDate());
+        order.setDateDelivery(dateDelivery);
+        order.setNumStockDelivery(orderBuyGroupDTO.getWarehouseId().toString());
+        
+        order.setCargo(orderBuyGroupDTO.getOrderBuy().get(0).getGoodsName().trim() + ", ");
+        //записываем в поле информация
+        order.setMarketInfo(orderBuyGroupDTO.getInfo().trim());
+        
+        Date dateCreateInMarket = Date.valueOf(orderBuyGroupDTO.getDatex().toLocalDateTime().toLocalDate());
+        order.setDateCreateMarket(dateCreateInMarket);
+        order.setChangeStatus("Заказ создан в маркете: " + dateCreateInMarket);
+        
+        //становился тут
+        //брать всё из POIExcel
 	}
 	
 	 private static String postRequest(String url, String payload) {

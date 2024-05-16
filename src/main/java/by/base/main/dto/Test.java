@@ -10,6 +10,8 @@ import java.nio.charset.StandardCharsets;
 
 import com.google.gson.Gson;
 
+import by.base.main.service.util.CustomJSONParser;
+
 public class Test {
 
 	private static String jwt;
@@ -69,19 +71,28 @@ public class Test {
 		jwt = marketRequestDto.getTable()[0].toString().split("=")[1].split("}")[0];
 		
 		//тест запроса 
-		MarketDataForRequestDto dataDto2 = new MarketDataForRequestDto("19480218");
-		MarketPacketDto packetDto2 = new MarketPacketDto(jwt, "SpeedLogist.GetOrderBuyInfo", "CD6AE87C-2477-4852-A4E7-8BA5BD01C156", dataDto2);
-		MarketRequestDto requestDto2 = new MarketRequestDto("", packetDto2);
-		String marketOrder = postRequest(url, gson.toJson(requestDto2));
-		System.err.println(gson.toJson(requestDto2));
-		System.out.println(marketOrder);
+//		MarketDataForRequestDto dataDto2 = new MarketDataForRequestDto("19480218");
+//		MarketPacketDto packetDto2 = new MarketPacketDto(jwt, "SpeedLogist.GetOrderBuyInfo", "CD6AE87C-2477-4852-A4E7-8BA5BD01C156", dataDto2);
+//		MarketRequestDto requestDto2 = new MarketRequestDto("", packetDto2);
+//		String marketOrder = postRequest(url, gson.toJson(requestDto2));
+//		System.err.println(gson.toJson(requestDto2));
+//		System.out.println(marketOrder);
 		
-		MarketDataForRequestDto dataDto3 = new MarketDataForRequestDto("19480219");
+		MarketDataForRequestDto dataDto3 = new MarketDataForRequestDto("19480223");
 		MarketPacketDto packetDto3 = new MarketPacketDto(jwt, "SpeedLogist.GetOrderBuyInfo", "CD6AE87C-2477-4852-A4E7-8BA5BD01C156", dataDto3);
 		MarketRequestDto requestDto3 = new MarketRequestDto("", packetDto3);
 		String marketOrder2 = postRequest(url, gson.toJson(requestDto3));
-		System.err.println(gson.toJson(requestDto3));
 		System.out.println(marketOrder2);
+		
+		//тут избавляемся от мусора в json
+		String str2 = marketOrder2.split("\\[", 2)[1];
+		String str3 = str2.substring(0, str2.length()-2);
+		
+		CustomJSONParser customJSONParser = new CustomJSONParser();
+		OrderBuyGroupDTO orderBuyGroupDTO = customJSONParser.parseOrderBuyGroupFromJSON(str3);
+		System.out.println(orderBuyGroupDTO);
+		System.out.println();
+		orderBuyGroupDTO.getOrderBuy().forEach(o->System.out.println(o));
 	}
 	
 	 private static String postRequest(String url, String payload) {

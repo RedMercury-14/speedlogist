@@ -557,7 +557,7 @@ public class POIExcel {
 	
 	/**
 	 * Основной метод смчитки 487 отчёта
-     * парсит только 50 статусы
+     * парсит только 50 и 51 статусы
      * записывает все ексели в папку 487
      * дополнительно записывает комментарии. Если коммент начинается на слово Создал - то не записывается
 	 * @param file
@@ -674,13 +674,9 @@ public class POIExcel {
                     Double pall = Math.ceil(Double.parseDouble(cellCountProduct487.toString().trim()) / Double.parseDouble(cellCountInPall487.toString().trim()));
                     String pallStr = pall+"";
 
-//                    System.out.println(cellCountProduct487.toString());
-//                    System.out.println(cellCountInPall487.toString());
-
-// Вычисляем pallNew
+                    // Вычисляем pallNew
                     Double pallNew = Double.parseDouble(cellCountProduct487.toString().trim()) / Double.parseDouble(cellCountInPall487.toString().trim());
-//                    System.out.println(pallNew);
-// Получаем целую и дробную части из pallNew
+                    // Получаем целую и дробную части из pallNew
                     int integerPart = (int) Math.floor(pallNew);
                     double fractionalPart = pallNew - integerPart;
                     String pallMono = Integer.toString(integerPart);
@@ -692,8 +688,6 @@ public class POIExcel {
                         // Иначе записываем дробную часть
                         pallMix = "0";
                     }
-//                    System.out.println("pallMono: " + pallMono);
-//                    System.out.println("pallMix: " + pallMix);
 
                     order.setPall(pallStr.split("\\.")[0]);
                     order.setMonoPall(Integer.parseInt(pallMono));

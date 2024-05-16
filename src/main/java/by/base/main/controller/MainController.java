@@ -305,10 +305,15 @@ public class MainController {
 	
 	@GetMapping("/main/analytics")
 	public String getAnalyticsPage(Model model, HttpServletRequest request) {
+		return "analyticsMain";
+	}
+	
+	@GetMapping("/main/analytics/shortage")
+	public String getAnalyticsЫhortagePage(Model model, HttpServletRequest request) {
 		return "analytics";
 	}
 	
-	@GetMapping("/main/logistics/analytics")
+	@GetMapping("/main/analytics/logistics")
 	public String getAnalyticsLogistPage(Model model, HttpServletRequest request) {
 		return "analyticsLogist";
 	}

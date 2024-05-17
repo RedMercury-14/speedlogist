@@ -1,7 +1,12 @@
 package by.base.main.service.util;
 
+import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -10,6 +15,9 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.poi.ss.usermodel.Row;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -45,7 +53,12 @@ public class PDFWriter {
 	
 	@Autowired
 	private ActService actService;
-
+	
+	private static final String url = "https://www.nbrb.by/api/exrates/rates/";
+	private static final String RUB = "456";
+	private static final String EUR = "451";
+	private static final String USD = "431";
+	private static final String KZT = "459";
 	
 	/**
 	 *	Метод отвечает за формирование акта в формате PDF
@@ -229,19 +242,73 @@ public class PDFWriter {
 	        
 	        //создаём тескт под таблицей
 	        double allCost = 0.0;
+	        double costNOTNds = 0.0;
+	        JSONParser parser = new JSONParser();
 	        if(isNDS) {
-	        	Paragraph p8 = new Paragraph("В том числе НДС: " + new FwMoney(roundВouble(nds, 2), routes.get(0).getStartCurrency()).num2str(), fontMainText);
+	        	costNOTNds = roundВouble(cost, 2) + roundВouble(way, 2);
+	        	Paragraph p8 = new Paragraph("Всего оказано услуг на сумму без НДС: " + new FwMoney(roundВouble(costNOTNds, 2), routes.get(0).getStartCurrency()).num2str(), fontMainText);
 	            p8.setSpacingBefore(10f);
 	            document.add(p8);
-	            allCost = roundВouble(cost, 2) + roundВouble(nds, 2) + roundВouble(way, 2);
-	            Paragraph p9 = new Paragraph("Всего оказано услуг на сумму с НДС: " + new FwMoney(roundВouble(allCost, 2), routes.get(0).getStartCurrency()).num2str(), fontMainText);
+	        	Paragraph p9 = new Paragraph("В том числе НДС: " + new FwMoney(roundВouble(nds, 2), routes.get(0).getStartCurrency()).num2str(), fontMainText);
+//	            p9.setSpacingBefore(10f);
 	            document.add(p9);
-	        }else {
-	        	allCost = roundВouble(cost, 2) + roundВouble(nds, 2) + roundВouble(way, 2);
-	        	Paragraph p8 = new Paragraph("Всего оказано услуг на сумму без НДС: " + new FwMoney(roundВouble(allCost, 2), routes.get(0).getStartCurrency()).num2str(), fontMainText);
-	            p8.setSpacingBefore(10f);
-	            document.add(p8);
 	            allCost = roundВouble(cost, 2) + roundВouble(nds, 2) + roundВouble(way, 2);
+	            Paragraph p10 = new Paragraph("Всего оказано услуг на сумму с НДС: " + new FwMoney(roundВouble(allCost, 2), routes.get(0).getStartCurrency()).num2str(), fontMainText);
+	            document.add(p10);	        	
+	        }else {//валютная потпись
+	        	//остановился тут
+	        	if(routes.get(0).getStartCurrency().equals("BYN")) {
+	        		allCost = roundВouble(cost, 2) + roundВouble(nds, 2) + roundВouble(way, 2);
+		        	Paragraph p8 = new Paragraph("Всего оказано услуг на сумму без НДС: " + new FwMoney(roundВouble(allCost, 2), routes.get(0).getStartCurrency()).num2str(), fontMainText);
+		            p8.setSpacingBefore(10f);
+		            document.add(p8);
+		            allCost = roundВouble(cost, 2) + roundВouble(nds, 2) + roundВouble(way, 2);
+	        	}else {
+	        		String finalUrl = url;
+	        		switch (routes.get(0).getStartCurrency()) {
+					case "EUR":
+						finalUrl = finalUrl + EUR;
+						break;
+					case "RUB":
+						finalUrl = finalUrl + RUB;
+						break;
+					case "KZT":
+						finalUrl = finalUrl + KZT;
+						break;
+					case "USD":
+						finalUrl = finalUrl + USD;
+						break;
+					default:
+						System.out.println("PDFWriter.getActFromRoute: Ошибка. Не верная валюта");
+						break;
+					}
+	        		JSONObject jsonpObject = null;
+	        		try {
+						jsonpObject = (JSONObject) parser.parse(getRequest(finalUrl));
+					} catch (ParseException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+	        		if(jsonpObject == null) {
+	        			System.err.println("PDFWriter.getActFromRoute: Ошибка запроса валюты!");
+	        		}
+	        		
+	        		Double curScale = Double.parseDouble(jsonpObject.get("Cur_Scale").toString());
+	        		Double curOfficialRate = Double.parseDouble(jsonpObject.get("Cur_OfficialRate").toString());
+	        		Paragraph p8 = new Paragraph("Курс НБ РБ на дату акта: " + roundВouble(curOfficialRate, 3) + " " + routes.get(0).getStartCurrency() + " за " + curScale + " BYN", fontMainText);
+		            p8.setSpacingBefore(10f);
+		            document.add(p8);
+		            costNOTNds = roundВouble(cost, 2)*curOfficialRate/curScale + roundВouble(way, 2);
+		        	Paragraph p9 = new Paragraph("Сумма оказаных услуг составляет: " + roundВouble(costNOTNds, 2) + " BYN; " + new FwMoney(roundВouble(costNOTNds, 2), "BYN").num2str(), fontMainText);
+		            document.add(p9);		            
+		        	Paragraph p10 = new Paragraph("с НДС по ставке 0% согласно п 2 ст. 126 Налогового Кодекса Республики Беларусь", fontMainText);
+		            document.add(p10);
+		            Paragraph p11 = new Paragraph("Справочно: сумма акта в валюте :" + new FwMoney(roundВouble(cost, 2), routes.get(0).getStartCurrency()).num2str(), fontMainText);
+		            document.add(p11);
+		            allCost = costNOTNds;
+		            Paragraph p12 = new Paragraph("Сумма подлежащая оплате по курсу НБ РБ на день оплаты: " + new FwMoney(roundВouble(allCost, 2), routes.get(0).getStartCurrency()).num2str(), fontMainText);
+		            document.add(p12);	
+	        	}
 	        }
 	        
 	      //вставляем QR код справа, где пока что номер акта и зашифрованная итоговая цена
@@ -742,4 +809,38 @@ public class PDFWriter {
 			double scale = Math.pow(10, places);
 			return Math.round(value * scale) / scale;
 		}
+		
+		/**
+		 * общий get запрос для получения курсов валют. 
+		 * @param url
+		 * @return
+		 */
+		 private static String getRequest(String url) {
+		        try {
+		            URL urlForPost = new URL(url);
+		            HttpURLConnection connection = (HttpURLConnection) urlForPost.openConnection();
+		            connection.setRequestMethod("GET");
+		            connection.setRequestProperty("Content-Type", "application/json");
+		            
+		            int getResponseCode = connection.getResponseCode();
+		            System.out.println("POST Response Code: " + getResponseCode);
+
+		            if (getResponseCode == HttpURLConnection.HTTP_OK) {
+		            	StringBuilder response = new StringBuilder();
+		            	try (BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"))) {
+		                    String inputLine;	 
+		                    while ((inputLine = in.readLine()) != null) {
+		                    	response.append(inputLine.trim());
+		                    }
+		                    in.close();
+		                }	           
+		                return response.toString();
+		            } else {
+		                return null;
+		            }
+		        } catch (IOException e) {
+		            System.out.println("Подключение недоступно");
+		            return "error";
+		        }
+		    }
 }

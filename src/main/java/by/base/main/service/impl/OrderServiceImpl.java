@@ -130,8 +130,56 @@ public class OrderServiceImpl implements OrderService {
 				return "Заказ " +  order.getMarketNumber() + " уже создан";
 			}
 		}
-		return "Неизвестный статус OrderServiceImpl";
+		return "Неизвестный статус OrderServiceImpl";		
+	}
+	
+	@Override
+	public String saveOrderFromMarket(Order order) {
+		Order oldOrder = null;
+		oldOrder = orderDAO.getOrderHasMarketCode(order.getMarketNumber());
+		if(oldOrder == null) {
+			Integer idOrder = orderDAO.saveOrder(order);
+			return "Создан новый заказ с номером " + order.getMarketNumber() + "<"+idOrder;
+		}
 		
+		if(oldOrder!=null) {
+			switch (oldOrder.getStatus()) {
+			case 5:
+				oldOrder.setDateDelivery(order.getDateDelivery());
+				oldOrder.setCounterparty(order.getCounterparty());
+				oldOrder.setNumStockDelivery(order.getNumStockDelivery());
+				oldOrder.setCargo(order.getCargo());
+				oldOrder.setDateCreate(order.getDateCreate());
+				oldOrder.setPall(order.getPall());
+				oldOrder.setChangeStatus(order.getChangeStatus());
+				oldOrder.setTimeUnload(order.getTimeUnload());
+				oldOrder.setSku(order.getSku());
+				oldOrder.setDateCreateMarket(order.getDateCreateMarket());
+				oldOrder.setMixPall(order.getMixPall());
+				oldOrder.setMonoPall(order.getMonoPall());
+				oldOrder.setMarketInfo(order.getMarketInfo());
+				oldOrder.setMarketContractGroupId(order.getMarketContractGroupId());
+				oldOrder.setMarketContractNumber(order.getMarketContractNumber());
+				oldOrder.setMarketContractorId(order.getMarketContractorId());
+				oldOrder.setMarketContractType(order.getMarketContractType());
+				orderDAO.updateOrder(oldOrder);
+				return "Обновлён заказ " +  order.getMarketNumber()+ "<"+oldOrder.getIdOrder();
+			case 10:
+				return "ОШИБКА 10 СТАТУСА - ОБРАТИТЕСЬ К АДМИНИСТРАТОРУ<-1";
+//				return "Заказ " +  order.getMarketNumber() + " отменен, но виртуальный не создан";
+			case 6:
+				return "Заказ " +  order.getMarketNumber() + " создан , но не поставлен в слоты<-1";				
+			case 7:
+				return "Заказ " +  order.getMarketNumber() + " поставлен в слоты, но не подтвержден<-1";
+			case 8:
+				return "Заказ " +  order.getMarketNumber() + " поставлен в слоты как доставка поставщиком<-1";
+			case 100:
+				return "Заказ " +  order.getMarketNumber() + " поставлен в слоты как доставка поставщиком<-1";
+			default:
+				return "Заказ " +  order.getMarketNumber() + " уже создан<-1";
+			}
+		}
+		return "Неизвестный статус OrderServiceImpl";	
 	}
 
 	@Override
@@ -215,4 +263,6 @@ public class OrderServiceImpl implements OrderService {
 	public List<Order> getOrderByTimeDelivery(Date dateStart, Date dateEnd) {
 		return orderDAO.getOrderByTimeDelivery(dateStart, dateEnd);
 	}
+
+	
 }

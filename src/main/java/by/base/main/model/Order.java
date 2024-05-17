@@ -177,13 +177,27 @@ public class Order {
 	@Column(name = "market_info")
 	private String marketInfo;
 	
+	@Column(name = "market_contract_type")
+	private String marketContractType;
+	
+	@Column(name = "market_contract_group_id")
+	private String marketContractGroupId;
+	
+	@Column(name = "market_contract_number")
+	private String marketContractNumber;
+	
+	@Column(name = "market_contractor_id")
+	private String marketContractorId;
+	
 	@Transient
 	private List<Address> addressesSort;
 	
 	@Transient
 	private List<Address> addressesToView;
 	
-	
+	@Transient
+	@JsonIgnore
+	private String message;
 	
 	
 	public Order() {
@@ -221,6 +235,32 @@ public class Order {
 		this.dateDelivery = dateDelivery;
 	}
 
+	
+	
+	public String getMarketContractType() {
+		return marketContractType;
+	}
+	public void setMarketContractType(String marketContractType) {
+		this.marketContractType = marketContractType;
+	}
+	public String getMarketContractGroupId() {
+		return marketContractGroupId;
+	}
+	public void setMarketContractGroupId(String marketContractGroupId) {
+		this.marketContractGroupId = marketContractGroupId;
+	}
+	public String getMarketContractNumber() {
+		return marketContractNumber;
+	}
+	public void setMarketContractNumber(String marketContractNumber) {
+		this.marketContractNumber = marketContractNumber;
+	}
+	public String getMarketContractorId() {
+		return marketContractorId;
+	}
+	public void setMarketContractorId(String marketContractorId) {
+		this.marketContractorId = marketContractorId;
+	}
 	public Integer getIdOrder() {
 		return idOrder;
 	}
@@ -233,6 +273,12 @@ public class Order {
 		return counterparty;
 	}
 
+	public String getMessage() {
+		return message;
+	}
+	public void setMessage(String message) {
+		this.message = message;
+	}
 	public void setCounterparty(String counterparty) {
 		this.counterparty = counterparty;
 	}

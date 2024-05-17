@@ -60,6 +60,13 @@ public interface OrderService {
 	 */
 	String saveOrderFromExcel (Order order);
 	
+	/**
+	 * Метод для сохранения, или выведения сообщения, заказов после ообщения из маркета (для 5 статусов и 6 статусов)
+	 * @param order
+	 * @return
+	 */
+	String saveOrderFromMarket (Order order);
+	
 	void updateOrder (Order order);
 	
 	/**

@@ -4,13 +4,19 @@ import static com.graphhopper.json.Statement.If;
 import static com.graphhopper.json.Statement.Op.LIMIT;
 import static com.graphhopper.json.Statement.Op.MULTIPLY;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -74,6 +80,13 @@ import com.graphhopper.util.PointList;
 import com.graphhopper.util.Translation;
 import com.graphhopper.util.shapes.GHPoint;
 import by.base.main.controller.MainController;
+import by.base.main.dto.MarketDataForLoginDto;
+import by.base.main.dto.MarketDataForRequestDto;
+import by.base.main.dto.MarketErrorDto;
+import by.base.main.dto.MarketPacketDto;
+import by.base.main.dto.MarketRequestDto;
+import by.base.main.dto.MarketTableDto;
+import by.base.main.dto.OrderBuyGroupDTO;
 import by.base.main.model.Address;
 import by.base.main.model.GeometryResponse;
 import by.base.main.model.JsonResponsePolygon;
@@ -99,7 +112,9 @@ import by.base.main.service.ServiceException;
 import by.base.main.service.ShopService;
 import by.base.main.service.TruckService;
 import by.base.main.service.UserService;
+import by.base.main.service.util.CustomJSONParser;
 import by.base.main.service.util.MailService;
+import by.base.main.service.util.OrderCreater;
 import by.base.main.service.util.POIExcel;
 import by.base.main.util.ChatEnpoint;
 import by.base.main.util.MainChat;
@@ -196,7 +211,12 @@ public class MainRestController {
 	@Autowired
 	private SlotWebSocket slotWebSocket;
 	
+	@Autowired
+	private OrderCreater orderCreater;
+	
 	private static String classLog;
+	private static String marketJWT;
+	private static final String marketUrl = "https://api.dobronom.by:10896/Json";
 
 
 	public static final Comparator<Address> comparatorAddressId = (Address e1, Address e2) -> (e1.getIdAddress() - e2.getIdAddress());
@@ -205,6 +225,68 @@ public class MainRestController {
 	@GetMapping("/carrier/test")
 	public String test(HttpServletRequest request) {
 		return MainChat.messegeList.size() + "";		
+	}
+	
+	/**
+	 * 
+	 * @param request
+	 * @param idMarket
+	 * @return
+	 */
+	@GetMapping("/manager/getMarketOrder/{idMarket}")
+	public Map<String, Object> getMarketOrder(HttpServletRequest request, @PathVariable String idMarket) {
+		checkJWT(marketUrl);
+		Map<String, Object> response = new HashMap<String, Object>();
+		MarketDataForRequestDto dataDto3 = new MarketDataForRequestDto(idMarket);
+		MarketPacketDto packetDto3 = new MarketPacketDto(marketJWT, "SpeedLogist.GetOrderBuyInfo", "CD6AE87C-2477-4852-A4E7-8BA5BD01C156", dataDto3);
+		MarketRequestDto requestDto3 = new MarketRequestDto("", packetDto3);
+		String marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto3));
+		
+		//проверяем на наличие сообщений об ошибке со стороны маркета
+		if(marketOrder2.contains("Error")) {
+			MarketErrorDto errorMarket = gson.fromJson(marketOrder2, MarketErrorDto.class);
+			response.put("status", "100");
+			response.put("message", errorMarket.getErrorDescription());
+			return response;
+		}
+		
+		//тут избавляемся от мусора в json
+		String str2 = marketOrder2.split("\\[", 2)[1];
+		String str3 = str2.substring(0, str2.length()-2);
+		
+		//создаём свой парсер и парсим json в объекты, с которыми будем работать.
+		CustomJSONParser customJSONParser = new CustomJSONParser();
+		OrderBuyGroupDTO orderBuyGroupDTO = customJSONParser.parseOrderBuyGroupFromJSON(str3);
+		
+		//создаём Order, записываем в бд и возвращаем или сам ордер или ошибку (тот же ордер, только с отрицательным id)
+		Order order = orderCreater.create(orderBuyGroupDTO);
+		if(order.getIdOrder() < 0) {
+			response.put("status", "100");
+			response.put("message", order.getMessage());
+			return response;
+		}else {
+			response.put("status", "200");
+			response.put("message", order.getMessage());
+			response.put("order", order);
+			return response;
+		}		
+	}
+	
+	/**
+	 * Метод проверки наличия jwt токена. Должен находится перед каждём запросом в маркет. 
+	 * @return
+	 */
+	private void checkJWT(String url) {
+		MarketDataForLoginDto dataDto = new MarketDataForLoginDto("SpeedLogist", "12345678", "101");
+//		MarketDataForLoginDtoTEST dataDto = new MarketDataForLoginDtoTEST("SpeedLogist", "12345678", 101);
+		MarketPacketDto packetDto = new MarketPacketDto("null", "GetJWT", "CD6AE87C-2477-4852-A4E7-8BA5BD01C156", dataDto);
+		MarketRequestDto requestDto = new MarketRequestDto("", packetDto);
+		if(marketJWT == null){
+			//запрашиваем jwt
+			String str = postRequest(url, gson.toJson(requestDto));
+			MarketTableDto marketRequestDto = gson.fromJson(str, MarketTableDto.class);
+			marketJWT = marketRequestDto.getTable()[0].toString().split("=")[1].split("}")[0];
+		}
 	}
 	
 	/**
@@ -4779,6 +4861,50 @@ public class MainRestController {
 		}
 		return summ;
 	}
+	
+	/**
+	 * Метод отправки POST запросов 
+	 * сделан для запросов в маркет
+	 * @param url
+	 * @param payload
+	 * @return
+	 */
+	private String postRequest(String url, String payload) {
+        try {
+            URL urlForPost = new URL(url);
+            HttpURLConnection connection = (HttpURLConnection) urlForPost.openConnection();
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type", "application/json");
+            connection.setDoOutput(true);
+           
+            byte[] postData = payload.getBytes(StandardCharsets.UTF_8);
+            
+            try (DataOutputStream wr = new DataOutputStream(connection.getOutputStream())) {
+                wr.write(postData);
+            }
+            
+            int getResponseCode = connection.getResponseCode();
+//            System.out.println("POST Response Code: " + getResponseCode);
+
+            if (getResponseCode == HttpURLConnection.HTTP_OK) {
+            	StringBuilder response = new StringBuilder();
+            	try (BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"))) {
+                    String inputLine;	 
+                    while ((inputLine = in.readLine()) != null) {
+                    	response.append(inputLine.trim());
+                    }
+                    in.close();
+                }	           
+//            	System.out.println(connection.getContentType());
+                return response.toString();
+            } else {
+                return null;
+            }
+        } catch (IOException e) {
+            System.out.println("MainRestController.postRequest: Подключение недоступно");
+            return "error";
+        }
+    }
 	
 	/**
 	 * Метод для сохранения действия в файл.

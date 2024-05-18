@@ -1,4 +1,5 @@
 import { snackbar } from "../snackbar/snackbar.js"
+import { dateHelper } from "../utils.js"
 import { Draggable, eventColors, userMessages } from "./constants.js"
 import { convertToDDMMYYYY, convertToDayMonthTime, getEventBGColor, getSlotStatus } from "./dataUtils.js"
 import { editableRulesToConfirmBtn, isAnotherUser } from "./rules.js"
@@ -164,7 +165,8 @@ export function hideEventInfoPopup() {
 // функция создания контента модального окна с информацией об ивенте
 function createEventInfoHTML(fcEvent) {
 	const order = fcEvent.extendedProps.data
-	const { marketNumber, dateDelivery, timeUnload, cargo, counterparty, loginManager, idRamp, idOrder, status, pall } = order
+	const { marketNumber, dateDelivery, timeUnload, cargo, counterparty, loginManager, idRamp, idOrder, status, pall, } = order
+	const marketInfo = order.marketInfo ? order.marketInfo : ''
 	const statusToView = getSlotStatus(status)
 	const stock = `${idRamp}`.slice(0, -2)
 	const ramp = `${idRamp}`.slice(-2)
@@ -189,6 +191,7 @@ function createEventInfoHTML(fcEvent) {
 		<div class="event-info__cargo">Груз: ${cargo}</div>
 		<div class="event-info__pall">Паллеты: ${pall}</div>
 		<div class="event-info__manager">Менеджер: ${loginManager}</div>
+		<div class="event-info__manager">Информация (из Маркета): ${marketInfo}</div>
 	`
 }
 

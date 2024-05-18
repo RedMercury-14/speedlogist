@@ -12,9 +12,17 @@
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/procurementForm2.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/autocomplete.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/snackbar.css">
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/bootstrap5overlay.css">
 </head>
 <body>
 	<jsp:include page="headerNEW.jsp" />
+
+	<div id="overlay" class="none">
+		<div class="spinner-border text-primary" role="status">
+			<span class="sr-only">Загрузка...</span>
+		</div>
+	</div>
+
 	<input type="hidden" value="<sec:authentication property="principal.username" />" id="login">
 	<div class="container my-container">
 		<div class="card">
@@ -88,6 +96,10 @@
 							<div class="form-group input-row-container">
 								<span class="text-muted font-weight-bold">Погрузочный номер: <span class="text-red">*</span></span>
 								<input type="text" class="form-control" name="loadNumber" id="loadNumber" required>
+							</div>
+							<div class="form-group input-row-container">
+								<span class="text-muted font-weight-bold">Информация из Маркета:</span>
+								<textarea type="text" class="form-control" name="marketInfo" id="marketInfo" placeholder="Комментарии" readonly></textarea>
 							</div>
 						</div>
 						<div class="separationLine"></div>

@@ -60,6 +60,8 @@ const columnDefs = [
 	{ headerName: 'Температурные условия', field: 'temperature', },
 	{ headerName: 'Штабелирование', field: 'stackingToView', },
 	{ headerName: 'Склад доставки (из Маркета)', field: 'numStockDelivery', },
+	{ headerName: 'Информация (из Маркета)', field: 'marketInfo', },
+
 ]
 const gridOptions = {
 	columnDefs: columnDefs,
@@ -73,6 +75,10 @@ const gridOptions = {
 		suppressMenu: true,
 		filter: true,
 		floatingFilter: true,
+		wrapText: true,
+		autoHeight: true,
+		wrapHeaderText: true,
+		autoHeaderHeight: true,
 	},
 	onSortChanged: debouncedSaveColumnState,
 	onColumnResized: debouncedSaveColumnState,

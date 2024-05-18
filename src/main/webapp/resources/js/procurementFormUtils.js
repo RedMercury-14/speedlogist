@@ -98,16 +98,16 @@ export function setUnloadTimeMinValue(loadDateInput, loadTimeSelect, unloadDateI
 }
 
 // установка минимального значения ДАТЫ для точек загрузки и выгрузки
-export function setMinValidDate() {
+export function setMinValidDate(order) {
 	const dateInputs = document.querySelectorAll('.date-input')
-	const minValidDate = dateHelper.getMinValidDate()
+	const minValidDate = dateHelper.getMinValidDate(order)
 	dateInputs.forEach(input => input.setAttribute('min', minValidDate))
 }
 
 // проверка правильности дат точек загрузки и выгрузки
 export function validatePointDates(data) {
 	const pointDates = data.points.map(point => point.date && new Date(point.date))
-	const minValidDate = new Date(dateHelper.getMinValidDate())
+	const minValidDate = new Date(dateHelper.getMinValidDate(data))
 	const isValid = pointDates.every(date => {
 		if (!date) return true
 		if (date >= minValidDate) return true
@@ -330,8 +330,10 @@ export function hideMarketNumberInput() {
 // заполняет данные заказа в форме заявки
 export function setOrderDataToOrderForm(form, orderData) {
 	const marketNumberInput = form.querySelector('#marketNumber')
+	const marketInfoSpan = form.querySelector('#marketInfo')
 	marketNumberInput.value = Number(orderData.marketNumber)
 	marketNumberInput.setAttribute('readonly', 'true')
+	marketInfoSpan.innerText = orderData.marketInfo
 	form.contertparty.value = orderData.counterparty
 	form.loadNumber.value = orderData.marketNumber
 	form.cargo.value = orderData.cargo
@@ -366,9 +368,10 @@ export function showUnloadTime(addUnloadPointForm) {
 
 export function getStockAddress(stockNumber) {
 	switch (stockNumber) {
-		case '1700': return 'Склад Адрес: 223065, Беларусь, Луговослободской с/с,Минский р-н,Минская обл., РАД М4, 18км. 2а, склад W05'
-		case '1200': return 'Склад 223039, Республика Беларусь, Минская область, Минский район, Хатежинский с/с, 1'
-		case '1250': return 'Склад Адрес: 223050, Республика Беларусь, Минская область, Минский р-н, 9-ый км Московского шоссе'
+		case '1700': return 'Склад 1700, Адрес: 223065, Беларусь, Луговослободской с/с,Минский р-н,Минская обл., РАД М4, 18км. 2а, склад W05'
+		case '1200': return 'Склад 1200, 223039, Республика Беларусь, Минская область, Минский район, Хатежинский с/с, 1'
+		case '1250': return 'Склад 1250, Адрес: 223050, Республика Беларусь, Минская область, Минский р-н, 9-ый км Московского шоссе'
+		case '1100': return 'Склад 1100, 223039, Республика Беларусь, Минская область, Минский район, Хатежинский с/с, 1'
 		default: return ''
 	}
 }
@@ -378,9 +381,11 @@ export function getOrderStatusByStockDelivery(numStockDelivery) {
 		case '1700':
 		case '1200':
 		case '1250':
+		case '1100':
 		case 1700:
 		case 1200:
 		case 1250:
+		case 1100:
 			return 6
 		default:
 			return 20

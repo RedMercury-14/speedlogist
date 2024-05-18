@@ -6,6 +6,12 @@ body {
 }
 .my-container {
     margin-top: 83px;
+}
+.my-container.smallHeader {
+	margin-top: 64px;
+}
+
+.row-flex-container {
     display: flex;
     flex-direction: row;
     gap: 5px;
@@ -15,7 +21,6 @@ body {
 }
 .left-container {
     flex: 5;
-    padding: 20px;
 }
 .right-container {
     flex: 2;
@@ -101,6 +106,19 @@ footer.to-bottom {
     font-weight: bold;
 }
 
+
+#numStockButtons {
+    display: flex;
+}
+#numStockButtons .stock-btn {
+    flex: 30%;
+    border-radius: 0;
+}
+
+#stockCard .badge {
+    font-size: 100%;
+}
+
 .inputs-container {
     padding: 0 20px;
 }
@@ -108,9 +126,6 @@ footer.to-bottom {
     display: flex;
     align-items: flex-start;
     gap: 10px;
-}
-#addShopsInExcelForm .form-control {
-    height: auto;
 }
 .modal input::-webkit-outer-spin-button,
 .modal input::-webkit-inner-spin-button {
@@ -134,9 +149,16 @@ footer.to-bottom {
 	opacity: .5;
 }
 
+#editGrid {
+    width: 100%;
+    height: calc(100vh - 155px);
+}
 #myGrid {
     width: 100%;
-    height: calc(100vh - 205px);
+    height: calc(100vh - 155px);
+}
+#myGrid.smallHeader {
+	height: calc(100vh - 138px);
 }
 .ag-theme-alpine {
     --ag-cell-horizontal-border: var(--ag-row-border-width) var(--ag-row-border-style) var(--ag-row-border-color);

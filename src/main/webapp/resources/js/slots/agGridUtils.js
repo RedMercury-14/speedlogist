@@ -15,6 +15,11 @@ const columnDefs = [
 	{ headerName: "Длительность", field: 'timeUnload', width: 60, },
 	{ headerName: "Рампа", field: "idRamp", width: 60, },
 	{ headerName: "Время", field: "timeDeliveryInfo", width: 190, wrapText: true, autoHeight: true, },
+	{
+		headerName: "Информация (из Маркета)", field: "marketInfo",
+		width: 190, wrapText: true, autoHeight: true,
+		editable: true, cellEditor: 'agLargeTextCellEditor', cellEditorPopup: true, cellEditorPopupPosition: 'under',
+	},
 ]
 
 export const gridOptions = {

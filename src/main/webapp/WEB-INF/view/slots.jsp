@@ -54,11 +54,16 @@
 		</div>
 
 		<div class="pallInfo-container">
-			<div class="pallInfo">
+			<div id="pallInfo" class="pallInfo">
 				<span id="pallCount" class="text-success">0</span>
 				<span>/</span>
 				<span id="maxPall">0</span>
 				<span>палл.</span>
+				<button type="button" class="btn btn-link px-1 py-0" data-toggle="modal" data-target="#pallChartModal">
+					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-graph-down" viewBox="0 0 16 16">
+						<path fill-rule="evenodd" d="M0 0h1v15h15v1H0V0Zm14.817 11.887a.5.5 0 0 0 .07-.704l-4.5-5.5a.5.5 0 0 0-.74-.037L7.06 8.233 3.404 3.206a.5.5 0 0 0-.808.588l4 5.5a.5.5 0 0 0 .758.06l2.609-2.61 4.15 5.073a.5.5 0 0 0 .704.07Z"/>
+					</svg>
+				</button>
 			</div>
 		</div>
 
@@ -152,6 +157,28 @@
 		</div>
 	</div>
 
+	<!-- Модальное окно с графиком паллетовместимости склада -->
+	<div class="modal fade" id="pallChartModal" tabindex="-1" aria-labelledby="pallChartModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header align-items-center">
+					<h5 class="modal-title" id="pallChartModalLabel">Паллетовместимость на 14 дней</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<!-- <div id="pallChart"></div> -->
+					<canvas id="pallLineChart" style="width:100%;"></canvas>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script src="${pageContext.request.contextPath}/resources/js/chartJS/chart.js"></script>
 	<script src='${pageContext.request.contextPath}/resources/mainPage/js/nav-fixed-top.js'></script>
 	<script src="${pageContext.request.contextPath}/resources/js/slots.js" type="module"></script>
 </body>

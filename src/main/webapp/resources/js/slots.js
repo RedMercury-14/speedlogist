@@ -3,13 +3,15 @@ import { store } from "./slots/store.js"
 import {
 	confirmSlotUrl,
 	deleteOrderUrl,
+	editMarketInfoBaseUrl,
 	eventColors,
+	getMarketOrderUrl,
 	getOrdersForSlotsBaseUrl,
 	loadOrderUrl,
 	updateOrderUrl,
 	userMessages,
 } from "./slots/constants.js"
-import { gridOptions, renderTable, updateTableData } from "./slots/agGridUtils.js"
+import { gridOptions, renderTable, updateTableData, updateTableRow } from "./slots/agGridUtils.js"
 import { addOnClickToMenuItemListner, closeSidebar } from "./slots/sidebar.js"
 import {
 	addNewStockOption,
@@ -34,7 +36,7 @@ import { uiIcons } from "./uiIcons.js"
 import { wsSlotUrl } from "./global.js"
 import { ajaxUtils } from "./ajaxUtils.js"
 import { bootstrap5overlay } from "./bootstrap5overlay/bootstrap5overlay.js"
-import { addCalendarEvent, deleteCalendarEvent, updateCalendarEvent } from "./slots/eventControlMethods.js"
+import { addCalendarEvent, deleteCalendarEvent, updateCalendarEvent, updateOrderAndEvent } from "./slots/eventControlMethods.js"
 import {
 	wsSlotOnCloseHandler,
 	wsSlotOnErrorHandler,
@@ -60,6 +62,7 @@ import {
 } from "./slots/dataUtils.js"
 import { gridColumnLocalState } from "./AG-Grid/ag-grid-utils.js"
 import { tempMaxPallRestrictions } from "./slots/maxPallRestrictions.js"
+import { updateChartData, getFormattedPallChartData, pallChartConfig, getMarkerBGColorData, } from "./slots/chartJSUtils.js"
 
 
 const LOCAL_STORAGE_KEY = 'AG_Grid_column_settings_to_Slots'
@@ -76,6 +79,8 @@ const orderTableGridOption = {
 	onColumnMoved: debouncedSaveColumnState,
 	onColumnVisible: debouncedSaveColumnState,
 	onColumnPinned: debouncedSaveColumnState,
+
+	onCellValueChanged: cellValueChangedHandler,
 }
 
 // вебсокет
@@ -87,6 +92,7 @@ wsSlot.onmessage = (e) => wsSlotOnMessageHandler(e, orderTableGridOption)
 
 let calendar
 let slots = []
+let pallLineChart
 
 const calendarOptions = {
 	timeZone: "ru",
@@ -223,6 +229,10 @@ window.onload = async function() {
 		if (e.button === 2) e.preventDefault()
 	})
 
+	// создание графика для паллетовместимости
+	const ctx = document.querySelector('#pallLineChart')
+	pallLineChart = new Chart(ctx, pallChartConfig)
+
 	// получаем данные
 	const { startDateStr, endDateStr } = getDatesToSlotsFetch(30)
 	const marketData = await getData(`${getOrdersForSlotsBaseUrl}${startDateStr}&${endDateStr}`)
@@ -285,6 +295,15 @@ function getContextMenuItemsForOrderTable(params) {
 			},
 			icon: uiIcons.clickBoadrPlus
 		},
+		{
+			disabled: !!idRamp || status !== 5 || isLogist(role) || isAdmin(role) || isSlotsObserver(role),
+			name: `Обновить заказ`,
+			action: () => {
+				// получаем обновленный заказ по номеру Маркета и обновляем в сторе и таблице
+				getOrderFromMarket(marketNumber, null, updateOrderFromMarket)
+			},
+			icon: uiIcons.refresh
+		},
 		"separator",
 		"excelExport",
 	]
@@ -319,7 +338,14 @@ function createNewOrder(marketNumber, eventContainer) {
 function addNewOrderButtonHandler(e, eventContainer) {
 	const marketNumber = prompt('Введите номер из Маркета заказа для загрузки:')
 	if (!marketNumber) return
-	createNewOrder(marketNumber, eventContainer)
+	// проверка, есть ли заказ с таким номером
+	const existingOrder = store.getOrderByMarketNumber(marketNumber)
+	if (existingOrder) {
+		snackbar.show('Заказ с таким номером уже существует')
+		return
+	}
+	// получаем заказ из маркета и создаем ивент в дропзоне
+	getOrderFromMarket(marketNumber, eventContainer, createNewOrderFromMarket)
 }
 
 // обработчик изменения текущего склада (выбора из списка)
@@ -333,7 +359,10 @@ function stockSelectOnChangeHandler(e, calendar) {
 	store.setCurrentStock(selectedStock)
 	slots = selectedStock.ramps
 
-	// отключаем кнопку "Добавить заказ" для логиста, админа и наблюдателя
+	// обновляем данные паллетовместимости склада за период (модалка)
+	updatePallChart(selectedStock)
+
+	// подключаем кнопку "Добавить заказ" для закупок
 	if (!isAdmin(role) && !isLogist(role) && !isSlotsObserver(role)) {
 		const addNewOrderButton = document.querySelector("#addNewOrder")
 		addNewOrderButton.removeAttribute("disabled")
@@ -717,7 +746,91 @@ function confirmSlot(fcEvent, action) {
 		}
 	})
 }
+function editMarketInfo(agGridParams) {
+	const method = 'editMarketInfo'
+	const currentLogin = store.getLogin()
+	const currentRole = store.getRole()
 
+	const order = agGridParams.data
+	const idOrder = order.idOrder
+	const marketInfo = agGridParams.newValue ? agGridParams.newValue : ''
+	const oldMarketInfo = agGridParams.oldValue ? agGridParams.oldValue : ''
+
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
+
+	ajaxUtils.get({
+		url: `${editMarketInfoBaseUrl}${idOrder}&${marketInfo}`,
+		successCallback: (data) => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+
+			if (data.status === '200') {
+				// обновляем заказ с сторе и ивент
+				updateOrderAndEvent(order, currentLogin, currentRole, method)
+				return
+			}
+
+			// устанавливаем старое значение
+			setOldMarketInfo(order, oldMarketInfo, orderTableGridOption)
+			customErrorCallback(null, data, method)
+		},
+		errorCallback: () => {
+			// устанавливаем старое значение
+			setOldMarketInfo(order, oldMarketInfo, orderTableGridOption)
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+		}
+	})
+}
+function getOrderFromMarket(marketNumber, eventContainer, successCallback) {
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
+
+	ajaxUtils.get({
+		url: getMarketOrderUrl + marketNumber,
+		successCallback: (data) => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+
+			if (data.status === '200') {
+				successCallback(data, marketNumber, eventContainer)
+				snackbar.show(data.message)
+				return
+			}
+
+			if (data.status === '100') {
+				const errorMessage = data.message
+					? data.message
+					: userMessages.actionNotCompleted
+				snackbar.show(errorMessage)
+			} else {
+				snackbar.show(userMessages.actionNotCompleted)
+			}
+		},
+		errorCallback: () => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+		}
+	})
+}
+
+// функция создания нового заказа по информации из Маркета
+function createNewOrderFromMarket(data, marketNumber, eventContainer) {
+	const order = data.order
+	// добавляем заказ в стор
+	store.addNewOrderFromMarket(order)
+	// обновляем данные таблицы
+	updateTableData(orderTableGridOption, store.getCurrentStockOrders())
+	// добавляем заказ в дроп зону
+	createNewOrder(marketNumber, eventContainer)
+}
+// функция обновления заказа по информации из Маркета
+function updateOrderFromMarket(data, marketNumber, eventContainer) {
+	const order = data.order
+	// обновляем заказ в сторе
+	store.updateOrderFromMarket(order)
+	// обновляем данные таблицы
+	updateTableData(orderTableGridOption, store.getCurrentStockOrders())
+}
 
 // функции управления состоянием колонок
 function saveColumnState() {
@@ -725,4 +838,32 @@ function saveColumnState() {
 }
 function restoreColumnState() {
 	gridColumnLocalState.restoreState(orderTableGridOption, LOCAL_STORAGE_KEY)
+}
+
+// коллбэк бля редактирования ячееек таблицы
+function cellValueChangedHandler(params) {
+	const columnName = params.column.colId
+
+	if (columnName === "marketInfo") {
+		editMarketInfo(params)
+	}
+}
+
+// функция установки старого значения информации из Маркета
+function setOldMarketInfo(order, oldValue, gridOption) {
+	// устанавливаем старое значение
+	order.marketInfo = oldValue
+	// обновляем заказ в сторе
+	const updatedOrder = store.updateOrder(order)
+	// вернуть старое значение в таблицу
+	updateTableRow(gridOption, updatedOrder)
+}
+
+// обновление данных графика паллетовместимости
+function updatePallChart(selectedStock) {
+	const nowDateStr = new Date().toISOString().slice(0, 10)
+	const pallChartData = store.getMaxPallDataByPeriod(selectedStock.id, nowDateStr, 14)
+	const chartData = getFormattedPallChartData(pallChartData)
+	const bgData = getMarkerBGColorData(pallChartData)
+	updateChartData(pallLineChart, chartData, bgData)
 }

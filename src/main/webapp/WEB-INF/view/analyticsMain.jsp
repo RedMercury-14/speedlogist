@@ -6,41 +6,22 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<style>
-		.navbar {
-			background-color: #0e377b !important;
-		}
-		.my-container {
-			margin-top: 83px;
-		}
-	</style>
 	<meta charset="UTF-8">
-	<meta name="${_csrf.parameterName}" content="${_csrf.token}" />
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>Аналитика</title>
+	<title>Логистика</title>
 	<link rel="icon" href="${pageContext.request.contextPath}/resources/img/favicon.ico">
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/logistics.css">
+</head>
 </head>
 <body>
 	<jsp:include page="headerNEW.jsp" />
-	<div class="fluid-container my-container">
-		<div class=" px-5 d-flex align-items-center justify-content-between">
-			<h3 class="mb-2">Нехватка товара на РЦ</h3>
-			<div>
-				<p class="mb-1">Логин: SologubA@dobronom.by</p>
-				<p class="mb-1">Пароль: 14A26B19c4</p>
-			</div>
-		</div>
-		<br>
-		<div class="frame-container">
-			<iframe
-				title="Нехватка товара на РЦ 2"
-				width="100%" height="780px"
-				src="https://app.fabric.microsoft.com/reportEmbed?reportId=5f4a775a-276a-4ec5-80ad-371e1ccef0c1&autoAuth=true&ctid=898331df-b42e-494c-b68e-d7245f2daef3"
-				frameborder="0"
-				allowFullScreen="true">
-			</iframe>
-		</div>
+	<div class="container my-container">
+		<h3 class="container">
+			<a class="my-link" href="<spring:url value="/main/analytics/shortage" />">Нехватка товаров на РЦ</a>
+			<br>
+			<a class="my-link" href="<spring:url value="/main/analytics/logistics" />">Аналитика Биржи</a>
+		</h3>
 	</div>
+
 	<script src='${pageContext.request.contextPath}/resources/mainPage/js/nav-fixed-top.js'></script>
 </body>
 </html>

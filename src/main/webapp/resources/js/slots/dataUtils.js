@@ -16,7 +16,7 @@ export function getMinUnloadDate(order, role) {
 // расчет минимальной даты слота для менеджеров
 export function getMinUnloadDateForManager(now, order) {
 	// + 2 дня от сегодня (пн на ср)
-	const minValidDate = dateHelper.getMinValidDate()
+	const minValidDate = dateHelper.getMinValidDate(order)
 	const nextDay = new Date(minValidDate).setHours(0,0,0,0)
 	// + 4 или 24 часа от даты загрузки
 	const unloadDateWithDelay = getUnloadDateWithDelay(order)
@@ -78,14 +78,15 @@ export function getOrderDataForAjax(info, currentStock, currentLogin, currentRol
 	const oldEvent = info.oldEvent ? info.oldEvent : ''
 	const stockId = currentStock.id
 	const eventId = fcEvent.id
-	const idRamp = fcEvent._def.resourceIds[0]
+	const idRamp = fcEvent._def ? fcEvent._def.resourceIds[0] : fcEvent.resourceId
 	const startDateStr = fcEvent.startStr
 	const timeDelivery = startDateStr.replace('T', ' ').split('+')[0]
 	const eventData = fcEvent.extendedProps.data
 	const idOrder = eventData.idOrder
 	const numberOfPalls = Number(eventData.pall)
 	const orderLogin = eventData.loginManager
-	const loginManager = isAdmin(currentRole) || isLogist(currentRole) ? orderLogin : currentLogin
+	const dontNeedUpdateLoginManager = isAdmin(currentRole) || isLogist(currentRole) || method === 'editMarketInfo'
+	const loginManager = dontNeedUpdateLoginManager ? orderLogin : currentLogin
 	const messageLogist = null
 
 	let status
@@ -93,6 +94,7 @@ export function getOrderDataForAjax(info, currentStock, currentLogin, currentRol
 	if (method === 'update') status = eventData.status
 	if (method === 'delete') status = eventData.status === 8 || eventData.status === 100 ? 5 : 6
 	if (method === 'confirm') status = eventData.status
+	if (method === 'editMarketInfo') status = eventData.status
 
 	return {
 		idOrder,

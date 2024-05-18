@@ -114,6 +114,10 @@
 									</c:otherwise>
 								</c:choose>
 							</div>
+							<div class="form-group input-row-container">
+								<span class="text-muted font-weight-bold">Информация из Маркета:</span>
+								<textarea type="text" class="form-control" name="marketInfo" id="marketInfo" placeholder="Комментарии" readonly>${order.marketInfo}</textarea>
+							</div>
 						</div>
 						<div class="separationLine"></div>
 						<div class="form-section right">

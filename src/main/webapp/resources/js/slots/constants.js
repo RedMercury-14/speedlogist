@@ -27,6 +27,8 @@ export const loadOrderUrl = `../api/slot/load`
 export const updateOrderUrl = `../api/slot/update`
 export const deleteOrderUrl = `../api/slot/delete`
 export const confirmSlotUrl = `../api/slot/save`
+export const editMarketInfoBaseUrl = `../api/manager/editMarketInfo/`
+export const getMarketOrderUrl = `../api/manager/getMarketOrder/`
 
 export const messagePattern = {
 	idMessage: null,

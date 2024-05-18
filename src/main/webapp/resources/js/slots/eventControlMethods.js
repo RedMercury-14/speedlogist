@@ -3,7 +3,7 @@ import { isAdmin, isLogist } from "../utils.js"
 import { updateTableData, updateTableRow } from "./agGridUtils.js"
 import { createDraggableElement, updatePallInfo } from "./calendarUtils.js"
 import { userMessages } from "./constants.js"
-import { getPallCoutnAction, stockAndDayIsVisible, stockIsVisible } from "./dataUtils.js"
+import { getOrderDataForAjax, getPallCoutnAction, stockAndDayIsVisible, stockIsVisible } from "./dataUtils.js"
 import { store } from "./store.js"
 
 /* -------------- методы для управления иветнтами ------------------ */
@@ -139,5 +139,27 @@ export function deleteCalendarEventFromTable(gridOptions, orderData) {
 	if (stockAndDayIsVisible(stockId, eventDate)) {
 		const maxPall = store.getCurrentMaxPall()
 		updatePallInfo(orderData.numberOfPalls, maxPall, 'decrement')
+	}
+}
+export function updateOrderAndEvent(order, currentLogin, currentRole, method) {
+	const stockId = order.idRamp.slice(0, -2)
+	const marketNumber = order.marketNumber
+	// обновляем заказ в сторе
+	const updatedOrder = store.updateOrder(order)
+	// получение ивента календаря (слота)
+	const event = store.getEvent(stockId, { id: marketNumber })
+
+	if (event) {
+		// обновляем ивент в виртуальном складе
+		const fakeInfo = {
+			oldEvent: null,
+			event: {
+				...event,
+				startStr: event.start,
+				extendedProps: { data: order }
+			},
+		}
+		const orderData = getOrderDataForAjax(fakeInfo, { id: stockId }, currentLogin, currentRole, method)
+		store.updateEvent(orderData, updatedOrder)
 	}
 }

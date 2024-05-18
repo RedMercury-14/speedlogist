@@ -18,24 +18,51 @@
 <body>
 	<jsp:include page="headerNEW.jsp" />
 	<div class="container-fluid my-container px-0">
-		<div class="inner-container left-container">
-			<div id="numStockButtons" class="">
-				<button data-stock="1700" class="btn btn-outline-primary btn-lg font-weight-bold">Склад 1700</button>
-				<button data-stock="1200" class="btn btn-outline-primary btn-lg font-weight-bold">Склад 1200</button>
-				<button data-stock="1250" class="btn btn-outline-primary btn-lg font-weight-bold">Склад 1250</button>
+		<div class="title-container">
+			<strong><h3>Ограничения паллетовместимости</h3></strong>
+		</div>
+		<div class="toolbar">
+			<button type="button" class="btn tools-btn font-weight-bold text-muted" data-toggle="modal" data-target="#addRestrictionModal">
+				+ Добавить ограничение паллетовместимости
+			</button>
+		</div>
+		<div class="row-flex-container">
+			<div class="inner-container left-container">
+				<div id="numStockButtons" class="">
+					<button data-stock="1700" class="btn stock-btn btn-outline-primary font-weight-bold">1700</button>
+					<button data-stock="1200" class="btn stock-btn btn-outline-primary font-weight-bold">1200</button>
+					<button data-stock="1250" class="btn stock-btn btn-outline-primary font-weight-bold">1250</button>
+				</div>
+				<div class="card">
+					<div id="stockCard">
+						<div class="card-header">
+							<h1 class="text-center my-1">Название склада</h1>
+						</div>
+						<ul class="list-group list-group-flush" >
+							<li class="list-group-item">Номер склада: </li>
+							<li class="list-group-item">Адрес: </li>
+							<li class="list-group-item">Координаты: </li>
+							<li class="list-group-item">Время работы: </li>
+							<li class="list-group-item">Контакт: </li>
+							<li class="list-group-item">Рампы: </li>
+							<li class="list-group-item">Паллетовместимость по умолчанию: </li>
+							<li class="list-group-item">Пересменка: </li>
+						</ul>
+					</div>
+				</div>
+			</div>
+	
+			<div class="inner-container right-container">
+				
+				<!-- <div id="numStockButtons" class="">
+					<button data-stock="1700" class="btn stock-btn btn-outline-primary font-weight-bold">1700</button>
+					<button data-stock="1200" class="btn stock-btn btn-outline-primary font-weight-bold">1200</button>
+					<button data-stock="1250" class="btn stock-btn btn-outline-primary font-weight-bold">1250</button>
+				</div> -->
+				<div id="myGrid" class="ag-theme-alpine"></div>
 			</div>
 		</div>
-		<div class="inner-container right-container">
-			<div class="title-container">
-				<strong><h3>Ограничения паллетовместимости</h3></strong>
-			</div>
-			<div class="toolbar">
-				<button type="button" class="btn tools-btn font-weight-bold text-muted" data-toggle="modal" data-target="#addRestrictionModal">
-					+ Ввести ограничение
-				</button>
-			</div>
-			<div id="myGrid" class="ag-theme-alpine"></div>
-		</div>
+
 		<div id="snackbar"></div>
 	</div>
 
@@ -115,7 +142,6 @@
 		</div>
 	</div>
 
-	<jsp:include page="footer.jsp" />
 </body>
 <script src="${pageContext.request.contextPath}/resources/js/VMSpage.js" type="module"></script>
 <script src='${pageContext.request.contextPath}/resources/mainPage/js/nav-fixed-top.js'></script>

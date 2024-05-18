@@ -671,6 +671,9 @@ public class POIExcel {
                         continue;
                         
                     }
+//                    System.err.println(i+1);
+//                    System.err.println(cellCountProduct487.toString());
+//                    System.err.println(cellCountInPall487.toString());
                     Double pall = Math.ceil(Double.parseDouble(cellCountProduct487.toString().trim()) / Double.parseDouble(cellCountInPall487.toString().trim()));
                     String pallStr = pall+"";
 

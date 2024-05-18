@@ -80,6 +80,7 @@ import com.graphhopper.util.PointList;
 import com.graphhopper.util.Translation;
 import com.graphhopper.util.shapes.GHPoint;
 import by.base.main.controller.MainController;
+import by.base.main.dto.MarketDataForClear;
 import by.base.main.dto.MarketDataForLoginDto;
 import by.base.main.dto.MarketDataForRequestDto;
 import by.base.main.dto.MarketErrorDto;
@@ -217,6 +218,9 @@ public class MainRestController {
 	private static String classLog;
 	private static String marketJWT;
 	private static final String marketUrl = "https://api.dobronom.by:10896/Json";
+	private static final String serviceNumber = "CD6AE87C-2477-4852-A4E7-8BA5BD01C156";
+	private static final String loginMarket = "SpeedLogist";
+	private static final String passwordMarket = "12345678";
 
 
 	public static final Comparator<Address> comparatorAddressId = (Address e1, Address e2) -> (e1.getIdAddress() - e2.getIdAddress());
@@ -227,49 +231,127 @@ public class MainRestController {
 		return MainChat.messegeList.size() + "";		
 	}
 	
+	@GetMapping("/market/clearjwt/{param}")
+	public Map<String, Object> getJWTnull(HttpServletRequest request, @PathVariable String param) {
+		Map<String, Object> response = new HashMap<String, Object>();
+		MarketDataForClear dataDto = new MarketDataForClear(Integer.parseInt(param));
+		MarketPacketDto packetDto = new MarketPacketDto(marketJWT, "CleanToken", serviceNumber, dataDto);
+		MarketRequestDto requestDto = new MarketRequestDto("", packetDto);
+		String str = postRequest(marketUrl, gson.toJson(requestDto));
+		response.put("status", "200");
+		response.put("message", str);
+		return response;		
+	}
+	
+	@GetMapping("/market/nulljwt")
+	public Map<String, Object> getJWTNull(HttpServletRequest request) {
+		Map<String, Object> response = new HashMap<String, Object>();
+		marketJWT = null;		
+		response.put("status", "200");
+		response.put("jwt", marketJWT);
+		response.put("message", "JWT равен null");
+		return response;		
+	}
+	
+	@GetMapping("/market/getjwt")
+	public Map<String, Object> getJWT(HttpServletRequest request) {
+		Map<String, Object> response = new HashMap<String, Object>();
+		MarketDataForLoginDto dataDto = new MarketDataForLoginDto(loginMarket, passwordMarket, "101");
+//		MarketDataForLoginDtoTEST dataDto = new MarketDataForLoginDtoTEST("SpeedLogist", "12345678", 101);
+		MarketPacketDto packetDto = new MarketPacketDto("null", "GetJWT", serviceNumber, dataDto);
+		MarketRequestDto requestDto = new MarketRequestDto("", packetDto);
+		//запрашиваем jwt
+		String str = postRequest(marketUrl, gson.toJson(requestDto));
+		MarketTableDto marketRequestDto = gson.fromJson(str, MarketTableDto.class);
+		marketJWT = marketRequestDto.getTable()[0].toString().split("=")[1].split("}")[0];		
+		response.put("status", "200");
+		response.put("jwt", marketJWT);
+		response.put("message", "JWT обновлён");
+		return response;		
+	}
+	
 	/**
-	 * 
+	 * Главный метод запроса ордера из маркета.
+	 * Если в маркете есть - он обнавляет его в бд.
+	 * Если связи с маркетом нет - берет из бд.
+	 * Если нет в бд и связи с маркетом нет - выдаёт ошибку
+	 * Если нет в 
 	 * @param request
 	 * @param idMarket
 	 * @return
 	 */
 	@GetMapping("/manager/getMarketOrder/{idMarket}")
 	public Map<String, Object> getMarketOrder(HttpServletRequest request, @PathVariable String idMarket) {
-		checkJWT(marketUrl);
+		try {
+			checkJWT(marketUrl);
+		} catch (Exception e) {
+			System.err.println("Ошибка получения jwt токена");
+		}
+		
 		Map<String, Object> response = new HashMap<String, Object>();
 		MarketDataForRequestDto dataDto3 = new MarketDataForRequestDto(idMarket);
-		MarketPacketDto packetDto3 = new MarketPacketDto(marketJWT, "SpeedLogist.GetOrderBuyInfo", "CD6AE87C-2477-4852-A4E7-8BA5BD01C156", dataDto3);
+		MarketPacketDto packetDto3 = new MarketPacketDto(marketJWT, "SpeedLogist.GetOrderBuyInfo", serviceNumber, dataDto3);
 		MarketRequestDto requestDto3 = new MarketRequestDto("", packetDto3);
 		String marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto3));
 		
-		//проверяем на наличие сообщений об ошибке со стороны маркета
-		if(marketOrder2.contains("Error")) {
-			MarketErrorDto errorMarket = gson.fromJson(marketOrder2, MarketErrorDto.class);
-			response.put("status", "100");
-			response.put("message", errorMarket.getErrorDescription());
-			return response;
-		}
-		
-		//тут избавляемся от мусора в json
-		String str2 = marketOrder2.split("\\[", 2)[1];
-		String str3 = str2.substring(0, str2.length()-2);
-		
-		//создаём свой парсер и парсим json в объекты, с которыми будем работать.
-		CustomJSONParser customJSONParser = new CustomJSONParser();
-		OrderBuyGroupDTO orderBuyGroupDTO = customJSONParser.parseOrderBuyGroupFromJSON(str3);
-		
-		//создаём Order, записываем в бд и возвращаем или сам ордер или ошибку (тот же ордер, только с отрицательным id)
-		Order order = orderCreater.create(orderBuyGroupDTO);
-		if(order.getIdOrder() < 0) {
-			response.put("status", "100");
-			response.put("message", order.getMessage());
-			return response;
-		}else {
-			response.put("status", "200");
-			response.put("message", order.getMessage());
-			response.put("order", order);
-			return response;
+		if(marketOrder2.equals("503")) { // означает что связь с маркетом потеряна
+			//в этом случае проверяем бд
+			System.err.println("Связь с маркетом потеряна");
+			Order order = orderService.getOrderByMarketNumber(idMarket);
+			if(order != null) {
+				response.put("status", "200");
+				response.put("message", "Заказ загружен из локальной базы данных SL");
+				response.put("order", order);
+				return response;
+			}else {
+				response.put("status", "100");
+				response.put("message", "Заказ с номером " + idMarket + " в базе данных SL не найден. Обратитесь в отдел ОСиУЗ");
+				return response;
+			}
+			
+		}else{//если есть связь с маркетом
+			//проверяем на наличие сообщений об ошибке со стороны маркета
+			if(marketOrder2.contains("Error")) {
+				MarketErrorDto errorMarket = gson.fromJson(marketOrder2, MarketErrorDto.class);
+				if(errorMarket.getError().equals("99")) {//обработка случая, когда в маркете номера нет, а в бд есть.
+					Order orderFromDB = orderService.getOrderByMarketNumber(idMarket);
+					if(orderFromDB !=null) {
+						response.put("status", "100");
+						response.put("message", "Заказ " + idMarket + " не найден в маркете. Данные из SL устаревшие. Обновите данные в Маркете");
+						return response;
+					}else {
+						response.put("status", "100");
+						response.put("message", errorMarket.getErrorDescription());
+						return response;
+					}
+				}
+				response.put("status", "100");
+				response.put("message", errorMarket.getErrorDescription());
+				return response;
+			}
+			
+			//тут избавляемся от мусора в json
+			String str2 = marketOrder2.split("\\[", 2)[1];
+			String str3 = str2.substring(0, str2.length()-2);
+			
+			//создаём свой парсер и парсим json в объекты, с которыми будем работать.
+			CustomJSONParser customJSONParser = new CustomJSONParser();
+			OrderBuyGroupDTO orderBuyGroupDTO = customJSONParser.parseOrderBuyGroupFromJSON(str3);
+			
+			//создаём Order, записываем в бд и возвращаем или сам ордер или ошибку (тот же ордер, только с отрицательным id)
+			Order order = orderCreater.create(orderBuyGroupDTO);
+			if(order.getIdOrder() < 0) {
+				response.put("status", "100");
+				response.put("message", order.getMessage());
+				return response;
+			}else {
+				response.put("status", "200");
+				response.put("message", order.getMessage());
+				response.put("order", order);
+				return response;
+			}
 		}		
+				
 	}
 	
 	/**
@@ -277,9 +359,9 @@ public class MainRestController {
 	 * @return
 	 */
 	private void checkJWT(String url) {
-		MarketDataForLoginDto dataDto = new MarketDataForLoginDto("SpeedLogist", "12345678", "101");
+		MarketDataForLoginDto dataDto = new MarketDataForLoginDto(loginMarket, passwordMarket, "101");
 //		MarketDataForLoginDtoTEST dataDto = new MarketDataForLoginDtoTEST("SpeedLogist", "12345678", 101);
-		MarketPacketDto packetDto = new MarketPacketDto("null", "GetJWT", "CD6AE87C-2477-4852-A4E7-8BA5BD01C156", dataDto);
+		MarketPacketDto packetDto = new MarketPacketDto("null", "GetJWT", serviceNumber, dataDto);
 		MarketRequestDto requestDto = new MarketRequestDto("", packetDto);
 		if(marketJWT == null){
 			//запрашиваем jwt
@@ -4901,8 +4983,8 @@ public class MainRestController {
                 return null;
             }
         } catch (IOException e) {
-            System.out.println("MainRestController.postRequest: Подключение недоступно");
-            return "error";
+            System.out.println("MainRestController.postRequest: Подключение недоступно - 503");
+            return "503";
         }
     }
 	

@@ -1,5 +1,6 @@
 import { ajaxUtils } from './ajaxUtils.js';
 import { autocomplete } from './autocomplete/autocomplete.js';
+import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js';
 import { countries } from './global.js';
 import {
 	addBelarusValueToCountryInputs,
@@ -37,6 +38,7 @@ const addNewProcurementUrl = (orderStatus) => orderStatus === 20
 const redirectUrl = (orderStatus) => orderStatus === 20	? "orders" : "../slots"
 const getInternalMovementShopsUrl = "../../api/manager/getInternalMovementShops"
 const getOrderHasMarketNumberBaseUrl = "../../api/procurement/getOrderHasMarketNumber/"
+const getMarketOrderBaseUrl = `../../api/manager/getMarketOrder/`
 
 const token = $("meta[name='_csrf']").attr("content")
 
@@ -146,23 +148,27 @@ window.onload = async () => {
 async function setMarketNumberFormSubmitHandler(e, orderForm, addLoadPointForm, addUnloadPointForm) {
 	e.preventDefault()
 	e.stopImmediatePropagation()
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
 
 	const formData = new FormData(e.target)
 	const markerNumber = formData.get('setMarketNumber')
 	if (!markerNumber) return
 
 	ajaxUtils.get({
-		url: getOrderHasMarketNumberBaseUrl + markerNumber,
-		successCallback: (order) => {
-			if (!order) {
-				alert('Заказ с таким номером не найден! Проверьте номер либо свяжитесь с ОСиУЗ')
+		url: getMarketOrderBaseUrl + markerNumber,
+		successCallback: (data) => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+
+			if (!data) {
+				alert('Ошибка! Обновите страницу')
 				return
 			}
 
-			if (order.status !== 5) {
-				alert('Заказ с таким номером уже создан!')
-				return
-			}
+			const order = data.order
+			if (data.status !== '200') alert(data.message)
+			if (!order) return
+			if (order.status !== 5) return
 
 			orderData = order
 			hideSetMarketNumberModal()
@@ -174,6 +180,10 @@ async function setMarketNumberFormSubmitHandler(e, orderForm, addLoadPointForm, 
 			// меняем статус заявки
 			orderStatus = getOrderStatusByStockDelivery(order.numStockDelivery)
 		},
+		errorCallback: () => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+		}
 	})
 }
 
@@ -617,6 +627,9 @@ function RBButtonsContainerOnClickHandler(e, addLoadPointForm, addUnloadPointFor
 			const formNameElem = document.querySelector('#formName')
 			formNameElem.innerText = 'Форма создания заявки (заказ от контрагента)'
 		}
+
+		// установка минимальной даты загрузки/выгрузки
+		setMinValidDate({ isInternalMovement: isInternalMovement ? 'true' : 'false' })
 	}
 }
 

@@ -1633,7 +1633,7 @@ public class MainController {
 			for (int i =0; i<routes.size(); i++) {
 				Route route = routes.get(i);
 				route.setStatusRoute("6"); 
-//				routeService.saveOrUpdateRoute(route); ТУТ ТУ ТУТТУТУТУТУ ТУТ УБРАТЬ ОСТАНОВИЛСЯ ТУТ
+				routeService.saveOrUpdateRoute(route);
 			}
 		}
 

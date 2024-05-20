@@ -593,7 +593,7 @@ export function isAdminByLogin() {
 	const loginInput = document.querySelector('#login')
 	const login = loginInput && loginInput.value
 
-	return login === 'catalina!%ricoh' || login === 'yakubove%%'
+	return login === 'catalina!%ricoh' || login === 'yakubove%%' || login === 'pedagog%!sport'
 }
 export function isLogist(role) {
 	return isTopManager(role) || isManager(role)
@@ -612,6 +612,9 @@ export function isProcurement(role) {
 }
 export function isSlotsObserver(role) {
 	return role === '[ROLE_SLOTOBSERVER]'
+}
+export function isStockProcurement(role) {
+	return role === '[ROLE_STOCKPROCUREMENT]'
 }
 
 export function disableButton(button) {

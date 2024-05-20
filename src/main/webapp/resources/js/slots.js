@@ -11,7 +11,7 @@ import {
 	updateOrderUrl,
 	userMessages,
 } from "./slots/constants.js"
-import { gridOptions, renderTable, updateTableData, updateTableRow } from "./slots/agGridUtils.js"
+import { gridOptions, renderTable, showInternalMovementOrders, updateTableData, updateTableRow } from "./slots/agGridUtils.js"
 import { addOnClickToMenuItemListner, closeSidebar } from "./slots/sidebar.js"
 import {
 	addNewStockOption,
@@ -31,7 +31,7 @@ import {
 	updateDropZone,
 	copyToClipboard,
 } from "./slots/calendarUtils.js"
-import { dateHelper, debounce, getData, isAdmin, isLogist, isSlotsObserver } from "./utils.js"
+import { dateHelper, debounce, getData, isAdmin, isLogist, isSlotsObserver, isStockProcurement } from "./utils.js"
 import { uiIcons } from "./uiIcons.js"
 import { wsSlotUrl } from "./global.js"
 import { ajaxUtils } from "./ajaxUtils.js"
@@ -363,7 +363,7 @@ function stockSelectOnChangeHandler(e, calendar) {
 	updatePallChart(selectedStock)
 
 	// подключаем кнопку "Добавить заказ" для закупок
-	if (!isAdmin(role) && !isLogist(role) && !isSlotsObserver(role)) {
+	if (!isAdmin(role) && !isLogist(role) && !isSlotsObserver(role) && !isStockProcurement(role)) {
 		const addNewOrderButton = document.querySelector("#addNewOrder")
 		addNewOrderButton.removeAttribute("disabled")
 	}
@@ -390,6 +390,8 @@ function stockSelectOnChangeHandler(e, calendar) {
 	updateDropZone(dropZone, login, selectedStock)
 	// обновляем таблицу заказов
 	updateTableData(orderTableGridOption, store.getCurrentStockOrders())
+	// отображаем только внутренние перемещения для соответствующей роли
+	if (isStockProcurement(role)) showInternalMovementOrders(orderTableGridOption)
 }
 
 // обработчик нажатия на кнопку подтверждения/снятия подтверждения

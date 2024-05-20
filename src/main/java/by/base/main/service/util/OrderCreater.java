@@ -44,7 +44,7 @@ public class OrderCreater {
 		        
 		        order.setCargo(orderBuyGroupDTO.getOrderBuy().get(0).getGoodsName().trim() + ", ");
 		        //записываем в поле информация
-		        order.setMarketInfo(orderBuyGroupDTO.getInfo().trim());
+		        order.setMarketInfo(orderBuyGroupDTO.getInfo());
 		        
 		        Date dateCreateInMarket = Date.valueOf(orderBuyGroupDTO.getDatex().toLocalDateTime().toLocalDate());
 		        order.setDateCreateMarket(dateCreateInMarket);

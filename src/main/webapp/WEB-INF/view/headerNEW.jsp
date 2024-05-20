@@ -185,6 +185,16 @@
 								</li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/slots" />">Слоты</a></li>
 							</c:when>
+							<c:when test="${roles == '[ROLE_STOCKPROCUREMENT]'}">
+								<li class="dropdown">
+									<a href="#" class="nav-item nav-link" data-toggle="dropdown">Заявки на перевозки</a>
+									<div class="dropdown-menu">
+										<a class="dropdown-item" href="<spring:url value="/main/procurement/add-order" />">Создание заявки</a>
+										<a class="dropdown-item" href="<spring:url value="/main/procurement/orders" />">Контроль заявок</a>
+									</div>
+								</li>
+								<li><a class="nav-item nav-link" href="<spring:url value="/main/slots" />">Слоты</a></li>
+							</c:when>
 							<c:otherwise>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/registration" />">Регистрация</a></li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/signin"/>">Вход в систему</a></li>

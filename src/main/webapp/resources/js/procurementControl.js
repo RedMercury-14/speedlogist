@@ -1,6 +1,6 @@
 import { AG_GRID_LOCALE_RU } from '../js/AG-Grid/ag-grid-locale-RU.js'
 import { ResetStateToolPanel, dateComparator, gridColumnLocalState, gridFilterLocalState } from './AG-Grid/ag-grid-utils.js'
-import { debounce, getData, dateHelper, getStatus, changeGridTableMarginTop, rowClassRules, isAdminByLogin, isAdmin } from './utils.js'
+import { debounce, getData, dateHelper, getStatus, changeGridTableMarginTop, rowClassRules, isAdminByLogin, isAdmin, isStockProcurement } from './utils.js'
 import { snackbar } from './snackbar/snackbar.js'
 import { uiIcons } from './uiIcons.js'
 import { excelStyles, getPointToView, getRouteInfo, pointSorting, procurementExcelExportParams } from "./procurementControlUtils.js"
@@ -8,12 +8,16 @@ import { excelStyles, getPointToView, getRouteInfo, pointSorting, procurementExc
 const PAGE_NAME = 'ProcurementControl'
 const LOCAL_STORAGE_KEY = `AG_Grid_settings_to_${PAGE_NAME}`
 const DATES_KEY = `searchDates_to_${PAGE_NAME}`
-const getOrderBaseUrl ='../../api/manager/getOrders/'
+const getDefaultOrderBaseUrl ='../../api/manager/getOrders/'
+const getOrdersForStockProcurementBaseUrl ='../../api/manager/getOrdersForStockProcurement/'
 const getSearchOrderBaseUrl ='../../api/manager/getOrdersHasCounterparty/'
 const getChangeOrderStatusBaseUrl ='../../api/manager/changeOrderStatus/'
 
 const debouncedSaveColumnState = debounce(saveColumnState, 300)
 const debouncedSaveFilterState = debounce(saveFilterState, 300)
+
+const role = document.querySelector('#role').value
+const getOrderBaseUrl = isStockProcurement(role) ? getOrdersForStockProcurementBaseUrl : getDefaultOrderBaseUrl
 
 const columnDefs = [
 	{ 
@@ -257,7 +261,7 @@ function getMappingData(data) {
 			? `${dateHelper.getFormatDate(order.onloadWindowDate)} ${order.onloadWindowTime.slice(0, 5)}`
 			: ''
 		
-		const addressesForTable = order.addressesToView
+		const addressesForTable = order.addressesToView ? order.addressesToView : order.addresses
 			.sort(pointSorting)
 			.map(getPointToView)
 		

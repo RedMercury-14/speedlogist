@@ -30,7 +30,7 @@
 				<div class="card-header d-flex justify-content-between">
 					<c:choose>
 						<c:when test="${order.isInternalMovement == 'true'}">
-							<h3 class="mb-0">Форма создания заявки (Внутренние перевозки)</h3>
+							<h3 class="mb-0">Форма создания заявки (внутреннее перемещение)</h3>
 						</c:when>
 						<c:otherwise>
 							<h3 class="mb-0">Форма создания заявки (${order.way})</h3>
@@ -507,6 +507,7 @@
 																<span id="statusInfoLabel" class="status-info-label">!</span>
 																<div id="statusInfo" class="status-info">
 																	<p class="mb-0">При создании заявки до 12:00 текущего дня минимальная дата загрузки/выгрузки - завтра, после 12:00 - послезавтра</p>
+																	<p class="mb-0">Для внутренних перемещений до 12:00 - завтра, после 12:00 - через 2 дня</p>
 																</div>
 															</div>
 															<input type="date" class="form-control date-input" name="date_${loop.index + 1}" id="loadDate" data-index="${loop.index}" required>
@@ -632,6 +633,7 @@
 																<span id="statusInfoLabel" class="status-info-label">!</span>
 																<div id="statusInfo" class="status-info">
 																	<p class="mb-0">При создании заявки до 12:00 текущего дня минимальная дата загрузки - через 2 дня, после 12:00 - через 3 дня</p>
+																	<p class="mb-0">Для внутренних перемещений до 12:00 - завтра, после 12:00 - через 2 дня</p>
 																</div>
 															</div>
 															<input type="date" class="form-control date-input" name="date_${loop.index + 1}" id="loadDate" data-index="${loop.index}" required>

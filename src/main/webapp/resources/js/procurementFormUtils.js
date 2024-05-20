@@ -327,6 +327,30 @@ export function hideMarketNumberInput() {
 	marketNumberInput.removeAttribute('required')
 }
 
+export function hideMarketInfoTextarea() {
+	const marketInfoTextarea = document.querySelector('#marketInfo')
+	const marketInfoContainer = marketInfoTextarea.parentElement
+	marketInfoContainer.classList.add('none')
+	marketInfoTextarea.removeAttribute('required')
+}
+
+export function setCounterparty(counterparty) {
+	const counterpartyInput = document.querySelector('#contertparty')
+	counterpartyInput.value = counterparty
+	// counterpartyInput.setAttribute('readonly', 'true')
+}
+
+export function setWayType(wayType) {
+	const wayTypeInput = document.querySelector('#way')
+	wayTypeInput.value = wayType
+	wayTypeInput.setAttribute('readonly', 'true')
+}
+
+export function setFormName(formName) {
+	const formNameElem = document.querySelector('#formName')
+	formNameElem.innerText = formName
+}
+
 // заполняет данные заказа в форме заявки
 export function setOrderDataToOrderForm(form, orderData) {
 	const marketNumberInput = form.querySelector('#marketNumber')

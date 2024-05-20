@@ -278,7 +278,8 @@
 									<input type="date" class="form-control date-input" name="date" id="loadDate" required>
 									<span id="statusInfoLabel" class="status-info-label">!</span>
 									<div id="statusInfo" class="status-info">
-										<p class="mb-0">При создании заявки до 12:00 текущего дня минимальная дата загрузки - через 2 дня, после 12:00 - через 3 дня</p>
+										<p class="mb-1">При создании заявки до 12:00 текущего дня минимальная дата загрузки - через 2 дня, после 12:00 - через 3 дня</p>
+										<p class="mb-0">Для внутренних перемещений до 12:00 - завтра, после 12:00 - через 2 дня</p>
 									</div>
 								</div>
 								<div class="form-group input-row-container">

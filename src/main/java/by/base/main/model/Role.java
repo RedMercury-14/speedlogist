@@ -36,6 +36,9 @@ public class Role implements GrantedAuthority{
 	@Column(name = "roles")
 	private String authority;
 	
+	@Column(name = "description")
+	private String description;
+	
 	@ManyToMany(fetch = FetchType.LAZY, 
 				cascade= {CascadeType.PERSIST, CascadeType.MERGE,
 					 CascadeType.DETACH, CascadeType.REFRESH})
@@ -53,6 +56,18 @@ public class Role implements GrantedAuthority{
 	public Role(int id, String role) {
 		this.idRole = id;
 		this.authority = role;
+	}
+
+
+
+	public String getDescription() {
+		return description;
+	}
+
+
+
+	public void setDescription(String description) {
+		this.description = description;
 	}
 
 

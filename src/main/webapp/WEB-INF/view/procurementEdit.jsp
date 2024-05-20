@@ -22,7 +22,7 @@
 				<div class="card-header d-flex justify-content-between">
 					<c:choose>
 						<c:when test="${order.isInternalMovement == 'true'}">
-							<h3 class="mb-0">Форма редактирования заявки (Внутренние перевозки)</h3>
+							<h3 class="mb-0">Форма редактирования заявки (внутреннее перемещение)</h3>
 						</c:when>
 						<c:otherwise>
 							<h3 class="mb-0">Форма редактирования заявки (${order.way})</h3>

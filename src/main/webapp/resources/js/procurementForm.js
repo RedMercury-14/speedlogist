@@ -13,15 +13,19 @@ import {
 	getOrderStatusByStockDelivery,
 	getStockAddress,
 	hideAddUnloadPointButton,
+	hideMarketInfoTextarea,
 	hideMarketNumberInput,
 	removeTnvdInputRequired,
 	removeUnloadDateInputRequired,
+	setCounterparty,
+	setFormName,
 	setMinValidDate,
 	setOrderDataToLoadPointForm,
 	setOrderDataToOrderForm,
 	setOrderDataToUnloadPointForm,
 	setUnloadDateMinValue,
 	setUnloadTimeMinValue,
+	setWayType,
 	showIncotermsInput,
 	showIncotermsInsuranseInfo,
 	showUnloadTime,
@@ -30,7 +34,7 @@ import {
 } from "./procurementFormUtils.js"
 import { snackbar } from "./snackbar/snackbar.js"
 import { uiIcons } from './uiIcons.js';
-import { disableButton, enableButton, getData } from './utils.js';
+import { disableButton, enableButton, getData, isStockProcurement } from './utils.js';
 
 const addNewProcurementUrl = (orderStatus) => orderStatus === 20
 	? "../../api/manager/addNewProcurement"
@@ -53,21 +57,29 @@ let orderData = null
 let orderStatus = 20
 
 window.onload = async () => {
-	// отображение модального окна для выбора типа маршрута
-	showWayTypeModal()
-
 	// установка минимальной даты загрузки/выгрузки
 	setMinValidDate()
 
+	// получаем внутренние склады
 	const domesticStocksData = await getData(getInternalMovementShopsUrl)
 	const domesticStocks = domesticStocksData.map(stock => `${stock.numshop}-${stock.address}`)
+
+	const addLoadPointForm = document.querySelector('#addLoadPointForm')
+	const addUnloadPointForm = document.querySelector('#addUnloadPointForm')
+
+	const role = document.querySelector('#role').value
+	if (isStockProcurement(role)) {
+		// превращение в форму для внутренних перемещений
+		transformToInternalMovementForm(addLoadPointForm, domesticStocks, addUnloadPointForm)
+	} else {
+		// отображение модального окна для выбора типа маршрута
+		showWayTypeModal()
+	}
 
 	const orderForm = document.querySelector('#orderForm')
 	const clearOrderFormBtn = document.querySelector('#clearOrderForm')
 	const counrtyInputs = document.querySelectorAll('.country')
 	const pointContainer = document.querySelector('.point-container')
-	const addLoadPointForm = document.querySelector('#addLoadPointForm')
-	const addUnloadPointForm = document.querySelector('#addUnloadPointForm')
 
 	// форма получения данных заказа по номеру из Маркета
 	const setMarketNumberForm = document.querySelector('#setMarketNumberForm')
@@ -617,15 +629,14 @@ function RBButtonsContainerOnClickHandler(e, addLoadPointForm, addUnloadPointFor
 			// время выгрузки отображается и обязательно к заполнению
 			// showUnloadTime(addUnloadPointForm)
 			// изменяем название формы
-			const formNameElem = document.querySelector('#formName')
-			formNameElem.innerText = 'Форма создания заявки (внутренние перемещения)'
-
+			setFormName('Форма создания заявки (внутреннее перемещение)')
+			// установка контрагента для внутренних перемещений
+			setCounterparty('ЗАО "Доброном"')
 		} else if (RBType === 'counterparty') {
 			// просим указать номер из маркета
 			showSetMarketNumberModal()
 			// изменяем название формы
-			const formNameElem = document.querySelector('#formName')
-			formNameElem.innerText = 'Форма создания заявки (заказ от контрагента)'
+			setFormName('Форма создания заявки (заказ от контрагента)')
 		}
 
 		// установка минимальной даты загрузки/выгрузки
@@ -682,4 +693,34 @@ async function checkMarketCode(marketNumber, messageElem) {
 			messageElem.innerHTML = ''
 		}
 	}
+}
+
+// превращение формы в форму внутренних перевозок
+function transformToInternalMovementForm(addLoadPointForm, domesticStocks, addUnloadPointForm) {
+	isInternalMovement = true
+	// изменяем название формы
+	setFormName('Форма создания заявки (внутреннее перемещение)')
+	// установка контрагента для внутренних перемещений
+	setCounterparty('ЗАО "Доброном"')
+	// установка типа маршрута
+	setWayType('РБ')
+	// делаем поле ТН ВЭД необязательным
+	removeTnvdInputRequired()
+	// автозаполнение значения страны в точках загрузки и выгрузки
+	const countryInputs = document.querySelectorAll('#country')
+	countryInputs.forEach(input => {
+		input.value = 'BY Беларусь'
+		input.setAttribute('readonly', 'true')
+	})
+	// скрываем инпуты с таможней
+	const customsContainers = document.querySelectorAll('.customs-container')
+	customsContainers.forEach(container => container.classList.add('none'))
+	// скрываем поле номер из Маркета
+	hideMarketNumberInput()
+	hideMarketInfoTextarea()
+	// заменяем поле адреса на выпадающий список с адресами складов для внутренних перемещений
+	transformAddressInputToSelect(addLoadPointForm, domesticStocks)
+	transformAddressInputToSelect(addUnloadPointForm, domesticStocks)
+	// установка минимальной даты загрузки/выгрузки
+	setMinValidDate({ isInternalMovement: 'true' })
 }

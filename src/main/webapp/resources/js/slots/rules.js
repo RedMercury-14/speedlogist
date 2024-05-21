@@ -4,7 +4,7 @@ import {
 	getMinUnloadDateForLogist,
 	getMinUnloadDateForManager,
 	getMinUnloadDateForSupplierOrder,
-	getPallCount,
+	getOrderType,
 } from "./dataUtils.js"
 
 // проверка, является ли пользователь админом приложения
@@ -253,29 +253,32 @@ export function isOverlapWithShiftChange(info, shiftChangeArray) {
 }
 
 // проверка паллетовместимости склада
-export function checkPallCount(info, currentStock, maxPall) {
+export function checkPallCount(info, pallCount, maxPall) {
 	const { event: fcEvent } = info
 	const order = fcEvent.extendedProps.data
-	const eventDateStr = fcEvent.startStr.split('T')[0]
 	const numberOfPalls = Number(order.pall)
-	const currentPallCount = getPallCount(currentStock, eventDateStr)
-	const newPallCount = currentPallCount + numberOfPalls
+	const orderType = getOrderType(order)
+	const pallCountValue = pallCount[orderType]
+	const maxPallValue = maxPall[orderType]
+	const newPallCount = pallCountValue + numberOfPalls
 
-	return newPallCount <= maxPall
+	return newPallCount <= maxPallValue
 }
 
 // проверка паллетовместимости склада на соседние даты
-export function checkPallCountForComingDates(info, currentStock, maxPall) {
+export function checkPallCountForComingDates(info, pallCount, maxPall) {
 	const { event: fcEvent } = info
 	const oldEvent = info.oldEvent
 	const order = fcEvent.extendedProps.data
 	const eventDateStr = fcEvent.startStr.split('T')[0]
 	const oldEventDateStr = oldEvent.startStr.split('T')[0]
 	const numberOfPalls = Number(order.pall)
+	const orderType = getOrderType(order)
+	const pallCountValue = pallCount[orderType]
+	const maxPallValue = maxPall[orderType]
 	
 	if (oldEventDateStr !== eventDateStr) {
-		const pallCountOfSelectedDay = getPallCount(currentStock, eventDateStr)
-		return pallCountOfSelectedDay + numberOfPalls <= maxPall
+		return pallCountValue + numberOfPalls <= maxPallValue
 	}
 	return true
 }

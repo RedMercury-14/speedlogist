@@ -24,7 +24,7 @@ export function updateChartData(chart, data, bgData) {
 export function getFormattedPallChartData(pallChartData) {
 	return pallChartData.map(item => ({
 		x: dateHelper.changeFormatToView(item.date).slice(0,5),
-		y: item.maxPall
+		y: item.maxPall.externalMovement
 	}))
 }
 

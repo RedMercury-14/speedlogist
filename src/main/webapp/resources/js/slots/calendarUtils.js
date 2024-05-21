@@ -222,41 +222,51 @@ export function isMobileDevice() {
 
 // обновление информации о паллетовместимости
 export function setPallInfo(pallCount, maxPall) {
-	const pallCountElem = document.querySelector('#pallCount')
-	const maxPallElem = document.querySelector('#maxPall')
+	if (!pallCount || !maxPall) return
 
-	if (!pallCountElem || !maxPallElem) {
+	const externalPallCountElem = document.querySelector('#externalPallCount')
+	const externalMaxPallElem = document.querySelector('#externalMaxPall')
+	const internalPallCountElem = document.querySelector('#internalPallCount')
+	const internalMaxPallElem = document.querySelector('#internalMaxPall')
+
+	if (
+		!externalPallCountElem
+		|| !externalMaxPallElem
+		|| !internalPallCountElem
+		|| !internalMaxPallElem
+	) {
 		return
 	}
 
-	const currentMaxPall = maxPall ? maxPall : Number(maxPallElem.innerText)
+	const externalPallCount = pallCount.externalMovement
+	const externalMaxPall = maxPall.externalMovement
+	const internalPallCount = pallCount.internalMovement
+	const internalMaxPall = maxPall.internalMovement
 
-	if (pallCount || pallCount === 0) {
-		pallCountElem.innerText = pallCount
-	}
+	externalPallCountElem.innerText = externalPallCount
+	externalMaxPallElem.innerText = externalMaxPall
+	internalPallCountElem.innerText = internalPallCount
+	internalMaxPallElem.innerText = internalMaxPall
 
-	if (maxPall || pallCount === 0) {
-		maxPallElem.innerText = maxPall
-	}
-
-	changePallCountElemColor(pallCountElem, pallCount, currentMaxPall)
+	changePallCountElemColor(externalPallCountElem, externalPallCount, externalMaxPall)
+	changePallCountElemColor(internalPallCountElem, internalPallCount, internalMaxPall)
 }
-export function updatePallInfo(numberOfPalls, maxPall, action) {
-	const pallCountElem = document.querySelector('#pallCount')
+export function updatePallInfo(currentPallCount, maxPall, orderType, action) {
+	let pallCountElem
+	if (orderType === 'externalMovement') {
+		pallCountElem = document.querySelector('#externalPallCount')
+	}
+	if (orderType === 'internalMovement') {
+		pallCountElem = document.querySelector('#internalPallCount')
+	}
 	if (!pallCountElem) return
-	const currentPallCount = Number(pallCountElem.innerText)
 
-	let newPallCount
+	const newPallCountValue = currentPallCount[orderType]
+	const maxPallValue = maxPall[orderType]
+	if (newPallCountValue === undefined || Number.isNaN(newPallCountValue)) return
 
-	if (action === 'increment') {
-		newPallCount = currentPallCount + numberOfPalls
-	} else if (action === 'decrement') {
-		newPallCount = currentPallCount - numberOfPalls
-	} else return
-
-	pallCountElem.innerText = newPallCount
-
-	changePallCountElemColor(pallCountElem, newPallCount, maxPall)
+	pallCountElem.innerText = newPallCountValue
+	changePallCountElemColor(pallCountElem, newPallCountValue, maxPallValue)
 }
 function changePallCountElemColor(pallCountElem, pallCount, maxPall) {
 	const factor = pallCount / maxPall
@@ -267,7 +277,7 @@ function changePallCountElemColor(pallCountElem, pallCount, maxPall) {
 	if (factor >= 0.5) {
 		pallCountElem.className = 'text-warning'
 	}
-	if (factor >= 1) {
+	if (factor >= 1 || Number.isNaN(factor)) {
 		pallCountElem.className = 'text-danger'
 	}
 }

@@ -264,5 +264,61 @@ public class OrderServiceImpl implements OrderService {
 		return orderDAO.getOrderByTimeDelivery(dateStart, dateEnd);
 	}
 
+	@Override
+	public Integer getSummPallInStockInternal(Order order) {
+		Timestamp dateTimeStart = order.getTimeDelivery();
+		String numStock = null;
+		if(order.getIdRamp().toString().length() < 5) {
+			System.err.println("Ошибка в названии склада. Склад не может быть двухзначным");
+		}
+		if(order.getIdRamp().toString().length() < 6) { // проверка на будующее если будет учавстовать склад с трехзначным индексом
+			numStock = order.getIdRamp().toString().substring(0, 3);
+		}else {
+			numStock = order.getIdRamp().toString().substring(0, 4);
+		}
+		Date dateTarget = Date.valueOf(dateTimeStart.toLocalDateTime().toLocalDate());
+		Set<Order> ordersSet = orderDAO.getOrderListHasDateAndStockFromSlots(dateTarget, numStock); // получаем список всех заказов на данном складе на текущий день
+		if(ordersSet == null) {
+			return 0;
+		}
+		List<Order> orders = ordersSet.stream()
+				.filter(o-> !o.getMarketNumber().equals(order.getMarketNumber()))// убираем таргетный зака, если он есть
+				.filter(o-> o.getIsInternalMovement()!=null && o.getIsInternalMovement().equals("true")) // пропускаем только заказы на внутренние перемещения
+				.collect(Collectors.toList()); 
+		Integer summPall = 0;
+		for (Order order2 : orders) {
+			summPall = summPall + Integer.parseInt(order2.getPall().trim());
+		}
+		return summPall;
+	}
+
+	@Override
+	public Integer getSummPallInStockExternal(Order order) {
+		Timestamp dateTimeStart = order.getTimeDelivery();
+		String numStock = null;
+		if(order.getIdRamp().toString().length() < 5) {
+			System.err.println("Ошибка в названии склада. Склад не может быть двухзначным");
+		}
+		if(order.getIdRamp().toString().length() < 6) { // проверка на будующее если будет учавстовать склад с трехзначным индексом
+			numStock = order.getIdRamp().toString().substring(0, 3);
+		}else {
+			numStock = order.getIdRamp().toString().substring(0, 4);
+		}
+		Date dateTarget = Date.valueOf(dateTimeStart.toLocalDateTime().toLocalDate());
+		Set<Order> ordersSet = orderDAO.getOrderListHasDateAndStockFromSlots(dateTarget, numStock); // получаем список всех заказов на данном складе на текущий день
+		if(ordersSet == null) {
+			return 0;
+		}
+		List<Order> orders = ordersSet.stream()
+				.filter(o-> !o.getMarketNumber().equals(order.getMarketNumber()))// убираем таргетный зака, если он есть
+				.filter(o-> o.getIsInternalMovement()==null || o.getIsInternalMovement()!=null && o.getIsInternalMovement().equals("falce")) // пропускаем только обычные заказы 
+				.collect(Collectors.toList()); 
+		Integer summPall = 0;
+		for (Order order2 : orders) {
+			summPall = summPall + Integer.parseInt(order2.getPall().trim());
+		}
+		return summPall;
+	}
+
 	
 }

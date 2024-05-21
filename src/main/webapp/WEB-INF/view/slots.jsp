@@ -54,16 +54,24 @@
 		</div>
 
 		<div class="pallInfo-container">
-			<div id="pallInfo" class="pallInfo">
-				<span id="pallCount" class="text-success">0</span>
+			<div id="externalPallInfo" class="pallInfo">
+				<span>Внеш.</span>
+				<span id="externalPallCount" class="text-success">0</span>
 				<span>/</span>
-				<span id="maxPall">0</span>
-				<span>палл.</span>
+				<span id="externalMaxPall">0</span>
+				<span>палл</span>
 				<button type="button" class="btn btn-link px-1 py-0" data-toggle="modal" data-target="#pallChartModal">
 					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-graph-down" viewBox="0 0 16 16">
 						<path fill-rule="evenodd" d="M0 0h1v15h15v1H0V0Zm14.817 11.887a.5.5 0 0 0 .07-.704l-4.5-5.5a.5.5 0 0 0-.74-.037L7.06 8.233 3.404 3.206a.5.5 0 0 0-.808.588l4 5.5a.5.5 0 0 0 .758.06l2.609-2.61 4.15 5.073a.5.5 0 0 0 .704.07Z"/>
 					</svg>
 				</button>
+			</div>
+			<div id="internalPallInfo" class="pallInfo">
+				<span>Внутр.</span>
+				<span id="internalPallCount" class="text-success">0</span>
+				<span>/</span>
+				<span id="internalMaxPall">0</span>
+				<span>палл</span>
 			</div>
 		</div>
 

@@ -14,12 +14,18 @@
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/procurementControl.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/autocomplete.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/snackbar.css">
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/bootstrap5overlay.css">
 	<script src="${pageContext.request.contextPath}/resources/js/sortableJS/sortable.min.js"></script>
-	<!-- <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" /> -->
-	<!-- <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script> -->
 </head>
 <body>
 	<jsp:include page="headerNEW.jsp" />
+
+	<div id="overlay" class="none">
+		<div class="spinner-border text-primary" role="status">
+			<span class="sr-only">Загрузка...</span>
+		</div>
+	</div>
+
 	<input type="hidden" value="<sec:authentication property="principal.username" />" id="login">
 	<div class="container-fluid my-container px-0">
 		<div class="title-container">

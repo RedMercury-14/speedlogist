@@ -13,9 +13,17 @@
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/variables.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/procurementControl.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/snackbar.css">
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/bootstrap5overlay.css">
 </head>
 <body>
 	<jsp:include page="headerNEW.jsp" />
+
+	<div id="overlay" class="none">
+		<div class="spinner-border text-primary" role="status">
+			<span class="sr-only">Загрузка...</span>
+		</div>
+	</div>
+
 	<input type="hidden" value="<sec:authentication property="principal.username" />" id="login">
 	<div class="container-fluid my-container px-0">
 		<div class="title-container">

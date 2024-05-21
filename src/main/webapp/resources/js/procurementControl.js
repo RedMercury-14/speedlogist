@@ -4,6 +4,7 @@ import { debounce, getData, dateHelper, getStatus, changeGridTableMarginTop, row
 import { snackbar } from './snackbar/snackbar.js'
 import { uiIcons } from './uiIcons.js'
 import { excelStyles, getPointToView, getRouteInfo, pointSorting, procurementExcelExportParams } from "./procurementControlUtils.js"
+import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 
 const PAGE_NAME = 'ProcurementControl'
 const LOCAL_STORAGE_KEY = `AG_Grid_settings_to_${PAGE_NAME}`
@@ -352,7 +353,10 @@ function editOrder(idOrder) {
 async function deleteOrder(idOrder, rowNode) {
 	const deleteStatus = 10
 	const deleteStatusText = getStatus(deleteStatus)
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
 	const res = await getData(`${getChangeOrderStatusBaseUrl}${idOrder}&${deleteStatus}`)
+	clearTimeout(timeoutId)
+	bootstrap5overlay.hideOverlay()
 
 	if (res.status === '200') {
 		snackbar.show('Заявка удалена')

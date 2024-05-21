@@ -57,7 +57,6 @@ import {
 	getDatesToSlotsFetch,
 	getMinUnloadDate,
 	getOrderDataForAjax,
-	getPallCount,
 	getSlotInfoToCopy,
 } from "./slots/dataUtils.js"
 import { gridColumnLocalState } from "./AG-Grid/ag-grid-utils.js"
@@ -425,7 +424,7 @@ function dateSetHandler(info) {
 	// изменение информации о паллетах для данного склада
 	if (currentStock) {
 		const maxPall = store.getMaxPallByDate(currentStock.id, currentDateStr)
-		const pallCount = getPallCount(currentStock, currentDateStr)
+		const pallCount = store.getPallCount(currentStock, currentDateStr)
 		// сохраняем в стор данные о паллетовместимости на текущем складе
 		store.setCurrentMaxPall(maxPall)
 		// изменяем данные по паллетовместимости у пользователя
@@ -494,8 +493,9 @@ function eventDropHandler(info) {
 
 	// проверка паллетовместимости склада на соседние даты
 	const eventDateStr = fcEvent.startStr.split('T')[0]
+	const pallCount = store.getPallCount(currentStock, eventDateStr)
 	const maxPall = store.getMaxPallByDate(currentStock.id, eventDateStr)
-	if (!checkPallCountForComingDates(info, currentStock, maxPall)) {
+	if (!checkPallCountForComingDates(info, pallCount, maxPall)) {
 		info.revert()
 		snackbar.show(userMessages.pallDropError)
 		return
@@ -520,8 +520,9 @@ function eventReceiveHandler(info) {
 
 	// проверка паллетовместимости склада
 	const currentStock = store.getCurrentStock()
+	const pallCount = store.getPallCount(currentStock, eventDateStr)
 	const maxPall = store.getMaxPallByDate(currentStock.id, eventDateStr)
-	if (!checkPallCount(info, currentStock, maxPall)) {
+	if (!checkPallCount(info, pallCount, maxPall)) {
 		info.revert()
 		snackbar.show(userMessages.pallDropError)
 		return

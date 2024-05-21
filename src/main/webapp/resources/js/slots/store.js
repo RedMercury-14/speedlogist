@@ -8,6 +8,11 @@ const token = $("meta[name='_csrf']").attr("content")
 const login = document.querySelector("#login").value
 const role = document.querySelector("#role").value
 
+const maxPall = {
+	externalMovement: 0,
+	internalMovement: 0,
+}
+
 export const store = {
 	_state: {
 		token,
@@ -77,10 +82,51 @@ export const store = {
 	},
 
 	setCurrentMaxPall(currentMaxPall) {
-		this._state.currentMaxPall = Number(currentMaxPall)
+		this._state.currentMaxPall = currentMaxPall
 	},
 	getCurrentMaxPall() {
 		return this._state.currentMaxPall
+	},
+
+	getPallCount(stock, dateStr) {
+		const isExternalMovementEvent = event => event.extendedProps.data.isInternalMovement !== 'true'
+		const isInternalMovementEvent = event => event.extendedProps.data.isInternalMovement === 'true'
+		const eventsByDate = event => event.start.split('T')[0] === dateStr
+		return stock.events
+			.filter(eventsByDate)
+			.reduce((acc, event) => {
+				const numberOfPall = Number(event.extendedProps.data.pall)
+				if (isExternalMovementEvent(event)) {
+					acc.externalMovement = acc.externalMovement + numberOfPall
+				}
+				if (isInternalMovementEvent(event)) {
+					acc.internalMovement = acc.internalMovement + numberOfPall
+				}
+				return acc
+			}, {
+				externalMovement: 0,
+				internalMovement: 0,
+			})
+	},
+	getPallCountForExternalMovement(stock, dateStr) {
+		const isExternalMovementEvent = event => event.extendedProps.data.isInternalMovement !== 'true'
+		const eventsByDate = event => event.start.split('T')[0] === dateStr && isExternalMovementEvent(event)
+		return stock.events
+			.filter(eventsByDate)
+			.reduce((acc, event) => {
+				const numberOfPall = Number(event.extendedProps.data.pall)
+				return acc + numberOfPall
+			}, 0)
+	},
+	getPallCountForInternalMovement(stock, dateStr) {
+		const isInternalMovementEvent = event => event.extendedProps.data.isInternalMovement === 'true'
+		const eventsByDate = event => event.start.split('T')[0] === dateStr && isInternalMovementEvent(event)
+		return stock.events
+			.filter(eventsByDate)
+			.reduce((acc, event) => {
+				const numberOfPall = Number(event.extendedProps.data.pall)
+				return acc + numberOfPall
+			}, 0)
 	},
 
 

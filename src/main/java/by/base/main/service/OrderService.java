@@ -79,10 +79,25 @@ public interface OrderService {
 	
 	/**
 	 * Возвращает суммарное кол-во паллет на текущий момент времени на складе
+	 * Это общее колл-во паллет! 
 	 * @param order
 	 * @return
 	 */
 	Integer getSummPallInStock (Order order);
+	
+	/**
+	 * Возвращает суммарное кол-во паллет <b>заказов внутренних перемещений</b> на текущий момент времени на складе
+	 * @param order
+	 * @return
+	 */
+	Integer getSummPallInStockInternal (Order order);
+	
+	/**
+	 * Возвращает суммарное кол-во паллет <b>обычных заказов</b> на текущий момент времени на складе
+	 * @param order
+	 * @return
+	 */
+	Integer getSummPallInStockExternal (Order order);
 	
 	int updateOrderFromStatus (Order order);
 	

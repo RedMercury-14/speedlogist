@@ -4,62 +4,106 @@
 export const tempMaxPallRestrictions = [
 	{
 		stockId: '1700',
-		date: '2024-05-17',
-		maxPall: 1600,
-	},
-	{
-		stockId: '1700',
-		date: '2024-05-18',
-		maxPall: 1600,
-	},
-	{
-		stockId: '1700',
-		date: '2024-05-19',
-		maxPall: 1300,
-	},
-	{
-		stockId: '1700',
-		date: '2024-05-20',
-		maxPall: 1500,
-	},
-	{
-		stockId: '1700',
 		date: '2024-05-21',
-		maxPall: 1600,
+		maxPall:{
+			externalMovement: 1600,
+			internalMovement: 120,
+		},
 	},
 	{
 		stockId: '1700',
 		date: '2024-05-22',
-		maxPall: 1600,
+		maxPall:{
+			externalMovement: 1600,
+			internalMovement: 120,
+		},
 	},
 	{
 		stockId: '1700',
 		date: '2024-05-23',
-		maxPall: 1600,
+		maxPall: {
+			externalMovement: 1600,
+			internalMovement: 120,
+		},
 	},
 	{
 		stockId: '1700',
 		date: '2024-05-24',
-		maxPall: 1600,
+		maxPall: {
+			externalMovement: 1600,
+			internalMovement: 120,
+		},
 	},
 	{
 		stockId: '1700',
 		date: '2024-05-25',
-		maxPall: 1400,
+		maxPall: {
+			externalMovement: 1400,
+			internalMovement: 90,
+		},
 	},
 	{
 		stockId: '1700',
 		date: '2024-05-26',
-		maxPall: 1300,
+		maxPall:{
+			externalMovement: 1300,
+			internalMovement: 90,
+		},
 	},
 	{
-		stockId: '1200',
-		date: '2024-05-18',
-		maxPall: 700,
+		stockId: '1700',
+		date: '2024-05-27',
+		maxPall:{
+			externalMovement: 1580,
+			internalMovement: 120,
+		},
 	},
 	{
-		stockId: '1200',
-		date: '2024-05-19',
-		maxPall: 700,
+		stockId: '1700',
+		date: '2024-05-28',
+		maxPall:{
+			externalMovement: 1580,
+			internalMovement: 120,
+		},
+	},
+	{
+		stockId: '1700',
+		date: '2024-05-29',
+		maxPall:{
+			externalMovement: 1580,
+			internalMovement: 120,
+		},
+	},
+	{
+		stockId: '1700',
+		date: '2024-05-30',
+		maxPall:{
+			externalMovement: 1580,
+			internalMovement: 120,
+		},
+	},
+	{
+		stockId: '1700',
+		date: '2024-05-31',
+		maxPall:{
+			externalMovement: 1580,
+			internalMovement: 120,
+		},
+	},
+	{
+		stockId: '1700',
+		date: '2024-06-01',
+		maxPall:{
+			externalMovement: 1400,
+			internalMovement: 90,
+		},
+	},
+	{
+		stockId: '1700',
+		date: '2024-06-02',
+		maxPall:{
+			externalMovement: 1300,
+			internalMovement: 60,
+		},
 	},
 ] 

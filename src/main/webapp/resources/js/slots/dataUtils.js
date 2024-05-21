@@ -113,17 +113,6 @@ export function getOrderDataForAjax(info, currentStock, currentLogin, currentRol
 }
 
 
-/* ------------ расчет паллетовместимости ------------ */
-export function getPallCount(stock, dateStr) {
-	return stock.events
-		.filter(event => event.start.split('T')[0] === dateStr)
-		.reduce((acc, event) => {
-			const numberOfPall = Number(event.extendedProps.data.pall)
-			return acc + numberOfPall
-		}, 0)
-}
-
-
 // получение action для метода обновления паллетовместимости на странице
 export function getPallCoutnAction(eventDateStr, oldEventDateStr) {
 	const eventDate = new Date(eventDateStr)
@@ -133,6 +122,12 @@ export function getPallCoutnAction(eventDateStr, oldEventDateStr) {
 	if (diff < 0) return 'decrement'
 	if (diff > 0) return 'increment'
 	return ''
+}
+
+// получение типа заказа 
+export function getOrderType(order) {
+	if (order.isInternalMovement === 'true') return 'internalMovement'
+	return 'externalMovement'
 }
 
 

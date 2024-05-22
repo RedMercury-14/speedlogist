@@ -683,26 +683,37 @@ public class MainRestController {
 		}
 		//главные проверки
 		//проверка на лимит приемки паллет
-		//отдельно проверяем на внутренние перемещение и все остальные
-		if(order.getIsInternalMovement().equals("true")) {
-			Integer summPall = orderService.getSummPallInStockInternal(order);
-			Integer summPallNew =  summPall + Integer.parseInt(order.getPall().trim());
-			String propKey = "limit.movment." + getTrueStock(order);
-			if(summPallNew > Integer.parseInt(propertiesStock.getProperty(propKey))) {
-				response.put("status", "100");
-				response.put("message", "Ошибка. Превышен лимит по паллетам на текущую дату");
-				return response;
-			}
-		}else {
-			Integer summPall = orderService.getSummPallInStockExternal(order);
-			Integer summPallNew =  summPall + Integer.parseInt(order.getPall().trim());
-			String propKey = "limit." + getTrueStock(order);
-			if(summPallNew > Integer.parseInt(propertiesStock.getProperty(propKey))) {						
-				response.put("status", "100");
-				response.put("message", "Ошибка. Превышен лимит по паллетам на текущую дату");
-				return response;
-			}
+		Integer summPall = orderService.getSummPallInStockExternal(order);
+		Integer summPallNew =  summPall + Integer.parseInt(order.getPall().trim());
+		String propKey = "limit." + getTrueStock(order);
+		if(summPallNew > Integer.parseInt(propertiesStock.getProperty(propKey))) {						
+			response.put("status", "100");
+			response.put("message", "Ошибка. Превышен лимит по паллетам на текущую дату");
+			return response;
 		}
+		
+		
+		
+//		//отдельно проверяем на внутренние перемещение и все остальные
+//		if(order.getIsInternalMovement() != null && order.getIsInternalMovement().equals("true")) {
+//			Integer summPall = orderService.getSummPallInStockInternal(order);
+//			Integer summPallNew =  summPall + Integer.parseInt(order.getPall().trim());
+//			String propKey = "limit.movment." + getTrueStock(order);
+//			if(summPallNew > Integer.parseInt(propertiesStock.getProperty(propKey))) {
+//				response.put("status", "100");
+//				response.put("message", "Ошибка. Превышен лимит по паллетам на текущую дату");
+//				return response;
+//			}
+//		}else {
+//			Integer summPall = orderService.getSummPallInStockExternal(order);
+//			Integer summPallNew =  summPall + Integer.parseInt(order.getPall().trim());
+//			String propKey = "limit." + getTrueStock(order);
+//			if(summPallNew > Integer.parseInt(propertiesStock.getProperty(propKey))) {						
+//				response.put("status", "100");
+//				response.put("message", "Ошибка. Превышен лимит по паллетам на текущую дату");
+//				return response;
+//			}
+//		}
 		String errorMessage = orderService.updateOrderForSlots(order);//проверка на пересечение со временим других слотов и лимит складов
 		java.util.Date t2 = new java.util.Date();
 		System.out.println(t2.getTime()-t1.getTime() + " ms - update" );
@@ -796,29 +807,39 @@ public class MainRestController {
 		order.setLoginManager(user.getLogin());
 		order.setStatus(jsonMainObject.get("status") == null ? 7 : Integer.parseInt(jsonMainObject.get("status").toString()));
 		//главные проверки
-		//проверка на лимит приемки паллет
-		//отдельно проверяем на внутренние перемещение и все остальные
-		if(order.getIsInternalMovement().equals("true")) {
-			Integer summPall = orderService.getSummPallInStockInternal(order);
-			System.out.println("Сумма паллет перемещение = " + summPall);
-			Integer summPallNew =  summPall + Integer.parseInt(order.getPall().trim());
-			String propKey = "limit.movment." + getTrueStock(order);
-			if(summPallNew > Integer.parseInt(propertiesStock.getProperty(propKey))) {
-				response.put("status", "100");
-				response.put("message", "Ошибка. Превышен лимит по паллетам на текущую дату");
-				return response;
-			}
-		}else {
-			Integer summPall = orderService.getSummPallInStockExternal(order);
-			System.out.println("Сумма паллет обычного заказа = " + summPall);
-			Integer summPallNew =  summPall + Integer.parseInt(order.getPall().trim());
-			String propKey = "limit." + getTrueStock(order);
-			if(summPallNew > Integer.parseInt(propertiesStock.getProperty(propKey))) {
-				response.put("status", "100");
-				response.put("message", "Ошибка. Превышен лимит по паллетам на текущую дату");
-				return response;
-			}
+		//проверка на лимит приемки паллет		
+		Integer summPall = orderService.getSummPallInStockExternal(order);
+		System.out.println("Сумма паллет обычного заказа = " + summPall);
+		Integer summPallNew =  summPall + Integer.parseInt(order.getPall().trim());
+		String propKey = "limit." + getTrueStock(order);
+		if(summPallNew > Integer.parseInt(propertiesStock.getProperty(propKey))) {
+			response.put("status", "100");
+			response.put("message", "Ошибка. Превышен лимит по паллетам на текущую дату");
+			return response;
 		}
+		
+		//отдельно проверяем на внутренние перемещение и все остальные
+//		if(order.getIsInternalMovement() != null && order.getIsInternalMovement().equals("true")) {
+//			Integer summPall = orderService.getSummPallInStockInternal(order);
+//			System.out.println("Сумма паллет перемещение = " + summPall);
+//			Integer summPallNew =  summPall + Integer.parseInt(order.getPall().trim());
+//			String propKey = "limit.movment." + getTrueStock(order);
+//			if(summPallNew > Integer.parseInt(propertiesStock.getProperty(propKey))) {
+//				response.put("status", "100");
+//				response.put("message", "Ошибка. Превышен лимит по паллетам на текущую дату");
+//				return response;
+//			}
+//		}else {
+//			Integer summPall = orderService.getSummPallInStockExternal(order);
+//			System.out.println("Сумма паллет обычного заказа = " + summPall);
+//			Integer summPallNew =  summPall + Integer.parseInt(order.getPall().trim());
+//			String propKey = "limit." + getTrueStock(order);
+//			if(summPallNew > Integer.parseInt(propertiesStock.getProperty(propKey))) {
+//				response.put("status", "100");
+//				response.put("message", "Ошибка. Превышен лимит по паллетам на текущую дату");
+//				return response;
+//			}
+//		}
 		
 		//конец проверки на лимит приемки
 		String errorMessage = orderService.updateOrderForSlots(order);//проверка на пересечение со временим других слотов

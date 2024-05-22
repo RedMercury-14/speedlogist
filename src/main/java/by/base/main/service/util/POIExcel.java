@@ -79,12 +79,14 @@ import by.base.main.model.Act;
 import by.base.main.model.MapResponse;
 import by.base.main.model.Message;
 import by.base.main.model.Order;
+import by.base.main.model.Product;
 import by.base.main.model.Route;
 import by.base.main.model.RouteHasShop;
 import by.base.main.model.Shop;
 import by.base.main.service.ActService;
 import by.base.main.service.MessageService;
 import by.base.main.service.OrderService;
+import by.base.main.service.ProductService;
 import by.base.main.service.ServiceException;
 
 /**
@@ -113,6 +115,9 @@ public class POIExcel {
 	
 	@Autowired
 	private OrderService orderService;
+	
+	@Autowired
+	private ProductService productService;
 
 	private ArrayList<Shop> shops;
 	private ArrayList<RouteHasShop> arrayRouteHasShop;
@@ -491,6 +496,128 @@ public class POIExcel {
 				System.out.println("Записан магазин: " + numShopTarget);
 			}
 		}
+	}
+	
+	
+	
+	private Integer dayMax = 20;
+	
+	public String loadBalanceStock(File file, HttpServletRequest request) throws FileNotFoundException, IOException {
+		 XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
+	     XSSFSheet sheet = wb.getSheetAt(0);
+	     Date dateUnload =  new Date(sheet.getRow(0).getCell(4).getDateCellValue().getTime());
+	     Set<Product> unicProduct = new HashSet<Product>();
+	     int upd = 0;
+	     int save = 0;
+	     for (int i = 1; i < sheet.getLastRowNum() + 1; i++) {
+	            XSSFRow rowI = sheet.getRow(i);
+	            
+	            XSSFCell cellCodeProduct = rowI.getCell(3);
+	            XSSFCell cellRating = rowI.getCell(0);
+	            XSSFCell cellNumStock = rowI.getCell(1);
+	            XSSFCell cell2 = rowI.getCell(2);
+	            XSSFCell cell4 = rowI.getCell(4);	            
+	            XSSFCell cell5 = rowI.getCell(5);
+	            XSSFCell cell6= rowI.getCell(6);
+	            XSSFCell cell7 = rowI.getCell(7);
+	            XSSFCell cell8 = rowI.getCell(8);
+	            XSSFCell cell9 = rowI.getCell(9);
+	            XSSFCell cell10 = rowI.getCell(10);
+	            XSSFCell cell11 = rowI.getCell(11);
+	            XSSFCell cell12 = rowI.getCell(12);
+	            XSSFCell cell13 = rowI.getCell(13);
+	            XSSFCell cell14 = rowI.getCell(14);
+	            XSSFCell cell15 = rowI.getCell(15);
+	            XSSFCell cell16 = rowI.getCell(16);
+	            XSSFCell cell17 = rowI.getCell(17);
+	            XSSFCell cell18 = rowI.getCell(18);
+	            XSSFCell cell19 = rowI.getCell(19);
+	            XSSFCell cell20 = rowI.getCell(20);
+	            XSSFCell cell21 = rowI.getCell(21);
+	            XSSFCell cell22 = rowI.getCell(22);
+
+
+
+	            //устанавливаем типы ячеек индивидуально! Все стринг
+	            cellCodeProduct.setCellType(CellType.STRING);
+	            cellRating.setCellType(CellType.STRING);
+	            cellNumStock.setCellType(CellType.STRING);
+	            cell4.setCellType(CellType.STRING);
+	            cell6.setCellType(CellType.STRING);
+	            
+	            
+	            Product product = productService.getProductByCode(Integer.parseInt(cellCodeProduct.toString()));
+	            if(product == null) {
+	            	product = new Product();
+	            	product.setRating(Integer.parseInt(cellRating.toString()));
+	            	product.setNumStock(Integer.parseInt(cellNumStock.toString()));
+	            	product.setGroup(cell2.toString());
+	            	product.setCodeProduct(Integer.parseInt(cellCodeProduct.toString()));
+	            	product.setName(cell4.toString());	            	
+	            	product.setDateUnload(dateUnload);
+	            	product.setСalculatedPerDay(Double.parseDouble(cell5.toString()));
+	            	product.setBalanceStock(Double.parseDouble(cell6.toString()));
+	            	product.setDuringAssembly(Double.parseDouble(cell7.toString()));
+	            	product.setNeed(Double.parseDouble(cell8.toString()));
+	            	product.setRemainderNetwork(Double.parseDouble(cell9.toString()));
+	            	product.setRemainderStockInPall(Double.parseDouble(cell10.toString()));
+	            	product.setRemainderStockInDay(Double.parseDouble(cell11.toString()));
+	            	product.setRemainderNetworkInDay(Double.parseDouble(cell12.toString()));
+	            	product.setAmountMaintenance(Double.parseDouble(cell13.toString()));
+	            	product.setTOWithLeftovers2Days(Double.parseDouble(cell14.toString()));
+	            	product.setPercent(Double.parseDouble(cell15.toString()));
+	            	product.setDifference(cell16 != null ? Double.parseDouble(cell16.toString()) : null);
+	            	product.setPriceWithoutNDS(cell17 != null ? Double.parseDouble(cell17.toString()) : null);
+	            	product.setExpectedArrival(Double.parseDouble(cell18.toString()));
+	            	product.setReserves(Double.parseDouble(cell20.toString()));
+	            	product.setReserves100And50(Double.parseDouble(cell21.toString()));
+	            	product.setBalanceStockAndReserves(Double.parseDouble(cell22.toString()));
+	            	product.setDateCreate(Timestamp.valueOf(LocalDateTime.now()));
+	            	product.setDayMax(dayMax);
+	            	product.setIsException(false);
+	            	productService.saveProduct(product);
+	            	save++;
+	            }else {	            	
+	            	product.setRating(Integer.parseInt(cellRating.toString()));
+	            	product.setNumStock(Integer.parseInt(cellNumStock.toString()));
+	            	product.setGroup(cell2.toString());
+	            	product.setCodeProduct(Integer.parseInt(cellCodeProduct.toString()));
+	            	product.setName(cell4.toString());	            	
+	            	product.setDateUnload(dateUnload);
+	            	product.setСalculatedPerDay(Double.parseDouble(cell5.toString()));
+	            	product.setBalanceStock(Double.parseDouble(cell6.toString()));
+	            	product.setDuringAssembly(Double.parseDouble(cell7.toString()));
+	            	product.setNeed(Double.parseDouble(cell8.toString()));
+	            	product.setRemainderNetwork(Double.parseDouble(cell9.toString()));
+	            	product.setRemainderStockInPall(Double.parseDouble(cell10.toString()));	            	
+	            	product.setRemainderNetworkInDay(Double.parseDouble(cell12.toString()));
+	            	product.setAmountMaintenance(Double.parseDouble(cell13.toString()));
+	            	product.setTOWithLeftovers2Days(Double.parseDouble(cell14.toString()));
+	            	product.setPercent(Double.parseDouble(cell15.toString()));
+	            	product.setDifference(cell16 != null ? Double.parseDouble(cell16.toString()) : null);
+	            	product.setPriceWithoutNDS(cell17 != null ? Double.parseDouble(cell17.toString()) : null);
+	            	product.setExpectedArrival(Double.parseDouble(cell18.toString()));
+	            	product.setReserves(Double.parseDouble(cell20.toString()));
+	            	product.setReserves100And50(Double.parseDouble(cell21.toString()));	            	
+	            	product.setDateCreate(Timestamp.valueOf(LocalDateTime.now()));
+	            	product.setDayMax(dayMax);
+	            	if(unicProduct.add(product)) {
+	            		product.setRemainderStockInDay(Double.parseDouble(cell11.toString()));
+	            		product.setBalanceStockAndReserves(Double.parseDouble(cell22.toString()));
+	            	}else {
+	            		Double stockInDay11 = product.getRemainderStockInDay();
+	            		Double balanceStockAndReserves22 = product.getBalanceStockAndReserves();
+	            		product.setRemainderStockInDay(Double.parseDouble(cell11.toString()) + stockInDay11);
+	            		product.setBalanceStockAndReserves(Double.parseDouble(cell22.toString()) + balanceStockAndReserves22);
+	            	}
+	            	productService.updateProduct(product);
+//	            	System.out.println(product);
+	            	upd++;
+	            }
+
+	        }
+	     String message = "Добавлено : " + save + " позиций;\nОбновлено : " + upd + " позиций";
+		return message;		
 	}
 	
 	private Integer codeСounterparty487 = 0;

@@ -29,7 +29,7 @@ public class Product {
 	@Column(name = "num_stock")
 	private Integer numStock;
 	
-	@Column(name = "group")
+	@Column(name = "`group`")
 	private String group;
 	
 	@Column(name = "name")

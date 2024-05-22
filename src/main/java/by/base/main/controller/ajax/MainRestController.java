@@ -94,6 +94,7 @@ import by.base.main.model.JsonResponsePolygon;
 import by.base.main.model.MapResponse;
 import by.base.main.model.Message;
 import by.base.main.model.Order;
+import by.base.main.model.Product;
 import by.base.main.model.Rates;
 import by.base.main.model.Role;
 import by.base.main.model.Route;
@@ -105,6 +106,7 @@ import by.base.main.model.User;
 import by.base.main.service.AddressService;
 import by.base.main.service.MessageService;
 import by.base.main.service.OrderService;
+import by.base.main.service.ProductService;
 import by.base.main.service.RatesService;
 import by.base.main.service.RoleService;
 import by.base.main.service.RouteHasShopService;
@@ -215,6 +217,9 @@ public class MainRestController {
 	@Autowired
 	private OrderCreater orderCreater;
 	
+	@Autowired
+	private ProductService productService;
+	
 	private static String classLog;
 	private static String marketJWT;
 	private static final String marketUrl = "https://api.dobronom.by:10896/Json";
@@ -225,6 +230,80 @@ public class MainRestController {
 
 	public static final Comparator<Address> comparatorAddressId = (Address e1, Address e2) -> (e1.getIdAddress() - e2.getIdAddress());
 	public static final Comparator<Address> comparatorAddressIdForView = (Address e1, Address e2) -> (e2.getType().charAt(0) - e1.getType().charAt(0));
+	
+	/**
+	 * Метод меняет остатки на складах Ост на РЦ + запасники в днях
+	 * @param request
+	 * @param code
+	 * @param stock
+	 * @return
+	 */
+	@GetMapping("/order-support/setNewBalance/{code}&{stock}")
+	public Map<String, Object> setNewBalance(HttpServletRequest request, @PathVariable String code, @PathVariable String stock) {
+		Map<String, Object> response = new HashMap<String, Object>();
+		Product product = productService.getProductByCode(Integer.parseInt(code.trim()));
+		product.setBalanceStockAndReserves(Double.parseDouble(stock));
+		productService.updateProduct(product);
+		response.put("status", "200");
+		response.put("message", "Данные по товaру обновлены");
+		return response;		
+	}
+	
+	/**
+	 * Метод меняет Exception
+	 * @param request
+	 * @param code
+	 * @return
+	 */
+	@GetMapping("/order-support/changeException/{idProduct}")
+	public Map<String, Object> changeException(HttpServletRequest request, @PathVariable String idProduct) {
+		Map<String, Object> response = new HashMap<String, Object>();
+		Product product = productService.getProductByCode(Integer.parseInt(idProduct.trim()));
+		product.setIsException(!product.getIsException());
+		productService.updateProduct(product);
+		response.put("status", "200");
+		response.put("message", "Данные по товaру обновлены.");
+		return response;		
+	}
+	
+	/**
+	 * Редактор максимального кол-ва дней для Product 
+	 * @param request
+	 * @param param
+	 * @return
+	 */
+	@GetMapping("/order-support/setMaxDay/{code}&{day}")
+	public Map<String, Object> setMaxDay(HttpServletRequest request, @PathVariable String code, @PathVariable String day) {
+		Map<String, Object> response = new HashMap<String, Object>();
+		Product product = productService.getProductByCode(Integer.parseInt(code.trim()));
+		product.setDayMax(Integer.parseInt(day));
+		productService.updateProduct(product);
+		response.put("status", "200");
+		response.put("message", "Данные по товaру обновлены");
+		return response;		
+	}
+	
+	/**
+	 * возвращает все SКU  manager
+	 * @param request
+	 * @return
+	 */
+	@GetMapping("/manager/getStockRemainder")
+	public List<Product> getStockRemainder(HttpServletRequest request) {
+		List<Product> targetRoutes = productService.getAllProductList();		
+		return targetRoutes;
+	}
+	
+	/**
+	 * возвращает все SКU  manager
+	 * @param request
+	 * @return
+	 */
+	@GetMapping("/order-support/getStockRemainder")
+	public List<Product> getStockRemainderSupport(HttpServletRequest request) {
+		List<Product> targetRoutes = productService.getAllProductList();		
+		return targetRoutes;
+	}
 	
 	@GetMapping("/carrier/test")
 	public String test(HttpServletRequest request) {
@@ -858,6 +937,37 @@ public class MainRestController {
 			return response;	
 		}			
 	}
+	/**
+	 * Метод отвечает за загрузку остатков на складах
+	 * @param model
+	 * @param request
+	 * @param session
+	 * @param excel
+	 * @return
+	 * @throws InvalidFormatException
+	 * @throws IOException
+	 * @throws ServiceException
+	 */
+	@RequestMapping(value = "/order-support/control/490", method = RequestMethod.POST, consumes = {
+			MediaType.MULTIPART_FORM_DATA_VALUE })
+	public Map<String, String> postOrderSupportLoad490(Model model, HttpServletRequest request, HttpSession session,
+			@RequestParam(value = "excel", required = false) MultipartFile excel)
+			throws InvalidFormatException, IOException, ServiceException {
+		Map<String, String> response = new HashMap<String, String>();	
+		File file1 = poiExcel.getFileByMultipartTarget(excel, request, "490.xlsx");
+//		String text = poiExcel.testHeaderOrderHasExcel(file1);
+		String text;
+//		if(text != null) {
+//			response.put("150", text);
+//			return response;
+//		}
+		//основной метод загрузки в БД
+		text = poiExcel.loadBalanceStock(file1, request);
+		
+		
+		response.put("200", text);
+		return response;
+	}
 	
 	/**
 	 * Метод отвечает за загрузку и создание Заказов
@@ -885,6 +995,7 @@ public class MainRestController {
 //		}
 		//основной метод создания заказов со статусом 5
 		text = poiExcel.loadOrderHasExcelV2(file1, request);
+//		text = poiExcel.loadBalanceStock(file1, request);
 		
 		
 		response.put("200", text);

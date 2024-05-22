@@ -11,6 +11,8 @@ public interface ProductService {
 	Integer saveProduct(Product product);
 
 	Product getProductByCode(Integer id);
+	
+	Product getProductByCodeAndStock(Integer id, Integer stock);
 
 	void updateProduct(Product product);
 }

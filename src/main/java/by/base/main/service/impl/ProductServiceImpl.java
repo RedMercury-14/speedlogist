@@ -3,11 +3,12 @@ package by.base.main.service.impl;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import by.base.main.dao.ProductDAO;
 import by.base.main.model.Product;
 import by.base.main.service.ProductService;
-
+@Service
 public class ProductServiceImpl implements ProductService{
 	
 	@Autowired
@@ -31,6 +32,11 @@ public class ProductServiceImpl implements ProductService{
 	@Override
 	public void updateProduct(Product product) {
 		productDAO.updateProduct(product);		
+	}
+
+	@Override
+	public Product getProductByCodeAndStock(Integer id, Integer stock) {
+		return productDAO.getProductByCodeAndStock(id, stock);
 	}
 
 }

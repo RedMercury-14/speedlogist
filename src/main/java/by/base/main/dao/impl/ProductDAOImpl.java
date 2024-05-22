@@ -8,10 +8,11 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 import by.base.main.dao.ProductDAO;
 import by.base.main.model.Product;
-
+@Repository
 public class ProductDAOImpl implements ProductDAO{
 
 	@Autowired
@@ -56,6 +57,22 @@ public class ProductDAOImpl implements ProductDAO{
 	public void updateProduct(Product product) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		currentSession.update(product);		
+	}
+
+	private static final String queryGetObjByCodeAndStock = "from Product where codeProduct=:codeProduct AND numStock=:stock";
+	@Transactional
+	@Override
+	public Product getProductByCodeAndStock(Integer id, Integer stock) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Product> theObject = currentSession.createQuery(queryGetObjByCodeAndStock, Product.class);
+		theObject.setParameter("codeProduct", id);
+		theObject.setParameter("stock", stock);
+		List<Product> trucks = theObject.getResultList();
+		if(trucks.isEmpty()) {
+			return null;
+		}
+		Product object = trucks.stream().findFirst().get();
+		return object;
 	}
 
 }

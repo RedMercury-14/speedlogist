@@ -32,7 +32,7 @@ public class CustomJSONParser {
 			JSONObject jsonpObject = (JSONObject) parser.parse(str);			
 			orderBuyGroupDTO.setCheckx(jsonpObject.get("Checkx") != null ? Integer.parseInt(jsonpObject.get("Checkx").toString()) : null);
 			orderBuyGroupDTO.setContractGroupId(jsonpObject.get("ContractGroupId") != null ? Long.parseLong(jsonpObject.get("ContractGroupId").toString()) : null);
-			orderBuyGroupDTO.setContractNumber(jsonpObject.get("ContractNumber") != null ? Long.parseLong(jsonpObject.get("ContractNumber").toString()) : null);
+			orderBuyGroupDTO.setContractNumber(jsonpObject.get("ContractNumber") != null ? jsonpObject.get("ContractNumber").toString() : null);
 			orderBuyGroupDTO.setContractorId(jsonpObject.get("ContractorId") != null ? Long.parseLong(jsonpObject.get("ContractorId").toString()) : null);
 			orderBuyGroupDTO.setContractorNameShort(jsonpObject.get("ContractorNameShort") != null ? jsonpObject.get("ContractorNameShort").toString() : null);
 			orderBuyGroupDTO.setContractType(jsonpObject.get("ContractType") != null ? Long.parseLong(jsonpObject.get("ContractType").toString()) : null);

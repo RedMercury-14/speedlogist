@@ -251,8 +251,8 @@ public class MainController {
 		}
 		
 		//телеграмм бот!
-//		if(telegrAMBOT.ISRUNNING == FALSE) {
-//			NEW BOTINITIALIZER(TELEGRAMBOT).INIT();
+//		if(telegramBot.isRunning == false) {
+//			new BotInitializer(telegramBot).init();
 //		}
 		System.err.println("ТЕЛЕГРАММ БОТ ОТКЛЮЧЕН!");
 		

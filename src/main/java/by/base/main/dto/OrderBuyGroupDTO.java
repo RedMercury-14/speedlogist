@@ -15,7 +15,7 @@ public class OrderBuyGroupDTO {
 	private Timestamp ShipmentDateLast; // Дата крайний поставки
 	private Long ContractType; // Тип контракта
 	private Long ContractGroupId; // Код контракта
-	private Long ContractNumber; // Номер контракта
+	private String ContractNumber; // Номер контракта
 	private Integer WarehouseId; // Склад назначения
 	private Long ContractorId; // Код поставщика
 	private String ContractorNameShort; // Краткое наименование поставщика
@@ -79,10 +79,10 @@ public class OrderBuyGroupDTO {
 	public void setContractGroupId(Long contractGroupId) {
 		ContractGroupId = contractGroupId;
 	}
-	public Long getContractNumber() {
+	public String getContractNumber() {
 		return ContractNumber;
 	}
-	public void setContractNumber(Long contractNumber) {
+	public void setContractNumber(String contractNumber) {
 		ContractNumber = contractNumber;
 	}
 	public Integer getWarehouseId() {

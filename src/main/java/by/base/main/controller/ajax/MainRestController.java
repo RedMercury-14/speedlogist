@@ -223,10 +223,10 @@ public class MainRestController {
 	
 	private static String classLog;
 	private static String marketJWT;
-	private static final String marketUrl = "https://api.dobronom.by:10896/Json";
-	private static final String serviceNumber = "CD6AE87C-2477-4852-A4E7-8BA5BD01C156";
-	private static final String loginMarket = "SpeedLogist";
-	private static final String passwordMarket = "12345678";
+	private static final String marketUrl = "https://api.dobronom.by:10806/Json";
+	private static final String serviceNumber = "BB7617FD-D103-4724-B634-D655970C7EC0";
+	private static final String loginMarket = "191178504_SpeedLogist";
+	private static final String passwordMarket = "SL!2024D@2005";
 
 
 	public static final Comparator<Address> comparatorAddressId = (Address e1, Address e2) -> (e1.getIdAddress() - e2.getIdAddress());
@@ -896,10 +896,10 @@ public class MainRestController {
 						Long deltDate = (long) (trueBalance - product.getDayMax() + 1);
 						if(message == null) {
 							message = "Товара " + product.getCodeProduct() + " ("+product.getName()+")" + " на складе хранится на " + trueBalance + " дней. Ограничение стока по данному товару: " + product.getDayMax() + " дней."
-									+"Ближайшая дата на которую можно привещти данный товар: " + start.toLocalDate().plusDays(deltDate);
+									+"Ближайшая дата на которую можно доставить данный товар: " + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy")) + "\n";
 						}else {
-							message = message + "\nТовара " + product.getCodeProduct() + " на складе хранится на " + trueBalance + " дней. Ограничение стока по данному товару: " + product.getDayMax() + " дней. "
-									+"Ближайшая дата на которую можно доставить данный товар: " + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy"));
+							message = message + "\nТовара " + product.getCodeProduct() + " ("+product.getName()+")" + " на складе хранится на " + trueBalance + " дней. Ограничение стока по данному товару: " + product.getDayMax() + " дней. "
+									+"Ближайшая дата на которую можно доставить данный товар: " + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy"))+ "\n";
 						}
 						 
 					}
@@ -981,7 +981,7 @@ public class MainRestController {
 		//главные проверки
 		//проверка на лимит приемки паллет		
 		Integer summPall = orderService.getSummPallInStockExternal(order);
-		System.out.println("Сумма паллет обычного заказа = " + summPall);
+//		System.out.println("Сумма паллет обычного заказа = " + summPall);
 		Integer summPallNew =  summPall + Integer.parseInt(order.getPall().trim());
 		String propKey = "limit." + getTrueStock(order);
 		if(summPallNew > Integer.parseInt(propertiesStock.getProperty(propKey))) {

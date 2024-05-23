@@ -871,7 +871,8 @@ public class MainRestController {
 		}
 		if(order.getNumProduct() == null) {
 			message = "Данные по заказу " + order.getMarketNumber() + " устарели! Обновите заказ.";
-			return message;
+//			return message; временно отключил
+			return null;
 		}
 		
 		String [] numProductMass = order.getNumProduct().split("\\^");

@@ -861,6 +861,7 @@ public class MainRestController {
 	
 	/**
 	 * Метод для проверки кол-ва товара на текущий день
+	 * если всё ок, возвращает null, если что то не то - сообщение
 	 * @return
 	 */
 	private String checkNumProductHasStock(Order order, Timestamp timeDelivery) {
@@ -887,12 +888,18 @@ public class MainRestController {
 				Double currentDate = (double) duration.toDays();
 				// считаем правильный остаток на текущий день
 				Double trueBalance = product.getBalanceStockAndReserves() + currentDate;
+				
+				
 				if(!product.getIsException()) {
 					if(trueBalance > product.getDayMax()) {
+						//считаем сколько дней нужно прибавить, чтобы заказать товар
+						Long deltDate = (long) (trueBalance - product.getDayMax() + 1);
 						if(message == null) {
-							message = "Товара " + product.getCodeProduct() + " ("+product.getName()+")" + " на складе хранится на " + trueBalance + " дней. Ограничение стока по данному товару: " + product.getDayMax() + " дней.";
+							message = "Товара " + product.getCodeProduct() + " ("+product.getName()+")" + " на складе хранится на " + trueBalance + " дней. Ограничение стока по данному товару: " + product.getDayMax() + " дней."
+									+"Ближайшая дата на которую можно привещти данный товар: " + start.toLocalDate().plusDays(deltDate);
 						}else {
-							message = message + "\nТовара " + product.getCodeProduct() + " на складе хранится на " + trueBalance + " дней. Ограничение стока по данному товару: " + product.getDayMax() + " дней.";
+							message = message + "\nТовара " + product.getCodeProduct() + " на складе хранится на " + trueBalance + " дней. Ограничение стока по данному товару: " + product.getDayMax() + " дней. "
+									+"Ближайшая дата на которую можно доставить данный товар: " + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy"));
 						}
 						 
 					}

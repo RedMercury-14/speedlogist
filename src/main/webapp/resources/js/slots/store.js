@@ -96,12 +96,13 @@ export const store = {
 			.filter(eventsByDate)
 			.reduce((acc, event) => {
 				const numberOfPall = Number(event.extendedProps.data.pall)
-				if (isExternalMovementEvent(event)) {
-					acc.externalMovement = acc.externalMovement + numberOfPall
-				}
-				if (isInternalMovementEvent(event)) {
-					acc.internalMovement = acc.internalMovement + numberOfPall
-				}
+				acc.externalMovement = acc.externalMovement + numberOfPall
+				// if (isExternalMovementEvent(event)) {
+				// 	acc.externalMovement = acc.externalMovement + numberOfPall
+				// }
+				// if (isInternalMovementEvent(event)) {
+				// 	acc.internalMovement = acc.internalMovement + numberOfPall
+				// }
 				return acc
 			}, {
 				externalMovement: 0,

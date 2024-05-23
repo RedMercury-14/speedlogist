@@ -282,3 +282,8 @@ function dateToNum(date) {
 
 	return yearNumber * 10000 + monthNumber * 100 + dayNumber
 }
+
+// выделение ("мигание") строки с изменениями
+export function highlightRow(gridOptions, rowNode) {
+	gridOptions.api.flashCells({ rowNodes: [rowNode] })
+}

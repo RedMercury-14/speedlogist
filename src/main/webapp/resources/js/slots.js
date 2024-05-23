@@ -30,6 +30,7 @@ import {
 	addSmallHeaderClass,
 	updateDropZone,
 	copyToClipboard,
+	showMessageModal,
 } from "./slots/calendarUtils.js"
 import { dateHelper, debounce, getData, isAdmin, isLogist, isSlotsObserver, isStockProcurement } from "./utils.js"
 import { uiIcons } from "./uiIcons.js"
@@ -614,6 +615,12 @@ function loadOrder(info) {
 				return
 			}
 
+			if (data.status === '105') {
+				info.revert()
+				showMessageModal(data.message)
+				return
+			}
+
 			customErrorCallback(info, data, method)
 		},
 		errorCallback: () => {
@@ -665,6 +672,12 @@ function updateOrder(info, isComplexUpdate) {
 				return
 			}
 
+			if (data.status === '105') {
+				info.revert()
+				showMessageModal(data.message)
+				return
+			}
+
 			customErrorCallback(info, data, method)
 		},
 		errorCallback: () => {
@@ -699,6 +712,12 @@ function deleteOrder(info) {
 
 			if (data.status === '200') {
 				deleteCalendarEvent(orderTableGridOption, orderData, false)
+				return
+			}
+
+			if (data.status === '105') {
+				info.revert()
+				showMessageModal(data.message)
 				return
 			}
 
@@ -797,6 +816,11 @@ function getOrderFromMarket(marketNumber, eventContainer, successCallback) {
 			if (data.status === '200') {
 				successCallback(data, marketNumber, eventContainer)
 				snackbar.show(data.message)
+				return
+			}
+
+			if (data.status === '105') {
+				showMessageModal(data.message)
 				return
 			}
 

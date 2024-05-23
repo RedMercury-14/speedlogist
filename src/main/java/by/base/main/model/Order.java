@@ -189,6 +189,9 @@ public class Order {
 	@Column(name = "market_contractor_id")
 	private String marketContractorId;
 	
+	@Column(name = "num_product")
+	private String numProduct;
+	
 	@Transient
 	private List<Address> addressesSort;
 	
@@ -405,6 +408,18 @@ public class Order {
 		return status;
 	}
 
+	/**
+	 * @return the numProduct
+	 */
+	public String getNumProduct() {
+		return numProduct;
+	}
+	/**
+	 * @param numProduct the numProduct to set
+	 */
+	public void setNumProduct(String numProduct) {
+		this.numProduct = numProduct;
+	}
 	public String getMarketNumber() {
 		return marketNumber;
 	}

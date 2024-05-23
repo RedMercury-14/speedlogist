@@ -10,7 +10,7 @@ export const stocks = [
 		shiftChange: ['08:00', '09:00', '20:00', '21:00'],
 		maxPall: {
 			externalMovement: 1300,
-			internalMovement: 120,
+			internalMovement: 0,
 		},
 		weekends: [],
 		ramps: [

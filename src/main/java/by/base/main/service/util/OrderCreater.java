@@ -55,6 +55,12 @@ public class OrderCreater {
 		        	if(Double.parseDouble(orderBuy.getQuantityOrder()) <= 0) {
 		        		continue;
 		        	}
+		        	if(order.getNumProduct() == null) {
+		        		order.setNumProduct(orderBuy.getGoodsId()+"^");
+		        	}else {
+		        		order.setNumProduct(order.getNumProduct()+orderBuy.getGoodsId()+"^");
+		        	}
+		        	
 		        	Double pall = Math.ceil(Double.parseDouble(orderBuy.getQuantityOrder().toString().trim()) / Double.parseDouble(orderBuy.getQuantityInPallet().toString().trim()));
 		            String pallStr = pall+"";
 

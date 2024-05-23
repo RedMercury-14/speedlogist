@@ -768,6 +768,7 @@ public class POIExcel {
                     order = new Order();
                     order.setMarketNumber(numOrderMarket.toString());                   
                     order.setCounterparty(cellNameСounterparty487.toString().trim());
+                    order.setNumProduct(cellCodeProduct487.toString()+"^");
                     Date dateDelivery;
                     try {
                         //отличное решение по датам
@@ -951,6 +952,7 @@ public class POIExcel {
                     
                     sku++;
                     order.setSku(sku);
+                    order.setNumProduct(order.getNumProduct() + cellCodeProduct487.toString()+"^");
                 }
             }
                         

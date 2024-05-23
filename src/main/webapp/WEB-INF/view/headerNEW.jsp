@@ -79,7 +79,7 @@
 								<li class="dropdown">
 									<a href="#" class="nav-item nav-link" data-toggle="dropdown">Cопровождение заказов</a>
 									<div class="dropdown-menu">
-										<a class="dropdown-item" href="<spring:url value="/main/order-support/orders" />">Менеджер заявок</a>
+										<a class="dropdown-item" href="<spring:url value="/main/order-support/orders" />">Остаток товара</a>
 										<a class="dropdown-item" href="<spring:url value="/main/order-support/control" />">Загрузить отчет</a>
 										<!-- <a class="dropdown-item" href="<spring:url value="/main/stock-support/orders" />">Таблица Башкиров</a> -->
 									</div>
@@ -166,7 +166,7 @@
 								<li class="dropdown">
 									<a href="#" class="nav-item nav-link" data-toggle="dropdown">Cопровождение заказов</a>
 									<div class="dropdown-menu">
-										<a class="dropdown-item" href="<spring:url value="/main/order-support/orders" />">Менеджер заявок</a>
+										<a class="dropdown-item" href="<spring:url value="/main/order-support/orders" />">Остаток товара</a>
 										<a class="dropdown-item" href="<spring:url value="/main/order-support/control" />">Загрузить отчет</a>
 									</div>
 								</li>
@@ -184,6 +184,7 @@
 									</div>
 								</li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/slots" />">Слоты</a></li>
+								<li><a class="nav-item nav-link" href="<spring:url value="/main/procurement/ordersBalance" />">Остаток товара</a></li>
 							</c:when>
 							<c:when test="${roles == '[ROLE_STOCKPROCUREMENT]'}">
 								<li class="dropdown">

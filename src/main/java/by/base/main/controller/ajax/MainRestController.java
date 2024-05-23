@@ -21,6 +21,7 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -284,6 +285,25 @@ public class MainRestController {
 	}
 	
 	/**
+	 * проверяет статус заказа по id маршрута.
+	 * @param request
+	 * @return
+	 */
+	@GetMapping("/logistics/checkOrderForStatus/{idRoute}")
+	public Map<String, String> checkOrderForStatus(HttpServletRequest request, @PathVariable String idRoute) {
+		Map<String, String> response = new HashMap<String, String>();		
+		Order order = orderService.getOrderByIdRoute(Integer.parseInt(idRoute));
+		if(order != null) {
+			response.put("status", "200");
+			response.put("message", order.getStatus().toString());
+		}else {
+			response.put("status", "200");
+			response.put("message", "0");
+		}
+		return response;
+	}
+	
+	/**
 	 * возвращает все SКU  manager
 	 * @param request
 	 * @return
@@ -393,7 +413,7 @@ public class MainRestController {
 			//проверяем на наличие сообщений об ошибке со стороны маркета
 			if(marketOrder2.contains("Error")) {
 				MarketErrorDto errorMarket = gson.fromJson(marketOrder2, MarketErrorDto.class);
-				System.out.println(errorMarket);
+//				System.out.println(errorMarket);
 				if(errorMarket.getError().equals("99")) {//обработка случая, когда в маркете номера нет, а в бд есть.
 					Order orderFromDB = orderService.getOrderByMarketNumber(idMarket);
 					if(orderFromDB !=null) {
@@ -578,6 +598,16 @@ public class MainRestController {
 			return response;
 		}
 		Order order = orderService.getOrderById(idOrder);
+//		//проверка на лимиты товара
+//				String checkMessage = checkNumProductHasStock(order, order.getTimeDelivery());		
+//				if(checkMessage != null) {
+//					response.put("status", "105");
+//					response.put("message", checkMessage);
+//					System.err.println("Не прошла проверку по лимитам товара");
+//					System.out.println(checkMessage);
+//					return response;
+//				}
+		
 		switch (order.getStatus()) {
 		case 8: // от поставщиков
 			order.setStatus(100);
@@ -768,6 +798,7 @@ public class MainRestController {
 		if(summPallNew > Integer.parseInt(propertiesStock.getProperty(propKey))) {						
 			response.put("status", "100");
 			response.put("message", "Ошибка. Превышен лимит по паллетам на текущую дату");
+			System.err.println("Не прошла проверку по лимитам паллет склада");
 			return response;
 		}
 		
@@ -793,12 +824,22 @@ public class MainRestController {
 //				return response;
 //			}
 //		}
+		//проверка на лимиты товара
+		String checkMessage = checkNumProductHasStock(order, timestamp);		
+		if(checkMessage != null) {
+			response.put("status", "105");
+			response.put("message", checkMessage);
+			System.err.println("Не прошла проверку по лимитам товара");
+			return response;
+		}
+		
 		String errorMessage = orderService.updateOrderForSlots(order);//проверка на пересечение со временим других слотов и лимит складов
 		java.util.Date t2 = new java.util.Date();
 		System.out.println(t2.getTime()-t1.getTime() + " ms - update" );
 		if(errorMessage!=null) {
 			response.put("status", "100");
 			response.put("message", errorMessage);
+			System.err.println("Не прошла проверку по пересечениям слотов");
 			return response;
 		}else {
 			saveActionInFile(request, "resources/others/blackBox/slot", idOrder, order.getMarketNumber(), order.getNumStockDelivery(), oldIdRamp, order.getIdRamp(), oldTimeDelivery, order.getTimeDelivery(), user.getLogin(), "update");
@@ -815,6 +856,51 @@ public class MainRestController {
 			response.put("message", str);
 			return response;	
 		}			
+	}
+	
+	
+	/**
+	 * Метод для проверки кол-ва товара на текущий день
+	 * @return
+	 */
+	private String checkNumProductHasStock(Order order, Timestamp timeDelivery) {
+		String message = null;
+		if(order.getIsInternalMovement() != null && order.getIsInternalMovement().equals("true")) {
+			return null;
+		}
+		if(order.getNumProduct() == null) {
+			message = "Данные по заказу " + order.getMarketNumber() + " устарели! Обновите заказ.";
+			return message;
+		}
+		
+		String [] numProductMass = order.getNumProduct().split("\\^");
+		
+		
+		for (String string : numProductMass) {
+			Product product = productService.getProductByCode(Integer.parseInt(string));
+			if(product != null) {
+				//считаем разницу в днях сегодняшнеего дня и непосредственно записи
+				LocalDateTime start = timeDelivery.toLocalDateTime();
+				LocalDateTime end = LocalDateTime.of(product.getDateUnload().toLocalDate(), LocalTime.now());
+
+				Duration duration = Duration.between(start, end);
+				Double currentDate = (double) duration.toDays();
+				// считаем правильный остаток на текущий день
+				Double trueBalance = product.getBalanceStockAndReserves() + currentDate;
+				if(!product.getIsException()) {
+					if(trueBalance > product.getDayMax()) {
+						if(message == null) {
+							message = "Товара " + product.getCodeProduct() + " ("+product.getName()+")" + " на складе хранится на " + trueBalance + " дней. Ограничение стока по данному товару: " + product.getDayMax() + " дней.";
+						}else {
+							message = message + "\nТовара " + product.getCodeProduct() + " на складе хранится на " + trueBalance + " дней. Ограничение стока по данному товару: " + product.getDayMax() + " дней.";
+						}
+						 
+					}
+				}
+				
+			}
+		}
+		return message;
 	}
 	
 	/**
@@ -894,6 +980,7 @@ public class MainRestController {
 		if(summPallNew > Integer.parseInt(propertiesStock.getProperty(propKey))) {
 			response.put("status", "100");
 			response.put("message", "Ошибка. Превышен лимит по паллетам на текущую дату");
+			System.err.println("Не прошла проверку по лимитам паллет склада");
 			return response;
 		}
 		
@@ -921,12 +1008,22 @@ public class MainRestController {
 //		}
 		
 		//конец проверки на лимит приемки
+		//проверка на лимиты товара
+				String checkMessage = checkNumProductHasStock(order, timestamp);		
+				if(checkMessage != null) {
+					response.put("status", "105");
+					response.put("message", checkMessage);
+					System.err.println("Не прошла проверку по лимитам товара");
+					return response;
+				}
+		
 		String errorMessage = orderService.updateOrderForSlots(order);//проверка на пересечение со временим других слотов
 		java.util.Date t2 = new java.util.Date();
 		System.out.println(t2.getTime()-t1.getTime() + " ms - load" );
 		if(errorMessage != null) {
 			response.put("status", "100");
 			response.put("message", errorMessage);
+			System.err.println("Не прошла проверку по лимитам паллет склада");
 			return response;
 		}else {
 			saveActionInFile(request, "resources/others/blackBox/slot", idOrder, order.getMarketNumber(), order.getNumStockDelivery(), null, order.getIdRamp(), null, order.getTimeDelivery(), user.getLogin(), "load");

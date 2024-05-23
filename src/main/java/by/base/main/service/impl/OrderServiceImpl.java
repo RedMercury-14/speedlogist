@@ -116,6 +116,7 @@ public class OrderServiceImpl implements OrderService {
 				oldOrder.setMixPall(order.getMixPall());
 				oldOrder.setMonoPall(order.getMonoPall());
 				oldOrder.setMarketInfo(order.getMarketInfo());
+				oldOrder.setNumProduct(order.getNumProduct());
 				orderDAO.updateOrder(oldOrder);
 				return "Обновлён заказ " +  order.getMarketNumber();
 			case 10:
@@ -162,6 +163,7 @@ public class OrderServiceImpl implements OrderService {
 				oldOrder.setMarketContractNumber(order.getMarketContractNumber());
 				oldOrder.setMarketContractorId(order.getMarketContractorId());
 				oldOrder.setMarketContractType(order.getMarketContractType());
+				oldOrder.setNumProduct(order.getNumProduct());
 				orderDAO.updateOrder(oldOrder);
 				return "Обновлён заказ " +  order.getMarketNumber()+ "<"+oldOrder.getIdOrder();
 			case 10:
@@ -190,6 +192,9 @@ public class OrderServiceImpl implements OrderService {
 		//далее проверяем: берем слот (той же рампы) к верхней границе и раньше, высчитываем для него время начала и время окончания и проверяем, входит ли верзняя граница в этот диапазон
 		Order before = orderDAO.getOrderBeforeTimeDeliveryHasStockAndRamp(order);
 		Order after = orderDAO.getOrderAfterTimeDeliveryHasStockAndRamp(order);
+		
+//		System.out.println(before);
+//		System.out.println(after);
 		
 		boolean targetStart = false;
 		boolean targetEnd = false;

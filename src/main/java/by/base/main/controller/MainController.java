@@ -47,6 +47,7 @@ import org.springframework.web.bind.annotation.SessionAttribute;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.pdf.PdfStructTreeController.returnType;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 import by.base.main.controller.ajax.MainRestController;
 import by.base.main.model.Act;
@@ -2256,6 +2257,11 @@ public class MainController {
 		return "orderSupportControlLogist";
 	}
 	
+	@GetMapping("/main/procurement/ordersBalance")
+	public String getOrdersBalance(HttpServletRequest request, HttpSession session, Model model) {
+		return "orderSupportControlLogist";
+	}
+	
 	@GetMapping("/main/stock-support/orders")
 	public String internationalStockSopport(HttpServletRequest request, HttpSession session, Model model) {
 		return "internationalStockSopport";
@@ -2739,6 +2745,12 @@ public class MainController {
 			@RequestParam("currency") String currency,
 			@RequestParam(name = "status", required = false) String status) {
 		User user = userService.getUserByLogin(login);
+		//обработка, если удалось нажать на кнопку
+		Order order = orderService.getOrderByIdRoute(idRoute);
+		if(order.getStatus() == 10) {			
+			return "redirect:/main/logistics/international";
+		}
+		
 		if (status == null) {
 			status = "4";
 			routeService.updateRouteInBase(idRoute, cost, currency, user, status);
@@ -2798,6 +2810,11 @@ public class MainController {
 				@RequestParam("idRoute") Integer idRoute,
 				@RequestParam("currency") String currency,
 				@RequestParam(name = "status", required = false) String status) {
+			//обработка, если удалось нажать на кнопку
+			Order order = orderService.getOrderByIdRoute(idRoute);
+			if(order.getStatus() == 10) {			
+				return "redirect:/main/logistics/international";
+			}
 			User user = userService.getUserByLogin(login);
 			if (status == null) {
 				status = "4";
@@ -2853,7 +2870,12 @@ public class MainController {
 	//подтверждение цены маршрута ДЛЯ АДМИНА
 		@RequestMapping("/main/admin/international/confrom")
 		public String confromCostAdmin(Model model,
-				@RequestParam("idRoute") Integer idRoute) {			
+				@RequestParam("idRoute") Integer idRoute) {	
+			//обработка, если удалось нажать на кнопку
+			Order order = orderService.getOrderByIdRoute(idRoute);
+			if(order.getStatus() == 10) {			
+				return "redirect:/main/logistics/international";
+			}
 			routeService.updateRouteInBase(idRoute, "4");
 			Route routeTarget = routeService.getRouteById(idRoute);
 			Set <Order> orders = routeTarget.getOrders();
@@ -2868,7 +2890,12 @@ public class MainController {
 		
 		@RequestMapping("/main/admin/internationalNew/confrom")
 		public String confromCostAdminNew(Model model,
-				@RequestParam("idRoute") Integer idRoute) {			
+				@RequestParam("idRoute") Integer idRoute) {	
+			//обработка, если удалось нажать на кнопку
+			Order order = orderService.getOrderByIdRoute(idRoute);
+			if(order.getStatus() == 10) {			
+				return "redirect:/main/logistics/international";
+			}
 			routeService.updateRouteInBase(idRoute, "4");
 			Route routeTarget = routeService.getRouteById(idRoute);
 			Set <Order> orders = routeTarget.getOrders();

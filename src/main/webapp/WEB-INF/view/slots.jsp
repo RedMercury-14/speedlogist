@@ -55,7 +55,7 @@
 
 		<div class="pallInfo-container">
 			<div id="externalPallInfo" class="pallInfo">
-				<span>Внеш.</span>
+				<!-- <span>Внеш.</span> -->
 				<span id="externalPallCount" class="text-success">0</span>
 				<span>/</span>
 				<span id="externalMaxPall">0</span>
@@ -66,13 +66,13 @@
 					</svg>
 				</button>
 			</div>
-			<div id="internalPallInfo" class="pallInfo">
+			<!-- <div id="internalPallInfo" class="pallInfo">
 				<span>Внутр.</span>
 				<span id="internalPallCount" class="text-success">0</span>
 				<span>/</span>
 				<span id="internalMaxPall">0</span>
 				<span>палл</span>
-			</div>
+			</div> -->
 		</div>
 
 		<div style="width: calc(100% - 100px);" id='calendar' data-stock=""></div>
@@ -181,6 +181,23 @@
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Модальное окно для отображения текста -->
+	<div class="modal fade" id="displayMessageModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="displayMessageModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header justify-content-center">
+					<h5 class="modal-title" id="displayMessageModalLabel">Сообщение</h5>
+				</div>
+				<div class="modal-body">
+					<div id="messageContainer"></div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Ок, понятно</button>
 				</div>
 			</div>
 		</div>

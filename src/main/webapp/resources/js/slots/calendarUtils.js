@@ -226,30 +226,30 @@ export function setPallInfo(pallCount, maxPall) {
 
 	const externalPallCountElem = document.querySelector('#externalPallCount')
 	const externalMaxPallElem = document.querySelector('#externalMaxPall')
-	const internalPallCountElem = document.querySelector('#internalPallCount')
-	const internalMaxPallElem = document.querySelector('#internalMaxPall')
+	// const internalPallCountElem = document.querySelector('#internalPallCount')
+	// const internalMaxPallElem = document.querySelector('#internalMaxPall')
 
 	if (
 		!externalPallCountElem
 		|| !externalMaxPallElem
-		|| !internalPallCountElem
-		|| !internalMaxPallElem
+		// || !internalPallCountElem
+		// || !internalMaxPallElem
 	) {
 		return
 	}
 
 	const externalPallCount = pallCount.externalMovement
 	const externalMaxPall = maxPall.externalMovement
-	const internalPallCount = pallCount.internalMovement
-	const internalMaxPall = maxPall.internalMovement
+	// const internalPallCount = pallCount.internalMovement
+	// const internalMaxPall = maxPall.internalMovement
 
 	externalPallCountElem.innerText = externalPallCount
 	externalMaxPallElem.innerText = externalMaxPall
-	internalPallCountElem.innerText = internalPallCount
-	internalMaxPallElem.innerText = internalMaxPall
+	// internalPallCountElem.innerText = internalPallCount
+	// internalMaxPallElem.innerText = internalMaxPall
 
 	changePallCountElemColor(externalPallCountElem, externalPallCount, externalMaxPall)
-	changePallCountElemColor(internalPallCountElem, internalPallCount, internalMaxPall)
+	// changePallCountElemColor(internalPallCountElem, internalPallCount, internalMaxPall)
 }
 export function updatePallInfo(currentPallCount, maxPall, orderType, action) {
 	let pallCountElem
@@ -326,4 +326,10 @@ export function addSmallHeaderClass() {
 export function copyToClipboard(text) {
 	navigator.clipboard.writeText(text)
 	snackbar.show('Информация о слоте скопирована в буфер обмена')
+}
+
+export function showMessageModal(message) {
+	const messageContainer = document.querySelector('#messageContainer')
+	messageContainer.innerText = message
+	$('#displayMessageModal').modal('show')
 }

@@ -2747,7 +2747,7 @@ public class MainController {
 		User user = userService.getUserByLogin(login);
 		//обработка, если удалось нажать на кнопку
 		Order order = orderService.getOrderByIdRoute(idRoute);
-		if(order.getStatus() == 10) {			
+		if(order != null && order.getStatus() == 10) {			
 			return "redirect:/main/logistics/international";
 		}
 		
@@ -2812,7 +2812,7 @@ public class MainController {
 				@RequestParam(name = "status", required = false) String status) {
 			//обработка, если удалось нажать на кнопку
 			Order order = orderService.getOrderByIdRoute(idRoute);
-			if(order.getStatus() == 10) {			
+			if(order != null && order.getStatus() == 10) {			
 				return "redirect:/main/logistics/international";
 			}
 			User user = userService.getUserByLogin(login);
@@ -2873,7 +2873,7 @@ public class MainController {
 				@RequestParam("idRoute") Integer idRoute) {	
 			//обработка, если удалось нажать на кнопку
 			Order order = orderService.getOrderByIdRoute(idRoute);
-			if(order.getStatus() == 10) {			
+			if(order != null && order.getStatus() == 10) {			
 				return "redirect:/main/logistics/international";
 			}
 			routeService.updateRouteInBase(idRoute, "4");
@@ -2893,7 +2893,7 @@ public class MainController {
 				@RequestParam("idRoute") Integer idRoute) {	
 			//обработка, если удалось нажать на кнопку
 			Order order = orderService.getOrderByIdRoute(idRoute);
-			if(order.getStatus() == 10) {			
+			if(order != null && order.getStatus() == 10) {			
 				return "redirect:/main/logistics/international";
 			}
 			routeService.updateRouteInBase(idRoute, "4");

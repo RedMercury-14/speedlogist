@@ -262,10 +262,14 @@ function getMappingData(data) {
 			? `${dateHelper.getFormatDate(order.onloadWindowDate)} ${order.onloadWindowTime.slice(0, 5)}`
 			: ''
 		
-		const addressesForTable = order.addressesToView ? order.addressesToView : order.addresses
-			.sort(pointSorting)
-			.map(getPointToView)
-		
+		const addressesForTable = order.addressesToView
+			? order.addressesToView
+				.sort(pointSorting)
+				.map(getPointToView)
+			: order.addresses
+				.sort(pointSorting)
+				.map(getPointToView)
+
 		const loadDateToView = addressesForTable.length ? addressesForTable[0].dateToView : ''
 
 		const unloadPointsArr = addressesForTable.length

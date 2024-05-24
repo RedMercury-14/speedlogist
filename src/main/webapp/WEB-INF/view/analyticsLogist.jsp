@@ -26,8 +26,8 @@
 		<div class=" px-5 d-flex align-items-center justify-content-between">
 			<h3 class="mb-2">Аналитика Биржи</h3>
 			<div>
-				<p class="mb-1">Логин: SologubA@dobronom.by</p>
-				<p class="mb-1">Пароль: 14A26B19c4</p>
+				<p class="mb-1">Логин: powerbi@proanalysesl.com</p>
+				<p class="mb-1">Пароль: Unks!89r</p>
 			</div>
 		</div>
 		<br>
@@ -35,7 +35,7 @@
 			<iframe
 				title="Нехватка товара на РЦ 2"
 				width="100%" height="780px"
-				src="https://app.fabric.microsoft.com/reportEmbed?reportId=e7b378cd-2feb-460a-99f5-a6b2b7c6ea1b&autoAuth=true&ctid=898331df-b42e-494c-b68e-d7245f2daef3"
+				src="https://app.powerbi.com/reportEmbed?reportId=943826e6-9d0f-4a88-ba2e-29548da4d8f3&autoAuth=true&ctid=a9af5edf-b4be-4591-ba34-a3a96434b108"
 				frameborder="0"
 				allowFullScreen="true">
 			</iframe>

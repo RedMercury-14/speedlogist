@@ -153,6 +153,12 @@ export const store = {
 				? orderData.fcEvent.extendedProps.data.marketInfo
 				: ''
 		const index = this._state.orders.findIndex(o => o.marketNumber === marketNumber)
+		// если заказа нет, то создаем его
+		if (index === -1 && orderData.idOrder) {
+			const newOrder = orderData.fcEvent.extendedProps.data
+			this._state.orders.push(newOrder)
+			return newOrder
+		}
 		this._state.orders[index] = {
 			...this._state.orders[index],
 			status: orderData.status,

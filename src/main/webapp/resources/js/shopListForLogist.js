@@ -2,7 +2,7 @@ import { AG_GRID_LOCALE_RU } from '../js/AG-Grid/ag-grid-locale-RU.js'
 import { ajaxUtils } from './ajaxUtils.js'
 import { snackbar } from "./snackbar/snackbar.js"
 import { uiIcons } from './uiIcons.js'
-import { getData, hideLoadingSpinner, showLoadingSpinner } from './utils.js'
+import { changeGridTableMarginTop, getData, hideLoadingSpinner, showLoadingSpinner } from './utils.js'
 
 const getAllShopsUrl = '../../api/manager/getAllShops'
 const loadShopsUrl = '../../api/map/loadShop'
@@ -98,6 +98,9 @@ window.onload = async () => {
 	const gridDiv = document.querySelector('#myGrid')
 
 	const shops = await getData(getAllShopsUrl)
+
+	// изменение отступа для таблицы
+	changeGridTableMarginTop()
 
 	renderTable(gridDiv, gridOptions, shops)
 

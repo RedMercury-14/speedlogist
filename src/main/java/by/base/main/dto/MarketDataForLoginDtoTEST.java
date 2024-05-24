@@ -1,24 +1,25 @@
 package by.base.main.dto;
 
-public class MarketDataDto {
+public class MarketDataForLoginDtoTEST {
 	private String LoginName;
 	private String Password;
-	private String LoginNameTypeId; // тип пользователя (1 – юридическое лицо).
+	private int LoginNameTypeId; // тип пользователя (1 – юридическое лицо).
 	
 	
 	
 	/**
 	 * 
 	 */
-	public MarketDataDto() {
+	public MarketDataForLoginDtoTEST() {
 		super();
 	}
 	/**
+	 * тестовая сущьность, разница в том что LoginNameTypeId - это int
 	 * @param loginName
 	 * @param password
 	 * @param loginNameTypeId тип пользователя (1 – юридическое лицо).
 	 */
-	public MarketDataDto(String loginName, String password, String loginNameTypeId) {
+	public MarketDataForLoginDtoTEST(String loginName, String password, int loginNameTypeId) {
 		super();
 		LoginName = loginName;
 		Password = password;
@@ -38,17 +39,17 @@ public class MarketDataDto {
 	}
 	
 	/**
-	 * тип пользователя (1 – юридическое лицо).
+	 * тип пользователя (101 – юридическое лицо).
 	 * @return
 	 */
-	public String getLoginNameTypeId() {
+	public int getLoginNameTypeId() {
 		return LoginNameTypeId;
 	}
 	/**
-	 * тип пользователя (1 – юридическое лицо).
+	 * тип пользователя (101 – юридическое лицо).
 	 * @param loginNameTypeId
 	 */
-	public void setLoginNameTypeId(String loginNameTypeId) {
+	public void setLoginNameTypeId(int loginNameTypeId) {
 		LoginNameTypeId = loginNameTypeId;
 	}
 	@Override

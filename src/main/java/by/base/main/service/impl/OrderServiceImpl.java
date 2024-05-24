@@ -115,6 +115,8 @@ public class OrderServiceImpl implements OrderService {
 				oldOrder.setDateCreateMarket(order.getDateCreateMarket());
 				oldOrder.setMixPall(order.getMixPall());
 				oldOrder.setMonoPall(order.getMonoPall());
+				oldOrder.setMarketInfo(order.getMarketInfo());
+				oldOrder.setNumProduct(order.getNumProduct());
 				orderDAO.updateOrder(oldOrder);
 				return "Обновлён заказ " +  order.getMarketNumber();
 			case 10:
@@ -129,8 +131,57 @@ public class OrderServiceImpl implements OrderService {
 				return "Заказ " +  order.getMarketNumber() + " уже создан";
 			}
 		}
-		return "Неизвестный статус OrderServiceImpl";
+		return "Неизвестный статус OrderServiceImpl";		
+	}
+	
+	@Override
+	public String saveOrderFromMarket(Order order) {
+		Order oldOrder = null;
+		oldOrder = orderDAO.getOrderHasMarketCode(order.getMarketNumber());
+		if(oldOrder == null) {
+			Integer idOrder = orderDAO.saveOrder(order);
+			return "Создан новый заказ с номером " + order.getMarketNumber() + "<"+idOrder;
+		}
 		
+		if(oldOrder!=null) {
+			switch (oldOrder.getStatus()) {
+			case 5:
+				oldOrder.setDateDelivery(order.getDateDelivery());
+				oldOrder.setCounterparty(order.getCounterparty());
+				oldOrder.setNumStockDelivery(order.getNumStockDelivery());
+				oldOrder.setCargo(order.getCargo());
+				oldOrder.setDateCreate(order.getDateCreate());
+				oldOrder.setPall(order.getPall());
+				oldOrder.setChangeStatus(order.getChangeStatus());
+				oldOrder.setTimeUnload(order.getTimeUnload());
+				oldOrder.setSku(order.getSku());
+				oldOrder.setDateCreateMarket(order.getDateCreateMarket());
+				oldOrder.setMixPall(order.getMixPall());
+				oldOrder.setMonoPall(order.getMonoPall());
+				oldOrder.setMarketInfo(order.getMarketInfo());
+				oldOrder.setMarketContractGroupId(order.getMarketContractGroupId());
+				oldOrder.setMarketContractNumber(order.getMarketContractNumber());
+				oldOrder.setMarketContractorId(order.getMarketContractorId());
+				oldOrder.setMarketContractType(order.getMarketContractType());
+				oldOrder.setNumProduct(order.getNumProduct());
+				orderDAO.updateOrder(oldOrder);
+				return "Обновлён заказ " +  order.getMarketNumber()+ "<"+oldOrder.getIdOrder();
+			case 10:
+				return "ОШИБКА 10 СТАТУСА - ОБРАТИТЕСЬ К АДМИНИСТРАТОРУ<-1";
+//				return "Заказ " +  order.getMarketNumber() + " отменен, но виртуальный не создан";
+			case 6:
+				return "Заказ " +  order.getMarketNumber() + " создан , но не поставлен в слоты<-1";				
+			case 7:
+				return "Заказ " +  order.getMarketNumber() + " поставлен в слоты, но не подтвержден<-1";
+			case 8:
+				return "Заказ " +  order.getMarketNumber() + " поставлен в слоты как доставка поставщиком<-1";
+			case 100:
+				return "Заказ " +  order.getMarketNumber() + " поставлен в слоты как доставка поставщиком<-1";
+			default:
+				return "Заказ " +  order.getMarketNumber() + " уже создан<-1";
+			}
+		}
+		return "Неизвестный статус OrderServiceImpl";	
 	}
 
 	@Override
@@ -141,6 +192,9 @@ public class OrderServiceImpl implements OrderService {
 		//далее проверяем: берем слот (той же рампы) к верхней границе и раньше, высчитываем для него время начала и время окончания и проверяем, входит ли верзняя граница в этот диапазон
 		Order before = orderDAO.getOrderBeforeTimeDeliveryHasStockAndRamp(order);
 		Order after = orderDAO.getOrderAfterTimeDeliveryHasStockAndRamp(order);
+		
+//		System.out.println(before);
+//		System.out.println(after);
 		
 		boolean targetStart = false;
 		boolean targetEnd = false;
@@ -214,4 +268,62 @@ public class OrderServiceImpl implements OrderService {
 	public List<Order> getOrderByTimeDelivery(Date dateStart, Date dateEnd) {
 		return orderDAO.getOrderByTimeDelivery(dateStart, dateEnd);
 	}
+
+	@Override
+	public Integer getSummPallInStockInternal(Order order) {
+		Timestamp dateTimeStart = order.getTimeDelivery();
+		String numStock = null;
+		if(order.getIdRamp().toString().length() < 5) {
+			System.err.println("Ошибка в названии склада. Склад не может быть двухзначным");
+		}
+		if(order.getIdRamp().toString().length() < 6) { // проверка на будующее если будет учавстовать склад с трехзначным индексом
+			numStock = order.getIdRamp().toString().substring(0, 3);
+		}else {
+			numStock = order.getIdRamp().toString().substring(0, 4);
+		}
+		Date dateTarget = Date.valueOf(dateTimeStart.toLocalDateTime().toLocalDate());
+		Set<Order> ordersSet = orderDAO.getOrderListHasDateAndStockFromSlots(dateTarget, numStock); // получаем список всех заказов на данном складе на текущий день
+		if(ordersSet == null) {
+			return 0;
+		}
+		List<Order> orders = ordersSet.stream()
+				.filter(o-> !o.getMarketNumber().equals(order.getMarketNumber()))// убираем таргетный зака, если он есть
+				.filter(o-> o.getIsInternalMovement()!=null && o.getIsInternalMovement().equals("true")) // пропускаем только заказы на внутренние перемещения
+				.collect(Collectors.toList()); 
+		Integer summPall = 0;
+		for (Order order2 : orders) {
+			summPall = summPall + Integer.parseInt(order2.getPall().trim());
+		}
+		return summPall;
+	}
+
+	@Override
+	public Integer getSummPallInStockExternal(Order order) {
+		Timestamp dateTimeStart = order.getTimeDelivery();
+		String numStock = null;
+		if(order.getIdRamp().toString().length() < 5) {
+			System.err.println("Ошибка в названии склада. Склад не может быть двухзначным");
+		}
+		if(order.getIdRamp().toString().length() < 6) { // проверка на будующее если будет учавстовать склад с трехзначным индексом
+			numStock = order.getIdRamp().toString().substring(0, 3);
+		}else {
+			numStock = order.getIdRamp().toString().substring(0, 4);
+		}
+		Date dateTarget = Date.valueOf(dateTimeStart.toLocalDateTime().toLocalDate());
+		Set<Order> ordersSet = orderDAO.getOrderListHasDateAndStockFromSlots(dateTarget, numStock); // получаем список всех заказов на данном складе на текущий день
+		if(ordersSet == null) {
+			return 0;
+		}
+		List<Order> orders = ordersSet.stream()
+				.filter(o-> !o.getMarketNumber().equals(order.getMarketNumber()))// убираем таргетный зака, если он есть
+				.filter(o-> o.getIsInternalMovement()==null || o.getIsInternalMovement()!=null && o.getIsInternalMovement().equals("falce")) // пропускаем только обычные заказы 
+				.collect(Collectors.toList()); 
+		Integer summPall = 0;
+		for (Order order2 : orders) {
+			summPall = summPall + Integer.parseInt(order2.getPall().trim());
+		}
+		return summPall;
+	}
+
+	
 }

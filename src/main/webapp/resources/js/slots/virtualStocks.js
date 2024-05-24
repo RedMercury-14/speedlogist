@@ -8,7 +8,10 @@ export const stocks = [
 		workingHoursStart: '00:00',
 		workingHoursEnd: '24:00',
 		shiftChange: ['08:00', '09:00', '20:00', '21:00'],
-		maxPall: 1300,
+		maxPall: {
+			externalMovement: 1300,
+			internalMovement: 0,
+		},
 		weekends: [],
 		ramps: [
 			{ id: "170001", title: "Рампа 1", businessHours: { startTime: '00:00', endTime: '24:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
@@ -28,12 +31,16 @@ export const stocks = [
 		workingHoursStart: '08:00',
 		workingHoursEnd: '21:00',
 		shiftChange: [],
-		maxPall: 600,
+		maxPall: {
+			externalMovement: 600,
+			internalMovement: 0,
+		},
 		weekends: [],
 		ramps: [
 			{ id: "120001", title: "Рампа 1", businessHours: { startTime: '09:00', endTime: '20:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
 			{ id: "120002", title: "Рампа 2", businessHours: { startTime: '09:00', endTime: '20:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
 			{ id: "120003", title: "Рампа 3", businessHours: { startTime: '09:00', endTime: '20:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
+			{ id: "120004", title: "Рампа 4", businessHours: { startTime: '09:00', endTime: '20:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
 		],
 		events: [],
 	},
@@ -45,10 +52,32 @@ export const stocks = [
 		workingHoursStart: '09:00',
 		workingHoursEnd: '22:00',
 		shiftChange: [],
-		maxPall: 100,
+		maxPall: {
+			externalMovement: 100,
+			internalMovement: 0,
+		},
 		weekends: [],
 		ramps: [
 			{ id: "125001", title: "Рампа 1", businessHours: { startTime: '10:00', endTime: '21:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
+		],
+		events: [],
+	},
+	{
+		id: '1100',
+		name: 'Склад 1100',
+		address: '223039, Республика Беларусь, Минская область, Минский район, Хатежинский с/с, 1',
+		contact: '',
+		workingHoursStart: '08:00',
+		workingHoursEnd: '20:00',
+		shiftChange: [],
+		maxPall: {
+			externalMovement: 320,
+			internalMovement: 0,
+		},
+		weekends: [],
+		ramps: [
+			{ id: "110001", title: "Рампа 1", businessHours: { startTime: '09:00', endTime: '19:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
+			{ id: "110002", title: "Рампа 2", businessHours: { startTime: '09:00', endTime: '19:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
 		],
 		events: [],
 	},

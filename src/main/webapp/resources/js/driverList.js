@@ -148,8 +148,8 @@ function getContextMenuItems(params) {
 			},
 			icon: uiIcons.trash,
 		},
-		"separator",
-		"export",
+		// "separator",
+		// "export",
 	];
 
 	return result;

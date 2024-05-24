@@ -13,6 +13,7 @@ import {
 import { excelStyles, getPointToView, getRouteInfo, getRoutePrice, pointSorting, procurementExcelExportParams } from './procurementControlUtils.js'
 import { autocomplete } from './autocomplete/autocomplete.js'
 import { countries } from './global.js'
+import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 
 const token = $("meta[name='_csrf']").attr("content")
 const PAGE_NAME = 'ProcurementControlLogist'
@@ -146,6 +147,10 @@ const gridOptions = {
 		suppressMenu: true,
 		filter: true,
 		floatingFilter: true,
+		wrapText: true,
+		autoHeight: true,
+		wrapHeaderText: true,
+		autoHeaderHeight: true,
 	},
 	onSortChanged: debouncedSaveColumnState,
 	onColumnResized: debouncedSaveColumnState,
@@ -533,12 +538,19 @@ function createRouteByOrders(orderData) {
 	openRouteModal()
 }
 function confirmRouteData(idOrder) {
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
 	ajaxUtils.get({
 		url: getDataHasOrderBaseUrl+idOrder,
 		successCallback: (res) => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
 			const { status, message } = res
 			snackbar.show(message)
 			hasConfirmRouteDataResponse = true
+		},
+		errorCallback: () => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
 		}
 	})
 }
@@ -780,11 +792,16 @@ function routeFormSubmitHandler(e) {
 
 	disableButton(e.submitter)
 
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
+
 	ajaxUtils.postJSONdata({
 		url: createRouteUrl,
 		token: token,
 		data: data,
 		successCallback: (res) => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+
 			if (res.status === '200') {
 				snackbar.show('Маршрут создан!')
 				updateTable()
@@ -797,6 +814,8 @@ function routeFormSubmitHandler(e) {
 			enableButton(e.submitter)
 		},
 		errorCallback: () => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
 			enableButton(e.submitter)
 		}
 	})

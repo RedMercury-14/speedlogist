@@ -19,6 +19,7 @@ import {
 	validatePointDates,
 } from "./procurementFormUtils.js"
 import { disableButton, enableButton, getData } from "./utils.js"
+import { bootstrap5overlay } from "./bootstrap5overlay/bootstrap5overlay.js"
 
 const addNewProcurementUrl = (orderStatus) => orderStatus === 20
 	? "../../../api/manager/addNewProcurement"
@@ -26,6 +27,7 @@ const addNewProcurementUrl = (orderStatus) => orderStatus === 20
 const redirectUrl = (orderStatus) => orderStatus === 20	? "../orders" : "../../slots"
 const getInternalMovementShopsUrl = "../../../api/manager/getInternalMovementShops"
 const getOrderHasMarketNumberBaseUrl = "../../../api/procurement/getOrderHasMarketNumber/"
+const getMarketOrderBaseUrl = `../../../api/manager/getMarketOrder/`
 
 const token = $("meta[name='_csrf']").attr("content")
 
@@ -93,7 +95,7 @@ window.onload = async () => {
 	})
 	
 	// установка минимальной даты загрузки/выгрузки
-	setMinValidDate()
+	setMinValidDate({ isInternalMovement })
 	
 	// установка минимальных значений даты и времени выгрузки при изменении даты
 	const loadDateInputs = document.querySelectorAll('#loadDate')
@@ -333,23 +335,27 @@ function hideSetMarketNumberModal() {
 async function setMarketNumberFormSubmitHandler(e, orderForm) {
 	e.preventDefault()
 	e.stopImmediatePropagation()
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
 
 	const formData = new FormData(e.target)
 	const markerNumber = formData.get('setMarketNumber')
 	if (!markerNumber) return
 
 	ajaxUtils.get({
-		url: getOrderHasMarketNumberBaseUrl + markerNumber,
-		successCallback: (order) => {
-			if (!order) {
-				alert('Заказ с таким номером не найден! Проверьте номер либо свяжитесь с ОСиУЗ')
+		url: getMarketOrderBaseUrl + markerNumber,
+		successCallback: (data) => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+
+			if (!data) {
+				alert('Ошибка! Обновите страницу')
 				return
 			}
 
-			if (order.status !== 5) {
-				alert('Заказ с таким номером уже создан!')
-				return
-			}
+			const order = data.order
+			if (data.status !== '200') alert(data.message)
+			if (!order) return
+			if (order.status !== 5) return
 
 			orderData = order
 			hideSetMarketNumberModal()
@@ -360,6 +366,10 @@ async function setMarketNumberFormSubmitHandler(e, orderForm) {
 			// // меняем статус заявки
 			orderStatus = getOrderStatusByStockDelivery(order.numStockDelivery)
 		},
+		errorCallback: () => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+		}
 	})
 }
 

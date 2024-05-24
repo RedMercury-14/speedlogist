@@ -194,10 +194,21 @@ export const dateHelper = {
 	 * выгрузки для заявок и слотов в формате "YYYY-MM-DD".
 	 * @returns {string} строку даты в формате "YYYY-MM-DD".
 	 */
-	getMinValidDate() {
+	getMinValidDate(order) {
 		const now = new Date()
 		const day = now.getDay()
 		const noonToday = this.getNoon(now)
+
+		// правида для внутренних перемещений
+		const isInternalMovement = order && order.isInternalMovement
+		if (isInternalMovement === 'true') {
+			// для иных случаев: до 12 - завтра, после 12 - на послезавтра
+			const tomorrow = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 1)
+			const dayAfterTomorrow = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 2)
+			return now < noonToday
+				? this.getDateForInput(tomorrow)
+				: this.getDateForInput(dayAfterTomorrow)
+		}
 
 		// если пятница, после 12:00, то на вторник
 		if (day === 5 &&  now > noonToday) {
@@ -351,6 +362,25 @@ export const dateHelper = {
 		}
 
 		return null
+	},
+
+	getDateStrsArray(startDateStr, numDays) {
+		const startDate = new Date(startDateStr)
+		const datesArray = []
+	
+		for (let i = 0; i < numDays; i++) {
+			const dateStr = this.getDateForInput(startDate.getTime() + i * 24 * 60 * 60 * 1000)
+			datesArray.push(dateStr)
+		}
+	
+		return datesArray
+	},
+
+	isWeekend(dateStr) {
+		if (!dateStr) return false
+		const date = new Date(dateStr)
+		const day = date.getDay()
+		return day === 0 || day === 6
 	}
 }
 
@@ -563,7 +593,7 @@ export function isAdminByLogin() {
 	const loginInput = document.querySelector('#login')
 	const login = loginInput && loginInput.value
 
-	return login === 'catalina!%ricoh' || login === 'yakubove%%'
+	return login === 'catalina!%ricoh' || login === 'yakubove%%' || login === 'pedagog%!sport'
 }
 export function isLogist(role) {
 	return isTopManager(role) || isManager(role)
@@ -582,6 +612,12 @@ export function isProcurement(role) {
 }
 export function isSlotsObserver(role) {
 	return role === '[ROLE_SLOTOBSERVER]'
+}
+export function isStockProcurement(role) {
+	return role === '[ROLE_STOCKPROCUREMENT]'
+}
+export function isOderSupport(role) {
+	return role === '[ROLE_ORDERSUPPORT]'
 }
 
 export function disableButton(button) {

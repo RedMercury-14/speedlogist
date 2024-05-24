@@ -215,7 +215,7 @@
 			</div>
 		</div>
 	</div>
-	<jsp:include page="footer.jsp" />
+
 </body>
 <script src="${pageContext.request.contextPath}/resources/js/shopListForLogist.js" type="module"></script>
 <script src='${pageContext.request.contextPath}/resources/mainPage/js/nav-fixed-top.js'></script>

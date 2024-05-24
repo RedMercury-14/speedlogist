@@ -174,13 +174,33 @@ public class Order {
 	@Column(name = "date_create_market")
 	private Date dateCreateMarket;
 	
+	@Column(name = "market_info")
+	private String marketInfo;
+	
+	@Column(name = "market_contract_type")
+	private String marketContractType;
+	
+	@Column(name = "market_contract_group_id")
+	private String marketContractGroupId;
+	
+	@Column(name = "market_contract_number")
+	private String marketContractNumber;
+	
+	@Column(name = "market_contractor_id")
+	private String marketContractorId;
+	
+	@Column(name = "num_product")
+	private String numProduct;
+	
 	@Transient
 	private List<Address> addressesSort;
 	
 	@Transient
 	private List<Address> addressesToView;
 	
-	
+	@Transient
+	@JsonIgnore
+	private String message;
 	
 	
 	public Order() {
@@ -218,6 +238,32 @@ public class Order {
 		this.dateDelivery = dateDelivery;
 	}
 
+	
+	
+	public String getMarketContractType() {
+		return marketContractType;
+	}
+	public void setMarketContractType(String marketContractType) {
+		this.marketContractType = marketContractType;
+	}
+	public String getMarketContractGroupId() {
+		return marketContractGroupId;
+	}
+	public void setMarketContractGroupId(String marketContractGroupId) {
+		this.marketContractGroupId = marketContractGroupId;
+	}
+	public String getMarketContractNumber() {
+		return marketContractNumber;
+	}
+	public void setMarketContractNumber(String marketContractNumber) {
+		this.marketContractNumber = marketContractNumber;
+	}
+	public String getMarketContractorId() {
+		return marketContractorId;
+	}
+	public void setMarketContractorId(String marketContractorId) {
+		this.marketContractorId = marketContractorId;
+	}
 	public Integer getIdOrder() {
 		return idOrder;
 	}
@@ -230,6 +276,12 @@ public class Order {
 		return counterparty;
 	}
 
+	public String getMessage() {
+		return message;
+	}
+	public void setMessage(String message) {
+		this.message = message;
+	}
 	public void setCounterparty(String counterparty) {
 		this.counterparty = counterparty;
 	}
@@ -288,6 +340,12 @@ public class Order {
 		this.typeLoad = typeLoad;
 	}
 
+	public String getMarketInfo() {
+		return marketInfo;
+	}
+	public void setMarketInfo(String marketInfo) {
+		this.marketInfo = marketInfo;
+	}
 	public String getPall() {
 		return pall;
 	}
@@ -350,6 +408,18 @@ public class Order {
 		return status;
 	}
 
+	/**
+	 * @return the numProduct
+	 */
+	public String getNumProduct() {
+		return numProduct;
+	}
+	/**
+	 * @param numProduct the numProduct to set
+	 */
+	public void setNumProduct(String numProduct) {
+		this.numProduct = numProduct;
+	}
 	public String getMarketNumber() {
 		return marketNumber;
 	}

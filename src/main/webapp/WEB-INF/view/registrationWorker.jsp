@@ -94,6 +94,7 @@
   						<option value="10">Отдел сопровождения закупок</option>
   						<option value="11">Слот наблюдатель</option>
   						<option value="12">Аналитик</option>
+  						<option value="13">Заказ транспорта для вн. пер-й</option>
  						</select>
 				</c:when>
 			</c:choose>

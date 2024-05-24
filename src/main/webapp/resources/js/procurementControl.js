@@ -1,19 +1,24 @@
 import { AG_GRID_LOCALE_RU } from '../js/AG-Grid/ag-grid-locale-RU.js'
 import { ResetStateToolPanel, dateComparator, gridColumnLocalState, gridFilterLocalState } from './AG-Grid/ag-grid-utils.js'
-import { debounce, getData, dateHelper, getStatus, changeGridTableMarginTop, rowClassRules, isAdminByLogin, isAdmin } from './utils.js'
+import { debounce, getData, dateHelper, getStatus, changeGridTableMarginTop, rowClassRules, isAdminByLogin, isAdmin, isStockProcurement } from './utils.js'
 import { snackbar } from './snackbar/snackbar.js'
 import { uiIcons } from './uiIcons.js'
 import { excelStyles, getPointToView, getRouteInfo, pointSorting, procurementExcelExportParams } from "./procurementControlUtils.js"
+import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 
 const PAGE_NAME = 'ProcurementControl'
 const LOCAL_STORAGE_KEY = `AG_Grid_settings_to_${PAGE_NAME}`
 const DATES_KEY = `searchDates_to_${PAGE_NAME}`
-const getOrderBaseUrl ='../../api/manager/getOrders/'
+const getDefaultOrderBaseUrl ='../../api/manager/getOrders/'
+const getOrdersForStockProcurementBaseUrl ='../../api/manager/getOrdersForStockProcurement/'
 const getSearchOrderBaseUrl ='../../api/manager/getOrdersHasCounterparty/'
 const getChangeOrderStatusBaseUrl ='../../api/manager/changeOrderStatus/'
 
 const debouncedSaveColumnState = debounce(saveColumnState, 300)
 const debouncedSaveFilterState = debounce(saveFilterState, 300)
+
+const role = document.querySelector('#role').value
+const getOrderBaseUrl = isStockProcurement(role) ? getOrdersForStockProcurementBaseUrl : getDefaultOrderBaseUrl
 
 const columnDefs = [
 	{ 
@@ -60,6 +65,8 @@ const columnDefs = [
 	{ headerName: 'Температурные условия', field: 'temperature', },
 	{ headerName: 'Штабелирование', field: 'stackingToView', },
 	{ headerName: 'Склад доставки (из Маркета)', field: 'numStockDelivery', },
+	{ headerName: 'Информация (из Маркета)', field: 'marketInfo', },
+
 ]
 const gridOptions = {
 	columnDefs: columnDefs,
@@ -73,6 +80,10 @@ const gridOptions = {
 		suppressMenu: true,
 		filter: true,
 		floatingFilter: true,
+		wrapText: true,
+		autoHeight: true,
+		wrapHeaderText: true,
+		autoHeaderHeight: true,
 	},
 	onSortChanged: debouncedSaveColumnState,
 	onColumnResized: debouncedSaveColumnState,
@@ -252,9 +263,13 @@ function getMappingData(data) {
 			: ''
 		
 		const addressesForTable = order.addressesToView
-			.sort(pointSorting)
-			.map(getPointToView)
-		
+			? order.addressesToView
+				.sort(pointSorting)
+				.map(getPointToView)
+			: order.addresses
+				.sort(pointSorting)
+				.map(getPointToView)
+
 		const loadDateToView = addressesForTable.length ? addressesForTable[0].dateToView : ''
 
 		const unloadPointsArr = addressesForTable.length
@@ -342,7 +357,10 @@ function editOrder(idOrder) {
 async function deleteOrder(idOrder, rowNode) {
 	const deleteStatus = 10
 	const deleteStatusText = getStatus(deleteStatus)
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
 	const res = await getData(`${getChangeOrderStatusBaseUrl}${idOrder}&${deleteStatus}`)
+	clearTimeout(timeoutId)
+	bootstrap5overlay.hideOverlay()
 
 	if (res.status === '200') {
 		snackbar.show('Заявка удалена')

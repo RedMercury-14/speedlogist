@@ -15,6 +15,18 @@ const columnDefs = [
 	{ headerName: "Длительность", field: 'timeUnload', width: 60, },
 	{ headerName: "Рампа", field: "idRamp", width: 60, },
 	{ headerName: "Время", field: "timeDeliveryInfo", width: 190, wrapText: true, autoHeight: true, },
+	{ headerName: "Создатель заявки", field: "manager", width: 190, wrapText: true, autoHeight: true, },
+	{ headerName: "Адрес загрузки", field: "loadAddress", width: 390, wrapText: true, autoHeight: true, },
+	{
+		headerName: "Информация (из Маркета)", field: "marketInfo",
+		width: 190, wrapText: true, autoHeight: true,
+		editable: true, cellEditor: 'agLargeTextCellEditor', cellEditorPopup: true, cellEditorPopupPosition: 'under',
+	},
+	{
+		headerName: "Внутреннее перемещение", field: "isInternalMovement",
+		width: 90, wrapText: true, autoHeight: true,
+		valueGetter: (params) => params.data.isInternalMovement === 'true' ? 'Да': 'Нет',
+	},
 ]
 
 export const gridOptions = {
@@ -83,12 +95,26 @@ function mapCallback(order) {
 		timeDeliveryInfo = ''
 	}
 
+	const loadAddress = getLoadAddress(order)
+
 	return {
 		...order,
 		idRamp,
 		dateDeliveryToView,
-		timeDeliveryInfo
+		timeDeliveryInfo,
+		loadAddress,
 	}
+}
+
+function getLoadAddress(order) {
+	if (!order || !order.addresses) return ''
+	if (!order.addresses.length) return ''
+
+	const loadPoint = order.addresses
+		.sort((a,b) => a.date - b.date)
+		.find(address => address.type === 'Загрузка')
+
+	return loadPoint ? loadPoint.bodyAddress : ''
 }
 
 export async function updateTableRow(gridOptions, orderData) {
@@ -109,4 +135,11 @@ function highlightRow(gridOptions, rowNode) {
 export function updateCellData(rowId, columnName, newValue) {
 	const rowNode = gridOptions.api.getRowNode(rowId)
 	rowNode.setDataValue(columnName, newValue)
+}
+
+// отображение только внутренних перевозок
+export function showInternalMovementOrders(gridOptions) {
+	const isInternalMovementComponent = gridOptions.api.getFilterInstance('isInternalMovement')
+	isInternalMovementComponent.setModel({ values: ['Да'] })
+	gridOptions.api.onFilterChanged()
 }

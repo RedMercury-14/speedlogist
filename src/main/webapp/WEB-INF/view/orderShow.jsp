@@ -55,6 +55,10 @@
 							<span class="text-muted font-weight-bold">Погрузочный номер: </span>
 							<span>${order.loadNumber}</span>
 						</div>
+						<div class="form-group input-row-container">
+							<span class="text-muted font-weight-bold">Информация из Маркета:</span>
+							<span>${order.marketInfo}</span>
+						</div>
 						<div class="text-container comment-container">
 							<span class="text-muted font-weight-bold">Комментарии:</span>
 							<span>${order.comment}</span>

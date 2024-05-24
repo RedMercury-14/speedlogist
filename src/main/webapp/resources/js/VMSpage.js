@@ -3,10 +3,61 @@ import { dateComparator } from './AG-Grid/ag-grid-utils.js'
 import { ajaxUtils } from './ajaxUtils.js'
 import { snackbar } from "./snackbar/snackbar.js"
 import { uiIcons } from './uiIcons.js'
-import { dateHelper, getData, hideLoadingSpinner, showLoadingSpinner } from './utils.js'
+import { changeGridTableMarginTop, dateHelper, getData, hideLoadingSpinner, showLoadingSpinner } from './utils.js'
 
+const stocksData = [
+	{
+		id: '1700',
+		name: 'Склад 1700',
+		address: '223065, Беларусь, Луговослободской с/с, Минский р-н, Минская обл., РАД М4, 18км. 2а, склад W05',
+		contact: '+375293473695',
+		workingHoursStart: '00:00',
+		workingHoursEnd: '24:00',
+		shiftChange: ['08:00', '09:00', '20:00', '21:00'],
+		maxPall: 1300,
+		weekends: [],
+		ramps: [
+			{ id: "170001", title: "Рампа 1", businessHours: { startTime: '00:00', endTime: '24:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
+			{ id: "170002", title: "Рампа 2", businessHours: { startTime: '00:00', endTime: '24:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
+			{ id: "170003", title: "Рампа 3", businessHours: { startTime: '00:00', endTime: '24:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
+			{ id: "170004", title: "Рампа 4", businessHours: { startTime: '00:00', endTime: '24:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
+			{ id: "170005", title: "Рампа 5", businessHours: { startTime: '00:00', endTime: '24:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
+			{ id: "170006", title: "Рампа 6 (Резерв)", businessHours: { startTime: '00:00', endTime: '24:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
+		],
+	},
+	{
+		id: '1200',
+		name: 'Склад 1200',
+		address: '223039, Республика Беларусь, Минская область, Минский район, Хатежинский с/с, 1',
+		contact: '+375447841737',
+		workingHoursStart: '08:00',
+		workingHoursEnd: '21:00',
+		shiftChange: [],
+		maxPall: 600,
+		weekends: [],
+		ramps: [
+			{ id: "120001", title: "Рампа 1", businessHours: { startTime: '09:00', endTime: '20:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
+			{ id: "120002", title: "Рампа 2", businessHours: { startTime: '09:00', endTime: '20:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
+			{ id: "120003", title: "Рампа 3", businessHours: { startTime: '09:00', endTime: '20:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
+		],
+	},
+	{
+		id: '1250',
+		name: 'Склад 1250',
+		address: '223050, Республика Беларусь, Минская область, Минский р-н, 9-ый км Московского шоссе',
+		contact: '+375291984537',
+		workingHoursStart: '09:00',
+		workingHoursEnd: '22:00',
+		shiftChange: [],
+		maxPall: 100,
+		weekends: [],
+		ramps: [
+			{ id: "125001", title: "Рампа 1", businessHours: { startTime: '10:00', endTime: '21:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
+		],
+	},
+]
 
-
+// ========================== тестовые данные ограничений ==========================
 const stocks = ['1700', '1250', '1200']
 const dateStart = '2024-04-29'
 const dateEnd = '2024-06-04'
@@ -32,7 +83,7 @@ for (let i = 0; i < 100; i++) {
 	data.push({
 		restrictionId: i + 1,
 		numStock: getRandomStock(),
-		date: dateHelper.getFormatDate(getRandomDate(new Date(dateStart), new Date(dateEnd))),
+		date: dateHelper.getDateForInput(getRandomDate(new Date(dateStart), new Date(dateEnd))),
 		maxPall: getRandomMaxPall(),
 	})
 }
@@ -44,7 +95,8 @@ const restrictions = data.reduce((acc, item) => {
 	acc.push(item)
 	return acc
 }, [])
-
+console.log("🚀 ~ restrictions ~ restrictions:", restrictions)
+//=======================================================================================
 
 const token = $("meta[name='_csrf']").attr("content")
 
@@ -53,7 +105,7 @@ let table
 
 const columnDefs = [
 	{ 
-		headerName: 'Дата', field: 'date',
+		headerName: 'Дата', field: 'dateToView',
 		cellClass: 'px-2 text-center',
 		sort: 'desc',
 		comparator: dateComparator,
@@ -94,7 +146,79 @@ const gridOptions = {
 	animateRows: true,
 }
 
+
+//=========================== структура склада ===============================
+let rowData = []
+let inputRow = {}
+
+function setRowData(newData) {
+	rowData = newData
+	gridOptionsForEdit.api.setRowData(rowData)
+}
+function setInputRow(newData) {
+	inputRow = newData
+	gridOptionsForEdit.api.setPinnedTopRowData([inputRow])
+}
+
+const columnDefsForEdit = [
+	{ field: 'structure', headerName: 'Название', },
+	{ field: 'pallCount', headerName: 'Всего паллет', },
+	{ field: 'freePall', headerName: 'Свободно паллет', },
+]
+const gridOptionsForEdit = {
+	rowData: null,
+	columnDefs: columnDefsForEdit,
+	pinnedTopRowData: [inputRow],
+
+	defaultColDef: {
+		flex: 1,
+		editable: true,
+		valueFormatter: (params) =>
+			isEmptyPinnedCell(params)
+				? createPinnedCellPlaceholder(params)
+				: undefined,
+	},
+
+	getRowStyle: ({ node }) =>
+		node.rowPinned ? { 'font-weight': 'bold', 'font-style': 'italic' } : 0,
+
+	onCellEditingStopped: (params) => {
+		if (isPinnedRowDataCompleted(params)) {
+			// save data
+			setRowData([...rowData, inputRow])
+			//reset pinned row
+			setInputRow({})
+		}
+	},
+}
+
+function isEmptyPinnedCell({ node, value }) {
+	return (node.rowPinned === 'top' && !value)
+}
+function createPinnedCellPlaceholder({ colDef }) {
+	return colDef.headerName[0].toUpperCase() + colDef.headerName.slice(1) + '...'
+}
+function isPinnedRowDataCompleted(params) {
+	if (params.rowPinned !== 'top') return
+	return columnDefsForEdit.every((def) => inputRow[def.field])
+}
+
+// const gridDiv = document.querySelector('#editGrid')
+// const editTable = new agGrid.Grid(gridDiv, gridOptionsForEdit)
+// gridOptionsForEdit.api.setRowData([])
+//============================================================================
+
+
+
+
+
+
+
+
 window.onload = async () => {
+	// изменение отступа для таблицы
+	changeGridTableMarginTop()
+
 	const numStockButtonsContainer = document.querySelector("#numStockButtons")
 	const numStockButtons = numStockButtonsContainer.querySelectorAll(".btn")
 	const addRestrictionForm = document.querySelector("#addRestrictionForm")
@@ -139,14 +263,27 @@ async function updateTable() {
 	// gridOptions.api.hideOverlay()
 }
 function getMappingData(data) {
+	return data.map(restriction => {
+		const dateToView = dateHelper.changeFormatToView(restriction.date)
 
-	return data
+		return {
+			...restriction,
+			dateToView,
+		}
+	})
 }
 function getContextMenuItems(params) {
 	const rowNode = params.node
 	const restriction = rowNode.data
-	console.log("🚀 ~ getContextMenuItems ~ rowNode:", rowNode)
+
 	const result = [
+		{
+			name: `Добавить ограничение`,
+			action: () => {
+				$('#addRestrictionModal').modal('show')
+			},
+			icon: uiIcons.clickBoadrPlus,
+		},
 		{
 			name: `Редактировать ограничение`,
 			action: () => {
@@ -162,7 +299,6 @@ function getContextMenuItems(params) {
 			icon: uiIcons.trash,
 		},
 		"separator",
-		"copy",
 		"export",
 	]
 
@@ -197,6 +333,8 @@ function numStockButtonsHandler(e, numStockButtons) {
 		target.classList.add('btn-primary')
 		target.blur()
 		showStockRestrictions(numStock)
+		const stock = stocksData.filter(stock => stock.id === numStock)[0]
+		setStockInfo(stock)
 	}
 }
 
@@ -211,6 +349,12 @@ function addRestrictionFormHandler(e) {
 
 	if (error) {
 		snackbar.show('Ошибка заполнения формы!')
+		return
+	}
+
+	// проверка наличия ограничения по дате и складу
+	if (checkRestriction(data)) {
+		alert('Ограничение на эту дату для выбранного склада уже установлено! Для изменения ограничения выполните операцию редактирования')
 		return
 	}
 
@@ -330,4 +474,54 @@ function updateCellData(rowId, columnName, newValue) {
 	const rowNode = gridOptions.api.getRowNode(rowId)
 	rowNode.setDataValue(columnName, newValue)
 	gridOptions.api.flashCells({ rowNodes: [rowNode] })
+}
+
+// показать информацию о выбранном складе
+function setStockInfo(stock) {
+	const stockCard = document.querySelector("#stockCard")
+
+	const shiftChange = getShiftChange(stock)
+
+	const stockCardHTML = `
+		<div class="card-header">
+			<h1 class="text-center my-1">${stock.name}</h1>
+		</div>
+		<ul class="list-group list-group-flush" >
+			<li class="list-group-item">Номер склада: <strong>${stock.id}</strong></li>
+			<li class="list-group-item">Адрес: <strong>${stock.address}</strong></li>
+			<li class="list-group-item">Время работы: <strong>${stock.workingHoursStart} - ${stock.workingHoursEnd}</strong></li>
+			<li class="list-group-item">Контакт: <strong>${stock.contact}</strong></li>
+			<li class="list-group-item">Рампы: <strong>${stock.ramps.length}</strong></li>
+			<li class="list-group-item">Паллетовместимость по умолчанию: <span class="badge badge-info">${stock.maxPall}</span></li>
+			<li class="list-group-item">Пересменка: <strong>${shiftChange}</strong></li>
+		</ul>
+	`
+
+	stockCard.innerHTML = stockCardHTML
+}
+function getShiftChange(stock) {
+	if (!stock.shiftChange) return 'Нет'
+	const shiftChange = stock.shiftChange
+
+	let html = ''
+
+	for (let i = 0; i < shiftChange.length; i+=2) {
+		html += `<span class="badge badge-danger">${shiftChange[i]} - ${shiftChange[i+1]}</span> `
+		if (i < shiftChange.length - 2) html += ' '
+	}
+
+	if (html === '') return 'Нет'
+	return html
+}
+
+
+// проверка наличия ограничения по дате и складу
+function checkRestriction(data) {
+	let res = false
+	restrictions.forEach(restriction => {
+		if (restriction.numStock === data.numStock && restriction.date === data.date) {
+			res = true
+		}
+	})
+	return res
 }

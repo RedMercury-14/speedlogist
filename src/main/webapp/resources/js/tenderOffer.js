@@ -1,3 +1,4 @@
+import { ajaxUtils } from './ajaxUtils.js';
 import { ws } from './global.js';
 import { wsHead } from './global.js';
 ws.onmessage = (e) => onMessage(JSON.parse(e.data));
@@ -84,6 +85,15 @@ $.getJSON(`../../../api/info/message/routes/${idRoute}`, function(data) {
 	setTimeout(() => doOptimalCost(), 600);
 	setTimeout(() => doBadCost(), 600);
 });
+
+
+
+window.onload = () => {
+	// проверка статуса заказа по маршруту
+	checkOrderForStatus(idRoute)
+
+}
+
 
 function sleep(milliseconds) {
   const date = Date.now();
@@ -507,3 +517,31 @@ function proof(){
 	
 }
 proof();
+
+function checkOrderForStatus(idRoute) {
+	ajaxUtils.get({
+		url: `../../../api/logistics/checkOrderForStatus/${idRoute}`,
+		successCallback: (data) => {
+			if (data.status === '200') {
+				orderStatusHandler(data)
+				return
+			}
+			
+		}
+	})
+}
+
+function orderStatusHandler(data) {
+	const messageContainer = document.querySelector('#messageContainer')
+	const status = Number(data.message)
+	if (!messageContainer) return
+	if (!status) return
+	
+	if (status === 10) {
+		const text = 'Заявка на транспорт по данному маршруту была отменена!'
+		messageContainer.innerHTML = text
+		$('#displayMessageModal').modal('show')
+		$('#displayMessageModal').addClass('show')
+		$('.modal-backdrop').addClass("whiteOverlay")
+	}
+}

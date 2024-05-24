@@ -27,6 +27,17 @@
 		.my-container {
 			margin-top: 100px;
 		}
+		.modal {
+			font-family: var(--font-family-sans-serif);
+		}
+		.whiteOverlay {
+			opacity: 1 !important;
+			background-color: #fff !important;
+		}
+		#messageContainer {
+			text-align: center;
+			font-size: 1.5rem;
+		}
 		footer.to-bottom {
 			margin-top: 51px;
 			position: fixed;
@@ -68,6 +79,25 @@
 				window.history.back();
 			}
 		</script>
+	</div>
+
+	<!-- Модальное окно с сообщением -->
+	<div class="modal fade" id="displayMessageModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="displayMessageModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header justify-content-center">
+					<h5 class="modal-title" id="displayMessageModalLabel">Сообщение</h5>
+				</div>
+				<div class="modal-body">
+					<div id="messageContainer">
+
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button class="btn btn-outline-secondary" onclick="goBack()">Назад</button>
+				</div>
+			</div>
+		</div>
 	</div>
 
 	<jsp:include page="footer.jsp" />

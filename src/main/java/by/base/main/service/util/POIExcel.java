@@ -79,12 +79,14 @@ import by.base.main.model.Act;
 import by.base.main.model.MapResponse;
 import by.base.main.model.Message;
 import by.base.main.model.Order;
+import by.base.main.model.Product;
 import by.base.main.model.Route;
 import by.base.main.model.RouteHasShop;
 import by.base.main.model.Shop;
 import by.base.main.service.ActService;
 import by.base.main.service.MessageService;
 import by.base.main.service.OrderService;
+import by.base.main.service.ProductService;
 import by.base.main.service.ServiceException;
 
 /**
@@ -113,6 +115,9 @@ public class POIExcel {
 	
 	@Autowired
 	private OrderService orderService;
+	
+	@Autowired
+	private ProductService productService;
 
 	private ArrayList<Shop> shops;
 	private ArrayList<RouteHasShop> arrayRouteHasShop;
@@ -493,6 +498,128 @@ public class POIExcel {
 		}
 	}
 	
+	
+	
+	private Integer dayMax = 20;
+	
+	public String loadBalanceStock(File file, HttpServletRequest request) throws FileNotFoundException, IOException {
+		 XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
+	     XSSFSheet sheet = wb.getSheetAt(0);
+	     Date dateUnload =  new Date(sheet.getRow(0).getCell(4).getDateCellValue().getTime());
+	     Set<Product> unicProduct = new HashSet<Product>();
+	     int upd = 0;
+	     int save = 0;
+	     for (int i = 1; i < sheet.getLastRowNum() + 1; i++) {
+	            XSSFRow rowI = sheet.getRow(i);
+	            
+	            XSSFCell cellCodeProduct = rowI.getCell(3);
+	            XSSFCell cellRating = rowI.getCell(0);
+	            XSSFCell cellNumStock = rowI.getCell(1);
+	            XSSFCell cell2 = rowI.getCell(2);
+	            XSSFCell cell4 = rowI.getCell(4);	            
+	            XSSFCell cell5 = rowI.getCell(5);
+	            XSSFCell cell6= rowI.getCell(6);
+	            XSSFCell cell7 = rowI.getCell(7);
+	            XSSFCell cell8 = rowI.getCell(8);
+	            XSSFCell cell9 = rowI.getCell(9);
+	            XSSFCell cell10 = rowI.getCell(10);
+	            XSSFCell cell11 = rowI.getCell(11);
+	            XSSFCell cell12 = rowI.getCell(12);
+	            XSSFCell cell13 = rowI.getCell(13);
+	            XSSFCell cell14 = rowI.getCell(14);
+	            XSSFCell cell15 = rowI.getCell(15);
+	            XSSFCell cell16 = rowI.getCell(16);
+	            XSSFCell cell17 = rowI.getCell(17);
+	            XSSFCell cell18 = rowI.getCell(18);
+	            XSSFCell cell19 = rowI.getCell(19);
+	            XSSFCell cell20 = rowI.getCell(20);
+	            XSSFCell cell21 = rowI.getCell(21);
+	            XSSFCell cell22 = rowI.getCell(22);
+
+
+
+	            //устанавливаем типы ячеек индивидуально! Все стринг
+	            cellCodeProduct.setCellType(CellType.STRING);
+	            cellRating.setCellType(CellType.STRING);
+	            cellNumStock.setCellType(CellType.STRING);
+	            cell4.setCellType(CellType.STRING);
+	            cell6.setCellType(CellType.STRING);
+	            
+	            
+	            Product product = productService.getProductByCode(Integer.parseInt(cellCodeProduct.toString()));
+	            if(product == null) {
+	            	product = new Product();
+	            	product.setRating(Integer.parseInt(cellRating.toString()));
+	            	product.setNumStock(Integer.parseInt(cellNumStock.toString()));
+	            	product.setGroup(cell2.toString());
+	            	product.setCodeProduct(Integer.parseInt(cellCodeProduct.toString()));
+	            	product.setName(cell4.toString());	            	
+	            	product.setDateUnload(dateUnload);
+	            	product.setСalculatedPerDay(Double.parseDouble(cell5.toString()));
+	            	product.setBalanceStock(Double.parseDouble(cell6.toString()));
+	            	product.setDuringAssembly(Double.parseDouble(cell7.toString()));
+	            	product.setNeed(Double.parseDouble(cell8.toString()));
+	            	product.setRemainderNetwork(Double.parseDouble(cell9.toString()));
+	            	product.setRemainderStockInPall(Double.parseDouble(cell10.toString()));
+	            	product.setRemainderStockInDay(Double.parseDouble(cell11.toString()));
+	            	product.setRemainderNetworkInDay(Double.parseDouble(cell12.toString()));
+	            	product.setAmountMaintenance(Double.parseDouble(cell13.toString()));
+	            	product.setTOWithLeftovers2Days(Double.parseDouble(cell14.toString()));
+	            	product.setPercent(Double.parseDouble(cell15.toString()));
+	            	product.setDifference(cell16 != null ? Double.parseDouble(cell16.toString()) : null);
+	            	product.setPriceWithoutNDS(cell17 != null ? Double.parseDouble(cell17.toString()) : null);
+	            	product.setExpectedArrival(Double.parseDouble(cell18.toString()));
+	            	product.setReserves(Double.parseDouble(cell20.toString()));
+	            	product.setReserves100And50(Double.parseDouble(cell21.toString()));
+	            	product.setBalanceStockAndReserves(Double.parseDouble(cell22.toString()));
+	            	product.setDateCreate(Timestamp.valueOf(LocalDateTime.now()));
+	            	product.setDayMax(dayMax);
+	            	product.setIsException(false);
+	            	productService.saveProduct(product);
+	            	save++;
+	            }else {	            	
+	            	product.setRating(Integer.parseInt(cellRating.toString()));
+	            	product.setNumStock(Integer.parseInt(cellNumStock.toString()));
+	            	product.setGroup(cell2.toString());
+	            	product.setCodeProduct(Integer.parseInt(cellCodeProduct.toString()));
+	            	product.setName(cell4.toString());	            	
+	            	product.setDateUnload(dateUnload);
+	            	product.setСalculatedPerDay(Double.parseDouble(cell5.toString()));
+	            	product.setBalanceStock(Double.parseDouble(cell6.toString()));
+	            	product.setDuringAssembly(Double.parseDouble(cell7.toString()));
+	            	product.setNeed(Double.parseDouble(cell8.toString()));
+	            	product.setRemainderNetwork(Double.parseDouble(cell9.toString()));
+	            	product.setRemainderStockInPall(Double.parseDouble(cell10.toString()));	            	
+	            	product.setRemainderNetworkInDay(Double.parseDouble(cell12.toString()));
+	            	product.setAmountMaintenance(Double.parseDouble(cell13.toString()));
+	            	product.setTOWithLeftovers2Days(Double.parseDouble(cell14.toString()));
+	            	product.setPercent(Double.parseDouble(cell15.toString()));
+	            	product.setDifference(cell16 != null ? Double.parseDouble(cell16.toString()) : null);
+	            	product.setPriceWithoutNDS(cell17 != null ? Double.parseDouble(cell17.toString()) : null);
+	            	product.setExpectedArrival(Double.parseDouble(cell18.toString()));
+	            	product.setReserves(Double.parseDouble(cell20.toString()));
+	            	product.setReserves100And50(Double.parseDouble(cell21.toString()));	            	
+	            	product.setDateCreate(Timestamp.valueOf(LocalDateTime.now()));
+	            	product.setDayMax(dayMax);
+	            	if(unicProduct.add(product)) {
+	            		product.setRemainderStockInDay(Double.parseDouble(cell11.toString()));
+	            		product.setBalanceStockAndReserves(Double.parseDouble(cell22.toString()));
+	            	}else {
+	            		Double stockInDay11 = product.getRemainderStockInDay();
+	            		Double balanceStockAndReserves22 = product.getBalanceStockAndReserves();
+	            		product.setRemainderStockInDay(Double.parseDouble(cell11.toString()) + stockInDay11);
+	            		product.setBalanceStockAndReserves(Double.parseDouble(cell22.toString()) + balanceStockAndReserves22);
+	            	}
+	            	productService.updateProduct(product);
+//	            	System.out.println(product);
+	            	upd++;
+	            }
+
+	        }
+	     String message = "Добавлено : " + save + " позиций;\nОбновлено : " + upd + " позиций";
+		return message;		
+	}
+	
 	private Integer codeСounterparty487 = 0;
 	private Integer nameСounterparty487 = 1;
 	private Integer codeOrder487 = 2;
@@ -506,6 +633,7 @@ public class POIExcel {
 	private Integer statusOrderMarcet487 = 30;
 	private Integer countInPack487 = 48;
 	private Integer countInPall487 = 49;
+	private Integer info487 = 50;
 	
 	
 	/**
@@ -536,6 +664,7 @@ public class POIExcel {
 		controlHeader.put(30, "Статус заказа");
 		controlHeader.put(48, "Кол-во в упаковке (ед.)");
 		controlHeader.put(49, "Кол-во на паллете (ед.)");
+		controlHeader.put(50, "Инфо расценки");
 		
 		// читаем шапку
 		XSSFRow rowHeader = sheet.getRow(2);
@@ -553,17 +682,355 @@ public class POIExcel {
 		return null;		
 	}	
 	
+	/**
+	 * Основной метод смчитки 487 отчёта
+     * парсит только 50 и 51 статусы
+     * записывает все ексели в папку 487
+     * дополнительно записывает комментарии. Если коммент начинается на слово Создал - то не записывается
+	 * @param file
+	 * @param request
+	 * @return
+	 * @throws ServiceException
+	 * @throws InvalidFormatException
+	 * @throws IOException
+	 */
+	public String loadOrderHasExcelV2(File file, HttpServletRequest request) throws ServiceException, InvalidFormatException, IOException {
+        String message = "СЧИТКА 50 и 51 СТАТУСОВ + столбец Информация  \n";
+        XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
+        XSSFSheet sheet = wb.getSheetAt(0);
+
+        Integer numOrderMarket = null;
+        Order order = null;
+        int numRow50Status = 0;
+        int createOrders = 0;
+        int sku = 0;
+
+        message = message + " Всего строк: " + (sheet.getLastRowNum() + 1) + " строк \n";
+        boolean flag = false;
+
+        for (int i = 3; i < sheet.getLastRowNum() + 1; i++) {
+            XSSFRow rowI = sheet.getRow(i);
+            XSSFRow rowBack = null;
+            if(i != 3) {
+            	rowBack = sheet.getRow(i-1);
+            }
+            XSSFRow rowNext = null;
+            if(sheet.getLastRowNum() + 1 != i) {
+                rowNext = sheet.getRow(i+1);
+            }
+            XSSFCell cellCodeСounterparty487 = rowI.getCell(codeСounterparty487);
+            XSSFCell cellNameСounterparty487 = rowI.getCell(nameСounterparty487);
+            XSSFCell cellCodeOrder487 = rowI.getCell(codeOrder487);
+            XSSFCell cellCodeOrder487NEXT = rowNext == null ? null : rowNext.getCell(codeOrder487);
+            XSSFCell cellCodeOrder487BACK = rowBack == null ? null : rowBack.getCell(codeOrder487);
+            XSSFCell cellDate487 = rowI.getCell(date487);
+            XSSFCell cellNumStock487 = rowI.getCell(numStock487);
+            XSSFCell cellCodeProduct487 = rowI.getCell(codeProduct487);
+            XSSFCell cellNameProduct487 = rowI.getCell(nameProduct487);
+            XSSFCell cellBarcodeProduct487 = rowI.getCell(barcodeProduct487);
+            XSSFCell cellCountProduct487 = rowI.getCell(countProduct487);
+            XSSFCell cellTimeCreateOrder487 = rowI.getCell(timeCreateOrder487);
+            XSSFCell cellStatusOrderMarcet487 = rowI.getCell(statusOrderMarcet487);
+            XSSFCell cellCountInPack487 = rowI.getCell(countInPack487);
+            XSSFCell cellCountInPall487 = rowI.getCell(countInPall487);
+            XSSFCell cellInfo487 = rowI.getCell(info487);
+
+
+
+            //устанавливаем типы ячеек индивидуально! Все стринг
+            cellCodeСounterparty487.setCellType(CellType.STRING);
+            cellNameСounterparty487.setCellType(CellType.STRING);
+            cellCodeOrder487.setCellType(CellType.STRING);
+            if(cellCodeOrder487NEXT != null) {
+                cellCodeOrder487NEXT.setCellType(CellType.STRING);
+            }
+            cellNumStock487.setCellType(CellType.STRING);
+            cellCodeProduct487.setCellType(CellType.STRING);
+            cellNameProduct487.setCellType(CellType.STRING);
+            cellBarcodeProduct487.setCellType(CellType.STRING);
+            cellCountProduct487.setCellType(CellType.STRING);
+//			cellTimeCreateOrder487.setCellType(CellType.STRING);
+            cellStatusOrderMarcet487.setCellType(CellType.STRING);
+            cellCountInPack487.setCellType(CellType.STRING);
+            cellCountInPall487.setCellType(CellType.STRING);
+            cellInfo487.setCellType(CellType.STRING);
+
+          
+            //Смотрим статус: если не 50 и не 51 - то пропускаем
+            if(!cellStatusOrderMarcet487.toString().trim().equals("50") && !cellStatusOrderMarcet487.toString().trim().equals("51")) {
+                continue;
+            }
+            numRow50Status++;
+
+            if(numOrderMarket == null || numOrderMarket == Integer.parseInt(cellCodeOrder487.toString().trim())) {
+                numOrderMarket = Integer.parseInt(cellCodeOrder487.toString().trim());
+                if(order == null) {
+                    order = new Order();
+                    order.setMarketNumber(numOrderMarket.toString());                   
+                    order.setCounterparty(cellNameСounterparty487.toString().trim());
+                    order.setNumProduct(cellCodeProduct487.toString()+"^");
+                    Date dateDelivery;
+                    try {
+                        //отличное решение по датам
+                        //https://qna.habr.com/q/1056046
+                        dateDelivery = new Date(cellDate487.getDateCellValue().getTime());
+                    } catch (Exception e) {
+//						e.printStackTrace();
+                        System.err.println("Ошибка парсинга даты! Неправильнный тип даты в строке " + i+1);
+                        return "Ошибка парсинга даты! Неправильнный тип даты в строке " + i+1;
+                    }
+                    order.setDateDelivery(dateDelivery);
+                    order.setNumStockDelivery(cellNumStock487.toString().trim());
+                    order.setCargo(cellNameProduct487.toString().trim() + ", ");
+                    //записываем в поле информация
+                    if(!cellInfo487.toString().isEmpty()) {
+                    	if(!cellInfo487.toString().split(" ")[0].equals("Создано")) {
+                    		order.setMarketInfo(cellInfo487.toString());
+                    	}
+                    }
+                    Date dateCreateInMarket = new Date(cellTimeCreateOrder487.getDateCellValue().getTime());
+                    order.setDateCreateMarket(dateCreateInMarket);
+                    order.setChangeStatus("Заказ создан в маркете: " + dateCreateInMarket);
+                    if(Double.parseDouble(cellCountProduct487.toString().trim()) == 0.0) {
+                        order = null;
+                        numOrderMarket= null;
+                        sku = 0;   
+                        flag = false;
+                        continue;
+                        
+                    }
+//                    System.err.println(i+1);
+//                    System.err.println(cellCountProduct487.toString());
+//                    System.err.println(cellCountInPall487.toString());
+                    Double pall = Math.ceil(Double.parseDouble(cellCountProduct487.toString().trim()) / Double.parseDouble(cellCountInPall487.toString().trim()));
+                    String pallStr = pall+"";
+
+                    // Вычисляем pallNew
+                    Double pallNew = Double.parseDouble(cellCountProduct487.toString().trim()) / Double.parseDouble(cellCountInPall487.toString().trim());
+                    // Получаем целую и дробную части из pallNew
+                    int integerPart = (int) Math.floor(pallNew);
+                    double fractionalPart = pallNew - integerPart;
+                    String pallMono = Integer.toString(integerPart);
+                    String pallMix;
+                    if (fractionalPart > 0) {
+                        // Если есть дробная часть, паллет микс = 1
+                        pallMix = "1";
+                    } else {
+                        // Иначе записываем дробную часть
+                        pallMix = "0";
+                    }
+
+                    order.setPall(pallStr.split("\\.")[0]);
+                    order.setMonoPall(Integer.parseInt(pallMono));
+                    order.setMixPall(Integer.parseInt(pallMix));
+                    sku++;
+                    order.setSku(sku);
+                }else {
+                    if(Double.parseDouble(cellCountProduct487.toString().trim()) == 0.0 && order!= null) {
+                    	if(i == sheet.getLastRowNum() && order != null) { //принудительная загрузка если последняя строка во всём по потребности равна 0
+//            				System.err.println("Сохраняем заказ в базе");
+                            //перед сохранение просчитываем время на выгрузку, пока костыльно, т.е. 6 мин на паллету!
+                            Integer minute = Integer.parseInt(order.getPall()) * 6;
+                            
+                            order.setStatus(5);
+
+                            Integer pallMono = Integer.valueOf(order.getMonoPall());
+                            Integer pallMix = Integer.valueOf(order.getMixPall());
+                            Integer skuTotal = Integer.valueOf(order.getSku());
+                            
+//                            Расчет времени выгрузки авто в минутах.
+//                            =10мин+ МОНО*2мин.+MIX*3мин.+((SKU-1мин)*3мин)
+//                            Разъяснение:
+//                            10 мин.= не зависимо от объема поставки есть действия специалиста требующие временных затрат.
+//                            МОНО -количество моно паллет в заказе
+//                            MIX - количество микс паллет в заказе
+//                            SKU-1 – каждое SKU более одной требует дополнительных временных затрат.
+                            Integer minutesUnload = 10 + pallMono * 2 + pallMix * 3 + ((skuTotal - 1) * 3);
+                            System.out.println(order.getMarketNumber() + " <---MARKET");
+                            try {
+                            	order.setTimeUnload(Time.valueOf(LocalTime.ofSecondOfDay(minutesUnload*60)));
+            				} catch (Exception e) {
+            					 return "Ошибка расчёта времени выгрузки! В номере из маркета " + order.getMarketNumber() + " рассчитано " + minutesUnload + " минут! \nРАСЧЁТ ЗАВЕРШЕН С ОШИБКОЙ!";
+            				}
+                            
+
+//                            System.err.println(order);
+                            
+                            
+                            message = message + " \n " + orderService.saveOrderFromExcel(order); // здесь происходит пролверка и запись заявки
+                            createOrders++;
+                            order = null;
+                            numOrderMarket= null;
+                            sku = 0;
+                    		break;
+                    	}
+                    	if(numOrderMarket != Integer.parseInt(cellCodeOrder487NEXT.toString().trim())) {//принудительная загрузка если послендняя строка в заказа равна 0, а дальше есть новый заказ
+//                    		System.err.println("Сохраняем заказ в базе");
+                            //перед сохранение просчитываем время на выгрузку, пока костыльно, т.е. 6 мин на паллету!
+                            Integer minute = Integer.parseInt(order.getPall()) * 6;
+                            
+                            order.setStatus(5);
+
+                            Integer pallMono = Integer.valueOf(order.getMonoPall());
+                            Integer pallMix = Integer.valueOf(order.getMixPall());
+                            Integer skuTotal = Integer.valueOf(order.getSku());
+                            
+//                            Расчет времени выгрузки авто в минутах.
+//                            =10мин+ МОНО*2мин.+MIX*3мин.+((SKU-1мин)*3мин)
+//                            Разъяснение:
+//                            10 мин.= не зависимо от объема поставки есть действия специалиста требующие временных затрат.
+//                            МОНО -количество моно паллет в заказе
+//                            MIX - количество микс паллет в заказе
+//                            SKU-1 – каждое SKU более одной требует дополнительных временных затрат.
+                            Integer minutesUnload = 10 + pallMono * 2 + pallMix * 3 + ((skuTotal - 1) * 3);
+                            System.out.println(order.getMarketNumber() + " <---MARKET");
+                            try {
+                            	order.setTimeUnload(Time.valueOf(LocalTime.ofSecondOfDay(minutesUnload*60)));
+            				} catch (Exception e) {
+            					 return "Ошибка расчёта времени выгрузки! В номере из маркета " + order.getMarketNumber() + " рассчитано " + minutesUnload + " минут! \nРАСЧЁТ ЗАВЕРШЕН С ОШИБКОЙ!";
+            				}
+                            
+                            message = message + " \n " + orderService.saveOrderFromExcel(order); // здесь происходит пролверка и запись заявки
+                            createOrders++;
+                            order = null;
+                            numOrderMarket= null;
+                            sku = 0;
+                            continue;
+                    	}
+                        continue;
+                    }
+                    double pall = Math.ceil(Double.parseDouble(cellCountProduct487.toString().trim()) / Double.parseDouble(cellCountInPall487.toString().trim()));
+
+//                    System.out.println(cellCountProduct487.toString());
+//                    System.out.println(cellCountInPall487.toString());
+
+                    // Вычисляем pallNew
+                    Double pallNew = Double.parseDouble(cellCountProduct487.toString().trim()) / Double.parseDouble(cellCountInPall487.toString().trim());
+//                    System.out.println(pallNew);
+
+                    // Получаем целую и дробную части из pallNew
+                    int integerPart = (int) Math.floor(pallNew);
+                    double fractionalPart = pallNew - integerPart;
+
+                    String pallMono = Integer.toString(integerPart);
+                    String pallMix;
+
+                    if (fractionalPart > 0) {
+                        // Если есть дробная часть, паллет микс = 1
+                        pallMix = "1";
+                    } else {
+                        // Иначе записываем дробную часть
+                        pallMix = "0";
+                    }
+
+//                    System.out.println("pallMono: " + pallMono);
+//                    System.out.println("pallMix: " + pallMix);
+
+                    Integer intPall = (int) pall;
+                    Integer oldIntPall = Integer.parseInt(order.getPall());
+                    Integer totalPall = intPall + oldIntPall;
+                 
+
+                    Integer intPallMono = Integer.valueOf(pallMono);
+                    Integer oldIntPallMono = order.getMonoPall();
+                    Integer totalPallMono = intPallMono + oldIntPallMono;
+                   
+
+                    Integer intPallMix = Integer.valueOf(pallMix);
+//                    System.out.println("oldPallMix - " + order.getMixPall());
+                    Integer oldIntPallMix = Integer.valueOf(order.getMixPall());
+                    Integer totalPallMix = intPallMix + oldIntPallMix;
+                 
+
+                    String totalPallStr = totalPall.toString();
+                    String totalPallMonoStr = totalPallMono.toString();
+                    String totalPallMixStr = totalPallMix.toString();
+
+                    order.setPall(totalPallStr);
+                    order.setMonoPall(Integer.parseInt(totalPallMonoStr));
+                    order.setMixPall(Integer.parseInt(totalPallMixStr));
+                    
+                    sku++;
+                    order.setSku(sku);
+                    order.setNumProduct(order.getNumProduct() + cellCodeProduct487.toString()+"^");
+                }
+            }
+                        
+            if(cellCodeOrder487NEXT == null || numOrderMarket != Integer.parseInt(cellCodeOrder487NEXT.toString().trim())) {
+//				System.err.println("Сохраняем заказ в базе");
+                
+                order.setStatus(5);
+
+                Integer pallMono = Integer.valueOf(order.getMonoPall());
+                Integer pallMix = Integer.valueOf(order.getMixPall());
+                Integer skuTotal = Integer.valueOf(order.getSku());
+                
+//                Расчет времени выгрузки авто в минутах.
+//                =10мин+ МОНО*2мин.+MIX*3мин.+((SKU-1мин)*3мин)
+//                Разъяснение:
+//                10 мин.= не зависимо от объема поставки есть действия специалиста требующие временных затрат.
+//                МОНО -количество моно паллет в заказе
+//                MIX - количество микс паллет в заказе
+//                SKU-1 – каждое SKU более одной требует дополнительных временных затрат.
+                Integer minutesUnload = 10 + pallMono * 2 + pallMix * 3 + ((skuTotal - 1) * 3);
+                System.out.println(order.getMarketNumber() + " <---MARKET");
+                try {
+                	order.setTimeUnload(Time.valueOf(LocalTime.ofSecondOfDay(minutesUnload*60)));
+				} catch (Exception e) {
+					 return "Ошибка расчёта времени выгрузки! В номере из маркета " + order.getMarketNumber() + " рассчитано " + minutesUnload + " минут! \nРАСЧЁТ ЗАВЕРШЕН С ОШИБКОЙ!";
+				}
+                
+
+//                System.err.println(order);
+                
+                
+              
+                
+                message = message + " \n " + orderService.saveOrderFromExcel(order); // здесь происходит пролверка и запись заявки
+                createOrders++;
+                order = null;
+                numOrderMarket = null;
+                sku = 0; 
+                continue;
+            }
+            
+        }
+        message = message + "\n Строк с 50 статусом: " + (numRow50Status) + "\n ";
+        message = message + "Всего считано маршрутов: " + (createOrders) + "\n ";
+
+        String appPath = request.getServletContext().getRealPath("");
+        String dateNow = LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+        String timeNow = LocalTime.now().format(DateTimeFormatter.ofPattern("HH-mm"));
+        String fileName = dateNow + " " + timeNow + ".xlsx";
+        //если файла нет - создаём его 
+        File fileTest= new File(appPath + "resources/others/487/");
+        if (!fileTest.exists()) {
+            fileTest.mkdir();
+        }
+        
+        File fileLocal = new File(appPath + "resources/others/487/" + fileName);
+        System.out.println(appPath + "resources/others/487/" + fileName);
+//		  		book.write(fos);
+//		  		fos.flush();
+        wb.write(new FileOutputStream(fileLocal));
+        wb.close();
+        message = message + "Считка завершена без ошибок";
+        return message;
+    }
+	
 	
 	/**
      * Основной метод смчитки 487 отчёта
      * парсит только 50 статусы
      * записывает все ексели в папку 487
+     * УСТАРЕЛ
      * @param file
      * @return
      * @throws ServiceException
      * @throws InvalidFormatException
      * @throws IOException
      */
+	@Deprecated
     public String loadOrderHasExcel(File file, HttpServletRequest request) throws ServiceException, InvalidFormatException, IOException {
         String message = "СЧИТКА 50 и 51 СТАТУСОВ \n";
         XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));

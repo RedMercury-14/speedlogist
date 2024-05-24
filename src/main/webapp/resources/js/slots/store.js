@@ -1,3 +1,4 @@
+import { dateHelper } from "../utils.js"
 import { eventColors } from "./constants.js"
 import { getEndTime, getEventBGColor, groupeByNumStockDelyvery } from "./dataUtils.js"
 import { editableRules, colorRules } from "./rules.js"
@@ -6,6 +7,11 @@ import { stocks } from "./virtualStocks.js"
 const token = $("meta[name='_csrf']").attr("content")
 const login = document.querySelector("#login").value
 const role = document.querySelector("#role").value
+
+const maxPall = {
+	externalMovement: 0,
+	internalMovement: 0,
+}
 
 export const store = {
 	_state: {
@@ -65,12 +71,63 @@ export const store = {
 		if (!maxPallRestriction) return this._state.stocks.find(({ id }) => id === stockId).maxPall
 		return maxPallRestriction.maxPall
 	},
+	getMaxPallDataByPeriod(stockId, startDateStr, numDays) {
+		const datesArray = dateHelper.getDateStrsArray(startDateStr, numDays)
+		return datesArray.map(dateStr => { 
+			return {
+				date: dateStr,
+				maxPall: this.getMaxPallByDate(stockId, dateStr),
+			}
+		})
+	},
 
 	setCurrentMaxPall(currentMaxPall) {
-		this._state.currentMaxPall = Number(currentMaxPall)
+		this._state.currentMaxPall = currentMaxPall
 	},
 	getCurrentMaxPall() {
 		return this._state.currentMaxPall
+	},
+
+	getPallCount(stock, dateStr) {
+		const isExternalMovementEvent = event => event.extendedProps.data.isInternalMovement !== 'true'
+		const isInternalMovementEvent = event => event.extendedProps.data.isInternalMovement === 'true'
+		const eventsByDate = event => event.start.split('T')[0] === dateStr
+		return stock.events
+			.filter(eventsByDate)
+			.reduce((acc, event) => {
+				const numberOfPall = Number(event.extendedProps.data.pall)
+				acc.externalMovement = acc.externalMovement + numberOfPall
+				// if (isExternalMovementEvent(event)) {
+				// 	acc.externalMovement = acc.externalMovement + numberOfPall
+				// }
+				// if (isInternalMovementEvent(event)) {
+				// 	acc.internalMovement = acc.internalMovement + numberOfPall
+				// }
+				return acc
+			}, {
+				externalMovement: 0,
+				internalMovement: 0,
+			})
+	},
+	getPallCountForExternalMovement(stock, dateStr) {
+		const isExternalMovementEvent = event => event.extendedProps.data.isInternalMovement !== 'true'
+		const eventsByDate = event => event.start.split('T')[0] === dateStr && isExternalMovementEvent(event)
+		return stock.events
+			.filter(eventsByDate)
+			.reduce((acc, event) => {
+				const numberOfPall = Number(event.extendedProps.data.pall)
+				return acc + numberOfPall
+			}, 0)
+	},
+	getPallCountForInternalMovement(stock, dateStr) {
+		const isInternalMovementEvent = event => event.extendedProps.data.isInternalMovement === 'true'
+		const eventsByDate = event => event.start.split('T')[0] === dateStr && isInternalMovementEvent(event)
+		return stock.events
+			.filter(eventsByDate)
+			.reduce((acc, event) => {
+				const numberOfPall = Number(event.extendedProps.data.pall)
+				return acc + numberOfPall
+			}, 0)
 	},
 
 
@@ -90,13 +147,25 @@ export const store = {
 	updateOrder(orderData) {
 		const marketNumber = orderData.marketNumber
 		const timeDelivery = orderData.timeDelivery ? new Date(orderData.timeDelivery).getTime() : null
+		const marketInfo = orderData.hasOwnProperty('marketInfo')
+			? orderData.marketInfo
+			: orderData.fcEvent.extendedProps.data.marketInfo
+				? orderData.fcEvent.extendedProps.data.marketInfo
+				: ''
 		const index = this._state.orders.findIndex(o => o.marketNumber === marketNumber)
+		// если заказа нет, то создаем его
+		if (index === -1 && orderData.idOrder) {
+			const newOrder = orderData.fcEvent.extendedProps.data
+			this._state.orders.push(newOrder)
+			return newOrder
+		}
 		this._state.orders[index] = {
 			...this._state.orders[index],
 			status: orderData.status,
 			timeDelivery,
 			idRamp: orderData.idRamp,
-			loginManager: orderData.loginManager
+			loginManager: orderData.loginManager,
+			marketInfo,
 		}
 		return this._state.orders[index]
 	},
@@ -104,6 +173,18 @@ export const store = {
 		const marketNumber = orderData.marketNumber
 		const index = this._state.orders.findIndex(o => o.marketNumber === marketNumber)
 		this._state.orders.splice(index, 1)
+		return this._state.orders
+	},
+	// добавление нового заказа из Маркета
+	addNewOrderFromMarket(order) {
+		this._state.orders.push(order)
+		return this._state.orders
+	},
+	// обновить заказ данными из Маркета
+	updateOrderFromMarket(order) {
+		const marketNumber = order.marketNumber
+		const index = this._state.orders.findIndex(o => o.marketNumber === marketNumber)
+		this._state.orders[index] = order
 		return this._state.orders
 	},
 
@@ -255,6 +336,12 @@ export const store = {
 		const eventIndex = this._state.stocks[stockIndex].events.findIndex(event => event.id === eventId)
 		this._state.stocks[stockIndex].events.splice(eventIndex, 1)
 		this._callSubscriber(this._state)
+	},
+	getEvent(stockId, fcEvent) {
+		const eventId = fcEvent.id
+		const stockIndex = this._state.stocks.findIndex(stock => stock.id === stockId)
+		if (stockIndex === -1) return null
+		return this._state.stocks[stockIndex].events.find(event => event.id === eventId)
 	},
 
 	subscribe (observer) {

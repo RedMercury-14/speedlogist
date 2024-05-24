@@ -4,17 +4,24 @@ import static com.graphhopper.json.Statement.If;
 import static com.graphhopper.json.Statement.Op.LIMIT;
 import static com.graphhopper.json.Statement.Op.MULTIPLY;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -74,12 +81,21 @@ import com.graphhopper.util.PointList;
 import com.graphhopper.util.Translation;
 import com.graphhopper.util.shapes.GHPoint;
 import by.base.main.controller.MainController;
+import by.base.main.dto.MarketDataForClear;
+import by.base.main.dto.MarketDataForLoginDto;
+import by.base.main.dto.MarketDataForRequestDto;
+import by.base.main.dto.MarketErrorDto;
+import by.base.main.dto.MarketPacketDto;
+import by.base.main.dto.MarketRequestDto;
+import by.base.main.dto.MarketTableDto;
+import by.base.main.dto.OrderBuyGroupDTO;
 import by.base.main.model.Address;
 import by.base.main.model.GeometryResponse;
 import by.base.main.model.JsonResponsePolygon;
 import by.base.main.model.MapResponse;
 import by.base.main.model.Message;
 import by.base.main.model.Order;
+import by.base.main.model.Product;
 import by.base.main.model.Rates;
 import by.base.main.model.Role;
 import by.base.main.model.Route;
@@ -91,6 +107,7 @@ import by.base.main.model.User;
 import by.base.main.service.AddressService;
 import by.base.main.service.MessageService;
 import by.base.main.service.OrderService;
+import by.base.main.service.ProductService;
 import by.base.main.service.RatesService;
 import by.base.main.service.RoleService;
 import by.base.main.service.RouteHasShopService;
@@ -99,7 +116,9 @@ import by.base.main.service.ServiceException;
 import by.base.main.service.ShopService;
 import by.base.main.service.TruckService;
 import by.base.main.service.UserService;
+import by.base.main.service.util.CustomJSONParser;
 import by.base.main.service.util.MailService;
+import by.base.main.service.util.OrderCreater;
 import by.base.main.service.util.POIExcel;
 import by.base.main.util.ChatEnpoint;
 import by.base.main.util.MainChat;
@@ -196,15 +215,288 @@ public class MainRestController {
 	@Autowired
 	private SlotWebSocket slotWebSocket;
 	
+	@Autowired
+	private OrderCreater orderCreater;
+	
+	@Autowired
+	private ProductService productService;
+	
 	private static String classLog;
+	private static String marketJWT;
+//	private static final String marketUrl = "https://api.dobronom.by:10806/Json";
+//	private static final String serviceNumber = "BB7617FD-D103-4724-B634-D655970C7EC0";
+//	private static final String loginMarket = "191178504_SpeedLogist";
+//	private static final String passwordMarket = "SL!2024D@2005";
+	private static final String marketUrl = "https://api.dobronom.by:10896/Json";
+	private static final String serviceNumber = "CD6AE87C-2477-4852-A4E7-8BA5BD01C156";
+	private static final String loginMarket = "SpeedLogist";
+	private static final String passwordMarket = "12345678";
 
 
 	public static final Comparator<Address> comparatorAddressId = (Address e1, Address e2) -> (e1.getIdAddress() - e2.getIdAddress());
 	public static final Comparator<Address> comparatorAddressIdForView = (Address e1, Address e2) -> (e2.getType().charAt(0) - e1.getType().charAt(0));
 	
+	/**
+	 * Метод меняет остатки на складах Ост на РЦ + запасники в днях
+	 * @param request
+	 * @param code
+	 * @param stock
+	 * @return
+	 */
+	@GetMapping("/order-support/setNewBalance/{code}&{stock}")
+	public Map<String, Object> setNewBalance(HttpServletRequest request, @PathVariable String code, @PathVariable String stock) {
+		Map<String, Object> response = new HashMap<String, Object>();
+		Product product = productService.getProductByCode(Integer.parseInt(code.trim()));
+		product.setBalanceStockAndReserves(Double.parseDouble(stock));
+		productService.updateProduct(product);
+		response.put("status", "200");
+		response.put("message", "Данные по товaру обновлены");
+		return response;		
+	}
+	
+	/**
+	 * Метод меняет Exception
+	 * @param request
+	 * @param code
+	 * @return
+	 */
+	@GetMapping("/order-support/changeException/{idProduct}")
+	public Map<String, Object> changeException(HttpServletRequest request, @PathVariable String idProduct) {
+		Map<String, Object> response = new HashMap<String, Object>();
+		Product product = productService.getProductByCode(Integer.parseInt(idProduct.trim()));
+		product.setIsException(!product.getIsException());
+		productService.updateProduct(product);
+		response.put("status", "200");
+		response.put("message", "Данные по товaру обновлены.");
+		return response;		
+	}
+	
+	/**
+	 * Редактор максимального кол-ва дней для Product 
+	 * @param request
+	 * @param param
+	 * @return
+	 */
+	@GetMapping("/order-support/setMaxDay/{code}&{day}")
+	public Map<String, Object> setMaxDay(HttpServletRequest request, @PathVariable String code, @PathVariable String day) {
+		Map<String, Object> response = new HashMap<String, Object>();
+		Product product = productService.getProductByCode(Integer.parseInt(code.trim()));
+		product.setDayMax(Integer.parseInt(day));
+		productService.updateProduct(product);
+		response.put("status", "200");
+		response.put("message", "Данные по товaру обновлены");
+		return response;		
+	}
+	
+	/**
+	 * проверяет статус заказа по id маршрута.
+	 * @param request
+	 * @return
+	 */
+	@GetMapping("/logistics/checkOrderForStatus/{idRoute}")
+	public Map<String, String> checkOrderForStatus(HttpServletRequest request, @PathVariable String idRoute) {
+		Map<String, String> response = new HashMap<String, String>();		
+		Order order = orderService.getOrderByIdRoute(Integer.parseInt(idRoute));
+		if(order != null) {
+			response.put("status", "200");
+			response.put("message", order.getStatus().toString());
+		}else {
+			response.put("status", "200");
+			response.put("message", "0");
+		}
+		return response;
+	}
+	
+	/**
+	 * возвращает все SКU  manager
+	 * @param request
+	 * @return
+	 */
+	@GetMapping("/manager/getStockRemainder")
+	public List<Product> getStockRemainder(HttpServletRequest request) {
+		List<Product> targetRoutes = productService.getAllProductList();		
+		return targetRoutes;
+	}
+	
+	/**
+	 * возвращает все SКU  manager
+	 * @param request
+	 * @return
+	 */
+	@GetMapping("/order-support/getStockRemainder")
+	public List<Product> getStockRemainderSupport(HttpServletRequest request) {
+		List<Product> targetRoutes = productService.getAllProductList();		
+		return targetRoutes;
+	}
+	
 	@GetMapping("/carrier/test")
 	public String test(HttpServletRequest request) {
 		return MainChat.messegeList.size() + "";		
+	}
+	
+	@GetMapping("/market/clearjwt/{param}")
+	public Map<String, Object> getJWTnull(HttpServletRequest request, @PathVariable String param) {
+		Map<String, Object> response = new HashMap<String, Object>();
+		MarketDataForClear dataDto = new MarketDataForClear(Integer.parseInt(param));
+		MarketPacketDto packetDto = new MarketPacketDto(marketJWT, "CleanToken", serviceNumber, dataDto);
+		MarketRequestDto requestDto = new MarketRequestDto("", packetDto);
+		String str = postRequest(marketUrl, gson.toJson(requestDto));
+		response.put("status", "200");
+		response.put("message", str);
+		return response;		
+	}
+	
+	@GetMapping("/market/nulljwt")
+	public Map<String, Object> getJWTNull(HttpServletRequest request) {
+		Map<String, Object> response = new HashMap<String, Object>();
+		marketJWT = null;		
+		response.put("status", "200");
+		response.put("jwt", marketJWT);
+		response.put("message", "JWT равен null");
+		return response;		
+	}
+	
+	@GetMapping("/market/getjwt")
+	public Map<String, Object> getJWT(HttpServletRequest request) {
+		Map<String, Object> response = new HashMap<String, Object>();
+		MarketDataForLoginDto dataDto = new MarketDataForLoginDto(loginMarket, passwordMarket, "101");
+//		MarketDataForLoginDtoTEST dataDto = new MarketDataForLoginDtoTEST("SpeedLogist", "12345678", 101);
+		MarketPacketDto packetDto = new MarketPacketDto("null", "GetJWT", serviceNumber, dataDto);
+		MarketRequestDto requestDto = new MarketRequestDto("", packetDto);
+		//запрашиваем jwt
+		String str = postRequest(marketUrl, gson.toJson(requestDto));
+		MarketTableDto marketRequestDto = gson.fromJson(str, MarketTableDto.class);
+		marketJWT = marketRequestDto.getTable()[0].toString().split("=")[1].split("}")[0];		
+		response.put("status", "200");
+		response.put("jwt", marketJWT);
+		response.put("message", "JWT обновлён");
+		return response;		
+	}
+	
+	/**
+	 * Главный метод запроса ордера из маркета.
+	 * Если в маркете есть - он обнавляет его в бд.
+	 * Если связи с маркетом нет - берет из бд.
+	 * Если нет в бд и связи с маркетом нет - выдаёт ошибку
+	 * Если нет в 
+	 * @param request
+	 * @param idMarket
+	 * @return
+	 */
+	@GetMapping("/manager/getMarketOrder/{idMarket}")
+	public Map<String, Object> getMarketOrder(HttpServletRequest request, @PathVariable String idMarket) {
+		try {			
+			checkJWT(marketUrl);			
+		} catch (Exception e) {
+			System.err.println("Ошибка получения jwt токена");
+		}
+		
+		Map<String, Object> response = new HashMap<String, Object>();
+		MarketDataForRequestDto dataDto3 = new MarketDataForRequestDto(idMarket);
+		MarketPacketDto packetDto3 = new MarketPacketDto(marketJWT, "SpeedLogist.GetOrderBuyInfo", serviceNumber, dataDto3);
+		MarketRequestDto requestDto3 = new MarketRequestDto("", packetDto3);
+		String marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto3));
+		
+		if(marketOrder2.equals("503")) { // означает что связь с маркетом потеряна
+			//в этом случае проверяем бд
+			System.err.println("Связь с маркетом потеряна");
+			Order order = orderService.getOrderByMarketNumber(idMarket);
+			marketJWT = null; // сразу говорим что jwt устарел
+			if(order != null) {
+				response.put("status", "200");
+				response.put("message", "Заказ загружен из локальной базы данных SL. Связь с маркетом отсутствует");
+				response.put("order", order);
+				return response;
+			}else {
+				response.put("status", "100");
+				response.put("message", "Заказ с номером " + idMarket + " в базе данных SL не найден. Связь с Маркетом отсутствует. Обратитесь в отдел ОСиУЗ");
+				return response;
+			}
+			
+		}else{//если есть связь с маркетом
+			//проверяем на наличие сообщений об ошибке со стороны маркета
+			if(marketOrder2.contains("Error")) {
+				MarketErrorDto errorMarket = gson.fromJson(marketOrder2, MarketErrorDto.class);
+//				System.out.println(errorMarket);
+				if(errorMarket.getError().equals("99")) {//обработка случая, когда в маркете номера нет, а в бд есть.
+					Order orderFromDB = orderService.getOrderByMarketNumber(idMarket);
+					if(orderFromDB !=null) {
+						response.put("status", "100");
+						response.put("message", "Заказ " + idMarket + " не найден в маркете. Данные из SL устаревшие. Обновите данные в Маркете");
+						return response;
+					}else {
+						response.put("status", "100");
+						response.put("message", errorMarket.getErrorDescription());
+						return response;
+					}
+				}
+				response.put("status", "100");
+				response.put("message", errorMarket.getErrorDescription());
+				return response;
+			}
+			
+			//тут избавляемся от мусора в json
+			String str2 = marketOrder2.split("\\[", 2)[1];
+			String str3 = str2.substring(0, str2.length()-2);
+			
+			//создаём свой парсер и парсим json в объекты, с которыми будем работать.
+			CustomJSONParser customJSONParser = new CustomJSONParser();
+			OrderBuyGroupDTO orderBuyGroupDTO = customJSONParser.parseOrderBuyGroupFromJSON(str3);
+			
+			//создаём Order, записываем в бд и возвращаем или сам ордер или ошибку (тот же ордер, только с отрицательным id)
+			Order order = orderCreater.create(orderBuyGroupDTO);
+			if(order.getIdOrder() < 0) {
+				response.put("status", "100");
+				response.put("message", order.getMessage());
+				return response;
+			}else {
+				response.put("status", "200");
+				response.put("message", order.getMessage());
+				response.put("order", order);
+				return response;
+			}
+		}		
+				
+	}
+	
+	/**
+	 * Метод проверки наличия jwt токена. Должен находится перед каждём запросом в маркет. 
+	 * @return
+	 */
+	private void checkJWT(String url) {
+		MarketDataForLoginDto dataDto = new MarketDataForLoginDto(loginMarket, passwordMarket, "101");
+//		MarketDataForLoginDtoTEST dataDto = new MarketDataForLoginDtoTEST("SpeedLogist", "12345678", 101);
+		MarketPacketDto packetDto = new MarketPacketDto("null", "GetJWT", serviceNumber, dataDto);
+		MarketRequestDto requestDto = new MarketRequestDto("", packetDto);
+		if(marketJWT == null){
+			//запрашиваем jwt
+			String str = postRequest(url, gson.toJson(requestDto));
+			MarketTableDto marketRequestDto = gson.fromJson(str, MarketTableDto.class);
+			marketJWT = marketRequestDto.getTable()[0].toString().split("=")[1].split("}")[0];
+		}
+	}
+	
+	/**
+	 * Метод редактирования поля "Информация" в заявке, для таблицы слотов.
+	 * @param request
+	 * @param idOrder
+	 * @param text
+	 * @return
+	 */
+	@GetMapping("/manager/editMarketInfo/{idOrder}&{text}")
+	public Map<String, String> getEditMarketInfo(HttpServletRequest request, @PathVariable String idOrder, @PathVariable String text) {
+		Map<String, String> response = new HashMap<String, String>();
+		Order order = orderService.getOrderById(Integer.parseInt(idOrder.trim()));
+		if(order == null) {
+			response.put("status", "100");
+			response.put("message", "Заказ не найден");
+			return response;
+		}
+		order.setMarketInfo(cleanXSS(text));
+		orderService.updateOrder(order);
+		response.put("status", "200");
+		response.put("message", "Комментарий изменен");
+		return response;
 	}
 	
 	/**
@@ -214,7 +506,7 @@ public class MainRestController {
 	 * @param dateFinish 2024-03-15
 	 * @return
 	 */
-	@GetMapping("/manager/getRouteForInternational//{dateStart}&{dateFinish}")
+	@GetMapping("/manager/getRouteForInternational/{dateStart}&{dateFinish}")
 	public Set<Route> getRouteForInternational(HttpServletRequest request, @PathVariable Date dateStart, @PathVariable Date dateFinish) {
 		Set<Route> routes = new HashSet<Route>();
 		List<Route>targetRoutes = routeService.getRouteListAsDate(dateStart, dateFinish);
@@ -310,6 +602,16 @@ public class MainRestController {
 			return response;
 		}
 		Order order = orderService.getOrderById(idOrder);
+//		//проверка на лимиты товара
+//				String checkMessage = checkNumProductHasStock(order, order.getTimeDelivery());		
+//				if(checkMessage != null) {
+//					response.put("status", "105");
+//					response.put("message", checkMessage);
+//					System.err.println("Не прошла проверку по лимитам товара");
+//					System.out.println(checkMessage);
+//					return response;
+//				}
+		
 		switch (order.getStatus()) {
 		case 8: // от поставщиков
 			order.setStatus(100);
@@ -494,20 +796,54 @@ public class MainRestController {
 		}
 		//главные проверки
 		//проверка на лимит приемки паллет
-		Integer summPall = orderService.getSummPallInStock(order);
+		Integer summPall = orderService.getSummPallInStockExternal(order);
 		Integer summPallNew =  summPall + Integer.parseInt(order.getPall().trim());
 		String propKey = "limit." + getTrueStock(order);
-		if(summPallNew > Integer.parseInt(propertiesStock.getProperty(propKey))) {
+		if(summPallNew > Integer.parseInt(propertiesStock.getProperty(propKey))) {						
 			response.put("status", "100");
 			response.put("message", "Ошибка. Превышен лимит по паллетам на текущую дату");
+			System.err.println("Не прошла проверку по лимитам паллет склада");
 			return response;
 		}
+		
+		
+		
+//		//отдельно проверяем на внутренние перемещение и все остальные
+//		if(order.getIsInternalMovement() != null && order.getIsInternalMovement().equals("true")) {
+//			Integer summPall = orderService.getSummPallInStockInternal(order);
+//			Integer summPallNew =  summPall + Integer.parseInt(order.getPall().trim());
+//			String propKey = "limit.movment." + getTrueStock(order);
+//			if(summPallNew > Integer.parseInt(propertiesStock.getProperty(propKey))) {
+//				response.put("status", "100");
+//				response.put("message", "Ошибка. Превышен лимит по паллетам на текущую дату");
+//				return response;
+//			}
+//		}else {
+//			Integer summPall = orderService.getSummPallInStockExternal(order);
+//			Integer summPallNew =  summPall + Integer.parseInt(order.getPall().trim());
+//			String propKey = "limit." + getTrueStock(order);
+//			if(summPallNew > Integer.parseInt(propertiesStock.getProperty(propKey))) {						
+//				response.put("status", "100");
+//				response.put("message", "Ошибка. Превышен лимит по паллетам на текущую дату");
+//				return response;
+//			}
+//		}
+		//проверка на лимиты товара
+		String checkMessage = checkNumProductHasStock(order, timestamp);		
+		if(checkMessage != null) {
+			response.put("status", "105");
+			response.put("message", checkMessage);
+			System.err.println("Не прошла проверку по лимитам товара");
+			return response;
+		}
+		
 		String errorMessage = orderService.updateOrderForSlots(order);//проверка на пересечение со временим других слотов и лимит складов
 		java.util.Date t2 = new java.util.Date();
 		System.out.println(t2.getTime()-t1.getTime() + " ms - update" );
 		if(errorMessage!=null) {
 			response.put("status", "100");
 			response.put("message", errorMessage);
+			System.err.println("Не прошла проверку по пересечениям слотов");
 			return response;
 		}else {
 			saveActionInFile(request, "resources/others/blackBox/slot", idOrder, order.getMarketNumber(), order.getNumStockDelivery(), oldIdRamp, order.getIdRamp(), oldTimeDelivery, order.getTimeDelivery(), user.getLogin(), "update");
@@ -524,6 +860,59 @@ public class MainRestController {
 			response.put("message", str);
 			return response;	
 		}			
+	}
+	
+	
+	/**
+	 * Метод для проверки кол-ва товара на текущий день
+	 * если всё ок, возвращает null, если что то не то - сообщение
+	 * @return
+	 */
+	private String checkNumProductHasStock(Order order, Timestamp timeDelivery) {
+		String message = null;
+		if(order.getIsInternalMovement() != null && order.getIsInternalMovement().equals("true")) {
+			return null;
+		}
+		if(order.getNumProduct() == null) {
+			message = "Данные по заказу " + order.getMarketNumber() + " устарели! Обновите заказ.";
+//			return message; временно отключил
+			return null;
+		}
+		
+		String [] numProductMass = order.getNumProduct().split("\\^");
+		
+		
+		for (String string : numProductMass) {
+			Product product = productService.getProductByCode(Integer.parseInt(string));
+			if(product != null) {
+				//считаем разницу в днях сегодняшнеего дня и непосредственно записи
+				LocalDateTime start = timeDelivery.toLocalDateTime();
+				LocalDateTime end = LocalDateTime.of(product.getDateUnload().toLocalDate(), LocalTime.now());
+
+				Duration duration = Duration.between(start, end);
+				Double currentDate = (double) duration.toDays();
+				// считаем правильный остаток на текущий день
+				Double trueBalance = product.getBalanceStockAndReserves() + currentDate;
+				
+				
+				if(!product.getIsException()) {
+					if(trueBalance > product.getDayMax()) {
+						//считаем сколько дней нужно прибавить, чтобы заказать товар
+						Long deltDate = (long) (trueBalance - product.getDayMax() + 1);
+						if(message == null) {
+							message = "Товара " + product.getCodeProduct() + " ("+product.getName()+")" + " на складе хранится на " + trueBalance + " дней. Ограничение стока по данному товару: " + product.getDayMax() + " дней."
+									+"Ближайшая дата на которую можно доставить данный товар: " + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy")) + "\n";
+						}else {
+							message = message + "\nТовара " + product.getCodeProduct() + " ("+product.getName()+")" + " на складе хранится на " + trueBalance + " дней. Ограничение стока по данному товару: " + product.getDayMax() + " дней. "
+									+"Ближайшая дата на которую можно доставить данный товар: " + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy"))+ "\n";
+						}
+						 
+					}
+				}
+				
+			}
+		}
+		return message;
 	}
 	
 	/**
@@ -595,21 +984,58 @@ public class MainRestController {
 		order.setLoginManager(user.getLogin());
 		order.setStatus(jsonMainObject.get("status") == null ? 7 : Integer.parseInt(jsonMainObject.get("status").toString()));
 		//главные проверки
-		//проверка на лимит приемки паллет
-		Integer summPall = orderService.getSummPallInStock(order);
+		//проверка на лимит приемки паллет		
+		Integer summPall = orderService.getSummPallInStockExternal(order);
+//		System.out.println("Сумма паллет обычного заказа = " + summPall);
 		Integer summPallNew =  summPall + Integer.parseInt(order.getPall().trim());
 		String propKey = "limit." + getTrueStock(order);
 		if(summPallNew > Integer.parseInt(propertiesStock.getProperty(propKey))) {
 			response.put("status", "100");
 			response.put("message", "Ошибка. Превышен лимит по паллетам на текущую дату");
+			System.err.println("Не прошла проверку по лимитам паллет склада");
 			return response;
 		}
+		
+		//отдельно проверяем на внутренние перемещение и все остальные
+//		if(order.getIsInternalMovement() != null && order.getIsInternalMovement().equals("true")) {
+//			Integer summPall = orderService.getSummPallInStockInternal(order);
+//			System.out.println("Сумма паллет перемещение = " + summPall);
+//			Integer summPallNew =  summPall + Integer.parseInt(order.getPall().trim());
+//			String propKey = "limit.movment." + getTrueStock(order);
+//			if(summPallNew > Integer.parseInt(propertiesStock.getProperty(propKey))) {
+//				response.put("status", "100");
+//				response.put("message", "Ошибка. Превышен лимит по паллетам на текущую дату");
+//				return response;
+//			}
+//		}else {
+//			Integer summPall = orderService.getSummPallInStockExternal(order);
+//			System.out.println("Сумма паллет обычного заказа = " + summPall);
+//			Integer summPallNew =  summPall + Integer.parseInt(order.getPall().trim());
+//			String propKey = "limit." + getTrueStock(order);
+//			if(summPallNew > Integer.parseInt(propertiesStock.getProperty(propKey))) {
+//				response.put("status", "100");
+//				response.put("message", "Ошибка. Превышен лимит по паллетам на текущую дату");
+//				return response;
+//			}
+//		}
+		
+		//конец проверки на лимит приемки
+		//проверка на лимиты товара
+				String checkMessage = checkNumProductHasStock(order, timestamp);		
+				if(checkMessage != null) {
+					response.put("status", "105");
+					response.put("message", checkMessage);
+					System.err.println("Не прошла проверку по лимитам товара");
+					return response;
+				}
+		
 		String errorMessage = orderService.updateOrderForSlots(order);//проверка на пересечение со временим других слотов
 		java.util.Date t2 = new java.util.Date();
 		System.out.println(t2.getTime()-t1.getTime() + " ms - load" );
 		if(errorMessage != null) {
 			response.put("status", "100");
 			response.put("message", errorMessage);
+			System.err.println("Не прошла проверку по лимитам паллет склада");
 			return response;
 		}else {
 			saveActionInFile(request, "resources/others/blackBox/slot", idOrder, order.getMarketNumber(), order.getNumStockDelivery(), null, order.getIdRamp(), null, order.getTimeDelivery(), user.getLogin(), "load");
@@ -619,6 +1045,37 @@ public class MainRestController {
 			response.put("message", str);
 			return response;	
 		}			
+	}
+	/**
+	 * Метод отвечает за загрузку остатков на складах
+	 * @param model
+	 * @param request
+	 * @param session
+	 * @param excel
+	 * @return
+	 * @throws InvalidFormatException
+	 * @throws IOException
+	 * @throws ServiceException
+	 */
+	@RequestMapping(value = "/order-support/control/490", method = RequestMethod.POST, consumes = {
+			MediaType.MULTIPART_FORM_DATA_VALUE })
+	public Map<String, String> postOrderSupportLoad490(Model model, HttpServletRequest request, HttpSession session,
+			@RequestParam(value = "excel", required = false) MultipartFile excel)
+			throws InvalidFormatException, IOException, ServiceException {
+		Map<String, String> response = new HashMap<String, String>();	
+		File file1 = poiExcel.getFileByMultipartTarget(excel, request, "490.xlsx");
+//		String text = poiExcel.testHeaderOrderHasExcel(file1);
+		String text;
+//		if(text != null) {
+//			response.put("150", text);
+//			return response;
+//		}
+		//основной метод загрузки в БД
+		text = poiExcel.loadBalanceStock(file1, request);
+		
+		
+		response.put("200", text);
+		return response;
 	}
 	
 	/**
@@ -646,7 +1103,8 @@ public class MainRestController {
 //			return response;
 //		}
 		//основной метод создания заказов со статусом 5
-		text = poiExcel.loadOrderHasExcel(file1, request);
+		text = poiExcel.loadOrderHasExcelV2(file1, request);
+//		text = poiExcel.loadBalanceStock(file1, request);
 		
 		
 		response.put("200", text);
@@ -2714,6 +3172,7 @@ public class MainRestController {
 			order.setCargo((String) jsonMainObject.get("cargo"));
 			order.setTypeLoad((String) jsonMainObject.get("typeLoad"));
 			order.setMethodLoad((String) jsonMainObject.get("methodLoad"));
+//			order.setMarketInfo(jsonMainObject.get("marketInfo") != null ? jsonMainObject.get("marketInfo").toString() : null);
 			order.setTypeTruck((String) jsonMainObject.get("typeTruck"));
 			order.setTemperature((String) jsonMainObject.get("temperature"));
 			order.setLoadNumber(jsonMainObject.get("loadNumber") != null ? jsonMainObject.get("loadNumber").toString() : null);
@@ -3231,6 +3690,27 @@ public class MainRestController {
 	}
 	
 	/**
+	 *  Отдаёт заявки только на внутреннние перемещения по периоду создания заявки. pattern = "yyyy-MM-dd"
+	 * @param dateStart
+	 * @param dateEnd
+	 * @return
+	 */
+	@GetMapping("/manager/getOrdersForStockProcurement/{dateStart}&{dateEnd}")
+	public Set<Order> getOrdersForStockProcurement(@PathVariable Date dateStart, @PathVariable Date dateEnd) {
+		Set<Order> orders = new HashSet<Order>();
+		for (Order order : orderService.getOrderByPeriodCreate(dateStart, dateEnd).stream()
+				.filter(o-> o.getIsInternalMovement().equals("true"))
+				.collect(Collectors.toSet())) {
+			List<Address> addresses = new ArrayList<Address>();
+			order.getAddresses().stream().filter(a -> a.getIsCorrect()).forEach(a -> addresses.add(a));
+			addresses.sort(comparatorAddressIdForView);
+			order.setAddressesToView(addresses);
+			orders.add(order);
+		}
+		return orders;
+	}
+	
+	/**
 	 * Отдаёт все заявки по периоду создания заявки. pattern = "yyyy-MM-dd"
 	 * Только импорт
 	 * @param dateStart
@@ -3317,6 +3797,7 @@ public class MainRestController {
 		order.setMethodLoad((String) jsonMainObject.get("methodLoad"));
 		order.setTypeTruck((String) jsonMainObject.get("typeTruck"));
 		order.setTemperature((String) jsonMainObject.get("temperature"));
+//		order.setMarketInfo(jsonMainObject.get("marketInfo") != null ? jsonMainObject.get("marketInfo").toString() : null);
 		order.setControl((boolean) jsonMainObject.get("control").toString().equals("true") ? true : false);
 		order.setComment((String) jsonMainObject.get("comment"));
 		order.setDateCreate(Date.valueOf(LocalDate.now()));
@@ -3508,6 +3989,7 @@ public class MainRestController {
 		order.setStacking(jsonMainObject.get("stacking").toString().equals("true") ? true : false);
 		order.setIncoterms(jsonMainObject.get("incoterms") == null ? null : jsonMainObject.get("incoterms").toString());
 		order.setIsInternalMovement(jsonMainObject.get("isInternalMovement") == null ? null : jsonMainObject.get("isInternalMovement").toString());
+//		order.setMarketInfo(jsonMainObject.get("marketInfo") != null ? jsonMainObject.get("marketInfo").toString() : null);
 		
 		if(order.getIsInternalMovement().equals("true")) {// костыльно ставим время выгрузки для перемещения 1 час
 			order.setTimeUnload(Time.valueOf(LocalTime.of(1, 0)));
@@ -4753,6 +5235,50 @@ public class MainRestController {
 		}
 		return summ;
 	}
+	
+	/**
+	 * Метод отправки POST запросов 
+	 * сделан для запросов в маркет
+	 * @param url
+	 * @param payload
+	 * @return
+	 */
+	private String postRequest(String url, String payload) {
+        try {
+            URL urlForPost = new URL(url);
+            HttpURLConnection connection = (HttpURLConnection) urlForPost.openConnection();
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type", "application/json");
+            connection.setDoOutput(true);
+           
+            byte[] postData = payload.getBytes(StandardCharsets.UTF_8);
+            
+            try (DataOutputStream wr = new DataOutputStream(connection.getOutputStream())) {
+                wr.write(postData);
+            }
+            
+            int getResponseCode = connection.getResponseCode();
+//            System.out.println("POST Response Code: " + getResponseCode);
+
+            if (getResponseCode == HttpURLConnection.HTTP_OK) {
+            	StringBuilder response = new StringBuilder();
+            	try (BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"))) {
+                    String inputLine;	 
+                    while ((inputLine = in.readLine()) != null) {
+                    	response.append(inputLine.trim());
+                    }
+                    in.close();
+                }	           
+//            	System.out.println(connection.getContentType());
+                return response.toString();
+            } else {
+                return null;
+            }
+        } catch (IOException e) {
+            System.out.println("MainRestController.postRequest: Подключение недоступно - 503");
+            return "503";
+        }
+    }
 	
 	/**
 	 * Метод для сохранения действия в файл.

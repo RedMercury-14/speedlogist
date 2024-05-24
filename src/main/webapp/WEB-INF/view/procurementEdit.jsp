@@ -22,7 +22,7 @@
 				<div class="card-header d-flex justify-content-between">
 					<c:choose>
 						<c:when test="${order.isInternalMovement == 'true'}">
-							<h3 class="mb-0">Форма редактирования заявки (Внутренние перевозки)</h3>
+							<h3 class="mb-0">Форма редактирования заявки (внутреннее перемещение)</h3>
 						</c:when>
 						<c:otherwise>
 							<h3 class="mb-0">Форма редактирования заявки (${order.way})</h3>
@@ -113,6 +113,10 @@
 										<input type="text" class="form-control" name="loadNumber" id="loadNumber" value="${order.loadNumber}" required readonly>
 									</c:otherwise>
 								</c:choose>
+							</div>
+							<div class="form-group input-row-container">
+								<span class="text-muted font-weight-bold">Информация из Маркета:</span>
+								<textarea type="text" class="form-control" name="marketInfo" id="marketInfo" placeholder="Комментарии" readonly>${order.marketInfo}</textarea>
 							</div>
 						</div>
 						<div class="separationLine"></div>

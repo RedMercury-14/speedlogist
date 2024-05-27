@@ -5,6 +5,7 @@ import { convertToDayMonthTime, getEndTime } from "./dataUtils.js"
 
 const columnDefs = [
 	{ headerName: "Дата доставки", field: "dateDeliveryToView", width: 80, comparator: dateComparator, },
+	{ headerName: "Склад доставки (из Маркета)", field: "numStockDelivery", width: 120, comparator: dateComparator, },
 	{ headerName: "ID", field: "idOrder", width: 100, },
 	{ headerName: "Номер из Маркета", field: "marketNumber", width: 100, },
 	{ headerName: "Статус", field: 'status', width: 60, },

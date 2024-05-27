@@ -144,6 +144,7 @@ export function deleteCalendarEventFromTable(gridOptions, orderData) {
 		updateTableData(gridOptions, store.getCurrentStockOrders())
 	}
 	// обновляем количество паллет для склада
+	console.log(stockAndDayIsVisible(currentStock, currentDate, stockId, eventDate))
 	if (stockAndDayIsVisible(currentStock, currentDate, stockId, eventDate)) {
 		const maxPall = store.getCurrentMaxPall()
 		const order = orderData.fcEvent.extendedProps.data

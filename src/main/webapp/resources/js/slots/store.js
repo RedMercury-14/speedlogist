@@ -135,8 +135,21 @@ export const store = {
 		return this._state.orders
 	},
 	getCurrentStockOrders() {
-		const stockId = this._state.currentStock.id
-		return this._state.orders.filter(order => order.numStockDelivery === stockId)
+		const currentStockId = this._state.currentStock.id
+		// для 1200 склада видны поставки на 1200 и 1230 склады
+		const filterCondition = (stockId) => currentStockId === '1200'
+			? stockId === currentStockId || stockId === '1230'
+			: stockId === currentStockId
+		// if (currentStockId === '1200') {
+		// 	return this._state.orders.filter(order => {
+		// 		const stockId = order.idRamp ? String(order.idRamp).slice(0, -2) : order.numStockDelivery
+		// 		return stockId === currentStockId || stockId === '1230'
+		// 	})
+		// }
+		return this._state.orders.filter(order => {
+			const stockId = order.idRamp ? String(order.idRamp).slice(0, -2) : order.numStockDelivery
+			return filterCondition(stockId)
+		})
 	},
 	setOrders(orders) {
 		this._state.orders = orders

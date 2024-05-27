@@ -2,6 +2,8 @@ package by.base.main.controller.ajax;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.sql.Date;
+import java.sql.Time;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -14,6 +16,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.csrf.CsrfToken;
@@ -21,9 +26,12 @@ import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.web.csrf.DefaultCsrfToken;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import by.base.main.model.Address;
 import by.base.main.model.ClientRequest;
 import by.base.main.model.Order;
 import by.base.main.model.User;
@@ -62,6 +70,22 @@ public class YardManagementRestController {
 		Map<String, String> response = new HashMap<String, String>();
 		response.put("status", "200");
 		response.put("message", responce.toString());
+		return response;		
+	}
+	
+	@PostMapping("/SetOrderStatus")
+	public Map<String, String> getAddressForImport(HttpServletRequest request, @RequestBody String str) throws ParseException {
+		Map<String, String> response = new HashMap<String, String>();
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		Integer idOrder = jsonMainObject.get("idOrder") != null ? Integer.parseInt(jsonMainObject.get("idOrder").toString()) : null;
+		if(idOrder == null) {
+			response.put("status", "100");
+			response.put("message", "Ошибка. Не пришел idOrder");
+			return response;
+		}
+		Order order = orderService.getOrderById(idOrder);
+		
 		return response;		
 	}
 	

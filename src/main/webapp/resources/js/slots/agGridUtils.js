@@ -1,11 +1,12 @@
 import { AG_GRID_LOCALE_RU } from "../AG-Grid/ag-grid-locale-RU.js"
 import { dateComparator } from "../AG-Grid/ag-grid-utils.js"
 import { dateHelper, rowClassRules } from "../utils.js"
-import { convertToDayMonthTime, getEndTime } from "./dataUtils.js"
+import { convertToDDMMYYYY, convertToDayMonthTime, getEndTime } from "./dataUtils.js"
 
 const columnDefs = [
 	{ headerName: "Дата доставки", field: "dateDeliveryToView", width: 80, comparator: dateComparator, },
-	{ headerName: "Склад доставки (из Маркета)", field: "numStockDelivery", width: 120, comparator: dateComparator, },
+	{ headerName: "Дата начала выгрузки", field: "timeDeliveryStartDate", width: 80, comparator: dateComparator, cellClass: 'px-1 text-center font-weight-bold',},
+	{ headerName: "Склад доставки (из Маркета)", field: "numStockDelivery", width: 120, },
 	{ headerName: "ID", field: "idOrder", width: 100, },
 	{ headerName: "Номер из Маркета", field: "marketNumber", width: 100, },
 	{ headerName: "Статус", field: 'status', width: 60, },
@@ -87,8 +88,8 @@ function getMappingData(data) {
 function mapCallback(order) {
 	const dateDeliveryToView = dateHelper.getFormatDate(order.dateDelivery)
 	const idRamp = order.idRamp ? `${order.idRamp}` : ''
-	let timeDeliveryInfo
 
+	let timeDeliveryInfo
 	if (order.timeDelivery) {
 		const end = getEndTime(order.timeDelivery, order.timeUnload)
 		timeDeliveryInfo =  `Старт: ${convertToDayMonthTime(order.timeDelivery)} \n Конец: ${convertToDayMonthTime(end)}`
@@ -98,12 +99,15 @@ function mapCallback(order) {
 
 	const loadAddress = getLoadAddress(order)
 
+	const timeDeliveryStartDate = order.timeDelivery ? convertToDDMMYYYY(order.timeDelivery) : ''
+
 	return {
 		...order,
 		idRamp,
 		dateDeliveryToView,
 		timeDeliveryInfo,
 		loadAddress,
+		timeDeliveryStartDate,
 	}
 }
 

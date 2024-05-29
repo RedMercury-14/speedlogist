@@ -48,6 +48,7 @@ import {
 	checkEventId,
 	checkPallCount,
 	checkPallCountForComingDates,
+	hasOrderInYard,
 	isInvalidEventDate,
 	isOldSupplierOrder,
 	isOverlapWithShiftChange,
@@ -63,6 +64,16 @@ import {
 import { gridColumnLocalState } from "./AG-Grid/ag-grid-utils.js"
 import { tempMaxPallRestrictions } from "./slots/maxPallRestrictions.js"
 import { updateChartData, getFormattedPallChartData, pallChartConfig, getMarkerBGColorData, } from "./slots/chartJSUtils.js"
+import {
+	addNewOrderBtnListner,
+	confitmSlotBtnListner,
+	copySlotInfoBtnListner,
+	reloadBtnListner,
+	sidebarListners,
+	slotInfoListners,
+	statusInfoLabelLIstners,
+	stockSelectListner,
+} from "./slots/listners.js"
 
 
 const LOCAL_STORAGE_KEY = 'AG_Grid_column_settings_to_Slots'
@@ -189,41 +200,15 @@ window.onload = async function() {
 		showMobileTooltop()
 	}
 
-	// добавляем класс при хэдере меньшего размера
-	addSmallHeaderClass()
-
-	// кнопки боковой панели
-	const menuItems = document.querySelectorAll(".menu-item")
-	const buttonClose = document.querySelector(".close-button")
-	menuItems.forEach((item) => addOnClickToMenuItemListner(item))
-	buttonClose.addEventListener("click", () => closeSidebar())
-	document.addEventListener("keydown", (e) => (e.key === "Escape") && closeSidebar())
-
-	const calendarEl = document.querySelector("#calendar")
-	const addNewOrderButton = document.querySelector("#addNewOrder")
-	const stockSelect = document.querySelector("#stockNumber")
 	const gridDiv = document.querySelector('#myGrid')
 	const eventContainer = document.querySelector("#external-events")
 
-	// кнопка подтверждения слота
-	const confirmSlotBtn = document.querySelector('#confirmSlot')
-	confirmSlotBtn.addEventListener('click', confirmSlotBtnClickHandler)
+	// добавляем класс при хэдере меньшего размера
+	addSmallHeaderClass()
 
-	// кнопка перезагрузки страницы
-	const reloadWindowButton = document.querySelector('#reloadWindowButton')
-	reloadWindowButton.addEventListener('click', (e) => window.location.reload())
-
-	// кнопка копирования информации о слоте
-	const copySlotInfoBtn = document.querySelector('#copySlotInfo')
-	copySlotInfoBtn.addEventListener('click', copySlotInfoBtnClickHandler)
-
-	const statusInfoLabel = document.querySelector('#statusInfoLabel')
-	const statusInfo = document.querySelector('#statusInfo')
-	statusInfoLabel.addEventListener('mouseover', (e) => statusInfo.classList.add('show'))
-	statusInfoLabel.addEventListener('mouseout', (e) => statusInfo.classList.remove('show'))
-
+	// создание календаря
+	const calendarEl = document.querySelector("#calendar")
 	calendar = new FullCalendar.Calendar(calendarEl, calendarOptions)
-
 	// предотвращаем правый клик в календаре
 	calendarEl.addEventListener('mousedown', (e) => {
 		if (e.button === 2) e.preventDefault()
@@ -236,35 +221,39 @@ window.onload = async function() {
 	// получаем данные
 	const { startDateStr, endDateStr } = getDatesToSlotsFetch(30)
 	const marketData = await getData(`${getOrdersForSlotsBaseUrl}${startDateStr}&${endDateStr}`)
-
-
 	// сохраняем заказы в стор
 	store.setOrders(marketData)
 	// добавляем ивенты на виртуальные склады
 	store.setStockEvents()
-
 	// сохраняем ограничения паллет
 	store.setMaxPallRestrictions(tempMaxPallRestrictions)
+	const stocks = store.getStocks()
 
 	// добавляем склады в селект и вешаем обработчик
-	const stocks = store.getStocks()
-	stockSelect.value = ''
-	stocks.forEach(stock => addNewStockOption(stockSelect, stock))
-	stockSelect.addEventListener("change", (e) => stockSelectOnChangeHandler(e, calendar))
-
+	stockSelectListner(stocks, calendar, stockSelectOnChangeHandler)
 	// добавление нового заказа
-	addNewOrderButton.addEventListener('click', (e) => addNewOrderButtonHandler(e, eventContainer))
+	addNewOrderBtnListner(eventContainer, addNewOrderButtonHandler)
+	// кнопки боковой панели
+	sidebarListners()
+	// кнопка подтверждения слота
+	confitmSlotBtnListner(confirmSlotBtnClickHandler)
+	// кнопка перезагрузки страницы
+	reloadBtnListner()
+	// кнопка копирования информации о слоте
+	copySlotInfoBtnListner(copySlotInfoBtnClickHandler)
+	// иконка информации о статусах заказов
+	statusInfoLabelLIstners()
+	// кнопки информации о слоте
+	slotInfoListners()
 
 	// обновляем ивенты календаря при изменении стора
 	store.subscribe(() => calendar.refetchEvents())
-
 	// рендеринг календаря и таблицы
 	calendar.render()
 	renderTable(gridDiv, orderTableGridOption, [])
-
 	// получаем настройки колонок таблицы
 	restoreColumnState()
-
+	// скрываем оверлей загрузки
 	bootstrap5overlay.hideOverlay()
 }
 
@@ -442,7 +431,7 @@ function eventsHandler(info, successCallback, failureCallback) {
 function eventContentHandler(info) {
 	const login = store.getLogin()
 	const eventElem = createEventElement(info)
-	const showBtn = isOldSupplierOrder(info, login)
+	const showBtn = isOldSupplierOrder(info, login) && !hasOrderInYard(info.event.extendedProps.data)
 	const closeBtn = info.isDraggable || showBtn ? createCloseEventButton(info, showBtn) : ''
 	const popupBtn = createPopupButton(info, login)
 

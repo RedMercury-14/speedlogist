@@ -73,6 +73,7 @@ window.onload = async () => {
 			const pointAddress = pointBodyAddress.split('; ')[1]
 			select.value = pointAddress
 		})
+		$('.address-input').selectpicker()
 	} else {
 		// добавляем информацию об адресах в точки
 		addDataToCountryInputs()

@@ -1,6 +1,6 @@
 import { dateHelper } from "../utils.js"
 import { eventColors } from "./constants.js"
-import { getEndTime, getEventBGColor, groupeByNumStockDelyvery } from "./dataUtils.js"
+import { getEndTime, getEventBGColor, getEventBorderColor, groupeByNumStockDelyvery } from "./dataUtils.js"
 import { editableRules, colorRules } from "./rules.js"
 import { stocks } from "./virtualStocks.js"
 
@@ -140,12 +140,6 @@ export const store = {
 		const filterCondition = (stockId) => currentStockId === '1200'
 			? stockId === currentStockId || stockId === '1230'
 			: stockId === currentStockId
-		// if (currentStockId === '1200') {
-		// 	return this._state.orders.filter(order => {
-		// 		const stockId = order.idRamp ? String(order.idRamp).slice(0, -2) : order.numStockDelivery
-		// 		return stockId === currentStockId || stockId === '1230'
-		// 	})
-		// }
 		return this._state.orders.filter(order => {
 			const stockId = order.idRamp ? String(order.idRamp).slice(0, -2) : order.numStockDelivery
 			return filterCondition(stockId)
@@ -179,6 +173,17 @@ export const store = {
 			idRamp: orderData.idRamp,
 			loginManager: orderData.loginManager,
 			marketInfo,
+		}
+		// для сообщений от Двора
+		if (orderData.hasOwnProperty('statusYard')) {
+			this._state.orders[index] = {
+				...this._state.orders[index],
+				statusYard: orderData.statusYard,
+				unloadFinishYard: orderData.unloadFinishYard !== 'null' ? orderData.unloadFinishYard : null,
+				unloadStartYard: orderData.unloadStartYard !== 'null' ? orderData.unloadStartYard : null,
+				weightFactYard: orderData.weightFactYard !== 'null' ? orderData.weightFactYard : null,
+				pallFactYard: orderData.pallFactYard !== 'null' ? orderData.pallFactYard : null,
+			}
 		}
 		return this._state.orders[index]
 	},
@@ -243,7 +248,7 @@ export const store = {
 				durationEditable: false,
 				resourceEditable: editable,
 				backgroundColor: bgColor,
-				borderColor: eventColors.borderColor,
+				borderColor: getEventBorderColor(order),
 				textColor: 'black',
 				// constraint: stockId === '1700' ? null : 'businessHours',
 			}
@@ -301,7 +306,7 @@ export const store = {
 			durationEditable: false,
 			resourceEditable: editable,
 			backgroundColor: bgColor,
-			borderColor: eventColors.borderColor,
+			borderColor: getEventBorderColor(updatedOrder),
 			textColor: 'black',
 			// constraint: stockId === '1700' ? null : 'businessHours',
 		}
@@ -334,7 +339,7 @@ export const store = {
 			durationEditable: false,
 			resourceEditable: editable,
 			backgroundColor: bgColor,
-			borderColor: eventColors.borderColor,
+			borderColor: getEventBorderColor(updatedOrder),
 			textColor: 'black',
 			// constraint: stockId === '1700' ? null : 'businessHours',
 		}

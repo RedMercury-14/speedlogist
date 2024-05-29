@@ -166,23 +166,6 @@ public class YardManagementRestController {
 		});
 		return orders;
 	}
-	 
-	/**
-	 * Тупо метод проверки заголовков
-	 * @param request
-	 * @return
-	 */
-	@GetMapping("/headers")
-	public List<Order> headers(HttpServletRequest request) {
-		Enumeration<String> headerNames = request.getHeaderNames();
-
-	    if (headerNames != null) {
-	            while (headerNames.hasMoreElements()) {
-	                    System.out.println("Header: " + request.getHeader(headerNames.nextElement()));
-	            }
-	    }
-		return null;
-	}
  
 	/**
 	 * Метод отдаёт csrf токен для пост методов от двора

@@ -7,6 +7,7 @@ export function getMinUnloadDate(order, role) {
 	const status = order.status
 	const isSupplierOrder = status === 5 || status === 8 || status === 100
 
+	// if (isAdmin(role)) return 0
 	if (isAdmin(role)) return now
 	if (isLogist(role)) return getMinUnloadDateForLogist(now, order)
 	if (isSupplierOrder) return getMinUnloadDateForSupplierOrder(now, order)
@@ -197,6 +198,23 @@ export function getEventBGColor(status) {
 	}
 }
 
+// цвета для границы ивентов
+export function getEventBorderColor(order) {
+	const statusYard = order.statusYard
+	// if (statusYard === 20) return '#ff9800'
+	// if (statusYard === 30) return '#4caf50'
+	// if (statusYard === 40) return '#1e88e5'
+
+	// if (statusYard === 20) return '#c2185b'
+	// if (statusYard === 30) return '#ff9800'
+	// if (statusYard === 40) return '#1976d2'
+		
+	if (statusYard === 20) return '#ff9800'
+	if (statusYard === 30) return '#8bc34a'
+	if (statusYard === 40) return '#1976d2'
+	return eventColors.borderColor
+}
+
 
 export function getSlotStatus(status) {
 	switch (status) {
@@ -224,6 +242,22 @@ export function getSlotStatus(status) {
 			return 'Машина на самовывоз найдена'
 		case 70:
 			return 'Маршрут на самовывоз завершен'
+		default:
+			return 'Неизвестный статус'
+	}
+}
+
+export function getSlotStatusYard(statusYard) {
+	switch (statusYard) {
+		case 10:
+		case null:
+			return 'Статус отсутствует'
+		case 20:
+			return 'Машина зарегистрирована'
+		case 30:
+			return 'Выгрузка начата'
+		case 40:
+			return 'Выгрузка завершена'
 		default:
 			return 'Неизвестный статус'
 	}

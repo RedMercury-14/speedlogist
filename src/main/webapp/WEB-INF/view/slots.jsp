@@ -154,8 +154,17 @@
 						<span aria-hidden="true">&times;</span>
 					</button>
 				</div>
+				<div class="btn-group btn-group-toggle px-1 border-bottom" id="eventInfoBtns" data-toggle="buttons">
+					<label class="btn btn-info active">
+						<input type="radio" name="options" id="eventInfoBtn" checked>Слоты
+					</label>
+					<label class="btn btn-info">
+						<input type="radio" name="options" id="yardInfoBtn">Двор
+					</label>
+				</div>
 				<div class="modal-body">
-					<div id="eventInfo"></div>
+					<div id="eventInfo" class="eventInfo"></div>
+					<div id="yardInfo" class="eventInfo none"></div>
 				</div>
 				<div class="modal-footer">
 					<button id="confirmSlot" data-action="save" type="button" class="btn btn-secondary"></button>

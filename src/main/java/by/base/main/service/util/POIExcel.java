@@ -499,9 +499,17 @@ public class POIExcel {
 	}
 	
 	
+	//дефолтное значение дней при каждой прогрузке
+	private Integer dayMax = 14;
 	
-	private Integer dayMax = 20;
-	
+	/**
+	 * Метод загрузки файла потребностей
+	 * @param file
+	 * @param request
+	 * @return
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
 	public String loadBalanceStock(File file, HttpServletRequest request) throws FileNotFoundException, IOException {
 		 XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
 	     XSSFSheet sheet = wb.getSheetAt(0);

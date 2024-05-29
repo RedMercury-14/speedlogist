@@ -39,7 +39,7 @@ export function wsSlotOnMessageHandler(e, gridOptions) {
 			const timeDelivery = orderData.timeDelivery.split('.')[0]
 			const startDateStr = timeDelivery.replace(' ', 'T')
 			const modifiedOrderData = {
-				idOrder: Number(orderData.status),
+				idOrder: Number(orderData.idOrder),
 				idRamp: null,
 				marketNumber: marketNumber,
 				timeDelivery,
@@ -54,6 +54,27 @@ export function wsSlotOnMessageHandler(e, gridOptions) {
 				messageLogist: null,
 			}
 			deleteCalendarEventFromTable(gridOptions, modifiedOrderData)
+		}
+
+		// получение информации со Двора
+		if (action === 'changeStatusYard') {
+			const event = store.getEvent(orderData.numStockDelivery, {id: orderData.marketNumber})
+			const order = event.extendedProps.data
+			const timeDelivery = orderData.timeDelivery.split('.')[0]
+			const startDateStr = timeDelivery.replace(' ', 'T')
+			const modifiedOrderData = {
+				...orderData,
+				statusYard: Number(orderData.statusYard),
+				fcEvent: event,
+				idOrder: Number(orderData.idOrder),
+				messageLogist: null,
+				numberOfPalls: Number(orderData.pall),
+				startDateStr,
+				status: order.status,
+				stockId: orderData.numStockDelivery,
+				timeDelivery,
+			}
+			updateCalendarEvent(gridOptions, modifiedOrderData, true)
 		}
 	}
 }

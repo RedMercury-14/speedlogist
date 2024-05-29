@@ -1,5 +1,5 @@
 .none {
-	display: none;
+	display: none !important;
 }
 .navbar {
 	background-color: #0e377b !important;
@@ -87,9 +87,6 @@ html, body {
 .smallHeader .pallInfo-container {
 	top: 71px;
 }
-.pallInfo {
-
-}
 .pallInfo button {
 	color: #fff;
 }
@@ -113,7 +110,7 @@ html, body {
 	opacity: 1;
 }
 
-#eventInfo {
+.eventInfo {
 	display: flex;
 	flex-direction: column;
 	gap: 10px;
@@ -357,6 +354,10 @@ html, body {
 }
 .fc .fc-non-business {
 	background: #c4c4c4b5;
+}
+.fc-event:has(.boldBorder) {
+	border-top-width: 8px;
+	/* border-left-width: 8px; */
 }
 
 

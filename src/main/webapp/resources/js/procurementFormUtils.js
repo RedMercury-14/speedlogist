@@ -297,8 +297,12 @@ function createAddressSelect(addresses) {
 	const select = document.createElement('select')
 	select.name = 'address'
 	select.id = 'address'
-	select.classList.add('form-control')
+	// select.classList.add('form-control')
+	select.classList.add('selectpicker')
 	select.setAttribute('required', 'true')
+	select.setAttribute('data-live-search', 'true')
+	select.setAttribute('data-size', '8')
+	select.setAttribute('data-width', '75%')
 
 	const option = document.createElement('option')
 	option.value = ''

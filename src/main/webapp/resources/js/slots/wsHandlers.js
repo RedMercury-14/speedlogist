@@ -58,7 +58,9 @@ export function wsSlotOnMessageHandler(e, gridOptions) {
 
 		// получение информации со Двора
 		if (action === 'changeStatusYard') {
-			const event = store.getEvent(orderData.numStockDelivery, {id: orderData.marketNumber})
+			const stockId = orderData.idRamp ? orderData.idRamp.slice(0, -2) : orderData.numStockDelivery
+			const event = store.getEvent(stockId, {id: orderData.marketNumber})
+			if (!event) return
 			const order = event.extendedProps.data
 			const timeDelivery = orderData.timeDelivery.split('.')[0]
 			const startDateStr = timeDelivery.replace(' ', 'T')
@@ -71,7 +73,7 @@ export function wsSlotOnMessageHandler(e, gridOptions) {
 				numberOfPalls: Number(orderData.pall),
 				startDateStr,
 				status: order.status,
-				stockId: orderData.numStockDelivery,
+				stockId,
 				timeDelivery,
 			}
 			updateCalendarEvent(gridOptions, modifiedOrderData, true)

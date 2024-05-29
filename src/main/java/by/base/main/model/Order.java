@@ -192,6 +192,21 @@ public class Order {
 	@Column(name = "num_product")
 	private String numProduct;
 	
+	@Column(name = "status_yard")
+	private Integer statusYard;
+	
+	@Column(name = "unload_start_yard")
+	private Timestamp unloadStartYard;
+	
+	@Column(name = "unload_finish_yard")
+	private Timestamp unloadFinishYard;
+	
+	@Column(name = "pall_fact_yard")
+	private Integer pallFactYard;
+	
+	@Column(name = "weight_fact_yard")
+	private Double weightFactYard;
+	
 	@Transient
 	private List<Address> addressesSort;
 	
@@ -290,6 +305,36 @@ public class Order {
 		return contact;
 	}
 
+	public Integer getStatusYard() {
+		return statusYard;
+	}
+	public void setStatusYard(Integer statusYard) {
+		this.statusYard = statusYard;
+	}
+	public Timestamp getUnloadStartYard() {
+		return unloadStartYard;
+	}
+	public void setUnloadStartYard(Timestamp unloadStartYard) {
+		this.unloadStartYard = unloadStartYard;
+	}
+	public Timestamp getUnloadFinishYard() {
+		return unloadFinishYard;
+	}
+	public void setUnloadFinishYard(Timestamp unloadFinishYard) {
+		this.unloadFinishYard = unloadFinishYard;
+	}
+	public Integer getPallFactYard() {
+		return pallFactYard;
+	}
+	public void setPallFactYard(Integer pallFactYard) {
+		this.pallFactYard = pallFactYard;
+	}
+	public Double getWeightFactYard() {
+		return weightFactYard;
+	}
+	public void setWeightFactYard(Double weightFactYard) {
+		this.weightFactYard = weightFactYard;
+	}
 	public Date getDateCreateMarket() {
 		return dateCreateMarket;
 	}
@@ -649,6 +694,22 @@ public class Order {
 				+ "\", \"numStockDelivery\":\"" + numStockDelivery + "\", \"pall\":\"" + pall
 				+ "\", \"timeDelivery\":\"" + timeDelivery + "\", \"loginManager\":\"" + loginManager + "\"}";
 	}
+	
+	public String toJsonForYard() {
+		return "{\"idOrder\":\"" + idOrder + "\", \"control\":\"" + control + "\", \"comment\":\"" + comment
+				+ "\", \"status\":\"" + status + "\", \"manager\":\"" + manager + "\", \"logist\":\"" + logist
+				+ "\", \"marketNumber\":\"" + marketNumber + "\", \"onloadWindowDate\":\"" + onloadWindowDate
+				+ "\", \"onloadWindowTime\":\"" + onloadWindowTime + "\", \"loadNumber\":\"" + loadNumber
+				+ "\", \"numStockDelivery\":\"" + numStockDelivery + "\", \"pall\":\"" + pall + "\", \"way\":\"" + way
+				+ "\", \"onloadTime\":\"" + onloadTime 
+				+ "\", \"needUnloadPoint\":\"" + needUnloadPoint + "\", \"idRamp\":\"" + idRamp
+				+ "\", \"timeDelivery\":\"" + timeDelivery + "\", \"timeUnload\":\"" + timeUnload
+				+ "\", \"loginManager\":\"" + loginManager + "\", \"statusYard\":\"" + statusYard
+				+ "\", \"unloadStartYard\":\"" + unloadStartYard + "\", \"unloadFinishYard\":\"" + unloadFinishYard
+				+ "\", \"pallFactYard\":\"" + pallFactYard + "\", \"weightFactYard\":\"" + weightFactYard + "\"}";
+	}
+	
+	
 		
 	
 	

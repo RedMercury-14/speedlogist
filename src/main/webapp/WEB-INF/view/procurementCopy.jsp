@@ -13,6 +13,8 @@
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/autocomplete.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/snackbar.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/bootstrap5overlay.css">
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/js/bootstrapSelect/bootstrapSelect.css">
+	<script src='${pageContext.request.contextPath}/resources/js/popper/popper.js'></script>
 </head>
 <body>
 	<jsp:include page="headerNEW.jsp" />
@@ -769,7 +771,12 @@
 																<div class="autocomplete">
 																	<input type="text" class="form-control country-input" name="country_${loop.index + 1}" id="country" placeholder="Страна" value="BY Беларусь" required readonly>
 																</div>
-																<select name="pointAddress_${loop.index + 1}" id="pointAddress" class="form-control address-input" required>
+																<select name="pointAddress_${loop.index + 1}" id="pointAddress"
+																	class="form-control address-input"
+																	data-live-search="true"
+																	data-size="8"
+																	data-width="75%"
+																	required>
 																	<option value="" disabled selected hidden>Выберите склад</option>
 																</select>
 															</div>
@@ -888,6 +895,8 @@
 	</div>
 
 	<jsp:include page="footer.jsp" />
+	<script src='${pageContext.request.contextPath}/resources/js/bootstrapSelect/bootstrapSelect.js'></script>
+	<script src='${pageContext.request.contextPath}/resources/js/bootstrapSelect/defaults-ru_RU.js'></script>
 	<script charset="utf-8" src="${pageContext.request.contextPath}/resources/js/procurementCopy.js" type="module"></script>
 	<script src='${pageContext.request.contextPath}/resources/mainPage/js/nav-fixed-top.js'></script>
 </body>

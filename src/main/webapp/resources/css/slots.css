@@ -1,5 +1,5 @@
 .none {
-	display: none;
+	display: none !important;
 }
 .navbar {
 	background-color: #0e377b !important;
@@ -27,7 +27,7 @@ html, body {
 }
 .modal .close {
 	float: right;
-	font-size: 1.5rem;
+	font-size: 2.0rem;
 	font-weight: 700;
 	line-height: 1;
 	color: #000;
@@ -87,9 +87,6 @@ html, body {
 .smallHeader .pallInfo-container {
 	top: 71px;
 }
-.pallInfo {
-
-}
 .pallInfo button {
 	color: #fff;
 }
@@ -113,10 +110,50 @@ html, body {
 	opacity: 1;
 }
 
-#eventInfo {
+#eventInfoModal .modal-header {
+	background-color: cadetblue;
+}
+.eventInfo {
 	display: flex;
 	flex-direction: column;
 	gap: 10px;
+	border-left: 1px solid #d3d9df;
+	border-right: 1px solid #d3d9df;
+	padding: 10px;
+	height: 370px;
+	overflow-y: scroll;
+}
+.eventInfo::-webkit-scrollbar {
+	width: 5px;
+}
+.eventInfo::-webkit-scrollbar-track {
+	background: #f1f1f1; 
+}
+.eventInfo::-webkit-scrollbar-thumb {
+	background: #888; 
+}
+.eventInfo::-webkit-scrollbar-thumb:hover {
+	background: #555;
+}
+#eventInfoBtns .btn {
+	/* background-color: #9fa5aa; */
+	border-radius: 0;
+	border-color: #d3d9df;
+	color: #8c8c8c;
+	border-top: none;
+	/* border: none; */
+	font-size: 1.2rem;
+}
+#eventInfoBtns .btn.focus,
+#eventInfoBtns .btn:focus {
+	box-shadow: none;
+}
+#eventInfoBtns .btn.active,
+#eventInfoBtns .btn:active {
+	background-color: #fff;
+	border-color: #d3d9df;
+	border-bottom-color: #fff;
+	color: cadetblue;
 }
 
 .status-info-container {
@@ -357,6 +394,10 @@ html, body {
 }
 .fc .fc-non-business {
 	background: #c4c4c4b5;
+}
+.fc-event:has(.boldBorder) {
+	border-top-width: 8px;
+	/* border-left-width: 8px; */
 }
 
 

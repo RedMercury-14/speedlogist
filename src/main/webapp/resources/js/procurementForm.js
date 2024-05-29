@@ -626,6 +626,7 @@ function RBButtonsContainerOnClickHandler(e, addLoadPointForm, addUnloadPointFor
 			// для внутренних перевозок
 			transformAddressInputToSelect(addLoadPointForm, domesticStocks)
 			transformAddressInputToSelect(addUnloadPointForm, domesticStocks)
+			$('.selectpicker').selectpicker()
 			// время выгрузки отображается и обязательно к заполнению
 			// showUnloadTime(addUnloadPointForm)
 			// изменяем название формы
@@ -721,6 +722,7 @@ function transformToInternalMovementForm(addLoadPointForm, domesticStocks, addUn
 	// заменяем поле адреса на выпадающий список с адресами складов для внутренних перемещений
 	transformAddressInputToSelect(addLoadPointForm, domesticStocks)
 	transformAddressInputToSelect(addUnloadPointForm, domesticStocks)
+	$('.selectpicker').selectpicker()
 	// установка минимальной даты загрузки/выгрузки
 	setMinValidDate({ isInternalMovement: 'true' })
 }

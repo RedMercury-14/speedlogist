@@ -1,8 +1,8 @@
 import { snackbar } from "../snackbar/snackbar.js"
 import { dateHelper } from "../utils.js"
 import { Draggable, eventColors, userMessages } from "./constants.js"
-import { convertToDDMMYYYY, convertToDayMonthTime, getEventBGColor, getSlotStatus } from "./dataUtils.js"
-import { editableRulesToConfirmBtn, isAnotherUser } from "./rules.js"
+import { convertToDDMMYYYY, convertToDayMonthTime, getEventBGColor, getSlotStatus, getSlotStatusYard } from "./dataUtils.js"
+import { editableRulesToConfirmBtn, hasOrderInYard, isAnotherUser } from "./rules.js"
 
 export function addNewStockOption(select, stock) {
 	const option = document.createElement("option")
@@ -26,7 +26,7 @@ export function createDraggableElement(container, order, login, currentStock) {
 	const status = order.status
 	const bgColor = status === 5
 		? getEventBGColor(8) : status === 6
-			? getEventBGColor(7) : getEventBGColor(order.status)
+			? getEventBGColor(7) : getEventBGColor(status)
 
 	const singleSlotElem = document.createElement("div")
 	singleSlotElem.id = `event_${order.marketNumber}`
@@ -77,8 +77,9 @@ export function createEventElement(info) {
 	const eventElem = document.createElement('div')
 	const { event: fcEvent, timeText } = info
 	const { id, title, extendedProps } = fcEvent
-
-	eventElem.className = 'fc-event-main-frame'
+	const order = extendedProps.data
+	// жирная граница ивента для статусов Двора
+	eventElem.className = hasOrderInYard(order) ? 'fc-event-main-frame boldBorder' : 'fc-event-main-frame'
 	eventElem.style.cursor = 'move'
 	eventElem.innerHTML = `
 		<div class="fc-event-time">${timeText}</div>
@@ -130,11 +131,11 @@ export function addTooltip(element, info) {
 		<div >${title}</div>
 	`
 
-	const tooltip = new bootstrap.Tooltip(element, {
-		delay: { "show": 700, "hide": 100 },
-		html: true,
-		title: tooltipHtml,
-	})
+	// const tooltip = new bootstrap.Tooltip(element, {
+	// 	delay: { "show": 700, "hide": 100 },
+	// 	html: true,
+	// 	title: tooltipHtml,
+	// })
 }
 
 // отображение модального окна с информацией об ивенте
@@ -149,8 +150,10 @@ export function showEventInfoPopup(fcEvent, currentLogin, currentRole) {
 	const action = isConfirmedSlot ? 'unSave' : 'save'
 
 	const eventInfo = document.querySelector('#eventInfo')
+	const yardInfo = document.querySelector('#yardInfo')
 	const confirmSlotBtn = document.querySelector('#confirmSlot')
 	eventInfo.innerHTML = createEventInfoHTML(fcEvent)
+	yardInfo.innerHTML = createYardInfoHTML(fcEvent)
 	confirmSlotBtn.innerText = text
 	confirmSlotBtn.className = isNotAnimated ? 'btn btn-secondary' : 'btn btn-secondary animation__small-pulse'
 	confirmSlotBtn.dataset.action = action
@@ -162,7 +165,7 @@ export function hideEventInfoPopup() {
 	$('#eventInfoModal').modal('hide')
 }
 
-// функция создания контента модального окна с информацией об ивенте
+// функции создания контента модального окна с информацией об ивенте
 function createEventInfoHTML(fcEvent) {
 	const order = fcEvent.extendedProps.data
 	const { marketNumber, dateDelivery, timeUnload, cargo, counterparty, loginManager, idRamp, idOrder, status, pall, } = order
@@ -192,6 +195,25 @@ function createEventInfoHTML(fcEvent) {
 		<div class="event-info__pall">Паллеты: ${pall}</div>
 		<div class="event-info__manager">Менеджер: ${loginManager}</div>
 		<div class="event-info__manager">Информация (из Маркета): ${marketInfo}</div>
+	`
+}
+function createYardInfoHTML(fcEvent) {
+	const order = fcEvent.extendedProps.data
+	const statusYard = getSlotStatusYard(order.statusYard)
+	const unloadStartYard = order.unloadStartYard ? convertToDayMonthTime(order.unloadStartYard) : ''
+	const unloadFinishYard = order.unloadFinishYard ? convertToDayMonthTime(order.unloadFinishYard) : ''
+	const pallFactYard = order.pallFactYard ? order.pallFactYard : ''
+	const weightFactYard = order.weightFactYard ? `${order.weightFactYard} кг` : ''
+
+	return `
+		<div class="event-info__status">
+			<p class="mb-1 font-weight-bold">Статус во Дворе: ${statusYard}</p>
+		</div>
+		<div class="event-info__marketNumber">Номер из Маркета: ${order.marketNumber}</div>
+		<div class="event-info__unloadStartYard">Начало выгрузки (факт): ${unloadStartYard}</div>
+		<div class="event-info__unloadFinishYard">Конец выгрузки (факт): ${unloadFinishYard}</div>
+		<div class="event-info__pallFactYard">Зарегистрировано паллет: ${pallFactYard}</div>
+		<div class="event-info__weightFactYard">Масса груза: ${weightFactYard}</div>
 	`
 }
 

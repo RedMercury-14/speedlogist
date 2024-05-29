@@ -20,26 +20,30 @@ export function editableRules(order, currentLogin, currentRole) {
 	const status = order.status
 	const isPickupOrder = status === 7
 	const isSupplierOrder = status === 8
-
+	
 	if (isSlotsObserver(currentRole)) return false
 
 	if (
 		(
 			isAdmin(currentRole)
+			&& !hasOrderInYard(order)
 			&& isEditableDate(now, order)
 		)
 		|| (
 			!isAnotherUser(orderLogin, currentLogin) 
 			&& isPickupOrder
+			&& !hasOrderInYard(order)
 			&& isManagerEditableDate(now, order)
 		)
 		|| (
 			!isAnotherUser(orderLogin, currentLogin)
 			&& isSupplierOrder
+			&& !hasOrderInYard(order)
 			&& isSupplierOrderEditableDate(now, order)
 		)
 		|| (
 			isLogist(currentRole)
+			&& !hasOrderInYard(order)
 			&& isLogistEditableStatuses(status)
 			&& isLogistEditableDate(now, order))
 	) {
@@ -62,16 +66,19 @@ export function editableRulesToConfirmBtn(order, currentLogin, currentRole) {
 	return (
 			isAdmin(currentRole)
 			&& (isPickupOrder || isSupplierOrder)
+			&& !hasOrderInYard(order)
 			&& isEditableDate(now, order)
 		)
 		|| (
 			!isAnotherUser(orderLogin, currentLogin) 
 			&& isPickupOrder
+			&& !hasOrderInYard(order)
 			&& isManagerEditableDate(now, order)
 		)
 		|| (
 			!isAnotherUser(orderLogin, currentLogin)
 			&& isSupplierOrder
+			&& !hasOrderInYard(order)
 			&& isSupplierOrderEditableDate(now, order)
 		)
 }
@@ -297,4 +304,10 @@ export function isOldSupplierOrder(info, currentLogin) {
 	const isSupplierOrder = status === 8 || status === 100
 
 	return (isSupplierOrder) && !isAnotherUser(orderLogin, currentLogin) && eventDate < tomorrowMs
+}
+
+// проверка, взят ли заказ в работу во Дворе
+export function hasOrderInYard(order) {
+	const statusYard = order.statusYard
+	return statusYard === 20 || statusYard === 30 || statusYard === 40
 }

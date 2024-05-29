@@ -39,9 +39,10 @@ public class CustomJSONParser {
 			orderBuyGroupDTO.setDatex(jsonpObject.get("Datex") != null ? jsonpObject.get("Datex").toString() : null);
 			orderBuyGroupDTO.setDeliveryDate(jsonpObject.get("DeliveryDate") != null ? jsonpObject.get("DeliveryDate").toString() : null);
 			if(jsonpObject.get("Info") != null) {
-				if(!jsonpObject.get("Info").toString().split(" ")[0].equals("Создано")) {
-					orderBuyGroupDTO.setInfo(jsonpObject.get("Info").toString());
-            	}
+//				if(!jsonpObject.get("Info").toString().split(" ")[0].equals("Создано")) {
+//					orderBuyGroupDTO.setInfo(jsonpObject.get("Info").toString());
+//            	}
+				orderBuyGroupDTO.setInfo(jsonpObject.get("Info").toString());
 			}			
 			orderBuyGroupDTO.setOrderBuyGroupId(jsonpObject.get("OrderBuyGroupId") != null ? Long.parseLong(jsonpObject.get("OrderBuyGroupId").toString()) : null);
 			orderBuyGroupDTO.setOrderSumFinal(jsonpObject.get("OrderSumFinal") != null ? Double.parseDouble(jsonpObject.get("OrderSumFinal").toString()) : null);

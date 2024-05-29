@@ -297,8 +297,12 @@ function createAddressSelect(addresses) {
 	const select = document.createElement('select')
 	select.name = 'address'
 	select.id = 'address'
-	select.classList.add('form-control')
+	// select.classList.add('form-control')
+	select.classList.add('selectpicker')
 	select.setAttribute('required', 'true')
+	select.setAttribute('data-live-search', 'true')
+	select.setAttribute('data-size', '8')
+	select.setAttribute('data-width', '75%')
 
 	const option = document.createElement('option')
 	option.value = ''
@@ -394,6 +398,7 @@ export function getStockAddress(stockNumber) {
 	switch (stockNumber) {
 		case '1700': return 'Склад 1700, Адрес: 223065, Беларусь, Луговослободской с/с,Минский р-н,Минская обл., РАД М4, 18км. 2а, склад W05'
 		case '1200': return 'Склад 1200, 223039, Республика Беларусь, Минская область, Минский район, Хатежинский с/с, 1'
+		case '1230': return 'Склад 1230, 223039, Республика Беларусь, Минская область, Минский район, Хатежинский с/с, 1'
 		case '1250': return 'Склад 1250, Адрес: 223050, Республика Беларусь, Минская область, Минский р-н, 9-ый км Московского шоссе'
 		case '1100': return 'Склад 1100, 223039, Республика Беларусь, Минская область, Минский район, Хатежинский с/с, 1'
 		default: return ''
@@ -404,10 +409,12 @@ export function getOrderStatusByStockDelivery(numStockDelivery) {
 	switch (numStockDelivery) {
 		case '1700':
 		case '1200':
+		case '1230':
 		case '1250':
 		case '1100':
 		case 1700:
 		case 1200:
+		case 1230:
 		case 1250:
 		case 1100:
 			return 6

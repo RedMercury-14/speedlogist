@@ -209,6 +209,8 @@ public class OrderServiceImpl implements OrderService {
 			orderDAO.updateOrder(order);
 			return null;
 		}else {
+			System.out.println(before.toString());
+			System.out.println(after.toString());
 			return "Обнаружено пересечение слотов!";
 		}		
 	}

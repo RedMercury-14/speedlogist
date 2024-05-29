@@ -67,6 +67,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.google.gson.Gson;
+import com.google.j2objc.annotations.AutoreleasePool;
 import com.graphhopper.GHRequest;
 import com.graphhopper.GHResponse;
 import com.graphhopper.GraphHopper;
@@ -81,6 +82,7 @@ import com.graphhopper.util.PointList;
 import com.graphhopper.util.Translation;
 import com.graphhopper.util.shapes.GHPoint;
 import by.base.main.controller.MainController;
+import by.base.main.dao.OrderDAO;
 import by.base.main.dto.MarketDataForClear;
 import by.base.main.dto.MarketDataForLoginDto;
 import by.base.main.dto.MarketDataForRequestDto;
@@ -223,18 +225,30 @@ public class MainRestController {
 	
 	private static String classLog;
 	private static String marketJWT;
-//	private static final String marketUrl = "https://api.dobronom.by:10806/Json";
-//	private static final String serviceNumber = "BB7617FD-D103-4724-B634-D655970C7EC0";
-//	private static final String loginMarket = "191178504_SpeedLogist";
-//	private static final String passwordMarket = "SL!2024D@2005";
-	private static final String marketUrl = "https://api.dobronom.by:10896/Json";
-	private static final String serviceNumber = "CD6AE87C-2477-4852-A4E7-8BA5BD01C156";
-	private static final String loginMarket = "SpeedLogist";
-	private static final String passwordMarket = "12345678";
+	private static final String marketUrl = "https://api.dobronom.by:10806/Json";
+	private static final String serviceNumber = "BB7617FD-D103-4724-B634-D655970C7EC0";
+	private static final String loginMarket = "191178504_SpeedLogist";
+	private static final String passwordMarket = "SL!2024D@2005";
+//	private static final String marketUrl = "https://api.dobronom.by:10896/Json";
+//	private static final String serviceNumber = "CD6AE87C-2477-4852-A4E7-8BA5BD01C156";
+//	private static final String loginMarket = "SpeedLogist";
+//	private static final String passwordMarket = "12345678";
 
 
 	public static final Comparator<Address> comparatorAddressId = (Address e1, Address e2) -> (e1.getIdAddress() - e2.getIdAddress());
 	public static final Comparator<Address> comparatorAddressIdForView = (Address e1, Address e2) -> (e2.getType().charAt(0) - e1.getType().charAt(0));
+	
+	@Autowired
+	OrderDAO orderDAO;
+	
+	@GetMapping("/test/{code}")
+	public Map<String, Object> test(HttpServletRequest request, @PathVariable String code) {
+		Map<String, Object> response = new HashMap<String, Object>();
+		
+		response.put("status", "200");
+		response.put("message", orderDAO.getOrderHasMarketCode(code));
+		return response;		
+	}
 	
 	/**
 	 * Метод меняет остатки на складах Ост на РЦ + запасники в днях
@@ -884,7 +898,11 @@ public class MainRestController {
 		
 		for (String string : numProductMass) {
 			Product product = productService.getProductByCode(Integer.parseInt(string));
+			
 			if(product != null) {
+				if(product.getBalanceStockAndReserves() == 9999.0) {
+					continue;
+				}
 				//считаем разницу в днях сегодняшнеего дня и непосредственно записи
 				LocalDateTime start = timeDelivery.toLocalDateTime();
 				LocalDateTime end = LocalDateTime.of(product.getDateUnload().toLocalDate(), LocalTime.now());
@@ -3769,7 +3787,7 @@ public class MainRestController {
 	 */
 	@RequestMapping(value = "/manager/addNewProcurementHasMarket", method = RequestMethod.POST)
 	public Map<String, String> addNewProcurement2(@RequestBody String str, HttpServletRequest request)
-			throws IOException, ServletException, ParseException {	
+			throws IOException, ServletException, ParseException {
 		//загружаем почтовые ящики из файлов .properties
 		String appPath = request.getServletContext().getRealPath("");
 		FileInputStream fileInputStream = new FileInputStream(appPath + "resources/properties/email.properties");
@@ -3937,7 +3955,7 @@ public class MainRestController {
 		}
 	
 	/**
-	 * Метод сохраняет заявку заявки создание заявки ДЛЯ ЭКСПОРТА
+	 * Метод сохраняет заявку заявки создание заявки ДЛЯ ЭКСПОРТА и заказов без слотов
 	 * @param str
 	 * @return
 	 * 
@@ -3961,14 +3979,34 @@ public class MainRestController {
 		String way = (String) jsonMainObject.get("way");
 		String needUnloadPoint =  jsonMainObject.get("needUnloadPoint") == null ? null : (String) jsonMainObject.get("needUnloadPoint");
 		Integer count = Integer.parseInt((String) jsonMainObject.get("orderCount"));
-
-		Order order = new Order((String) jsonMainObject.get("contertparty"), (String) jsonMainObject.get("contact"),
-				(String) jsonMainObject.get("cargo"), (String) jsonMainObject.get("typeLoad"),
-				(String) jsonMainObject.get("methodLoad"), (String) jsonMainObject.get("typeTruck"),
-				(String) jsonMainObject.get("temperature"),
-				(boolean) jsonMainObject.get("control").toString().equals("true") ? true : false,
-				(String) jsonMainObject.get("comment"), 20, Date.valueOf(LocalDate.now()),
-				null); // тут вместо null джолжно было стоять dateDelivery
+		
+		Order order = null;
+		
+		if(jsonMainObject.get("idOrder") != null) {
+			order = orderService.getOrderById(Integer.parseInt(jsonMainObject.get("idOrder").toString()));
+		}
+		
+		if(order == null) {
+			order = new Order((String) jsonMainObject.get("contertparty"), (String) jsonMainObject.get("contact"),
+					(String) jsonMainObject.get("cargo"), (String) jsonMainObject.get("typeLoad"),
+					(String) jsonMainObject.get("methodLoad"), (String) jsonMainObject.get("typeTruck"),
+					(String) jsonMainObject.get("temperature"),
+					(boolean) jsonMainObject.get("control").toString().equals("true") ? true : false,
+					(String) jsonMainObject.get("comment"), 20, Date.valueOf(LocalDate.now()),
+					null); // тут вместо null джолжно было стоять dateDelivery
+		}else {
+			order.setCounterparty((String) jsonMainObject.get("contertparty"));
+			order.setCargo((String) jsonMainObject.get("cargo"));
+			order.setContact((String) jsonMainObject.get("contact"));
+			order.setTypeLoad((String) jsonMainObject.get("typeLoad"));
+			order.setMethodLoad((String) jsonMainObject.get("methodLoad"));
+			order.setTypeTruck((String) jsonMainObject.get("typeTruck"));
+			order.setTemperature((String) jsonMainObject.get("temperature"));
+//			order.setMarketInfo(jsonMainObject.get("marketInfo") != null ? jsonMainObject.get("marketInfo").toString() : null);
+			order.setControl((boolean) jsonMainObject.get("control").toString().equals("true") ? true : false);
+			order.setComment((String) jsonMainObject.get("comment"));
+			order.setDateCreate(Date.valueOf(LocalDate.now()));
+		}
 		
 		if(jsonMainObject.get("dateDelivery") != null) {
 			if(jsonMainObject.get("dateDelivery").toString().contains("-")) { // значит 10-10-2024
@@ -4075,7 +4113,10 @@ public class MainRestController {
 
 		}
 		order.setPall(pall);
-		order.setIdOrder(orderService.saveOrder(order));
+		if(order.getIdOrder() == null) {
+			order.setIdOrder(orderService.saveOrder(order));
+		}
+		
 		
 		for (String string : mass) {
 			if (string.charAt(string.length() - 1) != '}') {

@@ -144,7 +144,7 @@
 		<div class="modal-dialog">
 			<div class="modal-content">
 				<div class="modal-header align-items-center">
-					<h5 class="modal-title" id="eventInfoModalLabel">Информация о слоте</h5>
+					<h4 class="modal-title" id="eventInfoModalLabel">Информация о слоте</h4>
 					<button id="copySlotInfo" type="button" class="btn ml-1" title="Копировать данные для письма">
 						<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-files" viewBox="0 0 16 16">
 							<path d="M13 0H6a2 2 0 0 0-2 2 2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2 2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zm0 13V4a2 2 0 0 0-2-2H5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1zM3 4a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4z"/>
@@ -154,15 +154,15 @@
 						<span aria-hidden="true">&times;</span>
 					</button>
 				</div>
-				<div class="btn-group btn-group-toggle px-1 border-bottom" id="eventInfoBtns" data-toggle="buttons">
-					<label class="btn btn-info active">
-						<input type="radio" name="options" id="eventInfoBtn" checked>Слоты
-					</label>
-					<label class="btn btn-info">
-						<input type="radio" name="options" id="yardInfoBtn">Двор
-					</label>
-				</div>
-				<div class="modal-body">
+				<div class="modal-body px-1 py-0">
+					<div class="btn-group btn-group-toggle d-flex" id="eventInfoBtns" data-toggle="buttons">
+						<label class="btn btn-light active font-weight-bold">
+							<input type="radio" name="options" id="eventInfoBtn" checked>Слоты
+						</label>
+						<label class="btn btn-light font-weight-bold">
+							<input type="radio" name="options" id="yardInfoBtn">Двор
+						</label>
+					</div>
 					<div id="eventInfo" class="eventInfo"></div>
 					<div id="yardInfo" class="eventInfo none"></div>
 				</div>

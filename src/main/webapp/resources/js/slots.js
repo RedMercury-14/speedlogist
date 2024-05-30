@@ -8,13 +8,12 @@ import {
 	getMarketOrderUrl,
 	getOrdersForSlotsBaseUrl,
 	loadOrderUrl,
+	slotStocks,
 	updateOrderUrl,
 	userMessages,
 } from "./slots/constants.js"
 import { gridOptions, renderTable, showInternalMovementOrders, updateTableData, updateTableRow } from "./slots/agGridUtils.js"
-import { addOnClickToMenuItemListner, closeSidebar } from "./slots/sidebar.js"
 import {
-	addNewStockOption,
 	createCloseEventButton,
 	createEventElement,
 	isMobileDevice,
@@ -68,6 +67,7 @@ import {
 	addNewOrderBtnListner,
 	confitmSlotBtnListner,
 	copySlotInfoBtnListner,
+	eventInfoModalClosedListner,
 	reloadBtnListner,
 	sidebarListners,
 	slotInfoListners,
@@ -245,6 +245,8 @@ window.onload = async function() {
 	statusInfoLabelLIstners()
 	// кнопки информации о слоте
 	slotInfoListners()
+	// закрытие модального окна с информацией об ивенте
+	eventInfoModalClosedListner()
 
 	// обновляем ивенты календаря при изменении стора
 	store.subscribe(() => calendar.refetchEvents())
@@ -803,6 +805,12 @@ function getOrderFromMarket(marketNumber, eventContainer, successCallback) {
 			bootstrap5overlay.hideOverlay()
 
 			if (data.status === '200') {
+				// если склад не на слотах, не создаем поставку
+				const order = data.order
+				if (!slotStocks.includes(order.numStockDelivery)) {
+					snackbar.show(userMessages.orderNotForSlot)
+					return
+				}
 				successCallback(data, marketNumber, eventContainer)
 				snackbar.show(data.message)
 				return

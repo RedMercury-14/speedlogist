@@ -11,7 +11,10 @@ export const userMessages = {
 	operationNotAllowed: 'Данная операция запрещена, недостаточно прав!',
 	messageLogistIsShort: 'Сообщение должно быть не менее 10 символов!',
 	shiftChangeError: 'Невозможно установить заказ на эту дату! Время выгрузки заказа пересекается со временем пересменки склада!',
+	orderNotForSlot: 'Данный заказ не нуждается в слотах - проверьте склад в Маркете'
 }
+
+export const slotStocks = ['1700','1200','1230','1250','1100']
 
 export const eventColors = {
 	disabled: '#65979f',

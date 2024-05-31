@@ -239,17 +239,6 @@ public class MainRestController {
 	public static final Comparator<Address> comparatorAddressId = (Address e1, Address e2) -> (e1.getIdAddress() - e2.getIdAddress());
 	public static final Comparator<Address> comparatorAddressIdForView = (Address e1, Address e2) -> (e2.getType().charAt(0) - e1.getType().charAt(0));
 	
-	@Autowired
-	OrderDAO orderDAO;
-	
-	@GetMapping("/test/{code}")
-	public Map<String, Object> test(HttpServletRequest request, @PathVariable String code) {
-		Map<String, Object> response = new HashMap<String, Object>();
-		
-		response.put("status", "200");
-		response.put("message", orderDAO.getOrderHasMarketCode(code));
-		return response;		
-	}
 	
 	/**
 	 * Метод меняет остатки на складах Ост на РЦ + запасники в днях

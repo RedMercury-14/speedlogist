@@ -500,7 +500,7 @@ public class POIExcel {
 	
 	
 	//дефолтное значение дней при каждой прогрузке
-	private Integer dayMax = 14;
+	private Integer dayMax = 20;
 	
 	/**
 	 * Метод загрузки файла потребностей

@@ -168,8 +168,9 @@ export function hideEventInfoPopup() {
 // функции создания контента модального окна с информацией об ивенте
 function createEventInfoHTML(fcEvent) {
 	const order = fcEvent.extendedProps.data
-	const { marketNumber, dateDelivery, timeUnload, cargo, counterparty, loginManager, idRamp, idOrder, status, pall, } = order
+	const { marketNumber, dateDelivery, timeUnload, cargo, counterparty, loginManager, idRamp, idOrder, status, pall } = order
 	const marketInfo = order.marketInfo ? order.marketInfo : ''
+	const slotInfo = order.slotInfo ? order.slotInfo : ''
 	const statusToView = getSlotStatus(status)
 	const stock = `${idRamp}`.slice(0, -2)
 	const ramp = `${idRamp}`.slice(-2)
@@ -181,6 +182,7 @@ function createEventInfoHTML(fcEvent) {
 		<div class="event-info__status">
 			<p class="mb-1 font-weight-bold">Статус заказа: ${statusToView}</p>
 		</div>
+		${slotInfo && `<div class="event-info__slotInfo font-weight-bold">${slotInfo}</div>`}
 		<div class="event-info__ramp">
 			Склад: ${stock}
 			Рампа: ${ramp}

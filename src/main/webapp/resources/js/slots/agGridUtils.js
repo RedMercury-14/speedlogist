@@ -19,6 +19,7 @@ const columnDefs = [
 	{ headerName: "Время", field: "timeDeliveryInfo", width: 190, wrapText: true, autoHeight: true, },
 	{ headerName: "Создатель заявки", field: "manager", width: 190, wrapText: true, autoHeight: true, },
 	{ headerName: "Адрес загрузки", field: "loadAddress", width: 390, wrapText: true, autoHeight: true, },
+	{ headerName: "Перен-но логистом", field: "isLogistEdited", width: 90, cellClass: 'px-1 text-center font-weight-bold', },
 	{
 		headerName: "Информация (из Маркета)", field: "marketInfo",
 		width: 190, wrapText: true, autoHeight: true,
@@ -98,8 +99,8 @@ function mapCallback(order) {
 	}
 
 	const loadAddress = getLoadAddress(order)
-
 	const timeDeliveryStartDate = order.timeDelivery ? convertToDDMMYYYY(order.timeDelivery) : ''
+	const isLogistEdited = order.slotInfo ? 'Да' : ''
 
 	return {
 		...order,
@@ -108,6 +109,7 @@ function mapCallback(order) {
 		timeDeliveryInfo,
 		loadAddress,
 		timeDeliveryStartDate,
+		isLogistEdited,
 	}
 }
 

@@ -17,6 +17,20 @@ export function slotInfoListners() {
 	})
 }
 
+export function eventInfoModalClosedListner() {
+	$('#eventInfoModal').on('hidden.bs.modal', (e) => {
+		const eventInfoBtn = document.querySelector('#eventInfoBtn')
+		const yardInfoBtn = document.querySelector('#yardInfoBtn')
+		const eventInfo = document.querySelector('#eventInfo')
+		const yardInfo = document.querySelector('#yardInfo')
+
+		yardInfoBtn.parentElement.classList.remove('active')
+		eventInfoBtn.parentElement.classList.add('active')
+		eventInfo.classList.remove('none')
+		yardInfo.classList.add('none')
+	})
+}
+
 export function sidebarListners() {
 	const menuItems = document.querySelectorAll(".menu-item")
 	const buttonClose = document.querySelector(".close-button")

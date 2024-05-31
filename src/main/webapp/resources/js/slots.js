@@ -8,13 +8,13 @@ import {
 	getMarketOrderUrl,
 	getOrdersForSlotsBaseUrl,
 	loadOrderUrl,
+	slotStocks,
+	slotsSettings,
 	updateOrderUrl,
 	userMessages,
 } from "./slots/constants.js"
 import { gridOptions, renderTable, showInternalMovementOrders, updateTableData, updateTableRow } from "./slots/agGridUtils.js"
-import { addOnClickToMenuItemListner, closeSidebar } from "./slots/sidebar.js"
 import {
-	addNewStockOption,
 	createCloseEventButton,
 	createEventElement,
 	isMobileDevice,
@@ -68,6 +68,7 @@ import {
 	addNewOrderBtnListner,
 	confitmSlotBtnListner,
 	copySlotInfoBtnListner,
+	eventInfoModalClosedListner,
 	reloadBtnListner,
 	sidebarListners,
 	slotInfoListners,
@@ -219,7 +220,10 @@ window.onload = async function() {
 	pallLineChart = new Chart(ctx, pallChartConfig)
 
 	// получаем данные
-	const { startDateStr, endDateStr } = getDatesToSlotsFetch(30)
+	const { startDateStr, endDateStr } = getDatesToSlotsFetch(
+		slotsSettings.DAY_COUNT_BACK,
+		slotsSettings.DAY_COUNT_FORVARD
+	)
 	const marketData = await getData(`${getOrdersForSlotsBaseUrl}${startDateStr}&${endDateStr}`)
 	// сохраняем заказы в стор
 	store.setOrders(marketData)
@@ -245,6 +249,8 @@ window.onload = async function() {
 	statusInfoLabelLIstners()
 	// кнопки информации о слоте
 	slotInfoListners()
+	// закрытие модального окна с информацией об ивенте
+	eventInfoModalClosedListner()
 
 	// обновляем ивенты календаря при изменении стора
 	store.subscribe(() => calendar.refetchEvents())
@@ -635,8 +641,10 @@ function updateOrder(info, isComplexUpdate) {
 
 	// просьба указать причину переноса слота для логистов
 	if (isLogist(currentRole)) {
-		const messageLogist = prompt('Укажите причину переноса (минимум 10 символов): ')
-		if (messageLogist.length < 10) {
+		const messageLogist = prompt(
+			`Укажите причину переноса (минимум ${slotsSettings.LOGIST_MESSAGE_MIN_LENGHT} символов): `
+		)
+		if (messageLogist.length < slotsSettings.LOGIST_MESSAGE_MIN_LENGHT) {
 			info.revert()
 			snackbar.show(userMessages.messageLogistIsShort)
 			return
@@ -803,6 +811,12 @@ function getOrderFromMarket(marketNumber, eventContainer, successCallback) {
 			bootstrap5overlay.hideOverlay()
 
 			if (data.status === '200') {
+				// если склад не на слотах, не создаем поставку
+				const order = data.order
+				if (!slotStocks.includes(order.numStockDelivery)) {
+					snackbar.show(userMessages.orderNotForSlot)
+					return
+				}
 				successCallback(data, marketNumber, eventContainer)
 				snackbar.show(data.message)
 				return
@@ -878,7 +892,11 @@ function setOldMarketInfo(order, oldValue, gridOption) {
 // обновление данных графика паллетовместимости
 function updatePallChart(selectedStock) {
 	const nowDateStr = new Date().toISOString().slice(0, 10)
-	const pallChartData = store.getMaxPallDataByPeriod(selectedStock.id, nowDateStr, 14)
+	const pallChartData = store.getMaxPallDataByPeriod(
+		selectedStock.id,
+		nowDateStr,
+		slotsSettings.PALL_CHART_DATA_DAY_COUNT
+	)
 	const chartData = getFormattedPallChartData(pallChartData)
 	const bgData = getMarkerBGColorData(pallChartData)
 	updateChartData(pallLineChart, chartData, bgData)

@@ -1,5 +1,14 @@
 export const Draggable = FullCalendar.Draggable
 
+export const slotsSettings = {
+	DAY_COUNT_BACK: 30,    // выборка дней назад для получения заказов
+	DAY_COUNT_FORVARD: 60,    // выборка дней вперед для получения заказов
+	LOGIST_MESSAGE_MIN_LENGHT: 10,    // минимальная длина сообщения от логиста
+	PALL_CHART_DATA_DAY_COUNT: 14,    // кол-во дней для отрисовки графика паллетовместимости
+	UNLOAD_DATE_HOUR_DELAY_FOR_RB: 4,    // задержка для расчета времени ДЛЯ РБ выгрузки в зависимости от даты загрузки
+	UNLOAD_DATE_HOUR_DELAY_FOR_IMPORT: 24,    // задержка для расчета времени ДЛЯ ИМПОРТА выгрузки в зависимости от даты загрузки
+}
+
 export const userMessages = {
 	start: 'Для начала работы выберите склад',
 	dateDropError: (unloadDate) => `Невозможно установить заказ на эту дату! Минимальная дата выгрузки ${unloadDate}`,
@@ -11,7 +20,10 @@ export const userMessages = {
 	operationNotAllowed: 'Данная операция запрещена, недостаточно прав!',
 	messageLogistIsShort: 'Сообщение должно быть не менее 10 символов!',
 	shiftChangeError: 'Невозможно установить заказ на эту дату! Время выгрузки заказа пересекается со временем пересменки склада!',
+	orderNotForSlot: 'Данный заказ не нуждается в слотах - проверьте склад в Маркете'
 }
+
+export const slotStocks = ['1700','1200','1230','1250','1100']
 
 export const eventColors = {
 	disabled: '#65979f',

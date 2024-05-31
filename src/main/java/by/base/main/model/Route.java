@@ -61,7 +61,7 @@ public class Route implements Serializable{
 	private Integer numStock;
 	
 	@Column(name = "dateLoad_previously")
-	@JsonFormat(pattern = "yyyy-MM-dd")
+	@JsonFormat(pattern = "yyyy-MM-dd", timezone = "Europe/Moscow")
 	private LocalDate dateLoadPreviously;
 	
 	@Column(name = "timeLoad_previously")
@@ -164,7 +164,7 @@ public class Route implements Serializable{
 	 * дата загрузки от перевозчика
 	 */
 	@Column(name = "dateLoad_actually")
-	@JsonFormat(pattern = "yyyy-MM-dd")
+	@JsonFormat(pattern = "yyyy-MM-dd", timezone = "Europe/Moscow")
 	private LocalDate dateLoadActually;
 	
 	/**
@@ -178,7 +178,7 @@ public class Route implements Serializable{
 	 * дата выгрузки от перевозчика
 	 */
 	@Column(name = "dateUnload_actually")
-	@JsonFormat(pattern = "yyyy-MM-dd")
+	@JsonFormat(pattern = "yyyy-MM-dd", timezone = "Europe/Moscow")
 	private LocalDate dateUnloadActually;
 	
 	/**
@@ -231,7 +231,7 @@ public class Route implements Serializable{
 	private Time timeUnloadPreviouslyStock;
 	
 	@Column(name="dateUnload_previouslyStock")
-	@JsonFormat(pattern = "yyyy-MM-dd")
+	@JsonFormat(pattern = "yyyy-MM-dd", timezone = "Europe/Moscow")
 	private Date dateUnloadPreviouslyStock;
 	
 	@Column(name="create_date")

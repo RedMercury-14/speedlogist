@@ -1,5 +1,5 @@
 import { dateHelper, isAdmin, isLogist } from "../utils.js"
-import { eventColors } from "./constants.js"
+import { eventColors, slotsSettings } from "./constants.js"
 
 // получение минимальной даты слота
 export function getMinUnloadDate(order, role) {
@@ -39,7 +39,7 @@ export function getMinUnloadDateForLogist(now, order) {
 	return nextDay
 }
 
-// расчет  выгрузки в зависимости от даты загрузки (4ч для РБ и 24 часа для импорта)
+// расчет времени выгрузки в зависимости от даты загрузки (4ч для РБ и 24 часа для импорта)
 function getUnloadDateWithDelay(order) {
 	const way = order.way
 	const { loadDate, loadTime } = getLastLoadDateTime(order)
@@ -47,11 +47,17 @@ function getUnloadDateWithDelay(order) {
 
 	// если маршрут РБ - добавляем 4 часа
 	if (way === 'РБ') {
-		return new Date(loadDate).setHours(h, m, s, 0) + (4 * dateHelper.MILLISECONDS_IN_HOUR)
+		return new Date(loadDate)
+			.setHours(h, m, s, 0) + (
+				slotsSettings.UNLOAD_DATE_HOUR_DELAY_FOR_RB * dateHelper.MILLISECONDS_IN_HOUR
+			)
 	}
 
 	// для остальных маршрутов (импорт) добавляем 24 часа
-	return new Date(loadDate).setHours(h, m, s, 0) + (24 * dateHelper.MILLISECONDS_IN_HOUR)
+	return new Date(loadDate)
+		.setHours(h, m, s, 0) + (
+			slotsSettings.UNLOAD_DATE_HOUR_DELAY_FOR_IMPORT * dateHelper.MILLISECONDS_IN_HOUR
+		)
 }
 
 
@@ -277,11 +283,11 @@ export function stockAndDayIsVisible(currentStock, currentDate, stockId, eventDa
 }
 
 // даты для получения слотов
-export function getDatesToSlotsFetch(dayCount) {
+export function getDatesToSlotsFetch(dayCountBack, dayCountForward) {
 	// плюс-минус указанное количество дней от сегодня
 	const now = new Date()
-	const startDate = new Date(now.getTime() - (dayCount * 86400000))
-	const endDate = new Date(now.getTime() + (dayCount * 86400000))
+	const startDate = new Date(now.getTime() - (dayCountBack * 86400000))
+	const endDate = new Date(now.getTime() + (dayCountForward * 86400000))
 	return {
 		startDate,
 		endDate,

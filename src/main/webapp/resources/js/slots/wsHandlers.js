@@ -36,6 +36,9 @@ export function wsSlotOnMessageHandler(e, gridOptions) {
 		// удаление заказа из таблицы контроля заявок
 		if (action === 'delete from table') {
 			const marketNumber = orderData.marketNumber
+			const stockId = orderData.idRamp ? orderData.idRamp.slice(0, -2) : orderData.numStockDelivery
+			const event = store.getEvent(stockId, {id: orderData.marketNumber})
+			if (!event) return
 			const timeDelivery = orderData.timeDelivery.split('.')[0]
 			const startDateStr = timeDelivery.replace(' ', 'T')
 			const modifiedOrderData = {
@@ -44,12 +47,10 @@ export function wsSlotOnMessageHandler(e, gridOptions) {
 				marketNumber: marketNumber,
 				timeDelivery,
 				loginManager: orderData.loginManager,
-				stockId: orderData.numStockDelivery,
+				stockId,
 				startDateStr,
 				numberOfPalls: Number(orderData.pall),
-				fcEvent: {
-					id: marketNumber
-				},
+				fcEvent: event,
 				status: 5,
 				messageLogist: null,
 			}

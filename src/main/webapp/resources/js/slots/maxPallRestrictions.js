@@ -190,7 +190,7 @@ export const tempMaxPallRestrictions = [
 		stockId: '1100',
 		date: '2024-06-04',
 		maxPall:{
-			externalMovement: 180,
+			externalMovement: 197,
 			internalMovement: 0,
 		},
 	},

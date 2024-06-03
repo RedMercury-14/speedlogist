@@ -50,6 +50,7 @@ import {
 	checkPallCountForComingDates,
 	hasOrderInYard,
 	isInvalidEventDate,
+	isOldSlotNotInYard,
 	isOldSupplierOrder,
 	isOverlapWithShiftChange,
 	methodAccessRules,
@@ -143,6 +144,10 @@ const calendarOptions = {
 		left: "prev,next today",
 		center: "title",
 		right: "resourceTimeGridDay,resourceTimeGridTwoDay",
+	},
+
+	titleFormat: {
+		year: 'numeric', month: 'long', day: 'numeric', weekday: 'short'
 	},
 
 	views: {
@@ -473,6 +478,7 @@ function eventDropHandler(info) {
 	const minUnloadDate = getMinUnloadDate(order, role)
 	const minUnloadDateStr = convertToDayMonthTime(minUnloadDate)
 	if (isInvalidEventDate(info, minUnloadDate)) {
+	// if (isInvalidEventDate(info, minUnloadDate) && !isOldSlotNotInYard(order)) {
 		info.revert()
 		snackbar.show(userMessages.dateDropError(minUnloadDateStr))
 		return
@@ -644,6 +650,10 @@ function updateOrder(info, isComplexUpdate) {
 		const messageLogist = prompt(
 			`Укажите причину переноса (минимум ${slotsSettings.LOGIST_MESSAGE_MIN_LENGHT} символов): `
 		)
+		if (!messageLogist) {
+			info.revert()
+			return
+		}
 		if (messageLogist.length < slotsSettings.LOGIST_MESSAGE_MIN_LENGHT) {
 			info.revert()
 			snackbar.show(userMessages.messageLogistIsShort)

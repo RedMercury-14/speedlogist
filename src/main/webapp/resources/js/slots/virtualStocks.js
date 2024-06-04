@@ -66,7 +66,7 @@ export const stocks = [
 		id: '1100',
 		name: 'Склад 1100',
 		address: '223039, Республика Беларусь, Минская область, Минский район, Хатежинский с/с, 1',
-		contact: '',
+		contact: '+375293146512, +375293158914',
 		workingHoursStart: '08:00',
 		workingHoursEnd: '20:00',
 		shiftChange: [],

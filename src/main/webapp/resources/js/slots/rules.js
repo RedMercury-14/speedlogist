@@ -45,7 +45,11 @@ export function editableRules(order, currentLogin, currentRole) {
 			isLogist(currentRole)
 			&& !hasOrderInYard(order)
 			&& isLogistEditableStatuses(status)
-			&& isLogistEditableDate(now, order))
+			&& isLogistEditableDate(now, order)
+		)
+		// || (
+		// 	isOldSlotNotInYard(order)
+		// )
 	) {
 		return true
 	} else {
@@ -304,6 +308,13 @@ export function isOldSupplierOrder(info, currentLogin) {
 	const isSupplierOrder = status === 8 || status === 100
 
 	return (isSupplierOrder) && !isAnotherUser(orderLogin, currentLogin) && eventDate < tomorrowMs
+}
+
+
+// проверка, что слот станый и не имеет статуса во Дворе
+export function isOldSlotNotInYard(order) {
+	const nowDateMs = new Date().setHours(0, 0, 0, 0)
+	return order.timeDelivery && !hasOrderInYard(order) && (order.timeDelivery < nowDateMs)
 }
 
 // проверка, взят ли заказ в работу во Дворе

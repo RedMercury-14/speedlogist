@@ -301,7 +301,7 @@ public class OrderDAOImpl implements OrderDAO{
 		return trucks;
 	}
 
-	private static final String queryGetOrderByTimeDelivery = "from Order o LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH r.truck t LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH o.addresses a where o.timeDelivery BETWEEN :dateStart and :dateEnd";
+	private static final String queryGetOrderByTimeDelivery = "from Order o LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH r.truck t LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH o.addresses a where o.status !=10 AND o.timeDelivery BETWEEN :dateStart and :dateEnd";
 	@Transactional
 	@Override
 	public List<Order> getOrderByTimeDelivery(Date dateStart, Date dateEnd) {

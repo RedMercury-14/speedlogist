@@ -874,6 +874,11 @@ public class MainRestController {
 	 */
 	private String checkNumProductHasStock(Order order, Timestamp timeDelivery) {
 		String message = null;
+		User user = getThisUser();
+		Role role = user.getRoles().stream().findFirst().get();
+		if(role.getIdRole() == 1 || role.getIdRole() == 2 || role.getIdRole() == 3) { // тут мы говорим что если это логист или админ - в проверке не нуждаемся
+			return null;
+		}
 		if(order.getIsInternalMovement() != null && order.getIsInternalMovement().equals("true")) {
 			return null;
 		}
@@ -1028,6 +1033,7 @@ public class MainRestController {
 //		}
 		
 		//конец проверки на лимит приемки
+		
 		//проверка на лимиты товара
 				String checkMessage = checkNumProductHasStock(order, timestamp);		
 				if(checkMessage != null) {

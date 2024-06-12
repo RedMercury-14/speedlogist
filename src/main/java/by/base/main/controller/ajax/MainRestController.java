@@ -874,6 +874,11 @@ public class MainRestController {
 	 */
 	private String checkNumProductHasStock(Order order, Timestamp timeDelivery) {
 		String message = null;
+		User user = getThisUser();
+		Role role = user.getRoles().stream().findFirst().get();
+		if(role.getIdRole() == 1 || role.getIdRole() == 2 || role.getIdRole() == 3) { // тут мы говорим что если это логист или админ - в проверке не нуждаемся
+			return null;
+		}
 		if(order.getIsInternalMovement() != null && order.getIsInternalMovement().equals("true")) {
 			return null;
 		}
@@ -891,6 +896,9 @@ public class MainRestController {
 			
 			if(product != null) {
 				if(product.getBalanceStockAndReserves() == 9999.0) {
+					continue;
+				}
+				if(product.getRemainderStockInPall() < 33.0) { //если в паллетах товара меньшге чем 33 - то пропускаем
 					continue;
 				}
 				//считаем разницу в днях сегодняшнеего дня и непосредственно записи
@@ -1028,6 +1036,7 @@ public class MainRestController {
 //		}
 		
 		//конец проверки на лимит приемки
+		
 		//проверка на лимиты товара
 				String checkMessage = checkNumProductHasStock(order, timestamp);		
 				if(checkMessage != null) {
@@ -3584,19 +3593,39 @@ public class MainRestController {
 		return orderService.getOrderByPeriodCreateAndCounterparty(dateStart, dateEnd, counterparty).stream()
 				.collect(Collectors.toSet());
 	}
+	
+	/**
+	 * Отдаёт заявки для логистов (нет 10 статуса и ниже) по периоду создания заявки.
+	 * pattern = "yyyy-MM-dd"
+	 * Использует специальный запрос
+	 * @param dateStart
+	 * @param dateEnd
+	 * @return
+	 */
+	@GetMapping("/manager/getOrdersForLogist2/{dateStart}&{dateEnd}")
+	public Set<Order> getListOrdersLogistV2(@PathVariable Date dateStart, @PathVariable Date dateEnd) {
+		java.util.Date t1 = new java.util.Date();
+		Set<Order> result = orderService.getListOrdersLogist(dateStart, dateEnd);
+		java.util.Date t2 = new java.util.Date();
+		System.out.println(t2.getTime() - t1.getTime() + " ms. getOrdersForLogist2");
+		return result;
+	}
 
 	/**
 	 * Отдаёт заявки для логистов (нет 10 статуса и ниже) по периоду создания заявки.
 	 * pattern = "yyyy-MM-dd"
-	 * 
 	 * @param dateStart 2023-10-01
 	 * @param dateEnd   2023-10-01
 	 * @return
 	 */
 	@GetMapping("/manager/getOrdersForLogist/{dateStart}&{dateEnd}")
 	public Set<Order> getListOrdersLogist(@PathVariable Date dateStart, @PathVariable Date dateEnd) {
-		return orderService.getOrderByPeriodCreate(dateStart, dateEnd).stream().filter(o -> o.getStatus() >= 17)
+		java.util.Date t1 = new java.util.Date();
+		Set<Order> result = orderService.getOrderByPeriodCreate(dateStart, dateEnd).stream().filter(o -> o.getStatus() >= 17)
 				.collect(Collectors.toSet());
+		java.util.Date t2 = new java.util.Date();
+		System.out.println(t2.getTime() - t1.getTime() + " ms. getOrdersForLogist");
+		return result;
 	}
 
 	/**

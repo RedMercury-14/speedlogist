@@ -327,5 +327,10 @@ public class OrderServiceImpl implements OrderService {
 		return summPall;
 	}
 
+	@Override
+	public Set<Order> getListOrdersLogist(Date dateStart, Date dateEnd) {
+		return orderDAO.getListOrdersLogist(dateStart, dateEnd);
+	}
+
 	
 }

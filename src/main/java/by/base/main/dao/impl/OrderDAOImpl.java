@@ -334,5 +334,17 @@ public class OrderDAOImpl implements OrderDAO{
 		
 	}
 
+	private static final String queryGetListOrdersLogist = "from Order o LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH r.truck t LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH o.addresses a where o.status >= 17 AND o.dateCreate BETWEEN :dateStart and :dateEnd";
+	@Transactional
+	@Override
+	public Set<Order> getListOrdersLogist(Date dateStart, Date dateEnd) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Order> theObject = currentSession.createQuery(queryGetListOrdersLogist, Order.class);
+		theObject.setParameter("dateStart", dateStart, TemporalType.DATE);
+		theObject.setParameter("dateEnd", dateEnd, TemporalType.DATE);
+		Set<Order> trucks = theObject.getResultStream().collect(Collectors.toSet());
+		return trucks;
+	}
+
 
 }

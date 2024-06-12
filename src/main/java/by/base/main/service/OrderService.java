@@ -2,6 +2,7 @@ package by.base.main.service;
 
 import java.sql.Date;
 import java.util.List;
+import java.util.Set;
 
 import by.base.main.model.Order;
 import by.base.main.model.Route;
@@ -19,6 +20,15 @@ public interface OrderService {
 	Order getOrderByIdRoute(Integer idRoute);
 	
 	List<Order> getOrderByPeriodDelivery(Date dateStart, Date dateEnd);
+	
+	/**
+	 * Метод который отдаёт заказы для логистов.
+	 * Фильтрует по статусам (отдаёт те что выше 17)
+	 * @param dateStart
+	 * @param dateEnd
+	 * @return
+	 */
+	Set<Order> getListOrdersLogist (Date dateStart, Date dateEnd);	
 	
 	/**
 	 * Отдаёт заказы по номеру из маркета (должен быть один)

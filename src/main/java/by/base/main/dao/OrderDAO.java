@@ -25,6 +25,15 @@ public interface OrderDAO {
 	List<Order> getOrderByPeriodCreate(Date dateStart, Date dateEnd);	
 	
 	/**
+	 * Метод который отдаёт заказы для логистов.
+	 * Фильтрует по статусам (отдаёт те что выше 17)
+	 * @param dateStart
+	 * @param dateEnd
+	 * @return
+	 */
+	Set<Order> getListOrdersLogist (Date dateStart, Date dateEnd);	
+	
+	/**
 	 * Возвращает заказы по периуду создания из маркета
 	 * @param dateStart
 	 * @param dateEnd
@@ -73,6 +82,8 @@ public interface OrderDAO {
 	 * @return
 	 */
 	Set<Order> getOrderListHasDateAndStockFromSlots (Date dateTarget, String stockTarget);
+	
+	
 	
 	Integer saveOrder (Order order);
 	

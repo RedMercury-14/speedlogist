@@ -453,7 +453,7 @@ public class Shop implements Serializable{
 				+ workStart + ", workfinish=" + workfinish + ", debt=" + debt + ", commercial=" + commercial
 				+ ", packageShop=" + packageShop + ", returnShop=" + returnShop + ", lat=" + lat + ", lng=" + lng
 				+ ", type=" + type + ", length=" + length + ", width=" + width + ", height=" + height + ", maxPall="
-				+ maxPall + ", needPall=" + needPall + ", needWeigth=" + needWeigth + "]";
+				+ maxPall + ", needPall=" + needPall + ", needWeigth=" + needWeigth + ", weight=" + weight +"]";
 	}
 	
 	

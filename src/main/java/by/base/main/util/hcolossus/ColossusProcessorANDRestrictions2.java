@@ -527,13 +527,13 @@ public class ColossusProcessorANDRestrictions2 {
 						stackTrace = stackTrace + "Закончились машины для чернового распределения!\n";
 						System.err.println("ColossusProcessorANDRestrictions2.run: Закончились машины для чернового распределения!");
 					}
-					System.out.println("-----> "+ firstShop);
+//					System.out.println("-----> "+ firstShop);
 					if(firstShop.getNeedPall() >= trucksBeforeRestr.get(0).getPall()) {//логика для разбиений магазинов когда паллет изначально больше!
 						double oneWidthPall = (double) (firstShop.getWeight()/firstShop.getNeedPall());
 						double widthNewShop = oneWidthPall*trucksBeforeRestr.get(0).getPall();
 						if (firstShop.getNeedPall() == trucksBeforeRestr.get(0).getPall()) { 
 							if(firstShop.getWeight() <= trucksBeforeRestr.get(0).getWeigth()) {
-								System.err.println("Распределяем магазин БЕЗ ограничений по весу, при том что паллет больше, после идеальных маршрутов (доп идеальные)!");
+								System.err.println("Распределяем магазин БЕЗ ограничений по весу, при том что паллет больше, после идеальных маршрутов (доп идеальные), когда паллет изначально больше!");
 								Vehicle targetTruck = trucksBeforeRestr.remove(0);
 								trucks.remove(targetTruck);
 								targetTruck.setTargetPall(targetTruck.getPall()); // загружаем машину полностью
@@ -558,6 +558,7 @@ public class ColossusProcessorANDRestrictions2 {
 								Shop newShopHasPall = new Shop(firstShop.getNumshop(), firstShop.getAddress(), firstShop.getLat(),
 										firstShop.getLng(), firstShop.getLength(), firstShop.getWidth(), firstShop.getHeight(), firstShop.getMaxPall());
 								newShopHasPall.setWeight(newNeedWeigthForShop);
+								newShopHasPall.setNeedWeigth(Double.parseDouble(newNeedWeigthForShop.toString()));
 								newShopHasPall.setNeedPall(newNeedPallForShop);
 								newShopHasPall.setDistanceFromStock(firstShop.getDistanceFromStock());
 								List<Shop> points1 = new ArrayList<Shop>();
@@ -586,12 +587,14 @@ public class ColossusProcessorANDRestrictions2 {
 										firstShop.getLng(), firstShop.getLength(), firstShop.getWidth(), firstShop.getHeight(), firstShop.getMaxPall());
 								newShopHasPall.setNeedPall(newNeedPallForShop);
 								newShopHasPall.setDistanceFromStock(firstShop.getDistanceFromStock());
+								double doubleWeigth = firstShop.getWeight() - oneWidthPall * targetTruck.getPall();
+								newShopHasPall.setWeight((int) doubleWeigth);
 								shopsForOptimization.remove(firstShop);
 								shopsForOptimization.add(newShopHasPall);
 								shopsForOptimization.sort(shopComparatorDistanceMain);
 								Shop newFirstShop = new Shop(firstShop.getNumshop(), firstShop.getAddress(), firstShop.getLat(),
 										firstShop.getLng(), firstShop.getLength(), firstShop.getWidth(), firstShop.getHeight(), firstShop.getMaxPall());
-								newFirstShop.setNeedPall(targetTruck.getPall());
+								newFirstShop.setNeedPall(targetTruck.getPall());								
 								points.remove(points.size()-1);
 								points.add(newFirstShop);
 								points.add(targetStock);
@@ -649,6 +652,7 @@ public class ColossusProcessorANDRestrictions2 {
 							}
 						}
 					}else { // тут мы знаем что паллет меньше. Далее проверям по весу
+						System.out.println(firstShop.toAllString());
 						double oneWidthPall = (double) (firstShop.getWeight()/firstShop.getNeedPall());
 						double widthNewShop = oneWidthPall*trucksBeforeRestr.get(0).getPall();
 						if(firstShop.getWeight() <= trucksBeforeRestr.get(0).getWeigth()) {

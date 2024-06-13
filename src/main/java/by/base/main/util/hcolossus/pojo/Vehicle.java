@@ -173,7 +173,7 @@ public class Vehicle{
 	}
 
 	public boolean isFull() {
-		if(this.pall == this.targetPall || this.pall.equals(this.targetPall)) {
+		if(this.pall == this.targetPall || this.pall.equals(this.targetPall) || this.weigth == this.targetWeigth || this.weigth.equals(this.targetWeigth)) {
 			return true;
 		}else {
 			return false;

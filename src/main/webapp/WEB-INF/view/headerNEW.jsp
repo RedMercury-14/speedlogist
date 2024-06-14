@@ -157,12 +157,6 @@
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/carrier/exchange"/>">О бирже</a></li>
 							</c:when>
 							<c:when test="${roles == '[ROLE_ORDERSUPPORT]'}">
-							<c:choose>
-								<c:when test="${login == 'romashkok%!dobronom.by'}">
-									<script src='${pageContext.request.contextPath}/resources/js/fun/snowRandom.js'></script>
-								</c:when>
-							</c:choose>
-							
 								<li class="dropdown">
 									<a href="#" class="nav-item nav-link" data-toggle="dropdown">Заявки на перевозки</a>
 									<div class="dropdown-menu">
@@ -202,6 +196,7 @@
 									</div>
 								</li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/slots" />">Слоты</a></li>
+								<li><a class="nav-item nav-link" href="<spring:url value="/main/procurement/ordersBalance" />">Остаток товара</a></li>
 							</c:when>
 							<c:otherwise>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/registration" />">Регистрация</a></li>
@@ -239,5 +234,4 @@
 	</header>
 
 	<script src="<spring:url value="/resources/js/headerNEW.js"/>" type="module"></script>
-<%-- 	<script src='${pageContext.request.contextPath}/resources/js/fun/snowRandom.js'></script> --%>
 </body>

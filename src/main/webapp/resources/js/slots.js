@@ -83,9 +83,17 @@ const LOCAL_STORAGE_KEY = 'AG_Grid_column_settings_to_Slots'
 const debouncedEventsSetHandler = debounce(eventsSetHandler, 200)
 const debouncedSaveColumnState = debounce(saveColumnState, 300)
 
+const role = store.getRole()
+
 // опции таблицы
 const orderTableGridOption = {
 	...gridOptions,
+	// запрет редактирования Информации из Маркета для логистов и наблюдателей
+	columnDefs: gridOptions.columnDefs.map(columnDef => {
+		return columnDef.field === "marketInfo" && (isLogist(role) || isSlotsObserver(role))
+			? { ...columnDef, editable: false }
+			: columnDef
+	}),
 	getContextMenuItems: getContextMenuItemsForOrderTable,
 	onSortChanged: debouncedSaveColumnState,
 	onColumnResized: debouncedSaveColumnState,

@@ -21,14 +21,14 @@
 			<span class="sr-only">Загрузка...</span>
 		</div>
 	</div>
-	<div class="container-fluid" style="margin-top: 80px;">
-		<h1>Текущие маршруты</h1>
+	<div class="container-fluid px-1" style="margin-top: 80px;">
+		<h1 class="mb-1 px-3">Текущие маршруты</h1>
 		<input type="hidden" value="<sec:authentication property="principal.username" />" id="login">
 		<input type="hidden" value='${user.companyName}' id="companyName">
-		<div class="form-group">
-			<h1 style="color: red;">
+		<div class="form-group mb-0">
+			<div style="color: red;">
 				<c:out value="${errorMessage}" />
-			</h1>
+			</div>
 		</div>
 		<div class="table-scroll">
 			<table class="table table-bordered table-hover table-sm" id="sort">

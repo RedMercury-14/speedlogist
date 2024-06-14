@@ -35,7 +35,7 @@
 			<iframe
 				title="Нехватка товара на РЦ 2"
 				width="100%" height="780px"
-				src="https://app.powerbi.com/reportEmbed?reportId=44dd24f3-c22d-4956-8b68-749aefd5f7bc&autoAuth=true&ctid=a9af5edf-b4be-4591-ba34-a3a96434b108"
+				src="https://app.powerbi.com/reportEmbed?reportId=df49078e-9c34-4073-ac9b-7a1e61eceadf&autoAuth=true&ctid=a9af5edf-b4be-4591-ba34-a3a96434b108"
 				frameborder="0"
 				allowFullScreen="true">
 			</iframe>

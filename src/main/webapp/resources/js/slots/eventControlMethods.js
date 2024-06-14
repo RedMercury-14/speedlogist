@@ -49,6 +49,8 @@ export function updateCalendarEvent(gridOptions, orderData, isAnotherUser) {
 	if (!oldEvent) return
 
 	const currentStock = store.getCurrentStock()
+	if (!currentStock) return
+
 	const currentDate = store.getCurrentDate()
 	const maxPall = store.getCurrentMaxPall()
 	const numberOfPall = Number(orderData.numberOfPalls)

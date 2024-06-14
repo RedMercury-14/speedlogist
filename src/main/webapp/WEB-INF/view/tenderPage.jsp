@@ -27,9 +27,9 @@
 	<input type="hidden" value="${user.surname} ${user.name}" id="fullName">
 	<c:choose>
 		<c:when test="${route.comments == 'international' && route.startPrice == null && route.user == null}">
-			<div class="container my-container">
+			<div class="container my-container px-0">
 				<input type="hidden" value="1" />
-				<form:form method="get" action="./tenderOffer">
+				<form:form method="get" id="tenderOfferForm" action="./tenderOffer">
 					<input type="hidden" value="${route.idRoute}" name="id" />
 					<input type="hidden" value="${userCost}" name="userCost" />
 					<h3 class="route-title">Маршрут ${route.routeDirection} от ${route.simpleDateStart}</h3>
@@ -56,97 +56,91 @@
 							</c:choose>
 						</div>
 						<div class="card-body pt-2 pb-2">
-							<h5 class="route-subtitle">Данные о заказе</h5>
-						</div>
-						<c:choose>
-							<c:when test="${route.dateUnloadPreviouslyStock != null}">
+							<div class="route-info-container">
+								<h5 class="route-subtitle">Данные о заказе</h5>
 								<c:choose>
-									<c:when test="${route.way == 'РБ'}">
-										<div class="card-body pt-2 pb-2">
-											<div class="dateUnloadInfo text-danger">
-												<span>Слот на выгрузку:</span>
-												<span>${route.dateUnloadPreviouslyStock} ${route.timeUnloadPreviouslyStock}</span>
-											</div>
+									<c:when test="${route.dateUnloadPreviouslyStock != null}">
+										<c:choose>
+											<c:when test="${route.way == 'РБ'}">
+												<div class="dateUnloadInfo text-danger">
+													<span>Слот на выгрузку:</span>
+													<span>${route.dateUnloadPreviouslyStock} ${route.timeUnloadPreviouslyStock}</span>
+												</div>
+											</c:when>
+											<c:otherwise>
+												<div class="dateUnloadInfo">
+													<span>Доставить до:</span>
+													<span>${route.dateUnloadPreviouslyStock} ${route.timeUnloadPreviouslyStock}</span>
+												</div>
+											</c:otherwise>
+										</c:choose>
+									</c:when>
+								</c:choose>
+								<c:choose>
+									<c:when test="${route.loadNumber != null}">
+										<div class="dateUnloadInfo font-weight-bold">
+											<span>Погрузочный номер:</span>
+											<span>${route.loadNumber}</span>
 										</div>
 									</c:when>
-									<c:otherwise>
-										<div class="card-body pt-2 pb-2">
-											<div class="dateUnloadInfo">
-												<span>Доставить до:</span>
-												<span>${route.dateUnloadPreviouslyStock} ${route.timeUnloadPreviouslyStock}</span>
-											</div>
-										</div>
-									</c:otherwise>
 								</c:choose>
-							</c:when>
-						</c:choose>
-						<c:choose>
-							<c:when test="${route.loadNumber != null}">
-								<div class="card-body pt-2 pb-2">
-									<div class="dateUnloadInfo font-weight-bold">
-										<span>Погрузочный номер:</span>
-										<span>${route.loadNumber}</span>
+								<div class="info-container pt-2">
+									<div class="route-info">
+										<strong>Дата загрузки:</strong>
+										<span class="text-muted">${route.simpleDateStart}</span>
+									</div>
+									<div class="route-info">
+										<strong>Время загрузки (планируемое):</strong>
+										<span class="text-muted">${route.timeLoadPreviously}</span>
+									</div>
+									<div class="route-info">
+										<strong>Груз:</strong>
+										<c:forEach var="RHS" items="${route.roteHasShop}" end="0">
+											<span class="text-muted">${RHS.cargo}</span>
+										</c:forEach>
+									</div>
+									<c:choose>
+										<c:when test="${route.startPrice != null}">
+											<div class="route-info">
+												<strong>Стоимость перевозки:</strong>
+												<span class="text-muted">${route.startPrice}</span>
+											</div>
+										</c:when>
+									</c:choose>
+									<div class="route-info comment-info">
+										<strong>Комментарии:</strong>
+										<span class="text-muted">${route.userComments}</span>
 									</div>
 								</div>
-							</c:when>
-						</c:choose>
-						<div class="card-body pt-2">
-							<p class="card-text d-flex flex-column">
-								<strong>Дата загрузки:</strong>
-								<span class="text-muted">${route.simpleDateStart}</span>
-							</p>
-							<p class="card-text d-flex flex-column">
-								<strong>Время загрузки (планируемое):</strong>
-								<span class="text-muted">${route.timeLoadPreviously}</span>
-							</p>
-							<p class="card-text d-flex flex-column">
-								<strong>Груз:</strong>
-								<c:forEach var="RHS" items="${route.roteHasShop}" end="0">
-									<span class="text-muted">${RHS.cargo}</span>
-								</c:forEach>
-							</p>
-							<c:choose>
-								<c:when test="${route.startPrice != null}">
-									<p class="card-text d-flex flex-column">
-										<strong>Стоимость перевозки:</strong>
-										<span class="text-muted">${route.startPrice}</span>
-									</p>
-								</c:when>
-							</c:choose>
-							<p class="card-text d-flex flex-column">
-								<strong>Комментарии:</strong>
-								<span class="text-muted">${route.userComments}</span>
-							</p>
-						</div>
-						<div class="card-body pt-2">
-							<p class="card-text d-flex flex-column">
-								<strong>Паллеты:</strong>
-								<span class="text-muted pall-content">${route.totalLoadPall} шт</span>
-							</p>
-							<p class="card-text d-flex flex-column">
-								<strong>Масса:</strong>
-								<span class="text-muted">${route.totalCargoWeight} кг</span>
-							</p>
-							<p class="card-text d-flex flex-column">
-								<strong>Тип прицепа:</strong>
-								<span class="text-muted">${route.typeTrailer}</span>
-							</p>
-							<p class="card-text d-flex flex-column">
-								<strong>Температура:</strong>
-								<span class="text-muted">${route.temperature}</span>
-							</p>
-							<p class="card-text d-flex flex-column">
-								<strong>Объем:</strong>
-								<c:forEach var="RHS" items="${route.roteHasShop}" end="0">
-									<span class="text-muted">${RHS.volume}</span>
-								</c:forEach>
-							</p>
-						</div>
-						<div class="card-body pt-0">
-							<p class="card-text">
-								<strong>Коды ТН ВЭД:</strong>
-								<span class="text-muted pall-content">${route.tnvd}</span>
-							</p>
+								<div class="info-container pt-2">
+									<div class="route-info">
+										<strong>Паллеты:</strong>
+										<span class="text-muted pall-content">${route.totalLoadPall} шт</span>
+									</div>
+									<div class="route-info">
+										<strong>Масса:</strong>
+										<span class="text-muted">${route.totalCargoWeight} кг</span>
+									</div>
+									<div class="route-info">
+										<strong>Тип прицепа:</strong>
+										<span class="text-muted">${route.typeTrailer}</span>
+									</div>
+									<div class="route-info">
+										<strong>Температура:</strong>
+										<span class="text-muted">${route.temperature}</span>
+									</div>
+									<div class="route-info">
+										<strong>Объем:</strong>
+										<c:forEach var="RHS" items="${route.roteHasShop}" end="0">
+											<span class="text-muted">${RHS.volume}</span>
+										</c:forEach>
+									</div>
+								</div>
+								<p class="route-info tnvd-info">
+									<strong>Коды ТН ВЭД:</strong>
+									<span class="text-muted pall-content">${route.tnvd}</span>
+								</p>
+							</div>
 						</div>
 						<div class="card-footer">
 							<label>
@@ -248,97 +242,91 @@
 							</p>
 						</div>
 						<div class="card-body pt-2 pb-2">
-							<h5 class="route-subtitle">Данные о заказе</h5>
-						</div>
-						<c:choose>
-							<c:when test="${route.dateUnloadPreviouslyStock != null}">
+							<div class="route-info-container">
+								<h5 class="route-subtitle">Данные о заказе</h5>
 								<c:choose>
-									<c:when test="${route.way == 'РБ'}">
-										<div class="card-body pt-2 pb-2">
-											<div class="dateUnloadInfo text-danger">
-												<span>Слот на выгрузку:</span>
-												<span>${route.dateUnloadPreviouslyStock} ${route.timeUnloadPreviouslyStock}</span>
-											</div>
+									<c:when test="${route.dateUnloadPreviouslyStock != null}">
+										<c:choose>
+											<c:when test="${route.way == 'РБ'}">
+												<div class="dateUnloadInfo text-danger">
+													<span>Слот на выгрузку:</span>
+													<span>${route.dateUnloadPreviouslyStock} ${route.timeUnloadPreviouslyStock}</span>
+												</div>
+											</c:when>
+											<c:otherwise>
+												<div class="dateUnloadInfo">
+													<span>Доставить до:</span>
+													<span>${route.dateUnloadPreviouslyStock} ${route.timeUnloadPreviouslyStock}</span>
+												</div>
+											</c:otherwise>
+										</c:choose>
+									</c:when>
+								</c:choose>
+								<c:choose>
+									<c:when test="${route.loadNumber != null}">
+										<div class="dateUnloadInfo font-weight-bold">
+											<span>Погрузочный номер:</span>
+											<span>${route.loadNumber}</span>
 										</div>
 									</c:when>
-									<c:otherwise>
-										<div class="card-body pt-2 pb-2">
-											<div class="dateUnloadInfo">
-												<span>Доставить до:</span>
-												<span>${route.dateUnloadPreviouslyStock} ${route.timeUnloadPreviouslyStock}</span>
-											</div>
-										</div>
-									</c:otherwise>
 								</c:choose>
-							</c:when>
-						</c:choose>
-						<c:choose>
-							<c:when test="${route.loadNumber != null}">
-								<div class="card-body pt-2 pb-2">
-									<div class="dateUnloadInfo font-weight-bold">
-										<span>Погрузочный номер:</span>
-										<span>${route.loadNumber}</span>
+								<div class="info-container pt-2">
+									<div class="route-info">
+										<strong>Дата загрузки:</strong>
+										<span class="text-muted">${route.simpleDateStart}</span>
+									</div>
+									<div class="route-info">
+										<strong>Время загрузки (планируемое):</strong>
+										<span class="text-muted">${route.timeLoadPreviously}</span>
+									</div>
+									<div class="route-info">
+										<strong>Груз:</strong>
+										<c:forEach var="RHS" items="${route.roteHasShop}" end="0">
+											<span class="text-muted">${RHS.cargo}</span>
+										</c:forEach>
+									</div>
+									<c:choose>
+										<c:when test="${route.startPrice != null}">
+											<div class="route-info">
+												<strong>Стоимость перевозки:</strong>
+												<span class="text-muted">${route.startPrice}</span>
+											</div>
+										</c:when>
+									</c:choose>
+									<div class="route-info comment-info">
+										<strong>Комментарии:</strong>
+										<span class="text-muted">${route.userComments}</span>
 									</div>
 								</div>
-							</c:when>
-						</c:choose>
-						<div class="card-body pt-2">
-							<p class="card-text d-flex flex-column">
-								<strong>Дата загрузки:</strong>
-								<span class="text-muted">${route.simpleDateStart}</span>
-							</p>
-							<p class="card-text d-flex flex-column">
-								<strong>Время загрузки (планируемое):</strong>
-								<span class="text-muted">${route.timeLoadPreviously}</span>
-							</p>
-							<p class="card-text d-flex flex-column">
-								<strong>Груз:</strong>
-								<c:forEach var="RHS" items="${route.roteHasShop}" end="0">
-									<span class="text-muted">${RHS.cargo}</span>
-								</c:forEach>
-							</p>
-							<c:choose>
-								<c:when test="${route.startPrice != null}">
-									<p class="card-text d-flex flex-column">
-										<strong>Стоимость перевозки:</strong>
-										<span class="text-muted">${route.startPrice} BYN</span>
-									</p>
-								</c:when>
-							</c:choose>
-							<p class="card-text d-flex flex-column">
-								<strong>Комментарии:</strong>
-								<span class="text-muted">${route.userComments}</span>
-							</p>
-						</div>
-						<div class="card-body pt-2">
-							<p class="card-text d-flex flex-column">
-								<strong>Паллеты:</strong>
-								<span class="text-muted pall-content">${route.totalLoadPall} шт</span>
-							</p>
-							<p class="card-text d-flex flex-column">
-								<strong>Масса:</strong>
-								<span class="text-muted">${route.totalCargoWeight} кг</span>
-							</p>
-							<p class="card-text d-flex flex-column">
-								<strong>Тип прицепа:</strong>
-								<span class="text-muted">${route.typeTrailer}</span>
-							</p>
-							<p class="card-text d-flex flex-column">
-								<strong>Температура:</strong>
-								<span class="text-muted">${route.temperature}</span>
-							</p>
-							<p class="card-text d-flex flex-column">
-								<strong>Объем:</strong>
-								<c:forEach var="RHS" items="${route.roteHasShop}" end="0">
-									<span class="text-muted">${RHS.volume}</span>
-								</c:forEach>
-							</p>
-						</div>
-						<div class="card-body pt-0">
-							<p class="card-text">
-								<strong>Коды ТН ВЭД:</strong>
-								<span class="text-muted pall-content">${route.tnvd}</span>
-							</p>
+								<div class="info-container pt-2">
+									<div class="route-info">
+										<strong>Паллеты:</strong>
+										<span class="text-muted pall-content">${route.totalLoadPall} шт</span>
+									</div>
+									<div class="route-info">
+										<strong>Масса:</strong>
+										<span class="text-muted">${route.totalCargoWeight} кг</span>
+									</div>
+									<div class="route-info">
+										<strong>Тип прицепа:</strong>
+										<span class="text-muted">${route.typeTrailer}</span>
+									</div>
+									<div class="route-info">
+										<strong>Температура:</strong>
+										<span class="text-muted">${route.temperature}</span>
+									</div>
+									<div class="route-info">
+										<strong>Объем:</strong>
+										<c:forEach var="RHS" items="${route.roteHasShop}" end="0">
+											<span class="text-muted">${RHS.volume}</span>
+										</c:forEach>
+									</div>
+								</div>
+								<p class="route-info tnvd-info">
+									<strong>Коды ТН ВЭД:</strong>
+									<span class="text-muted pall-content">${route.tnvd}</span>
+								</p>
+							</div>
 						</div>
 						<div class="card-footer">
 							<label>
@@ -415,93 +403,91 @@
 							<h3 class="route-title">Маршрут №${route.idRoute} ${route.routeDirection}</h3>
 						</div>
 						<div class="card-body pt-2 pb-2">
-							<h5 class="route-subtitle">Данные о заказе</h5>
-						</div>
-						<c:choose>
-							<c:when test="${route.dateUnloadPreviouslyStock != null}">
+							<div class="route-info-container">
+								<h5 class="route-subtitle">Данные о заказе</h5>
 								<c:choose>
-									<c:when test="${route.way == 'РБ'}">
-										<div class="card-body pt-2 pb-2">
-											<div class="dateUnloadInfo text-danger">
-												<span>Слот на выгрузку:</span>
-												<span>${route.dateUnloadPreviouslyStock} ${route.timeUnloadPreviouslyStock}</span>
-											</div>
+									<c:when test="${route.dateUnloadPreviouslyStock != null}">
+										<c:choose>
+											<c:when test="${route.way == 'РБ'}">
+												<div class="dateUnloadInfo text-danger">
+													<span>Слот на выгрузку:</span>
+													<span>${route.dateUnloadPreviouslyStock} ${route.timeUnloadPreviouslyStock}</span>
+												</div>
+											</c:when>
+											<c:otherwise>
+												<div class="dateUnloadInfo">
+													<span>Доставить до:</span>
+													<span>${route.dateUnloadPreviouslyStock} ${route.timeUnloadPreviouslyStock}</span>
+												</div>
+											</c:otherwise>
+										</c:choose>
+									</c:when>
+								</c:choose>
+								<c:choose>
+									<c:when test="${route.loadNumber != null}">
+										<div class="dateUnloadInfo font-weight-bold">
+											<span>Погрузочный номер:</span>
+											<span>${route.loadNumber}</span>
 										</div>
 									</c:when>
-									<c:otherwise>
-										<div class="card-body pt-2 pb-2">
-											<div class="dateUnloadInfo">
-												<span>Доставить до:</span>
-												<span>${route.dateUnloadPreviouslyStock} ${route.timeUnloadPreviouslyStock}</span>
-											</div>
-										</div>
-									</c:otherwise>
 								</c:choose>
-							</c:when>
-						</c:choose>
-						<c:choose>
-							<c:when test="${route.loadNumber != null}">
-								<div class="card-body pt-2 pb-2">
-									<div class="dateUnloadInfo font-weight-bold">
-										<span>Погрузочный номер:</span>
-										<span>${route.loadNumber}</span>
+								<div class="info-container pt-2">
+									<div class="route-info">
+										<strong>Дата загрузки:</strong>
+										<span class="text-muted">${route.simpleDateStart}</span>
+									</div>
+									<div class="route-info">
+										<strong>Время загрузки (планируемое):</strong>
+										<span class="text-muted">${route.timeLoadPreviously}</span>
+									</div>
+									<div class="route-info">
+										<strong>Груз:</strong>
+										<c:forEach var="RHS" items="${route.roteHasShop}" end="0">
+											<span class="text-muted">${RHS.cargo}</span>
+										</c:forEach>
+									</div>
+									<c:choose>
+										<c:when test="${route.startPrice != null}">
+											<div class="route-info">
+												<strong>Стоимость перевозки:</strong>
+												<span class="text-muted">${route.startPrice}</span>
+											</div>
+										</c:when>
+									</c:choose>
+									<div class="route-info comment-info">
+										<strong>Комментарии:</strong>
+										<span class="text-muted">${route.userComments}</span>
 									</div>
 								</div>
-							</c:when>
-						</c:choose>
-						<div class="card-body pt-2">
-							<p class="card-text d-flex flex-column">
-								<strong>Дата загрузки:</strong>
-								<span class="text-muted">${route.simpleDateStart}</span>
-							</p>
-							<p class="card-text d-flex flex-column">
-								<strong>Время загрузки (планируемое):</strong>
-								<span class="text-muted">${route.timeLoadPreviously}</span>
-							</p>
-							<p class="card-text d-flex flex-column">
-								<strong>Груз:</strong>
-								<c:forEach var="RHS" items="${route.roteHasShop}" end="0">
-									<span class="text-muted">${RHS.cargo}</span>
-								</c:forEach>
-							</p>
-							<p class="card-text d-flex flex-column">
-								<strong>Стоимость перевозки:</strong>
-								<span class="text-muted">${route.finishPrice} ${route.startCurrency}</span>
-							</p>
-							<p class="card-text d-flex flex-column">
-								<strong>Комментарии:</strong>
-								<span class="text-muted">${route.userComments}</span>
-							</p>
-						</div>
-						<div class="card-body pt-2">
-							<p class="card-text d-flex flex-column">
-								<strong>Паллеты:</strong>
-								<span class="text-muted pall-content">${route.totalLoadPall} шт</span>
-							</p>
-							<p class="card-text d-flex flex-column">
-								<strong>Масса:</strong>
-								<span class="text-muted">${route.totalCargoWeight} кг</span>
-							</p>
-							<p class="card-text d-flex flex-column">
-								<strong>Тип прицепа:</strong>
-								<span class="text-muted">${route.typeTrailer}</span>
-							</p>
-							<p class="card-text d-flex flex-column">
-								<strong>Температура:</strong>
-								<span class="text-muted">${route.temperature}</span>
-							</p>
-							<p class="card-text d-flex flex-column">
-								<strong>Объем:</strong>
-								<c:forEach var="RHS" items="${route.roteHasShop}" end="0">
-									<span class="text-muted">${RHS.volume}</span>
-								</c:forEach>
-							</p>
-						</div>
-						<div class="card-body pt-0">
-							<p class="card-text">
-								<strong>Коды ТН ВЭД:</strong>
-								<span class="text-muted pall-content">${route.tnvd}</span>
-							</p>
+								<div class="info-container pt-2">
+									<div class="route-info">
+										<strong>Паллеты:</strong>
+										<span class="text-muted pall-content">${route.totalLoadPall} шт</span>
+									</div>
+									<div class="route-info">
+										<strong>Масса:</strong>
+										<span class="text-muted">${route.totalCargoWeight} кг</span>
+									</div>
+									<div class="route-info">
+										<strong>Тип прицепа:</strong>
+										<span class="text-muted">${route.typeTrailer}</span>
+									</div>
+									<div class="route-info">
+										<strong>Температура:</strong>
+										<span class="text-muted">${route.temperature}</span>
+									</div>
+									<div class="route-info">
+										<strong>Объем:</strong>
+										<c:forEach var="RHS" items="${route.roteHasShop}" end="0">
+											<span class="text-muted">${RHS.volume}</span>
+										</c:forEach>
+									</div>
+								</div>
+								<p class="route-info tnvd-info">
+									<strong>Коды ТН ВЭД:</strong>
+									<span class="text-muted pall-content">${route.tnvd}</span>
+								</p>
+							</div>
 						</div>
 						<div class="card-footer">
 							<label>
@@ -720,93 +706,91 @@
 							<h3 class="route-title">Маршрут №${route.idRoute} ${route.routeDirection}</h3>
 						</div>
 						<div class="card-body pt-2 pb-2">
-							<h5 class="route-subtitle">Данные о заказе</h5>
-						</div>
-						<c:choose>
-							<c:when test="${route.dateUnloadPreviouslyStock != null}">
+							<div class="route-info-container">
+								<h5 class="route-subtitle">Данные о заказе</h5>
 								<c:choose>
-									<c:when test="${route.way == 'РБ'}">
-										<div class="card-body pt-2 pb-2">
-											<div class="dateUnloadInfo text-danger">
-												<span>Слот на выгрузку:</span>
-												<span>${route.dateUnloadPreviouslyStock} ${route.timeUnloadPreviouslyStock}</span>
-											</div>
+									<c:when test="${route.dateUnloadPreviouslyStock != null}">
+										<c:choose>
+											<c:when test="${route.way == 'РБ'}">
+												<div class="dateUnloadInfo text-danger">
+													<span>Слот на выгрузку:</span>
+													<span>${route.dateUnloadPreviouslyStock} ${route.timeUnloadPreviouslyStock}</span>
+												</div>
+											</c:when>
+											<c:otherwise>
+												<div class="dateUnloadInfo">
+													<span>Доставить до:</span>
+													<span>${route.dateUnloadPreviouslyStock} ${route.timeUnloadPreviouslyStock}</span>
+												</div>
+											</c:otherwise>
+										</c:choose>
+									</c:when>
+								</c:choose>
+								<c:choose>
+									<c:when test="${route.loadNumber != null}">
+										<div class="dateUnloadInfo font-weight-bold">
+											<span>Погрузочный номер:</span>
+											<span>${route.loadNumber}</span>
 										</div>
 									</c:when>
-									<c:otherwise>
-										<div class="card-body pt-2 pb-2">
-											<div class="dateUnloadInfo">
-												<span>Доставить до:</span>
-												<span>${route.dateUnloadPreviouslyStock} ${route.timeUnloadPreviouslyStock}</span>
-											</div>
-										</div>
-									</c:otherwise>
 								</c:choose>
-							</c:when>
-						</c:choose>
-						<c:choose>
-							<c:when test="${route.loadNumber != null}">
-								<div class="card-body pt-2 pb-2">
-									<div class="dateUnloadInfo font-weight-bold">
-										<span>Погрузочный номер:</span>
-										<span>${route.loadNumber}</span>
+								<div class="info-container pt-2">
+									<div class="route-info">
+										<strong>Дата загрузки:</strong>
+										<span class="text-muted">${route.simpleDateStart}</span>
+									</div>
+									<div class="route-info">
+										<strong>Время загрузки (планируемое):</strong>
+										<span class="text-muted">${route.timeLoadPreviously}</span>
+									</div>
+									<div class="route-info">
+										<strong>Груз:</strong>
+										<c:forEach var="RHS" items="${route.roteHasShop}" end="0">
+											<span class="text-muted">${RHS.cargo}</span>
+										</c:forEach>
+									</div>
+									<c:choose>
+										<c:when test="${route.startPrice != null}">
+											<div class="route-info">
+												<strong>Стоимость перевозки:</strong>
+												<span class="text-muted">${route.startPrice}</span>
+											</div>
+										</c:when>
+									</c:choose>
+									<div class="route-info comment-info">
+										<strong>Комментарии:</strong>
+										<span class="text-muted">${route.userComments}</span>
 									</div>
 								</div>
-							</c:when>
-						</c:choose>
-						<div class="card-body pt-2">
-							<p class="card-text d-flex flex-column">
-								<strong>Дата загрузки:</strong>
-								<span class="text-muted">${route.simpleDateStart}</span>
-							</p>
-							<p class="card-text d-flex flex-column">
-								<strong>Время загрузки (планируемое):</strong>
-								<span class="text-muted">${route.timeLoadPreviously}</span>
-							</p>
-							<p class="card-text d-flex flex-column">
-								<strong>Груз:</strong>
-								<c:forEach var="RHS" items="${route.roteHasShop}" end="0">
-									<span class="text-muted">${RHS.cargo}</span>
-								</c:forEach>
-							</p>
-							<p class="card-text d-flex flex-column">
-								<strong>Стоимость перевозки:</strong>
-								<span class="text-muted">${route.finishPrice} ${route.startCurrency}</span>
-							</p>
-							<p class="card-text d-flex flex-column">
-								<strong>Комментарии:</strong>
-								<span class="text-muted">${route.userComments}</span>
-							</p>
-						</div>
-						<div class="card-body pt-2">
-							<p class="card-text d-flex flex-column">
-								<strong>Паллеты:</strong>
-								<span class="text-muted pall-content">${route.totalLoadPall} шт</span>
-							</p>
-							<p class="card-text d-flex flex-column">
-								<strong>Масса:</strong>
-								<span class="text-muted">${route.totalCargoWeight} кг</span>
-							</p>
-							<p class="card-text d-flex flex-column">
-								<strong>Тип прицепа:</strong>
-								<span class="text-muted">${route.typeTrailer}</span>
-							</p>
-							<p class="card-text d-flex flex-column">
-								<strong>Температура:</strong>
-								<span class="text-muted">${route.temperature}</span>
-							</p>
-							<p class="card-text d-flex flex-column">
-								<strong>Объем:</strong>
-								<c:forEach var="RHS" items="${route.roteHasShop}" end="0">
-									<span class="text-muted">${RHS.volume}</span>
-								</c:forEach>
-							</p>
-						</div>
-						<div class="card-body pt-0">
-							<p class="card-text">
-								<strong>Коды ТН ВЭД:</strong>
-								<span class="text-muted pall-content">${route.tnvd}</span>
-							</p>
+								<div class="info-container pt-2">
+									<div class="route-info">
+										<strong>Паллеты:</strong>
+										<span class="text-muted pall-content">${route.totalLoadPall} шт</span>
+									</div>
+									<div class="route-info">
+										<strong>Масса:</strong>
+										<span class="text-muted">${route.totalCargoWeight} кг</span>
+									</div>
+									<div class="route-info">
+										<strong>Тип прицепа:</strong>
+										<span class="text-muted">${route.typeTrailer}</span>
+									</div>
+									<div class="route-info">
+										<strong>Температура:</strong>
+										<span class="text-muted">${route.temperature}</span>
+									</div>
+									<div class="route-info">
+										<strong>Объем:</strong>
+										<c:forEach var="RHS" items="${route.roteHasShop}" end="0">
+											<span class="text-muted">${RHS.volume}</span>
+										</c:forEach>
+									</div>
+								</div>
+								<p class="route-info tnvd-info">
+									<strong>Коды ТН ВЭД:</strong>
+									<span class="text-muted pall-content">${route.tnvd}</span>
+								</p>
+							</div>
 						</div>
 						<div class="card-footer">
 							<label>

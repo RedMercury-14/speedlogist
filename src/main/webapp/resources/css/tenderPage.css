@@ -24,6 +24,7 @@
 }
 .my-container {
     margin-bottom: 120px;
+    font-family: "Open Sans", sans-serif;
 }
 .route-card.card {
     background-color: #f9f9f9;
@@ -36,6 +37,7 @@ p.card-text {
 .route-title {
     text-align: center;
     text-wrap: balance;
+    font-size: 1.75rem;
 }
 .route-subtitle {
     display: flex;
@@ -74,10 +76,21 @@ p.card-text {
     padding-left: 5px;
     padding-right: 5px;
 }
-.card-body {
+.route-info-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.info-container {
     display: flex;
     justify-content: space-between;
     gap: 10px;
+}
+.route-info {
+    display: flex;
+    flex-direction: column;
+    color: #8c8c8c;
+    line-height: 1.5;
 }
 .card-footer table {
     font-family: "Open Sans", sans-serif;
@@ -92,9 +105,27 @@ footer.to-bottom {
     position: fixed;
 }
 @media (max-width: 1023px) {
-    .card-body {
+    .info-container {
         flex-direction: column;
         padding-bottom: 5px !important;
+    }
+    .route-info {
+        display: flex;
+        flex-direction: row;
+        gap: 5px;
+    }
+    .comment-info, .tnvd-info {
+        flex-direction: column;
+        gap: 0;
+    }
+    .route-title {
+        text-align: center;
+        text-wrap: balance;
+        font-size: 1.25rem;
+    }
+    footer.to-bottom {
+        margin-top: 60px;
+        position: relative;
     }
 }
 @media (max-width: 1100px) {
@@ -106,4 +137,5 @@ footer.to-bottom {
     .table-scroll {
         overflow: scroll;
     }
+    
 }

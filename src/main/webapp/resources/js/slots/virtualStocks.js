@@ -71,7 +71,7 @@ export const stocks = [
 		workingHoursEnd: '20:00',
 		shiftChange: [],
 		maxPall: {
-			externalMovement: 240,
+			externalMovement: 120,
 			internalMovement: 0,
 		},
 		weekends: [],

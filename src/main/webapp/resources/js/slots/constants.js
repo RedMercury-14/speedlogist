@@ -23,7 +23,7 @@ export const userMessages = {
 	orderNotForSlot: 'Данный заказ не нуждается в слотах - проверьте склад в Маркете'
 }
 
-export const slotStocks = ['1700','1200','1230','1250','1100']
+export const slotStocks = ['1700','1200','1230','1214','1250','1100']
 
 export const eventColors = {
 	disabled: '#65979f',

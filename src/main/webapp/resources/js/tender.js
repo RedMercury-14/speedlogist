@@ -43,6 +43,7 @@ const columnDefsForMobile = [
 		},
 		getQuickFilterText: params => params.value
 	},
+	{ headerName: "Направление", field: "way", cellClass: 'px-1 font-weight-bold text-center', minWidth: 63, },
 	{
 		headerName: "Загрузка", field: 'loadDateToView',
 		cellClass: 'px-0 text-center', minWidth: 80,
@@ -53,17 +54,16 @@ const columnDefsForMobile = [
 		cellClass: 'px-1 text-center', minWidth: 80,
 		comparator: dateComparator,
 	},
-	{ headerName: "Направление", field: "way", cellClass: 'px-1 font-weight-bold text-center', minWidth: 63, },
 	{ 
 		headerName: "Предложенная цена", field: "price",
 		cellClass: 'px-1 font-weight-bold text-center',
-		minWidth: 60,
+		minWidth: 90,
 		wrapText: true, autoHeight: true,
 	},
 	{ 
 		headerName: "Ваше предложение", field: "myOffer",
 		cellClass: 'px-1 font-weight-bold text-center',
-		minWidth: 60,
+		minWidth: 90,
 		wrapText: true, autoHeight: true,
 	}
 ]
@@ -71,10 +71,7 @@ const columnDefsForPC = [
 	{ 
 		headerName: "Название тендера", field: "routeDirection",
 		flex: 6, minWidth: 260,
-		cellRenderer: 'agGroupCellRenderer',
-		cellRendererParams: {
-			innerRenderer: routeLinkRenderer,
-		},
+		cellRenderer: routeLinkRenderer,
 		getQuickFilterText: params => params.value
 	},
 	{
@@ -106,9 +103,45 @@ const columnDefsForPC = [
 
 ]
 const columnDefs = isMobileView ? columnDefsForMobile : columnDefsForPC
+const detailCellRendererParams = {
+	detailGridOptions: {
+		columnDefs: [
+			{ headerName: "Дата загрузки", field: 'loadDateTimeToView', flex: 2, minWidth: 85, },
+			{ headerName: "Дата выгрузки", field: 'unloadDateTimeToView', flex: 2, minWidth: 85, },
+			{
+				headerName: "Машина", field: 'carInfo',
+				flex: 2, minWidth: 160,
+			},
+			{
+				headerName: "Груз", field: 'cargoInfo',
+				wrapText: true, autoHeight: true,
+				flex: 2, minWidth: 160,
+			},
+		],
+		defaultColDef: {
+			cellClass: 'px-1',
+			wrapText: true,
+			autoHeight: true,
+			resizable: true,
+			flex: 1,
+			suppressMenu: true,
+			wrapHeaderText: true,
+			autoHeaderHeight: true,
+		},
+		suppressContextMenu: true,
+		suppressDragLeaveHidesColumns: true,
+		enableBrowserTooltips: true,
+		localeText: AG_GRID_LOCALE_RU,
+	},
+	getDetailRowData: (params) => {
+		params.successCallback([params.data]);
+	},
+}
 const gridOptions = {
 	columnDefs: columnDefs,
 	rowClassRules: rowClassRules,
+	headerHeight: 35,
+	floatingFiltersHeight: 35,
 	defaultColDef: {
 		headerClass: 'px-2',
 		cellClass: 'px-2',
@@ -123,44 +156,14 @@ const gridOptions = {
 	onFilterChanged: debouncedSaveFilterState,
 	suppressContextMenu: true,
 	suppressRowClickSelection: true,
+	suppressRowHoverHighlight: isMobileView,
+	suppressMovableColumns: true,
 	suppressDragLeaveHidesColumns: true,
 	enableBrowserTooltips: true,
 	localeText: AG_GRID_LOCALE_RU,
 	masterDetail: isMobileView,
 	detailRowHeight: 230,
-	detailCellRendererParams: {
-		detailGridOptions: {
-			columnDefs: [
-				{ headerName: "Дата загрузки", field: 'loadDateTimeToView', flex: 2, minWidth: 85, },
-				{
-					headerName: "Машина", field: 'carInfo',
-					flex: 2, minWidth: 160,
-				},
-				{
-					headerName: "Груз", field: 'cargoInfo',
-					wrapText: true, autoHeight: true,
-					flex: 2, minWidth: 160,
-				},
-			],
-			defaultColDef: {
-				cellClass: 'px-1',
-				wrapText: true,
-				autoHeight: true,
-				resizable: true,
-				flex: 1,
-				suppressMenu: true,
-				wrapHeaderText: true,
-				autoHeaderHeight: true,
-			},
-			suppressContextMenu: true,
-			suppressDragLeaveHidesColumns: true,
-			enableBrowserTooltips: true,
-			localeText: AG_GRID_LOCALE_RU,
-		},
-		getDetailRowData: (params) => {
-			params.successCallback([params.data]);
-		},
-	}
+	detailCellRendererParams: detailCellRendererParams
 }
 
 window.onload = async () => {

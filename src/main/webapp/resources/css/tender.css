@@ -76,7 +76,7 @@ footer.to-bottom {
 }
 @media (max-width: 1023px) {
     #myGrid {
-        height: calc(100vh - 220px);
+        height: calc(100vh - 120px);
     }
 }
 @media (max-width: 767px) {

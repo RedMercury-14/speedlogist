@@ -92,9 +92,21 @@ public class YardManagementRestController {
 		return response;		
 	}
 	
-	@GetMapping("/SetOrderStatus/{marketNum}&{status}&{timeStart}&{timeEnd}&{pall}&{weight}")
+	/**
+	 * Метод который принимает информацию о статусе авто во дворе
+	 * @param request
+	 * @param marketNum
+	 * @param status
+	 * @param timeStart
+	 * @param timeEnd
+	 * @param pall
+	 * @param weight
+	 * @return
+	 * @throws ParseException
+	 */
+	@GetMapping("/SetOrderStatus/{marketNum}&{status}&{timeStart}&{timeEnd}&{pall}&{weight}&{timeArrival}&{timeRegistration}")
 	public Map<String, String> getAddressForImport(HttpServletRequest request, @PathVariable String marketNum, @PathVariable String status, 
-			@PathVariable String timeStart, @PathVariable String timeEnd, @PathVariable String pall, @PathVariable String weight) throws ParseException {
+			@PathVariable String timeStart, @PathVariable String timeEnd, @PathVariable String pall, @PathVariable String weight, @PathVariable String timeArrival, @PathVariable String timeRegistration) throws ParseException {
 		Map<String, String> response = new HashMap<String, String>();
 		String headerFlag = request.getHeader("Flag");
 		
@@ -122,6 +134,8 @@ public class YardManagementRestController {
 		order.setUnloadFinishYard(timeEnd != null && !timeEnd.equals("null") ? new Timestamp(Long.parseLong(timeEnd)) : null);
 		order.setPallFactYard(pall != null && !pall.equals("null")? Integer.parseInt(pall) : null);
 		order.setWeightFactYard(weight != null && !weight.equals("null") ? Double.parseDouble(weight) : null);
+		order.setArrivalFactYard(timeArrival != null && !timeArrival.equals("null") ? new Timestamp(Long.parseLong(timeArrival)) : null);
+		order.setRegistrationFactYard(timeRegistration != null && !timeRegistration.equals("null") ? new Timestamp(Long.parseLong(timeRegistration)) : null);
 		orderService.updateOrder(order);
 		//тправляем сообщение в WS
 		Message message = new Message("yard", null, "200", order.toJsonForYard(), idOrder.toString(), "changeStatusYard");

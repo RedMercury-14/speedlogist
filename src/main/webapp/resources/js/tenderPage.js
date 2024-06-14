@@ -29,26 +29,26 @@ function cancelCost() {
 
 
 };
-try {
-	document.querySelector('.agreeinternational').addEventListener("mousedown", (event) => {
-		if (parseInt(document.querySelector('input[name=cost]').value) > 0) {
-			if (document.querySelector('#startPriceChoice') != null) {
-				if (parseInt(document.querySelector('.lastCost').innerHTML) > parseInt(document.querySelector('input[name=cost]').value)) {
-					sendCost();
-				} else {
-					alert('Недопустимое цена! Ваша цена должна быть меньше последней предложенной');
-				}
-			} else {
-				sendCost();
-			}
-		}
-	})
-} catch (e) { };
-try {
-	document.querySelector('.notagreeinternational').addEventListener("mousedown", (event) => {
-		cancelCost();
-	})
-} catch (e) { };
+// try {
+// 	document.querySelector('.agreeinternational').addEventListener("mousedown", (event) => {
+// 		if (parseInt(document.querySelector('input[name=cost]').value) > 0) {
+// 			if (document.querySelector('#startPriceChoice') != null) {
+// 				if (parseInt(document.querySelector('.lastCost').innerHTML) > parseInt(document.querySelector('input[name=cost]').value)) {
+// 					sendCost();
+// 				} else {
+// 					alert('Недопустимое цена! Ваша цена должна быть меньше последней предложенной');
+// 				}
+// 			} else {
+// 				sendCost();
+// 			}
+// 		}
+// 	})
+// } catch (e) { };
+// try {
+// 	document.querySelector('.notagreeinternational').addEventListener("mousedown", (event) => {
+// 		cancelCost();
+// 	})
+// } catch (e) { };
 
 function onOpenSock() {
 };
@@ -135,11 +135,43 @@ buttonRegionalAgree && buttonRegionalAgree.addEventListener('mousedown', ()=>{
 	})
 })
 
+const tenderOfferForm = document.querySelector('#tenderOfferForm')
+tenderOfferForm.addEventListener('submit', (e)=>{
+	e.preventDefault()
+
+	const submitBtn = e.target.querySelector('input[type=submit]')
+	const submitBtnName = submitBtn.name
+
+	// кнопка Поддержать цену
+	if (submitBtnName === 'agree') {
+		if (parseInt(document.querySelector('input[name=cost]').value) > 0) {
+			if (document.querySelector('#startPriceChoice') != null) {
+				if (parseInt(document.querySelector('.lastCost').innerHTML) > parseInt(document.querySelector('input[name=cost]').value)) {
+					sendCost();
+					backToTender()
+				} else {
+					alert('Недопустимое цена! Ваша цена должна быть меньше последней предложенной');
+				}
+			} else {
+				sendCost();
+				backToTender()
+			}
+		}
+	}
+
+	// кнопка Отменить
+	if (submitBtnName === 'notagree') {
+		cancelCost()
+		backToTender()
+	}
+})
+
+function backToTender() {
+	setTimeout(() => {
+		window.location.href = '../tender'
+	}, 300);
+}
+
 function isInteger(num) {
 	return (num ^ 0) === num;
 }
-
-	console.log(device.windows());
-	console.log(device.mobile());
-	console.log(device.ios());
-	console.log(device.android());

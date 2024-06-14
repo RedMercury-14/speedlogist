@@ -138,7 +138,7 @@ export const store = {
 		const currentStockId = this._state.currentStock.id
 		// для 1200 склада видны поставки на 1200 и 1230 склады
 		const filterCondition = (stockId) => currentStockId === '1200'
-			? stockId === currentStockId || stockId === '1230'
+			? stockId === currentStockId || stockId === '1230' || stockId === '1214'
 			: stockId === currentStockId
 		return this._state.orders.filter(order => {
 			const stockId = order.idRamp ? String(order.idRamp).slice(0, -2) : order.numStockDelivery
@@ -183,6 +183,8 @@ export const store = {
 				unloadStartYard: orderData.unloadStartYard !== 'null' ? orderData.unloadStartYard : null,
 				weightFactYard: orderData.weightFactYard !== 'null' ? orderData.weightFactYard : null,
 				pallFactYard: orderData.pallFactYard !== 'null' ? orderData.pallFactYard : null,
+				arrivalFactYard: orderData.arrivalFactYard !== 'null' ? orderData.arrivalFactYard : null,
+				registrationFactYard: orderData.registrationFactYard !== 'null' ? orderData.registrationFactYard : null,
 			}
 		}
 		return this._state.orders[index]

@@ -207,6 +207,12 @@ public class Order {
 	@Column(name = "weight_fact_yard")
 	private Double weightFactYard;
 	
+	@Column(name = "arrival_fact_yard")
+	private Timestamp arrivalFactYard;
+	
+	@Column(name = "registration_fact_yard")
+	private Timestamp registrationFactYard;
+	
 	@Transient
 	private List<Address> addressesSort;
 	
@@ -665,6 +671,20 @@ public class Order {
 	public void setMailInfo(String mailInfo) {
 		this.mailInfo = mailInfo;
 	}
+	
+	
+	public Timestamp getArrivalFactYard() {
+		return arrivalFactYard;
+	}
+	public void setArrivalFactYard(Timestamp arrivalFactYard) {
+		this.arrivalFactYard = arrivalFactYard;
+	}
+	public Timestamp getRegistrationFactYard() {
+		return registrationFactYard;
+	}
+	public void setRegistrationFactYard(Timestamp registrationFactYard) {
+		this.registrationFactYard = registrationFactYard;
+	}
 	@Override
 	public int hashCode() {
 		return Objects.hash(idOrder);
@@ -696,7 +716,7 @@ public class Order {
 	}
 	
 	public String toJsonForYard() {
-		return "{\"idOrder\":\"" + idOrder + "\", \"control\":\"" + control + "\", \"comment\":\"" + comment
+		return "{\"idOrder\":\"" + idOrder + "\", \"control\":\"" + control
 				+ "\", \"status\":\"" + status + "\", \"manager\":\"" + manager + "\", \"logist\":\"" + logist
 				+ "\", \"marketNumber\":\"" + marketNumber + "\", \"onloadWindowDate\":\"" + onloadWindowDate
 				+ "\", \"onloadWindowTime\":\"" + onloadWindowTime + "\", \"loadNumber\":\"" + loadNumber
@@ -705,6 +725,7 @@ public class Order {
 				+ "\", \"needUnloadPoint\":\"" + needUnloadPoint + "\", \"idRamp\":\"" + idRamp
 				+ "\", \"timeDelivery\":\"" + timeDelivery + "\", \"timeUnload\":\"" + timeUnload
 				+ "\", \"loginManager\":\"" + loginManager + "\", \"statusYard\":\"" + statusYard
+				+ "\", \"arrivalFactYard\":\"" + arrivalFactYard + "\", \"registrationFactYard\":\"" + registrationFactYard
 				+ "\", \"unloadStartYard\":\"" + unloadStartYard + "\", \"unloadFinishYard\":\"" + unloadFinishYard
 				+ "\", \"pallFactYard\":\"" + pallFactYard + "\", \"weightFactYard\":\"" + weightFactYard + "\"}";
 	}

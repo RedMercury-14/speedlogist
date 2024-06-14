@@ -183,6 +183,8 @@ export const store = {
 				unloadStartYard: orderData.unloadStartYard !== 'null' ? orderData.unloadStartYard : null,
 				weightFactYard: orderData.weightFactYard !== 'null' ? orderData.weightFactYard : null,
 				pallFactYard: orderData.pallFactYard !== 'null' ? orderData.pallFactYard : null,
+				arrivalFactYard: orderData.arrivalFactYard !== 'null' ? orderData.arrivalFactYard : null,
+				registrationFactYard: orderData.registrationFactYard !== 'null' ? orderData.registrationFactYard : null,
 			}
 		}
 		return this._state.orders[index]

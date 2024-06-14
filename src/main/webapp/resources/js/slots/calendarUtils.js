@@ -202,6 +202,8 @@ function createEventInfoHTML(fcEvent) {
 function createYardInfoHTML(fcEvent) {
 	const order = fcEvent.extendedProps.data
 	const statusYard = getSlotStatusYard(order.statusYard)
+	const arrivalFactYard = order.arrivalFactYard ? convertToDayMonthTime(order.arrivalFactYard) : ''
+	const registrationFactYard = order.registrationFactYard ? convertToDayMonthTime(order.registrationFactYard) : ''
 	const unloadStartYard = order.unloadStartYard ? convertToDayMonthTime(order.unloadStartYard) : ''
 	const unloadFinishYard = order.unloadFinishYard ? convertToDayMonthTime(order.unloadFinishYard) : ''
 	const pallFactYard = order.pallFactYard ? order.pallFactYard : ''
@@ -212,6 +214,8 @@ function createYardInfoHTML(fcEvent) {
 			<p class="mb-1 font-weight-bold">Статус во Дворе: ${statusYard}</p>
 		</div>
 		<div class="event-info__marketNumber">Номер из Маркета: ${order.marketNumber}</div>
+		<div class="event-info__arrivalFactYard">Прибытие на склад: ${arrivalFactYard}</div>
+		<div class="event-info__registrationFactYard">Регистрация: ${registrationFactYard}</div>
 		<div class="event-info__unloadStartYard">Начало выгрузки (факт): ${unloadStartYard}</div>
 		<div class="event-info__unloadFinishYard">Конец выгрузки (факт): ${unloadFinishYard}</div>
 		<div class="event-info__pallFactYard">Зарегистрировано паллет: ${pallFactYard}</div>

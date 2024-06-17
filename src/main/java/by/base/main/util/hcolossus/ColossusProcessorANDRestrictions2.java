@@ -14,8 +14,6 @@ import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.mysql.cj.x.protobuf.MysqlxCrud.Collection;
 
 import by.base.main.model.Shop;
@@ -105,11 +103,10 @@ public class ColossusProcessorANDRestrictions2 {
 	 *                       * noFullLoad - подбор машины так, чтобы не полностью
 	 *                       загружать ее
 	 * @return
-	 * @throws JsonProcessingException 
-	 * @throws JsonMappingException 
+	 * @throws Exception 
 	 */
 	public Solution run(JSONObject jsonMainObject, List<Integer> shopList, List<Integer> pallHasShops, List<Integer> tonnageHasShops, Integer stock,
-			Double koeff, String algoritm) throws JsonMappingException, JsonProcessingException {
+			Double koeff, String algoritm) throws Exception {
 		if(tonnageHasShops == null) {
 			System.err.println("Используется старый метод! Нужно использовать /map/myoptimization3");
 			return null;
@@ -287,7 +284,7 @@ public class ColossusProcessorANDRestrictions2 {
 					}
 //					System.out.println("-----> "+ firstShop);
 					if(firstShop.getNeedPall() >= trucksBeforeRestr.get(0).getPall()) {//логика для разбиений магазинов когда паллет изначально больше!
-						double oneWidthPall = (double) (firstShop.getWeight()/firstShop.getNeedPall());
+						double oneWidthPall = Double.valueOf(firstShop.getWeight())/Double.valueOf(firstShop.getNeedPall());
 						double widthNewShop = oneWidthPall*trucksBeforeRestr.get(0).getPall();
 						if (firstShop.getNeedPall() == trucksBeforeRestr.get(0).getPall()) { 
 							if(firstShop.getWeight() <= trucksBeforeRestr.get(0).getWeigth()) {
@@ -340,6 +337,8 @@ public class ColossusProcessorANDRestrictions2 {
 								Vehicle targetTruck = trucksBeforeRestr.remove(0);
 								trucks.remove(targetTruck);
 								targetTruck.setTargetPall(targetTruck.getPall()); // загружаем машину полностью
+								Double finalWeigth = oneWidthPall * targetTruck.getTargetPall();
+								targetTruck.setTargetWeigth(finalWeigth.intValue());
 								Integer newNeedPallForShop = firstShop.getNeedPall() - targetTruck.getPall();
 								Shop newShopHasPall = new Shop(firstShop.getNumshop(), firstShop.getAddress(), firstShop.getLat(),
 										firstShop.getLng(), firstShop.getLength(), firstShop.getWidth(), firstShop.getHeight(), firstShop.getMaxPall());
@@ -410,7 +409,7 @@ public class ColossusProcessorANDRestrictions2 {
 							}
 						}
 					}else { // тут мы знаем что паллет меньше. Далее проверям по весу
-						double oneWidthPall = (double) (firstShop.getWeight()/firstShop.getNeedPall());
+						double oneWidthPall = Double.valueOf(firstShop.getWeight())/Double.valueOf(firstShop.getNeedPall());
 						double widthNewShop = oneWidthPall*trucksBeforeRestr.get(0).getPall();
 						if(firstShop.getWeight() <= trucksBeforeRestr.get(0).getWeigth()) {
 							System.err.println("Распределяем магазин БЕЗ ограничений по весу, при том что паллет МЕНЬШЕ чем может поместиться в одну машину, после идеальных маршрутов (доп идеальные)!");
@@ -1286,9 +1285,13 @@ public class ColossusProcessorANDRestrictions2 {
 	/**
 	 * Блок, отвечающий за замену машины, когда маршрут окончательно построен. Должен быть всегда самым последним!
 	 * @param vehicleWayVirtual
+	 * @throws Exception 
 	 */
-	private void changeTruckHasSmall(VehicleWay vehicleWayVirtual, Shop targetStock) {		
+	private void changeTruckHasSmall(VehicleWay vehicleWayVirtual, Shop targetStock) throws Exception {		
 		System.out.println("-->>> changeTruckHasSmall START : " + vehicleWayVirtual);
+		if(vehicleWayVirtual.getVehicle().getTargetWeigth() == null) {
+			throw new Exception();
+		}
 		if (!vehicleWayVirtual.getVehicle().isFull()) {
 			// проверяем, есть ли, гипотетически меньшая машина, для того чтобы сохранить
 			// большую
@@ -1349,19 +1352,22 @@ public class ColossusProcessorANDRestrictions2 {
 				}
 				if (e.getValue().getNeedPall() <= vehicleWayVirtual.getFreePallInVehicle()) {
 					if (e.getValue().getNumshop() != lastShop.getNumshop() && !shopsForDelite.contains(e.getValue())) {
-						processWay.remove(size - 1);
-						processWay.add(e.getValue());
-						processWay.add(targetStock);
-						Vehicle truck = vehicleWayVirtual.getVehicle();
-						truck.setTargetPall(calcPallHashHsop(processWay, targetStock));
-						truck.setTargetWeigth(truck.getTargetWeigth() + e.getValue().getWeight());
-						vehicleWayVirtual.setVehicle(truck);
-						vehicleWayVirtual.setWay(processWay);			
-						shopsForDelite.add(e.getValue());
-						shopsForOptimization.remove(e.getValue());
-						size = processWay.size();
-						System.err.println(	"~~~~~~~~~~~~~~~~~ БЛОК догруза машины по последней точке СРАБОТАЛ ~~~~~~~~~~~~~~~~~~~");
-//						break;
+						if(e.getValue().getWeight() < vehicleWayVirtual.getFreeWeigthInVehicle()) {
+							processWay.remove(size - 1);
+							processWay.add(e.getValue());
+							processWay.add(targetStock);
+							Vehicle truck = vehicleWayVirtual.getVehicle();
+							truck.setTargetPall(calcPallHashHsop(processWay, targetStock));
+							truck.setTargetWeigth(truck.getTargetWeigth() + e.getValue().getWeight());
+							vehicleWayVirtual.setVehicle(truck);
+							vehicleWayVirtual.setWay(processWay);			
+							shopsForDelite.add(e.getValue());
+							shopsForOptimization.remove(e.getValue());
+							size = processWay.size();
+							System.err.println(	"~~~~~~~~~~~~~~~~~ БЛОК догруза машины по последней точке СРАБОТАЛ ~~~~~~~~~~~~~~~~~~~");
+//							break;
+						}
+						
 					}
 				}
 			}
@@ -1458,8 +1464,9 @@ public class ColossusProcessorANDRestrictions2 {
 	 * ПОСЛЕ ЭТОГО МЕТОДА ВСЕГДА ДОЛЖНА БЫТЬ КОМАНДА break;
 	 * @param shop
 	 * @param targetStock
+	 * @throws Exception 
 	 */
-	private void createIdealWay(Shop shop, Shop targetStock) {
+	private void createIdealWay(Shop shop, Shop targetStock) throws Exception {
 		Integer shopPall = shop.getNeedPall();
 		Integer shopWeight = shop.getWeight();
 		Integer maxPallTruck = trucks.get(0).getPall();
@@ -1580,7 +1587,7 @@ public class ColossusProcessorANDRestrictions2 {
 		}
 	}
 	
-	private void createIdealWayAndPallRestriction (Shop shop, Shop targetStock) {
+	private void createIdealWayAndPallRestriction (Shop shop, Shop targetStock) throws Exception {
 		Integer shopPall = shop.getNeedPall();
 		Integer shopWeight = shop.getWeight();
 		Integer maxPallTruck = trucks.get(0).getPall();

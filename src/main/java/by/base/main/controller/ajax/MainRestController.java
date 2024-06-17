@@ -64,8 +64,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.google.gson.Gson;
 import com.google.j2objc.annotations.AutoreleasePool;
 import com.graphhopper.GHRequest;
@@ -1156,7 +1154,7 @@ public class MainRestController {
 	}
 	
 	@PostMapping("/map/myoptimization3")
-	public Solution myOptimization3(@RequestBody String str) throws ParseException, JsonMappingException, JsonProcessingException {
+	public Solution myOptimization3(@RequestBody String str) throws Exception {
 		Double maxKoef = 1.2;
 		JSONParser parser = new JSONParser();
 		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
@@ -1788,7 +1786,7 @@ public class MainRestController {
 	private LogicAnalyzer logicAnalyzer;
 	
 	@PostMapping("/map/myoptimization2")
-	public Solution myOptimization2(@RequestBody String str) throws ParseException, JsonMappingException, JsonProcessingException {
+	public Solution myOptimization2(@RequestBody String str) throws Exception {
 		Double maxKoef = 2.0;
 		Map<String, String> response = new HashMap<String, String>();
 		JSONParser parser = new JSONParser();
@@ -1947,7 +1945,7 @@ public class MainRestController {
 	}
 
 	@PostMapping("/map/myoptimization")
-	public Solution myOptimization(@RequestBody String str) throws ParseException, JsonMappingException, JsonProcessingException {
+	public Solution myOptimization(@RequestBody String str) throws Exception {
 		Map<String, String> response = new HashMap<String, String>();
 		JSONParser parser = new JSONParser();
 		JSONObject jsonMainObject = (JSONObject) parser.parse(str);

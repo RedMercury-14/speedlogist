@@ -48,6 +48,8 @@ public class VehicleWay {
 
 	private Integer freePallInVehicle = null;
 	
+	private Integer freeWeigthInVehicle = null;
+	
 	private Double totalRun;
 	
 	private Integer summPall;
@@ -199,6 +201,27 @@ public class VehicleWay {
 			return freePallInVehicle;
 		}
 	}
+	
+	/**
+	 * ВОзвращает свободный вес в машине на этом маршруте
+	 * @return
+	 */
+	public Integer getFreeWeigthInVehicle() {
+		if(freeWeigthInVehicle == null) {
+			return vehicle.getFreeWeigth();
+		}else {			
+			return freeWeigthInVehicle;
+		}
+	}
+	
+	/**
+	 * Задаёт свободный вес в машине на этом маршруте
+	 * @param freePallInVehicle
+	 */
+	public void setFreeWeigthInVehicle(Integer freeWeigthInVehicle) {
+		this.freeWeigthInVehicle = freeWeigthInVehicle;
+	}
+	
 
 	/**
 	 * Задаёт свободное место в машине на этом маршруте

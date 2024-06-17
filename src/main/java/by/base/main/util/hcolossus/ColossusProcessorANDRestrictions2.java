@@ -410,7 +410,6 @@ public class ColossusProcessorANDRestrictions2 {
 							}
 						}
 					}else { // тут мы знаем что паллет меньше. Далее проверям по весу
-						System.out.println(firstShop.toAllString());
 						double oneWidthPall = (double) (firstShop.getWeight()/firstShop.getNeedPall());
 						double widthNewShop = oneWidthPall*trucksBeforeRestr.get(0).getPall();
 						if(firstShop.getWeight() <= trucksBeforeRestr.get(0).getWeigth()) {
@@ -1355,9 +1354,9 @@ public class ColossusProcessorANDRestrictions2 {
 						processWay.add(targetStock);
 						Vehicle truck = vehicleWayVirtual.getVehicle();
 						truck.setTargetPall(calcPallHashHsop(processWay, targetStock));
-						truck.setTargetWeigth(truck.getTargetWeigth() + e.getValue().getNeedPall());
+						truck.setTargetWeigth(truck.getTargetWeigth() + e.getValue().getWeight());
 						vehicleWayVirtual.setVehicle(truck);
-						vehicleWayVirtual.setWay(processWay);						
+						vehicleWayVirtual.setWay(processWay);			
 						shopsForDelite.add(e.getValue());
 						shopsForOptimization.remove(e.getValue());
 						size = processWay.size();

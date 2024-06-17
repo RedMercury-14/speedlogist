@@ -464,7 +464,6 @@ public class ColossusProcessorANDRestrictions2 {
 						}
 						
 					}
-					//остановился тут! сюда ни один из предыдущих методов не проходит ВРОДЕ ПРОБЛЕМА РЕШЕНА
 					//обавляет в последние точки два склада, например 1700-1700
 					
 					radiusMap = getDistanceMatrixHasMin(shopsForOptimization, firstShop);
@@ -729,7 +728,7 @@ public class ColossusProcessorANDRestrictions2 {
 					changeTruckHasSmall(vehicleWayVirtual, targetStock);
 
 					whiteWay.add(vehicleWayVirtual);
-				} else { // блок где нет ограничений! остановился тут!
+				} else { 
 					System.err.println("Большой блок распределения БЕЗ ограничений подъездов");
 					
 					// создаём матрицу расстояний от первого магазина
@@ -981,11 +980,15 @@ public class ColossusProcessorANDRestrictions2 {
 //							Integer summPallHasPoints  = 0;
 							boolean flag = false;
 							Integer summPallHasPoints = calcPallHashHsop(points, targetStock);
+							Integer weightHasWay= calcWeightHashHsop(points, targetStock);
 							// ВАЖНО! ТУТ ПРОХОДИМ ПО НОВОМУ СПИСКУ!
 							for (Vehicle truck : trucks) {
 								if (truck.getPall() >= summPallHasPoints) {
-									flag = true;
-									break;
+									//ТУТ ОШИБКА
+									if(truck.getWeigth() >= weightHasWay) {
+										flag = true;
+										break;
+									}									
 								}
 							}
 
@@ -1032,7 +1035,8 @@ public class ColossusProcessorANDRestrictions2 {
 								vehicleForDelete.add(truck);
 								break;
 							}else {
-								System.err.println("нужна машина побольше вер 3");
+								System.err.println("нужна машина побольше вер 3");								
+								//остановился тут
 							}
 							
 						}
@@ -1040,9 +1044,15 @@ public class ColossusProcessorANDRestrictions2 {
 					
 					if (vehicleWayVirtual.getVehicle() == null) {
 						// подбираем и ставим машину в виртуальный маршрут
+						System.out.println(trucks.size() + " ---- всего осталось машин");
 						for (Vehicle truck : trucks) { // недогруженная машина
+							
 							Integer pallHasWay = calcPallHashHsop(vehicleWayVirtual.getWay(), targetStock);
 							Integer weightHasWay= calcWeightHashHsop(vehicleWayVirtual.getWay(), targetStock);
+							System.err.println(vehicleWayVirtual.toString());
+							System.out.println(pallHasWay + " pallHasWay" + "    " + truck.getPall() + "  truck.getPall()");
+							System.out.println(weightHasWay + " weightHasWay" + "    " + truck.getWeigth() + " truck.getWeigth()");
+							
 							if (truck.getPall() > pallHasWay) {
 								if(weightHasWay <= truck.getWeigth()) {
 									truck.setTargetPall(pallHasWay);

@@ -88,6 +88,8 @@ public class ColossusProcessorANDRestrictions2 {
 	private List<Vehicle> trucks;
 	private List<Vehicle> vehicleForDelete;
 	private String stackTrace;
+	private List<VehicleWay> whiteWay;
+	private List<Shop> shopsForAddNewNeedPall;
 	/**
 	 * Основной метод расчёта первочной оптимизации
 	 * 
@@ -116,7 +118,7 @@ public class ColossusProcessorANDRestrictions2 {
 		Map<Integer, Shop> allShop = shopService.getShopMap();
 		Shop targetStock = allShop.get(stock);
 		this.jsonMainObject = jsonMainObject;
-		List<VehicleWay> whiteWay = new ArrayList<VehicleWay>();
+		whiteWay = new ArrayList<VehicleWay>();
 		vehicleForDelete = new ArrayList<Vehicle>();
 		// блок подготовки
 		// заполняем static матрицу. Пусть хранится там
@@ -156,7 +158,8 @@ public class ColossusProcessorANDRestrictions2 {
 
 		// тут пойдёт логика самого маршрутизатора
 		int i = 0; // для тестов, чтобы ограничивать цикл while
-		int iMax = shopsForOptimization.size() * shopsForOptimization.size() * 2;
+//		int iMax = shopsForOptimization.size() * shopsForOptimization.size() * 3;
+		int iMax = shopsForOptimization.size() * shopsForOptimization.size() * 10;
 		int j = 0; // итерация
 		
 		while (!trucks.isEmpty()) {
@@ -171,7 +174,7 @@ public class ColossusProcessorANDRestrictions2 {
 			}
 
 			shopsForDelite = new ArrayList<Shop>();
-			List<Shop> shopsForAddNewNeedPall = new ArrayList<Shop>();
+			shopsForAddNewNeedPall = new ArrayList<Shop>();
 
 			shopsForOptimization.sort(shopComparatorForIdealWay);
 			
@@ -194,237 +197,14 @@ public class ColossusProcessorANDRestrictions2 {
 				// 1. определяем идеальные маршруты (одна точка)
 				if (shopPall >= maxPallTruck && pallRestrictionIdeal == null) {
 					// логика создания идеального маршрута если нет ограничений
-					//&& shopWeight < maxWeighTruck
-					if (shopPall == maxPallTruck && maxWeighTruck >= shopWeight) {
-						System.err.println("Блок распределения идеальных маршрутов: Распределяем магазин по паллетам, при том что паллеты проходят ровно!");
-						Vehicle targetTruck = trucks.remove(0);
-						targetTruck.setTargetPall(targetTruck.getPall()); // загружаем машину полностью
-						targetTruck.setTargetWeigth(shop.getWeight()); //загружаем машину по весу
-						List<Shop> points = new ArrayList<Shop>();
-						points.add(targetStock);
-						shop.setNeedPall(targetTruck.getPall()); // указываем текущую потребность магазина для этой фуры
-						points.add(shop);
-						points.add(targetStock);
-						VehicleWay vehicleWay = new VehicleWay(points, 0.0, 40, targetTruck);
-						changeTruckHasSmall(vehicleWay, targetStock);
-						whiteWay.add(vehicleWay);
-						shopsForDelite.add(shop);
-						break;//добвил недавно. Проверить!!!
-					}else if(shopPall == maxPallTruck && maxWeighTruck < shopWeight) {
-						System.err.println("Блок распределения идеальных маршрутов: Распределяем магазин по весу, при том что паллеты проходят ровно!");
-						//делим магаз по весу
-						Vehicle targetTruck = trucks.remove(0);
-						double oneWidthPall = (double) (shop.getWeight()/shop.getNeedPall());
-						double widthNewShop = oneWidthPall*targetTruck.getPall();						
-						int newNeedPall = targetTruck.getWeigth()/(int) oneWidthPall; // определяем сколько паллет (по ср. весу) поместится в эту машину
-						targetTruck.setTargetPall(newNeedPall); // загружаем этим колличеством паллет
-						targetTruck.setTargetWeigth((int)widthNewShop);
-						Integer newNeedPallForShop = shopPall - newNeedPall;
-						Integer finalWidthFOrTruck = (int) ((int) newNeedPall*oneWidthPall);
-						targetTruck.setTargetWeigth(finalWidthFOrTruck);
-						Integer newNeedWeigthForShop = shopWeight - finalWidthFOrTruck;
-						Shop newShopHasPall = new Shop(shop.getNumshop(), shop.getAddress(), shop.getLat(),
-								shop.getLng(), shop.getLength(), shop.getWidth(), shop.getHeight(), shop.getMaxPall());
-						newShopHasPall.setWeight(newNeedWeigthForShop);
-						newShopHasPall.setNeedPall(newNeedPallForShop);
-						newShopHasPall.setDistanceFromStock(distanceFromStock);
-						List<Shop> points = new ArrayList<Shop>();
-						shopsForDelite.add(shop);
-						shopsForAddNewNeedPall.add(newShopHasPall);
-						shop.setNeedPall(targetTruck.getTargetPall()); // указываем текущую потребность магазина для этой фуры
-						points.add(targetStock);
-						points.add(shop);
-						points.add(targetStock);
-						VehicleWay vehicleWay = new VehicleWay(points, 0.0, 40, targetTruck);
-						changeTruckHasSmall(vehicleWay, targetStock);
-						whiteWay.add(vehicleWay);
-						break;
-					}
-					if (shopPall > maxPallTruck && pallRestrictionIdeal == null) { // тут, если потребность магаза
-																					// превышает загрузку максимально
-																					// оставшейся машины - он загружает
-																					// машину полностью и создаёт магаз
-																					// с остатком от потребности
-						Vehicle targetTruck = trucks.remove(0);
-						
-						//проверяем, поместится ли данный магазин в фуру по весу!
-						//делим паллеты на вес, находим приблизительный вес паллеты и ссумируем по паллетам в машине
-						double oneWidthPall = (double) (shop.getWeight()/shop.getNeedPall());
-						double widthNewShop = oneWidthPall*targetTruck.getPall();
-//						System.err.println("Вес одной паллеты: " + oneWidthPall);
-//						System.err.println("Потребность нового магазина с учётом максимальной паллетовместимости машины: " + widthNewShop);
-//						System.err.println("Грузоподъемность машины: " + targetTruck.getWeigth());						
-						if(widthNewShop > targetTruck.getWeigth()) {
-							//если по весу не проходит, то алгоритм разбивает магаз не по паллетам, а по весу
-							System.err.println("Блок распределения идеальных маршрутов: Распределяем магазин по весу!");
-							int newNeedPall = targetTruck.getWeigth()/(int) oneWidthPall; // определяем сколько паллет (по ср. весу) поместится в эту машину
-							targetTruck.setTargetPall(newNeedPall); // загружаем этим колличеством паллет
-							Integer newNeedPallForShop = shopPall - newNeedPall;
-							Integer finalWidthFOrTruck = (int) ((int) newNeedPall*oneWidthPall);
-							targetTruck.setTargetWeigth(finalWidthFOrTruck);
-							Integer newNeedWeigthForShop = shopWeight - finalWidthFOrTruck;
-							Shop newShopHasPall = new Shop(shop.getNumshop(), shop.getAddress(), shop.getLat(),
-									shop.getLng(), shop.getLength(), shop.getWidth(), shop.getHeight(), shop.getMaxPall());
-							newShopHasPall.setWeight(newNeedWeigthForShop);
-							newShopHasPall.setNeedPall(newNeedPallForShop);
-							newShopHasPall.setDistanceFromStock(distanceFromStock);
-							List<Shop> points = new ArrayList<Shop>();
-							shopsForDelite.add(shop);
-							shopsForAddNewNeedPall.add(newShopHasPall);
-							shop.setNeedPall(targetTruck.getTargetPall()); // указываем текущую потребность магазина для этой фуры
-							points.add(targetStock);
-							points.add(shop);
-							points.add(targetStock);
-							VehicleWay vehicleWay = new VehicleWay(points, 0.0, 40, targetTruck);
-							changeTruckHasSmall(vehicleWay, targetStock);
-							whiteWay.add(vehicleWay);
-							break;
-						}else {
-							System.err.println("Блок распределения идеальных маршрутов: Распределяем магазин по паллетам!");
-							int newNeedPall = targetTruck.getWeigth()/(int) oneWidthPall; // определяем сколько паллет (по ср. весу) поместится в эту машину
-							targetTruck.setTargetPall(targetTruck.getPall()); // загружаем машину полностью						
-							Integer newNeedPallForShop = shopPall - targetTruck.getPall();
-							Integer finalWidthFOrTruck = (int) ((int) newNeedPall*oneWidthPall);
-							targetTruck.setTargetWeigth(finalWidthFOrTruck);
-							Integer newNeedWeigthForShop = shopWeight - finalWidthFOrTruck;
-							Shop newShopHasPall = new Shop(shop.getNumshop(), shop.getAddress(), shop.getLat(),
-									shop.getLng(), shop.getLength(), shop.getWidth(), shop.getHeight(), shop.getMaxPall());
-							newShopHasPall.setWeight(newNeedWeigthForShop);
-							newShopHasPall.setNeedPall(newNeedPallForShop);
-							newShopHasPall.setDistanceFromStock(distanceFromStock);
-							List<Shop> points = new ArrayList<Shop>();
-							shopsForDelite.add(shop);
-							shopsForAddNewNeedPall.add(newShopHasPall);
-							shop.setNeedPall(targetTruck.getTargetPall()); // указываем текущую потребность магазина для этой фуры
-							points.add(targetStock);
-							points.add(shop);
-							points.add(targetStock);
-							VehicleWay vehicleWay = new VehicleWay(points, 0.0, 40, targetTruck);
-							changeTruckHasSmall(vehicleWay, targetStock);
-							whiteWay.add(vehicleWay);
-							break;
-						}
-					}
+					createIdealWay(shop, targetStock);
+					break;
 				}
 
 				// логика создания идеального маршрута если ЕСТЬ ограниченя
 				if (shopPall >= maxPallTruck && pallRestrictionIdeal != null) {
-					if (shopPall <= pallRestrictionIdeal && shopPall == maxPallTruck && maxWeighTruck >= shopWeight) {
-						System.err.println("Блок распределения идеальных маршрутов: Распределяем магазин БЕЗ ограничениями по весу, при том что паллеты проходят ровно!");
-						Vehicle targetTruck = trucks.remove(0);
-						targetTruck.setTargetPall(targetTruck.getPall()); // загружаем машину полностью
-						targetTruck.setTargetWeigth(shopWeight); // загружаем авто по весу
-						List<Shop> points = new ArrayList<Shop>();
-						points.add(targetStock);
-						shop.setNeedPall(targetTruck.getPall()); // указываем текущую потребность магазина для этой фуры
-						points.add(shop);
-						points.add(targetStock);
-						VehicleWay vehicleWay = new VehicleWay(points, 0.0, 40, targetTruck);
-						changeTruckHasSmall(vehicleWay, targetStock);
-						whiteWay.add(vehicleWay);
-						shopsForDelite.add(shop);
-						break; //тест. проверить!
-					}else if(shopPall <= pallRestrictionIdeal && shopPall == maxPallTruck && maxWeighTruck < shopWeight) {
-						System.err.println("Блок распределения идеальных маршрутов: Распределяем магазин с ограничениями по весу, при том что паллеты проходят ровно!");
-						//делим магаз по весу
-						Vehicle targetTruck = trucks.remove(0);
-						double oneWidthPall = (double) (shop.getWeight()/shop.getNeedPall());
-						double widthNewShop = oneWidthPall*targetTruck.getPall();						
-						int newNeedPall = targetTruck.getWeigth()/(int) oneWidthPall; // определяем сколько паллет (по ср. весу) поместится в эту машину
-						targetTruck.setTargetPall(newNeedPall); // загружаем этим колличеством паллет
-						targetTruck.setTargetWeigth((int)widthNewShop);
-						Integer newNeedPallForShop = shopPall - newNeedPall;
-						Integer finalWidthFOrTruck = (int) ((int) newNeedPall*oneWidthPall);
-						targetTruck.setTargetWeigth(finalWidthFOrTruck);
-						Integer newNeedWeigthForShop = shopWeight - finalWidthFOrTruck;
-						Shop newShopHasPall = new Shop(shop.getNumshop(), shop.getAddress(), shop.getLat(),
-								shop.getLng(), shop.getLength(), shop.getWidth(), shop.getHeight(), shop.getMaxPall());
-						newShopHasPall.setWeight(newNeedWeigthForShop);
-						newShopHasPall.setNeedPall(newNeedPallForShop);
-						newShopHasPall.setDistanceFromStock(distanceFromStock);
-						List<Shop> points = new ArrayList<Shop>();
-						shopsForDelite.add(shop);
-						shopsForAddNewNeedPall.add(newShopHasPall);
-						shop.setNeedPall(targetTruck.getTargetPall()); // указываем текущую потребность магазина для этой фуры
-						points.add(targetStock);
-						points.add(shop);
-						points.add(targetStock);
-						VehicleWay vehicleWay = new VehicleWay(points, 0.0, 40, targetTruck);
-						changeTruckHasSmall(vehicleWay, targetStock);
-						whiteWay.add(vehicleWay);
-						break;
-					}
-					if (shopPall >= pallRestrictionIdeal) {
-						Vehicle targetTruck = null;
-						for (Vehicle truck : trucks) {
-							if (truck.getPall() <= pallRestrictionIdeal) {
-								targetTruck = truck;
-								break;
-							}
-						}
-						if(targetTruck == null) {
-							stackTrace = stackTrace + "Ограничения на магазин следующие: не более " + shop.getMaxPall() + "паллет! Машин равных или меньше данному значению не найдено!\n";
-							System.err.println("ColossusProcessorANDRestrictions2.run: Ограничения на магазин следующие: не более" + shop.getMaxPall() + "паллет! Машин равных или меньше данному значению не найдено!");
-							//Нужно придумать специальную обработку
-//							Solution solution = new Solution();
-//							solution.setStackTrace(stackTrace);
-//							return solution;
-						}
-						double oneWidthPall = (double) (shop.getWeight()/shop.getNeedPall());
-						double widthNewShop = oneWidthPall*targetTruck.getPall();
-						if(widthNewShop > targetTruck.getWeigth()) {
-							//если по весу не проходит, то алгоритм разбивает магаз не по паллетам, а по весу
-							System.err.println("Блок распределения идеальных маршрутов: Распределяем магазин c ограничениями по весу!");
-							trucks.remove(targetTruck);
-							int newNeedPall = targetTruck.getWeigth()/(int) oneWidthPall; // определяем сколько паллет (по ср. весу) поместится в эту машину
-							targetTruck.setTargetPall(newNeedPall); // загружаем этим колличеством паллет
-							Integer newNeedPallForShop = shopPall - newNeedPall;
-							Integer finalWidthFOrTruck = (int) ((int) newNeedPall*oneWidthPall);
-							targetTruck.setTargetWeigth(finalWidthFOrTruck);
-							Integer newNeedWeigthForShop = shopWeight - finalWidthFOrTruck;
-							Shop newShopHasPall = new Shop(shop.getNumshop(), shop.getAddress(), shop.getLat(),
-									shop.getLng(), shop.getLength(), shop.getWidth(), shop.getHeight(), shop.getMaxPall());
-							newShopHasPall.setWeight(newNeedWeigthForShop);
-							newShopHasPall.setNeedPall(newNeedPallForShop);
-							newShopHasPall.setDistanceFromStock(distanceFromStock);
-							List<Shop> points = new ArrayList<Shop>();
-							shopsForDelite.add(shop);
-							shopsForAddNewNeedPall.add(newShopHasPall);
-							shop.setNeedPall(targetTruck.getTargetPall()); // указываем текущую потребность магазина для этой фуры
-							points.add(targetStock);
-							points.add(shop);
-							points.add(targetStock);
-							VehicleWay vehicleWay = new VehicleWay(points, 0.0, 40, targetTruck);
-							changeTruckHasSmall(vehicleWay, targetStock);
-							whiteWay.add(vehicleWay);
-							break;
-						}else {
-							System.err.println("Блок распределения идеальных маршрутов: Распределяем магазин БЕЗ ограничениями по весу!");
-							trucks.remove(targetTruck);
-							int newNeedPall = targetTruck.getWeigth()/(int) oneWidthPall; // определяем сколько паллет (по ср. весу) поместится в эту машину
-							targetTruck.setTargetPall(targetTruck.getPall()); // загружаем машину полностью
-							Integer newNeedPallForShop = shopPall - targetTruck.getPall();
-							Integer finalWidthFOrTruck = (int) ((int) newNeedPall*oneWidthPall);
-							targetTruck.setTargetWeigth(finalWidthFOrTruck);
-							Integer newNeedWeigthForShop = shopWeight - finalWidthFOrTruck;
-							Shop newShopHasPall = new Shop(shop.getNumshop(), shop.getAddress(), shop.getLat(),
-									shop.getLng(), shop.getLength(), shop.getWidth(), shop.getHeight(), shop.getMaxPall());
-							newShopHasPall.setNeedPall(newNeedPallForShop);
-							newShopHasPall.setWeight(newNeedWeigthForShop);
-							newShopHasPall.setDistanceFromStock(distanceFromStock);
-							List<Shop> points = new ArrayList<Shop>();
-							shopsForDelite.add(shop);
-							shopsForAddNewNeedPall.add(newShopHasPall);
-							shop.setNeedPall(targetTruck.getPall()); // указываем текущую потребность магазина для этой фуры
-							points.add(targetStock);
-							points.add(shop);
-							points.add(targetStock);
-							VehicleWay vehicleWay = new VehicleWay(points, 0.0, 40, targetTruck);
-							changeTruckHasSmall(vehicleWay, targetStock);
-							whiteWay.add(vehicleWay);
-							break;
-						}						
-					}
+					createIdealWayAndPallRestriction(shop, targetStock);
+					break;
 				}
 
 				// 1. конец блока опредиления идеальных маршрутов
@@ -434,28 +214,6 @@ public class ColossusProcessorANDRestrictions2 {
 				}
 			}
 			
-
-//			//после каждого цикла очищаем магазы
-//			if(!shopsForDelite.isEmpty()) {
-//				for (Shop shop : shopsForDelite) {
-//					shopsForOptimization.remove(shop);
-//				}
-////				shopsForDelite.clear();
-//				shopsForOptimization.sort(shopComparator); // сортируем обновлённый список
-//			}
-//			//после каждого цикла добавляем новые магазы, если есть
-//			if(!shopsForAddNewNeedPall.isEmpty()) {
-//				for (Shop shop : shopsForAddNewNeedPall) {
-//					shopsForOptimization.add(shop);
-//				}
-////				shopsForAddNewNeedPall.clear();
-//				shopsForOptimization.sort(shopComparator); // сортируем обновлённый список
-//			}
-//			stackTrace = stackTrace + "Итерация " + j + ": \n";
-//			j++;
-//			for (VehicleWay v : whiteWay) {
-//				stackTrace = stackTrace + v+"\n";
-//			}
 
 			stackTrace = stackTrace + "Магазины после первого пункта: \n";
 			for (Shop shop : shopsForOptimization) {
@@ -973,7 +731,8 @@ public class ColossusProcessorANDRestrictions2 {
 					changeTruckHasSmall(vehicleWayVirtual, targetStock);
 
 					whiteWay.add(vehicleWayVirtual);
-				} else {
+				} else { // блок где нет ограничений! остановился тут!
+					System.err.println("Большой блок распределения БЕЗ ограничений подъездов");
 					
 					// создаём матрицу расстояний от первого магазина
 					Map<Double, Shop> radiusMap = new TreeMap<Double, Shop>();
@@ -983,6 +742,218 @@ public class ColossusProcessorANDRestrictions2 {
 					List<Shop> points = new ArrayList<Shop>();
 					points.add(targetStock);
 					points.add(firstShop);
+					
+					if(firstShop.getNeedPall() >= trucks.get(0).getPall()) {//логика для разбиений магазинов когда паллет изначально больше!
+						double oneWidthPall = (double) (firstShop.getWeight()/firstShop.getNeedPall());
+						double widthNewShop = oneWidthPall*trucks.get(0).getPall();
+						if (firstShop.getNeedPall() == trucks.get(0).getPall()) { 
+							if(firstShop.getWeight() <= trucks.get(0).getWeigth()) {
+								System.err.println("Распределяем магазин БЕЗ ограничений по весу, в блоке распределения БЕЗ ограничений подъездов, при том что паллет больше, после идеальных маршрутов (доп идеальные), когда паллет изначально больше!");
+								Vehicle targetTruck = trucks.remove(0);
+								targetTruck.setTargetPall(targetTruck.getPall()); // загружаем машину полностью
+								targetTruck.setTargetWeigth(firstShop.getWeight()); // загружаем машину по весу
+								points.add(targetStock);
+								VehicleWay vehicleWay = new VehicleWay(points, 0.0, 40, targetTruck);
+								shopsForOptimization.remove(firstShop);
+								optimizationOfVirtualRoutesType1(vehicleWay, pallRestriction, targetStock);
+								changeTruckHasSmall(vehicleWay, targetStock);
+								whiteWay.add(vehicleWay);							
+								continue;
+							}else {
+								System.err.println("Распределяем магазин c ограничениями по весу, в блоке распределения БЕЗ ограничений подъездов, при том что паллеты входят ровно, после идеальных маршрутов (доп идеальные)!");
+								Vehicle targetTruck = trucks.remove(0);
+								int newNeedPall = targetTruck.getWeigth()/(int) oneWidthPall; // определяем сколько паллет (по ср. весу) поместится в эту машину
+								targetTruck.setTargetPall(newNeedPall); // загружаем этим колличеством паллет
+								Integer newNeedPallForShop = firstShop.getNeedPall() - newNeedPall;
+								Integer finalWidthFOrTruck = (int) ((int) newNeedPall*oneWidthPall);
+								targetTruck.setTargetWeigth(finalWidthFOrTruck);
+								Integer newNeedWeigthForShop = firstShop.getWeight() - finalWidthFOrTruck;
+								Shop newShopHasPall = new Shop(firstShop.getNumshop(), firstShop.getAddress(), firstShop.getLat(),
+										firstShop.getLng(), firstShop.getLength(), firstShop.getWidth(), firstShop.getHeight(), firstShop.getMaxPall());
+								newShopHasPall.setWeight(newNeedWeigthForShop);
+								newShopHasPall.setNeedWeigth(Double.parseDouble(newNeedWeigthForShop.toString()));
+								newShopHasPall.setNeedPall(newNeedPallForShop);
+								newShopHasPall.setDistanceFromStock(firstShop.getDistanceFromStock());
+								List<Shop> points1 = new ArrayList<Shop>();
+								shopsForDelite.add(firstShop);
+								shopsForAddNewNeedPall.add(newShopHasPall);
+								firstShop.setNeedPall(targetTruck.getTargetPall()); // указываем текущую потребность магазина для этой фуры
+								points1.add(targetStock);
+								points1.add(firstShop);
+								points1.add(targetStock);
+								VehicleWay vehicleWay = new VehicleWay(points1, 0.0, 40, targetTruck);
+								optimizationOfVirtualRoutesType1(vehicleWay, pallRestriction, targetStock);
+								changeTruckHasSmall(vehicleWay, targetStock);
+								whiteWay.add(vehicleWay);
+								continue;
+							}
+							
+						}
+						if (firstShop.getNeedPall() > trucks.get(0).getPall()) {
+							if(firstShop.getWeight() <= trucks.get(0).getWeigth()) {
+								System.err.println("Распределяем магазин БЕЗ ограничений по весу, в блоке распределения БЕЗ ограничений подъездов, при том что паллет больше, после идеальных маршрутов (доп идеальные)!");
+								Vehicle targetTruck = trucks.remove(0);
+								targetTruck.setTargetPall(targetTruck.getPall()); // загружаем машину полностью
+								Integer newNeedPallForShop = firstShop.getNeedPall() - targetTruck.getPall();
+								Shop newShopHasPall = new Shop(firstShop.getNumshop(), firstShop.getAddress(), firstShop.getLat(),
+										firstShop.getLng(), firstShop.getLength(), firstShop.getWidth(), firstShop.getHeight(), firstShop.getMaxPall());
+								newShopHasPall.setNeedPall(newNeedPallForShop);
+								newShopHasPall.setDistanceFromStock(firstShop.getDistanceFromStock());
+								double doubleWeigth = firstShop.getWeight() - oneWidthPall * targetTruck.getPall();
+								newShopHasPall.setWeight((int) doubleWeigth);
+								shopsForOptimization.remove(firstShop);
+								shopsForOptimization.add(newShopHasPall);
+								shopsForOptimization.sort(shopComparatorDistanceMain);
+								Shop newFirstShop = new Shop(firstShop.getNumshop(), firstShop.getAddress(), firstShop.getLat(),
+										firstShop.getLng(), firstShop.getLength(), firstShop.getWidth(), firstShop.getHeight(), firstShop.getMaxPall());
+								newFirstShop.setNeedPall(targetTruck.getPall());								
+								points.remove(points.size()-1);
+								points.add(newFirstShop);
+								points.add(targetStock);
+								VehicleWay vehicleWay = new VehicleWay(points, 0.0, 40, targetTruck);
+								optimizationOfVirtualRoutesType1(vehicleWay, pallRestriction, targetStock);
+								changeTruckHasSmall(vehicleWay, targetStock);
+								whiteWay.add(vehicleWay);
+								if (!shopsForAddNewNeedPall.isEmpty()) {
+									for (Shop shop : shopsForAddNewNeedPall) {
+										if (!shopsForOptimization.contains(shop)) {
+											shopsForOptimization.add(shop);
+										}
+									}
+//									shopsForAddNewNeedPall.clear();
+									shopsForOptimization.sort(shopComparatorDistanceMain); // сортируем обновлённый список
+								}
+								continue;
+							}else {
+								System.err.println("Распределяем магазин c ограничениями по весу, в блоке распределения БЕЗ ограничений подъездов, при том что паллет больше, после идеальных маршрутов (доп идеальные)!");
+								Vehicle targetTruck = trucks.remove(0);
+								int newNeedPall = targetTruck.getWeigth()/(int) oneWidthPall; // определяем сколько паллет (по ср. весу) поместится в эту машину
+								targetTruck.setTargetPall(newNeedPall); // загружаем этим колличеством паллет
+								Integer newNeedPallForShop = firstShop.getNeedPall() - newNeedPall;
+								Integer finalWidthFOrTruck = (int) ((int) newNeedPall*oneWidthPall);
+								targetTruck.setTargetWeigth(finalWidthFOrTruck);
+								Integer newNeedWeigthForShop = firstShop.getWeight() - finalWidthFOrTruck;
+								Shop newShopHasPall = new Shop(firstShop.getNumshop(), firstShop.getAddress(), firstShop.getLat(),
+										firstShop.getLng(), firstShop.getLength(), firstShop.getWidth(), firstShop.getHeight(), firstShop.getMaxPall());
+								newShopHasPall.setWeight(newNeedWeigthForShop);
+								newShopHasPall.setNeedPall(newNeedPallForShop);
+								newShopHasPall.setDistanceFromStock(firstShop.getDistanceFromStock());
+								List<Shop> points1 = new ArrayList<Shop>();
+								shopsForDelite.add(firstShop);
+								shopsForAddNewNeedPall.add(newShopHasPall);
+								firstShop.setNeedPall(targetTruck.getTargetPall()); // указываем текущую потребность магазина для этой фуры
+								points1.add(targetStock);
+								points1.add(firstShop);
+								points1.add(targetStock);
+								VehicleWay vehicleWay = new VehicleWay(points1, 0.0, 40, targetTruck);
+								optimizationOfVirtualRoutesType1(vehicleWay, pallRestriction, targetStock);
+								changeTruckHasSmall(vehicleWay, targetStock);
+								whiteWay.add(vehicleWay);
+								// после каждого цикла добавляем новые магазы, если есть
+								if (!shopsForAddNewNeedPall.isEmpty()) {
+									for (Shop shop : shopsForAddNewNeedPall) {
+										if (!shopsForOptimization.contains(shop)) {
+											shopsForOptimization.add(shop);
+										}
+									}
+//									shopsForAddNewNeedPall.clear();
+									shopsForOptimization.sort(shopComparatorDistanceMain); // сортируем обновлённый список
+								}
+								continue;
+							}
+						}
+					}else { // тут мы знаем что паллет меньше. Далее проверям по весу
+						System.out.println(firstShop.toAllString());
+						double oneWidthPall = (double) (firstShop.getWeight()/firstShop.getNeedPall());
+						double widthNewShop = oneWidthPall*trucks.get(0).getPall();
+						if(firstShop.getWeight() > trucks.get(0).getWeigth()) {
+							System.err.println("Распределяем магазин c ограничениями по весу, в блоке распределения БЕЗ ограничений подъездов, при том что паллет МЕНЬШЕ чем может поместиться в одну машину, после идеальных маршрутов (доп идеальные)!");
+							Vehicle targetTruck = trucks.remove(0);
+							int newNeedPall = targetTruck.getWeigth()/(int) oneWidthPall; // определяем сколько паллет (по ср. весу) поместится в эту машину
+							targetTruck.setTargetPall(newNeedPall); // загружаем этим колличеством паллет
+							Integer newNeedPallForShop = firstShop.getNeedPall() - newNeedPall;
+							Integer finalWidthFOrTruck = (int) ((int) newNeedPall*oneWidthPall);
+							targetTruck.setTargetWeigth(finalWidthFOrTruck);
+							Integer newNeedWeigthForShop = firstShop.getWeight() - finalWidthFOrTruck;
+							Shop newShopHasPall = new Shop(firstShop.getNumshop(), firstShop.getAddress(), firstShop.getLat(),
+									firstShop.getLng(), firstShop.getLength(), firstShop.getWidth(), firstShop.getHeight(), firstShop.getMaxPall());
+							newShopHasPall.setWeight(newNeedWeigthForShop);
+							newShopHasPall.setNeedPall(newNeedPallForShop);
+							newShopHasPall.setDistanceFromStock(firstShop.getDistanceFromStock());
+							List<Shop> points1 = new ArrayList<Shop>();
+							shopsForDelite.add(firstShop);
+							shopsForAddNewNeedPall.add(newShopHasPall);
+							firstShop.setNeedPall(targetTruck.getTargetPall()); // указываем текущую потребность магазина для этой фуры
+							points1.add(targetStock);
+							points1.add(firstShop);
+							points1.add(targetStock);
+							VehicleWay vehicleWay = new VehicleWay(points1, 0.0, 40, targetTruck);
+							optimizationOfVirtualRoutesType1(vehicleWay, pallRestriction, targetStock);
+							changeTruckHasSmall(vehicleWay, targetStock);
+							whiteWay.add(vehicleWay);
+							// после каждого цикла добавляем новые магазы, если есть
+							if (!shopsForAddNewNeedPall.isEmpty()) {
+								for (Shop shop : shopsForAddNewNeedPall) {
+									if (!shopsForOptimization.contains(shop)) {
+										shopsForOptimization.add(shop);
+									}
+								}
+//								shopsForAddNewNeedPall.clear();
+								shopsForOptimization.sort(shopComparatorDistanceMain); // сортируем обновлённый список
+							}
+							continue;
+						}
+//						if(firstShop.getWeight() <= trucks.get(0).getWeigth()) {
+//							System.err.println("Распределяем магазин БЕЗ ограничений по весу, в блоке распределения БЕЗ ограничений подъездов, при том что паллет МЕНЬШЕ чем может поместиться в одну машину, после идеальных маршрутов (доп идеальные)!");
+//							Vehicle targetTruck = trucks.remove(0);
+//							targetTruck.setTargetPall(firstShop.getNeedPall()); // загружаем машину полностью
+//							targetTruck.setTargetWeigth(firstShop.getWeight()); // загружаем машину по весу
+//							points.add(targetStock);
+//							VehicleWay vehicleWay = new VehicleWay(points, 0.0, 40, targetTruck);
+//							shopsForOptimization.remove(firstShop);
+//							optimizationOfVirtualRoutesType1(vehicleWay, pallRestriction, targetStock);
+//							changeTruckHasSmall(vehicleWay, targetStock);
+//							whiteWay.add(vehicleWay);	
+//							continue;
+//						}else {
+//							System.err.println("Распределяем магазин c ограничениями по весу, в блоке распределения БЕЗ ограничений подъездов, при том что паллет МЕНЬШЕ чем может поместиться в одну машину, после идеальных маршрутов (доп идеальные)!");
+//							Vehicle targetTruck = trucks.remove(0);
+//							int newNeedPall = targetTruck.getWeigth()/(int) oneWidthPall; // определяем сколько паллет (по ср. весу) поместится в эту машину
+//							targetTruck.setTargetPall(newNeedPall); // загружаем этим колличеством паллет
+//							Integer newNeedPallForShop = firstShop.getNeedPall() - newNeedPall;
+//							Integer finalWidthFOrTruck = (int) ((int) newNeedPall*oneWidthPall);
+//							targetTruck.setTargetWeigth(finalWidthFOrTruck);
+//							Integer newNeedWeigthForShop = firstShop.getWeight() - finalWidthFOrTruck;
+//							Shop newShopHasPall = new Shop(firstShop.getNumshop(), firstShop.getAddress(), firstShop.getLat(),
+//									firstShop.getLng(), firstShop.getLength(), firstShop.getWidth(), firstShop.getHeight(), firstShop.getMaxPall());
+//							newShopHasPall.setWeight(newNeedWeigthForShop);
+//							newShopHasPall.setNeedPall(newNeedPallForShop);
+//							newShopHasPall.setDistanceFromStock(firstShop.getDistanceFromStock());
+//							List<Shop> points1 = new ArrayList<Shop>();
+//							shopsForDelite.add(firstShop);
+//							shopsForAddNewNeedPall.add(newShopHasPall);
+//							firstShop.setNeedPall(targetTruck.getTargetPall()); // указываем текущую потребность магазина для этой фуры
+//							points1.add(targetStock);
+//							points1.add(firstShop);
+//							points1.add(targetStock);
+//							VehicleWay vehicleWay = new VehicleWay(points1, 0.0, 40, targetTruck);
+//							optimizationOfVirtualRoutesType1(vehicleWay, pallRestriction, targetStock);
+//							changeTruckHasSmall(vehicleWay, targetStock);
+//							whiteWay.add(vehicleWay);
+//							// после каждого цикла добавляем новые магазы, если есть
+//							if (!shopsForAddNewNeedPall.isEmpty()) {
+//								for (Shop shop : shopsForAddNewNeedPall) {
+//									if (!shopsForOptimization.contains(shop)) {
+//										shopsForOptimization.add(shop);
+//									}
+//								}
+////								shopsForAddNewNeedPall.clear();
+//								shopsForOptimization.sort(shopComparatorDistanceMain); // сортируем обновлённый список
+//							}
+//							continue;
+//						}
+						
+					}
 
 					stackTrace = stackTrace + "МАТРИЦА МАГАЗИНА " + firstShop.getNumshop() + "\n";
 					for (Map.Entry<Double, Shop> entry : radiusMap.entrySet()) {
@@ -1011,23 +982,16 @@ public class ColossusProcessorANDRestrictions2 {
 							// проверяем, в теории сможем ли мы положить в какую-нибудь машину такой маргрут
 //							Integer summPallHasPoints  = 0;
 							boolean flag = false;
-//							for (Shop shop3 : points) {
-//								if(shop3.getNeedPall() == null) {
-//									continue;
-//								}
-//								summPallHasPoints = summPallHasPoints + shop3.getNeedPall();
-//							}
 							Integer summPallHasPoints = calcPallHashHsop(points, targetStock);
+							// ВАЖНО! ТУТ ПРОХОДИМ ПО НОВОМУ СПИСКУ!
 							for (Vehicle truck : trucks) {
 								if (truck.getPall() >= summPallHasPoints) {
 									flag = true;
 									break;
 								}
-
 							}
 
 							if (flag) {
-//								points.add(shop2);
 								shopsForDelite.add(shop2);
 								points.remove(points.size() - 1);
 //								System.out.println("кладём " + shop2);					
@@ -1056,31 +1020,43 @@ public class ColossusProcessorANDRestrictions2 {
 //					System.err.println(vehicleWayVirtual);
 
 					// подбираем и ставим машину в виртуальный маршрут
-
 					for (Vehicle truck : trucks) { // если удалось собрать сразу всю машину
-//						Integer pallHasWay = vehicleWayVirtual.getSummPall();
 						Integer pallHasWay = calcPallHashHsop(vehicleWayVirtual.getWay(), targetStock);
+						Integer weightHasWay= calcWeightHashHsop(vehicleWayVirtual.getWay(), targetStock);
 						if (pallHasWay > truck.getPall()) {
 							continue;
 						} else if (truck.getPall() == pallHasWay) {
-							truck.setTargetPall(pallHasWay);
-							vehicleWayVirtual.setVehicle(truck);
-							vehicleWayVirtual.setStatus(35);
-							vehicleForDelete.add(truck);
-							break;
+							if(weightHasWay <= truck.getWeigth()) {
+								truck.setTargetPall(pallHasWay);
+								truck.setTargetWeigth(weightHasWay);
+								vehicleWayVirtual.setVehicle(truck);
+								vehicleWayVirtual.setStatus(35);
+								vehicleForDelete.add(truck);
+								break;
+							}else {
+								System.err.println("нужна машина побольше вер 3");
+							}
+							
 						}
 					}
+					
 					if (vehicleWayVirtual.getVehicle() == null) {
 						// подбираем и ставим машину в виртуальный маршрут
 						for (Vehicle truck : trucks) { // недогруженная машина
-//							Integer pallHasWay = vehicleWayVirtual.getSummPall();
 							Integer pallHasWay = calcPallHashHsop(vehicleWayVirtual.getWay(), targetStock);
+							Integer weightHasWay= calcWeightHashHsop(vehicleWayVirtual.getWay(), targetStock);
 							if (truck.getPall() > pallHasWay) {
-								truck.setTargetPall(pallHasWay);
-								vehicleWayVirtual.setVehicle(truck);
-								vehicleWayVirtual.setStatus(30);
-								vehicleForDelete.add(truck);
-								break;
+								if(weightHasWay <= truck.getWeigth()) {
+									truck.setTargetPall(pallHasWay);
+									truck.setTargetWeigth(weightHasWay);
+									vehicleWayVirtual.setVehicle(truck);
+									vehicleWayVirtual.setStatus(30);
+									vehicleForDelete.add(truck);
+									break;
+								}else {
+									System.err.println("нужна машина побольше вер 4");
+								}
+								
 							}
 						}
 					}
@@ -1091,8 +1067,7 @@ public class ColossusProcessorANDRestrictions2 {
 							trucks.remove(tr);
 						}
 					}
-
-//					whiteWay.add(vehicleWayVirtual);
+					
 					// блок комбинатрики
 
 					// говорим, что если больше 4-х точек, то включаем блок
@@ -1225,105 +1200,11 @@ public class ColossusProcessorANDRestrictions2 {
 							vehicleWayVirtual.setWay(pointsOld);
 						}
 					}
+					
 					// блок оптимизации виртуальных маршрутов
-
-					if (!vehicleWayVirtual.getVehicle().isFull()) {
-						// если тачка недогружена, то возможны 2 варианта:
-						// берем последнюю точку, прокладываем радиус 10 км, убераем её и ищем магаз
-						// (магазы) которые могут догрузить машину
-						// второй варик тот же самый, но с убиранием точки
-						List<Shop> newPoints = logicAnalyzer.correctRouteMaker(vehicleWayVirtual.getWay());
-						Shop lastShop = newPoints.get(1);
-						List<Shop> processWay = new ArrayList<Shop>(newPoints);
-						int size = processWay.size();
-
-						Map<Double, Shop> radiusFromLastShop = getDistanceMatrixHasMinLimitParameter(shopsForOptimization, shopsForDelite, lastShop, 10000.0);
-						
-						for (Map.Entry<Double, Shop> e : radiusFromLastShop.entrySet()) {
-							if(firstShop.getMaxPall() == null && e.getValue().getMaxPall() != null) {
-								//это условие говорит, что если первый магазин без ограничений, то в машину ограничения вообще не вставляются.
-								System.out.println("POINT 1");
-								continue;
-							}
-							if (vehicleWayVirtual.getWay().get(1).getMaxPall() == null && e.getValue().getMaxPall() != null) {
-								System.out.println("POINT 1");
-								continue;
-							}
-							if (e.getValue().getNeedPall() <= vehicleWayVirtual.getFreePallInVehicle()) {
-								if (e.getValue().getNumshop() != lastShop.getNumshop() && !shopsForDelite.contains(e.getValue())) {
-									processWay.remove(size - 1);
-									processWay.add(e.getValue());
-									processWay.add(targetStock);
-									Vehicle truck = vehicleWayVirtual.getVehicle();
-									truck.setTargetPall(calcPallHashHsop(processWay, targetStock));
-									vehicleWayVirtual.setVehicle(truck);
-									vehicleWayVirtual.setWay(processWay);
-									shopsForDelite.add(e.getValue());
-									System.err.println(
-											"~~~~~~~~~~~~~~~~~БЛОК ОПТИМИЗАЦИИ СРАБОТАЛ МАКСИМАЛЬНЫЙ ДОГРУЗ~~~~~~~~~~~~~~~~~~~");
-									break;
-								}
-							}
-						}
-
-						
-						if(!vehicleWayVirtual.getVehicle().isFull()) {
-							for (Map.Entry<Double, Shop> e : radiusFromLastShop.entrySet()) {
-								if(vehicleWayVirtual.getWay().get(1).getMaxPall() == null && e.getValue().getMaxPall() != null) {
-									//это условие говорит, что если первый магазин без ограничений, то в машину ограничения вообще не вставляются.
-									System.out.println("POINT 11");
-									continue;
-								}
-								if (vehicleWayVirtual.getWay().get(1).getMaxPall() == null && e.getValue().getMaxPall() != null) {
-									System.out.println("POINT 11");
-									continue;
-								}
-								if(e.getValue().getNeedPall() == vehicleWayVirtual.getFreePallInVehicle()+lastShop.getNeedPall()) {
-									if(e.getValue().getNumshop() != lastShop.getNumshop() && !shopsForDelite.contains(e.getValue())) {
-										processWay.remove(size-1);
-										processWay.remove(lastShop);
-										
-										shopsForDelite.remove(lastShop);
-										if(!shopsForOptimization.contains(lastShop)) {
-											shopsForOptimization.add(lastShop);
-										}
-										
-										processWay.add(e.getValue());
-										processWay.add(targetStock);
-										Vehicle truck = vehicleWayVirtual.getVehicle();
-										truck.setTargetPall(calcPallHashHsop(processWay, targetStock));
-										vehicleWayVirtual.setVehicle(truck);
-										vehicleWayVirtual.setWay(processWay);
-										shopsForDelite.add(e.getValue());
-										System.err.println("~~~~~~~~~~~~~~~~~СРАБОТАЛ МАКСИМАЛЬНЫЙ ДОГРУЗ С УДАЛЕНИЕМ ПОСЛЕДНЕГО МАГАЗИНА  "+vehicleWayVirtual.getId()+"~~~~~~~~~~~~~~~~~~~");
-										break;
-									}							
-								}
-							}
-						}
-					}
-
-					if (!vehicleWayVirtual.getVehicle().isFull()) {
-						// проверяем, есть ли, гипотетически меньшая машина, для того чтобы сохранить
-						// большую
-						Integer pallHasWay = calcPallHashHsop(vehicleWayVirtual.getWay(), targetStock);
-						Vehicle oldTruck = vehicleWayVirtual.getVehicle();
-						Integer pallHasOldTruck = vehicleWayVirtual.getVehicle().getPall();
-						trucks.sort(vehicleComparatorFromMin);
-						for (Vehicle truck : trucks) {
-							if (truck.getPall() > pallHasWay && truck.getPall() < pallHasOldTruck) {
-								truck.setTargetPall(pallHasWay);
-								trucks.add(oldTruck);
-								vehicleForDelete.add(truck);
-								vehicleForDelete.remove(oldTruck);
-								vehicleWayVirtual.setVehicle(truck);
-								stackTrace = stackTrace + "Меняем тачку с " + oldTruck.getPall() + " на "
-										+ truck.getPall() + "\n";
-								break;
-							}
-						}
-						trucks.sort(vehicleComparatorFromMax);
-					}
+					// блок оптимизации виртуальных маршрутов по последним точкам
+					optimizationOfVirtualRoutesType1(vehicleWayVirtual, pallRestriction, targetStock);
+					changeTruckHasSmall(vehicleWayVirtual, targetStock);
 
 					whiteWay.add(vehicleWayVirtual);
 
@@ -1380,7 +1261,7 @@ public class ColossusProcessorANDRestrictions2 {
 		System.out.println("========= Свободные авто ==========");
 		trucks.forEach(t -> System.out.println(t));
 		System.out.println("+++++++++ Оставшиеся магазины +++++++++++");
-		shopsForOptimization.forEach(s -> System.out.println(s));
+		shopsForOptimization.forEach(s -> System.out.println(s.toAllString()));
 
 		Solution solution = new Solution();
 
@@ -1407,8 +1288,8 @@ public class ColossusProcessorANDRestrictions2 {
 	 * Блок, отвечающий за замену машины, когда маршрут окончательно построен. Должен быть всегда самым последним!
 	 * @param vehicleWayVirtual
 	 */
-	private void changeTruckHasSmall(VehicleWay vehicleWayVirtual, Shop targetStock) {
-		System.out.println("-->>> changeTruckHasSmall : " + vehicleWayVirtual);
+	private void changeTruckHasSmall(VehicleWay vehicleWayVirtual, Shop targetStock) {		
+		System.out.println("-->>> changeTruckHasSmall START : " + vehicleWayVirtual);
 		if (!vehicleWayVirtual.getVehicle().isFull()) {
 			// проверяем, есть ли, гипотетически меньшая машина, для того чтобы сохранить
 			// большую
@@ -1421,7 +1302,9 @@ public class ColossusProcessorANDRestrictions2 {
 				if(truck.getWeigth() >= oldTruck.getTargetWeigth()) {
 					if (truck.getPall() >= oldTruck.getTargetPall() && truck.getPall() < pallHasOldTruck) {
 						truck.setTargetPall(pallHasWay);
+						truck.setTargetWeigth(oldTruck.getTargetWeigth());
 						trucks.add(oldTruck);
+						trucks.remove(truck);
 						vehicleForDelete.add(truck);
 						vehicleForDelete.remove(oldTruck);
 						vehicleWayVirtual.setVehicle(truck);
@@ -1432,6 +1315,7 @@ public class ColossusProcessorANDRestrictions2 {
 				}
 				
 			}
+			System.out.println("-->>> changeTruckHasSmall FINISH : " + vehicleWayVirtual);
 			trucks.sort(vehicleComparatorFromMax);
 		}
 	}
@@ -1569,7 +1453,257 @@ public class ColossusProcessorANDRestrictions2 {
 		}
 		return radiusMap;
 	}
+	
+	/**
+	 * Метод создаёт идеальныу маршруты, когда нет ограничений. Создаёт в зависимости от паллет и веса.
+	 * ПОСЛЕ ЭТОГО МЕТОДА ВСЕГДА ДОЛЖНА БЫТЬ КОМАНДА break;
+	 * @param shop
+	 * @param targetStock
+	 */
+	private void createIdealWay(Shop shop, Shop targetStock) {
+		Integer shopPall = shop.getNeedPall();
+		Integer shopWeight = shop.getWeight();
+		Integer maxPallTruck = trucks.get(0).getPall();
+		Integer maxWeighTruck = trucks.get(0).getWeigth();
+		Double distanceFromStock = shop.getDistanceFromStock();
+		// логика создания идеального маршрута если нет ограничений
+		//&& shopWeight < maxWeighTruck
+		if (shopPall == maxPallTruck && maxWeighTruck >= shopWeight) {
+			System.err.println("Блок распределения идеальных маршрутов: Распределяем магазин по паллетам, при том что паллеты проходят ровно!");
+			Vehicle targetTruck = trucks.remove(0);
+			targetTruck.setTargetPall(targetTruck.getPall()); // загружаем машину полностью
+			targetTruck.setTargetWeigth(shop.getWeight()); //загружаем машину по весу
+			List<Shop> points = new ArrayList<Shop>();
+			points.add(targetStock);
+			shop.setNeedPall(targetTruck.getPall()); // указываем текущую потребность магазина для этой фуры
+			points.add(shop);
+			points.add(targetStock);
+			VehicleWay vehicleWay = new VehicleWay(points, 0.0, 40, targetTruck);
+			changeTruckHasSmall(vehicleWay, targetStock);
+			whiteWay.add(vehicleWay);
+			shopsForDelite.add(shop);
+		}else if(shopPall == maxPallTruck && maxWeighTruck < shopWeight) {
+			System.err.println("Блок распределения идеальных маршрутов: Распределяем магазин по весу, при том что паллеты проходят ровно!");
+			//делим магаз по весу
+			Vehicle targetTruck = trucks.remove(0);
+			double oneWidthPall = (double) (shop.getWeight()/shop.getNeedPall());
+			double widthNewShop = oneWidthPall*targetTruck.getPall();						
+			int newNeedPall = targetTruck.getWeigth()/(int) oneWidthPall; // определяем сколько паллет (по ср. весу) поместится в эту машину
+			targetTruck.setTargetPall(newNeedPall); // загружаем этим колличеством паллет
+			targetTruck.setTargetWeigth((int)widthNewShop);
+			Integer newNeedPallForShop = shopPall - newNeedPall;
+			Integer finalWidthFOrTruck = (int) ((int) newNeedPall*oneWidthPall);
+			targetTruck.setTargetWeigth(finalWidthFOrTruck);
+			Integer newNeedWeigthForShop = shopWeight - finalWidthFOrTruck;
+			Shop newShopHasPall = new Shop(shop.getNumshop(), shop.getAddress(), shop.getLat(),
+					shop.getLng(), shop.getLength(), shop.getWidth(), shop.getHeight(), shop.getMaxPall());
+			newShopHasPall.setWeight(newNeedWeigthForShop);
+			newShopHasPall.setNeedPall(newNeedPallForShop);
+			newShopHasPall.setDistanceFromStock(distanceFromStock);
+			List<Shop> points = new ArrayList<Shop>();
+			shopsForDelite.add(shop);
+			shopsForAddNewNeedPall.add(newShopHasPall);
+			shop.setNeedPall(targetTruck.getTargetPall()); // указываем текущую потребность магазина для этой фуры
+			points.add(targetStock);
+			points.add(shop);
+			points.add(targetStock);
+			VehicleWay vehicleWay = new VehicleWay(points, 0.0, 40, targetTruck);
+			changeTruckHasSmall(vehicleWay, targetStock);
+			whiteWay.add(vehicleWay);
+		}
+		if (shopPall > maxPallTruck) { // тут, если потребность магаза
+																		// превышает загрузку максимально
+																		// оставшейся машины - он загружает
+																		// машину полностью и создаёт магаз
+																		// с остатком от потребности
+			Vehicle targetTruck = trucks.remove(0);
+			
+			//проверяем, поместится ли данный магазин в фуру по весу!
+			//делим паллеты на вес, находим приблизительный вес паллеты и ссумируем по паллетам в машине
+			double oneWidthPall = (double) (shop.getWeight()/shop.getNeedPall());
+			double widthNewShop = oneWidthPall*targetTruck.getPall();
+//			System.err.println("Вес одной паллеты: " + oneWidthPall);
+//			System.err.println("Потребность нового магазина с учётом максимальной паллетовместимости машины: " + widthNewShop);
+//			System.err.println("Грузоподъемность машины: " + targetTruck.getWeigth());						
+			if(widthNewShop > targetTruck.getWeigth()) {
+				//если по весу не проходит, то алгоритм разбивает магаз не по паллетам, а по весу
+				System.err.println("Блок распределения идеальных маршрутов: Распределяем магазин по весу!");
+				int newNeedPall = targetTruck.getWeigth()/(int) oneWidthPall; // определяем сколько паллет (по ср. весу) поместится в эту машину
+				targetTruck.setTargetPall(newNeedPall); // загружаем этим колличеством паллет
+				Integer newNeedPallForShop = shopPall - newNeedPall;
+				Integer finalWidthFOrTruck = (int) ((int) newNeedPall*oneWidthPall);
+				targetTruck.setTargetWeigth(finalWidthFOrTruck);
+				Integer newNeedWeigthForShop = shopWeight - finalWidthFOrTruck;
+				Shop newShopHasPall = new Shop(shop.getNumshop(), shop.getAddress(), shop.getLat(),
+						shop.getLng(), shop.getLength(), shop.getWidth(), shop.getHeight(), shop.getMaxPall());
+				newShopHasPall.setWeight(newNeedWeigthForShop);
+				newShopHasPall.setNeedPall(newNeedPallForShop);
+				newShopHasPall.setDistanceFromStock(distanceFromStock);				
+				List<Shop> points = new ArrayList<Shop>();
+				shopsForDelite.add(shop);
+				shopsForAddNewNeedPall.add(newShopHasPall);
+				shop.setNeedPall(targetTruck.getTargetPall()); // указываем текущую потребность магазина для этой фуры
+				points.add(targetStock);
+				points.add(shop);
+				points.add(targetStock);
+				VehicleWay vehicleWay = new VehicleWay(points, 0.0, 40, targetTruck);
+				changeTruckHasSmall(vehicleWay, targetStock);
+				whiteWay.add(vehicleWay);
+			}else {
+				System.err.println("Блок распределения идеальных маршрутов: Распределяем магазин по паллетам!");
+				int newNeedPall = targetTruck.getWeigth()/(int) oneWidthPall; // определяем сколько паллет (по ср. весу) поместится в эту машину
+				if(newNeedPall>= targetTruck.getPall()) {
+					targetTruck.setTargetPall(targetTruck.getPall()); // загружаем машину полностью		
+				}else {
+					System.err.println("обработать вариант! По идее такого быть не должно");
+					targetTruck.setTargetPall(newNeedPall);
+				}								
+				Integer newNeedPallForShop = shopPall - targetTruck.getPall();
+				Integer finalWidthFOrTruck = (int) ((int) targetTruck.getTargetPall()*oneWidthPall);
+				targetTruck.setTargetWeigth(finalWidthFOrTruck);
+				Integer newNeedWeigthForShop = shopWeight - finalWidthFOrTruck;
+				Shop newShopHasPall = new Shop(shop.getNumshop(), shop.getAddress(), shop.getLat(),
+						shop.getLng(), shop.getLength(), shop.getWidth(), shop.getHeight(), shop.getMaxPall());
+				newShopHasPall.setWeight(newNeedWeigthForShop);
+				newShopHasPall.setNeedPall(newNeedPallForShop);
+				newShopHasPall.setDistanceFromStock(distanceFromStock);
+				List<Shop> points = new ArrayList<Shop>();				
+				shopsForDelite.add(shop);
+				shopsForAddNewNeedPall.add(newShopHasPall);
+				shop.setNeedPall(targetTruck.getTargetPall()); // указываем текущую потребность магазина для этой фуры
+				points.add(targetStock);
+				points.add(shop);
+				points.add(targetStock);
+				VehicleWay vehicleWay = new VehicleWay(points, 0.0, 40, targetTruck);
+				changeTruckHasSmall(vehicleWay, targetStock);
+				whiteWay.add(vehicleWay);
+			}
+		}
+	}
+	
+	private void createIdealWayAndPallRestriction (Shop shop, Shop targetStock) {
+		Integer shopPall = shop.getNeedPall();
+		Integer shopWeight = shop.getWeight();
+		Integer maxPallTruck = trucks.get(0).getPall();
+		Integer maxWeighTruck = trucks.get(0).getWeigth();
+		Double distanceFromStock = shop.getDistanceFromStock();
 
+		// проверяем, есть ли ограничения и записываем
+		Integer pallRestrictionIdeal = shop.getMaxPall() != null ? shop.getMaxPall() : null;
+		
+		if (shopPall <= pallRestrictionIdeal && shopPall == maxPallTruck && maxWeighTruck >= shopWeight) {
+			System.err.println("Блок распределения идеальных маршрутов: Распределяем магазин БЕЗ ограничениями по весу, при том что паллеты проходят ровно!");
+			Vehicle targetTruck = trucks.remove(0);
+			targetTruck.setTargetPall(targetTruck.getPall()); // загружаем машину полностью
+			targetTruck.setTargetWeigth(shopWeight); // загружаем авто по весу
+			List<Shop> points = new ArrayList<Shop>();
+			points.add(targetStock);
+			shop.setNeedPall(targetTruck.getPall()); // указываем текущую потребность магазина для этой фуры
+			points.add(shop);
+			points.add(targetStock);
+			VehicleWay vehicleWay = new VehicleWay(points, 0.0, 40, targetTruck);
+			changeTruckHasSmall(vehicleWay, targetStock);
+			whiteWay.add(vehicleWay);
+			shopsForDelite.add(shop);
+		}else if(shopPall <= pallRestrictionIdeal && shopPall == maxPallTruck && maxWeighTruck < shopWeight) {
+			System.err.println("Блок распределения идеальных маршрутов: Распределяем магазин с ограничениями по весу, при том что паллеты проходят ровно!");
+			//делим магаз по весу
+			Vehicle targetTruck = trucks.remove(0);
+			double oneWidthPall = (double) (shop.getWeight()/shop.getNeedPall());
+			double widthNewShop = oneWidthPall*targetTruck.getPall();						
+			int newNeedPall = targetTruck.getWeigth()/(int) oneWidthPall; // определяем сколько паллет (по ср. весу) поместится в эту машину
+			targetTruck.setTargetPall(newNeedPall); // загружаем этим колличеством паллет
+			targetTruck.setTargetWeigth((int)widthNewShop);
+			Integer newNeedPallForShop = shopPall - newNeedPall;
+			Integer finalWidthFOrTruck = (int) ((int) newNeedPall*oneWidthPall);
+			targetTruck.setTargetWeigth(finalWidthFOrTruck);
+			Integer newNeedWeigthForShop = shopWeight - finalWidthFOrTruck;
+			Shop newShopHasPall = new Shop(shop.getNumshop(), shop.getAddress(), shop.getLat(),
+					shop.getLng(), shop.getLength(), shop.getWidth(), shop.getHeight(), shop.getMaxPall());
+			newShopHasPall.setWeight(newNeedWeigthForShop);
+			newShopHasPall.setNeedPall(newNeedPallForShop);
+			newShopHasPall.setDistanceFromStock(distanceFromStock);
+			List<Shop> points = new ArrayList<Shop>();
+			shopsForDelite.add(shop);
+			shopsForAddNewNeedPall.add(newShopHasPall);
+			shop.setNeedPall(targetTruck.getTargetPall()); // указываем текущую потребность магазина для этой фуры
+			points.add(targetStock);
+			points.add(shop);
+			points.add(targetStock);
+			VehicleWay vehicleWay = new VehicleWay(points, 0.0, 40, targetTruck);
+			changeTruckHasSmall(vehicleWay, targetStock);
+			whiteWay.add(vehicleWay);
+		}
+		if (shopPall >= pallRestrictionIdeal) {
+			Vehicle targetTruck = null;
+			for (Vehicle truck : trucks) {
+				if (truck.getPall() <= pallRestrictionIdeal) {
+					targetTruck = truck;
+					break;
+				}
+			}
+			if(targetTruck == null) {
+				stackTrace = stackTrace + "Ограничения на магазин следующие: не более " + shop.getMaxPall() + "паллет! Машин равных или меньше данному значению не найдено!\n";
+				System.err.println("ColossusProcessorANDRestrictions2.run: Ограничения на магазин следующие: не более" + shop.getMaxPall() + "паллет! Машин равных или меньше данному значению не найдено!");
+				//Нужно придумать специальную обработку
+//				Solution solution = new Solution();
+//				solution.setStackTrace(stackTrace);
+//				return solution;
+			}
+			double oneWidthPall = (double) (shop.getWeight()/shop.getNeedPall());
+			double widthNewShop = oneWidthPall*targetTruck.getPall();
+			if(widthNewShop > targetTruck.getWeigth()) {
+				//если по весу не проходит, то алгоритм разбивает магаз не по паллетам, а по весу
+				System.err.println("Блок распределения идеальных маршрутов: Распределяем магазин c ограничениями по весу!");
+				trucks.remove(targetTruck);
+				int newNeedPall = targetTruck.getWeigth()/(int) oneWidthPall; // определяем сколько паллет (по ср. весу) поместится в эту машину
+				targetTruck.setTargetPall(newNeedPall); // загружаем этим колличеством паллет
+				Integer newNeedPallForShop = shopPall - newNeedPall;
+				Integer finalWidthFOrTruck = (int) ((int) newNeedPall*oneWidthPall);
+				targetTruck.setTargetWeigth(finalWidthFOrTruck);
+				Integer newNeedWeigthForShop = shopWeight - finalWidthFOrTruck;
+				Shop newShopHasPall = new Shop(shop.getNumshop(), shop.getAddress(), shop.getLat(),
+						shop.getLng(), shop.getLength(), shop.getWidth(), shop.getHeight(), shop.getMaxPall());
+				newShopHasPall.setWeight(newNeedWeigthForShop);
+				newShopHasPall.setNeedPall(newNeedPallForShop);
+				newShopHasPall.setDistanceFromStock(distanceFromStock);
+				List<Shop> points = new ArrayList<Shop>();
+				shopsForDelite.add(shop);
+				shopsForAddNewNeedPall.add(newShopHasPall);
+				shop.setNeedPall(targetTruck.getTargetPall()); // указываем текущую потребность магазина для этой фуры
+				points.add(targetStock);
+				points.add(shop);
+				points.add(targetStock);
+				VehicleWay vehicleWay = new VehicleWay(points, 0.0, 40, targetTruck);
+				changeTruckHasSmall(vehicleWay, targetStock);
+				whiteWay.add(vehicleWay);
+			}else {
+				System.err.println("Блок распределения идеальных маршрутов: Распределяем магазин БЕЗ ограничениями по весу!");
+				trucks.remove(targetTruck);
+				int newNeedPall = targetTruck.getWeigth()/(int) oneWidthPall; // определяем сколько паллет (по ср. весу) поместится в эту машину
+				targetTruck.setTargetPall(targetTruck.getPall()); // загружаем машину полностью
+				Integer newNeedPallForShop = shopPall - targetTruck.getPall();
+				Integer finalWidthFOrTruck = (int) ((int) newNeedPall*oneWidthPall);
+				targetTruck.setTargetWeigth(finalWidthFOrTruck);
+				Integer newNeedWeigthForShop = shopWeight - finalWidthFOrTruck;
+				Shop newShopHasPall = new Shop(shop.getNumshop(), shop.getAddress(), shop.getLat(),
+						shop.getLng(), shop.getLength(), shop.getWidth(), shop.getHeight(), shop.getMaxPall());
+				newShopHasPall.setNeedPall(newNeedPallForShop);
+				newShopHasPall.setWeight(newNeedWeigthForShop);
+				newShopHasPall.setDistanceFromStock(distanceFromStock);
+				List<Shop> points = new ArrayList<Shop>();
+				shopsForDelite.add(shop);
+				shopsForAddNewNeedPall.add(newShopHasPall);
+				shop.setNeedPall(targetTruck.getPall()); // указываем текущую потребность магазина для этой фуры
+				points.add(targetStock);
+				points.add(shop);
+				points.add(targetStock);
+				VehicleWay vehicleWay = new VehicleWay(points, 0.0, 40, targetTruck);
+				changeTruckHasSmall(vehicleWay, targetStock);
+				whiteWay.add(vehicleWay);
+			}						
+		}
+	}
 	/**
 	 * Метод раздеяет число на слогаемые в разных вариациях
 	 * 

@@ -76,7 +76,7 @@ const optimizeRouteColumnDefs = [
 		cellClassRules: { 'green-cell': params => params.data.vehicle && params.data.vehicle.targetPall === params.data.vehicle.pall }
 	},
 	{ headerName: 'Расст.', field: 'fullDistance', cellClass: 'text-center', },
-	{ headerName: 'Перепробег', field: 'overrun', cellClass: 'text-center', },
+	{ headerName: 'Вес', field: 'targetWeigth', cellClass: 'text-center', },
 	{
 		headerName: 'Цвет', field: 'color', cellClass: 'p-0 text-center', width: 40,
 		cellRenderer: inputColorRenderer,

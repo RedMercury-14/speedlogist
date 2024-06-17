@@ -444,7 +444,7 @@ public class Shop implements Serializable{
 	@Override
 	public String toString() {
 		return "Shop [numshop=" + numshop + ", address=" + address + ", lat=" + lat + ", lng=" + lng + ", needPall="
-				+ needPall + "]";
+				+ needPall + ", needWeigth=" + needWeigth + "]";
 	}
 	
 	

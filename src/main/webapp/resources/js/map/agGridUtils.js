@@ -52,6 +52,7 @@ export function getFormatDataToOptimizeRouteTable(routesResponse) {
 			return acc
 		}, 0)
 		const color = randomColor()
+		const targetWeigth = el.vehicle.targetWeigth
 
 		const points = route.reduce((acc, route, i) => {
 			if (i === 0) {
@@ -83,6 +84,7 @@ export function getFormatDataToOptimizeRouteTable(routesResponse) {
 			route,
 			points,
 			fullDistance: Math.round(fullDistance / 1000),
+			targetWeigth,
 		}
 	})
 
@@ -96,6 +98,7 @@ export function getFormatDataToOptimizeRouteTable(routesResponse) {
 			problemShop: null,
 			color: null,
 			vehicle: null,
+			targetWeigth: null,
 		}
 		routes.push(emptyShopRow)
 	}

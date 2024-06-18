@@ -128,7 +128,6 @@ import by.base.main.util.GraphHopper.CustomJsonFeature;
 import by.base.main.util.GraphHopper.JSpiritMachine;
 import by.base.main.util.GraphHopper.RoutingMachine;
 import by.base.main.util.bots.TelegramBot;
-import by.base.main.util.hcolossus.ColossusProcessor;
 import by.base.main.util.hcolossus.ColossusProcessorANDRestrictions2;
 import by.base.main.util.hcolossus.pojo.Solution;
 import by.base.main.util.hcolossus.pojo.VehicleWay;
@@ -197,12 +196,6 @@ public class MainRestController {
 	@Autowired
 	private JSpiritMachine jSpiritMachine;
 
-	@Autowired
-	private ColossusProcessor colossusProcessor;
-
-//	@Autowired
-//	private MAINColossusProcessorVirtualWayVer2 colossusProcessorRad;
-	
 	@Autowired
 	private ColossusProcessorANDRestrictions2 colossusProcessorRad;
 

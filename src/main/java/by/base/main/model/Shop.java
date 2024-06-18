@@ -157,10 +157,6 @@ public class Shop implements Serializable{
 	private Integer needPall; // потребность магазина в паллетах
 
 	@Transient
-	private Double needWeigth; // потребность магазина в кг;
-	
-	
-	@Transient
 	private Double distanceFromStock; // расстояние от заданного склада
 	
 	@OneToMany(fetch=FetchType.EAGER,
@@ -236,6 +232,10 @@ public class Shop implements Serializable{
 	 */
 	public void setWeight(Integer weight) {
 		this.weight = weight;
+	}
+	
+	public void setWeight(Double weight) {
+		this.weight = weight.intValue();
 	}
 	
 	public String getDebt() {
@@ -317,12 +317,6 @@ public class Shop implements Serializable{
 	}
 	public void setNeedPall(Integer needPall) {
 		this.needPall = needPall;
-	}
-	public Double getNeedWeigth() {
-		return needWeigth;
-	}
-	public void setNeedWeigth(Double needWeigth) {
-		this.needWeigth = needWeigth;
 	}
 	
 	public Boolean getIsFit() {
@@ -444,7 +438,7 @@ public class Shop implements Serializable{
 	@Override
 	public String toString() {
 		return "Shop [numshop=" + numshop + ", address=" + address + ", lat=" + lat + ", lng=" + lng + ", needPall="
-				+ needPall + ", needWeigth=" + needWeigth + "]";
+				+ needPall + "]";
 	}
 	
 	
@@ -453,7 +447,7 @@ public class Shop implements Serializable{
 				+ workStart + ", workfinish=" + workfinish + ", debt=" + debt + ", commercial=" + commercial
 				+ ", packageShop=" + packageShop + ", returnShop=" + returnShop + ", lat=" + lat + ", lng=" + lng
 				+ ", type=" + type + ", length=" + length + ", width=" + width + ", height=" + height + ", maxPall="
-				+ maxPall + ", needPall=" + needPall + ", needWeigth=" + needWeigth + ", weight=" + weight +"]";
+				+ maxPall + ", needPall=" + needPall + ", weight=" + weight +"]";
 	}
 	
 	

@@ -1,5 +1,5 @@
 import { snackbar } from "../snackbar/snackbar.js"
-import { isAdmin, isLogist } from "../utils.js"
+import { dateHelper, isAdmin, isLogist } from "../utils.js"
 import { updateTableData, updateTableRow } from "./agGridUtils.js"
 import { createDraggableElement, updatePallInfo } from "./calendarUtils.js"
 import { userMessages } from "./constants.js"
@@ -14,18 +14,9 @@ export function addCalendarEvent(gridOptions, orderData, isAnotherUser) {
 	updateTableRow(gridOptions, updatedOrder)
 	// добавляем ивент в виртуальный склад
 	store.addEvent(orderData, updatedOrder)
-	
-	// обновляем количество паллет для склада
 	const currentStock = store.getCurrentStock()
-	const currentDate = store.getCurrentDate()
-	const stockId = orderData.stockId
-	const eventDate = orderData.startDateStr.split('T')[0]
-	if (stockAndDayIsVisible(currentStock, currentDate, stockId, eventDate)) {
-		const maxPall = store.getCurrentMaxPall()
-		const orderType = getOrderType(updatedOrder)
-		const currentPallCount = store.getPallCount(currentStock, currentDate)
-		updatePallInfo(currentPallCount, maxPall, orderType, 'increment')
-	}
+	// обновляем количество паллет для склада
+	changePallCapacity(orderData, currentStock, updatedOrder)
 
 	if (!isAnotherUser) {
 		// удаляем ивент из календаря, так как он уже добавлен в стор
@@ -37,62 +28,32 @@ export function addCalendarEvent(gridOptions, orderData, isAnotherUser) {
 	}
 }
 export function updateCalendarEvent(gridOptions, orderData, isAnotherUser) {
+	const oldOrder = store.getOrderByMarketNumber(orderData.marketNumber)
+	if (!oldOrder) return
+	const oldOrderStockId = `${oldOrder.idRamp}`.slice(0,-2)
 	// обновляем заказ в сторе
 	const updatedOrder = store.updateOrder(orderData)
-	// обновляем заказ в таблице
-	updateTableRow(gridOptions, updatedOrder)
-	// обновляем ивент в виртуальном складе
-	store.updateEvent(orderData, updatedOrder)
+	const updatedStockId = `${updatedOrder.idRamp}`.slice(0,-2)
 
-	// обновляем количество паллет для склада
-	const oldEvent = orderData.oldEvent
-	if (!oldEvent) return
+	// если склады не совпадают
+	if ((oldOrderStockId !== updatedStockId)) {
+		// удаляем старый ивент из виртуального склада
+		store.removeEvent(oldOrderStockId, oldOrder.marketNumber)
+		// добавляем новый ивент в виртуальный склад
+		store.addEvent(orderData, updatedOrder)
+		// обновляем заказ в таблице
+		updateTableRow(gridOptions, updatedOrder)
+	} else {
+		// обновляем заказ в таблице
+		updateTableRow(gridOptions, updatedOrder)
+		// обновляем ивент в виртуальном складе
+		store.updateEvent(orderData, updatedOrder)
+	}
 
 	const currentStock = store.getCurrentStock()
 	if (!currentStock) return
-
-	const currentDate = store.getCurrentDate()
-	const maxPall = store.getCurrentMaxPall()
-	const numberOfPall = Number(orderData.numberOfPalls)
-	const eventDateStr = orderData.startDateStr.split('T')[0]
-	const orderType = getOrderType(updatedOrder)
-	const currentPallCount = store.getPallCount(currentStock, currentDate)
-
-	// для текущего пользователя
-	if (!isAnotherUser) {
-		const oldEventDateStr = oldEvent.startStr.split('T')[0]
-
-		// если даты совпадают, то не обновляем паллетовместимость
-		if (oldEventDateStr === eventDateStr) return
-
-		const action = getPallCoutnAction(eventDateStr, oldEventDateStr)
-		updatePallInfo(currentPallCount, maxPall, orderType, action)
-		return
-	}
-
-	// для других пользователей
-	if (isAnotherUser) {
-		const oldStockId = oldEvent.extendedProps.data.numStockDelivery
-		const oldEventDateStr = oldEvent.start.split('T')[0]
-		const stockId = orderData.stockId
-
-		// если даты и склады совпадают, то не обновляем паллетовместимость
-		if ((oldEventDateStr === eventDateStr) && (stockId === oldStockId)) {
-			return
-		}
-
-		// если виден склад и дата старого ивента
-		if (stockAndDayIsVisible(currentStock, currentDate, oldStockId, oldEventDateStr)) {
-			updatePallInfo(currentPallCount, maxPall, orderType, 'decrement')
-			return
-		}
-
-		// если виден склад и дата нового ивента
-		if (stockAndDayIsVisible(currentStock, currentDate, stockId, eventDateStr)) {
-			updatePallInfo(currentPallCount, maxPall, orderType, 'increment')
-			return
-		}
-	}
+	// обновляем количество паллет для склада
+	changePallCapacityForUpdateCE(orderData, currentStock, oldOrder, updatedOrder, isAnotherUser)
 }
 export function deleteCalendarEvent(gridOptions, orderData, isAnotherUser) {
 	const login = store.getLogin()
@@ -109,17 +70,9 @@ export function deleteCalendarEvent(gridOptions, orderData, isAnotherUser) {
 	// обновляем заказ в таблице
 	updateTableRow(gridOptions, updatedOrder)
 	// удаляем ивент из стора
-	store.removeEvent(orderData.stockId, orderData.fcEvent)
+	store.removeEvent(orderData.stockId, orderData.marketNumber)
 	// обновляем количество паллет для склада
-	const currentDate = store.getCurrentDate()
-	const stockId = orderData.stockId
-	const eventDate = orderData.startDateStr.split('T')[0]
-	if (stockAndDayIsVisible(currentStock, currentDate, stockId, eventDate)) {
-		const maxPall = store.getCurrentMaxPall()
-		const orderType = getOrderType(updatedOrder)
-		const currentPallCount = store.getPallCount(currentStock, currentDate)
-		updatePallInfo(currentPallCount, maxPall, orderType, 'decrement')
-	}
+	changePallCapacity(orderData, currentStock, updatedOrder)
 
 	if (!isAnotherUser && currentStock) {
 		// добавляем ивент в очередь ожидания
@@ -135,32 +88,24 @@ export function deleteCalendarEventFromTable(gridOptions, orderData) {
 	// удаляем заказ в сторе
 	store.deleteOrder(orderData)
 	// удаляем ивент из стора
-	store.removeEvent(orderData.stockId, orderData.fcEvent)
+	store.removeEvent(orderData.stockId, orderData.marketNumber)
 
 	const currentStock = store.getCurrentStock()
-	const currentDate = store.getCurrentDate()
 	const stockId = orderData.stockId
-	const eventDate = orderData.startDateStr.split('T')[0]
+	const order = orderData.fcEvent.extendedProps.data
 	// обновляем заказ в таблице
 	if (stockIsVisible(currentStock, stockId)) {
 		updateTableData(gridOptions, store.getCurrentStockOrders())
 	}
 	// обновляем количество паллет для склада
-	if (stockAndDayIsVisible(currentStock, currentDate, stockId, eventDate)) {
-		const maxPall = store.getCurrentMaxPall()
-		const order = orderData.fcEvent.extendedProps.data
-		const orderType = getOrderType(order)
-		const currentPallCount = store.getPallCount(currentStock, currentDate)
-		updatePallInfo(currentPallCount, maxPall, orderType, 'decrement')
-	}
+	changePallCapacity(orderData, currentStock, order)
 }
 export function updateOrderAndEvent(order, currentLogin, currentRole, method) {
 	const stockId = order.idRamp.slice(0, -2)
-	const marketNumber = order.marketNumber
 	// обновляем заказ в сторе
 	const updatedOrder = store.updateOrder(order)
 	// получение ивента календаря (слота)
-	const event = store.getEvent(stockId, { id: marketNumber })
+	const event = store.getEvent(stockId, order.marketNumber)
 
 	if (event) {
 		// обновляем ивент в виртуальном складе
@@ -174,5 +119,68 @@ export function updateOrderAndEvent(order, currentLogin, currentRole, method) {
 		}
 		const orderData = getOrderDataForAjax(fakeInfo, { id: stockId }, currentLogin, currentRole, method)
 		store.updateEvent(orderData, updatedOrder)
+	}
+}
+
+function changePallCapacity(orderData, currentStock, order) {
+	const currentDate = store.getCurrentDate()
+	const stockId = orderData.stockId
+	const eventDate = orderData.startDateStr.split('T')[0]
+	if (stockAndDayIsVisible(currentStock, currentDate, stockId, eventDate)) {
+		const maxPall = store.getCurrentMaxPall()
+		const orderType = getOrderType(order)
+		const currentPallCount = store.getPallCount(currentStock, currentDate)
+		updatePallInfo(currentPallCount, maxPall, orderType)
+	}
+}
+
+function changePallCapacityForUpdateCE(orderData, currentStock, oldOrder, order, isAnotherUser) {
+	const oldEvent = orderData.oldEvent
+	const oldOrderStockId = `${oldOrder.idRamp}`.slice(0,-2)
+	const currentDate = store.getCurrentDate()
+	const maxPall = store.getCurrentMaxPall()
+	const eventDateStr = orderData.startDateStr.split('T')[0]
+	const orderType = getOrderType(order)
+	const currentPallCount = store.getPallCount(currentStock, currentDate)
+
+	// для текущего пользователя
+	if (!isAnotherUser) {
+		const oldEventDateStr = oldEvent
+			? oldEvent.startStr.split('T')[0]
+			: new Date(oldOrder.timeDelivery).toISOString().split('T')[0]
+
+		// если даты не совпадают, то обновляем паллетовместимость
+		if (oldEventDateStr !== eventDateStr) {
+			updatePallInfo(currentPallCount, maxPall, orderType)
+			return
+		}
+	}
+
+	// для других пользователей
+	if (isAnotherUser) {
+		const oldStockId = oldEvent
+			? oldEvent.extendedProps.data.numStockDelivery
+			: oldOrderStockId
+		const oldEventDateStr = oldEvent
+			? oldEvent.start.split('T')[0]
+			: new Date(oldOrder.timeDelivery).toISOString().split('T')[0]
+		const stockId = orderData.stockId
+
+		// если даты и склады совпадают, то не обновляем паллетовместимость
+		if ((oldEventDateStr === eventDateStr) && (stockId === oldStockId)) {
+			return
+		}
+
+		// если виден склад и дата старого ивента
+		if (stockAndDayIsVisible(currentStock, currentDate, oldStockId, oldEventDateStr)) {
+			updatePallInfo(currentPallCount, maxPall, orderType)
+			return
+		}
+
+		// если виден склад и дата нового ивента
+		if (stockAndDayIsVisible(currentStock, currentDate, stockId, eventDateStr)) {
+			updatePallInfo(currentPallCount, maxPall, orderType)
+			return
+		}
 	}
 }

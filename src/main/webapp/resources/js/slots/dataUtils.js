@@ -133,7 +133,7 @@ export function getPallCoutnAction(eventDateStr, oldEventDateStr) {
 
 // получение типа заказа (необходимо для определения паллетовместимости)
 export function getOrderType(order) {
-	// if (order.isInternalMovement === 'true') return 'internalMovement'
+	if (order.isInternalMovement === 'true') return 'internalMovement'
 	return 'externalMovement'
 }
 

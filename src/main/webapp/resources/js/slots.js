@@ -31,6 +31,8 @@ import {
 	updateDropZone,
 	copyToClipboard,
 	showMessageModal,
+	setCurrentDateAttr,
+	setStockAttr,
 } from "./slots/calendarUtils.js"
 import { dateHelper, debounce, getData, isAdmin, isLogist, isSlotsObserver, isStockProcurement } from "./utils.js"
 import { uiIcons } from "./uiIcons.js"
@@ -49,9 +51,11 @@ import {
 	checkPallCount,
 	checkPallCountForComingDates,
 	hasOrderInYard,
+	isBackgroundEvent,
 	isInvalidEventDate,
 	isOldSlotNotInYard,
 	isOldSupplierOrder,
+	isOverlapWithInternalMovementTime,
 	isOverlapWithShiftChange,
 	methodAccessRules,
 } from "./slots/rules.js"
@@ -169,7 +173,7 @@ const calendarOptions = {
 	droppable: true,
 	selectable: false,
 	selectOverlap: false,
-	eventOverlap: false,
+	eventOverlap: (stillEvent, movingEvent) => stillEvent.display === 'background',
 	eventDurationEditable: false,
 	eventColor: eventColors.default,
 
@@ -377,8 +381,7 @@ function stockSelectOnChangeHandler(e, calendar) {
 	}
 
 	// добавляем для календаря текущий склад в атрибуты
-	const calendarElem = document.querySelector('#calendar')
-	calendarElem.dataset.stock = selectedStock.id
+	setStockAttr(selectedStock.id)
 
 	snackbar.show(`Выбран ${selectedStock.name}`)
 
@@ -439,6 +442,9 @@ function dateSetHandler(info) {
 		// изменяем данные по паллетовместимости у пользователя
 		setPallInfo(pallCount, maxPall)
 	}
+
+	// добавляем для календаря текущую дату в атрибуты
+	setCurrentDateAttr(currentDateStr)
 }
 function eventsHandler(info, successCallback, failureCallback) {
 	const currentStock = store.getCurrentStock()
@@ -450,6 +456,10 @@ function eventsHandler(info, successCallback, failureCallback) {
 function eventContentHandler(info) {
 	const login = store.getLogin()
 	const eventElem = createEventElement(info)
+
+	// если ивент - подложка
+	if (isBackgroundEvent(info.event)) return eventElem
+
 	const showBtn = isOldSupplierOrder(info, login) && !hasOrderInYard(info.event.extendedProps.data)
 	const closeBtn = info.isDraggable || showBtn ? createCloseEventButton(info, showBtn) : ''
 	const popupBtn = createPopupButton(info, login)
@@ -461,7 +471,7 @@ function eventContentHandler(info) {
 	}
 }
 function eventDidMountHandler(info) {
-	if(!info.isDraggable) {
+	if(!info.isDraggable && !isBackgroundEvent(info.event)) {
 		info.el.children[0].children[0].style.cursor = 'default'
 		return
 	}
@@ -498,6 +508,15 @@ function eventDropHandler(info) {
 	if (isOverlapWithShiftChange(info, shiftChange)) {
 		info.revert()
 		snackbar.show(userMessages.shiftChangeError)
+		return
+	}
+
+	// проверка пересечения со временем для внутренних перемещений
+	const internaMovementsTimes = currentStock.internaMovementsTimes
+	const internalMovementsRamps = currentStock.internalMovementsRamps
+	if (isOverlapWithInternalMovementTime(info, internaMovementsTimes, internalMovementsRamps)) {
+		info.revert()
+		alert(userMessages.internalMovementTimeError)
 		return
 	}
 
@@ -543,6 +562,15 @@ function eventReceiveHandler(info) {
 	if (isOverlapWithShiftChange(info, shiftChange)) {
 		info.revert()
 		snackbar.show(userMessages.shiftChangeError)
+		return
+	}
+
+	// проверка пересечения со временем для внутренних перемещений
+	const internaMovementsTimes = currentStock.internaMovementsTimes
+	const internalMovementsRamps = currentStock.internalMovementsRamps
+	if (isOverlapWithInternalMovementTime(info, internaMovementsTimes, internalMovementsRamps)) {
+		info.revert()
+		alert(userMessages.internalMovementTimeError)
 		return
 	}
 

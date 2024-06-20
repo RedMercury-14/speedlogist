@@ -2,7 +2,7 @@ import { snackbar } from "../snackbar/snackbar.js"
 import { dateHelper } from "../utils.js"
 import { Draggable, eventColors, userMessages } from "./constants.js"
 import { convertToDDMMYYYY, convertToDayMonthTime, getEventBGColor, getSlotStatus, getSlotStatusYard } from "./dataUtils.js"
-import { editableRulesToConfirmBtn, hasOrderInYard, isAnotherUser } from "./rules.js"
+import { editableRulesToConfirmBtn, hasOrderInYard, isAnotherUser, isBackgroundEvent } from "./rules.js"
 
 export function addNewStockOption(select, stock) {
 	const option = document.createElement("option")
@@ -78,6 +78,14 @@ export function createEventElement(info) {
 	const { event: fcEvent, timeText } = info
 	const { id, title, extendedProps } = fcEvent
 	const order = extendedProps.data
+
+	// элемент подложки для других ивентов
+	if (isBackgroundEvent(fcEvent)) {
+		const backgroundEventClasses = 'fc-event fc-event-start fc-event-end fc-event-today fc-bg-event'
+		eventElem.className = backgroundEventClasses
+		return eventElem
+	}
+
 	// жирная граница ивента для статусов Двора
 	eventElem.className = hasOrderInYard(order) ? 'fc-event-main-frame boldBorder' : 'fc-event-main-frame'
 	eventElem.style.cursor = 'move'
@@ -254,32 +262,32 @@ export function setPallInfo(pallCount, maxPall) {
 
 	const externalPallCountElem = document.querySelector('#externalPallCount')
 	const externalMaxPallElem = document.querySelector('#externalMaxPall')
-	// const internalPallCountElem = document.querySelector('#internalPallCount')
-	// const internalMaxPallElem = document.querySelector('#internalMaxPall')
+	const internalPallCountElem = document.querySelector('#internalPallCount')
+	const internalMaxPallElem = document.querySelector('#internalMaxPall')
 
 	if (
 		!externalPallCountElem
 		|| !externalMaxPallElem
-		// || !internalPallCountElem
-		// || !internalMaxPallElem
+		|| !internalPallCountElem
+		|| !internalMaxPallElem
 	) {
 		return
 	}
 
 	const externalPallCount = pallCount.externalMovement
 	const externalMaxPall = maxPall.externalMovement
-	// const internalPallCount = pallCount.internalMovement
-	// const internalMaxPall = maxPall.internalMovement
+	const internalPallCount = pallCount.internalMovement
+	const internalMaxPall = maxPall.internalMovement
 
 	externalPallCountElem.innerText = externalPallCount
 	externalMaxPallElem.innerText = externalMaxPall
-	// internalPallCountElem.innerText = internalPallCount
-	// internalMaxPallElem.innerText = internalMaxPall
+	internalPallCountElem.innerText = internalPallCount
+	internalMaxPallElem.innerText = internalMaxPall
 
 	changePallCountElemColor(externalPallCountElem, externalPallCount, externalMaxPall)
-	// changePallCountElemColor(internalPallCountElem, internalPallCount, internalMaxPall)
+	changePallCountElemColor(internalPallCountElem, internalPallCount, internalMaxPall)
 }
-export function updatePallInfo(currentPallCount, maxPall, orderType, action) {
+export function updatePallInfo(currentPallCount, maxPall, orderType) {
 	let pallCountElem
 	if (orderType === 'externalMovement') {
 		pallCountElem = document.querySelector('#externalPallCount')
@@ -360,4 +368,20 @@ export function showMessageModal(message) {
 	const messageContainer = document.querySelector('#messageContainer')
 	messageContainer.innerText = message
 	$('#displayMessageModal').modal('show')
+}
+
+// добавление текущей даты в атрибуты календаря
+export function setCurrentDateAttr(currentDate) {
+	const calendarElem = document.querySelector('#calendar')
+	const nowDate = new Date().toISOString().split('T')[0]
+
+	calendarElem.dataset.date = currentDate === nowDate
+		? 'now'
+		: currentDate
+}
+
+// добавление id текущего склада в атрибуты календаря
+export function setStockAttr(stockId) {
+	const calendarElem = document.querySelector('#calendar')
+	calendarElem.dataset.stock = stockId
 }

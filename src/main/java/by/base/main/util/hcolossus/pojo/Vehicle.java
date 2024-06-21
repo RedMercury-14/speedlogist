@@ -3,6 +3,7 @@ package by.base.main.util.hcolossus.pojo;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.itextpdf.text.pdf.PdfStructTreeController.returnType;
 
 /**
  * Класс реализующий транспортное средство для проекта колос.
@@ -204,6 +205,19 @@ public class Vehicle{
 	 */
 	public Integer getFreePall() {
 		return (int) (pall - targetPall) < 0 ? -1 : (pall - targetPall) ;
+	}
+	
+	/**
+	 * Возвращает свободное вес в машине
+	 * @return
+	 */
+	public Integer getFreeWeigth() {
+		if(targetWeigth != null) {
+			return (int) (weigth - targetWeigth) < 0 ? -1 : (weigth - targetWeigth) ;
+		}else {
+			return weigth;
+		}
+		
 	}
 
 	@Override

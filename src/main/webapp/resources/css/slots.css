@@ -259,6 +259,8 @@ html, body {
 	font-size: 85%;
 	opacity: 1;
 }
+
+/* -------- выделение пересменки -------- */
 #calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="08:00:00"],
 #calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="20:00:00"] {
 	border-top: none;

@@ -8,9 +8,11 @@ export const stocks = [
 		workingHoursStart: '00:00',
 		workingHoursEnd: '24:00',
 		shiftChange: ['08:00', '09:00', '20:00', '21:00'],
+		internaMovementsTimes: ['12:00', '20:00'],
+		internalMovementsRamps: ['170001'],
 		maxPall: {
 			externalMovement: 1300,
-			internalMovement: 0,
+			internalMovement: 500,
 		},
 		weekends: [],
 		ramps: [
@@ -31,9 +33,11 @@ export const stocks = [
 		workingHoursStart: '08:00',
 		workingHoursEnd: '21:00',
 		shiftChange: [],
+		internaMovementsTimes: [],
+		internalMovementsRamps: [],
 		maxPall: {
 			externalMovement: 600,
-			internalMovement: 0,
+			internalMovement: 500,
 		},
 		weekends: [],
 		ramps: [
@@ -52,9 +56,11 @@ export const stocks = [
 		workingHoursStart: '09:00',
 		workingHoursEnd: '22:00',
 		shiftChange: [],
+		internaMovementsTimes: [],
+		internalMovementsRamps: [],
 		maxPall: {
 			externalMovement: 100,
-			internalMovement: 0,
+			internalMovement: 500,
 		},
 		weekends: [],
 		ramps: [
@@ -70,9 +76,11 @@ export const stocks = [
 		workingHoursStart: '08:00',
 		workingHoursEnd: '20:00',
 		shiftChange: [],
+		internaMovementsTimes: [],
+		internalMovementsRamps: [],
 		maxPall: {
 			externalMovement: 120,
-			internalMovement: 0,
+			internalMovement: 500,
 		},
 		weekends: [],
 		ramps: [

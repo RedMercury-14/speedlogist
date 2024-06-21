@@ -11,20 +11,25 @@ const excelHeader = [
 	cell('Номер', 'header'),
 	cell('Адрес', 'header'),
 	cell('Паллеты', 'header'),
+	cell('Общий вес', 'header'),
+	cell('Вес', 'header'),
 	cell('Расстояние, км', 'header'),
 ]
 const getExcelRows = (params) => {
-	const rows = params.node.data.points.map((point, i) => 
-		({
-			cells: [
-				cell((i === 0 ? params.node.data.id : ''), 'body'),
-				cell(point.numshop, 'body'),
-				cell(point.address, 'body'),
-				cell((point.needPall ? point.needPall : 0), 'body'),
-				cell(point.distanceToView, 'body'),
-			]
-		})
-	)
+	const routeResponse = params.node.data
+	const rows = params.node.data.points.map((point, i) => {
+		return ({
+				cells: [
+					cell((i === 0 ? params.node.data.id : ''), 'body'),
+					cell(point.numshop, 'body'),
+					cell(point.address, 'body'),
+					cell((point.needPall ? point.needPall : 0), 'body'),
+					cell(routeResponse.targetWeigth, 'body'),
+					cell((point.endShop.weight ? point.endShop.weight : 0), 'body'),
+					cell(point.distanceToView, 'body'),
+				]
+			})
+	})
 	return rows
 }
 const defaultExcelExportParams = {
@@ -76,7 +81,7 @@ const optimizeRouteColumnDefs = [
 		cellClassRules: { 'green-cell': params => params.data.vehicle && params.data.vehicle.targetPall === params.data.vehicle.pall }
 	},
 	{ headerName: 'Расст.', field: 'fullDistance', cellClass: 'text-center', },
-	{ headerName: 'Перепробег', field: 'overrun', cellClass: 'text-center', },
+	{ headerName: 'Вес', field: 'targetWeigth', cellClass: 'text-center', },
 	{
 		headerName: 'Цвет', field: 'color', cellClass: 'p-0 text-center', width: 40,
 		cellRenderer: inputColorRenderer,

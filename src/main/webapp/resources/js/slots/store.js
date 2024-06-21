@@ -8,11 +8,6 @@ const token = $("meta[name='_csrf']").attr("content")
 const login = document.querySelector("#login").value
 const role = document.querySelector("#role").value
 
-const maxPall = {
-	externalMovement: 0,
-	internalMovement: 0,
-}
-
 export const store = {
 	_state: {
 		token,
@@ -91,18 +86,18 @@ export const store = {
 	getPallCount(stock, dateStr) {
 		const isExternalMovementEvent = event => event.extendedProps.data.isInternalMovement !== 'true'
 		const isInternalMovementEvent = event => event.extendedProps.data.isInternalMovement === 'true'
-		const eventsByDate = event => event.start.split('T')[0] === dateStr
+		const eventsByDate = event => event.start && event.start.split('T')[0] === dateStr
 		return stock.events
 			.filter(eventsByDate)
 			.reduce((acc, event) => {
 				const numberOfPall = Number(event.extendedProps.data.pall)
-				acc.externalMovement = acc.externalMovement + numberOfPall
-				// if (isExternalMovementEvent(event)) {
-				// 	acc.externalMovement = acc.externalMovement + numberOfPall
-				// }
-				// if (isInternalMovementEvent(event)) {
-				// 	acc.internalMovement = acc.internalMovement + numberOfPall
-				// }
+				// acc.externalMovement = acc.externalMovement + numberOfPall
+				if (isExternalMovementEvent(event)) {
+					acc.externalMovement = acc.externalMovement + numberOfPall
+				}
+				if (isInternalMovementEvent(event)) {
+					acc.internalMovement = acc.internalMovement + numberOfPall
+				}
 				return acc
 			}, {
 				externalMovement: 0,
@@ -170,7 +165,7 @@ export const store = {
 			...this._state.orders[index],
 			status: orderData.status,
 			timeDelivery,
-			idRamp: orderData.idRamp,
+			idRamp: Number(orderData.idRamp),
 			loginManager: orderData.loginManager,
 			marketInfo,
 		}
@@ -259,6 +254,23 @@ export const store = {
 
 			stock.events.push(event)
 		})
+
+		const backgroundEvent = {
+			id: 'background1',
+			resourceId: '170001',
+			display: 'background',
+			startTime: '12:00',
+			endTime: '20:00',
+			eventOverlap: true,
+			title: '',
+			extendedProps: {
+				data: {
+					pall: 0,
+				}
+			},
+		}
+		const stock1700 = this._state.stocks.find(stock => stock.id === '1700')
+		stock1700.events.push(backgroundEvent)
 	},
 
 
@@ -350,15 +362,13 @@ export const store = {
 
 		this._callSubscriber(this._state)
 	},
-	removeEvent(stockId, fcEvent) {
-		const eventId = fcEvent.id
+	removeEvent(stockId, eventId) {
 		const stockIndex = this._state.stocks.findIndex(stock => stock.id === stockId)
 		const eventIndex = this._state.stocks[stockIndex].events.findIndex(event => event.id === eventId)
 		this._state.stocks[stockIndex].events.splice(eventIndex, 1)
 		this._callSubscriber(this._state)
 	},
-	getEvent(stockId, fcEvent) {
-		const eventId = fcEvent.id
+	getEvent(stockId, eventId) {
 		const stockIndex = this._state.stocks.findIndex(stock => stock.id === stockId)
 		if (stockIndex === -1) return null
 		return this._state.stocks[stockIndex].events.find(event => event.id === eventId)

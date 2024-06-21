@@ -64,8 +64,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.google.gson.Gson;
 import com.google.j2objc.annotations.AutoreleasePool;
 import com.graphhopper.GHRequest;
@@ -130,7 +128,6 @@ import by.base.main.util.GraphHopper.CustomJsonFeature;
 import by.base.main.util.GraphHopper.JSpiritMachine;
 import by.base.main.util.GraphHopper.RoutingMachine;
 import by.base.main.util.bots.TelegramBot;
-import by.base.main.util.hcolossus.ColossusProcessor;
 import by.base.main.util.hcolossus.ColossusProcessorANDRestrictions2;
 import by.base.main.util.hcolossus.pojo.Solution;
 import by.base.main.util.hcolossus.pojo.VehicleWay;
@@ -200,12 +197,6 @@ public class MainRestController {
 	private JSpiritMachine jSpiritMachine;
 
 	@Autowired
-	private ColossusProcessor colossusProcessor;
-
-//	@Autowired
-//	private MAINColossusProcessorVirtualWayVer2 colossusProcessorRad;
-	
-	@Autowired
 	private ColossusProcessorANDRestrictions2 colossusProcessorRad;
 
 	@Autowired
@@ -238,6 +229,8 @@ public class MainRestController {
 
 	public static final Comparator<Address> comparatorAddressId = (Address e1, Address e2) -> (e1.getIdAddress() - e2.getIdAddress());
 	public static final Comparator<Address> comparatorAddressIdForView = (Address e1, Address e2) -> (e2.getType().charAt(0) - e1.getType().charAt(0));
+	
+	
 	
 	
 	/**
@@ -800,14 +793,16 @@ public class MainRestController {
 		}
 		//главные проверки
 		//проверка на лимит приемки паллет
-		Integer summPall = orderService.getSummPallInStockExternal(order);
-		Integer summPallNew =  summPall + Integer.parseInt(order.getPall().trim());
-		String propKey = "limit." + getTrueStock(order);
-		if(summPallNew > Integer.parseInt(propertiesStock.getProperty(propKey))) {						
-			response.put("status", "100");
-			response.put("message", "Ошибка. Превышен лимит по паллетам на текущую дату");
-			System.err.println("Не прошла проверку по лимитам паллет склада");
-			return response;
+		if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) { // проверяем всё кроме вн перемещений
+			Integer summPall = orderService.getSummPallInStockExternal(order);
+			Integer summPallNew =  summPall + Integer.parseInt(order.getPall().trim());
+			String propKey = "limit." + getTrueStock(order);
+			if(summPallNew > Integer.parseInt(propertiesStock.getProperty(propKey))) {						
+				response.put("status", "100");
+				response.put("message", "Ошибка. Превышен лимит по паллетам на текущую дату");
+				System.err.println("Не прошла проверку по лимитам паллет склада");
+				return response;
+			}			
 		}
 		
 		
@@ -1000,17 +995,20 @@ public class MainRestController {
 		order.setLoginManager(user.getLogin());
 		order.setStatus(jsonMainObject.get("status") == null ? 7 : Integer.parseInt(jsonMainObject.get("status").toString()));
 		//главные проверки
-		//проверка на лимит приемки паллет		
-		Integer summPall = orderService.getSummPallInStockExternal(order);
-//		System.out.println("Сумма паллет обычного заказа = " + summPall);
-		Integer summPallNew =  summPall + Integer.parseInt(order.getPall().trim());
-		String propKey = "limit." + getTrueStock(order);
-		if(summPallNew > Integer.parseInt(propertiesStock.getProperty(propKey))) {
-			response.put("status", "100");
-			response.put("message", "Ошибка. Превышен лимит по паллетам на текущую дату");
-			System.err.println("Не прошла проверку по лимитам паллет склада");
-			return response;
+		//проверка на лимит приемки паллет	
+		if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) { // проверяем всё кроме вн перемещений
+			Integer summPall = orderService.getSummPallInStockExternal(order);
+//			System.out.println("Сумма паллет обычного заказа = " + summPall);
+			Integer summPallNew =  summPall + Integer.parseInt(order.getPall().trim());
+			String propKey = "limit." + getTrueStock(order);
+			if(summPallNew > Integer.parseInt(propertiesStock.getProperty(propKey))) {
+				response.put("status", "100");
+				response.put("message", "Ошибка. Превышен лимит по паллетам на текущую дату");
+				System.err.println("Не прошла проверку по лимитам паллет склада");
+				return response;
+			}
 		}
+		
 		
 		//отдельно проверяем на внутренние перемещение и все остальные
 //		if(order.getIsInternalMovement() != null && order.getIsInternalMovement().equals("true")) {
@@ -1156,8 +1154,8 @@ public class MainRestController {
 	}
 	
 	@PostMapping("/map/myoptimization3")
-	public Solution myOptimization3(@RequestBody String str) throws ParseException, JsonMappingException, JsonProcessingException {
-		Double maxKoef = 1.2;
+	public Solution myOptimization3(@RequestBody String str) throws Exception {
+		Double maxKoef = 1.45;
 		JSONParser parser = new JSONParser();
 		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
 		JSONArray numShopsJSON = (JSONArray) jsonMainObject.get("shops");
@@ -1177,7 +1175,7 @@ public class MainRestController {
 		List<Solution> solutions = new ArrayList<Solution>();
 		
 		//реализация перебора первого порядка
-		for (double i = 1.20; i <= maxKoef; i = i + 0.02) {
+		for (double i = 1.45; i <= maxKoef; i = i + 0.02) {
 			Double koeff = i;
 //			System.out.println("Коэфф = " + koeff);
 			Solution solution = colossusProcessorRad.run(jsonMainObject, numShops, pallHasShops, tonnageHasShops, stock, koeff, "fullLoad");
@@ -1788,7 +1786,7 @@ public class MainRestController {
 	private LogicAnalyzer logicAnalyzer;
 	
 	@PostMapping("/map/myoptimization2")
-	public Solution myOptimization2(@RequestBody String str) throws ParseException, JsonMappingException, JsonProcessingException {
+	public Solution myOptimization2(@RequestBody String str) throws Exception {
 		Double maxKoef = 2.0;
 		Map<String, String> response = new HashMap<String, String>();
 		JSONParser parser = new JSONParser();
@@ -1947,7 +1945,7 @@ public class MainRestController {
 	}
 
 	@PostMapping("/map/myoptimization")
-	public Solution myOptimization(@RequestBody String str) throws ParseException, JsonMappingException, JsonProcessingException {
+	public Solution myOptimization(@RequestBody String str) throws Exception {
 		Map<String, String> response = new HashMap<String, String>();
 		JSONParser parser = new JSONParser();
 		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
@@ -5289,7 +5287,7 @@ public class MainRestController {
 	public Integer calcPallHashHsop(List<Shop> shops, Shop targetStock) {
 		Integer summ = 0;
 		for (Shop shop : shops) {
-			if(!targetStock.equals(shop)) {
+			if(targetStock.getNumshop() !=shop.getNumshop()) {
 				summ = summ + shop.getNeedPall();
 			}
 		}

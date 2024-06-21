@@ -33,7 +33,7 @@ import by.base.main.util.hcolossus.service.VehicleMachine;
  * Самый основной оптимизатор! БАЗА! Изменение запрещено!
  */
 @Component
-public class ColossusProcessorANDRestrictions2 {
+public class ColossusProcessorANDRestrictions2SUPERFULL {
 
 	private JSONObject jsonMainObject;
 
@@ -1347,15 +1347,14 @@ public class ColossusProcessorANDRestrictions2 {
 	 * @param pallRestriction
 	 * @param targetStock
 	 */
-	private void optimizationOfVirtualRoutesType1(VehicleWay vehicleWayVirtual, Integer pallRestriction, Shop targetStock) {
-		if (!vehicleWayVirtual.getVehicle().isFull() || vehicleWayVirtual.getWay().size() > 3) {
+	private void optimizationOfVirtualRoutesType1(VehicleWay vehicleWayVirtual, Integer pallRestriction, Shop targetStock) {		
+		if (!vehicleWayVirtual.getVehicle().isFull()) {
 			// если тачка недогружена, то возможны 2 варианта:
 			// берем последнюю точку, прокладываем радиус 10 км, убераем её и ищем магаз
 			// (магазы) которые могут догрузить машину
 			// второй варик тот же самый, но без убирание точки
 			List<Shop> newPoints = logicAnalyzer.correctRouteMaker(vehicleWayVirtual.getWay());
-			Shop lastShop = newPoints.get(1);
-			System.out.println("LAST SHOP  =  " + lastShop);
+			Shop lastShop = newPoints.get(newPoints.size() - 2);
 			List<Shop> processWay = new ArrayList<Shop>(newPoints);
 			int size = processWay.size();
 
@@ -1367,59 +1366,25 @@ public class ColossusProcessorANDRestrictions2 {
 					continue;
 				}
 				if (e.getValue().getNeedPall() <= vehicleWayVirtual.getFreePallInVehicle()) {
-					System.out.println("<><><><><> 11");
 					if (e.getValue().getNumshop() != lastShop.getNumshop() && !shopsForDelite.contains(e.getValue())) {
-						System.out.println("<><><><><> 12");
 						if(e.getValue().getWeight() < vehicleWayVirtual.getFreeWeigthInVehicle()) {
-							System.out.println("<><><><><> 13");
-							processWay.remove(0);
-							List<Shop> processWayNew = new ArrayList<Shop>();
-							processWayNew.add(targetStock);
-							processWayNew.add(e.getValue());
-							processWayNew.addAll(processWay);
+							processWay.remove(size - 1);
+							processWay.add(e.getValue());
+							processWay.add(targetStock);
 							Vehicle truck = vehicleWayVirtual.getVehicle();
-							truck.setTargetPall(calcPallHashHsop(processWayNew, targetStock));
+							truck.setTargetPall(calcPallHashHsop(processWay, targetStock));
 							truck.setTargetWeigth(truck.getTargetWeigth() + e.getValue().getWeight());
 							vehicleWayVirtual.setVehicle(truck);
-							vehicleWayVirtual.setWay(processWayNew);			
+							vehicleWayVirtual.setWay(processWay);			
 							shopsForDelite.add(e.getValue());
 							shopsForOptimization.remove(e.getValue());
-							size = processWayNew.size();
+							size = processWay.size();
 							System.err.println(	"~~~~~~~~~~~~~~~~~ БЛОК догруза машины по последней точке СРАБОТАЛ ~~~~~~~~~~~~~~~~~~~");
 //							break;
 						}
 						
 					}
 				}
-//				if (e.getValue().getNeedPall() <= vehicleWayVirtual.getFreePallInVehicle()+lastShop.getNeedPall() || !vehicleWayVirtual.getVehicle().isFull()) {
-//					System.out.println("<><><><><> 21");
-//					if (e.getValue().getNumshop() != lastShop.getNumshop() && !shopsForDelite.contains(e.getValue())) {
-//						System.out.println("<><><><><> 22");
-//						if(e.getValue().getWeight() < vehicleWayVirtual.getFreeWeigthInVehicle()+lastShop.getWeight()) {
-//							System.out.println("<><><><><> 23");
-//							System.out.println(e.getValue().toAllString());
-//							processWay.forEach(s-> System.err.println(s.toAllString()));
-//							processWay.remove(0);
-//							Shop oldShopForReplace = processWay.remove(0);
-//							List<Shop> processWayNew = new ArrayList<Shop>();
-//							processWayNew.add(targetStock);
-//							processWayNew.add(e.getValue());
-//							processWayNew.addAll(processWay);
-//							Vehicle truck = vehicleWayVirtual.getVehicle();							
-//							truck.setTargetPall(calcPallHashHsop(processWayNew, targetStock));
-//							truck.setTargetWeigth(truck.getTargetWeigth() + e.getValue().getWeight());
-//							vehicleWayVirtual.setVehicle(truck);
-//							vehicleWayVirtual.setWay(processWayNew);			
-//							shopsForDelite.add(e.getValue());
-//							shopsForOptimization.remove(e.getValue());
-//							shopsForOptimization.add(oldShopForReplace);
-//							size = processWayNew.size();
-//							System.err.println(	"~~~~~~~~~~~~~~~~~ БЛОК догруза машины с заменой последней СРАБОТАЛ ~~~~~~~~~~~~~~~~~~~");
-////							break;
-//						}
-//						
-//					}
-//				}
 			}
 
 //			if(!vehicleWayVirtual.getVehicle().isFull()) {

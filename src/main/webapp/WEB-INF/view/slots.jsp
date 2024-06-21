@@ -66,13 +66,13 @@
 					</svg>
 				</button>
 			</div>
-			<!-- <div id="internalPallInfo" class="pallInfo">
+			<div id="internalPallInfo" class="pallInfo">
 				<span>Внутр.</span>
 				<span id="internalPallCount" class="text-success">0</span>
 				<span>/</span>
 				<span id="internalMaxPall">0</span>
 				<span>палл</span>
-			</div> -->
+			</div>
 		</div>
 
 		<div style="width: calc(100% - 100px);" id='calendar' data-stock=""></div>

@@ -263,6 +263,42 @@ export function isOverlapWithShiftChange(info, shiftChangeArray) {
 	return true
 }
 
+// проверка попадания ивента на промежуток для внутренних перемещений (ВП)
+export function isOverlapWithInternalMovementTime(info, internalMovementTimes, internalMovementsRamps) {
+	if(!internalMovementTimes || internalMovementTimes.length < 2) return false
+
+	const { event: fcEvent } = info
+	const rampId = fcEvent._def.resourceIds[0]
+
+	// если слот на ВП
+	const isInternalMovement = fcEvent.extendedProps.data.isInternalMovement
+	if (isInternalMovement === 'true') return false
+
+	// если рампа не в числе рамп для ВП
+	if (!internalMovementsRamps.includes(rampId)) return false
+
+	const currentDate = new Date(fcEvent.startStr)
+	const eventStartMs = new Date(fcEvent.start).getTime()
+	const eventEndMs = new Date(fcEvent.end).getTime()
+	const [ SH1startH, SH1startM ] = internalMovementTimes[0].split(':')
+	const [ SH1endH, SH1endM ] = internalMovementTimes[1].split(':')
+
+	// время начала и конца промежутка для ВП
+	const internalMovementTimeStartMs = currentDate.setUTCHours(SH1startH, SH1startM,0, 0)
+	const internalMovementTimeEndMs = currentDate.setUTCHours(SH1endH, SH1endM,0, 0)
+
+	// если ивент начинается раньше и заканчивается до начала промежутка
+	if (
+		eventStartMs < internalMovementTimeStartMs
+		&& eventEndMs <= internalMovementTimeStartMs
+	) return false
+
+	// если ивент начинается после промежутка
+	if (eventStartMs >= internalMovementTimeEndMs) return false
+
+	return true
+}
+
 // проверка паллетовместимости склада
 export function checkPallCount(info, pallCount, maxPall) {
 	const { event: fcEvent } = info
@@ -321,4 +357,8 @@ export function isOldSlotNotInYard(order) {
 export function hasOrderInYard(order) {
 	const statusYard = order.statusYard
 	return statusYard === 20 || statusYard === 30 || statusYard === 40
+}
+
+export function isBackgroundEvent(fcEvent) {
+	return fcEvent.display === 'background'
 }

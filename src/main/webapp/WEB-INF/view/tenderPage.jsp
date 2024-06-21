@@ -11,6 +11,7 @@
 	<title>Маршрут</title>
 	<link rel="icon" href="${pageContext.request.contextPath}/resources/img/favicon.ico">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/tenderPage.css">
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/snackbar.css">
 </head>
 <body>
 	<jsp:include page="headerNEW.jsp" />
@@ -977,6 +978,8 @@
 			</div>
 		</c:otherwise>
 	</c:choose>
+
+	<div id="snackbar"></div>
 
 	<!-- контейнер для отображения полученных сообщений -->
 	<div id="toasts" class="position-fixed bottom-0 right-0 p-3" style="z-index: 100; right: 0; bottom: 0;"></div>

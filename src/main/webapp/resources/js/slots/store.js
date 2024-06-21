@@ -157,7 +157,14 @@ export const store = {
 		const index = this._state.orders.findIndex(o => o.marketNumber === marketNumber)
 		// если заказа нет, то создаем его
 		if (index === -1 && orderData.idOrder) {
-			const newOrder = orderData.fcEvent.extendedProps.data
+			const newOrder = {
+				...orderData.fcEvent.extendedProps.data,
+				status: orderData.status,
+				timeDelivery,
+				idRamp: Number(orderData.idRamp),
+				loginManager: orderData.loginManager,
+				marketInfo,
+			}
 			this._state.orders.push(newOrder)
 			return newOrder
 		}

@@ -232,6 +232,33 @@ public class MainRestController {
 	
 	
 	
+	@PostMapping("/carrier/cost")
+	public Map<String, String> postSetCarrierCost(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+//		User user = getThisUser();
+		Map<String, String> response = new HashMap<String, String>();
+		if(str == null) {
+			response.put("status", "100");
+			response.put("message", "Тело запроса = null");
+			return response;
+		}
+		
+		Message message = new Message();
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		message.setFromUser(jsonMainObject.get("fromUser") == null ? null : jsonMainObject.get("fromUser").toString());
+		message.setText(jsonMainObject.get("text") == null ? null : jsonMainObject.get("text").toString());
+		message.setIdRoute(jsonMainObject.get("idRoute") == null ? null : jsonMainObject.get("idRoute").toString());
+		message.setCurrency(jsonMainObject.get("currency") == null ? null : jsonMainObject.get("currency").toString());
+		message.setFullName(jsonMainObject.get("fullName") == null ? null : jsonMainObject.get("fullName").toString());
+		message.setStatus(jsonMainObject.get("status") == null ? null : jsonMainObject.get("status").toString());
+		message.setComment(jsonMainObject.get("comment") == null ? null : jsonMainObject.get("comment").toString());
+		DateTimeFormatter formatter1 = DateTimeFormatter.ofPattern("d-MM-yyyy; HH:mm:ss");
+		message.setDatetime(LocalDateTime.now().format(formatter1));
+		chatEnpoint.onMessageFromRest(message);
+		response.put("status", "200");
+		return response;
+		
+	}
 	
 	/**
 	 * Метод меняет остатки на складах Ост на РЦ + запасники в днях

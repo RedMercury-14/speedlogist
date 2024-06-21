@@ -231,6 +231,8 @@ public class MainRestController {
 	public static final Comparator<Address> comparatorAddressIdForView = (Address e1, Address e2) -> (e2.getType().charAt(0) - e1.getType().charAt(0));
 	
 	
+	
+	
 	/**
 	 * Метод меняет остатки на складах Ост на РЦ + запасники в днях
 	 * @param request

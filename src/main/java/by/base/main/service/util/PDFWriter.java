@@ -161,7 +161,6 @@ public class PDFWriter {
 			double costAndNdsValue = 0.0;
 			String currency = routes.get(0).getStartCurrency();
 			for (Route route : routes) {
-				
 				table.addCell(new PdfPCell(new Phrase(route.getDateLoadPreviously().format(formatter), fontMainText)));
 		        table.addCell(new PdfPCell(new Phrase(route.getDateUnload(), fontMainText)));
 		        table.addCell(new PdfPCell(new Phrase(route.getIdRoute().toString(), fontMainText)));
@@ -257,7 +256,7 @@ public class PDFWriter {
 	        document.add(qrcodeImage);
 	        
 	        // вставляем футер
-	        addFooterHasAct(document, fontForRequisitesBolt, requisitesCarrier, sheffName);
+	        addFooterHasAct(document, fontForRequisitesBolt, requisitesCarrier, sheffName, routes.get(0));
 	        
 	        //тут идёт проверка, а не занимает ли акт, с реквизитами больше одного листа
 	        if(pdfWriter.getPageNumber() > 1) {
@@ -470,7 +469,7 @@ public class PDFWriter {
 			        document.add(qrcodeImage);
 			        
 			        //вставляем футер
-					addFooterHasAct(document, fontForRequisitesBolt, requisitesCarrier, sheffName);
+					addFooterHasAct(document, fontForRequisitesBolt, requisitesCarrier, sheffName, routes.get(0));
 					
 					//сохраняем акт
 					Act act = new Act();
@@ -662,7 +661,7 @@ public class PDFWriter {
 			        document.add(qrcodeImage);
 			        		        
 			      	// вставляем футер
-			        addFooterHasAct(document, fontForRequisitesBolt, requisitesCarrier, sheffName);
+			        addFooterHasAct(document, fontForRequisitesBolt, requisitesCarrier, sheffName, routes.get(0));
 			        
 			        //тут идёт проверка, а не занимает ли акт, с реквизитами больше одного листа
 			        if(pdfWriter.getPageNumber() > 2) {
@@ -710,15 +709,30 @@ public class PDFWriter {
 	 * @param sheffName
 	 * @throws DocumentException
 	 */
-	private void addFooterHasAct(Document document, com.itextpdf.text.Font fontForRequisites, String requisitesCarrier, String sheffName) throws DocumentException {
+	private void addFooterHasAct(Document document, com.itextpdf.text.Font fontForRequisites, String requisitesCarrier, String sheffName, Route route) throws DocumentException {
 		//тут вставляются реквизиты свои
-        Paragraph p11 = new Paragraph("Заказчик:\nЗАО Доброном: Республика Беларусь,\r\n"
-				+ "220073, г.Минск, пер.Загородный 1-й, 20-23; " + "УНП 191178504, ОКПО 378869615000\r\n"
-				+ "р/с BY61ALFA30122365100050270000 ( BYN)\r\nоткрытый  в Закрытое акционерное общество «Альфа-банк» \r\n"
-				+ "Юридический адрес: Ул. Сурганова, 43-47; 220013 Минск, Республика Беларусь\r\n"
-				+ "УНП 101541947; " + "SWIFT – ALFABY2X\r\n" + "р/с  BY24ALFA30122365100010270000 (USD)\r\n"
-				+ "р/с  BY09ALFA30122365100020270000(EUR)\r\n" + "р/с BY91 ALFA 3012 2365 1000 3027 0000 (RUB.)\r\n\n"
-				+ "_______________/Е.В. Якубов", fontForRequisites);		
+		Paragraph p11;
+		// временно сделал так, что если выгрузка позже июня 2024 - ставит старый адрес
+		if(Integer.parseInt(route.getDateUnload().split("\\.")[1]) >=7 && Integer.parseInt(route.getDateUnload().split("\\.")[2]) >= 2024) {
+			p11 = new Paragraph("Заказчик:\nЗАО Доброном: Республика Беларусь,\r\n"
+					+ "220073, г.Минск, пер.Загородный 1-й, 20-23; " + "УНП 191178504, ОКПО 378869615000\r\n"
+					+ "р/с BY61ALFA30122365100050270000 ( BYN)\r\nоткрытый  в Закрытое акционерное общество «Альфа-банк» \r\n"
+					+ "Юридический адрес: Ул. Сурганова, 43-47; 220013 Минск, Республика Беларусь\r\n"
+					+ "УНП 101541947; " + "SWIFT – ALFABY2X\r\n" + "р/с  BY24ALFA30122365100010270000 (USD)\r\n"
+					+ "р/с  BY09ALFA30122365100020270000(EUR)\r\n" + "р/с BY91 ALFA 3012 2365 1000 3027 0000 (RUB.)\r\n\n"
+					+ "_______________/Е.В. Якубов", fontForRequisites);
+	        
+		}else {
+			p11 = new Paragraph("Заказчик:\nЗАО Доброном: Республика Беларусь,\r\n"
+					+ "220112, г. Минск, ул. Янки Лучины, 5; " + "УНП 191178504, ОКПО 378869615000\r\n"
+					+ "р/с BY61ALFA30122365100050270000 ( BYN)\r\nоткрытый  в Закрытое акционерное общество «Альфа-банк» \r\n"
+					+ "Юридический адрес: Ул. Сурганова, 43-47; 220013 Минск, Республика Беларусь\r\n"
+					+ "УНП 101541947; " + "SWIFT – ALFABY2X\r\n" + "р/с  BY24ALFA30122365100010270000 (USD)\r\n"
+					+ "р/с  BY09ALFA30122365100020270000(EUR)\r\n" + "р/с BY91 ALFA 3012 2365 1000 3027 0000 (RUB.)\r\n\n"
+					+ "_______________/Е.В. Якубов", fontForRequisites);
+		}
+		
+        		
         p11.setSpacingBefore(20f); // высота от прошлого текста
         p11.setAlignment(Element.ALIGN_RIGHT);
         document.add(p11);

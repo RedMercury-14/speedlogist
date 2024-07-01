@@ -79,7 +79,7 @@ export const stocks = [
 		internaMovementsTimes: [],
 		internalMovementsRamps: [],
 		maxPall: {
-			externalMovement: 120,
+			externalMovement: 180,
 			internalMovement: 500,
 		},
 		weekends: [],

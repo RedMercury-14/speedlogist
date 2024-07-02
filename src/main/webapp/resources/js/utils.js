@@ -627,3 +627,7 @@ export function disableButton(button) {
 export function enableButton(button) {
 	button.removeAttribute('disabled')
 }
+
+export function removeSingleQuotes(str) {
+	return str.replace(/'/g, '');
+}

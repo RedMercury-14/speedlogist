@@ -34,7 +34,7 @@ import {
 } from "./procurementFormUtils.js"
 import { snackbar } from "./snackbar/snackbar.js"
 import { uiIcons } from './uiIcons.js';
-import { disableButton, enableButton, getData, isStockProcurement } from './utils.js';
+import { disableButton, enableButton, getData, isStockProcurement, removeSingleQuotes } from './utils.js';
 
 const addNewProcurementUrl = (orderStatus) => orderStatus === 20
 	? "../../api/manager/addNewProcurement"
@@ -371,7 +371,7 @@ function pointFormDataFormatter(formData) {
 		type: data.type,
 		date: data.date ? data.date : '',
 		time: data.time ? data.time : '',
-		cargo: data.pointCargo ? data.pointCargo : '',
+		cargo: data.pointCargo ? removeSingleQuotes(data.pointCargo) : '',
 		pall: data.pall ? data.pall : '',
 		weight: data.weight ? data.weight : '',
 		volume: data.volume ? data.volume : '',

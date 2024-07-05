@@ -204,6 +204,15 @@ public class ColossusProcessorANDRestrictions3 {
 			
 			shopsForOptimization.sort(shopComparatorDistanceMain);
 			
+			Integer pallRestriction = null;
+			
+			//берем самый дальний магазин
+			Shop firstShop = shopsForOptimization.remove(0);
+			pallRestriction = firstShop.getMaxPall() != null ? firstShop.getMaxPall() : null;
+			// создаём матрицу расстояний от первого магазина
+			Map<Double, Shop> radiusMap = new TreeMap<Double, Shop>();
+			radiusMap = getDistanceMatrixHasMin(shopsForOptimization, firstShop);
+			
 			
 
 		} // КОНЕЦ ОСНОВНОГО ЦИКЛА ДЛЯ ПУНКТОВ 1 И 2

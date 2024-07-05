@@ -45,15 +45,23 @@ const columnDefs = [
 	{ headerName: 'Модель', field: 'modelTruck', },
 	{ headerName: 'Номер прицепа', field: 'numTrailer', },
 	{ headerName: 'Тип кузова/прицепа', field: 'typeTrailer', minWidth: 70, },
-	{ headerName: 'Грузоподъемность', field: 'cargoCapacity', cellClass: 'text-center', minWidth: 70, },
+	{
+		headerName: 'Грузоподъемность', field: 'cargoCapacity',
+		cellClass: 'text-center', minWidth: 70,
+		valueFormatter: params => params.value ? params.value + ' кг' : '',
+	},
 	{ headerName: 'Паллетовместимость', field: 'pallCapacity', cellClass: 'text-center', minWidth: 70, },
-	{ headerName: 'Объем', field: 'volumeTrailer', flex: 1, cellClass: 'text-center', minWidth: 70, },
+	{
+		headerName: 'Объем', field: 'volumeTrailer',
+		flex: 1, cellClass: 'text-center', minWidth: 70,
+		valueFormatter: params => params.value ? params.value + ' м.куб.' : ''
+	},
 	{ headerName: 'Техпаспорт', field: 'technicalCertificate', },
 	// { headerName: 'Подтвержден?', field: 'verify', cellClass: 'checkbox-value' },
 ]
 const gridOptions = {
 	columnDefs: columnDefs,
-	rowClassRules: rowClassRules,
+	// rowClassRules: rowClassRules,
 	defaultColDef: {
 		headerClass: 'px-2',
 		cellClass: 'px-2',
@@ -131,11 +139,11 @@ async function updateTable() {
 }
 function getMappingData(data) {
 	return data.map(truck => {
-		const isVerify = truck.verify === null ? true : truck.verify
+		// const isVerify = truck.verify === null ? true : truck.verify
 
 		return {
 			...truck,
-			verify: isVerify
+			// verify: isVerify
 		}
 	})
 }
@@ -157,7 +165,7 @@ function getContextMenuItems(params) {
 		},
 		{
 			name: `Редактировать автомобиль`,
-			disabled: isVerify,
+			// disabled: isVerify,
 			action: () => {
 				editTruck(rowNode.data)
 			},

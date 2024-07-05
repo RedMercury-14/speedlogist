@@ -1182,7 +1182,7 @@ public class MainRestController {
 	
 	@PostMapping("/map/myoptimization3")
 	public Solution myOptimization3(@RequestBody String str) throws Exception {
-		Double maxKoef = 1.45;
+		Double maxKoef = 1.2;
 		JSONParser parser = new JSONParser();
 		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
 		JSONArray numShopsJSON = (JSONArray) jsonMainObject.get("shops");
@@ -1202,7 +1202,7 @@ public class MainRestController {
 		List<Solution> solutions = new ArrayList<Solution>();
 		
 		//реализация перебора первого порядка
-		for (double i = 1.45; i <= maxKoef; i = i + 0.02) {
+		for (double i = 1.2; i <= maxKoef; i = i + 0.02) {
 			Double koeff = i;
 //			System.out.println("Коэфф = " + koeff);
 			Solution solution = colossusProcessorRad.run(jsonMainObject, numShops, pallHasShops, tonnageHasShops, stock, koeff, "fullLoad");

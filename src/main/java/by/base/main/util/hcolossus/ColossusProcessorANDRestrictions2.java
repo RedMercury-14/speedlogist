@@ -283,9 +283,13 @@ public class ColossusProcessorANDRestrictions2 {
 						System.err.println("ColossusProcessorANDRestrictions2.run: Закончились машины для чернового распределения!");
 					}
 //					System.out.println("-----> "+ firstShop);
+					System.out.println(trucksBeforeRestr.size() + " <<< --- trucksBeforeRestr.size()");
+					System.out.println(firstShop.toAllString() + " <<< --- firstShop.toAllString()");
+					System.out.println(trucks.size() + " <<< --- trucks.size()");
+					trucks.forEach(t-> System.out.println(t.toString()));
 					if(firstShop.getNeedPall() >= trucksBeforeRestr.get(0).getPall()) {//логика для разбиений магазинов когда паллет изначально больше!
 						Double oneWidthPall = Double.valueOf(firstShop.getWeight())/Double.valueOf(firstShop.getNeedPall());
-						Double widthNewShop = oneWidthPall*trucksBeforeRestr.get(0).getPall();
+						Double widthNewShop = oneWidthPall*trucksBeforeRestr.get(0).getPall();						
 						if (firstShop.getNeedPall() == trucksBeforeRestr.get(0).getPall()) { 
 							if(firstShop.getWeight() <= trucksBeforeRestr.get(0).getWeigth()) {
 								System.err.println("Распределяем магазин БЕЗ ограничений по весу, при том что паллет больше, после идеальных маршрутов (доп идеальные), когда паллет изначально больше!");
@@ -296,7 +300,7 @@ public class ColossusProcessorANDRestrictions2 {
 								points.add(targetStock);
 								VehicleWay vehicleWay = new VehicleWay(points, 0.0, 40, targetTruck);
 								shopsForOptimization.remove(firstShop);
-								optimizationOfVirtualRoutesType1(vehicleWay, pallRestriction, targetStock);
+								vehicleWay = optimizationOfVirtualRoutesType1(vehicleWay, pallRestriction, targetStock);
 								changeTruckHasSmall(vehicleWay, targetStock);
 								whiteWay.add(vehicleWay);							
 								continue;
@@ -324,7 +328,7 @@ public class ColossusProcessorANDRestrictions2 {
 								points1.add(firstShop);
 								points1.add(targetStock);
 								VehicleWay vehicleWay = new VehicleWay(points1, 0.0, 40, targetTruck);
-								optimizationOfVirtualRoutesType1(vehicleWay, pallRestriction, targetStock);
+								vehicleWay = optimizationOfVirtualRoutesType1(vehicleWay, pallRestriction, targetStock);
 								changeTruckHasSmall(vehicleWay, targetStock);
 								whiteWay.add(vehicleWay);
 								continue;
@@ -357,7 +361,7 @@ public class ColossusProcessorANDRestrictions2 {
 								points.add(newFirstShop);
 								points.add(targetStock);
 								VehicleWay vehicleWay = new VehicleWay(points, 0.0, 40, targetTruck);
-								optimizationOfVirtualRoutesType1(vehicleWay, pallRestriction, targetStock);
+								vehicleWay = optimizationOfVirtualRoutesType1(vehicleWay, pallRestriction, targetStock);
 								changeTruckHasSmall(vehicleWay, targetStock);
 								whiteWay.add(vehicleWay);
 								if (!shopsForAddNewNeedPall.isEmpty()) {
@@ -394,7 +398,7 @@ public class ColossusProcessorANDRestrictions2 {
 								points1.add(firstShop);
 								points1.add(targetStock);
 								VehicleWay vehicleWay = new VehicleWay(points1, 0.0, 40, targetTruck);
-								optimizationOfVirtualRoutesType1(vehicleWay, pallRestriction, targetStock);
+								vehicleWay = optimizationOfVirtualRoutesType1(vehicleWay, pallRestriction, targetStock);
 								changeTruckHasSmall(vehicleWay, targetStock);
 								whiteWay.add(vehicleWay);
 								// после каждого цикла добавляем новые магазы, если есть
@@ -422,7 +426,7 @@ public class ColossusProcessorANDRestrictions2 {
 							points.add(targetStock);
 							VehicleWay vehicleWay = new VehicleWay(points, 0.0, 40, targetTruck);
 							shopsForOptimization.remove(firstShop);
-							optimizationOfVirtualRoutesType1(vehicleWay, pallRestriction, targetStock);
+							vehicleWay = optimizationOfVirtualRoutesType1(vehicleWay, pallRestriction, targetStock);
 							changeTruckHasSmall(vehicleWay, targetStock);
 							whiteWay.add(vehicleWay);	
 							continue;
@@ -450,7 +454,7 @@ public class ColossusProcessorANDRestrictions2 {
 							points1.add(firstShop);
 							points1.add(targetStock);
 							VehicleWay vehicleWay = new VehicleWay(points1, 0.0, 40, targetTruck);
-							optimizationOfVirtualRoutesType1(vehicleWay, pallRestriction, targetStock);
+							vehicleWay = optimizationOfVirtualRoutesType1(vehicleWay, pallRestriction, targetStock);
 							changeTruckHasSmall(vehicleWay, targetStock);
 							whiteWay.add(vehicleWay);
 							// после каждого цикла добавляем новые магазы, если есть
@@ -727,7 +731,7 @@ public class ColossusProcessorANDRestrictions2 {
 					}
 					
 					// блок оптимизации виртуальных маршрутов по последним точкам
-					optimizationOfVirtualRoutesType1(vehicleWayVirtual, pallRestriction, targetStock);
+					vehicleWayVirtual = optimizationOfVirtualRoutesType1(vehicleWayVirtual, pallRestriction, targetStock);
 					changeTruckHasSmall(vehicleWayVirtual, targetStock);
 
 					whiteWay.add(vehicleWayVirtual);
@@ -755,7 +759,7 @@ public class ColossusProcessorANDRestrictions2 {
 								points.add(targetStock);
 								VehicleWay vehicleWay = new VehicleWay(points, 0.0, 40, targetTruck);
 								shopsForOptimization.remove(firstShop);
-								optimizationOfVirtualRoutesType1(vehicleWay, pallRestriction, targetStock);
+								vehicleWay = optimizationOfVirtualRoutesType1(vehicleWay, pallRestriction, targetStock);
 								changeTruckHasSmall(vehicleWay, targetStock);
 								whiteWay.add(vehicleWay);							
 								continue;
@@ -781,7 +785,7 @@ public class ColossusProcessorANDRestrictions2 {
 								points1.add(firstShop);
 								points1.add(targetStock);
 								VehicleWay vehicleWay = new VehicleWay(points1, 0.0, 40, targetTruck);
-								optimizationOfVirtualRoutesType1(vehicleWay, pallRestriction, targetStock);
+								vehicleWay = optimizationOfVirtualRoutesType1(vehicleWay, pallRestriction, targetStock);
 								changeTruckHasSmall(vehicleWay, targetStock);
 								whiteWay.add(vehicleWay);
 								continue;
@@ -811,7 +815,7 @@ public class ColossusProcessorANDRestrictions2 {
 								points.add(newFirstShop);
 								points.add(targetStock);
 								VehicleWay vehicleWay = new VehicleWay(points, 0.0, 40, targetTruck);
-								optimizationOfVirtualRoutesType1(vehicleWay, pallRestriction, targetStock);
+								vehicleWay = optimizationOfVirtualRoutesType1(vehicleWay, pallRestriction, targetStock);
 								changeTruckHasSmall(vehicleWay, targetStock);
 								whiteWay.add(vehicleWay);
 								if (!shopsForAddNewNeedPall.isEmpty()) {
@@ -847,7 +851,7 @@ public class ColossusProcessorANDRestrictions2 {
 								points1.add(firstShop);
 								points1.add(targetStock);
 								VehicleWay vehicleWay = new VehicleWay(points1, 0.0, 40, targetTruck);
-								optimizationOfVirtualRoutesType1(vehicleWay, pallRestriction, targetStock);
+								vehicleWay = optimizationOfVirtualRoutesType1(vehicleWay, pallRestriction, targetStock);
 								changeTruckHasSmall(vehicleWay, targetStock);
 								whiteWay.add(vehicleWay);
 								// после каждого цикла добавляем новые магазы, если есть
@@ -890,7 +894,7 @@ public class ColossusProcessorANDRestrictions2 {
 							points1.add(firstShop);
 							points1.add(targetStock);
 							VehicleWay vehicleWay = new VehicleWay(points1, 0.0, 40, targetTruck);
-							optimizationOfVirtualRoutesType1(vehicleWay, pallRestriction, targetStock);
+							vehicleWay = optimizationOfVirtualRoutesType1(vehicleWay, pallRestriction, targetStock);
 							changeTruckHasSmall(vehicleWay, targetStock);
 							whiteWay.add(vehicleWay);
 							// после каждого цикла добавляем новые магазы, если есть
@@ -1216,7 +1220,7 @@ public class ColossusProcessorANDRestrictions2 {
 					
 					// блок оптимизации виртуальных маршрутов
 					// блок оптимизации виртуальных маршрутов по последним точкам
-					optimizationOfVirtualRoutesType1(vehicleWayVirtual, pallRestriction, targetStock);
+					vehicleWayVirtual = optimizationOfVirtualRoutesType1(vehicleWayVirtual, pallRestriction, targetStock);
 					changeTruckHasSmall(vehicleWayVirtual, targetStock);
 
 					whiteWay.add(vehicleWayVirtual);
@@ -1315,7 +1319,7 @@ public class ColossusProcessorANDRestrictions2 {
 			Integer pallHasOldTruck = vehicleWayVirtual.getVehicle().getPall();
 			trucks.sort(vehicleComparatorFromMin);
 			for (Vehicle truck : trucks) {
-				System.err.println(truck + " <----> " + oldTruck);
+//				System.err.println(truck + " <----> " + oldTruck);
 				if(truck.getWeigth() >= oldTruck.getTargetWeigth()) {
 					if (truck.getPall() >= oldTruck.getTargetPall() && truck.getPall() < pallHasOldTruck) {
 						truck.setTargetPall(pallHasWay);
@@ -1347,36 +1351,43 @@ public class ColossusProcessorANDRestrictions2 {
 	 * @param pallRestriction
 	 * @param targetStock
 	 */
-	private void optimizationOfVirtualRoutesType1(VehicleWay vehicleWayVirtual, Integer pallRestriction, Shop targetStock) {
+	private VehicleWay optimizationOfVirtualRoutesType1(VehicleWay vehicleWayVirtual, Integer pallRestriction, Shop targetStock) {
 		if (!vehicleWayVirtual.getVehicle().isFull() || vehicleWayVirtual.getWay().size() > 3) {
 			// если тачка недогружена, то возможны 2 варианта:
 			// берем последнюю точку, прокладываем радиус 10 км, убераем её и ищем магаз
 			// (магазы) которые могут догрузить машину
 			// второй варик тот же самый, но без убирание точки
-			List<Shop> newPoints = logicAnalyzer.correctRouteMaker(vehicleWayVirtual.getWay());
-			Shop lastShop = newPoints.get(1);
-			System.out.println("LAST SHOP  =  " + lastShop);
-			List<Shop> processWay = new ArrayList<Shop>(newPoints);
-			int size = processWay.size();
+			List<Shop> newPointsStart = logicAnalyzer.correctRouteMaker(vehicleWayVirtual.getWay());
+			Shop lastShopStart = newPointsStart.get(1);
+//			List<Shop> processWay = new ArrayList<Shop>(newPoints);
+//			int size = processWay.size();
 
-			Map<Double, Shop> radiusFromLastShop = getDistanceMatrixHasMinLimitParameter(shopsForOptimization, shopsForDelite, lastShop, 10000.0);
+			Map<Double, Shop> radiusFromLastShop = getDistanceMatrixHasMinLimitParameter(shopsForOptimization, shopsForDelite, lastShopStart, 10000.0);
 			for (Map.Entry<Double, Shop> e : radiusFromLastShop.entrySet()) {
+				List<Shop> newPoints = logicAnalyzer.correctRouteMaker(vehicleWayVirtual.getWay());
+				Shop lastShop = newPoints.get(1);
+				List<Shop> processWay = new ArrayList<Shop>(newPoints);
 				if(e.getValue().getMaxPall() != null && e.getValue().getMaxPall() > pallRestriction) {
 					//это условие говорит, что если ограничения второго магазина больше чем первого - магаз не рассматриваем
 					System.out.println("POINT 2");
 					continue;
 				}
 				if (e.getValue().getNeedPall() <= vehicleWayVirtual.getFreePallInVehicle()) {
+					Integer maxLim = getMaxLimitPallHasVehicleWay(vehicleWayVirtual, targetStock); 
+					if(maxLim != null && maxLim <= vehicleWayVirtual.getVehicle().getPall()) { //здесь говорим что если машина больше чем ограничения, то не догружаем этот магазин
+						continue;
+					}
 					System.out.println("<><><><><> 11");
 					if (e.getValue().getNumshop() != lastShop.getNumshop() && !shopsForDelite.contains(e.getValue())) {
 						System.out.println("<><><><><> 12");
 						if(e.getValue().getWeight() < vehicleWayVirtual.getFreeWeigthInVehicle()) {
 							System.out.println("<><><><><> 13");
+							processWay.forEach(s-> System.out.println(s.toString())); //aaaaaa
 							processWay.remove(0);
 							List<Shop> processWayNew = new ArrayList<Shop>();
 							processWayNew.add(targetStock);
 							processWayNew.add(e.getValue());
-							processWayNew.addAll(processWay);
+							processWayNew.addAll(processWay);							
 							Vehicle truck = vehicleWayVirtual.getVehicle();
 							truck.setTargetPall(calcPallHashHsop(processWayNew, targetStock));
 							truck.setTargetWeigth(truck.getTargetWeigth() + e.getValue().getWeight());
@@ -1384,7 +1395,7 @@ public class ColossusProcessorANDRestrictions2 {
 							vehicleWayVirtual.setWay(processWayNew);			
 							shopsForDelite.add(e.getValue());
 							shopsForOptimization.remove(e.getValue());
-							size = processWayNew.size();
+//							size = processWayNew.size();
 							System.err.println(	"~~~~~~~~~~~~~~~~~ БЛОК догруза машины по последней точке СРАБОТАЛ ~~~~~~~~~~~~~~~~~~~");
 //							break;
 						}
@@ -1449,6 +1460,7 @@ public class ColossusProcessorANDRestrictions2 {
 //			}
 
 		}
+		return vehicleWayVirtual;
 	}
 
 	/**
@@ -1637,6 +1649,31 @@ public class ColossusProcessorANDRestrictions2 {
 				whiteWay.add(vehicleWay);
 			}
 		}
+	}
+	
+	/**
+	 * Возвращает максимальное ограничение на виртуально маршруте
+	 * @param vehicleWay
+	 * @param targetStock
+	 * @return
+	 */
+	private Integer getMaxLimitPallHasVehicleWay (VehicleWay vehicleWay, Shop targetStock) {
+		Integer maxLim = null;
+		for (Shop shop : vehicleWay.getWay()) {
+			if(shop.getNumshop() == targetStock.getNumshop()) {
+				continue;
+			}
+			if(shop.getMaxPall() != null) {
+				if(maxLim == null) {
+					maxLim = shop.getMaxPall();
+				}else {
+					if(maxLim > shop.getMaxPall()) {
+						maxLim = shop.getMaxPall();
+					}
+				}
+			}
+		}
+		return maxLim;		
 	}
 	
 	private void createIdealWayAndPallRestriction (Shop shop, Shop targetStock) throws Exception {

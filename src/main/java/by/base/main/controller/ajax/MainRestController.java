@@ -129,6 +129,7 @@ import by.base.main.util.GraphHopper.JSpiritMachine;
 import by.base.main.util.GraphHopper.RoutingMachine;
 import by.base.main.util.bots.TelegramBot;
 import by.base.main.util.hcolossus.ColossusProcessorANDRestrictions2;
+import by.base.main.util.hcolossus.ColossusProcessorANDRestrictions3;
 import by.base.main.util.hcolossus.pojo.Solution;
 import by.base.main.util.hcolossus.pojo.VehicleWay;
 import by.base.main.util.hcolossus.service.LogicAnalyzer;
@@ -197,7 +198,7 @@ public class MainRestController {
 	private JSpiritMachine jSpiritMachine;
 
 	@Autowired
-	private ColossusProcessorANDRestrictions2 colossusProcessorRad;
+	private ColossusProcessorANDRestrictions3 colossusProcessorRad;
 
 	@Autowired
 	private MatrixMachine matrixMachine;

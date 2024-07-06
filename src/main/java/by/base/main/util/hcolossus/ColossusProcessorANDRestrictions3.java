@@ -207,9 +207,7 @@ public class ColossusProcessorANDRestrictions3 {
 			//берем самый дальний магазин
 			Shop firstShop = shopsForOptimization.remove(0);
 			pallRestriction = firstShop.getMaxPall() != null ? firstShop.getMaxPall() : null;
-			// создаём матрицу расстояний от первого магазина
-			Map<Double, Shop> radiusMap = new TreeMap<Double, Shop>();
-			radiusMap = getDistanceMatrixHasMin(shopsForOptimization, firstShop);
+			
 			
 			//Проверяем, загрузится ли этот магазин в самую большую машину (проверка на идеальные маршруты)
 			
@@ -230,12 +228,95 @@ public class ColossusProcessorANDRestrictions3 {
 				i++;
 				continue;
 			}
+			// это не идеальный маршрут, пожтому догружаем по обычному алгоритму
+			// создаём порядок точек
+			List<Shop> points = new ArrayList<Shop>();
+			points.add(targetStock);
+			points.add(firstShop);
 			
+			// создаём матрицу расстояний от первого магазина
+			Map<Double, Shop> radiusMap = new TreeMap<Double, Shop>();
+			radiusMap = getDistanceMatrixHasMin(shopsForOptimization, firstShop);
+			// создаём виртуальную машину
+			Vehicle virtualTruck = new Vehicle();
+			virtualTruck = trucks.get(0);
+			int countRadiusMap = 0;
+			int maxCountRadiusMap = radiusMap.entrySet().size()-1;
+			for (Map.Entry<Double, Shop> entry : radiusMap.entrySet()) {
+				Shop shop2 = entry.getValue();		
+
+				// тут добавляем мазаз в точку point
+				points.add(shop2);
+				points.add(targetStock);
+				
+				// проверяем является ли маршрут логичным!
+				VehicleWay vehicleWayTest = new VehicleWay(points, 0.0, 30, null);
+
+				Double logicResult = logicAnalyzer.logicalСheck(vehicleWayTest, koeff);
+//				System.err.println(logicResult + " логичность маршрута составила");
+				
+				/**
+				 * Тут решаем, в зависимости от логичтности - кладём магазин в точки, или нет.
+				 * Если нет, то идём дальше
+				 */
+				if (logicResult > 0) {
+					shopsForOptimization.remove(shop2);
+					points.remove(points.size() - 1);
+				} else {
+//					System.out.println("не кладём, т.к. не логично " + shop2);
+					points.remove(points.size() - 1);
+					points.remove(points.size() - 1);
+					countRadiusMap++;
+					continue;
+				}	
+				
+				/**
+				 * Далее идут проверки на вместимость авто
+				 * именно тут мы проверяем на вместимость машины
+				 */
+				
+				int totalPall = calcPallHashHsop(points, targetStock);
+				int totalWeigth = calcWeightHashHsop(points, targetStock);
+				
+				/**
+				 * В этом условии проверяем, если текущие точки под завязку грузят машину. По весу или по паллетам
+				 */
+				if(totalPall == virtualTruck.getPall().intValue() && totalWeigth <= virtualTruck.getWeigth().intValue() || totalWeigth == virtualTruck.getWeigth().intValue() && totalPall <= virtualTruck.getPall().intValue()) {
+					trucks.remove(virtualTruck);
+					virtualTruck.setTargetWeigth(totalWeigth);
+					virtualTruck.setTargetPall(totalPall);	
+					break;
+				}
+				
+				/**
+				 * В этом условии проверяем, если текущие точки не проходят в машину по весу и паллетам!
+				 * В этом случае пропускаем данную точку.
+				 */
+				if(totalPall > virtualTruck.getPall().intValue() && totalWeigth > virtualTruck.getWeigth().intValue()) {
+					shopsForOptimization.add(shop2);
+					points.remove(points.size() - 1);	
+					
+					/**
+					 * блок завершения или продолжения цикла
+					 */
+					if(countRadiusMap == maxCountRadiusMap) {
+						trucks.remove(virtualTruck);
+						virtualTruck.setTargetWeigth(calcWeightHashHsop(points, targetStock));
+						virtualTruck.setTargetPall(calcPallHashHsop(points, targetStock));					
+					}else {
+						countRadiusMap++;
+						continue;
+					}
+					//конец блока завершения или продолжения цикла
+				}
+				
+			}
 			
-			
-			//создаём виртуальный маршрут по первому магазину
-			VehicleWay vehicleWayVirtual = new VehicleWay(i+"");
-			i++;
+			// создаём финальный, виртуальный маршрут
+			points.add(targetStock);
+			VehicleWay vehicleWayVirtual = new VehicleWay(i+ "", points, 0.0, 30, virtualTruck);
+			System.err.println(vehicleWayVirtual.toString());
+			i++;			
 		}
 
 

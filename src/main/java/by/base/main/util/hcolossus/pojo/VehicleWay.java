@@ -52,6 +52,8 @@ public class VehicleWay {
 	
 	private Double totalRun;
 	
+	private Double distanceFromStock;
+	
 	private Integer summPall;
 	
 	/**
@@ -168,7 +170,21 @@ public class VehicleWay {
 		this.overrun = overrun;
 	}
 
-	
+	/**
+	 * Возвращает расстояние от склада, до дальней точки маршрута
+	 * @param distanceFromStock
+	 */
+	public Double getDistanceFromStock() {
+		return distanceFromStock;
+	}
+	/**
+	 * Задаёт расстояние от склада, до дальней точки маршрута
+	 * @param distanceFromStock
+	 */
+	public void setDistanceFromStock(Double distanceFromStock) {
+		this.distanceFromStock = distanceFromStock;
+	}
+
 	public List<Shop> getProblemShops() {
 		return problemShops;
 	}

@@ -84,6 +84,7 @@ public class ColossusProcessorANDRestrictions3 {
 	private List<Vehicle> vehicleForDelete;
 	private String stackTrace;
 	private List<VehicleWay> whiteWay;
+	private List<VehicleWay> directionsWay; // направления
 	private List<Shop> shopsForAddNewNeedPall;
 	/**
 	 * Основной метод расчёта первочной оптимизации
@@ -113,6 +114,7 @@ public class ColossusProcessorANDRestrictions3 {
 		Shop targetStock = allShop.get(stock);
 		this.jsonMainObject = jsonMainObject;
 		whiteWay = new ArrayList<VehicleWay>();
+		directionsWay = new ArrayList<VehicleWay>();
 		vehicleForDelete = new ArrayList<Vehicle>();
 		// блок подготовки
 		// заполняем static матрицу. Пусть хранится там
@@ -235,6 +237,7 @@ public class ColossusProcessorANDRestrictions3 {
 			points.add(firstShop);
 			
 			// создаём матрицу расстояний от первого магазина
+			firstShop.setDistanceFromStock(matrixMachine.matrix.get(targetStock.getNumshop()+"-"+firstShop.getNumshop()));
 			Map<Double, Shop> radiusMap = new TreeMap<Double, Shop>();
 			radiusMap = getDistanceMatrixHasMin(shopsForOptimization, firstShop);
 			// создаём виртуальную машину
@@ -244,7 +247,7 @@ public class ColossusProcessorANDRestrictions3 {
 			int maxCountRadiusMap = radiusMap.entrySet().size()-1;
 			for (Map.Entry<Double, Shop> entry : radiusMap.entrySet()) {
 				Shop shop2 = entry.getValue();		
-
+				shop2.setDistanceFromStock(matrixMachine.matrix.get(targetStock.getNumshop()+"-"+shop2.getNumshop()));
 				// тут добавляем мазаз в точку point
 				points.add(shop2);
 				points.add(targetStock);
@@ -259,7 +262,8 @@ public class ColossusProcessorANDRestrictions3 {
 				 * Тут решаем, в зависимости от логичтности - кладём магазин в точки, или нет.
 				 * Если нет, то идём дальше
 				 */
-				if (logicResult > 0) {
+				double distanceBetween = matrixMachine.matrix.get(points.get(points.size() - 3).getNumshop()+"-"+shop2.getNumshop());
+				if (logicResult > 0 && distanceBetween<=100000.0) {
 					shopsForOptimization.remove(shop2);
 					points.remove(points.size() - 1);
 				} else {
@@ -281,40 +285,43 @@ public class ColossusProcessorANDRestrictions3 {
 				/**
 				 * В этом условии проверяем, если текущие точки под завязку грузят машину. По весу или по паллетам
 				 */
-				if(totalPall == virtualTruck.getPall().intValue() && totalWeigth <= virtualTruck.getWeigth().intValue() || totalWeigth == virtualTruck.getWeigth().intValue() && totalPall <= virtualTruck.getPall().intValue()) {
-					trucks.remove(virtualTruck);
-					virtualTruck.setTargetWeigth(totalWeigth);
-					virtualTruck.setTargetPall(totalPall);	
-					break;
-				}
+//				if(totalPall == virtualTruck.getPall().intValue() && totalWeigth <= virtualTruck.getWeigth().intValue() || totalWeigth == virtualTruck.getWeigth().intValue() && totalPall <= virtualTruck.getPall().intValue()) {
+//					trucks.remove(virtualTruck);
+//					virtualTruck.setTargetWeigth(totalWeigth);
+//					virtualTruck.setTargetPall(totalPall);	
+//					break;
+//				}
 				
 				/**
 				 * В этом условии проверяем, если текущие точки не проходят в машину по весу и паллетам!
-				 * В этом случае пропускаем данную точку.
+				 * В этом случае принимаем решение положить этот магазин обратно в общий список
 				 */
-				if(totalPall > virtualTruck.getPall().intValue() && totalWeigth > virtualTruck.getWeigth().intValue()) {
-					shopsForOptimization.add(shop2);
-					points.remove(points.size() - 1);	
-					
-					/**
-					 * блок завершения или продолжения цикла
-					 */
-					if(countRadiusMap == maxCountRadiusMap) {
-						trucks.remove(virtualTruck);
-						virtualTruck.setTargetWeigth(calcWeightHashHsop(points, targetStock));
-						virtualTruck.setTargetPall(calcPallHashHsop(points, targetStock));					
-					}else {
-						countRadiusMap++;
-						continue;
-					}
-					//конец блока завершения или продолжения цикла
-				}
+//				if(totalPall > virtualTruck.getPall().intValue() || totalWeigth > virtualTruck.getWeigth().intValue()) {
+//					shopsForOptimization.add(shop2);
+//					points.remove(points.size() - 1);	
+//					
+//					/**
+//					 * блок завершения или продолжения цикла
+//					 */
+//					if(countRadiusMap == maxCountRadiusMap) {
+//						trucks.remove(virtualTruck);
+//						virtualTruck.setTargetWeigth(calcWeightHashHsop(points, targetStock));
+//						virtualTruck.setTargetPall(calcPallHashHsop(points, targetStock));					
+//					}else {
+//						countRadiusMap++;
+//						continue;
+//					}
+//					//конец блока завершения или продолжения цикла
+//				}
 				
 			}
 			
 			// создаём финальный, виртуальный маршрут
 			points.add(targetStock);
 			VehicleWay vehicleWayVirtual = new VehicleWay(i+ "", points, 0.0, 30, virtualTruck);
+			vehicleWayVirtual.setDistanceFromStock(firstShop.getDistanceFromStock());
+			directionsWay.add(vehicleWayVirtual);
+			whiteWay.add(vehicleWayVirtual);
 			System.err.println(vehicleWayVirtual.toString());
 			i++;			
 		}

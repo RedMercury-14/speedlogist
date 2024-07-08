@@ -14,6 +14,7 @@ import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.itextpdf.text.log.SysoCounter;
 import com.mysql.cj.x.protobuf.MysqlxCrud.Collection;
 
 import by.base.main.model.Shop;
@@ -302,8 +303,32 @@ public class ColossusProcessorANDRestrictions3 {
 			if(isRestrictions || isRestrictionsFirst) {
 				boolean flag = false;
 				do {
-//					Shop specialShop = points.get(points.size()-1);
-					Shop specialShop = points.stream().filter(s-> s.getMaxPall() != null).findFirst().get();
+					Shop specialShop = null;
+					/**
+					 * Данный блок отвечает за первичный и вотричный поиск магазина с ограничениями
+					 * если flag true это значит что в списке присутствует 2 магазина с ограничениями, притом один из них меньше чем другой.
+					 * блок с true как раз отвечает за поиск самого маленького ограничения и магазина.
+					 */
+					if(flag) {
+						Integer extraPall = null;
+						//тут определяем минимальное оганичение по паллетам, если таковое имеется
+						for (Shop shop : points) {
+							if(shop.getMaxPall() != null) {
+								if (extraPall != null && extraPall > shop.getMaxPall()) {
+									extraPall = shop.getMaxPall();
+									specialShop = shop;
+								}else {
+									extraPall = shop.getMaxPall();
+									specialShop = shop;
+								}
+							}
+						}
+					}else {
+						specialShop = points.stream().filter(s-> s.getMaxPall() != null).findFirst().get();
+					}
+					
+					flag = false;
+					
 					Integer specialPall = specialShop.getMaxPall();
 					List<Vehicle> specialTrucks = new ArrayList<Vehicle>();
 					trucks.stream().filter(t-> t.getPall()<=specialPall).forEach(t->specialTrucks.add(t));
@@ -352,18 +377,12 @@ public class ColossusProcessorANDRestrictions3 {
 					for (Map.Entry<Double, Shop> entry : radiusMapSpecial.entrySet()) {
 						Shop shop2 = entry.getValue();	
 						Integer specialPallNew = shop2.getMaxPall() != null ? shop2.getMaxPall() : null; // тут определяем есть ли ограничения в текущем задании
-						if(specialPallNew != null && specialPallNew < specialPall) {
-							System.err.println("В РАЗРАБОТКЕ ! ИСКЛЮЧЕНИЕ ЕСЛИ СЛЕДУЮЩИЙ МАГАЗИН НАКЛАДЫВАЕТ БОЛЕЕ ЖЕСТКОЕ ОГРАНИЧЕНИЕ ЧЕМ ПРОШЛЫЙ");
-							continue;
-						}
+						
 						// тут добавляем мазаз в точку point
 						points.add(shop2);
 						points.add(targetStock);
 						
 						shop2.setDistanceFromStock(matrixMachine.matrix.get(targetStock.getNumshop()+"-"+shop2.getNumshop()));
-						
-									
-						
 						
 						// проверяем является ли маршрут логичным!
 						VehicleWay vehicleWayTest = new VehicleWay(points, 0.0, 30, null);
@@ -379,6 +398,13 @@ public class ColossusProcessorANDRestrictions3 {
 						if (logicResult > 0 && distanceBetween<=100000.0) {
 							shopsForOptimization.remove(shop2);
 							points.remove(points.size() - 1);
+							if(specialPallNew != null && specialPallNew < specialPall) {
+								System.err.println("В РАЗРАБОТКЕ ! ИСКЛЮЧЕНИЕ ЕСЛИ СЛЕДУЮЩИЙ МАГАЗИН НАКЛАДЫВАЕТ БОЛЕЕ ЖЕСТКОЕ ОГРАНИЧЕНИЕ ЧЕМ ПРОШЛЫЙ");
+								System.err.println(shop2.toAllString());
+								points.forEach(p-> System.out.println(p.toAllString()));
+								flag = true;
+								break;
+							}
 						} else {
 //							System.out.println("не кладём, т.к. не логично " + shop2);
 							points.remove(points.size() - 1);
@@ -424,11 +450,6 @@ public class ColossusProcessorANDRestrictions3 {
 
 				
 			}
-			
-			
-			
-			
-			
 			
 			
 			trucks.remove(virtualTruck);
@@ -554,13 +575,23 @@ public class ColossusProcessorANDRestrictions3 {
 			// проверяем, есть ли, гипотетически меньшая машина, для того чтобы сохранить
 			// большую
 			Integer pallHasWay = calcPallHashHsop(vehicleWayVirtual.getWay(), targetStock);
+			Integer extraPall = 999;
+			//тут определяем минимальное оганичение по паллетам, если таковое имеется
+			for (Shop shop : vehicleWayVirtual.getWay()) {
+				if(shop.getMaxPall() != null) {
+					if (extraPall > shop.getMaxPall()) {
+						extraPall = shop.getMaxPall();
+					}
+				}
+			}
+			
 			Vehicle oldTruck = vehicleWayVirtual.getVehicle();
 			Integer pallHasOldTruck = vehicleWayVirtual.getVehicle().getPall();
 			trucks.sort(vehicleComparatorFromMin);
 			for (Vehicle truck : trucks) {
 //				System.err.println(truck + " <----> " + oldTruck);
 				if(truck.getWeigth() >= oldTruck.getTargetWeigth()) {
-					if (truck.getPall() >= oldTruck.getTargetPall() && truck.getPall() < pallHasOldTruck) {
+					if (truck.getPall() >= oldTruck.getTargetPall() && truck.getPall() < pallHasOldTruck && extraPall > truck.getPall()) {
 						truck.setTargetPall(pallHasWay);
 						truck.setTargetWeigth(oldTruck.getTargetWeigth());
 						trucks.add(oldTruck);

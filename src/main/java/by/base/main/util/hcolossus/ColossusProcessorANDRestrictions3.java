@@ -84,6 +84,9 @@ public class ColossusProcessorANDRestrictions3 {
 	private List<Vehicle> vehicleForDelete;
 	private String stackTrace;
 	private List<VehicleWay> whiteWay;
+	/**
+	 * Это список с направлениями
+	 */
 	private List<VehicleWay> directionsWay; // направления
 	private List<Shop> shopsForAddNewNeedPall;
 	/**
@@ -321,6 +324,8 @@ public class ColossusProcessorANDRestrictions3 {
 			VehicleWay vehicleWayVirtual = new VehicleWay(i+ "", points, 0.0, 30, virtualTruck);
 			vehicleWayVirtual.setDistanceFromStock(firstShop.getDistanceFromStock());
 			directionsWay.add(vehicleWayVirtual);
+			
+			//остановился тут
 			whiteWay.add(vehicleWayVirtual);
 			System.err.println(vehicleWayVirtual.toString());
 			i++;			
@@ -368,6 +373,18 @@ public class ColossusProcessorANDRestrictions3 {
 		solution.setStackTrace(stackTrace);
 		return solution;
 
+	}
+	
+	/**
+	 * Метод оптимизации направлений.
+	 * Ищет направления с одной или двумя точками, и соединяет это направление с ближайшим.
+	 * @param vehicleWayVirtual
+	 * @param targetStock
+	 * @return
+	 */
+	private VehicleWay optimizationDirectionsWay(VehicleWay vehicleWayVirtual, Shop targetStock) {
+		
+		return vehicleWayVirtual;		
 	}
 	
 	/**

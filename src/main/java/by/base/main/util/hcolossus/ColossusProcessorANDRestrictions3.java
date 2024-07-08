@@ -177,34 +177,6 @@ public class ColossusProcessorANDRestrictions3 {
 			shopsForAddNewNeedPall = new ArrayList<Shop>();
 
 			
-
-//			shopsForOptimization.sort(shopComparatorForIdealWay);
-//			// тут ставится блок ограничений, по дефолту все параметры равны null
-//			Integer pallRestrictionIdeal = null;
-//
-//			for (Shop shop : shopsForOptimization) {
-//				//Блок распределения идеальных маршрутов
-//				// проверяем, поместится ли вся потребность магазина в одну машину
-//				Integer shopPall = shop.getNeedPall();
-//				Integer maxPallTruck = trucks.get(0).getPall();
-//
-//				// проверяем, есть ли ограничения и записываем
-//				pallRestrictionIdeal = shop.getMaxPall() != null ? shop.getMaxPall() : null;
-//
-//				// 1. определяем идеальные маршруты (одна точка)
-//				if (shopPall >= maxPallTruck && pallRestrictionIdeal == null) {
-//					// логика создания идеального маршрута если нет ограничений
-//					createIdealWay(shop, targetStock);
-//					break;
-//				}
-//
-//				// логика создания идеального маршрута если ЕСТЬ ограниченя
-//				if (shopPall >= maxPallTruck && pallRestrictionIdeal != null) {
-//					createIdealWayAndPallRestriction(shop, targetStock);
-//					break;
-//				}				
-//			}
-			
 			shopsForOptimization.sort(shopComparatorDistanceMain);
 			
 			Integer pallRestriction = null;
@@ -212,7 +184,7 @@ public class ColossusProcessorANDRestrictions3 {
 			//берем самый дальний магазин
 			Shop firstShop = shopsForOptimization.remove(0);
 			pallRestriction = firstShop.getMaxPall() != null ? firstShop.getMaxPall() : null;
-			
+			boolean isRestrictionsFirst = false;
 			
 			//Проверяем, загрузится ли этот магазин в самую большую машину (проверка на идеальные маршруты)
 			
@@ -233,6 +205,7 @@ public class ColossusProcessorANDRestrictions3 {
 				i++;
 				continue;
 			}
+			isRestrictionsFirst = firstShop.getMaxPall() != null ? true : false; // тут определяем есть ли ограничения в текущем задании
 			// это не идеальный маршрут, пожтому догружаем по обычному алгоритму
 			// создаём порядок точек
 			List<Shop> points = new ArrayList<Shop>();
@@ -248,12 +221,18 @@ public class ColossusProcessorANDRestrictions3 {
 			virtualTruck = trucks.get(0);
 			int countRadiusMap = 0;
 			int maxCountRadiusMap = radiusMap.entrySet().size()-1;
+			boolean isRestrictions = false;
 			for (Map.Entry<Double, Shop> entry : radiusMap.entrySet()) {
-				Shop shop2 = entry.getValue();		
-				shop2.setDistanceFromStock(matrixMachine.matrix.get(targetStock.getNumshop()+"-"+shop2.getNumshop()));
+				Shop shop2 = entry.getValue();	
+				isRestrictions = shop2.getMaxPall() != null ? true : false; // тут определяем есть ли ограничения в текущем задании
 				// тут добавляем мазаз в точку point
 				points.add(shop2);
 				points.add(targetStock);
+				
+				shop2.setDistanceFromStock(matrixMachine.matrix.get(targetStock.getNumshop()+"-"+shop2.getNumshop()));
+				
+							
+				
 				
 				// проверяем является ли маршрут логичным!
 				VehicleWay vehicleWayTest = new VehicleWay(points, 0.0, 30, null);
@@ -269,6 +248,7 @@ public class ColossusProcessorANDRestrictions3 {
 				if (logicResult > 0 && distanceBetween<=100000.0) {
 					shopsForOptimization.remove(shop2);
 					points.remove(points.size() - 1);
+					if(isRestrictions || isRestrictionsFirst) break;
 				} else {
 //					System.out.println("не кладём, т.к. не логично " + shop2);
 					points.remove(points.size() - 1);
@@ -287,45 +267,176 @@ public class ColossusProcessorANDRestrictions3 {
 				
 				/**
 				 * В этом условии проверяем, если текущие точки под завязку грузят машину. По весу или по паллетам
+				 * И магазины без ограничений
+				 * 
 				 */
-//				if(totalPall == virtualTruck.getPall().intValue() && totalWeigth <= virtualTruck.getWeigth().intValue() || totalWeigth == virtualTruck.getWeigth().intValue() && totalPall <= virtualTruck.getPall().intValue()) {
+				if(totalPall == virtualTruck.getPall().intValue() && totalWeigth <= virtualTruck.getWeigth().intValue() && !isRestrictions || totalWeigth == virtualTruck.getWeigth().intValue() && totalPall <= virtualTruck.getPall().intValue() && !isRestrictions) {
 //					trucks.remove(virtualTruck);
 //					virtualTruck.setTargetWeigth(totalWeigth);
 //					virtualTruck.setTargetPall(totalPall);	
-//					break;
-//				}
+					break;
+				}
+				
 				
 				/**
-				 * В этом условии проверяем, если текущие точки не проходят в машину по весу и паллетам!
+				 * В этом условии проверяем, если текущие точки не проходят в самую большую машину по весу и паллетам!
 				 * В этом случае принимаем решение положить этот магазин обратно в общий список
+				 * ВАЖНО! УСЛОВИЕ РАБОТАЕТ ЕСЛ/И НЕТ МАГАЗИНОВ С ОГРАНИЧЕНИЯМИ
 				 */
-//				if(totalPall > virtualTruck.getPall().intValue() || totalWeigth > virtualTruck.getWeigth().intValue()) {
-//					shopsForOptimization.add(shop2);
-//					points.remove(points.size() - 1);	
-//					
-//					/**
-//					 * блок завершения или продолжения цикла
-//					 */
-//					if(countRadiusMap == maxCountRadiusMap) {
-//						trucks.remove(virtualTruck);
-//						virtualTruck.setTargetWeigth(calcWeightHashHsop(points, targetStock));
-//						virtualTruck.setTargetPall(calcPallHashHsop(points, targetStock));					
-//					}else {
-//						countRadiusMap++;
-//						continue;
-//					}
-//					//конец блока завершения или продолжения цикла
-//				}
+				if(totalPall > virtualTruck.getPall().intValue() && !isRestrictions || totalWeigth > virtualTruck.getWeigth().intValue() && !isRestrictions) {
+					shopsForOptimization.add(shop2);
+					points.remove(points.size() - 1);	
+				}
+				
 				
 			}
 			
+			
+			
+			/**
+			 * Большой блок подбора и обработки магазинов если есть ограничения 
+			 */			
+			if(isRestrictions || isRestrictionsFirst) {
+//				Shop specialShop = points.get(points.size()-1);
+				Shop specialShop = points.stream().filter(s-> s.getMaxPall() != null).findFirst().get();
+				Integer specialPall = specialShop.getMaxPall();
+				List<Vehicle> specialTrucks = new ArrayList<Vehicle>();
+				trucks.stream().filter(t-> t.getPall()<=specialPall).forEach(t->specialTrucks.add(t));
+				if(specialTrucks.isEmpty()) {
+					System.err.println("Отсутствуют машины с паллетовместимостью " + specialPall + " и ниже!");
+					break;
+				}
+				Map<Double, Shop> radiusMapSpecial = new TreeMap<Double, Shop>();
+				radiusMapSpecial = getDistanceMatrixHasMin(shopsForOptimization, specialShop);
+				virtualTruck = specialTrucks.remove(0);
+				/**
+				 * Сначала проверяем поместится ли уже текущие точки в данную машину
+				 * если входит, то продолжаем искать по СТАРОМУ списку.
+				 * Если не водит, избавляемся от лишних точке начиная с последней
+				 */
+				int totalPall = calcPallHashHsop(points, targetStock);
+				int totalWeigth = calcWeightHashHsop(points, targetStock);
+				
+				if(totalPall > virtualTruck.getPall().intValue() || totalWeigth > virtualTruck.getWeigth().intValue()) {
+					List<Shop> pointsNew = new ArrayList<Shop>();
+					pointsNew.add(targetStock);
+					pointsNew.add(specialShop);
+					for (Shop shop : points) {
+						if(shop.equals(targetStock) || shop.equals(specialShop)) continue;
+						pointsNew.add(shop);
+						int totalPallNew = calcPallHashHsop(pointsNew, targetStock);
+						int totalWeigthNew = calcWeightHashHsop(pointsNew, targetStock);
+						if(totalPallNew <= virtualTruck.getPall().intValue() && totalWeigthNew <= virtualTruck.getWeigth().intValue()) {
+							continue;
+						}else {
+							pointsNew.remove(pointsNew.size()-1);
+							continue;
+						}
+						
+					}
+					List<Shop> correctRoute = correctRouteMaker(pointsNew, targetStock);
+
+					List<Shop> extraShop = new ArrayList<Shop>(points);
+					extraShop.removeAll(correctRoute);
+					shopsForOptimization.addAll(extraShop);	
+					points = correctRoute;
+				}
+				/**
+				 * продолжаем догружать машину дальше
+				 */
+				for (Map.Entry<Double, Shop> entry : radiusMapSpecial.entrySet()) {
+					Shop shop2 = entry.getValue();	
+					Integer specialPallNew = shop2.getMaxPall() != null ? shop2.getMaxPall() : null; // тут определяем есть ли ограничения в текущем задании
+					if(specialPallNew != null && specialPallNew < specialPall) {
+						System.err.println("В РАЗРАБОТКЕ ! ИСКЛЮЧЕНИЕ ЕСЛИ СЛЕДУЮЩИЙ МАГАЗИН НАКЛАДЫВАЕТ БОЛЕЕ ЖЕСТКОЕ ОГРАНИЧЕНИЕ ЧЕМ ПРОШЛЫЙ");
+						continue;
+					}
+					// тут добавляем мазаз в точку point
+					points.add(shop2);
+					points.add(targetStock);
+					
+					shop2.setDistanceFromStock(matrixMachine.matrix.get(targetStock.getNumshop()+"-"+shop2.getNumshop()));
+					
+								
+					
+					
+					// проверяем является ли маршрут логичным!
+					VehicleWay vehicleWayTest = new VehicleWay(points, 0.0, 30, null);
+
+					Double logicResult = logicAnalyzer.logicalСheck(vehicleWayTest, koeff);
+//					System.err.println(logicResult + " логичность маршрута составила");
+					
+					/**
+					 * Тут решаем, в зависимости от логичтности - кладём магазин в точки, или нет.
+					 * Если нет, то идём дальше
+					 */
+					double distanceBetween = matrixMachine.matrix.get(points.get(points.size() - 3).getNumshop()+"-"+shop2.getNumshop());
+					if (logicResult > 0 && distanceBetween<=100000.0) {
+						shopsForOptimization.remove(shop2);
+						points.remove(points.size() - 1);
+					} else {
+//						System.out.println("не кладём, т.к. не логично " + shop2);
+						points.remove(points.size() - 1);
+						points.remove(points.size() - 1);
+						countRadiusMap++;
+						continue;
+					}	
+					
+					/**
+					 * Далее идут проверки на вместимость авто
+					 * именно тут мы проверяем на вместимость машины
+					 */
+					
+					totalPall = calcPallHashHsop(points, targetStock);
+					totalWeigth = calcWeightHashHsop(points, targetStock);
+					
+					/**
+					 * В этом условии проверяем, если текущие точки под завязку грузят машину. По весу или по паллетам
+					 * И магазины без ограничений
+					 * 
+					 */
+					if(totalPall == virtualTruck.getPall().intValue() && totalWeigth <= virtualTruck.getWeigth().intValue() || totalWeigth == virtualTruck.getWeigth().intValue() && totalPall <= virtualTruck.getPall().intValue()) {
+//						trucks.remove(virtualTruck);
+//						virtualTruck.setTargetWeigth(totalWeigth);
+//						virtualTruck.setTargetPall(totalPall);	
+						break;
+					}
+					
+					
+					/**
+					 * В этом условии проверяем, если текущие точки не проходят в самую большую машину по весу и паллетам!
+					 * В этом случае принимаем решение положить этот магазин обратно в общий список
+					 * ВАЖНО! УСЛОВИЕ РАБОТАЕТ ЕСЛ/И НЕТ МАГАЗИНОВ С ОГРАНИЧЕНИЯМИ
+					 */
+					if(totalPall > virtualTruck.getPall().intValue() || totalWeigth > virtualTruck.getWeigth().intValue()) {
+						shopsForOptimization.add(shop2);
+						points.remove(points.size() - 1);	
+					}
+					
+					
+				}
+				
+			}
+			
+			
+			
+			
+			
+			
+			
+			trucks.remove(virtualTruck);
+			virtualTruck.setTargetWeigth(calcWeightHashHsop(points, targetStock));
+			virtualTruck.setTargetPall(calcPallHashHsop(points, targetStock));	
+						
+			
 			// создаём финальный, виртуальный маршрут
 			points.add(targetStock);
+
 			VehicleWay vehicleWayVirtual = new VehicleWay(i+ "", points, 0.0, 30, virtualTruck);
-			vehicleWayVirtual.setDistanceFromStock(firstShop.getDistanceFromStock());
-			directionsWay.add(vehicleWayVirtual);
+			vehicleWayVirtual.setDistanceFromStock(firstShop.getDistanceFromStock());			
+			changeTruckHasSmall(vehicleWayVirtual, targetStock);
 			
-			//остановился тут
+			
 			whiteWay.add(vehicleWayVirtual);
 			System.err.println(vehicleWayVirtual.toString());
 			i++;			
@@ -376,15 +487,50 @@ public class ColossusProcessorANDRestrictions3 {
 	}
 	
 	/**
-	 * Метод оптимизации направлений.
-	 * Ищет направления с одной или двумя точками, и соединяет это направление с ближайшим.
-	 * @param vehicleWayVirtual
-	 * @param targetStock
+	 * Метод преобразует любой маршрут в правильный, т.е. точки выстраиваются по отдалению от склада, то меньшего к большему расстоянию
+	 * <br>Сама сортировка прохордит с помощью помещения расстояний в TreeMap
+	 * <br>не добавляет склад в конце
+	 * @param points
 	 * @return
 	 */
-	private VehicleWay optimizationDirectionsWay(VehicleWay vehicleWayVirtual, Shop targetStock) {
+	public List<Shop> correctRouteMaker(List<Shop> points, Shop targetStock){
+		List<Shop> mainList = new ArrayList<Shop>(points);
+//		System.out.println("получаем на вход:");
+//		mainList.forEach(s-> System.out.println(s));
+
+		mainList.remove(targetStock);
+		if(mainList.get(mainList.size()-1).equals(targetStock)) {
+			mainList.remove(mainList.size()-1);
+		}
 		
-		return vehicleWayVirtual;		
+		
+//		System.out.println("после удаления слкада:");
+//		mainList.forEach(s-> System.out.println(s));
+		
+		Map<Double, Shop> map = new TreeMap<Double, Shop>(Collections.reverseOrder()); // с обратной сортировкой
+		
+		for (Shop shop : mainList) {
+			String keyForMatrix = targetStock.getNumshop()+"-"+shop.getNumshop();
+			Double km = matrixMachine.matrix.get(keyForMatrix);
+			if(km == null) {
+				System.err.println("LogicAnalyzer.correctRouteMaker: Расстояние " + keyForMatrix + " не найдено в матрице!");
+				//генерим exception
+			}else {
+				map.put(km, shop);
+			}			
+		}
+		
+//		System.out.println("После обработки");
+//		map.forEach((k,v) -> System.out.println(k + "  " + v));
+		
+		List<Shop> result = new ArrayList<Shop>();
+		result.add(targetStock);
+		map.forEach((k,v) -> result.add(v));
+		
+//		System.out.println("реузльтат:");
+//		result.forEach(s-> System.out.println(s));
+		
+		return result;		
 	}
 	
 	/**

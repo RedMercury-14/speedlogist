@@ -292,3 +292,17 @@ select option:disabled {
 	padding-bottom: 10px;
 	margin-top: -5px;
 }
+
+.disableSlotRedirect-container {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+.disableSlotRedirect-container label,
+#disableSlotRedirect {
+	cursor: pointer;
+}
+#disableSlotRedirect {
+	width: 20px;
+	height: 20px;
+}

@@ -101,7 +101,7 @@ public class LogicAnalyzer {
 				//берем самое большое расстояние от магазина к магазину и сравниваем его с расстоянием до склада деленное на 2
 				//если оно больше этого значение - умножаем на коэф. 1,35 и проверяем опять на логичность
 				
-				System.err.print("LogicAnalyzer.logicalСheck: Задействована проверка на кластерность: ");
+//				System.err.print("LogicAnalyzer.logicalСheck: Задействована проверка на кластерность: ");
 				
 				Double clusterresult = clusterCheck(correctRoute, distanceСhain, result);
 				return clusterresult; 

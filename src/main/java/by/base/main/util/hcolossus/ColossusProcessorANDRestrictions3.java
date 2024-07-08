@@ -295,126 +295,133 @@ public class ColossusProcessorANDRestrictions3 {
 			
 			/**
 			 * Большой блок подбора и обработки магазинов если есть ограничения 
-			 */			
+			 */		
+			for (Shop shop : points) {
+				isRestrictions = shop.getMaxPall() != null ? true : false;
+			}			
 			if(isRestrictions || isRestrictionsFirst) {
-//				Shop specialShop = points.get(points.size()-1);
-				Shop specialShop = points.stream().filter(s-> s.getMaxPall() != null).findFirst().get();
-				Integer specialPall = specialShop.getMaxPall();
-				List<Vehicle> specialTrucks = new ArrayList<Vehicle>();
-				trucks.stream().filter(t-> t.getPall()<=specialPall).forEach(t->specialTrucks.add(t));
-				if(specialTrucks.isEmpty()) {
-					System.err.println("Отсутствуют машины с паллетовместимостью " + specialPall + " и ниже!");
-					break;
-				}
-				Map<Double, Shop> radiusMapSpecial = new TreeMap<Double, Shop>();
-				radiusMapSpecial = getDistanceMatrixHasMin(shopsForOptimization, specialShop);
-				virtualTruck = specialTrucks.remove(0);
-				/**
-				 * Сначала проверяем поместится ли уже текущие точки в данную машину
-				 * если входит, то продолжаем искать по СТАРОМУ списку.
-				 * Если не водит, избавляемся от лишних точке начиная с последней
-				 */
-				int totalPall = calcPallHashHsop(points, targetStock);
-				int totalWeigth = calcWeightHashHsop(points, targetStock);
-				
-				if(totalPall > virtualTruck.getPall().intValue() || totalWeigth > virtualTruck.getWeigth().intValue()) {
-					List<Shop> pointsNew = new ArrayList<Shop>();
-					pointsNew.add(targetStock);
-					pointsNew.add(specialShop);
-					for (Shop shop : points) {
-						if(shop.equals(targetStock) || shop.equals(specialShop)) continue;
-						pointsNew.add(shop);
-						int totalPallNew = calcPallHashHsop(pointsNew, targetStock);
-						int totalWeigthNew = calcWeightHashHsop(pointsNew, targetStock);
-						if(totalPallNew <= virtualTruck.getPall().intValue() && totalWeigthNew <= virtualTruck.getWeigth().intValue()) {
-							continue;
-						}else {
-							pointsNew.remove(pointsNew.size()-1);
-							continue;
-						}
-						
-					}
-					List<Shop> correctRoute = correctRouteMaker(pointsNew, targetStock);
-
-					List<Shop> extraShop = new ArrayList<Shop>(points);
-					extraShop.removeAll(correctRoute);
-					shopsForOptimization.addAll(extraShop);	
-					points = correctRoute;
-				}
-				/**
-				 * продолжаем догружать машину дальше
-				 */
-				for (Map.Entry<Double, Shop> entry : radiusMapSpecial.entrySet()) {
-					Shop shop2 = entry.getValue();	
-					Integer specialPallNew = shop2.getMaxPall() != null ? shop2.getMaxPall() : null; // тут определяем есть ли ограничения в текущем задании
-					if(specialPallNew != null && specialPallNew < specialPall) {
-						System.err.println("В РАЗРАБОТКЕ ! ИСКЛЮЧЕНИЕ ЕСЛИ СЛЕДУЮЩИЙ МАГАЗИН НАКЛАДЫВАЕТ БОЛЕЕ ЖЕСТКОЕ ОГРАНИЧЕНИЕ ЧЕМ ПРОШЛЫЙ");
-						continue;
-					}
-					// тут добавляем мазаз в точку point
-					points.add(shop2);
-					points.add(targetStock);
-					
-					shop2.setDistanceFromStock(matrixMachine.matrix.get(targetStock.getNumshop()+"-"+shop2.getNumshop()));
-					
-								
-					
-					
-					// проверяем является ли маршрут логичным!
-					VehicleWay vehicleWayTest = new VehicleWay(points, 0.0, 30, null);
-
-					Double logicResult = logicAnalyzer.logicalСheck(vehicleWayTest, koeff);
-//					System.err.println(logicResult + " логичность маршрута составила");
-					
-					/**
-					 * Тут решаем, в зависимости от логичтности - кладём магазин в точки, или нет.
-					 * Если нет, то идём дальше
-					 */
-					double distanceBetween = matrixMachine.matrix.get(points.get(points.size() - 3).getNumshop()+"-"+shop2.getNumshop());
-					if (logicResult > 0 && distanceBetween<=100000.0) {
-						shopsForOptimization.remove(shop2);
-						points.remove(points.size() - 1);
-					} else {
-//						System.out.println("не кладём, т.к. не логично " + shop2);
-						points.remove(points.size() - 1);
-						points.remove(points.size() - 1);
-						countRadiusMap++;
-						continue;
-					}	
-					
-					/**
-					 * Далее идут проверки на вместимость авто
-					 * именно тут мы проверяем на вместимость машины
-					 */
-					
-					totalPall = calcPallHashHsop(points, targetStock);
-					totalWeigth = calcWeightHashHsop(points, targetStock);
-					
-					/**
-					 * В этом условии проверяем, если текущие точки под завязку грузят машину. По весу или по паллетам
-					 * И магазины без ограничений
-					 * 
-					 */
-					if(totalPall == virtualTruck.getPall().intValue() && totalWeigth <= virtualTruck.getWeigth().intValue() || totalWeigth == virtualTruck.getWeigth().intValue() && totalPall <= virtualTruck.getPall().intValue()) {
-//						trucks.remove(virtualTruck);
-//						virtualTruck.setTargetWeigth(totalWeigth);
-//						virtualTruck.setTargetPall(totalPall);	
+				boolean flag = false;
+				do {
+//					Shop specialShop = points.get(points.size()-1);
+					Shop specialShop = points.stream().filter(s-> s.getMaxPall() != null).findFirst().get();
+					Integer specialPall = specialShop.getMaxPall();
+					List<Vehicle> specialTrucks = new ArrayList<Vehicle>();
+					trucks.stream().filter(t-> t.getPall()<=specialPall).forEach(t->specialTrucks.add(t));
+					if(specialTrucks.isEmpty()) {
+						System.err.println("Отсутствуют машины с паллетовместимостью " + specialPall + " и ниже!");
 						break;
 					}
-					
-					
+					Map<Double, Shop> radiusMapSpecial = new TreeMap<Double, Shop>();
+					radiusMapSpecial = getDistanceMatrixHasMin(shopsForOptimization, specialShop);
+					virtualTruck = specialTrucks.remove(0);
 					/**
-					 * В этом условии проверяем, если текущие точки не проходят в самую большую машину по весу и паллетам!
-					 * В этом случае принимаем решение положить этот магазин обратно в общий список
-					 * ВАЖНО! УСЛОВИЕ РАБОТАЕТ ЕСЛ/И НЕТ МАГАЗИНОВ С ОГРАНИЧЕНИЯМИ
+					 * Сначала проверяем поместится ли уже текущие точки в данную машину
+					 * если входит, то продолжаем искать по СТАРОМУ списку.
+					 * Если не водит, избавляемся от лишних точке начиная с последней
 					 */
+					int totalPall = calcPallHashHsop(points, targetStock);
+					int totalWeigth = calcWeightHashHsop(points, targetStock);
+					
 					if(totalPall > virtualTruck.getPall().intValue() || totalWeigth > virtualTruck.getWeigth().intValue()) {
-						shopsForOptimization.add(shop2);
-						points.remove(points.size() - 1);	
+						List<Shop> pointsNew = new ArrayList<Shop>();
+						pointsNew.add(targetStock);
+						pointsNew.add(specialShop);
+						for (Shop shop : points) {
+							if(shop.equals(targetStock) || shop.equals(specialShop)) continue;
+							pointsNew.add(shop);
+							int totalPallNew = calcPallHashHsop(pointsNew, targetStock);
+							int totalWeigthNew = calcWeightHashHsop(pointsNew, targetStock);
+							if(totalPallNew <= virtualTruck.getPall().intValue() && totalWeigthNew <= virtualTruck.getWeigth().intValue()) {
+								continue;
+							}else {
+								pointsNew.remove(pointsNew.size()-1);
+								continue;
+							}
+							
+						}
+						List<Shop> correctRoute = correctRouteMaker(pointsNew, targetStock);
+
+						List<Shop> extraShop = new ArrayList<Shop>(points);
+						extraShop.removeAll(correctRoute);
+						shopsForOptimization.addAll(extraShop);	
+						points = correctRoute;
 					}
-					
-					
-				}
+					/**
+					 * продолжаем догружать машину дальше
+					 */
+					for (Map.Entry<Double, Shop> entry : radiusMapSpecial.entrySet()) {
+						Shop shop2 = entry.getValue();	
+						Integer specialPallNew = shop2.getMaxPall() != null ? shop2.getMaxPall() : null; // тут определяем есть ли ограничения в текущем задании
+						if(specialPallNew != null && specialPallNew < specialPall) {
+							System.err.println("В РАЗРАБОТКЕ ! ИСКЛЮЧЕНИЕ ЕСЛИ СЛЕДУЮЩИЙ МАГАЗИН НАКЛАДЫВАЕТ БОЛЕЕ ЖЕСТКОЕ ОГРАНИЧЕНИЕ ЧЕМ ПРОШЛЫЙ");
+							continue;
+						}
+						// тут добавляем мазаз в точку point
+						points.add(shop2);
+						points.add(targetStock);
+						
+						shop2.setDistanceFromStock(matrixMachine.matrix.get(targetStock.getNumshop()+"-"+shop2.getNumshop()));
+						
+									
+						
+						
+						// проверяем является ли маршрут логичным!
+						VehicleWay vehicleWayTest = new VehicleWay(points, 0.0, 30, null);
+
+						Double logicResult = logicAnalyzer.logicalСheck(vehicleWayTest, koeff);
+//						System.err.println(logicResult + " логичность маршрута составила");
+						
+						/**
+						 * Тут решаем, в зависимости от логичтности - кладём магазин в точки, или нет.
+						 * Если нет, то идём дальше
+						 */
+						double distanceBetween = matrixMachine.matrix.get(points.get(points.size() - 3).getNumshop()+"-"+shop2.getNumshop());
+						if (logicResult > 0 && distanceBetween<=100000.0) {
+							shopsForOptimization.remove(shop2);
+							points.remove(points.size() - 1);
+						} else {
+//							System.out.println("не кладём, т.к. не логично " + shop2);
+							points.remove(points.size() - 1);
+							points.remove(points.size() - 1);
+							countRadiusMap++;
+							continue;
+						}	
+						
+						/**
+						 * Далее идут проверки на вместимость авто
+						 * именно тут мы проверяем на вместимость машины
+						 */
+						
+						totalPall = calcPallHashHsop(points, targetStock);
+						totalWeigth = calcWeightHashHsop(points, targetStock);
+						
+						/**
+						 * В этом условии проверяем, если текущие точки под завязку грузят машину. По весу или по паллетам
+						 * И магазины без ограничений
+						 * 
+						 */
+						if(totalPall == virtualTruck.getPall().intValue() && totalWeigth <= virtualTruck.getWeigth().intValue() || totalWeigth == virtualTruck.getWeigth().intValue() && totalPall <= virtualTruck.getPall().intValue()) {
+//							trucks.remove(virtualTruck);
+//							virtualTruck.setTargetWeigth(totalWeigth);
+//							virtualTruck.setTargetPall(totalPall);	
+							break;
+						}
+						
+						
+						/**
+						 * В этом условии проверяем, если текущие точки не проходят в самую большую машину по весу и паллетам!
+						 * В этом случае принимаем решение положить этот магазин обратно в общий список
+						 * ВАЖНО! УСЛОВИЕ РАБОТАЕТ ЕСЛ/И НЕТ МАГАЗИНОВ С ОГРАНИЧЕНИЯМИ
+						 */
+						if(totalPall > virtualTruck.getPall().intValue() || totalWeigth > virtualTruck.getWeigth().intValue()) {
+							shopsForOptimization.add(shop2);
+							points.remove(points.size() - 1);	
+						}
+						
+						
+					}
+				} while (flag);
+
 				
 			}
 			

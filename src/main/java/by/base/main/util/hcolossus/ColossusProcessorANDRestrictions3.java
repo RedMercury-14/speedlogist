@@ -530,7 +530,7 @@ public class ColossusProcessorANDRestrictions3 {
 			for (Entry<Double, Shop> entry : radiusFromShop.entrySet()) {
 				Shop nextShop = entry.getValue();
 				
-				if(nextShop.getMaxPall()!=null && nextShop.getMaxPall() > truck.getPall()) {
+				if(nextShop.getMaxPall()!=null && nextShop.getMaxPall() < truck.getPall()) {
 					continue;
 				}
 				allPall = calcPallHashHsop(newPoints, targetStock) + nextShop.getNeedPall();

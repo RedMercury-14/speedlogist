@@ -33,6 +33,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -1776,6 +1777,45 @@ public class MainRestController {
 	public Integer getCalcMatrix(HttpServletRequest request) {
 		return matrixMachine.loadMatrixOfDistance().size();
 	}
+	
+	@GetMapping("/map/downloadmatrix")
+	public String getDownloadmatrix(HttpServletRequest request) {
+		Gson gson = new Gson();
+        String json = gson.toJson(matrixMachine.matrix);
+        try (FileWriter writer = new FileWriter(request.getServletContext().getRealPath("") + "resources/distance/data.json")) {
+            writer.write(json);
+            System.out.println(writer);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+		return request.getServletContext().getRealPath("") + "resources/distance/data.json";
+	}
+	
+	@GetMapping("/map/downloadmatrixCSV")
+	public String getDownloadmatrixCSV(HttpServletRequest request) {
+        convertToCSV(matrixMachine.matrix, request.getServletContext().getRealPath("") + "resources/distance/data.csv");
+		return request.getServletContext().getRealPath("") + "resources/distance/data.csv";
+	}
+	
+    private void convertToCSV(Map<String, Double> matrix, String fileName) {
+        try (FileWriter writer = new FileWriter(fileName)) {
+            // Пишем заголовок CSV
+            writer.append("Key,Value;");
+
+            // Пишем данные из HashMap в CSV
+            for (Entry<String, Double> entry : matrix.entrySet()) {
+                writer.append(entry.getKey().toString());
+                writer.append(",");
+                writer.append(entry.getValue().toString());
+                writer.append(";");
+            }
+
+            System.out.println("CSV файл успешно создан: " + fileName);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
 	@GetMapping("/map/sizematrix")
 	public Map<String, String> getSizeMatrix(HttpServletRequest request) {
@@ -1795,6 +1835,8 @@ public class MainRestController {
 		response.put("/map/sizematrix",
 				"Возвращает колличество элементов матрицы и выводит в консоль, все ли элементы прогружены на текущий момент");
 		response.put("/map/calcmatrix/{i}", "рассчитать матрицу и создать фай1л сериализации (0 - если всю)");
+		response.put("/map/downloadmatrix", "Скачивает матрицу расстояний в фолрмате json");
+		response.put("/map/downloadmatrixCSV", "Скачивает матрицу расстояний в фолрмате CSV с разделителем ;");
 		return response;
 	}
 

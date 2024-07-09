@@ -85,10 +85,9 @@ public class ColossusProcessorANDRestrictions3 {
 	private List<Vehicle> vehicleForDelete;
 	private String stackTrace;
 	private List<VehicleWay> whiteWay;
-	/**
-	 * Это список с направлениями
-	 */
-	private List<VehicleWay> directionsWay; // направления
+	
+	private Double maxDistanceInRoute = 100000.0;
+	
 	private List<Shop> shopsForAddNewNeedPall;
 	/**
 	 * Основной метод расчёта первочной оптимизации
@@ -118,7 +117,6 @@ public class ColossusProcessorANDRestrictions3 {
 		Shop targetStock = allShop.get(stock);
 		this.jsonMainObject = jsonMainObject;
 		whiteWay = new ArrayList<VehicleWay>();
-		directionsWay = new ArrayList<VehicleWay>();
 		vehicleForDelete = new ArrayList<Vehicle>();
 		// блок подготовки
 		// заполняем static матрицу. Пусть хранится там
@@ -246,7 +244,7 @@ public class ColossusProcessorANDRestrictions3 {
 				 * Если нет, то идём дальше
 				 */
 				double distanceBetween = matrixMachine.matrix.get(points.get(points.size() - 3).getNumshop()+"-"+shop2.getNumshop());
-				if (logicResult > 0 && distanceBetween<=100000.0) {
+				if (logicResult > 0 && distanceBetween <= maxDistanceInRoute) {
 					shopsForOptimization.remove(shop2);
 					points.remove(points.size() - 1);
 					if(isRestrictions || isRestrictionsFirst) break;
@@ -395,12 +393,11 @@ public class ColossusProcessorANDRestrictions3 {
 						 * Если нет, то идём дальше
 						 */
 						double distanceBetween = matrixMachine.matrix.get(points.get(points.size() - 3).getNumshop()+"-"+shop2.getNumshop());
-						if (logicResult > 0 && distanceBetween<=100000.0) {
+						if (logicResult > 0 && distanceBetween <= maxDistanceInRoute) {
 							shopsForOptimization.remove(shop2);
 							points.remove(points.size() - 1);
 							if(specialPallNew != null && specialPallNew < specialPall) {
-								System.err.println("В РАЗРАБОТКЕ ! ИСКЛЮЧЕНИЕ ЕСЛИ СЛЕДУЮЩИЙ МАГАЗИН НАКЛАДЫВАЕТ БОЛЕЕ ЖЕСТКОЕ ОГРАНИЧЕНИЕ ЧЕМ ПРОШЛЫЙ");
-								System.err.println(shop2.toAllString());
+								System.err.println("ИСКЛЮЧЕНИЕ ЕСЛИ СЛЕДУЮЩИЙ МАГАЗИН НАКЛАДЫВАЕТ БОЛЕЕ ЖЕСТКОЕ ОГРАНИЧЕНИЕ ЧЕМ ПРОШЛЫЙ");
 								points.forEach(p-> System.out.println(p.toAllString()));
 								flag = true;
 								break;
@@ -448,7 +445,6 @@ public class ColossusProcessorANDRestrictions3 {
 					}
 				} while (flag);
 
-				
 			}
 			
 			
@@ -461,12 +457,15 @@ public class ColossusProcessorANDRestrictions3 {
 			points.add(targetStock);
 
 			VehicleWay vehicleWayVirtual = new VehicleWay(i+ "", points, 0.0, 30, virtualTruck);
-			vehicleWayVirtual.setDistanceFromStock(firstShop.getDistanceFromStock());			
-			changeTruckHasSmall(vehicleWayVirtual, targetStock);
+			vehicleWayVirtual.setDistanceFromStock(firstShop.getDistanceFromStock());	
 			
+			//методы постобработки маршрутов
+						
+			superProcessingWay(vehicleWayVirtual, targetStock); // метод попутноо подбора авто
+			
+			changeTruckHasSmall(vehicleWayVirtual, targetStock); // метод замены авто на меньшее
 			
 			whiteWay.add(vehicleWayVirtual);
-			System.err.println(vehicleWayVirtual.toString());
 			i++;			
 		}
 
@@ -513,6 +512,51 @@ public class ColossusProcessorANDRestrictions3 {
 		return solution;
 
 	}
+	
+	private void superProcessingWay(VehicleWay vehicleWayVirtual, Shop targetStock) {
+		Vehicle truck = vehicleWayVirtual.getVehicle();
+		List<Shop> mainPoints = new ArrayList<Shop>(vehicleWayVirtual.getWay());
+		if(mainPoints.get(0).equals(targetStock)) mainPoints.remove(0);
+		if(mainPoints.get(mainPoints.size()-1).equals(targetStock)) mainPoints.remove(mainPoints.size()-1);
+		List<Shop> newPoints = new ArrayList<Shop>();
+		newPoints.add(targetStock);
+		for (Shop shop : mainPoints) {
+			int allPall = calcPallHashHsop(newPoints, targetStock) + shop.getNeedPall();
+			int allWeigth = calcWeightHashHsop(newPoints, targetStock) + shop.getWeight();
+			if(truck.getWeigth() >= allWeigth && truck.getPall() >= allPall && !newPoints.contains(shop)) {
+				newPoints.add(shop);				
+			}
+			Map<Double, Shop> radiusFromShop = getDistanceMatrixHasMinLimitParameter(shopsForOptimization, null, shop, 10000.0);
+			for (Entry<Double, Shop> entry : radiusFromShop.entrySet()) {
+				Shop nextShop = entry.getValue();
+				
+				if(nextShop.getMaxPall()!=null && nextShop.getMaxPall() > truck.getPall()) {
+					continue;
+				}
+				allPall = calcPallHashHsop(newPoints, targetStock) + nextShop.getNeedPall();
+				allWeigth = calcWeightHashHsop(newPoints, targetStock) + nextShop.getWeight();
+				if(truck.getWeigth() >= allWeigth && truck.getPall() >= allPall && !newPoints.contains(nextShop)) {
+					newPoints.add(nextShop);
+					shopsForOptimization.remove(nextShop);
+				}
+			}
+//			System.err.println(radiusFromShop.size() + "  " + allPall + "  " + allWeigth);
+//			radiusFromShop.entrySet().forEach(e -> System.out.println("++++++>> " + e.getKey() + " - " + e.getValue().toString()));			
+		}
+		mainPoints.removeAll(newPoints);
+		shopsForOptimization.addAll(mainPoints);
+		
+//		newPoints.forEach(s->System.out.println("-------->>>> " + s));
+		truck.setTargetWeigth(calcWeightHashHsop(newPoints, targetStock));
+		truck.setTargetPall(calcPallHashHsop(newPoints, targetStock));	
+					
+		
+		newPoints.add(targetStock);
+		vehicleWayVirtual.setVehicle(truck);
+		vehicleWayVirtual.setWay(newPoints);
+		
+	}
+	
 	
 	/**
 	 * Метод преобразует любой маршрут в правильный, т.е. точки выстраиваются по отдалению от склада, то меньшего к большему расстоянию

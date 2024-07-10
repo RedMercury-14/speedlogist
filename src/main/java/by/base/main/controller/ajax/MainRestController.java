@@ -9,6 +9,7 @@ import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -45,6 +46,11 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -62,6 +68,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -1778,7 +1785,7 @@ public class MainRestController {
 		return matrixMachine.loadMatrixOfDistance().size();
 	}
 	
-	@GetMapping("/map/downloadmatrix")
+	@GetMapping("/map/downloadmatrixJSON")
 	public String getDownloadmatrix(HttpServletRequest request) {
 		Gson gson = new Gson();
         String json = gson.toJson(matrixMachine.matrix);
@@ -1795,6 +1802,109 @@ public class MainRestController {
 	public String getDownloadmatrixCSV(HttpServletRequest request) {
         convertToCSV(matrixMachine.matrix, request.getServletContext().getRealPath("") + "resources/distance/data.csv");
 		return request.getServletContext().getRealPath("") + "resources/distance/data.csv";
+	}
+	
+	/**
+	 * Метод, который формирует и скачивает матрицу расстояний
+	 * GPT
+	 * @param request
+	 * @param response
+	 * @return
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
+	@GetMapping("/map/downloadmatrix")
+	@ResponseBody
+	public String getDownloadmatrix2(HttpServletRequest request, HttpServletResponse response) throws FileNotFoundException, IOException {
+		 // Получаем уникальные точки
+        Set<String> points = new HashSet<>();
+        for (String key : matrixMachine.matrix.keySet()) {
+            String[] pointPair = key.split("-");
+            points.add(pointPair[0]);
+            points.add(pointPair[1]);
+        }
+
+        // Создаем массив для точек
+        String[] pointArray = points.toArray(new String[0]);
+
+        // Создаем двумерный массив для расстояний
+        double[][] matrix = new double[points.size()][points.size()];
+
+        // Заполняем двумерный массив расстояний
+        for (int i = 0; i < pointArray.length; i++) {
+            for (int j = 0; j < pointArray.length; j++) {
+                if (i == j) {
+                    matrix[i][j] = 0;
+                } else {
+                    String key1 = pointArray[i] + "-" + pointArray[j];
+                    String key2 = pointArray[j] + "-" + pointArray[i];
+                    if (matrixMachine.matrix.containsKey(key1)) {
+                        matrix[i][j] = matrixMachine.matrix.get(key1);
+                    } else if (matrixMachine.matrix.containsKey(key2)) {
+                        matrix[i][j] = matrixMachine.matrix.get(key2);
+                    } else {
+                        matrix[i][j] = 0; // Если расстояние не задано
+                    }
+                }
+            }
+        }
+
+        // Создаем новый файл Excel
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Distances");
+
+        // Заполняем заголовки
+        Row headerRow = sheet.createRow(0);
+        for (int i = 0; i < pointArray.length; i++) {
+            Cell cell = headerRow.createCell(i + 1);
+            cell.setCellValue(pointArray[i]);
+        }
+        for (int i = 0; i < pointArray.length; i++) {
+            Row row = sheet.createRow(i + 1);
+            Cell cell = row.createCell(0);
+            cell.setCellValue(pointArray[i]);
+            for (int j = 0; j < pointArray.length; j++) {
+                cell = row.createCell(j + 1);
+                cell.setCellValue(matrix[i][j]);
+            }
+        }
+
+        // Записываем файл
+        try (FileOutputStream fileOut = new FileOutputStream(request.getServletContext().getRealPath("") + "resources/distance/distances.xlsx")) {
+            workbook.write(fileOut);
+        }
+
+        // Записываем файл в ответ
+        response.setHeader("content-disposition", "attachment;filename=distances.xlsx");
+        workbook.write(response.getOutputStream());
+        workbook.close();
+        
+//        FileInputStream in = null;
+//		OutputStream out = null;
+//		response.setHeader("content-disposition", "attachment;filename=distances.xlsx");
+//		try {
+//			
+//			// Прочтите файл, который нужно загрузить, и сохраните его во входном потоке файла
+//			in = new FileInputStream(request.getServletContext().getRealPath("") + "resources/distance/distances.xlsx");
+//			//  Создать выходной поток
+//			out = response.getOutputStream();			
+//			//  Создать буфер
+//			byte buffer[] = new byte[1024];
+//			int len = 0;
+//			//  Прочитать содержимое входного потока в буфер в цикле
+//			while ((len = in.read(buffer)) > 0) {
+//				out.write(buffer, 0, len);
+//			}
+//			in.close();
+//			out.close();
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}finally {
+//			in.close();
+//			out.close();
+//		}
+    
+		return "Готово";
 	}
 	
     private void convertToCSV(Map<String, Double> matrix, String fileName) {
@@ -1835,8 +1945,9 @@ public class MainRestController {
 		response.put("/map/sizematrix",
 				"Возвращает колличество элементов матрицы и выводит в консоль, все ли элементы прогружены на текущий момент");
 		response.put("/map/calcmatrix/{i}", "рассчитать матрицу и создать фай1л сериализации (0 - если всю)");
-		response.put("/map/downloadmatrix", "Скачивает матрицу расстояний в фолрмате json");
+		response.put("/map/downloadmatrixJSON", "Скачивает матрицу расстояний в фолрмате json");
 		response.put("/map/downloadmatrixCSV", "Скачивает матрицу расстояний в фолрмате CSV с разделителем ;");
+		response.put("/map/downloadmatrix", "Скачивает матрицу расстояний в виде двумерного массива");
 		return response;
 	}
 

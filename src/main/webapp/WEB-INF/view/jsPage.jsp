@@ -48,14 +48,14 @@
 <link rel="stylesheet" type="text/css" href="<c:url value="/resources/css/other.css"/>"/>
 <!-- Latest compiled and minified CSS -->
 <link rel="stylesheet"
-	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+	href="${pageContext.request.contextPath}/resources/js/bootstrap3/bootstrap.min.css">
 
 <!-- Optional theme -->
 <link rel="stylesheet"
-	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+	href="${pageContext.request.contextPath}/resources/js/bootstrap3/bootstrap-theme.min.css">
 
 <!-- Latest Jquery -->
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="${pageContext.request.contextPath}/resources/js/bootstrap3/jquery.min.js"></script>
 
 <!-- Latest compiled and minified JavaScript -->
 
@@ -81,7 +81,7 @@
         </ul>
 <script	src="${pageContext.request.contextPath}/resources/js/test.js" type="module"></script>
 <script
-	src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+	src="${pageContext.request.contextPath}/resources/js/bootstrap3/bootstrap.min.js"></script>
 
 <script src="${pageContext.request.contextPath}/resources/tablesort/src/tablesort.js"></script>
 <script src="${pageContext.request.contextPath}/resources/tablesort/test/tape.js"></script>

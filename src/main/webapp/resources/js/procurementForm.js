@@ -363,7 +363,7 @@ function pointFormDataFormatter(formData) {
 				: data.pointContact_tel
 					? `Тел. ${data.pointContact_tel}` : ''
 
-	const bodyAdress = `${data.country}; ${data.address}`
+	const bodyAdress = `${data.country}; ${data.address.replace(/;/g, ',')}`
 
 	const customsAddress = 
 		data.customsCountry && data.customsAddress

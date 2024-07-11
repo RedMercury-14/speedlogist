@@ -4,62 +4,6 @@
 export const tempMaxPallRestrictions = [
 	{
 		stockId: '1700',
-		date: '2024-07-01',
-		maxPall:{
-			externalMovement: 1600,
-			internalMovement: 500,
-		},
-	},
-	{
-		stockId: '1700',
-		date: '2024-07-02',
-		maxPall:{
-			externalMovement: 1500,
-			internalMovement: 500,
-		},
-	},
-	{
-		stockId: '1700',
-		date: '2024-07-03',
-		maxPall:{
-			externalMovement: 1300,
-			internalMovement: 500,
-		},
-	},
-	{
-		stockId: '1700',
-		date: '2024-07-04',
-		maxPall:{
-			externalMovement: 1500,
-			internalMovement: 500,
-		},
-	},
-	{
-		stockId: '1700',
-		date: '2024-07-05',
-		maxPall:{
-			externalMovement: 1500,
-			internalMovement: 500,
-		},
-	},
-	{
-		stockId: '1700',
-		date: '2024-07-06',
-		maxPall:{
-			externalMovement: 1400,
-			internalMovement: 500,
-		},
-	},
-	{
-		stockId: '1700',
-		date: '2024-07-07',
-		maxPall:{
-			externalMovement: 1300,
-			internalMovement: 500,
-		},
-	},
-	{
-		stockId: '1700',
 		date: '2024-07-08',
 		maxPall:{
 			externalMovement: 1500,
@@ -115,34 +59,58 @@ export const tempMaxPallRestrictions = [
 		},
 	},
 	{
-		stockId: '1100',
-		date: '2024-07-01',
+		stockId: '1700',
+		date: '2024-07-15',
 		maxPall:{
-			externalMovement: 240,
+			externalMovement: 1400,
 			internalMovement: 500,
 		},
 	},
 	{
-		stockId: '1100',
-		date: '2024-07-02',
+		stockId: '1700',
+		date: '2024-07-16',
 		maxPall:{
-			externalMovement: 240,
+			externalMovement: 1500,
 			internalMovement: 500,
 		},
 	},
 	{
-		stockId: '1100',
-		date: '2024-07-03',
+		stockId: '1700',
+		date: '2024-07-17',
 		maxPall:{
-			externalMovement: 240,
+			externalMovement: 1500,
 			internalMovement: 500,
 		},
 	},
 	{
-		stockId: '1100',
-		date: '2024-07-04',
+		stockId: '1700',
+		date: '2024-07-18',
 		maxPall:{
-			externalMovement: 180,
+			externalMovement: 1500,
+			internalMovement: 500,
+		},
+	},
+	{
+		stockId: '1700',
+		date: '2024-07-19',
+		maxPall:{
+			externalMovement: 1500,
+			internalMovement: 500,
+		},
+	},
+	{
+		stockId: '1700',
+		date: '2024-07-20',
+		maxPall:{
+			externalMovement: 1300,
+			internalMovement: 500,
+		},
+	},
+	{
+		stockId: '1700',
+		date: '2024-07-13',
+		maxPall:{
+			externalMovement: 1300,
 			internalMovement: 500,
 		},
 	},
@@ -154,4 +122,12 @@ export const tempMaxPallRestrictions = [
 			internalMovement: 500,
 		},
 	},
-] 
+	{
+		stockId: '1100',
+		date: '2024-07-10',
+		maxPall:{
+			externalMovement: 230,
+			internalMovement: 500,
+		},
+	},
+]

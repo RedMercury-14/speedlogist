@@ -181,7 +181,7 @@
     <script src='${pageContext.request.contextPath}/resources/mainPage/js/main.js'></script>
     <script src='${pageContext.request.contextPath}/resources/mainPage/js/flickity.pkgd.min.js'></script>
     <script src="${pageContext.request.contextPath}/resources/mainPage/js/slider.js"></script>
-    <script src='${pageContext.request.contextPath}/resources/mainPage/js/nav-fixed-top.js'></script>    
+    <script src='${pageContext.request.contextPath}/resources/mainPage/js/nav-fixed-top.js'></script>
     <script src="${pageContext.request.contextPath}/resources/js/myMessage.js" type="module"></script>
     <!-- JAVASCRIPTS END -->
     

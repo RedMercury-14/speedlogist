@@ -45,8 +45,10 @@ import {
 } from "./map/formDataUtils.js"
 import optimizeRouteConfig from "./map/agGridOptimizeRouteConfig.js"
 import distanceControlConfig from "./map/agGridDistanceControlConfig.js"
+import { checkboxHTML, createFormInputs, getOptimizeRouteParamsFormData, inputParams, numericInputHTML, setOptimizeRouteParamsFormData, сheckboxParams } from "./map/optimizeRouteParamsUtils.js"
 
 const testOptimizationUrl = `../api/map/myoptimization3`
+const saveOptimizeRouteParamsUrl = `../api/map/set`
 
 const getAllShopsUrl = '../api/manager/getAllShops'
 const getAllPolygonsUrl = '../api/map/getAllPolygons'
@@ -55,7 +57,8 @@ const deletePolygonBaseUrl = `../api/map/delPolygon/`
 const checkNamePolygonBaseUrl = `../api/map/checkNamePolygon/`
 const getRouterParamsUrl = '../api/map/getDefaultParameters'
 const setRouterParamsUrl = '../api/map/setDefaultParameters'
-const getRoutingListUrl = '../api/map/way/4'
+//const getRoutingListUrl = '../api/map/way/4'
+const getRoutingListUrl = '../api/map/way/5'
 const getServerMessageUrl = '../api/map/getStackTrace'
 const sendExcelFileUrl = '../api/map/5'
 const sendExcelFileWithReportUrl = '../api/map/6'
@@ -63,6 +66,7 @@ const sendExcelFileWithReportUrl = '../api/map/6'
 const token = $("meta[name='_csrf']").attr("content")
 
 const OPTIMIZE_ROUTE_DATA_KEY = "NEW_optimizeRouteData"
+const OPTIMIZE_ROUTE_PARAMS_KEY = "NEW_optimizeRouteParams"
 
 // обработчик отправки формы загрузки магазинов
 function shopLoadsFormHandler(e) {
@@ -452,6 +456,7 @@ window.onload = async () => {
 	const shopLoadsForm = document.querySelector("#shopLoadsForm")
 	const routingParamsForm = document.querySelector("#routingParamsForm")
 	const poligonControlForm = document.querySelector("#poligonControlForm")
+	const optimizeRouteParamsForm = document.querySelector('#optimizeRouteParamsForm')
 	routeForm && routeForm.addEventListener("submit", routeFormHandler)
 	routeAreaForm && routeAreaForm.addEventListener("submit", routeAreaFormHandler)
 	distanceControlForm && distanceControlForm.addEventListener("submit", (e) => distanceControlFormHandler(e, distanceControlGridDiv))
@@ -460,6 +465,7 @@ window.onload = async () => {
 	shopLoadsForm && shopLoadsForm.addEventListener("submit", shopLoadsFormHandler)
 	routingParamsForm && routingParamsForm.addEventListener("submit", (e) => routingParamsFormHandler(e, routeForm))
 	poligonControlForm && poligonControlForm.addEventListener('submit', poligonControlFormSubmitHandler)
+	optimizeRouteParamsForm && optimizeRouteParamsForm.addEventListener('submit', optimizeRouteParamsFormHandler)
 
 	// кнопки управления параметрами маршрутизатора
 	const saveRoutingParamsBtn = document.querySelector("#saveRoutingParams")
@@ -507,6 +513,16 @@ window.onload = async () => {
 		displayPolygons()
 		displayShops()
 	}
+
+
+	// создание элементов формы настроек оптимизатора
+	const optimizeRouteParamsCheckboxes = document.querySelector('#optimizeRouteParamsCheckboxes')
+	const optimizeRouteParamsInputs = document.querySelector('#optimizeRouteParamsInputs')
+	createFormInputs(сheckboxParams, checkboxHTML, optimizeRouteParamsCheckboxes)
+	createFormInputs(inputParams, numericInputHTML, optimizeRouteParamsInputs)
+
+	// автозаполнение формы настрорек оптимизатора
+	setOptimizeRouteParamsFormData(optimizeRouteParamsForm, OPTIMIZE_ROUTE_PARAMS_KEY)
 
 
 	// -------------------------------------------------------------------------------//
@@ -843,7 +859,9 @@ function optimizeRouteFormHandler(e, gridDiv) {
 
 	const submitButton = e.submitter
 	const submitButtonText = submitButton.innerText
-	const data = getOptimizeRouteFormData(e.target)
+	const optimizeRouteParams = JSON.parse(localStorage.getItem(OPTIMIZE_ROUTE_PARAMS_KEY))
+	const data = getOptimizeRouteFormData(e.target, optimizeRouteParams)
+
 	localStorage.setItem(OPTIMIZE_ROUTE_DATA_KEY, JSON.stringify(data))
 	showLoadingSpinner(submitButton)
 	
@@ -862,6 +880,16 @@ function optimizeRouteFormHandler(e, gridDiv) {
 		},
 		errorCallback: () => hideLoadingSpinner(submitButton, submitButtonText)
 	})
+}
+
+// обработчик отправки формы настроек тестового оптимизатора
+function optimizeRouteParamsFormHandler(e) {
+	e.preventDefault()
+
+	const data = getOptimizeRouteParamsFormData(e.target)
+	console.log("🚀 Настройки оптимизатора: ", data)
+	localStorage.setItem(OPTIMIZE_ROUTE_PARAMS_KEY, JSON.stringify(data))
+	snackbar.show('Настройки оптимизатора сохранены')
 }
 
 

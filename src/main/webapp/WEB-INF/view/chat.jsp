@@ -99,15 +99,15 @@
 <title>Чат</title>
 <link rel="icon" href="${pageContext.request.contextPath}/resources/img/favicon.ico">
 <link rel="stylesheet"
-	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+	href="${pageContext.request.contextPath}/resources/js/bootstrap3/bootstrap.min.css">
 <link rel="stylesheet"
-	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+	href="${pageContext.request.contextPath}/resources/js/bootstrap3/bootstrap-theme.min.css">
 
 <script
-	src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"
+	src="${pageContext.request.contextPath}/resources/js/bootstrap3/jquery.min.js"
 	type="text/javascript"></script>
 <script
-	src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+	src="${pageContext.request.contextPath}/resources/js/bootstrap3/bootstrap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.3"></script>
 </head>

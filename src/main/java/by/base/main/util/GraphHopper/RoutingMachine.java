@@ -204,6 +204,7 @@ public class RoutingMachine {
 			}
 	}
 	
+	
 	/**
 	 * Метод преобразуете Map с листами координат в мапу с запросами, 
 	 * <br>где ключ является подярковым номером маршрута согласно excel
@@ -228,6 +229,51 @@ public class RoutingMachine {
 	
 	/**
 	 * Метод принимает запрос json и отдаёт массив GHRequest от точке к точке, разделяя общий маршрут на отдельные участки. 
+	 * <b>Новая версия. от 11.07.2024</b> 
+	 * <br><b>Модель уже установлена в GHRequest</b> 
+	 * <br><b>В зависимости от того, какая последняя точка, меняется модель: если это склад 1700, 1100, 100, 1200 - то машина едет по смягченным ограничениям</b> 
+	 * <br> Колличество точек не ограничено.
+	 * @param JSONstr
+	 * @return
+	 * @throws ParseException
+	 */
+	public List<GHRequest> parseJSONFromClientRequestSplitV2(String JSONstr) throws ParseException {
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(JSONstr);
+		List<Double[]> coordinates = new ArrayList<Double[]>();
+		Double[] startPoint = getPointsDouble(jsonMainObject.get("startPoint").toString());
+		coordinates.add(startPoint);
+		JSONArray lang = (JSONArray) jsonMainObject.get("points");
+
+		for (Object str : lang) {
+			coordinates.add(getPointsDouble(str.toString()));
+		}
+		List<GHRequest> ghRequests = new ArrayList<GHRequest>();
+		CustomModel model = parseJSONFromClientCustomModel(JSONstr);		
+		CustomModel specoalModel = getSpecialModel();
+//		System.out.println(model);
+		List<Shop> shops = getShopAsPointNumbers(JSONstr);	
+		for (int i = 0; i < coordinates.size()-1; i++) {
+			Shop shopNext = null;
+			GHRequest request;
+			if(i != coordinates.size()-1) shopNext = shops.get(i+1);
+			if(shopNext != null) {
+				if(shopNext.getNumshop() == 1700 || shopNext.getNumshop() == 1100 || shopNext.getNumshop() == 1200 || shopNext.getNumshop() == 100 || shopNext.getNumshop() == 1250) {
+					request = GHRequestBilder(coordinates.get(i)[0], coordinates.get(i)[1], specoalModel, coordinates.get(i+1)[0], coordinates.get(i+1)[1]);
+				}else {
+					request = GHRequestBilder(coordinates.get(i)[0], coordinates.get(i)[1], model, coordinates.get(i+1)[0], coordinates.get(i+1)[1]);
+				}
+			}else {
+				request = GHRequestBilder(coordinates.get(i)[0], coordinates.get(i)[1], model, coordinates.get(i+1)[0], coordinates.get(i+1)[1]);
+			}			
+			ghRequests.add(request);
+		}		
+		return ghRequests;		
+	}
+	
+	/**
+	 * Метод принимает запрос json и отдаёт массив GHRequest от точке к точке, разделяя общий маршрут на отдельные участки. 
+	 * <br>Постотянные ограничения в любое направление движения
 	 * <b>Модель уже установлена в GHRequest</b> 
 	 * <br> Колличество точек не ограничено.
 	 * @param JSONstr
@@ -247,7 +293,7 @@ public class RoutingMachine {
 		}
 		List<GHRequest> ghRequests = new ArrayList<GHRequest>();
 		CustomModel model = parseJSONFromClientCustomModel(JSONstr);		
-//		System.out.println(model);
+//		System.out.println(model);			
 		for (int i = 0; i < coordinates.size()-1; i++) {
 			GHRequest request = GHRequestBilder(coordinates.get(i)[0], coordinates.get(i)[1], model, coordinates.get(i+1)[0], coordinates.get(i+1)[1]);
 			ghRequests.add(request);
@@ -617,6 +663,10 @@ public class RoutingMachine {
 					model.addToPriority(If("in_"+jsonFeatureEntry.getValue().getId(), MULTIPLY, "0.01"));
 					break;
 					
+				case "trafficSpecialBan": //запрет, который могут игноррировать, если машина едет пустая
+					model.addToPriority(If("in_"+jsonFeatureEntry.getValue().getId(), MULTIPLY, "0.01"));
+					break;
+					
 				case "trafficRestrictions": //ограничение
 					model.addToPriority(If("in_"+jsonFeatureEntry.getValue().getId(), MULTIPLY, "0.5"));
 					break;
@@ -662,6 +712,10 @@ public class RoutingMachine {
 					model.addToPriority(If("in_"+jsonFeatureEntry.getValue().getId(), MULTIPLY, "0.01"));
 					break;
 					
+				case "trafficSpecialBan": //запрет, который могут игноррировать, если машина едет пустая
+					model.addToPriority(If("in_"+jsonFeatureEntry.getValue().getId(), MULTIPLY, "0.01"));
+					break;
+					
 				case "trafficRestrictions": //ограничение
 					model.addToPriority(If("in_"+jsonFeatureEntry.getValue().getId(), MULTIPLY, "0.5"));
 					break;
@@ -673,6 +727,69 @@ public class RoutingMachine {
 			return model;
 		}
 		//
+	}
+	
+	/**
+	 * Метод отдаёт специальную модель без ограничений
+	 * <br>Но с ограничениями транзита
+	 * @param json
+	 * @return
+	 * @throws ParseException
+	 */
+	public CustomModel getSpecialModel() throws ParseException {
+		List<JsonFeature> features = new ArrayList<JsonFeature>();
+		polygons.forEach((k,v) -> features.add(v.toJsonFeature()));
+		CustomJsonFeatureCollection customJsonFeatureCollection = new CustomJsonFeatureCollection();
+		customJsonFeatureCollection.setFeatures(features);
+		CustomModel model = new CustomModel();
+		model.addToPriority(If("road_class == PRIMARY", MULTIPLY, roadClassPRIMARY));
+		model.addToPriority(If("road_class == TERTIARY", MULTIPLY, roadClassTERTIARY));
+		model.addToPriority(If("road_environment == FERRY", MULTIPLY, roadEnvironmentFERRY));
+		model.addToPriority(If("road_class == RESIDENTIAL", MULTIPLY, roadClassRESIDENTIAL));
+		model.addToPriority(If("road_class == SECONDARY", MULTIPLY, roadClassSECONDARY));
+		model.addToPriority(If("surface == MISSING", MULTIPLY, surfaceMISSING));
+		model.addToPriority(If("surface == GRAVEL", MULTIPLY, surfaceGRAVEL));			
+		model.addToPriority(If("surface == COMPACTED", MULTIPLY, surfaceCOMPACTED));
+		model.addToPriority(If("surface == ASPHALT", MULTIPLY, surfaceASPHALT));		
+		model.addToPriority(If("max_axle_load < " + "1", MULTIPLY, maxAxleLoadCoeff));
+		model.setDistanceInfluence(Double.parseDouble(distanceInfluence));
+		model.addToPriority(If("road_class == UNCLASSIFIED", MULTIPLY, roadClassUNCLASSIFIED));		
+		model.addToPriority(If("road_class == MOTORWAY && toll == ALL", MULTIPLY, roadClassMOTORWAYTOLL));
+		
+		model.addToSpeed(If("true", LIMIT, "90"));
+//		model.addToPriority(If("true", LIMIT, "100"));
+		
+		//для грузовиков:
+//		model.addToPriority(If("hazmat == NO || hazmat_water == NO", MULTIPLY, "0.01"));		
+//		model.addToPriority(If("hazmat_tunnel == D || hazmat_tunnel == E", MULTIPLY, "0.01"));
+//		model.addToPriority(If("max_width < 3 || max_weight < 3.5 || max_height < 4", MULTIPLY, "0.01"));
+//		model.addToPriority(If("max_width < 3 || max_height < 3.9", MULTIPLY, "0.01"));
+		
+		//загружаем полигоны			
+		model.setAreas(customJsonFeatureCollection);
+		
+		//задаём приоритеты для области
+		for (Map.Entry<String, CustomJsonFeature> jsonFeatureEntry: polygons.entrySet()) {
+			
+			switch (jsonFeatureEntry.getValue().getAction()) {
+			case "trafficBan": //запрет
+				model.addToPriority(If("in_"+jsonFeatureEntry.getValue().getId(), MULTIPLY, "0.01"));
+				break;
+				
+			case "trafficSpecialBan": //запрет, который могут игноррировать, если машина едет пустая
+//				model.addToPriority(If("in_"+jsonFeatureEntry.getValue().getId(), MULTIPLY, "0.01"));
+				System.err.println("Игноррируем этот полигон");
+				break;
+				
+			case "trafficRestrictions": //ограничение
+				model.addToPriority(If("in_"+jsonFeatureEntry.getValue().getId(), MULTIPLY, "0.5"));				
+				break;
+
+			default:
+				break;
+			}
+		}
+		return model;
 	}
 	
 	/**
@@ -725,6 +842,26 @@ public class RoutingMachine {
 			result.add(new Shop[] {shops.get(i), shops.get(i+1)});
 		}
 		return result;
+	}
+	
+	/**
+	 * Возвращает лист с номерами магазинов преобразованный из JSON формата 
+	 * @param JSONstr
+	 * @return
+	 * @throws ParseException
+	 */
+	public List<Shop> getShopAsPointNumbers(String JSONstr) throws ParseException {
+		
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(JSONstr);
+		List <Shop> shops = new ArrayList<Shop>();
+		Shop mainStartShop = shopService.getShopByNum(Integer.parseInt(jsonMainObject.get("startPoint").toString()));
+		shops.add(mainStartShop);
+		JSONArray lang = (JSONArray) jsonMainObject.get("points");
+		for (Object str : lang) {
+			shops.add(shopService.getShopByNum(Integer.parseInt(str.toString())));
+		}
+		return shops;
 	}
 	
 

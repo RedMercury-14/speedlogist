@@ -15,6 +15,10 @@ const POLYGON_ACTIONS_DICTIONARY = {
 		text: "Запретить движение",
 		color: "red",
 	},
+	trafficSpecialBan: {
+		text: "Запретить движение для загруженных машин",
+		color: "purple",
+	},
 }
 
 export const drawControl = new L.Control.Draw({
@@ -56,7 +60,6 @@ export let currentDrawEvent = null
 export const leafletDrawLayerEventHandlers = {
 	// обработчик ивента при создании полигона
 	onDrawLayerHandler(event) {
-		console.log('draw layer')
 		currentDrawEvent = event
 		openPoligonControlModal()
 	},

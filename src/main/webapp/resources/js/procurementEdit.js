@@ -137,7 +137,7 @@ function orderFormDataFormatter(formData) {
 			weight: data[`weight_${i}`],
 			volume: data[`volume_${i}`],
 			tnvd: data[`tnvd_${i}`] ? data[`tnvd_${i}`] : '',
-			bodyAdress: data[`country_${i}`] + '; ' + data[`pointAddress_${i}`],
+			bodyAdress: data[`country_${i}`] + '; ' + data[`pointAddress_${i}`].replace(/;/g, ','),
 			customsAddress: data[`customsAddress_${i}`],
 			timeFrame: data[`timeFrame_${i}`],
 			contact: data[`pointContact_${i}`],

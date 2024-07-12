@@ -1334,7 +1334,6 @@ finalSolution.getWhiteWay().forEach(way -> {
 			List<GHRequest> ghRequests = null;
 			List<GHRequest> ghRequestsReturn = null;
 			List<Shop> returnPoint = new ArrayList<Shop>(way.getWay());
-			System.err.println(way.toString());
 			try {
 				ghRequests = routingMachine.createrListGHRequest(way.getWay());
 				

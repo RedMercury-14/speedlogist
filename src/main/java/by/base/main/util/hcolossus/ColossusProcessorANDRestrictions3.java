@@ -467,16 +467,16 @@ public class ColossusProcessorANDRestrictions3 {
 			
 			vehicleWayVirtual.getWay().remove(0);
 			vehicleWayVirtual.getWay().remove(vehicleWayVirtual.getWay().size()-1);
-			Collections.shuffle(vehicleWayVirtual.getWay());
-			List<Shop> ff = new ArrayList<Shop>();
-			ff.add(targetStock);
-			ff.addAll(vehicleWayVirtual.getWay());
-			ff.add(targetStock);
-			vehicleWayVirtual.setWay(ff);
 			
-			vehicleWayVirtual.getWay().forEach(s->System.out.println("ДО ->>> "+s.toString()));
+//			Collections.shuffle(vehicleWayVirtual.getWay());
+//			List<Shop> ff = new ArrayList<Shop>();
+//			ff.add(targetStock);
+//			ff.addAll(vehicleWayVirtual.getWay());
+//			ff.add(targetStock);
+//			vehicleWayVirtual.setWay(ff);
+			
 			optimizePoints(vehicleWayVirtual);//метод оптимизации точек маршрута
-			vehicleWayVirtual.getWay().forEach(s->System.out.println("ПОСЛЕ ->>> "+s.toString()));
+			
 			whiteWay.add(vehicleWayVirtual);
 			i++;			
 		}

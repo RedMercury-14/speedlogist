@@ -1229,24 +1229,6 @@ public class MainRestController {
 			solution.setKoef(koeff);
 			solutions.add(solution);
 		}
-		//второй порядок
-//		for (double i = 1.01; i <= maxKoef; i = i + 0.02) {
-//			Double koeff = i;
-////			System.out.println("Коэфф = " + koeff);
-//			Solution solution = colossusProcessorRad.run(jsonMainObject, numShops, pallHasShops, stock, koeff, "noFullLoad");
-//
-//			// строим маршруты для отправки клиенту
-//
-//			// в этой мате ключ это id самого маршрута, т.е. WhiteWay, а значение это сам
-//			// маршрут
-//
-//			solution.getWhiteWay().forEach(w -> {
-//				List<Shop> newPoints = logicAnalyzer.correctRouteMaker(w.getWay());
-//				VehicleWay way = w;
-//				way.setWay(newPoints);
-//			});
-//			solutions.add(solution);
-//		}
 		
 //		System.err.println(solutions.size());
 //		solutions.forEach(s-> System.out.println(s.getTotalRunSolution()));

@@ -307,7 +307,7 @@ public class RoutingMachine {
 	 * @return
 	 * @throws ParseException 
 	 */
-	public List<GHRequest> createrListGHRequest(List<Shop> way) throws ParseException{
+	public List<GHRequest> createrListGHRequest(List<Shop> way) throws ParseException{ //тут
 		List<Double[]> coordinates = new ArrayList<Double[]>();
 		Double[] startPoint = getPointsDouble(way.get(0).getNumshop()+"");
 		coordinates.add(startPoint);
@@ -317,12 +317,13 @@ public class RoutingMachine {
 		}
 		List<GHRequest> ghRequests = new ArrayList<GHRequest>();
 		CustomModel model = parseJSONFromClientCustomModel(null);
+		CustomModel specoalModel = getSpecialModel();
 		for (int i = 0; i < coordinates.size()-1; i++) {
 			GHRequest request = GHRequestBilder(coordinates.get(i)[0], coordinates.get(i)[1], model, coordinates.get(i+1)[0], coordinates.get(i+1)[1]);
 			ghRequests.add(request);
 		}	
 		//от последней точки до склада
-		GHRequest lastPoint = GHRequestBilder(coordinates.get(coordinates.size()-1)[0], coordinates.get(coordinates.size()-1)[1], model, startPoint[0], startPoint[1]);
+		GHRequest lastPoint = GHRequestBilder(coordinates.get(coordinates.size()-1)[0], coordinates.get(coordinates.size()-1)[1], specoalModel, startPoint[0], startPoint[1]);
 		ghRequests.add(lastPoint);
 		return ghRequests;
 		
@@ -730,7 +731,8 @@ public class RoutingMachine {
 	}
 	
 	/**
-	 * Метод отдаёт специальную модель без ограничений
+	 * Метод отдаёт специальную модель без ограничений 
+	 * <br>В основном используется для опратных маршрутов.
 	 * <br>Но с ограничениями транзита
 	 * @param json
 	 * @return
@@ -778,7 +780,7 @@ public class RoutingMachine {
 				
 			case "trafficSpecialBan": //запрет, который могут игноррировать, если машина едет пустая
 //				model.addToPriority(If("in_"+jsonFeatureEntry.getValue().getId(), MULTIPLY, "0.01"));
-				System.err.println("Игноррируем этот полигон");
+				System.err.println("Игнорируем этот полигон");
 				break;
 				
 			case "trafficRestrictions": //ограничение

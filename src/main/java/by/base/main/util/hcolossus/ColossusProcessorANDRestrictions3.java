@@ -461,10 +461,22 @@ public class ColossusProcessorANDRestrictions3 {
 			
 			//методы постобработки маршрутов
 						
-			superProcessingWay(vehicleWayVirtual, targetStock); // метод попутноо подбора авто
+//			superProcessingWay(vehicleWayVirtual, targetStock); // метод попутноо подбора авто
 			
 			changeTruckHasSmall(vehicleWayVirtual, targetStock); // метод замены авто на меньшее
 			
+			vehicleWayVirtual.getWay().remove(0);
+			vehicleWayVirtual.getWay().remove(vehicleWayVirtual.getWay().size()-1);
+			Collections.shuffle(vehicleWayVirtual.getWay());
+			List<Shop> ff = new ArrayList<Shop>();
+			ff.add(targetStock);
+			ff.addAll(vehicleWayVirtual.getWay());
+			ff.add(targetStock);
+			vehicleWayVirtual.setWay(ff);
+			
+			vehicleWayVirtual.getWay().forEach(s->System.out.println("ДО ->>> "+s.toString()));
+			optimizePoints(vehicleWayVirtual);//метод оптимизации точек маршрута
+			vehicleWayVirtual.getWay().forEach(s->System.out.println("ПОСЛЕ ->>> "+s.toString()));
 			whiteWay.add(vehicleWayVirtual);
 			i++;			
 		}
@@ -513,6 +525,49 @@ public class ColossusProcessorANDRestrictions3 {
 
 	}
 	
+	private void optimizePoints(VehicleWay vehicleWayVirtual) {
+		Shop targetStock = vehicleWayVirtual.getWay().remove(0);
+		vehicleWayVirtual.getWay().remove(vehicleWayVirtual.getWay().size()-1);
+		List<Shop> points = vehicleWayVirtual.getWay();
+		List<Shop> pointsNew = new ArrayList<Shop>();
+		//определяем самый дальний магазин от склада		
+		Shop furtherShop = getDistanceMatrixHasMin(vehicleWayVirtual.getWay(), targetStock).entrySet().stream().reduce((a, b) -> b).orElse(null).getValue(); // получаем последний элемент
+		pointsNew.add(targetStock);
+		pointsNew.add(furtherShop);
+		points.remove(furtherShop);
+		
+		for (Shop shop : points) {
+			Shop backShop = null;
+			if(pointsNew.size() == 2) {
+				backShop = furtherShop;
+			}else {
+				backShop = pointsNew.get(pointsNew.size()-1);
+			}
+			Map<Double, Shop> distanceMap = getDistanceMatrixHasMin(vehicleWayVirtual.getWay(), backShop);
+			for (Map.Entry<Double, Shop> entry : distanceMap.entrySet()) {
+				Shop targetShop = entry.getValue();
+				if(!pointsNew.contains(targetShop)) {
+					pointsNew.add(targetShop);
+					break;
+				}else {
+					continue;
+				}
+			}
+			
+		}
+		
+		pointsNew.add(targetStock);
+		vehicleWayVirtual.setWay(pointsNew);		
+	}
+	
+	/**
+	 * Метод кластерного догруза авто.
+	 * <br> Берется точка, от неё прокладывается радиус 10 км,
+	 * <br> все магазины в этом радиусе кладутся в эту точку. и так далее по каждой точке исходного маршрута.
+	 * <br> Важно что в качестве точек, по которым идём ьерется начальный маршрут.
+	 * @param vehicleWayVirtual
+	 * @param targetStock
+	 */
 	private void superProcessingWay(VehicleWay vehicleWayVirtual, Shop targetStock) {
 		Vehicle truck = vehicleWayVirtual.getVehicle();
 		List<Shop> mainPoints = new ArrayList<Shop>(vehicleWayVirtual.getWay());

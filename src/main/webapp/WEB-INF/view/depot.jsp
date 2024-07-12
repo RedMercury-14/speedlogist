@@ -462,8 +462,10 @@
 											<div id="collapseFour" class="collapse" aria-labelledby="headingFour" data-parent="#settings-accordion">
 												<!-- форма настроек оптимизатора -->
 												<form id="optimizeRouteParamsForm" action="">
-													<div class="d-flex flex-wrap" id="optimizeRouteParamsCheckboxes"></div>
-													<div id="optimizeRouteParamsInputs"></div>
+													<div class="border-bottom mb-2" id="optimizeRouteParamsMainCheckbox"></div>
+													<div class="d-flex flex-wrap border-bottom mb-2" id="optimizeRouteParamsCheckboxes"></div>
+													<div class="border-bottom mb-2" id="optimizeRouteParamsSelect"></div>
+													<div class="border-bottom mb-2" id="optimizeRouteParamsInputs"></div>
 													<div class="d-flex">
 														<button id="loadRoutingParams" class="btn btn-primary mt-1" type="submit">Сохранить настройки</button>
 													</div>

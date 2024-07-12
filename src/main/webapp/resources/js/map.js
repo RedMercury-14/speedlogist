@@ -45,7 +45,20 @@ import {
 } from "./map/formDataUtils.js"
 import optimizeRouteConfig from "./map/agGridOptimizeRouteConfig.js"
 import distanceControlConfig from "./map/agGridDistanceControlConfig.js"
-import { checkboxHTML, createFormInputs, getOptimizeRouteParamsFormData, inputParams, numericInputHTML, setOptimizeRouteParamsFormData, сheckboxParams } from "./map/optimizeRouteParamsUtils.js"
+import {
+	checkboxHTML,
+	createFormInputs,
+	createSelect,
+	getOptimizeRouteParamsFormData,
+	inputParams,
+	mainCheckboxHTML,
+	mainCheckboxParams,
+	numericInputHTML,
+	selectOptions,
+	selectParams,
+	setOptimizeRouteParamsFormData,
+	сheckboxParams,
+} from "./map/optimizeRouteParamsUtils.js";
 
 const testOptimizationUrl = `../api/map/myoptimization3`
 const saveOptimizeRouteParamsUrl = `../api/map/set`
@@ -57,8 +70,7 @@ const deletePolygonBaseUrl = `../api/map/delPolygon/`
 const checkNamePolygonBaseUrl = `../api/map/checkNamePolygon/`
 const getRouterParamsUrl = '../api/map/getDefaultParameters'
 const setRouterParamsUrl = '../api/map/setDefaultParameters'
-//const getRoutingListUrl = '../api/map/way/4'
-const getRoutingListUrl = '../api/map/way/5'
+const getRoutingListUrl = '../api/map/way/4'
 const getServerMessageUrl = '../api/map/getStackTrace'
 const sendExcelFileUrl = '../api/map/5'
 const sendExcelFileWithReportUrl = '../api/map/6'
@@ -516,10 +528,14 @@ window.onload = async () => {
 
 
 	// создание элементов формы настроек оптимизатора
+	const optimizeRouteParamsMainCheckbox = document.querySelector('#optimizeRouteParamsMainCheckbox')
 	const optimizeRouteParamsCheckboxes = document.querySelector('#optimizeRouteParamsCheckboxes')
+	const optimizeRouteParamsSelect = document.querySelector('#optimizeRouteParamsSelect')
 	const optimizeRouteParamsInputs = document.querySelector('#optimizeRouteParamsInputs')
+	createFormInputs(mainCheckboxParams, mainCheckboxHTML, optimizeRouteParamsMainCheckbox)
 	createFormInputs(сheckboxParams, checkboxHTML, optimizeRouteParamsCheckboxes)
 	createFormInputs(inputParams, numericInputHTML, optimizeRouteParamsInputs)
+	createSelect(selectParams, selectOptions, optimizeRouteParamsSelect)
 
 	// автозаполнение формы настрорек оптимизатора
 	setOptimizeRouteParamsFormData(optimizeRouteParamsForm, OPTIMIZE_ROUTE_PARAMS_KEY)
@@ -871,6 +887,7 @@ function optimizeRouteFormHandler(e, gridDiv) {
 		data: data,
 		successCallback: (res) => {
 			hideLoadingSpinner(submitButton, submitButtonText)
+			snackbar.show(res.message)
 			document.querySelector('#displayDataInput').value = res.stackTrace
 			// $('#displayDataModal').modal('show')
 			$('#collapseTwo').collapse('show')

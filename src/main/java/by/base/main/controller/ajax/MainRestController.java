@@ -1192,12 +1192,33 @@ public class MainRestController {
 	
 	@PostMapping("/map/myoptimization3")
 	public Solution myOptimization3(@RequestBody String str) throws Exception {
+		Boolean mainParameter = null;
+		Boolean boolParameter1 = null;
+		Boolean boolParameter2 = null;
+		Boolean boolParameter3 = null;
+		Boolean boolParameter4 = null;
+		Boolean boolParameter5 = null;
+		Boolean boolParameter6 = null;
+		Double dobleParameter1 = null;
+		Double dobleParameter2 = null;
+		Double dobleParameter3 = null;
+		Double dobleParameter4 = null;
+		Double dobleParameter5 = null;
+		
+		
 		Double maxKoef = 1.82;
 		JSONParser parser = new JSONParser();
 		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		JSONObject jsonParameters = (JSONObject) parser.parse(jsonMainObject.get("params").toString());
 		JSONArray numShopsJSON = (JSONArray) jsonMainObject.get("shops");
 		JSONArray pallHasShopsJSON = (JSONArray) jsonMainObject.get("palls");
 		JSONArray tonnageHasShopsJSON = (JSONArray) jsonMainObject.get("tonnage");
+		
+//		mainParameter = jsonParameters.get("")
+//		
+//		if() {
+//			
+//		}
 
 		List<Integer> numShops = new ArrayList<Integer>();
 		List<Integer> pallHasShops = new ArrayList<Integer>();
@@ -1270,6 +1291,7 @@ public class MainRestController {
 					emptyShop = solution2.getEmptyShop().size();
 					finalSolution = solution2;
 				}
+				solution2.setStackTrace(solution2.getStackTrace() + "\n" + "Выбран маршрут с данными: суммарный пробег: " + solution2.getTotalRunKM() + "м, " + solution2.getEmptyShop().size() + " - кол-во неназначенных магазинов; " + solution2.getEmptyTrucks().size() + " - кол-во свободных авто; Итерация = " + solution2.getKoef() + "; Паллеты: " + summpall);
 			}
 		}
 		Map<String, List<MapResponse>> wayHasMap = new HashMap<String, List<MapResponse>>();
@@ -1445,7 +1467,7 @@ finalSolution.getWhiteWay().forEach(way -> {
 			
 		});
 		finalSolution.setMapResponses(wayHasMap);
-		
+		finalSolution.setMessage("Готово");
 		return finalSolution;
 
 

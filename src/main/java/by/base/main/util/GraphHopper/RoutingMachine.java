@@ -780,7 +780,7 @@ public class RoutingMachine {
 				
 			case "trafficSpecialBan": //запрет, который могут игноррировать, если машина едет пустая
 //				model.addToPriority(If("in_"+jsonFeatureEntry.getValue().getId(), MULTIPLY, "0.01"));
-				System.err.println("Игнорируем этот полигон");
+//				System.err.println("Игнорируем этот полигон");
 				break;
 				
 			case "trafficRestrictions": //ограничение

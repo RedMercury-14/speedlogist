@@ -465,8 +465,8 @@ public class ColossusProcessorANDRestrictions3 {
 			
 			changeTruckHasSmall(vehicleWayVirtual, targetStock); // метод замены авто на меньшее
 			
-			vehicleWayVirtual.getWay().remove(0);
-			vehicleWayVirtual.getWay().remove(vehicleWayVirtual.getWay().size()-1);
+//			vehicleWayVirtual.getWay().remove(0);
+//			vehicleWayVirtual.getWay().remove(vehicleWayVirtual.getWay().size()-1);
 			
 //			Collections.shuffle(vehicleWayVirtual.getWay());
 //			List<Shop> ff = new ArrayList<Shop>();
@@ -476,7 +476,6 @@ public class ColossusProcessorANDRestrictions3 {
 //			vehicleWayVirtual.setWay(ff);
 			
 			optimizePoints(vehicleWayVirtual);//метод оптимизации точек маршрута
-			
 			whiteWay.add(vehicleWayVirtual);
 			i++;			
 		}
@@ -548,6 +547,7 @@ public class ColossusProcessorANDRestrictions3 {
 				Shop targetShop = entry.getValue();
 				if(!pointsNew.contains(targetShop)) {
 					pointsNew.add(targetShop);
+					System.err.println("Ставим -> "+targetShop.toString());
 					break;
 				}else {
 					continue;

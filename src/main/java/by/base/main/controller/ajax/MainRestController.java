@@ -28,6 +28,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1272,17 +1273,81 @@ public class MainRestController {
 			}
 		}
 		Map<String, List<MapResponse>> wayHasMap = new HashMap<String, List<MapResponse>>();
-		finalSolution.getWhiteWay().forEach(way -> {
+//		finalSolution.getWhiteWay().forEach(way -> {
+//			List<GHRequest> ghRequests = null;
+//			try {
+//				ghRequests = routingMachine.createrListGHRequest(way.getWay());
+//			} catch (ParseException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//			List<Shop[]> shopPoints = null;
+//			try {
+//				shopPoints = routingMachine.getShopAsWay(way.getWay());
+//			} catch (ParseException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//			GraphHopper hopper = routingMachine.getGraphHopper();
+////			ghRequests.forEach(r->System.out.println(r.getCustomModel()));
+//			List<MapResponse> listResult = new ArrayList<MapResponse>();
+//			for (GHRequest req : ghRequests) {
+//				int index = ghRequests.indexOf(req);
+//
+//				GHResponse rsp = hopper.route(req);
+//				if (rsp.getAll().isEmpty()) {
+//					rsp.getErrors().forEach(e -> System.out.println(e));
+//					rsp.getErrors().forEach(e -> e.printStackTrace());
+//					listResult.add(new MapResponse(null, null, null, 500.0, 500));
+//				}
+////				System.err.println(rsp.getAll().size());
+//				if (rsp.getAll().size() > 1) {
+//					rsp.getAll().forEach(p -> System.out.println(p.getDistance() + "    " + p.getTime()));
+//				}
+//				ResponsePath path = rsp.getBest();
+//				List<ResponsePath> listPath = rsp.getAll();
+//				for (ResponsePath pathI : listPath) {
+//					if (pathI.getDistance() < path.getDistance()) {
+//						path = pathI;
+//					}
+//				}
+////				System.out.println(roundВouble(path.getDistance()/1000, 2) + "km, " + path.getTime() + " time");
+//				PointList pointList = path.getPoints();
+//				path.getPathDetails();
+//				List<Double[]> result = new ArrayList<Double[]>(); // возможна утечка помяти
+//				pointList.forEach(p -> result.add(p.toGeoJson()));
+//				List<Double[]> resultPoints = new ArrayList<Double[]>();
+//				double cash = 0.0;
+//				for (Double[] point : result) {
+//					cash = point[0];
+//					point[0] = point[1];
+//					point[1] = cash;
+//					resultPoints.add(point);
+//				}
+//				listResult.add(new MapResponse(resultPoints, path.getDistance(), path.getTime(),
+//						shopPoints.get(index)[0], shopPoints.get(index)[1]));
+//			}
+//			wayHasMap.put(way.getId(), listResult);
+//		});
+finalSolution.getWhiteWay().forEach(way -> {
+			
 			List<GHRequest> ghRequests = null;
+			List<GHRequest> ghRequestsReturn = null;
+			List<Shop> returnPoint = new ArrayList<Shop>(way.getWay());
 			try {
 				ghRequests = routingMachine.createrListGHRequest(way.getWay());
+				
+				Collections.reverse(returnPoint);
+				ghRequestsReturn = routingMachine.createrListGHRequest(returnPoint);
 			} catch (ParseException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			List<Shop[]> shopPoints = null;
+			List<Shop[]> shopPointsReturn = null;
 			try {
 				shopPoints = routingMachine.getShopAsWay(way.getWay());
+				shopPointsReturn = routingMachine.getShopAsWay(returnPoint);
 			} catch (ParseException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -1290,6 +1355,9 @@ public class MainRestController {
 			GraphHopper hopper = routingMachine.getGraphHopper();
 //			ghRequests.forEach(r->System.out.println(r.getCustomModel()));
 			List<MapResponse> listResult = new ArrayList<MapResponse>();
+			List<MapResponse> listResultReturn = new ArrayList<MapResponse>();
+			Double distance = null;
+			Double distanceReturn = null;
 			for (GHRequest req : ghRequests) {
 				int index = ghRequests.indexOf(req);
 
@@ -1323,10 +1391,58 @@ public class MainRestController {
 					point[1] = cash;
 					resultPoints.add(point);
 				}
+				distance = path.getDistance();
 				listResult.add(new MapResponse(resultPoints, path.getDistance(), path.getTime(),
 						shopPoints.get(index)[0], shopPoints.get(index)[1]));
 			}
-			wayHasMap.put(way.getId(), listResult);
+			for (GHRequest req : ghRequestsReturn) {
+				int index = ghRequestsReturn.indexOf(req);
+
+				GHResponse rsp = hopper.route(req);
+				if (rsp.getAll().isEmpty()) {
+					rsp.getErrors().forEach(e -> System.out.println(e));
+					rsp.getErrors().forEach(e -> e.printStackTrace());
+					listResultReturn.add(new MapResponse(null, null, null, 500.0, 500));
+				}
+//				System.err.println(rsp.getAll().size());
+				if (rsp.getAll().size() > 1) {
+					rsp.getAll().forEach(p -> System.out.println(p.getDistance() + "    " + p.getTime()));
+				}
+				ResponsePath path = rsp.getBest();
+				List<ResponsePath> listPath = rsp.getAll();
+				for (ResponsePath pathI : listPath) {
+					if (pathI.getDistance() < path.getDistance()) {
+						path = pathI;
+					}
+				}
+//				System.out.println(roundВouble(path.getDistance()/1000, 2) + "km, " + path.getTime() + " time");
+				PointList pointList = path.getPoints();
+				path.getPathDetails();
+				List<Double[]> result = new ArrayList<Double[]>(); // возможна утечка помяти
+				pointList.forEach(p -> result.add(p.toGeoJson()));
+				List<Double[]> resultPoints = new ArrayList<Double[]>();
+				double cash = 0.0;
+				for (Double[] point : result) {
+					cash = point[0];
+					point[0] = point[1];
+					point[1] = cash;
+					resultPoints.add(point);
+				}
+				distanceReturn = path.getDistance();
+				listResultReturn.add(new MapResponse(resultPoints, path.getDistance(), path.getTime(),
+						shopPointsReturn.get(index)[0], shopPointsReturn.get(index)[1]));
+				
+			}
+			
+			if(distance < distanceReturn) {
+				wayHasMap.put(way.getId(), listResult);
+				System.out.println("Выбираем прямой");
+			}else {
+				wayHasMap.put(way.getId(), listResultReturn);
+				System.out.println("Выбираем обратный");
+			}
+			
+			
 		});
 		finalSolution.setMapResponses(wayHasMap);
 		

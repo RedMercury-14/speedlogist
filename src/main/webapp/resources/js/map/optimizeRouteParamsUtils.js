@@ -8,7 +8,7 @@ export const mainCheckboxParams = {
 export const сheckboxParams = {
 	// название переменной: подпись в интерфейсе
 	// здесь же редактируется и количество переключателей
-	optimizeRouteCheckbox1: 'Чекбокс 1',
+	optimizeRouteCheckbox1: 'Проверка обратного маршрута',
 	optimizeRouteCheckbox2: 'Чекбокс 2',
 	optimizeRouteCheckbox3: 'Чекбокс 3',
 	optimizeRouteCheckbox4: 'Чекбокс 4',

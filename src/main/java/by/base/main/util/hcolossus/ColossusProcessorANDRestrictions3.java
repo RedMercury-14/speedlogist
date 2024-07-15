@@ -3,6 +3,7 @@ package by.base.main.util.hcolossus;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -466,7 +467,7 @@ public class ColossusProcessorANDRestrictions3 {
 			changeTruckHasSmall(vehicleWayVirtual, targetStock); // метод замены авто на меньшее
 			
 			optimizePoints(vehicleWayVirtual);//метод оптимизации точек маршрута
-			
+;
 			whiteWay.add(vehicleWayVirtual);
 			i++;			
 		}
@@ -515,6 +516,11 @@ public class ColossusProcessorANDRestrictions3 {
 
 	}
 	
+	/**
+	 * Оптимизирует точки по простому алгоритму: от крайней точке к самой ближайшей и так далее.
+	 * <br> Так строятся красивые логичные маршруты (не всегда короткие)
+	 * @param vehicleWayVirtual
+	 */
 	private void optimizePoints(VehicleWay vehicleWayVirtual) {
 		Shop targetStock = vehicleWayVirtual.getWay().remove(0);
 		vehicleWayVirtual.getWay().remove(vehicleWayVirtual.getWay().size()-1);

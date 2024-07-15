@@ -1193,6 +1193,7 @@ public class MainRestController {
 	@PostMapping("/map/myoptimization3")
 	public Solution myOptimization3(@RequestBody String str) throws Exception {
 		Boolean mainParameter = null;
+		String algorithm = null;
 		Boolean boolParameter1 = null;
 		Boolean boolParameter2 = null;
 		Boolean boolParameter3 = null;
@@ -1206,7 +1207,7 @@ public class MainRestController {
 		Double dobleParameter5 = null;
 		
 		
-		Double maxKoef = 1.82;
+		Double maxKoef = 2.0;
 		JSONParser parser = new JSONParser();
 		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
 		JSONObject jsonParameters = (JSONObject) parser.parse(jsonMainObject.get("params").toString());
@@ -1214,11 +1215,23 @@ public class MainRestController {
 		JSONArray pallHasShopsJSON = (JSONArray) jsonMainObject.get("palls");
 		JSONArray tonnageHasShopsJSON = (JSONArray) jsonMainObject.get("tonnage");
 		
-//		mainParameter = jsonParameters.get("")
-//		
-//		if() {
-//			
-//		}
+		
+		
+		mainParameter = jsonParameters != null && jsonParameters.get("optimizeRouteMainCheckbox") != null ? jsonParameters.get("optimizeRouteMainCheckbox").toString().contains("true") : null; 
+		
+		if(mainParameter != null && mainParameter) {
+			algorithm = jsonParameters.get("algorithm") != null ? jsonParameters.get("algorithm").toString() : null;
+			boolParameter1 = jsonParameters.get("optimizeRouteCheckbox1") != null ? jsonParameters.get("optimizeRouteCheckbox1").toString().contains("true") : null; // параметр проверки на развернутый маршрут. Если true - то проверяем
+			boolParameter2 = jsonParameters.get("optimizeRouteCheckbox2") != null ? jsonParameters.get("optimizeRouteCheckbox2").toString().contains("true") : null;
+			boolParameter3 = jsonParameters.get("optimizeRouteCheckbox3") != null ? jsonParameters.get("optimizeRouteCheckbox3").toString().contains("true") : null;
+			boolParameter4 = jsonParameters.get("optimizeRouteCheckbox4") != null ? jsonParameters.get("optimizeRouteCheckbox4").toString().contains("true") : null;
+			boolParameter5 = jsonParameters.get("optimizeRouteCheckbox5") != null ? jsonParameters.get("optimizeRouteCheckbox5").toString().contains("true") : null;
+			boolParameter6 = jsonParameters.get("optimizeRouteCheckbox6") != null ? jsonParameters.get("optimizeRouteCheckbox6").toString().contains("true") : null;
+			
+			System.out.println(algorithm);
+			System.out.println(boolParameter1);
+			
+		}
 
 		List<Integer> numShops = new ArrayList<Integer>();
 		List<Integer> pallHasShops = new ArrayList<Integer>();
@@ -1233,7 +1246,7 @@ public class MainRestController {
 		List<Solution> solutions = new ArrayList<Solution>();
 		
 		//реализация перебора первого порядка
-		for (double i = 1.82; i <= maxKoef; i = i + 0.02) {
+		for (double i = 1.0; i <= maxKoef; i = i + 0.02) {
 			Double koeff = i;
 //			System.out.println("Коэфф = " + koeff);
 			Solution solution = colossusProcessorRad.run(jsonMainObject, numShops, pallHasShops, tonnageHasShops, stock, koeff, "fullLoad");

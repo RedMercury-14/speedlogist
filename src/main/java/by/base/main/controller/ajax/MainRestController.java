@@ -1391,8 +1391,8 @@ finalSolution.getWhiteWay().forEach(way -> {
 //			ghRequests.forEach(r->System.out.println(r.getCustomModel()));
 			List<MapResponse> listResult = new ArrayList<MapResponse>();
 			List<MapResponse> listResultReturn = new ArrayList<MapResponse>();
-			Double distance = null;
-			Double distanceReturn = null;
+			Double distance = 0.0;
+			Double distanceReturn = 0.0;
 			for (GHRequest req : ghRequests) {
 				int index = ghRequests.indexOf(req);
 
@@ -1426,7 +1426,7 @@ finalSolution.getWhiteWay().forEach(way -> {
 					point[1] = cash;
 					resultPoints.add(point);
 				}
-				distance = path.getDistance();
+				distance = distance + path.getDistance();
 				listResult.add(new MapResponse(resultPoints, path.getDistance(), path.getTime(),
 						shopPoints.get(index)[0], shopPoints.get(index)[1]));
 			}
@@ -1463,7 +1463,7 @@ finalSolution.getWhiteWay().forEach(way -> {
 					point[1] = cash;
 					resultPoints.add(point);
 				}
-				distanceReturn = path.getDistance();
+				distanceReturn = distanceReturn + path.getDistance();
 				listResultReturn.add(new MapResponse(resultPoints, path.getDistance(), path.getTime(),
 						shopPointsReturn.get(index)[0], shopPointsReturn.get(index)[1]));
 				
@@ -1471,10 +1471,10 @@ finalSolution.getWhiteWay().forEach(way -> {
 			
 			if(distance < distanceReturn) {
 				wayHasMap.put(way.getId(), listResult);
-				System.out.println("Выбираем прямой");
+				System.out.println("Выбираем прямой: id = " + way.getId() + " расстояние прямого: " + distance + " м; а обратного: " + distanceReturn);
 			}else {
 				wayHasMap.put(way.getId(), listResultReturn);
-				System.out.println("Выбираем обратный");
+				System.out.println("Выбираем обратный: id = " + way.getId() + " расстояние обратного: " + distanceReturn + " м; а прямого: " + distance);
 			}
 			
 			

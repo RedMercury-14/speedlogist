@@ -576,7 +576,6 @@ public class ColossusProcessorANDRestrictions3 {
 		}
 		pointsNew.add(targetStock);
 //		vehicleWayVirtual.setWay(pointsNew);	
-		pointsNew.forEach(s-> System.err.println(s.toString()));
 		for (int l = 0; l < pointsNew.size() - 1; l++) {
 			String key = pointsNew.get(l).getNumshop() + "-" + pointsNew.get(l + 1).getNumshop();
 			totalRunHasMatrix = totalRunHasMatrix + matrixMachine.matrix.get(key);

@@ -467,7 +467,7 @@ public class ColossusProcessorANDRestrictions3 {
 			changeTruckHasSmall(vehicleWayVirtual, targetStock); // метод замены авто на меньшее
 			
 			optimizePoints(vehicleWayVirtual);//метод оптимизации точек маршрута
-;
+
 			whiteWay.add(vehicleWayVirtual);
 			i++;			
 		}
@@ -522,15 +522,26 @@ public class ColossusProcessorANDRestrictions3 {
 	 * @param vehicleWayVirtual
 	 */
 	private void optimizePoints(VehicleWay vehicleWayVirtual) {
-		Shop targetStock = vehicleWayVirtual.getWay().remove(0);
-		vehicleWayVirtual.getWay().remove(vehicleWayVirtual.getWay().size()-1);
 		List<Shop> points = vehicleWayVirtual.getWay();
+		vehicleWayVirtual.getWay().remove(vehicleWayVirtual.getWay().size()-1);
+		Shop targetStock = points.remove(0);
+		
 		List<Shop> pointsNew = new ArrayList<Shop>();
-		//определяем самый дальний магазин от склада		
-		Shop furtherShop = getDistanceMatrixHasMin(vehicleWayVirtual.getWay(), targetStock).entrySet().stream().reduce((a, b) -> b).orElse(null).getValue(); // получаем последний элемент
+		//определяем самый дальний магазин от склада	
+		Map<Double, Shop> startMatrix = getDistanceMatrixHasMin(vehicleWayVirtual.getWay(), targetStock);
+		Shop furtherShop = startMatrix.entrySet().stream().reduce((a, b) -> b).orElse(null).getValue(); // получаем последний элемент
 		pointsNew.add(targetStock);
 		pointsNew.add(furtherShop);
 		points.remove(furtherShop);
+		
+		//определяем самый лижний магазин от склада
+		Shop lastShop = startMatrix.entrySet().stream().findFirst().get().getValue();
+		if(pointsNew.contains(lastShop)) {
+			lastShop = null;
+		}else {
+			points.remove(lastShop);
+		}
+		
 		
 		for (Shop shop : points) {
 			Shop backShop = null;
@@ -552,6 +563,9 @@ public class ColossusProcessorANDRestrictions3 {
 			
 		}
 		
+		if(lastShop != null) {
+			pointsNew.add(lastShop);
+		}
 		pointsNew.add(targetStock);
 		vehicleWayVirtual.setWay(pointsNew);		
 	}

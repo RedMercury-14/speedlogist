@@ -11,7 +11,7 @@ const excelHeader = [
 	cell('Номер', 'header'),
 	cell('Адрес', 'header'),
 	cell('Паллеты', 'header'),
-	// cell('Вес', 'header'),
+	 cell('Вес', 'header'),
 	cell('Расстояние, км', 'header'),
 ]
 const getExcelRows = (params) => {
@@ -22,7 +22,7 @@ const getExcelRows = (params) => {
 					cell(point.numshop, 'body'),
 					cell(point.address, 'body'),
 					cell((point.needPall ? point.needPall : 0), 'body'),
-					// cell((point.endShop.weight ? point.endShop.weight : 0), 'body'),
+					 cell((point.endShop.weight ? point.endShop.weight : 0), 'body'),
 					cell(point.distanceToView, 'body'),
 				]
 			})

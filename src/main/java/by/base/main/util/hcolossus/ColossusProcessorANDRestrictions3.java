@@ -134,7 +134,7 @@ public class ColossusProcessorANDRestrictions3 {
 		 * магазины для распределения выстроены в порядке убывания потребностей
 		 */
 		shopsForOptimization = shopMachine.prepareShopList3Parameters(shopList, pallHasShops,tonnageHasShops, stock); // магазины для распределения выстроены в порядке убывания потребностей TEST
-
+		
 		shopsForOptimization.sort(comparatorShopsWhithRestrict);
 //		System.out.println("Начальное распределение магазинов слеюущее: ");
 		stackTrace = "Начальное распределение магазинов слеюущее: \n";
@@ -143,6 +143,7 @@ public class ColossusProcessorANDRestrictions3 {
 			stackTrace = stackTrace + "магазин : " + s.getNumshop() + " - " + s.getDistanceFromStock() + " км - "
 					+ s.getNeedPall() + " паллет\n";
 		}
+		
 		System.out.println("===========");
 		stackTrace = stackTrace + "===========\n";
 
@@ -399,7 +400,7 @@ public class ColossusProcessorANDRestrictions3 {
 							points.remove(points.size() - 1);
 							if(specialPallNew != null && specialPallNew < specialPall) {
 								System.err.println("ИСКЛЮЧЕНИЕ ЕСЛИ СЛЕДУЮЩИЙ МАГАЗИН НАКЛАДЫВАЕТ БОЛЕЕ ЖЕСТКОЕ ОГРАНИЧЕНИЕ ЧЕМ ПРОШЛЫЙ");
-								points.forEach(p-> System.out.println(p.toAllString()));
+//								points.forEach(p-> System.out.println(p.toAllString()));
 								flag = true;
 								break;
 							}
@@ -495,7 +496,7 @@ public class ColossusProcessorANDRestrictions3 {
 		System.out.println("========= Свободные авто ==========");
 		trucks.forEach(t -> System.out.println(t));
 		System.out.println("+++++++++ Оставшиеся магазины +++++++++++");
-		shopsForOptimization.forEach(s -> System.out.println(s.toAllString()));
+//		shopsForOptimization.forEach(s -> System.out.println(s.toAllString()));
 
 		Solution solution = new Solution();
 
@@ -512,7 +513,7 @@ public class ColossusProcessorANDRestrictions3 {
 			}
 		}
 		solution.setTotalRunKM(totalRunHasMatrix);
-		stackTrace = stackTrace + "Суммарный пробег маршрута: " + totalRunHasMatrix + " м.\n";
+//		stackTrace = stackTrace + "Суммарный пробег маршрута: " + totalRunHasMatrix + " м.\n";
 		solution.setStackTrace(stackTrace);
 		return solution;
 

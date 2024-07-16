@@ -22,7 +22,7 @@ const getExcelRows = (params) => {
 					cell(point.numshop, 'body'),
 					cell(point.address, 'body'),
 					cell((point.needPall ? point.needPall : 0), 'body'),
-					 cell((point.endShop.weight ? point.endShop.weight : 0), 'body'),
+					cell((point.endShop.weight ? point.endShop.weight : 0), 'body'),
 					cell(point.distanceToView, 'body'),
 				]
 			})
@@ -33,7 +33,7 @@ const defaultExcelExportParams = {
 	getCustomContentBelowRow: (params) => getExcelRows(params),
 	processCellCallback: (params) => '',
 	columnWidth: 120,
-	fileName: 'ag-grid.xlsx',
+	fileName: 'optimization.xlsx',
 	skipColumnHeaders: true,
 	columnWidth: 120,
 	prependContent: [

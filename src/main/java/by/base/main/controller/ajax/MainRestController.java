@@ -88,6 +88,8 @@ import com.graphhopper.util.JsonFeature;
 import com.graphhopper.util.PointList;
 import com.graphhopper.util.Translation;
 import com.graphhopper.util.shapes.GHPoint;
+import com.itextpdf.text.pdf.PdfStructTreeController.returnType;
+
 import by.base.main.controller.MainController;
 import by.base.main.dao.OrderDAO;
 import by.base.main.dto.MarketDataForClear;
@@ -140,6 +142,7 @@ import by.base.main.util.bots.TelegramBot;
 import by.base.main.util.hcolossus.ColossusProcessorANDRestrictions2;
 import by.base.main.util.hcolossus.ColossusProcessorANDRestrictions3;
 import by.base.main.util.hcolossus.pojo.Solution;
+import by.base.main.util.hcolossus.pojo.Vehicle;
 import by.base.main.util.hcolossus.pojo.VehicleWay;
 import by.base.main.util.hcolossus.service.LogicAnalyzer;
 import by.base.main.util.hcolossus.service.MatrixMachine;
@@ -1190,8 +1193,33 @@ public class MainRestController {
 		return orderService.getOrderByMarketNumber(number);
 	}
 	
+	private static boolean isRuningOptimization = false;
+	
+	@GetMapping("/map/myoptimization3/reset")
+	public String getReset(HttpServletRequest request, @PathVariable String number) {
+		if(isRuningOptimization) {
+			isRuningOptimization = !isRuningOptimization;
+		}
+		return isRuningOptimization + "";
+	}
+	
 	@PostMapping("/map/myoptimization3")
 	public Solution myOptimization3(@RequestBody String str) throws Exception {
+		if(isRuningOptimization) {
+			Solution messageSolution = new Solution();
+			messageSolution.setMapResponses(new HashMap<String, List<MapResponse>>());
+			messageSolution.setEmptyShop(new ArrayList<Shop>());
+			messageSolution.setEmptyTrucks(new ArrayList<Vehicle>());
+			messageSolution.setKoef(0.0);
+			messageSolution.setTotalRunKM(0.0);
+			messageSolution.setWhiteWay(new ArrayList<VehicleWay>());			
+			messageSolution.setMessage("Отказано! Процесс занят пользователем : " + getThisUser().getSurname() + " " + getThisUser().getName());
+			return messageSolution;
+		}else {
+			isRuningOptimization = !isRuningOptimization;
+		}
+		
+		
 		Boolean mainParameter = null;
 		String algorithm = null;
 		Boolean boolParameter1 = null;
@@ -1210,7 +1238,7 @@ public class MainRestController {
 		Double maxKoef = 2.0;
 		JSONParser parser = new JSONParser();
 		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
-		JSONObject jsonParameters = (JSONObject) parser.parse(jsonMainObject.get("params").toString());
+		JSONObject jsonParameters = jsonMainObject.get("params") != null ? (JSONObject) parser.parse(jsonMainObject.get("params").toString()) : null;
 		JSONArray numShopsJSON = (JSONArray) jsonMainObject.get("shops");
 		JSONArray pallHasShopsJSON = (JSONArray) jsonMainObject.get("palls");
 		JSONArray tonnageHasShopsJSON = (JSONArray) jsonMainObject.get("tonnage");
@@ -1304,7 +1332,7 @@ public class MainRestController {
 					emptyShop = solution2.getEmptyShop().size();
 					finalSolution = solution2;
 				}
-				solution2.setStackTrace(solution2.getStackTrace() + "\n" + "Выбран маршрут с данными: суммарный пробег: " + solution2.getTotalRunKM() + "м, " + solution2.getEmptyShop().size() + " - кол-во неназначенных магазинов; " + solution2.getEmptyTrucks().size() + " - кол-во свободных авто; Итерация = " + solution2.getKoef() + "; Паллеты: " + summpall);
+//				solution2.setStackTrace(solution2.getStackTrace() + "\n" + "Выбран маршрут с данными: суммарный пробег: " + solution2.getTotalRunKM() + "м, " + solution2.getEmptyShop().size() + " - кол-во неназначенных магазинов; " + solution2.getEmptyTrucks().size() + " - кол-во свободных авто; Итерация = " + solution2.getKoef() + "; Паллеты: " + summpall);
 			}
 		}
 		Map<String, List<MapResponse>> wayHasMap = new HashMap<String, List<MapResponse>>();
@@ -1364,7 +1392,10 @@ public class MainRestController {
 //			}
 //			wayHasMap.put(way.getId(), listResult);
 //		});
-finalSolution.getWhiteWay().forEach(way -> {
+		
+		Double totalKM = 0.0;
+		
+		for (VehicleWay way : finalSolution.getWhiteWay()) {
 			
 			List<GHRequest> ghRequests = null;
 			List<GHRequest> ghRequestsReturn = null;
@@ -1471,19 +1502,24 @@ finalSolution.getWhiteWay().forEach(way -> {
 			
 			if(distance < distanceReturn) {
 				wayHasMap.put(way.getId(), listResult);
+				totalKM = totalKM + distance;
 				System.out.println("Выбираем прямой: id = " + way.getId() + " расстояние прямого: " + distance + " м; а обратного: " + distanceReturn);
 			}else {
 				wayHasMap.put(way.getId(), listResultReturn);
+				totalKM = totalKM + distanceReturn;
 				System.out.println("Выбираем обратный: id = " + way.getId() + " расстояние обратного: " + distanceReturn + " м; а прямого: " + distance);
 			}
 			
-			
-		});
+		}
 		finalSolution.setMapResponses(wayHasMap);
 		finalSolution.setMessage("Готово");
+		finalSolution.setTotalRunKM(totalKM);
+		System.out.println("Всего пробег: " + totalKM + " км.");
+		finalSolution.setStackTrace(finalSolution.getStackTrace() + "\n" + "Всего пробег: " + totalKM + " км. Коэфициент поиска: " + finalSolution.getKoef() );
+		if(isRuningOptimization) {
+			isRuningOptimization = !isRuningOptimization;
+		}
 		return finalSolution;
-
-
 	}
 	
 	/**

@@ -529,6 +529,7 @@ public class ColossusProcessorANDRestrictions3 {
 		Double totalRunHasMatrix = 0.0;
 		List<Shop> points2 = new ArrayList<Shop>(vehicleWayVirtual.getWay());
 		Double totalRunHasMatrix2 = 0.0;
+		
 		vehicleWayVirtual.getWay().remove(vehicleWayVirtual.getWay().size()-1);
 		Shop targetStock = points.remove(0);
 		
@@ -557,7 +558,7 @@ public class ColossusProcessorANDRestrictions3 {
 			}else {
 				backShop = pointsNew.get(pointsNew.size()-1);
 			}
-			Map<Double, Shop> distanceMap = getDistanceMatrixHasMin(vehicleWayVirtual.getWay(), backShop);
+			Map<Double, Shop> distanceMap = getDistanceMatrixHasMin(points, backShop);
 			for (Map.Entry<Double, Shop> entry : distanceMap.entrySet()) {
 				Shop targetShop = entry.getValue();
 				if(!pointsNew.contains(targetShop)) {
@@ -574,7 +575,8 @@ public class ColossusProcessorANDRestrictions3 {
 			pointsNew.add(lastShop);
 		}
 		pointsNew.add(targetStock);
-//		vehicleWayVirtual.setWay(pointsNew);		
+//		vehicleWayVirtual.setWay(pointsNew);	
+		pointsNew.forEach(s-> System.err.println(s.toString()));
 		for (int l = 0; l < pointsNew.size() - 1; l++) {
 			String key = pointsNew.get(l).getNumshop() + "-" + pointsNew.get(l + 1).getNumshop();
 			totalRunHasMatrix = totalRunHasMatrix + matrixMachine.matrix.get(key);
@@ -585,18 +587,18 @@ public class ColossusProcessorANDRestrictions3 {
 		//определяем самый дальний магазин от склада	
 				Map<Double, Shop> startMatrix2 = getDistanceMatrixHasMin(vehicleWayVirtual.getWay(), targetStock);
 				Shop furtherShop2 = startMatrix2.entrySet().stream().reduce((a, b) -> b).orElse(null).getValue(); // получаем последний элемент
-				pointsNew.add(targetStock);
-				pointsNew.add(furtherShop2);
-				points.remove(furtherShop2);
+				pointsNew2.add(targetStock);
+				pointsNew2.add(furtherShop2);
+				points2.remove(furtherShop2);
 				
 				for (Shop shop : points2) {
 					Shop backShop = null;
-					if(pointsNew.size() == 2) {
+					if(pointsNew2.size() == 2) {
 						backShop = furtherShop2;
 					}else {
 						backShop = pointsNew2.get(pointsNew2.size()-1);
 					}
-					Map<Double, Shop> distanceMap = getDistanceMatrixHasMin(vehicleWayVirtual.getWay(), backShop);
+					Map<Double, Shop> distanceMap = getDistanceMatrixHasMin(points2, backShop);
 					for (Map.Entry<Double, Shop> entry : distanceMap.entrySet()) {
 						Shop targetShop = entry.getValue();
 						if(!pointsNew2.contains(targetShop)) {

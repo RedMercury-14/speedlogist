@@ -9,6 +9,7 @@ import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -27,12 +28,14 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -44,6 +47,11 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -61,6 +69,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -79,6 +88,8 @@ import com.graphhopper.util.JsonFeature;
 import com.graphhopper.util.PointList;
 import com.graphhopper.util.Translation;
 import com.graphhopper.util.shapes.GHPoint;
+import com.itextpdf.text.pdf.PdfStructTreeController.returnType;
+
 import by.base.main.controller.MainController;
 import by.base.main.dao.OrderDAO;
 import by.base.main.dto.MarketDataForClear;
@@ -129,7 +140,9 @@ import by.base.main.util.GraphHopper.JSpiritMachine;
 import by.base.main.util.GraphHopper.RoutingMachine;
 import by.base.main.util.bots.TelegramBot;
 import by.base.main.util.hcolossus.ColossusProcessorANDRestrictions2;
+import by.base.main.util.hcolossus.ColossusProcessorANDRestrictions3;
 import by.base.main.util.hcolossus.pojo.Solution;
+import by.base.main.util.hcolossus.pojo.Vehicle;
 import by.base.main.util.hcolossus.pojo.VehicleWay;
 import by.base.main.util.hcolossus.service.LogicAnalyzer;
 import by.base.main.util.hcolossus.service.MatrixMachine;
@@ -197,7 +210,7 @@ public class MainRestController {
 	private JSpiritMachine jSpiritMachine;
 
 	@Autowired
-	private ColossusProcessorANDRestrictions2 colossusProcessorRad;
+	private ColossusProcessorANDRestrictions3 colossusProcessorRad;
 
 	@Autowired
 	private MatrixMachine matrixMachine;
@@ -1180,14 +1193,73 @@ public class MainRestController {
 		return orderService.getOrderByMarketNumber(number);
 	}
 	
+	private static boolean isRuningOptimization = false;
+	
+	@GetMapping("/map/myoptimization3/reset")
+	public String getReset(HttpServletRequest request, @PathVariable String number) {
+		if(isRuningOptimization) {
+			isRuningOptimization = !isRuningOptimization;
+		}
+		return isRuningOptimization + "";
+	}
+	
 	@PostMapping("/map/myoptimization3")
 	public Solution myOptimization3(@RequestBody String str) throws Exception {
-		Double maxKoef = 1.2;
+		if(isRuningOptimization) {
+			Solution messageSolution = new Solution();
+			messageSolution.setMapResponses(new HashMap<String, List<MapResponse>>());
+			messageSolution.setEmptyShop(new ArrayList<Shop>());
+			messageSolution.setEmptyTrucks(new ArrayList<Vehicle>());
+			messageSolution.setKoef(0.0);
+			messageSolution.setTotalRunKM(0.0);
+			messageSolution.setWhiteWay(new ArrayList<VehicleWay>());			
+			messageSolution.setMessage("Отказано! Процесс занят пользователем : " + getThisUser().getSurname() + " " + getThisUser().getName());
+			return messageSolution;
+		}else {
+			isRuningOptimization = !isRuningOptimization;
+		}
+		
+		
+		Boolean mainParameter = null;
+		String algorithm = null;
+		Boolean boolParameter1 = null;
+		Boolean boolParameter2 = null;
+		Boolean boolParameter3 = null;
+		Boolean boolParameter4 = null;
+		Boolean boolParameter5 = null;
+		Boolean boolParameter6 = null;
+		Double dobleParameter1 = null;
+		Double dobleParameter2 = null;
+		Double dobleParameter3 = null;
+		Double dobleParameter4 = null;
+		Double dobleParameter5 = null;
+		
+		
+		Double maxKoef = 2.0;
 		JSONParser parser = new JSONParser();
 		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		JSONObject jsonParameters = jsonMainObject.get("params") != null ? (JSONObject) parser.parse(jsonMainObject.get("params").toString()) : null;
 		JSONArray numShopsJSON = (JSONArray) jsonMainObject.get("shops");
 		JSONArray pallHasShopsJSON = (JSONArray) jsonMainObject.get("palls");
 		JSONArray tonnageHasShopsJSON = (JSONArray) jsonMainObject.get("tonnage");
+		
+		
+		
+		mainParameter = jsonParameters != null && jsonParameters.get("optimizeRouteMainCheckbox") != null ? jsonParameters.get("optimizeRouteMainCheckbox").toString().contains("true") : null; 
+		
+		if(mainParameter != null && mainParameter) {
+			algorithm = jsonParameters.get("algorithm") != null ? jsonParameters.get("algorithm").toString() : null;
+			boolParameter1 = jsonParameters.get("optimizeRouteCheckbox1") != null ? jsonParameters.get("optimizeRouteCheckbox1").toString().contains("true") : null; // параметр проверки на развернутый маршрут. Если true - то проверяем
+			boolParameter2 = jsonParameters.get("optimizeRouteCheckbox2") != null ? jsonParameters.get("optimizeRouteCheckbox2").toString().contains("true") : null;
+			boolParameter3 = jsonParameters.get("optimizeRouteCheckbox3") != null ? jsonParameters.get("optimizeRouteCheckbox3").toString().contains("true") : null;
+			boolParameter4 = jsonParameters.get("optimizeRouteCheckbox4") != null ? jsonParameters.get("optimizeRouteCheckbox4").toString().contains("true") : null;
+			boolParameter5 = jsonParameters.get("optimizeRouteCheckbox5") != null ? jsonParameters.get("optimizeRouteCheckbox5").toString().contains("true") : null;
+			boolParameter6 = jsonParameters.get("optimizeRouteCheckbox6") != null ? jsonParameters.get("optimizeRouteCheckbox6").toString().contains("true") : null;
+			
+			System.out.println(algorithm);
+			System.out.println(boolParameter1);
+			
+		}
 
 		List<Integer> numShops = new ArrayList<Integer>();
 		List<Integer> pallHasShops = new ArrayList<Integer>();
@@ -1202,7 +1274,7 @@ public class MainRestController {
 		List<Solution> solutions = new ArrayList<Solution>();
 		
 		//реализация перебора первого порядка
-		for (double i = 1.2; i <= maxKoef; i = i + 0.02) {
+		for (double i = 1.0; i <= maxKoef; i = i + 0.02) {
 			Double koeff = i;
 //			System.out.println("Коэфф = " + koeff);
 			Solution solution = colossusProcessorRad.run(jsonMainObject, numShops, pallHasShops, tonnageHasShops, stock, koeff, "fullLoad");
@@ -1212,32 +1284,14 @@ public class MainRestController {
 			// в этой мате ключ это id самого маршрута, т.е. WhiteWay, а значение это сам
 			// маршрут
 	
-			solution.getWhiteWay().forEach(w -> {
-				List<Shop> newPoints = logicAnalyzer.correctRouteMaker(w.getWay());				
-				VehicleWay way = w;
-				way.setWay(newPoints);
-			});
-			solution.setKoef(koeff);
-			solutions.add(solution);
-		}
-		//второй порядок
-//		for (double i = 1.01; i <= maxKoef; i = i + 0.02) {
-//			Double koeff = i;
-////			System.out.println("Коэфф = " + koeff);
-//			Solution solution = colossusProcessorRad.run(jsonMainObject, numShops, pallHasShops, stock, koeff, "noFullLoad");
-//
-//			// строим маршруты для отправки клиенту
-//
-//			// в этой мате ключ это id самого маршрута, т.е. WhiteWay, а значение это сам
-//			// маршрут
-//
 //			solution.getWhiteWay().forEach(w -> {
-//				List<Shop> newPoints = logicAnalyzer.correctRouteMaker(w.getWay());
+//				List<Shop> newPoints = logicAnalyzer.correctRouteMaker(w.getWay());				
 //				VehicleWay way = w;
 //				way.setWay(newPoints);
 //			});
-//			solutions.add(solution);
-//		}
+			solution.setKoef(koeff);
+			solutions.add(solution);
+		}
 		
 //		System.err.println(solutions.size());
 //		solutions.forEach(s-> System.out.println(s.getTotalRunSolution()));
@@ -1278,20 +1332,88 @@ public class MainRestController {
 					emptyShop = solution2.getEmptyShop().size();
 					finalSolution = solution2;
 				}
+//				solution2.setStackTrace(solution2.getStackTrace() + "\n" + "Выбран маршрут с данными: суммарный пробег: " + solution2.getTotalRunKM() + "м, " + solution2.getEmptyShop().size() + " - кол-во неназначенных магазинов; " + solution2.getEmptyTrucks().size() + " - кол-во свободных авто; Итерация = " + solution2.getKoef() + "; Паллеты: " + summpall);
 			}
 		}
 		Map<String, List<MapResponse>> wayHasMap = new HashMap<String, List<MapResponse>>();
-		finalSolution.getWhiteWay().forEach(way -> {
+//		finalSolution.getWhiteWay().forEach(way -> {
+//			List<GHRequest> ghRequests = null;
+//			try {
+//				ghRequests = routingMachine.createrListGHRequest(way.getWay());
+//			} catch (ParseException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//			List<Shop[]> shopPoints = null;
+//			try {
+//				shopPoints = routingMachine.getShopAsWay(way.getWay());
+//			} catch (ParseException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//			GraphHopper hopper = routingMachine.getGraphHopper();
+////			ghRequests.forEach(r->System.out.println(r.getCustomModel()));
+//			List<MapResponse> listResult = new ArrayList<MapResponse>();
+//			for (GHRequest req : ghRequests) {
+//				int index = ghRequests.indexOf(req);
+//
+//				GHResponse rsp = hopper.route(req);
+//				if (rsp.getAll().isEmpty()) {
+//					rsp.getErrors().forEach(e -> System.out.println(e));
+//					rsp.getErrors().forEach(e -> e.printStackTrace());
+//					listResult.add(new MapResponse(null, null, null, 500.0, 500));
+//				}
+////				System.err.println(rsp.getAll().size());
+//				if (rsp.getAll().size() > 1) {
+//					rsp.getAll().forEach(p -> System.out.println(p.getDistance() + "    " + p.getTime()));
+//				}
+//				ResponsePath path = rsp.getBest();
+//				List<ResponsePath> listPath = rsp.getAll();
+//				for (ResponsePath pathI : listPath) {
+//					if (pathI.getDistance() < path.getDistance()) {
+//						path = pathI;
+//					}
+//				}
+////				System.out.println(roundВouble(path.getDistance()/1000, 2) + "km, " + path.getTime() + " time");
+//				PointList pointList = path.getPoints();
+//				path.getPathDetails();
+//				List<Double[]> result = new ArrayList<Double[]>(); // возможна утечка помяти
+//				pointList.forEach(p -> result.add(p.toGeoJson()));
+//				List<Double[]> resultPoints = new ArrayList<Double[]>();
+//				double cash = 0.0;
+//				for (Double[] point : result) {
+//					cash = point[0];
+//					point[0] = point[1];
+//					point[1] = cash;
+//					resultPoints.add(point);
+//				}
+//				listResult.add(new MapResponse(resultPoints, path.getDistance(), path.getTime(),
+//						shopPoints.get(index)[0], shopPoints.get(index)[1]));
+//			}
+//			wayHasMap.put(way.getId(), listResult);
+//		});
+		
+		Double totalKM = 0.0;
+		
+		for (VehicleWay way : finalSolution.getWhiteWay()) {
+			
 			List<GHRequest> ghRequests = null;
+			List<GHRequest> ghRequestsReturn = null;
+			List<Shop> returnPoint = new ArrayList<Shop>(way.getWay());
 			try {
 				ghRequests = routingMachine.createrListGHRequest(way.getWay());
+				
+				Collections.reverse(returnPoint);
+				ghRequestsReturn = routingMachine.createrListGHRequest(returnPoint);
 			} catch (ParseException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			List<Shop[]> shopPoints = null;
+			List<Shop[]> shopPointsReturn = null;
 			try {
 				shopPoints = routingMachine.getShopAsWay(way.getWay());
+				shopPointsReturn = routingMachine.getShopAsWay(returnPoint);
 			} catch (ParseException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -1299,6 +1421,9 @@ public class MainRestController {
 			GraphHopper hopper = routingMachine.getGraphHopper();
 //			ghRequests.forEach(r->System.out.println(r.getCustomModel()));
 			List<MapResponse> listResult = new ArrayList<MapResponse>();
+			List<MapResponse> listResultReturn = new ArrayList<MapResponse>();
+			Double distance = 0.0;
+			Double distanceReturn = 0.0;
 			for (GHRequest req : ghRequests) {
 				int index = ghRequests.indexOf(req);
 
@@ -1332,16 +1457,69 @@ public class MainRestController {
 					point[1] = cash;
 					resultPoints.add(point);
 				}
+				distance = distance + path.getDistance();
 				listResult.add(new MapResponse(resultPoints, path.getDistance(), path.getTime(),
 						shopPoints.get(index)[0], shopPoints.get(index)[1]));
 			}
-			wayHasMap.put(way.getId(), listResult);
-		});
+			for (GHRequest req : ghRequestsReturn) {
+				int index = ghRequestsReturn.indexOf(req);
+
+				GHResponse rsp = hopper.route(req);
+				if (rsp.getAll().isEmpty()) {
+					rsp.getErrors().forEach(e -> System.out.println(e));
+					rsp.getErrors().forEach(e -> e.printStackTrace());
+					listResultReturn.add(new MapResponse(null, null, null, 500.0, 500));
+				}
+//				System.err.println(rsp.getAll().size());
+				if (rsp.getAll().size() > 1) {
+					rsp.getAll().forEach(p -> System.out.println(p.getDistance() + "    " + p.getTime()));
+				}
+				ResponsePath path = rsp.getBest();
+				List<ResponsePath> listPath = rsp.getAll();
+				for (ResponsePath pathI : listPath) {
+					if (pathI.getDistance() < path.getDistance()) {
+						path = pathI;
+					}
+				}
+//				System.out.println(roundВouble(path.getDistance()/1000, 2) + "km, " + path.getTime() + " time");
+				PointList pointList = path.getPoints();
+				path.getPathDetails();
+				List<Double[]> result = new ArrayList<Double[]>(); // возможна утечка помяти
+				pointList.forEach(p -> result.add(p.toGeoJson()));
+				List<Double[]> resultPoints = new ArrayList<Double[]>();
+				double cash = 0.0;
+				for (Double[] point : result) {
+					cash = point[0];
+					point[0] = point[1];
+					point[1] = cash;
+					resultPoints.add(point);
+				}
+				distanceReturn = distanceReturn + path.getDistance();
+				listResultReturn.add(new MapResponse(resultPoints, path.getDistance(), path.getTime(),
+						shopPointsReturn.get(index)[0], shopPointsReturn.get(index)[1]));
+				
+			}
+			
+			if(distance < distanceReturn) {
+				wayHasMap.put(way.getId(), listResult);
+				totalKM = totalKM + distance;
+				System.out.println("Выбираем прямой: id = " + way.getId() + " расстояние прямого: " + distance + " м; а обратного: " + distanceReturn);
+			}else {
+				wayHasMap.put(way.getId(), listResultReturn);
+				totalKM = totalKM + distanceReturn;
+				System.out.println("Выбираем обратный: id = " + way.getId() + " расстояние обратного: " + distanceReturn + " м; а прямого: " + distance);
+			}
+			
+		}
 		finalSolution.setMapResponses(wayHasMap);
-		
+		finalSolution.setMessage("Готово");
+		finalSolution.setTotalRunKM(totalKM);
+		System.out.println("Всего пробег: " + totalKM + " км.");
+		finalSolution.setStackTrace(finalSolution.getStackTrace() + "\n" + "Всего пробег: " + totalKM + " км. Коэфициент поиска: " + finalSolution.getKoef() );
+		if(isRuningOptimization) {
+			isRuningOptimization = !isRuningOptimization;
+		}
 		return finalSolution;
-
-
 	}
 	
 	/**
@@ -1775,6 +1953,148 @@ public class MainRestController {
 	public Integer getCalcMatrix(HttpServletRequest request) {
 		return matrixMachine.loadMatrixOfDistance().size();
 	}
+	
+	@GetMapping("/map/downloadmatrixJSON")
+	public String getDownloadmatrix(HttpServletRequest request) {
+		Gson gson = new Gson();
+        String json = gson.toJson(matrixMachine.matrix);
+        try (FileWriter writer = new FileWriter(request.getServletContext().getRealPath("") + "resources/distance/data.json")) {
+            writer.write(json);
+            System.out.println(writer);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+		return request.getServletContext().getRealPath("") + "resources/distance/data.json";
+	}
+	
+	@GetMapping("/map/downloadmatrixCSV")
+	public String getDownloadmatrixCSV(HttpServletRequest request) {
+        convertToCSV(matrixMachine.matrix, request.getServletContext().getRealPath("") + "resources/distance/data.csv");
+		return request.getServletContext().getRealPath("") + "resources/distance/data.csv";
+	}
+	
+	/**
+	 * Метод, который формирует и скачивает матрицу расстояний
+	 * GPT
+	 * @param request
+	 * @param response
+	 * @return
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
+	@GetMapping("/map/downloadmatrix")
+	@ResponseBody
+	public String getDownloadmatrix2(HttpServletRequest request, HttpServletResponse response) throws FileNotFoundException, IOException {
+		 // Получаем уникальные точки
+        Set<String> points = new HashSet<>();
+        for (String key : matrixMachine.matrix.keySet()) {
+            String[] pointPair = key.split("-");
+            points.add(pointPair[0]);
+            points.add(pointPair[1]);
+        }
+
+        // Создаем массив для точек
+        String[] pointArray = points.toArray(new String[0]);
+
+        // Создаем двумерный массив для расстояний
+        double[][] matrix = new double[points.size()][points.size()];
+
+        // Заполняем двумерный массив расстояний
+        for (int i = 0; i < pointArray.length; i++) {
+            for (int j = 0; j < pointArray.length; j++) {
+                if (i == j) {
+                    matrix[i][j] = 0;
+                } else {
+                    String key1 = pointArray[i] + "-" + pointArray[j];
+                    String key2 = pointArray[j] + "-" + pointArray[i];
+                    if (matrixMachine.matrix.containsKey(key1)) {
+                        matrix[i][j] = matrixMachine.matrix.get(key1);
+                    } else if (matrixMachine.matrix.containsKey(key2)) {
+                        matrix[i][j] = matrixMachine.matrix.get(key2);
+                    } else {
+                        matrix[i][j] = 0; // Если расстояние не задано
+                    }
+                }
+            }
+        }
+
+        // Создаем новый файл Excel
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Distances");
+
+        // Заполняем заголовки
+        Row headerRow = sheet.createRow(0);
+        for (int i = 0; i < pointArray.length; i++) {
+            Cell cell = headerRow.createCell(i + 1);
+            cell.setCellValue(pointArray[i]);
+        }
+        for (int i = 0; i < pointArray.length; i++) {
+            Row row = sheet.createRow(i + 1);
+            Cell cell = row.createCell(0);
+            cell.setCellValue(pointArray[i]);
+            for (int j = 0; j < pointArray.length; j++) {
+                cell = row.createCell(j + 1);
+                cell.setCellValue(matrix[i][j]);
+            }
+        }
+
+        // Записываем файл
+        try (FileOutputStream fileOut = new FileOutputStream(request.getServletContext().getRealPath("") + "resources/distance/distances.xlsx")) {
+            workbook.write(fileOut);
+        }
+
+        // Записываем файл в ответ
+        response.setHeader("content-disposition", "attachment;filename=distances.xlsx");
+        workbook.write(response.getOutputStream());
+        workbook.close();
+        
+//        FileInputStream in = null;
+//		OutputStream out = null;
+//		response.setHeader("content-disposition", "attachment;filename=distances.xlsx");
+//		try {
+//			
+//			// Прочтите файл, который нужно загрузить, и сохраните его во входном потоке файла
+//			in = new FileInputStream(request.getServletContext().getRealPath("") + "resources/distance/distances.xlsx");
+//			//  Создать выходной поток
+//			out = response.getOutputStream();			
+//			//  Создать буфер
+//			byte buffer[] = new byte[1024];
+//			int len = 0;
+//			//  Прочитать содержимое входного потока в буфер в цикле
+//			while ((len = in.read(buffer)) > 0) {
+//				out.write(buffer, 0, len);
+//			}
+//			in.close();
+//			out.close();
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}finally {
+//			in.close();
+//			out.close();
+//		}
+    
+		return "Готово";
+	}
+	
+    private void convertToCSV(Map<String, Double> matrix, String fileName) {
+        try (FileWriter writer = new FileWriter(fileName)) {
+            // Пишем заголовок CSV
+            writer.append("Key,Value;");
+
+            // Пишем данные из HashMap в CSV
+            for (Entry<String, Double> entry : matrix.entrySet()) {
+                writer.append(entry.getKey().toString());
+                writer.append(",");
+                writer.append(entry.getValue().toString());
+                writer.append(";");
+            }
+
+            System.out.println("CSV файл успешно создан: " + fileName);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
 	@GetMapping("/map/sizematrix")
 	public Map<String, String> getSizeMatrix(HttpServletRequest request) {
@@ -1794,6 +2114,9 @@ public class MainRestController {
 		response.put("/map/sizematrix",
 				"Возвращает колличество элементов матрицы и выводит в консоль, все ли элементы прогружены на текущий момент");
 		response.put("/map/calcmatrix/{i}", "рассчитать матрицу и создать фай1л сериализации (0 - если всю)");
+		response.put("/map/downloadmatrixJSON", "Скачивает матрицу расстояний в фолрмате json");
+		response.put("/map/downloadmatrixCSV", "Скачивает матрицу расстояний в фолрмате CSV с разделителем ;");
+		response.put("/map/downloadmatrix", "Скачивает матрицу расстояний в виде двумерного массива");
 		return response;
 	}
 
@@ -2341,6 +2664,7 @@ public class MainRestController {
 		File target = poiExcel.getFileByMultipartTarget(excel, request, "routes.xlsx");
 		java.util.Date t2 = new java.util.Date();
 		Map<Long, List<Double[]>> pointsMap = poiExcel.readExcelForWays(target);
+//		List<Integer> shopsNum = 
 		if (pointsMap == null) {
 			classLog = classLog + "\n Controller -- Отмена построения маршрутов!";
 			return null;
@@ -2804,6 +3128,54 @@ public class MainRestController {
 		return null;
 	}
 
+	
+	@RequestMapping(value = "/map/way/5", method = RequestMethod.POST)
+	public List<MapResponse> getSplitWayHasNumShop5(@RequestBody String str) throws ParseException {
+		List<GHRequest> ghRequests = routingMachine.parseJSONFromClientRequestSplitV2(str);
+		List<Shop[]> shopPoints = routingMachine.getShopAsPoint(str);
+		GraphHopper hopper = routingMachine.getGraphHopper();
+//		ghRequests.forEach(r->System.out.println(r.getCustomModel()));
+		List<MapResponse> listResult = new ArrayList<MapResponse>();
+		for (GHRequest req : ghRequests) {
+			int index = ghRequests.indexOf(req);
+
+			GHResponse rsp = hopper.route(req);
+			if (rsp.getAll().isEmpty()) {
+				rsp.getErrors().forEach(e -> System.out.println(e));
+				rsp.getErrors().forEach(e -> e.printStackTrace());
+				listResult.add(new MapResponse(null, null, null, 500.0, 500));
+			}
+//			System.err.println(rsp.getAll().size());
+			if (rsp.getAll().size() > 1) {
+//				rsp.getAll().forEach(p -> System.out.println(p.getDistance() + "    " + p.getTime()));
+			}
+			ResponsePath path = rsp.getBest();
+			List<ResponsePath> listPath = rsp.getAll();
+			for (ResponsePath pathI : listPath) {
+				if (pathI.getDistance() < path.getDistance()) {
+					path = pathI;
+				}
+			}
+//			System.out.println(roundВouble(path.getDistance()/1000, 2) + "km, " + path.getTime() + " time");
+			PointList pointList = path.getPoints();
+			path.getPathDetails();
+			List<Double[]> result = new ArrayList<Double[]>(); // возможна утечка помяти
+			pointList.forEach(p -> result.add(p.toGeoJson()));
+			List<Double[]> resultPoints = new ArrayList<Double[]>();
+			double cash = 0.0;
+			for (Double[] point : result) {
+				cash = point[0];
+				point[0] = point[1];
+				point[1] = cash;
+				resultPoints.add(point);
+			}
+			listResult.add(new MapResponse(resultPoints, path.getDistance(), path.getTime(), shopPoints.get(index)[0],
+					shopPoints.get(index)[1]));
+		}
+		return listResult;
+	}
+	
+	
 	/**
 	 * Основной метод постройки и отладки отдельных маршрутов по точкам принимает
 	 * номер маршрута, берет координаты из БД отдаёт информацию по магазинам в

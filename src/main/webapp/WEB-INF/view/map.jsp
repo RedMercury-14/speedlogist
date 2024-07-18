@@ -18,12 +18,12 @@ height: 580px
 <title>Insert title here</title>
 <link rel="icon" href="${pageContext.request.contextPath}/resources/img/favicon.ico">
 <link rel="stylesheet" type="text/css" href="<c:url value="/resources/css/style.css"/>"/>
-<!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css"> -->
-<!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css"> -->
+<!-- <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/js/bootstrap3/bootstrap.min.css"> -->
+<!-- <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/js/bootstrap3/bootstrap-theme.min.css"> -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.2/dist/leaflet.css"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
-<script	src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"	type="text/javascript"></script>
-<!-- <script	src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script> -->
+<script	src="${pageContext.request.contextPath}/resources/js/bootstrap3/jquery.min.js"	type="text/javascript"></script>
+<!-- <script	src="${pageContext.request.contextPath}/resources/js/bootstrap3/bootstrap.min.js"></script> -->
 <script src="https://unpkg.com/leaflet@1.9.2/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 </head>

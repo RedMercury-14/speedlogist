@@ -23,7 +23,7 @@ public class LogicAnalyzer {
 	
 	private static Double percentOverWay; //процент перепробега
 	private static Double percentGoodOverWay = 0.0; //процент допустимиго перепробега, где маршрут считается линейным
-	private static Double penaltyForClusterCheck = 1.6;
+	private static Double penaltyForClusterCheck = 2.0; //1.6 old
 	private static Double radiusSearch = 40000.0; // радиус поиска
 	
 	/**
@@ -101,7 +101,7 @@ public class LogicAnalyzer {
 				//берем самое большое расстояние от магазина к магазину и сравниваем его с расстоянием до склада деленное на 2
 				//если оно больше этого значение - умножаем на коэф. 1,35 и проверяем опять на логичность
 				
-				System.err.print("LogicAnalyzer.logicalСheck: Задействована проверка на кластерность: ");
+//				System.err.print("LogicAnalyzer.logicalСheck: Задействована проверка на кластерность: ");
 				
 				Double clusterresult = clusterCheck(correctRoute, distanceСhain, result);
 				return clusterresult; 

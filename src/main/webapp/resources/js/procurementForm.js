@@ -39,18 +39,21 @@ import { disableButton, enableButton, getData, isStockProcurement, removeSingleQ
 const addNewProcurementUrl = (orderStatus) => orderStatus === 20
 	? "../../api/manager/addNewProcurement"
 	: "../../api/manager/addNewProcurementHasMarket"
-const redirectUrl = (orderStatus) => orderStatus === 20	? "orders" : "../slots"
+const redirectUrl = (orderStatus) => orderStatus === 20 || disableSlotRedirect ? "orders" : "../slots"
 const getInternalMovementShopsUrl = "../../api/manager/getInternalMovementShops"
-const getOrderHasMarketNumberBaseUrl = "../../api/procurement/getOrderHasMarketNumber/"
+// const getOrderHasMarketNumberBaseUrl = "../../api/procurement/getOrderHasMarketNumber/"
 const getMarketOrderBaseUrl = `../../api/manager/getMarketOrder/`
 
 const token = $("meta[name='_csrf']").attr("content")
 
 let error = false
-
+// отключения переадресации в слоты
+let disableSlotRedirect = false
+// количество точек в форме
 let pointsCounter = 0
-
+// необходимость точки выгрузки
 let needUnloadPoint = false
+// внутреннее перемещение
 let isInternalMovement = false
 let orderWay
 let orderData = null
@@ -155,6 +158,10 @@ window.onload = async () => {
 	// обработчик для модального окна оклейка, УКЗ, СИ, акциз
 	const RBButtonsContainer = document.querySelector('#RBButtons')
 	RBButtonsContainer.addEventListener('click', (e) => RBButtonsContainerOnClickHandler(e, addLoadPointForm, addUnloadPointForm, domesticStocks))
+
+	// обработчик отключения редиректа на слоты
+	const disableSlotRedirectCheckbox = document.querySelector('#disableSlotRedirect')
+	disableSlotRedirectCheckbox.addEventListener('change', (e) => disableSlotRedirect = e.target.checked)
 }
 
 async function setMarketNumberFormSubmitHandler(e, orderForm, addLoadPointForm, addUnloadPointForm) {
@@ -356,7 +363,7 @@ function pointFormDataFormatter(formData) {
 				: data.pointContact_tel
 					? `Тел. ${data.pointContact_tel}` : ''
 
-	const bodyAdress = `${data.country}; ${data.address}`
+	const bodyAdress = `${data.country}; ${data.address.replace(/;/g, ',')}`
 
 	const customsAddress = 
 		data.customsCountry && data.customsAddress

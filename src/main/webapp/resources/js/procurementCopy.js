@@ -24,15 +24,16 @@ import { bootstrap5overlay } from "./bootstrap5overlay/bootstrap5overlay.js"
 const addNewProcurementUrl = (orderStatus) => orderStatus === 20
 	? "../../../api/manager/addNewProcurement"
 	: "../../../api/manager/addNewProcurementHasMarket"
-const redirectUrl = (orderStatus) => orderStatus === 20	? "../orders" : "../../slots"
+const redirectUrl = (orderStatus) => orderStatus === 20 || disableSlotRedirect ? "../orders" : "../../slots"
 const getInternalMovementShopsUrl = "../../../api/manager/getInternalMovementShops"
-const getOrderHasMarketNumberBaseUrl = "../../../api/procurement/getOrderHasMarketNumber/"
+// const getOrderHasMarketNumberBaseUrl = "../../../api/procurement/getOrderHasMarketNumber/"
 const getMarketOrderBaseUrl = `../../../api/manager/getMarketOrder/`
 
 const token = $("meta[name='_csrf']").attr("content")
 
 let error = false
-
+// отключения переадресации в слоты
+let disableSlotRedirect = false
 let orderData = null
 let orderStatus = 20
 
@@ -173,6 +174,10 @@ window.onload = async () => {
 	}
 
 	points.forEach(point => changeCargoInfoInputsRequired(point))
+
+	// обработчик отключения редиректа на слоты
+	const disableSlotRedirectCheckbox = document.querySelector('#disableSlotRedirect')
+	disableSlotRedirectCheckbox.addEventListener('change', (e) => disableSlotRedirect = e.target.checked)
 }
 
 // обработчики отправки форм
@@ -227,7 +232,7 @@ function orderFormDataFormatter(formData) {
 			weight: data[`weight_${i}`],
 			volume: data[`volume_${i}`],
 			tnvd: data[`tnvd_${i}`] ? data[`tnvd_${i}`] : '',
-			bodyAdress: data[`country_${i}`] + '; ' + data[`pointAddress_${i}`],
+			bodyAdress: data[`country_${i}`] + '; ' + data[`pointAddress_${i}`].replace(/;/g, ','),
 			customsAddress: data[`customsAddress_${i}`],
 			timeFrame: data[`timeFrame_${i}`],
 			contact: data[`pointContact_${i}`],

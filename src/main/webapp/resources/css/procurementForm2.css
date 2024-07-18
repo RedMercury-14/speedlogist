@@ -252,3 +252,17 @@ select option:disabled {
 	opacity: 1 !important;
 	background-color: #fff !important;
 }
+
+.disableSlotRedirect-container {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+.disableSlotRedirect-container label,
+#disableSlotRedirect {
+	cursor: pointer;
+}
+#disableSlotRedirect {
+	width: 20px;
+	height: 20px;
+}

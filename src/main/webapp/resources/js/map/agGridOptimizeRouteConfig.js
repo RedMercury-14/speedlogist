@@ -11,12 +11,10 @@ const excelHeader = [
 	cell('Номер', 'header'),
 	cell('Адрес', 'header'),
 	cell('Паллеты', 'header'),
-	cell('Общий вес', 'header'),
-	cell('Вес', 'header'),
+	 cell('Вес', 'header'),
 	cell('Расстояние, км', 'header'),
 ]
 const getExcelRows = (params) => {
-	const routeResponse = params.node.data
 	const rows = params.node.data.points.map((point, i) => {
 		return ({
 				cells: [
@@ -24,7 +22,6 @@ const getExcelRows = (params) => {
 					cell(point.numshop, 'body'),
 					cell(point.address, 'body'),
 					cell((point.needPall ? point.needPall : 0), 'body'),
-					cell(routeResponse.targetWeigth, 'body'),
 					cell((point.endShop.weight ? point.endShop.weight : 0), 'body'),
 					cell(point.distanceToView, 'body'),
 				]
@@ -36,7 +33,7 @@ const defaultExcelExportParams = {
 	getCustomContentBelowRow: (params) => getExcelRows(params),
 	processCellCallback: (params) => '',
 	columnWidth: 120,
-	fileName: 'ag-grid.xlsx',
+	fileName: 'optimization.xlsx',
 	skipColumnHeaders: true,
 	columnWidth: 120,
 	prependContent: [

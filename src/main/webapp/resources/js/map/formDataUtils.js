@@ -36,7 +36,7 @@ export function getPointsDataFromTextarea(routeTextareaForm, routeParams = {}) {
 }
 
 // функция получения данных для POST-запроса тестовой формы оптимизатора
-export function getOptimizeRouteFormData(optimizeRouteForm, routeParams = {}) {
+export function getOptimizeRouteFormData(optimizeRouteForm, params = {}) {
 	const stock = optimizeRouteForm.stock.value || ''
 	const iteration = optimizeRouteForm.iteration.value || ''
 	const shops = getTextareaData(optimizeRouteForm.routeTextarea)
@@ -74,6 +74,7 @@ export function getOptimizeRouteFormData(optimizeRouteForm, routeParams = {}) {
 		big,
 		middle,
 		little,
+		params,
 	}
 }
 

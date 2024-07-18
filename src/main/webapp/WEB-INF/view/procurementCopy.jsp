@@ -838,6 +838,10 @@
 								</c:otherwise>
 							</c:choose>
 						</c:forEach>
+						<div class="disableSlotRedirect-container">
+							<input id="disableSlotRedirect" type="checkbox">
+							<label for="disableSlotRedirect">Отключить переадресацию в слоты</label>
+						</div>
 					</div>
 				</div>
 				<div class="card-footer">

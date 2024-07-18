@@ -60,6 +60,18 @@ public class Solution {
 	private Double totalRunKM;
 	
 	private Double koef;
+	
+	private String message;
+
+	
+	
+	public String getMessage() {
+		return message;
+	}
+
+	public void setMessage(String message) {
+		this.message = message;
+	}
 
 	public List<VehicleWay> getWhiteWay() {
 		return whiteWay;

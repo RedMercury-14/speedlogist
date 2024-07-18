@@ -14,10 +14,10 @@
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/variables.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/map.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/snackbar.css">
-	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" integrity="sha512-gc3xjCmIy673V6MyOAZhIW93xhM9ei1I+gLbmFjUHIjocENRsLX/QUE1htk5q1XV2D/iie/VQ8DXI6Vu8bexvQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js" integrity="sha512-ozq8xQKq6urvuU6jNgkfqAmT7jKN2XumbrX1JiB3TnF7tI48DPI4Gy1GXKD/V3EExgAs1V+pRO7vwtS1LHg0Gw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/js/leaflet/leaflet.css"/>
+	<script src="${pageContext.request.contextPath}/resources/js/leaflet/leaflet.js"></script>
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/js/leaflet/leaflet.draw.css"/>
+	<script src="${pageContext.request.contextPath}/resources/js/leaflet/leaflet.draw.js"></script>
 </head>
 <body class="active-sidebar">
 	<jsp:include page="headerNEW.jsp" />
@@ -68,7 +68,7 @@
 						</li>
 
 						<c:choose>
-							<c:when test="${login == 'catalina!%ricoh' || login == 'yakubove%%'}">
+							<c:when test="${login == 'catalina!%ricoh' || login =='pedagog%!sport' || login == 'yakubove%%'}">
 
 								<!-- кнопка вкладки поиска по адресу -->
 								<li class="menu-item" data-item="addressSearch">
@@ -226,7 +226,7 @@
 						</div>
 
 						<c:choose>
-							<c:when test="${login == 'catalina!%ricoh' || login == 'yakubove%%'}">
+							<c:when test="${login == 'catalina!%ricoh' || login =='pedagog%!sport' || login == 'yakubove%%'}">
 
 								<!-- вкладка поиска по адресу -->
 								<div class="item-content" id="addressSearch">
@@ -442,7 +442,7 @@
 													<button class="btn btn-primary" type="submit">Построить маршрут</button>
 													<div class="d-flex">
 														<c:choose>
-															<c:when test="${login == 'catalina!%ricoh' || login == 'yakubove%%'}">
+															<c:when test="${login == 'catalina!%ricoh' || login =='pedagog%!sport' || login == 'yakubove%%'}">
 																<button id="saveRoutingParams" class="btn btn-secondary mt-1" type="button">Сохранить настройки</button>
 															</c:when>
 														</c:choose>
@@ -461,7 +461,15 @@
 											</div>
 											<div id="collapseFour" class="collapse" aria-labelledby="headingFour" data-parent="#settings-accordion">
 												<!-- форма настроек оптимизатора -->
-												<span class="text-muted">Настройки оптимизатора</span>
+												<form id="optimizeRouteParamsForm" action="">
+													<div class="border-bottom mb-2" id="optimizeRouteParamsMainCheckbox"></div>
+													<div class="d-flex flex-wrap border-bottom mb-2" id="optimizeRouteParamsCheckboxes"></div>
+													<div class="border-bottom mb-2" id="optimizeRouteParamsSelect"></div>
+													<div class="border-bottom mb-2" id="optimizeRouteParamsInputs"></div>
+													<div class="d-flex">
+														<button id="loadRoutingParams" class="btn btn-primary mt-1" type="submit">Сохранить настройки</button>
+													</div>
+												</form>
 											</div>
 										</div>
 									</div>
@@ -500,6 +508,7 @@
 								<option value="" hidden disabled selected>Выберите действие для полигона</option>
 								<option value="trafficRestrictions">Ограничить движение</option>
 								<option value="trafficBan">Запретить движение</option>
+								<option value="trafficSpecialBan">Запретить движение для загруженных машин</option>
 							</select>
 						</div>
 					</div>

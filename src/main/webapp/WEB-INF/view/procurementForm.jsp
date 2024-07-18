@@ -162,6 +162,10 @@
 						<button id="addUnloadPoint" type="submit" class="btn btn-outline-secondary">+ точка выгрузки</button>
 						<div class="text-red font-italic py-2">Важно: добавляйте точки в порядке их прохождения машиной (начните с точки загрузки)</div>
 					</div>
+					<div class="disableSlotRedirect-container">
+						<input id="disableSlotRedirect" type="checkbox">
+						<label for="disableSlotRedirect">Отключить переадресацию в слоты</label>
+					</div>
 				</div>
 				<div class="card-footer d-flex justify-content-center">
 					<button id="formSubmitBtn" class="btn btn-primary btn-lg" type="submit">Создать заявку</button>

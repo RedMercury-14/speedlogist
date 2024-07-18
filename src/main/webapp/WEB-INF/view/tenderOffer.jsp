@@ -102,7 +102,7 @@
 
 	<jsp:include page="footer.jsp" />
 	<script type="module" src="${pageContext.request.contextPath}/resources/js/tenderOffer.js"></script>
-	<script	src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+	<script	src="${pageContext.request.contextPath}/resources/js/bootstrap3/bootstrap.min.js"></script>
 	
 </body>
 </html>

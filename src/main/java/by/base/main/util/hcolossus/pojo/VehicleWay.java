@@ -52,6 +52,8 @@ public class VehicleWay {
 	
 	private Double totalRun;
 	
+	private Double distanceFromStock;
+	
 	private Integer summPall;
 	
 	/**
@@ -83,6 +85,33 @@ public class VehicleWay {
 			this.status = status;
 			this.vehicle = vehicle;
 			this.id = Objects.hash(vehicle, way)+"";
+		}		
+	}
+	
+	/**
+	 * 10 - нуждается в проверке на логичность
+	 * <br>15 - идеальный недогруженный маршрут
+	 * <br>20 - черновой нелогичный маршрут (но загруженный полностью)
+	 * <br>30 - черновой логичный маршрут (но недогруженный)
+	 * <br>35 - черновой логичный маршрут <b>(догруженный)<b>
+	 * <br>40 - оптимизированный маршут согласно расстояниям
+	 * <br>100 - чистовой маршрут
+	 * @param id
+	 * @param way
+	 * @param overrun
+	 * @param status
+	 * @param vehicle
+	 */
+	public VehicleWay(String id, List<Shop> way, Double overrun, int status, Vehicle vehicle) {
+		super();
+		if(way == null || way.isEmpty()) {
+			System.err.println("Объект VehicleWay не может быть создан без порядка прохождения точек");
+		}else {
+			this.way = way;
+			this.overrun = overrun;
+			this.status = status;
+			this.vehicle = vehicle;
+			this.id = id;
 		}		
 	}
 	
@@ -141,7 +170,21 @@ public class VehicleWay {
 		this.overrun = overrun;
 	}
 
-	
+	/**
+	 * Возвращает расстояние от склада, до дальней точки маршрута
+	 * @param distanceFromStock
+	 */
+	public Double getDistanceFromStock() {
+		return distanceFromStock;
+	}
+	/**
+	 * Задаёт расстояние от склада, до дальней точки маршрута
+	 * @param distanceFromStock
+	 */
+	public void setDistanceFromStock(Double distanceFromStock) {
+		this.distanceFromStock = distanceFromStock;
+	}
+
 	public List<Shop> getProblemShops() {
 		return problemShops;
 	}

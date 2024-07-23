@@ -86,6 +86,7 @@ import by.base.main.util.MainChat;
 import by.base.main.util.GraphHopper.RoutingMachine;
 import by.base.main.util.bots.BotInitializer;
 import by.base.main.util.bots.TelegramBot;
+import by.base.main.util.bots.TelegramBotRouting;
 import by.base.main.util.hcolossus.service.MatrixMachine;
 
 /**
@@ -172,6 +173,9 @@ public class MainController {
 	@Autowired
 	private TelegramBot telegramBot;
 	
+	@Autowired
+	private TelegramBotRouting telegramBotRouting;
+	
 	public static final Map<String,String> distances = new HashMap<String, String>();
 	public static String path = null;
 	
@@ -255,6 +259,7 @@ public class MainController {
 //			new BotInitializer(telegramBot).init();
 //		}
 		System.err.println("ТЕЛЕГРАММ БОТ ОТКЛЮЧЕН!");
+		new BotInitializer(telegramBotRouting).initRoutingBot();
 		
 		
 		try {

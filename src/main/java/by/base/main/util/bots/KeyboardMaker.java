@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 
@@ -51,6 +53,123 @@ public class KeyboardMaker {
         replyKeyboardMarkup.setOneTimeKeyboard(false);
 
         return replyKeyboardMarkup;
+    }
+    
+    /**
+     * Начальная клавиатура после приветствия
+     * <br>Зарегистрироваться   Инфо
+     * <br>Подключиться по номеру телефона
+     * @return
+     */
+    public ReplyKeyboardMarkup getStartKeyboardTest () {
+        KeyboardRow row1 = new KeyboardRow();
+        row1.add(new KeyboardButton("Зарегистрироваться"));
+        row1.add(new KeyboardButton("Инфо"));
+        KeyboardRow row2 = new KeyboardRow();
+        KeyboardButton reg = new KeyboardButton("Подключиться по номеру телефона");
+        reg.setRequestContact(true);
+//        reg.setRequestLocation(true);
+        row2.add(reg);
+        
+        List<KeyboardRow> keyboard = new ArrayList<>();
+        keyboard.add(row1);
+        keyboard.add(row2);
+
+        final ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+        replyKeyboardMarkup.setKeyboard(keyboard);
+        replyKeyboardMarkup.setSelective(true);
+        replyKeyboardMarkup.setResizeKeyboard(true);
+        replyKeyboardMarkup.setOneTimeKeyboard(false);
+        
+        return replyKeyboardMarkup;
+    }
+    
+    /**
+     * Главная клава для юзеров
+     * @return
+     */
+    public ReplyKeyboardMarkup getMainKeyboard () {
+        KeyboardRow row1 = new KeyboardRow();
+        row1.add(new KeyboardButton("Заявить машину на завтра"));
+        KeyboardRow row2 = new KeyboardRow();
+        row2.add(new KeyboardButton("Заявить машину на дату"));
+        KeyboardButton reg = new KeyboardButton("Редактировать список заявленных машин");
+//        reg.setRequestContact(true);
+//        reg.setRequestLocation(true);
+        row2.add(reg);
+        KeyboardRow row3 = new KeyboardRow();
+        row3.add(new KeyboardButton("Список машин заявленных на завтра"));
+        
+        List<KeyboardRow> keyboard = new ArrayList<>();
+        keyboard.add(row1);
+        keyboard.add(row2);
+        keyboard.add(row3);
+
+        final ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+        replyKeyboardMarkup.setKeyboard(keyboard);
+        replyKeyboardMarkup.setSelective(true);
+        replyKeyboardMarkup.setResizeKeyboard(true);
+        replyKeyboardMarkup.setOneTimeKeyboard(true);
+        
+        return replyKeyboardMarkup;
+    }
+    
+    public ReplyKeyboardMarkup getStartKeyboard () {
+        KeyboardRow row1 = new KeyboardRow();
+        KeyboardButton reg = new KeyboardButton("Войти по номеру телефона");
+        reg.setRequestContact(true);
+//        reg.setRequestLocation(true);
+        row1.add(reg);
+        
+        List<KeyboardRow> keyboard = new ArrayList<>();
+        keyboard.add(row1);
+
+        final ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+        replyKeyboardMarkup.setKeyboard(keyboard);
+        replyKeyboardMarkup.setSelective(true);
+        replyKeyboardMarkup.setResizeKeyboard(true);
+        replyKeyboardMarkup.setOneTimeKeyboard(true);
+        
+        return replyKeyboardMarkup;
+    }
+    
+    /**
+     * Клавиатура с паллетами для сообщения
+     * @return
+     */
+    public InlineKeyboardMarkup getPallMessageKeyboard(String numTruck) {
+    	InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
+    	List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
+
+    	for (int i = 4; i <= 33; i += 3) {
+    	    List<InlineKeyboardButton> rowInline = new ArrayList<>();
+    	    
+    	    InlineKeyboardButton inlineKeyboardButton1 = new InlineKeyboardButton();
+    	    inlineKeyboardButton1.setText(i + " паллеты");
+    	    inlineKeyboardButton1.setCallbackData(numTruck+"_"+i + "_pall");
+    	    rowInline.add(inlineKeyboardButton1);
+    	    
+    	    if (i + 1 <= 33) {
+    	        InlineKeyboardButton inlineKeyboardButton2 = new InlineKeyboardButton();
+    	        inlineKeyboardButton2.setText((i + 1) + " паллеты");
+    	        inlineKeyboardButton2.setCallbackData(numTruck+"_"+(i + 1) + "_pall");
+    	        rowInline.add(inlineKeyboardButton2);
+    	    }
+    	    
+    	    if (i + 2 <= 33) {
+    	        InlineKeyboardButton inlineKeyboardButton3 = new InlineKeyboardButton();
+    	        inlineKeyboardButton3.setText((i + 2) + " паллеты");
+    	        inlineKeyboardButton3.setCallbackData(numTruck+"_"+(i + 2) + "_pall");
+    	        rowInline.add(inlineKeyboardButton3);
+    	    }
+    	    
+    	    rowsInline.add(rowInline);
+    	}
+		
+		
+		markupInline.setKeyboard(rowsInline);
+        
+        return markupInline;
     }
 
 }

@@ -259,6 +259,7 @@ public class MainController {
 //			new BotInitializer(telegramBot).init();
 //		}
 		System.err.println("ТЕЛЕГРАММ БОТ ОТКЛЮЧЕН!");
+		
 		new BotInitializer(telegramBotRouting).initRoutingBot();
 		
 		

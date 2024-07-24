@@ -5,10 +5,14 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -20,6 +24,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import by.base.main.controller.MainController;
+import by.base.main.model.Truck;
 import by.base.main.model.User;
 
 @Component
@@ -42,7 +47,6 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 	public void onUpdateReceived(Update update) {
 		
 		if(update.hasMessage() && update.getMessage().hasContact()){
-			System.out.println(update.getMessage().getText());
 			long chatId = update.getMessage().getChatId();
 			User user = new User();
 			user.setLogin(chatId+"");
@@ -55,16 +59,71 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 		
 		if(update.hasCallbackQuery()){
 			System.out.println("CallbackData -> " + update.getCallbackQuery().getData());
-			System.out.println("CallbackData.getId -> " + update.getCallbackQuery().getId());
+//			System.out.println("CallbackData.getId -> " + update.getCallbackQuery().getId());
 			System.out.println("CallbackData.getMessage().getChatId() -> " + update.getCallbackQuery().getMessage().getChatId());
-			System.err.println("CallbackDataToString -> " + update.getCallbackQuery());
+//			System.err.println("CallbackDataToString -> " + update.getCallbackQuery());
+			
+			long chatId = update.getCallbackQuery().getMessage().getChatId();
+			String data = update.getCallbackQuery().getData();
+			User user = users.get(chatId);
+			switch (user.getStatus()) {
+			case "/setpall":
+				String numTruck = data.split("_")[0];
+				String pall = data.split("_")[1];
+				
+				Truck truck = new Truck();
+				truck.setNumTruck(numTruck);
+				truck.setPallCapacity(pall);
+				user.putTrucksForBot(numTruck, truck);				
+				user.setValidityPass(numTruck); // сюза временно записываем номер авто которое обрабатывается
+				//создали машину, присвоили номер и записали сколько паллет.
+				
+				user.setStatus("/setweigth");
+				users.put(chatId, user);
+				sendMessage(chatId, "Введите грузоподъемность авто");
+				break;
+			case "/settype":
+				String numTruckForType = data.split("_")[0];
+				String type = data.split("_")[1];
+				
+				Truck truckForType = user.getTrucksForBot(numTruckForType);
+				truckForType.setTypeTrailer(type);
+				
+				user.putTrucksForBot(numTruckForType, truckForType);				
+				user.setValidityPass(null); // сюза временно записываем номер авто которое обрабатывается но записывем null т.к. типо закончили
+				//создали машину, присвоили номер и записали сколько паллет.
+				
+				user.setStatus("/proofTruck");
+				users.put(chatId, user);
+				SendMessage messageProof = new SendMessage();
+				messageProof.setChatId(chatId);   
+				String dateNext = LocalDate.now().plusDays(1).format(DateTimeFormatter.ofPattern("dd:MM:yyyy"));
+				messageProof.setText("Заявляем машину на завтра ("+dateNext+")\n Авто: "+truckForType.getTruckForBot());
+				messageProof.setReplyMarkup(keyboardMaker.getYesNoKeyboard(numTruckForType));
+        		try {
+					execute(messageProof);
+				} catch (TelegramApiException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				break;
+			default:
+				break;
+			} 
 			
 		}
 		
         if(update.hasMessage() && update.getMessage().hasText()){
             String messageText = update.getMessage().getText();   
             long chatId = update.getMessage().getChatId();
-            if(users.containsKey(chatId) && users.get(chatId).getStatus() != null) {
+            
+            if(users.get(chatId).getStatus() != null && messageText.split("~")[0].equals("/start")) {
+            	User user = users.get(chatId);
+            	user.setStatus(null);
+            	users.put(chatId, user);
+            }
+            
+            if(users.containsKey(chatId) && users.get(chatId).getStatus() != null && !messageText.split("~")[0].equals("/start")) {
             	messageText = users.get(chatId).getStatus()+"~"+messageText;
             }
 //            System.out.println(messageText + " idChat = " + chatId);
@@ -76,12 +135,13 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
             System.err.println(command);
             switch (command.toLowerCase()){
                 case "/start": 
-                	SendMessage sendKeyboard = new SendMessage();
-                	sendKeyboard.setText("Приветики пистолетики");
+                	SendMessage sendKeyboard = new SendMessage();                	
                 	sendKeyboard.setChatId(chatId);
 					if(users.containsKey(chatId)) {
+						sendKeyboard.setText("Приветствую " + users.get(chatId).getCompanyName() + "!");
 						sendKeyboard.setReplyMarkup(keyboardMaker.getMainKeyboard()); // клава для юзеров
-					}else {						
+					}else {		
+						sendKeyboard.setText("Приветствую!");
 	                	sendKeyboard.setReplyMarkup(keyboardMaker.getStartKeyboard()); // клава со входом	
 					}                	
             		try {
@@ -93,7 +153,8 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
                     break;
                 case "/login": 
                 	User user = users.get(chatId);
-                	user.setCompanyName(messageText);
+                	String companyName = messageText.contains("~") ? messageText.split("~")[1] : messageText;
+                	user.setCompanyName(companyName);
                 	user.setStatus(null);
                 	users.put(chatId, user);
                 	serializableUsers();
@@ -117,7 +178,7 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
                     //остановился тут
                 case "/numtruck": 
                 	User userForTruck2 = users.get(chatId);
-                	userForTruck2.setStatus(null);
+                	userForTruck2.setStatus("/setpall");
                 	users.put(chatId, userForTruck2);
                 	//создаём и записываем авто
                 	String numTruck = messageText.split("~")[1];
@@ -127,6 +188,26 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
             		message.setReplyMarkup(keyboardMaker.getPallMessageKeyboard(numTruck));
             		try {
 						execute(message);
+					} catch (TelegramApiException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+                    break;
+                case "/setweigth": 
+                	User userForTruck3 = users.get(chatId);
+                	Truck truck = userForTruck3.getTrucksForBot(userForTruck3.getValidityPass());
+                	truck.setCargoCapacity(messageText.split("~")[1]);
+                	userForTruck3.setStatus("/settype");
+                	userForTruck3.putTrucksForBot(userForTruck3.getValidityPass(), truck);
+                	users.put(chatId, userForTruck3);
+                	
+                	//создаём и записываем авто
+                	SendMessage messageBeforeWeigth = new SendMessage();
+                	messageBeforeWeigth.setChatId(chatId);                    
+                	messageBeforeWeigth.setText("Вес принял. \nУкажите тип авто");
+                	messageBeforeWeigth.setReplyMarkup(keyboardMaker.getTypeTruckKeyboard(truck.getNumTruck()));
+            		try {
+						execute(messageBeforeWeigth);
 					} catch (TelegramApiException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();

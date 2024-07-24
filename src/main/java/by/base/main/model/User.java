@@ -2,7 +2,9 @@ package by.base.main.model;
 
 import java.io.Serializable;
 import java.sql.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -231,6 +233,10 @@ public class User implements Serializable{
 	@Transient
 	@JsonIgnore // закрыл потому что ломает запрос от Route к User 
 	private int numCar;
+	
+	@Transient
+	@JsonIgnore
+	private Map<String, Truck> trucksForBot = null;
 	
 	
 	
@@ -651,6 +657,27 @@ public class User implements Serializable{
 		this.dateRegistration = dateRegistration;
 	}
 	
+	public Map<String, Truck> getTrucksForBot() {
+		return trucksForBot;
+	}
+
+	public void setTrucksForBot(Map<String, Truck> trucksForBot) {
+		this.trucksForBot = trucksForBot;
+	}
+	
+	public Truck getTrucksForBot(String numTruck) {
+		return trucksForBot.get(numTruck);
+	}
+	
+	public void putTrucksForBot(String numTruck, Truck truck) {
+		if(this.trucksForBot == null) {
+			this.trucksForBot = new HashMap<String, Truck>();
+			this.trucksForBot.put(numTruck, truck);
+		}else {
+			this.trucksForBot.put(numTruck, truck);
+		}
+	}
+
 	public int getNumCar() {
 		//задаём общее число машин, если это перевозчик
 				Role carrer = new Role(7, "ROLE_CARRIER");

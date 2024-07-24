@@ -171,5 +171,59 @@ public class KeyboardMaker {
         
         return markupInline;
     }
+    
+    /**
+     * Клава с типами авто тент/реф для сообщения
+     * @param numTruck
+     * @return
+     */
+    public InlineKeyboardMarkup getTypeTruckKeyboard(String numTruck) {
+    	InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
+    	List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
+    	List<InlineKeyboardButton> rowInline = new ArrayList<>();
+    	
+    	InlineKeyboardButton inlineKeyboardButton1 = new InlineKeyboardButton();
+	    inlineKeyboardButton1.setText("Тент");
+	    inlineKeyboardButton1.setCallbackData(numTruck+"_Тент" );
+	    rowInline.add(inlineKeyboardButton1);
+	    
+	    InlineKeyboardButton inlineKeyboardButton2 = new InlineKeyboardButton();
+	    inlineKeyboardButton2.setText("Реф");
+	    inlineKeyboardButton2.setCallbackData(numTruck+"_Рефрижератор");
+	    rowInline.add(inlineKeyboardButton2);
+    	
+	    rowsInline.add(rowInline);
+		
+		markupInline.setKeyboard(rowsInline);
+        
+        return markupInline;
+    }
+    
+    /**
+     * Кнопки да/нет для сообщения
+     * @param numTruck
+     * @return
+     */
+    public InlineKeyboardMarkup getYesNoKeyboard(String numTruck) {
+    	InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
+    	List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
+    	List<InlineKeyboardButton> rowInline = new ArrayList<>();
+    	
+    	InlineKeyboardButton inlineKeyboardButton1 = new InlineKeyboardButton();
+	    inlineKeyboardButton1.setText("Да");
+	    inlineKeyboardButton1.setCallbackData(numTruck+"_yes" );
+	    rowInline.add(inlineKeyboardButton1);
+	    
+	    InlineKeyboardButton inlineKeyboardButton2 = new InlineKeyboardButton();
+	    inlineKeyboardButton2.setText("Нет");
+	    inlineKeyboardButton2.setCallbackData(numTruck+"_no");
+	    rowInline.add(inlineKeyboardButton2);
+    	
+	    rowsInline.add(rowInline);
+		
+		markupInline.setKeyboard(rowsInline);
+        
+        return markupInline;
+    }
 
 }

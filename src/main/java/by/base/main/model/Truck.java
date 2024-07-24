@@ -308,6 +308,10 @@ public class Truck implements Serializable{
 	public String getTechnicalCertificate() {
 		return technicalCertificate;
 	}
+	
+	public String getTruckForBot (){
+		return numTruck + " ("+typeTrailer+") " + cargoCapacity+"/"+pallCapacity + " (вес/паллеты)";
+	}
 
 	public void setTechnicalCertificate(String technicalCertificate) {
 		this.technicalCertificate = technicalCertificate;

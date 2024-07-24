@@ -45,6 +45,7 @@ public class BotInitializer {
 		try {			
 			TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);			
 			telegramBotsApi.registerBot((LongPollingBot) botRouting);
+			botRouting.deSerializableIdUsers();
 			System.out.println("TelegramBotRouting запущен");			
 		} catch (TelegramApiException e) {
 			e.printStackTrace();

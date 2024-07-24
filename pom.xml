@@ -18,6 +18,14 @@
 
 	<dependencies>
 		
+		<!-- https://mvnrepository.com/artifact/io.github.dostonhamrakulov/java-telegram-bot-calendar -->
+<dependency>
+    <groupId>io.github.dostonhamrakulov</groupId>
+    <artifactId>java-telegram-bot-calendar</artifactId>
+    <version>2.3</version>
+</dependency>
+
+		
 		<dependency>
 		    <groupId>com.google.guava</groupId>
 		    <artifactId>guava</artifactId>

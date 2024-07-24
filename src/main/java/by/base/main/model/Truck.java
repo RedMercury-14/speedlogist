@@ -1,6 +1,8 @@
 package by.base.main.model;
 
 import java.io.Serializable;
+import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
@@ -15,6 +17,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -136,6 +139,10 @@ public class Truck implements Serializable{
 	 */
 	@Column(name = "technical_certificate")
 	private String technicalCertificate;
+	
+	@Transient
+	@JsonIgnore
+	private Date dateRequisition;
 	
 	/**
 	 * проверена ли машина модератором. Если true то проверена
@@ -323,6 +330,38 @@ public class Truck implements Serializable{
 
 	public void setVerify(Boolean verify) {
 		this.verify = verify;
+	}
+
+	/**
+	 * отдаёт дату на которую заявлялась машина SQLDate
+	 * @return
+	 */
+	public Date getDateRequisition() {
+		return dateRequisition;
+	}
+	
+	/**
+	 * отдаёт дату на которую заявлялась машина LocalDate
+	 * @return
+	 */
+	public LocalDate getDateRequisitionLocalDate() {
+		return dateRequisition.toLocalDate();
+	}
+
+	/**
+	 * Записывает дату на которую заявлялась машина
+	 * @param dateRequisition
+	 */
+	public void setDateRequisition(Date dateRequisition) {
+		this.dateRequisition = dateRequisition;
+	}
+	
+	/**
+	 * Записывает дату на которую заявлялась машина
+	 * @param dateRequisition
+	 */
+	public void setDateRequisition(LocalDate dateRequisition) {
+		this.dateRequisition = Date.valueOf(dateRequisition);
 	}
 
 	@Override

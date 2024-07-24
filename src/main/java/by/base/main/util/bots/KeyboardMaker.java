@@ -93,9 +93,9 @@ public class KeyboardMaker {
         row1.add(new KeyboardButton("Заявить машину на завтра"));
         KeyboardRow row2 = new KeyboardRow();
         row2.add(new KeyboardButton("Заявить машину на дату"));
-        KeyboardButton reg = new KeyboardButton("Редактировать список заявленных машин");
+        KeyboardButton reg = new KeyboardButton("Тест координат");
 //        reg.setRequestContact(true);
-//        reg.setRequestLocation(true);
+        reg.setRequestLocation(true);
         row2.add(reg);
         KeyboardRow row3 = new KeyboardRow();
         row3.add(new KeyboardButton("Список машин заявленных на завтра"));
@@ -218,6 +218,38 @@ public class KeyboardMaker {
 	    inlineKeyboardButton2.setText("Нет");
 	    inlineKeyboardButton2.setCallbackData(numTruck+"_no");
 	    rowInline.add(inlineKeyboardButton2);
+    	
+	    rowsInline.add(rowInline);
+		
+		markupInline.setKeyboard(rowsInline);
+        
+        return markupInline;
+    }
+    
+    /**
+     * Кнопки отменить, удалить, редактировать для сообщения
+     * @param numTruck
+     * @return
+     */
+    public InlineKeyboardMarkup getCancelDeleteEditKeyboard(String numTruck) {
+    	InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
+    	List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
+    	List<InlineKeyboardButton> rowInline = new ArrayList<>();
+    	
+    	InlineKeyboardButton inlineKeyboardButton1 = new InlineKeyboardButton();
+	    inlineKeyboardButton1.setText("Отменить");
+	    inlineKeyboardButton1.setCallbackData(numTruck+"_cancel" );
+	    rowInline.add(inlineKeyboardButton1);
+	    
+	    InlineKeyboardButton inlineKeyboardButton2 = new InlineKeyboardButton();
+	    inlineKeyboardButton2.setText("Удалить");
+	    inlineKeyboardButton2.setCallbackData(numTruck+"_delete");
+	    rowInline.add(inlineKeyboardButton2);
+	    
+	    InlineKeyboardButton inlineKeyboardButton3 = new InlineKeyboardButton();
+	    inlineKeyboardButton3.setText("Редактировать");
+	    inlineKeyboardButton3.setCallbackData(numTruck+"_edit");
+	    rowInline.add(inlineKeyboardButton3);
     	
 	    rowsInline.add(rowInline);
 		

@@ -677,6 +677,12 @@ public class User implements Serializable{
 			this.trucksForBot.put(numTruck, truck);
 		}
 	}
+	
+	public void removeTrucksForBot(String numTruck) {
+		if(this.trucksForBot != null) {
+			this.trucksForBot.remove(numTruck);
+		}
+	}
 
 	public int getNumCar() {
 		//задаём общее число машин, если это перевозчик

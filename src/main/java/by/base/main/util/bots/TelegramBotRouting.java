@@ -18,6 +18,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -26,6 +28,11 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import by.base.main.controller.MainController;
 import by.base.main.model.Truck;
 import by.base.main.model.User;
+import io.github.dostonhamrakulov.CalendarBot;
+import io.github.dostonhamrakulov.DateTimeUtil;
+import io.github.dostonhamrakulov.InlineCalendarBuilder;
+import io.github.dostonhamrakulov.InlineCalendarCommandUtil;
+import io.github.dostonhamrakulov.LanguageEnum;
 
 @Component
 public class TelegramBotRouting extends TelegramLongPollingBot{
@@ -43,6 +50,9 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 	private List<Long> idAllUsers = new ArrayList<Long>(); // все подключенные к боту юзеры
 	private Map<Long, String> idAdmins = new HashMap<Long, String>(); // админы
 	
+	private static final InlineCalendarBuilder inlineCalendarBuilder = new InlineCalendarBuilder(LanguageEnum.RU);
+	private Map<Long, Integer> chatAndMessageIdMap = new HashMap<>();
+	
 	@Override
 	public void onUpdateReceived(Update update) {
 		
@@ -56,6 +66,10 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 			serializableUsers();
 			sendMessage(chatId, "Номер принят. Напишите название фирмы");
 		}
+		if(update.hasMessage() && update.getMessage().hasLocation()){
+			long chatId = update.getMessage().getChatId();			
+			sendMessage(chatId, update.getMessage().getLocation().toString());
+		}
 		
 		if(update.hasCallbackQuery()){
 			System.out.println("CallbackData -> " + update.getCallbackQuery().getData());
@@ -63,8 +77,40 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 			System.out.println("CallbackData.getMessage().getChatId() -> " + update.getCallbackQuery().getMessage().getChatId());
 //			System.err.println("CallbackDataToString -> " + update.getCallbackQuery());
 			
+			
 			long chatId = update.getCallbackQuery().getMessage().getChatId();
 			String data = update.getCallbackQuery().getData();
+			if(data.split("_")[0].equals("CAL")) {
+				System.err.println(1111);
+				Message message = update.getMessage();
+		        SendMessage sendMessage = new SendMessage();
+		        sendMessage.setChatId(message.getChatId());
+				EditMessageText editMessageText = new EditMessageText();
+		        editMessageText.setChatId(message.getChatId());
+		        editMessageText.setMessageId(chatAndMessageIdMap.get(message.getChatId()));
+
+		        if (InlineCalendarCommandUtil.isInlineCalendarClicked(update)) {
+		            if (InlineCalendarCommandUtil.isCalendarIgnoreButtonClicked(update)) {
+		                return;
+		            }
+
+		            if (InlineCalendarCommandUtil.isCalendarNavigationButtonClicked(update)) {
+		                editMessageText.setText("Selected date: ");
+		                editMessageText.setReplyMarkup(inlineCalendarBuilder.build(update));
+		                executeCommand(editMessageText);
+
+		                return;
+		            }
+
+		            LocalDate localDate = InlineCalendarCommandUtil.extractDate(update);
+		            sendMessage.setText("Selected date: " + DateTimeUtil.convertToString(localDate));
+		            executeCommand(sendMessage);
+		        }
+
+		        sendMessage.setText("Please, send /start command to the bot");
+		        executeCommand(sendMessage);
+			}
+			
 			User user = users.get(chatId);
 			switch (user.getStatus()) {
 			case "/setpall":
@@ -88,6 +134,7 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 				
 				Truck truckForType = user.getTrucksForBot(numTruckForType);
 				truckForType.setTypeTrailer(type);
+				truckForType.setDateRequisition(LocalDate.now().plusDays(1));
 				
 				user.putTrucksForBot(numTruckForType, truckForType);				
 				user.setValidityPass(null); // сюза временно записываем номер авто которое обрабатывается но записывем null т.к. типо закончили
@@ -97,7 +144,7 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 				users.put(chatId, user);
 				SendMessage messageProof = new SendMessage();
 				messageProof.setChatId(chatId);   
-				String dateNext = LocalDate.now().plusDays(1).format(DateTimeFormatter.ofPattern("dd:MM:yyyy"));
+				String dateNext = LocalDate.now().plusDays(1).format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
 				messageProof.setText("Заявляем машину на завтра ("+dateNext+")\n Авто: "+truckForType.getTruckForBot());
 				messageProof.setReplyMarkup(keyboardMaker.getYesNoKeyboard(numTruckForType));
         		try {
@@ -107,6 +154,38 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 					e.printStackTrace();
 				}
 				break;
+			case "/proofTruck":
+				String numTruckProof = data.split("_")[0];
+				String answer = data.split("_")[1];
+				
+				SendMessage sendKeyboard = new SendMessage();                	
+            	sendKeyboard.setChatId(chatId);
+				
+				if(answer.equals("yes")) {
+					user.setStatus(null);
+					user.setValidityPass(null);
+					users.put(chatId, user);
+					serializableUsers();
+					sendKeyboard.setText("Машина заявлена!");
+					sendKeyboard.setReplyMarkup(keyboardMaker.getMainKeyboard()); // клава для юзеров
+				}else {
+					user.removeTrucksForBot(numTruckProof);
+					user.setStatus(null);
+					user.setValidityPass(null);
+					users.put(chatId, user);
+					serializableUsers();
+					sendKeyboard.setText("Машина отменена!");
+					sendKeyboard.setReplyMarkup(keyboardMaker.getMainKeyboard()); // клава для юзеров
+				}
+				try {
+					execute(sendKeyboard);
+				} catch (TelegramApiException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				break;
+				
 			default:
 				break;
 			} 
@@ -214,6 +293,39 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 					}
                     break;
                     
+                case "список машин заявленных на завтра": 
+                	User userForList = users.get(chatId);
+                	Map<String, Truck> trucks = userForList.getTrucksForBot();
+                	
+                	trucks.entrySet().stream().filter(e-> e.getValue().getDateRequisitionLocalDate().equals(LocalDate.now().plusDays(1))).forEach(entry->{                		
+                    	SendMessage messageTruckList = new SendMessage();
+                    	messageTruckList.setChatId(chatId);                    
+                    	messageTruckList.setText(entry.getValue().getTruckForBot() + " на " + entry.getValue().getDateRequisitionLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
+                    	messageTruckList.setReplyMarkup(keyboardMaker.getCancelDeleteEditKeyboard(entry.getKey()));
+                		try {
+    						execute(messageTruckList);
+    					} catch (TelegramApiException e) {
+    						// TODO Auto-generated catch block
+    						e.printStackTrace();
+    					}
+                	});  
+                    break;
+                case "заявить машину на дату": 
+                	SendMessage sendMessage = new SendMessage();
+                    sendMessage.setChatId(chatId);
+                    sendMessage.setText("Выберите дату");
+                    sendMessage.setReplyMarkup(inlineCalendarBuilder.build(update));
+                    Message message1 = executeCommand(sendMessage);
+                    chatAndMessageIdMap.put(chatId, message1.getMessageId());
+                    
+				try {
+					execute(sendMessage);
+				} catch (TelegramApiException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+                    break;
+             
                 case "/mail":
                 	if(idAdmins.get(chatId) != null) {
                 		sendMessageAll(messageText.split("~")[1]);
@@ -498,4 +610,21 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 				e.printStackTrace();
 			}
 	}
+	
+    private Message executeCommand(SendMessage sendMessage) {
+        try {
+            return execute(sendMessage);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    
+    private void executeCommand(EditMessageText editMessageText) {
+        try {
+            execute(editMessageText);
+        } catch (TelegramApiException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

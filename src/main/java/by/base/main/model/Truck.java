@@ -345,7 +345,7 @@ public class Truck implements Serializable{
 	 * @return
 	 */
 	public LocalDate getDateRequisitionLocalDate() {
-		return dateRequisition.toLocalDate();
+		return dateRequisition != null ? dateRequisition.toLocalDate() : null;
 	}
 
 	/**

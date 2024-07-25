@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
             overflow: hidden;
             background-color: #000;
         }
-        
+
         .snow-container {
             position: absolute;
             top: 0;

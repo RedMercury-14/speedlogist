@@ -489,7 +489,9 @@ body {font-family: Arial, Helvetica, sans-serif;}
       <p>Номер телефона: ${route.driver.telephone}</p>
       <p>Дата подачи машины на загрузку: ${route.dateLoadActuallySimple}; время: ${route.timeLoadActually};</p>
       <p>Дата прибытия авто под выгрузку: ${route.dateUnloadActuallySimple}; время: ${route.timeUnloadActually};</p>
+      <p><b>Тип транспорта: ${route.truck.typeTrailer}</b></p>
       <p>Стоимость перевозки: ${route.finishPrice} ${route.startCurrency}</p>
+      
     </div>
   </div>
 </div>

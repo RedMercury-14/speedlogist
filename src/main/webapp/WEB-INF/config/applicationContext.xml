@@ -28,7 +28,7 @@
         <property name="user" value="root" />
         <property name="password" value="5001020" /> 
 
-<!-- 		 <property name="jdbcUrl" value="jdbc:mysql://93.125.114.112:3311/logistdbNew5?serverTimezone=Europe/Moscow" /> -->
+<!-- 		 <property name="jdbcUrl" value="jdbc:mysql://93.125.114.112:3311/logistdbNew6?serverTimezone=Europe/Moscow" /> -->
 <!--          <property name="user" value="hdf" /> -->
 <!--          <property name="password" value="111403hdf" /> -->
         

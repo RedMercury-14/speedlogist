@@ -260,7 +260,7 @@ public class MainController {
 //		}
 		System.err.println("ТЕЛЕГРАММ БОТ ОТКЛЮЧЕН!");
 		
-		new BotInitializer(telegramBotRouting).initRoutingBot();
+//		new BotInitializer(telegramBotRouting).initRoutingBot();
 		
 		
 		try {
@@ -323,6 +323,11 @@ public class MainController {
 	@GetMapping("/main/analytics/logistics")
 	public String getAnalyticsLogistPage(Model model, HttpServletRequest request) {
 		return "analyticsLogist";
+	}
+	
+	@GetMapping("/main/analytics/zero")
+	public String getAnalyticsZeroPage(Model model, HttpServletRequest request) {
+		return "analyticsZero";
 	}
 	
 	@GetMapping("/main/procurement")

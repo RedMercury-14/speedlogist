@@ -272,9 +272,9 @@ public class KeyboardMaker {
             inlineKeyboardButton.setText(roundDouble(weight, 1) + " т.");
             inlineKeyboardButton.setCallbackData(roundDouble(weight, 1) + "_weight");
 
-            if(weight>maxWeight) {
-            	continue;
-            }
+//            if(weight > maxWeight) {
+//            	continue;
+//            }
             
             rowInline.add(inlineKeyboardButton);
 

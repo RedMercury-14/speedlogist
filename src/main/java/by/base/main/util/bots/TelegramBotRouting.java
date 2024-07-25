@@ -28,11 +28,6 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import by.base.main.controller.MainController;
 import by.base.main.model.Truck;
 import by.base.main.model.User;
-import io.github.dostonhamrakulov.CalendarBot;
-import io.github.dostonhamrakulov.DateTimeUtil;
-import io.github.dostonhamrakulov.InlineCalendarBuilder;
-import io.github.dostonhamrakulov.InlineCalendarCommandUtil;
-import io.github.dostonhamrakulov.LanguageEnum;
 
 @Component
 public class TelegramBotRouting extends TelegramLongPollingBot{
@@ -50,7 +45,7 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 	private List<Long> idAllUsers = new ArrayList<Long>(); // все подключенные к боту юзеры
 	private Map<Long, String> idAdmins = new HashMap<Long, String>(); // админы
 	
-	private static final InlineCalendarBuilder inlineCalendarBuilder = new InlineCalendarBuilder(LanguageEnum.RU);
+//	private static final InlineCalendarBuilder inlineCalendarBuilder = new InlineCalendarBuilder(LanguageEnum.RU);
 	private Map<Long, Integer> chatAndMessageIdMap = new HashMap<>();
 	
 	@Override
@@ -80,36 +75,36 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 			
 			long chatId = update.getCallbackQuery().getMessage().getChatId();
 			String data = update.getCallbackQuery().getData();
-			if(data.split("_")[0].equals("CAL")) {
-				System.err.println(1111);
-				Message message = update.getMessage();
-		        SendMessage sendMessage = new SendMessage();
-		        sendMessage.setChatId(message.getChatId());
-				EditMessageText editMessageText = new EditMessageText();
-		        editMessageText.setChatId(message.getChatId());
-		        editMessageText.setMessageId(chatAndMessageIdMap.get(message.getChatId()));
-
-		        if (InlineCalendarCommandUtil.isInlineCalendarClicked(update)) {
-		            if (InlineCalendarCommandUtil.isCalendarIgnoreButtonClicked(update)) {
-		                return;
-		            }
-
-		            if (InlineCalendarCommandUtil.isCalendarNavigationButtonClicked(update)) {
-		                editMessageText.setText("Selected date: ");
-		                editMessageText.setReplyMarkup(inlineCalendarBuilder.build(update));
-		                executeCommand(editMessageText);
-
-		                return;
-		            }
-
-		            LocalDate localDate = InlineCalendarCommandUtil.extractDate(update);
-		            sendMessage.setText("Selected date: " + DateTimeUtil.convertToString(localDate));
-		            executeCommand(sendMessage);
-		        }
-
-		        sendMessage.setText("Please, send /start command to the bot");
-		        executeCommand(sendMessage);
-			}
+//			if(data.split("_")[0].equals("CAL")) {
+//				System.err.println(1111);
+//				Message message = update.getMessage();
+//		        SendMessage sendMessage = new SendMessage();
+//		        sendMessage.setChatId(message.getChatId());
+//				EditMessageText editMessageText = new EditMessageText();
+//		        editMessageText.setChatId(message.getChatId());
+//		        editMessageText.setMessageId(chatAndMessageIdMap.get(message.getChatId()));
+//
+//		        if (InlineCalendarCommandUtil.isInlineCalendarClicked(update)) {
+//		            if (InlineCalendarCommandUtil.isCalendarIgnoreButtonClicked(update)) {
+//		                return;
+//		            }
+//
+//		            if (InlineCalendarCommandUtil.isCalendarNavigationButtonClicked(update)) {
+//		                editMessageText.setText("Selected date: ");
+//		                editMessageText.setReplyMarkup(inlineCalendarBuilder.build(update));
+//		                executeCommand(editMessageText);
+//
+//		                return;
+//		            }
+//
+//		            LocalDate localDate = InlineCalendarCommandUtil.extractDate(update);
+//		            sendMessage.setText("Selected date: " + DateTimeUtil.convertToString(localDate));
+//		            executeCommand(sendMessage);
+//		        }
+//
+//		        sendMessage.setText("Please, send /start command to the bot");
+//		        executeCommand(sendMessage);
+//			}
 			
 			User user = users.get(chatId);
 			switch (user.getStatus()) {
@@ -171,8 +166,27 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 				}
 				break;
 			case "/setweigth":
-				System.out.println("у ру ру ");
-				break;
+            	User userForTruck3 = users.get(chatId);
+            	Truck truckForWeigth = userForTruck3.getTrucksForBot(userForTruck3.getValidityPass());
+            	truckForWeigth.setCargoCapacity(data.split("_")[0]);
+            	userForTruck3.setStatus("/settype");
+            	userForTruck3.putTrucksForBot(userForTruck3.getValidityPass(), truckForWeigth);
+            	users.put(chatId, userForTruck3);
+            	
+            	long messageWeigth = update.getCallbackQuery().getMessage().getMessageId();
+				EditMessageText messageWeigthEdit = EditMessageText.builder()
+						.chatId(chatId)
+						.messageId(Math.toIntExact(messageWeigth))
+						.text("Вес принял. \nУкажите тип авто")
+						.replyMarkup(keyboardMaker.getTypeTruckKeyboard(truckForWeigth.getNumTruck()))
+						.build();   
+        		try {
+					execute(messageWeigthEdit);
+				} catch (TelegramApiException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+                break;
 			case "/proofTruck":
 				String numTruckProof = data.split("_")[0];
 				String answer = data.split("_")[1];
@@ -331,7 +345,7 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
                 	SendMessage sendMessage = new SendMessage();
                     sendMessage.setChatId(chatId);
                     sendMessage.setText("Выберите дату");
-                    sendMessage.setReplyMarkup(inlineCalendarBuilder.build(update));
+//                    sendMessage.setReplyMarkup(inlineCalendarBuilder.build(update));
                     Message message1 = executeCommand(sendMessage);
                     chatAndMessageIdMap.put(chatId, message1.getMessageId());
                     

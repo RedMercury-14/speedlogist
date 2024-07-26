@@ -256,36 +256,39 @@ public class KeyboardMaker {
 
         List<InlineKeyboardButton> rowInline = new ArrayList<>();
         
-        //создаём минимальное значение веса
+        // создаём минимальное значение веса
         InlineKeyboardButton inlineKeyboardButtonStart = new InlineKeyboardButton();
         inlineKeyboardButtonStart.setText(roundDouble(minWeight, 1) + " т.");
         inlineKeyboardButtonStart.setCallbackData(roundDouble(minWeight, 1) + "_weight");
         
         rowInline.add(inlineKeyboardButtonStart);
         
-        if(minWeight%2 != 0) {
-        	minWeight = minWeight-0.1;
+        if(minWeight % 2 != 0) {
+            minWeight = minWeight - 0.1;
         }
 
-        for (double weight = minWeight+step; weight <= maxWeight+0.2; weight += step) {
+        for (double weight = minWeight + step; weight < maxWeight; weight += step) {
             InlineKeyboardButton inlineKeyboardButton = new InlineKeyboardButton();
             inlineKeyboardButton.setText(roundDouble(weight, 1) + " т.");
             inlineKeyboardButton.setCallbackData(roundDouble(weight, 1) + "_weight");
-
-//            if(weight > maxWeight) {
-//            	continue;
-//            }
             
             rowInline.add(inlineKeyboardButton);
 
-            // If we have 3 buttons in a row, add the row to rowsInline and start a new row
+            // If we have 4 buttons in a row, add the row to rowsInline and start a new row
             if (rowInline.size() == 4) {
                 rowsInline.add(rowInline);
                 rowInline = new ArrayList<>();
             }
         }
 
-        // Add the last row if it has less than 3 buttons and is not empty
+        // Добавляем кнопку с максимальным значением веса, если она ещё не была добавлена
+        InlineKeyboardButton inlineKeyboardButtonEnd = new InlineKeyboardButton();
+        inlineKeyboardButtonEnd.setText(roundDouble(maxWeight, 1) + " т.");
+        inlineKeyboardButtonEnd.setCallbackData(roundDouble(maxWeight, 1) + "_weight");
+        
+        rowInline.add(inlineKeyboardButtonEnd);
+
+        // Add the last row if it has less than 4 buttons and is not empty
         if (!rowInline.isEmpty()) {
             rowsInline.add(rowInline);
         }

@@ -13,6 +13,8 @@
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/transportation.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/snackbar.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/bootstrap5overlay.css">
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/js/bootstrapSelect/bootstrapSelect.css">
+	<script src='${pageContext.request.contextPath}/resources/js/popper/popper.js'></script>
 </head>
 <body class="no-scroll">
 	<jsp:include page="headerNEW.jsp" />
@@ -22,7 +24,15 @@
 		</div>
 	</div>
 	<div class="container-fluid px-1" style="margin-top: 80px;">
-		<h1 class="mb-1 px-3">Текущие маршруты</h1>
+		<div class="d-flex justify-content-between">
+			<h1 class="my-1 px-3">Текущие маршруты</h1>
+			<!-- <div class="toggler-container d-flex align-items-end">
+				<label>
+					<span class="text-muted font-weight-bold">Поиск в списках</span>
+					<input class="toggler" id="searchInSelectToggler" type="checkbox"/>
+				</label>
+			</div> -->
+		</div>
 		<input type="hidden" value="<sec:authentication property="principal.username" />" id="login">
 		<input type="hidden" value='${user.companyName}' id="companyName">
 		<div class="form-group mb-0">
@@ -131,7 +141,26 @@
 								<div><span class="text-muted">Колличество точек: </span>${route.numPoint}</div>
 							</td>
 							<td class="text-center font-weight-bold">${route.dateUnloadPreviouslyStock} ${route.timeUnloadPreviouslyStock}</td>
-							<td class="text-center">${route.finishPrice} ${route.startCurrency}</td>
+							<td class="text-center">
+								<div>
+									${route.finishPrice} ${route.startCurrency}
+								</div>
+								<c:choose>
+									<c:when test="${route.way == 'Импорт'}">
+										<c:choose>
+											<c:when test="${route.driver == null}">
+												<div class="pt-1 text-danger">Укажите стоимость экспедиторских услуг:</div>
+												<input type="number" class="form-control mt-1" name="expeditionCost" id="expeditionCost" min="0" max="${route.finishPrice}">
+												<span>${route.startCurrency}</span>
+											</c:when>
+											<c:when test="${route.expeditionCost != null}">
+												<div class="pt-1">Стоимость экспедиторских услуг:</div>
+												<div class="pt-1">${route.expeditionCost} ${route.startCurrency}</div>
+											</c:when>
+										</c:choose>
+									</c:when>
+								</c:choose>
+							</td>
 							<td>
 								<input type="date" name="dateLoadActually" id="dateLoadActually" min="${route.dateLoadPreviously}" value="${route.dateLoadActually}" class="form-control" required="true">
 								<script type="text/javascript">
@@ -425,6 +454,8 @@
 	</div>
 	<jsp:include page="footer.jsp" />
 
+	<script src='${pageContext.request.contextPath}/resources/js/bootstrapSelect/bootstrapSelect.js'></script>
+	<script src='${pageContext.request.contextPath}/resources/js/bootstrapSelect/defaults-ru_RU.js'></script>
 	<script src='${pageContext.request.contextPath}/resources/js/transportation.js' type="module"></script>
 	<script src='${pageContext.request.contextPath}/resources/mainPage/js/nav-fixed-top.js'></script>
 	<script src="${pageContext.request.contextPath}/resources/js/myMessage.js" type="module"></script>

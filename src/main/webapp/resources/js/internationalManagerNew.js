@@ -677,7 +677,13 @@ function getFinishPriceToView(route) {
 	if (!route) return ''
 	const finishPrice = route.finishPrice ? route.finishPrice : ''
 	const currency = route.startCurrency ? route.startCurrency : ''
-	return `${finishPrice} ${currency}`
+	const expeditionCost = route.expeditionCost ? route.expeditionCost : ''
+
+	const res = expeditionCost
+		? `${finishPrice} ${currency} (${expeditionCost} ${currency})`
+		: `${finishPrice} ${currency}`
+
+	return res
 }
 function getEconomy(route) {
 	return ''

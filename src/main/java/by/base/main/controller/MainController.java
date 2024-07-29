@@ -260,7 +260,7 @@ public class MainController {
 //		}
 		System.err.println("ТЕЛЕГРАММ БОТ ОТКЛЮЧЕН!");
 		
-		new BotInitializer(telegramBotRouting).initRoutingBot();
+//		new BotInitializer(telegramBotRouting).initRoutingBot();
 		
 		
 		try {
@@ -1383,6 +1383,23 @@ public class MainController {
 		return "transportation";
 	}
 	
+	/**
+	 * Запись в route водителя машины, времени прибытия и экспедиторских услуг 
+	 * от перевозчика
+	 * @param model
+	 * @param request
+	 * @param session
+	 * @param idTruck
+	 * @param idDriver
+	 * @param idRoute
+	 * @param revers
+	 * @param dateLoad
+	 * @param dateUnload
+	 * @param timeUnload
+	 * @param timeLoad
+	 * @param expeditionCostStr
+	 * @return
+	 */
 	@RequestMapping("/main/carrier/transportation/update")
 	public String transportationUpdate(Model model, HttpServletRequest request, HttpSession session,
 			@RequestParam(value ="isTruck", required = false) Integer idTruck,
@@ -1392,7 +1409,9 @@ public class MainController {
 			@RequestParam(value = "dateLoadActually" , required = false) String dateLoad,
 			@RequestParam(value = "dateUnloadActually" , required = false) String dateUnload,
 			@RequestParam(value = "timeUnloadActually" , required = false) String timeUnload,
-			@RequestParam(value = "timeLoadActually" , required = false) String timeLoad) {	
+			@RequestParam(value = "timeLoadActually" , required = false) String timeLoad,
+			@RequestParam(value = "expeditionCost" , required = false) String expeditionCostStr) {	
+		Integer expeditionCost = expeditionCostStr != null ? Integer.parseInt(expeditionCostStr.trim()) : null;		
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 		DateTimeFormatter formatterTime = DateTimeFormatter.ofPattern("HH:mm");
 		if(timeUnload.length()>5) {
@@ -1404,6 +1423,11 @@ public class MainController {
 		route.setTimeUnloadActually(LocalTime.parse(timeUnload, formatterTime));
 		route.setDateLoadActually(LocalDate.parse(dateLoad, formatter));
 		route.setTimeLoadActually(LocalTime.parse(timeLoad, formatterTime));
+		
+		if(route.getWay().equals("Импорт")) {
+			route.setExpeditionCost(expeditionCost);
+		}
+		
 		if(revers != null) {
 //			route.setDriver(null);
 //			route.setTruck(null);

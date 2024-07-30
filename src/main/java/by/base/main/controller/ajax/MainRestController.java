@@ -421,7 +421,7 @@ public class MainRestController {
 	 * @return
 	 */
 	@GetMapping("/manager/getMarketOrder/{idMarket}")
-	public Map<String, Object> getMarketOrder(HttpServletRequest request, @PathVariable String idMarket) {
+	public Map<String, Object> getMarketOrder(HttpServletRequest request, @PathVariable String idMarket) {		
 		try {			
 			checkJWT(marketUrl);			
 		} catch (Exception e) {

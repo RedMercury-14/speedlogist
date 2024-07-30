@@ -46,8 +46,19 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.SessionAttribute;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.itextpdf.text.BaseColor;
+import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Element;
+import com.itextpdf.text.Font;
+import com.itextpdf.text.PageSize;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.Phrase;
+import com.itextpdf.text.pdf.ColumnText;
+import com.itextpdf.text.pdf.PdfContentByte;
+import com.itextpdf.text.pdf.PdfGState;
 import com.itextpdf.text.pdf.PdfStructTreeController.returnType;
+import com.itextpdf.text.pdf.PdfWriter;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 import by.base.main.controller.ajax.MainRestController;
 import by.base.main.model.Act;
@@ -1657,20 +1668,33 @@ public class MainController {
 //		poiExcel.getActOfRoute(routes, request, isNDS, dateContract, numContractTarget, user.getDirector(), city, requisitesCarrier, dateOfAct);
 		
 		//test остановился тут, тут залочены акты
-		int numPage = pdfWriter.getActOfRoute(routesForOrders, request, isNDS, dateContract, numContractTarget, user.getDirector(), city, requisitesCarrier, dateOfAct, 0);
-		if(numPage != 1) {
-			numPage = pdfWriter.getActOfRoute(routesForOrders, request, isNDS, dateContract, numContractTarget, user.getDirector(), city, requisitesCarrier, dateOfAct, numPage);
+		int numPage = 0;
+		if(routesForOrders.get(0).getExpeditionCost() != null) {
+			numPage = pdfWriter.getActOfRouteExpedition(routesForOrders, request, isNDS, dateContract, numContractTarget, user.getDirector(), city, requisitesCarrier, dateOfAct, 0);
+			if(numPage != 1) {
+				numPage = pdfWriter.getActOfRouteExpedition(routesForOrders, request, isNDS, dateContract, numContractTarget, user.getDirector(), city, requisitesCarrier, dateOfAct, numPage);
+			}
+		}else {
+			numPage = pdfWriter.getActOfRoute(routesForOrders, request, isNDS, dateContract, numContractTarget, user.getDirector(), city, requisitesCarrier, dateOfAct, 0);
+			if(numPage != 1) {
+				numPage = pdfWriter.getActOfRoute(routesForOrders, request, isNDS, dateContract, numContractTarget, user.getDirector(), city, requisitesCarrier, dateOfAct, numPage);
+			}
 		}
+		
+		
+		
+		
 		if(numPage>2) {
 			//тут сгенерить ошибку
 			return null;
 		}else {
 			//тут меняем статусы
-			for (int i =0; i<routes.size(); i++) {
-				Route route = routes.get(i);
-				route.setStatusRoute("6"); 
-				routeService.saveOrUpdateRoute(route);
-			}
+//			for (int i =0; i<routes.size(); i++) {
+//				Route route = routes.get(i);
+//				route.setStatusRoute("6"); 
+//				routeService.saveOrUpdateRoute(route);
+//			}
+			//ТУТ НЕ ЗАБЫТЬ РАЗБЛОКИРОВАТЬ
 		}
 
 		String appPath = request.getServletContext().getRealPath("");
@@ -1681,7 +1705,7 @@ public class MainController {
 		session.removeAttribute("datesUnload");
 		mailService.sendEmailWhithFileToUser(request, "Акт от перевозчика "+user.getCompanyName(), "", file, "apanaschiko@dobronom.by");
 		FileInputStream in = null;
-		OutputStream out = null;
+		OutputStream out = null;	
 		try {
 			
 			// Прочтите файл, который нужно загрузить, и сохраните его во входном потоке файла
@@ -1715,6 +1739,7 @@ public class MainController {
 		}
 		return "redirect:/main/carrier/transportation/routecontrole";
 	}
+	
 	
 	@RequestMapping("/main/carrier/downdoad")
 	public String downdoadGet(HttpServletRequest request, HttpServletResponse response) throws IOException {

@@ -148,9 +148,9 @@
 								<c:choose>
 									<c:when test="${route.way == 'Импорт'}">
 										<c:choose>
-											<c:when test="${route.driver == null}">
+											<c:when test="${route.expeditionCost == null}">
 												<div class="pt-1 text-danger">Укажите стоимость экспедиторских услуг:</div>
-												<input type="number" class="form-control mt-1" name="expeditionCost" id="expeditionCost" min="0" max="${route.finishPrice}">
+												<input type="number" class="form-control mt-1" name="expeditionCost" id="expeditionCost" min="0" max="${route.finishPrice}" required>
 												<span>${route.startCurrency}</span>
 											</c:when>
 											<c:when test="${route.expeditionCost != null}">
@@ -454,6 +454,7 @@
 	</div>
 	<jsp:include page="footer.jsp" />
 
+	<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 	<script src='${pageContext.request.contextPath}/resources/js/bootstrapSelect/bootstrapSelect.js'></script>
 	<script src='${pageContext.request.contextPath}/resources/js/bootstrapSelect/defaults-ru_RU.js'></script>
 	<script src='${pageContext.request.contextPath}/resources/js/transportation.js' type="module"></script>

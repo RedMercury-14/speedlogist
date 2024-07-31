@@ -1423,6 +1423,7 @@ public class MainController {
 			@RequestParam(value = "timeLoadActually" , required = false) String timeLoad,
 			@RequestParam(value = "expeditionCost" , required = false) String expeditionCostStr) {	
 		Integer expeditionCost = expeditionCostStr != null ? Integer.parseInt(expeditionCostStr.trim()) : null;		
+	
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 		DateTimeFormatter formatterTime = DateTimeFormatter.ofPattern("HH:mm");
 		if(timeUnload.length()>5) {
@@ -1435,7 +1436,7 @@ public class MainController {
 		route.setDateLoadActually(LocalDate.parse(dateLoad, formatter));
 		route.setTimeLoadActually(LocalTime.parse(timeLoad, formatterTime));
 		
-		if(route.getWay().equals("Импорт")) {
+		if(route.getWay().equals("Импорт") && route.getExpeditionCost() == null) {
 			route.setExpeditionCost(expeditionCost);
 		}
 		
@@ -1689,12 +1690,11 @@ public class MainController {
 			return null;
 		}else {
 			//тут меняем статусы
-//			for (int i =0; i<routes.size(); i++) {
-//				Route route = routes.get(i);
-//				route.setStatusRoute("6"); 
-//				routeService.saveOrUpdateRoute(route);
-//			}
-			//ТУТ НЕ ЗАБЫТЬ РАЗБЛОКИРОВАТЬ
+			for (int i =0; i<routes.size(); i++) {
+				Route route = routes.get(i);
+				route.setStatusRoute("6"); 
+				routeService.saveOrUpdateRoute(route);
+			}			
 		}
 
 		String appPath = request.getServletContext().getRealPath("");

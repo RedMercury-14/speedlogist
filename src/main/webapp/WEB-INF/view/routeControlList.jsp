@@ -91,8 +91,8 @@
 		<input class="btn btn-primary mb-3" type="submit" value="Сформировать отчёт" form="getformact">
 		<form method="get" action="routecontrole/getformact" id="getformact">
 			<div class="mb-2" id="myForm">
-				<label>С НДС <input type="radio" name="isNDS" value="${true}" required></label>
-				<label style="padding-left: 50px">Без НДС <input type="radio" name="isNDS" value="${false}" required></label>
+				<label>С НДС <input class="withNDS" type="radio" name="isNDS" value="${true}" required></label>
+				<label style="padding-left: 50px">Без НДС <input class="withoutNDS" type="radio" name="isNDS" value="${false}" required></label>
 			</div>
 			<div class="table-scroll">
 				<table class="table table-bordered border-primary table-hover table-condensed"id="sort">
@@ -117,9 +117,28 @@
 					</thead>
 					<c:forEach var="route" items="${routes}">
 						<%-- <input type="hidden" value="${route.idRoute}" name="id" /> --%>
-						<tr>
+						<tr class="route" data-way="${route.way}">
 							<td class="none" id="routeDirection">${route.routeDirection}</td>
-							<td><input type="checkbox" name="targetAct" value="${route.idRoute}" class="qwe" /></td>
+							<td>
+								<c:choose>
+									<c:when test="${route.expeditionCost != null && route.expeditionCost != 0}">
+										<input type="checkbox"
+											name="targetAct"
+											value="${route.idRoute}"
+											class="qwe expeditionRouteCheckbox"
+											data-way="${route.way}"
+										/>
+									</c:when>
+									<c:otherwise>
+										<input type="checkbox"
+											name="targetAct"
+											value="${route.idRoute}"
+											class="qwe defaultRouteCheckbox"
+											data-way="${route.way}"
+										/>
+									</c:otherwise>
+								</c:choose>
+							</td>
 							<td>${route.routeDirection}</td>
 							<td><input type="date" name="dateUnload" disabled="disabled" id="${route.idRoute}" required></td>
 							<td class="none" id="idTarget">${route.idRoute}</td>
@@ -133,7 +152,16 @@
 							<td>${route.temperature}</td>
 							<td>${route.totalLoadPall}</td>
 							<td>${route.totalCargoWeight}</td>
-							<td>${route.finishPrice} ${route.startCurrency}</td>
+							<td>
+								${route.finishPrice} ${route.startCurrency}
+								<c:choose>
+									<c:when test="${route.expeditionCost != null && route.expeditionCost != 0}">
+										<div class="expeditionCost">
+											Из них экспедиторские услуги: ${route.expeditionCost} ${route.startCurrency}
+										</div>
+									</c:when>
+								</c:choose>
+							</td>
 							<td>${route.numPoint}</td>
 						</tr>
 					</c:forEach>

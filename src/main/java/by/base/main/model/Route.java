@@ -157,6 +157,9 @@ public class Route implements Serializable{
 	@Column(name="way")
 	private String way;
 	
+	@Column(name="expedition_cost")
+	private Integer expeditionCost;
+	
 	@Column(name = "load_number")
 	private String loadNumber;
 	
@@ -281,6 +284,8 @@ public class Route implements Serializable{
 	private String cargoWeightForAct;
 	
 	
+
+
 	/**
 	 * форматер для простого отображения дат во view
 	 */
@@ -329,6 +334,14 @@ public class Route implements Serializable{
 
 	public Date getOnloadWindowDate() {
 		return onloadWindowDate;
+	}
+	
+	public Integer getExpeditionCost() {
+		return expeditionCost;
+	}
+
+	public void setExpeditionCost(Integer expeditionCost) {
+		this.expeditionCost = expeditionCost;
 	}
 
 	public void setOnloadWindowDate(Date onloadWindowDate) {

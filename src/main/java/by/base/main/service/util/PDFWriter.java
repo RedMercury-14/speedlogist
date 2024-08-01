@@ -2,6 +2,7 @@ package by.base.main.service.util;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -13,6 +14,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Element;
@@ -25,10 +27,14 @@ import com.itextpdf.text.Phrase;
 import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.pdf.BarcodeQRCode;
 import com.itextpdf.text.pdf.BaseFont;
+import com.itextpdf.text.pdf.ColumnText;
 import com.itextpdf.text.pdf.GrayColor;
 import com.itextpdf.text.pdf.PdfContentByte;
+import com.itextpdf.text.pdf.PdfGState;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfReader;
+import com.itextpdf.text.pdf.PdfStamper;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.text.pdf.PdfStructTreeController.returnType;
 
@@ -203,6 +209,9 @@ public class PDFWriter {
 	        	return pdfWriter.getPageNumber();
 	        }
 			
+	        //создаём сводную строку "Услуги экспедитора"
+	        
+	        
 			//создём сводную строку
 			float [] pointColumnWidthsBottomNDS = {2070F, 175F, 175F, 180F, 180F};
 			float [] pointColumnWidthsBottom = {2070F, 175F, 180F, 180F};
@@ -700,6 +709,234 @@ public class PDFWriter {
 		return 1;
 	}
 	
+	/**
+	 *	Метод отвечает за формирование акта <b>для экспедиций импорт</b> в формате PDF
+	 * <br>Возвращает колличество листов, занимаемым документом.
+	 * <br>Логика такая: про первичном формировании акта, метод проверяет сколько листов занимает акт.
+	 * <br>Если занимает один лист - акт выплёвывается.
+	 * <br>Если занимает больше - метод перестраивается одностительно колличества листов в акте. 
+	 * <br>Важно то, что колличество листов передаётся в метод, т.е. оно берется за основу этого метода.
+	 * <br><b>Важно: первый раз в свойства метода вписывается 0 (нуль)<b>
+	 * @param routes
+	 * @param request
+	 * @param isNDS
+	 * @param dateContract
+	 * @param numContractTarget
+	 * @param sheffName
+	 * @param city
+	 * @param requisitesCarrier
+	 * @param dateOfAct
+	 * @param numPage
+	 * @return
+	 * @throws DocumentException
+	 * @throws FileNotFoundException
+	 */
+	public int getActOfRouteExpedition(List<Route> routes, HttpServletRequest request, boolean isNDS, String dateContract,
+			String numContractTarget, String sheffName, String city, String requisitesCarrier, String dateOfAct, int numPage) throws DocumentException, FileNotFoundException {
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+		DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
+		//загружаем шрифты
+		String path = request.getServletContext().getRealPath("");
+		com.itextpdf.text.Font fontMainHeader = FontFactory.getFont(path + "resources/others/fonts/DejaVuSans-Bold.ttf", "cp1251", BaseFont.EMBEDDED, 8);
+		com.itextpdf.text.Font fontMainText = FontFactory.getFont(path + "resources/others/fonts/DejaVuSans.ttf", "cp1251", BaseFont.EMBEDDED, 6);
+		com.itextpdf.text.Font fontForRequisitesBolt = FontFactory.getFont(path + "resources/others/fonts/DejaVuSans-Bold.ttf", "cp1251", BaseFont.EMBEDDED, 5);
+		com.itextpdf.text.Font fontMainTextBold = FontFactory.getFont(path + "resources/others/fonts/DejaVuSans-Bold.ttf", "cp1251", BaseFont.EMBEDDED, 6);
+//		com.itextpdf.text.Font fontWatermark = new Font(Font.FontFamily.HELVETICA, 34, Font.BOLD, new GrayColor(0.5f));
+		System.err.println(path+"resources/others/");
+		
+		Document document = new Document();
+        document.setPageSize(PageSize.A4.rotate()); // поворачиваем на альбомную ориентацию		
+        
+        
+        String fileName = routes.get(0).getUser().getCompanyName();
+        PdfWriter pdfWriter = PdfWriter.getInstance(document, new FileOutputStream(path+"resources/others/"+fileName+".pdf"));		        
+        document.open(); 
+        
+        //формируем текс шапки
+        //Первая строка "Акт №5111551"
+        Paragraph p1 = null;
+        String numAct;
+        if (routes.size() == 1) {
+        	p1 = new Paragraph("Акт № "+routes.get(0).getIdRoute(),fontMainHeader);
+			numAct = routes.get(0).getIdRoute().toString().trim();
+		} else {
+			p1 = new Paragraph("Акт № T"+routes.get(0).getIdRoute(),fontMainHeader);
+			numAct = "T" + routes.get(0).getIdRoute();
+		}
+        p1.setSpacingBefore(-30f);
+        p1.setAlignment(Element.ALIGN_CENTER);
+        document.add(p1);
+        
+        Paragraph p2 = new Paragraph("сдачи-приемки выполненных работ на оказание транспортных услуг",fontMainHeader);
+        p2.setAlignment(Element.ALIGN_CENTER);
+        document.add(p2);
+        
+        //третья строка шапки с городом и датой
+        Paragraph p3 = new Paragraph(dateOfAct+", г. "+city, fontMainHeader);
+        p3.setAlignment(Element.ALIGN_LEFT);
+        p3.setSpacingAfter(10f);
+        document.add(p3);
+        
+        Paragraph p4 = new Paragraph("       Мы, нижеподписавшиеся: представитель Перевозчика "
+        		+ routes.get(0).getUser().getCompanyName()
+        		+ ", в лице директора " + sheffName
+        		+ " действующего на основании Устава одной стороны, и представитель Заказчика  ЗАО «Доброном» в лице заместителя генерального директора по логистике Якубова Евгения Владимировича, действующего на основании доверенности № 8 от 20.12.2023 года, с другой стороны, составили настоящий акт о том, что услуги, оказанные на основании договора перевозки №"
+        		+ numContractTarget + " от " + dateContract
+        		+ " выполнены в полном объеме и стороны претензий друг к другу не имеют", fontMainText);
+        p4.setSpacingAfter(10f);
+        document.add(p4);
+        
+        //создаём таблицу, заполняем шапку таблицы       
+        
+        
+        float [] pointColumnWidths = {180F, 180f, 150F, 600F, 190F, 180F, 450F, 140F, 175F, 180F, 180F}; //рa-ры колонок БЕЗ НДС
+        PdfPTable table = null;
+        table = new PdfPTable(pointColumnWidths);
+         
+        table.setTotalWidth(780f); // общий размер таблицы
+        table.setLockedWidth(true); // запрет изменения общего ра-ра табл.
+        table.addCell(new PdfPCell(new Phrase("Дата загрузки", fontMainTextBold)));
+        table.addCell(new PdfPCell(new Phrase("Дата выгрузки", fontMainTextBold)));
+        table.addCell(new PdfPCell(new Phrase("№ Рейса", fontMainTextBold)));
+//        table.addCell(new PdfPCell(new Phrase("Маршрут", fontMainText)));
+        PdfPCell routeCellHeader = new PdfPCell(new Phrase("Маршрут", fontMainTextBold));
+        routeCellHeader.setHorizontalAlignment(Element.ALIGN_CENTER);
+        table.addCell(routeCellHeader);
+        table.addCell(new PdfPCell(new Phrase("№ ТС", fontMainTextBold)));
+        table.addCell(new PdfPCell(new Phrase("№ Путевого листа", fontMainTextBold)));
+        table.addCell(new PdfPCell(new Phrase("№ ТТН/CMR", fontMainTextBold)));
+        table.addCell(new PdfPCell(new Phrase("Объем Груза (тонн)", fontMainTextBold)));
+        table.addCell(new PdfPCell(new Phrase("Сумма", fontMainTextBold)));        
+        table.addCell(new PdfPCell(new Phrase("Ставка НДС, 0%", fontMainTextBold)));
+        table.addCell(new PdfPCell(new Phrase("Сумма без НДС", fontMainTextBold)));
+        
+        double cost = 0.0;
+		double nds = 0.0;
+		double way = 0.0;
+		double expeditionCost = 0.0;
+		double costAndNdsValue = 0.0;
+		String currency = routes.get(0).getStartCurrency();
+		for (Route route : routes) {
+			table.addCell(new PdfPCell(new Phrase(route.getDateLoadPreviously().format(formatter), fontMainText)));
+	        table.addCell(new PdfPCell(new Phrase(route.getDateUnload(), fontMainText)));
+	        table.addCell(new PdfPCell(new Phrase(route.getIdRoute().toString(), fontMainText)));
+	        table.addCell(new PdfPCell(new Phrase(route.getRouteDirection(), fontMainText)));
+	        if(route.getNumTruckAndTrailer() != null) {
+	        	table.addCell(new PdfPCell(new Phrase(route.getNumTruckAndTrailer(), fontMainText)));
+	        }else {
+	        	table.addCell(new PdfPCell(new Phrase(route.getTruck().getNumTruck() + "/" + route.getTruck().getNumTrailer(), fontMainText)));
+	        }
+	        table.addCell(new PdfPCell(new Phrase(route.getNumWayList(), fontMainText)));
+	        table.addCell(new PdfPCell(new Phrase(route.getCmr(), fontMainText)));
+	        table.addCell(new PdfPCell(new Phrase(route.getCargoWeightForAct(), fontMainText)));
+	        cost = cost + route.getFinishPrice();
+	        expeditionCost = expeditionCost + Double.parseDouble(route.getExpeditionCost().toString());
+	        Integer price = route.getFinishPrice() - route.getExpeditionCost();
+	        table.addCell(new PdfPCell(new Phrase(price.toString(), fontMainText))); // финальная цена
+	        double totalNDS = 0.0;
+			way = way + Double.parseDouble(route.getCostWay());
+			nds = nds + totalNDS; 
+        	table.addCell(new PdfPCell(new Phrase("0.0%", fontMainText)));
+        	costAndNdsValue = costAndNdsValue + route.getFinishPrice() + totalNDS
+					+ Double.parseDouble(route.getCostWay());
+        	Double costAndNDS = route.getFinishPrice() + roundВouble(totalNDS, 2)+ roundВouble(Double.parseDouble(route.getCostWay()), 2);
+	        table.addCell(new PdfPCell(new Phrase(price.toString(), fontMainText)));
+		}
+		document.add(table);
+		
+		//тут идёт проверка, а не занимает ли акт, с реквизитами больше одного листа
+        if(pdfWriter.getPageNumber() > 1) {
+        	return pdfWriter.getPageNumber();
+        }
+		
+		float [] pointColumnWidthsBottom = {2070F, 175F, 180F, 180F};
+		
+		//создаём сводную строку "Услуги экспедитора"
+		PdfPTable tableExpedition = null;
+		tableExpedition = new PdfPTable(pointColumnWidthsBottom);
+		tableExpedition.setTotalWidth(780f);
+		tableExpedition.setLockedWidth(true);
+		tableExpedition.addCell(new PdfPCell(new Phrase("Услуги экспедитора:", fontMainTextBold)));
+		tableExpedition.addCell(new PdfPCell(new Phrase(roundВouble(expeditionCost, 2)+"", fontMainTextBold))); // остановился тут
+       
+		tableExpedition.addCell(new PdfPCell(new Phrase(roundВouble(0.0, 2)+"%", fontMainTextBold)));
+    	tableExpedition.addCell(new PdfPCell(new Phrase(roundВouble(expeditionCost, 2)+"", fontMainTextBold)));
+    	
+        document.add(tableExpedition);
+        
+		//создём сводную строку
+		PdfPTable tableBottom = null;
+		tableBottom = new PdfPTable(pointColumnWidthsBottom);
+        tableBottom.setTotalWidth(780f);
+        tableBottom.setLockedWidth(true);
+        tableBottom.addCell(new PdfPCell(new Phrase("Итого:", fontMainTextBold)));
+        tableBottom.addCell(new PdfPCell(new Phrase(roundВouble(cost, 2)+"", fontMainTextBold)));
+        tableBottom.addCell(new PdfPCell(new Phrase(roundВouble(0.0, 2)+"%", fontMainTextBold)));
+        tableBottom.addCell(new PdfPCell(new Phrase(roundВouble(cost, 2)+"", fontMainTextBold)));       
+        document.add(tableBottom);
+        
+        //создаём тескт под таблицей
+        double allCost = 0.0;
+        allCost = roundВouble(cost, 2) + roundВouble(nds, 2) + roundВouble(way, 2);
+    	Paragraph p8 = new Paragraph("Всего оказано услуг на сумму без НДС: " + new FwMoney(roundВouble(allCost, 2), routes.get(0).getStartCurrency()).num2str(), fontMainText);
+        p8.setSpacingBefore(10f);
+        document.add(p8);
+        allCost = roundВouble(cost, 2) + roundВouble(nds, 2) + roundВouble(way, 2);
+        
+        Paragraph infoText = new Paragraph("Настоящий акт составлен в двух экземплярах,  служит основанием для проведения расчетов Заказчика и Перевозчика и является одновременно протоколом согласования стоимости транспортных услуг.", fontMainText);
+        p8.setSpacingBefore(10f);
+        document.add(infoText);
+        
+      //вставляем QR код справа, где пока что номер акта и зашифрованная итоговая цена
+        int minValue = 1;
+		int maxValue = 10000000;
+		int randomValue = minValue + (int) (Math.random() * (maxValue - minValue + 1));
+        String QRBody = numAct+randomValue;
+        BarcodeQRCode qrcode = new BarcodeQRCode(QRBody, 1, 1, null);
+        Image qrcodeImage = qrcode.getImage();
+        qrcodeImage.setAbsolutePosition(750, 515);
+        qrcodeImage.setSpacingAfter(10f);
+        qrcodeImage.scalePercent(100);	
+        document.add(qrcodeImage);
+        
+        // вставляем футер
+        addFooterHasAct(document, fontForRequisitesBolt, requisitesCarrier, sheffName, routes.get(0));
+        
+        //тут идёт проверка, а не занимает ли акт, с реквизитами больше одного листа
+        if(pdfWriter.getPageNumber() > 1) {
+        	return pdfWriter.getPageNumber();
+        }		       
+        
+        document.addTitle("Акт выполненных работ");
+        document.addKeywords("Java, PDF, iText");
+        document.addCreator("SpeedLogist");
+        document.addAuthor("Expedition");
+              
+        
+        System.out.println(pdfWriter.getPageNumber() + " - getPageNumber()");
+        System.out.println("======================");
+        document.close();    
+        
+        	        
+        Act act = new Act();
+		act.setNumAct(numAct);
+		act.setSecretCode(QRBody);
+		String idRoutes = "";
+		for (Route route : routes) {
+			idRoutes = idRoutes + route.getIdRoute().toString().trim() + ";";
+		}
+		act.setIdRoutes(idRoutes);
+		act.setFinalCost(cost + way);
+		act.setNds(nds);
+		act.setStatus("1");
+		act.setCurrency(currency);
+		act.setDate(LocalDate.now());
+		act.setTime(LocalDateTime.now().format(formatter2).toString());
+		actService.saveOrUpdateAct(act);
+        return 1;
+	}
+	
+
 	
 	/**
 	 * метод вставляет реквизиты в акт

@@ -32,6 +32,9 @@ window.onload = function() {
 
 	for (let i = 0; i < truckSelects.length; i++) {
 		const truckSelect = truckSelects[i]
+
+		addSearchInSelectOptions(truckSelect)
+
 		truckSelect.addEventListener('change', function(e) {
 			if (this.value === 'addTruck') {
 				targetTruckSelect = truckSelect
@@ -41,6 +44,9 @@ window.onload = function() {
 	}
 	for (let i = 0; i < driverSelects.length; i++) {
 		const driverSelect = driverSelects[i]
+
+		addSearchInSelectOptions(driverSelect)
+
 		driverSelect.addEventListener('change', function(e) {
 			if (this.value === 'addDriver') {
 				targetDriverSelect = driverSelect
@@ -113,6 +119,32 @@ for (let i = 1; i < rows.length; i++) {
 		})
 
 	}
+}
+
+// поиск в списке селекта
+function addSearchInSelectOptions(select) {
+	const container = select.parentElement
+	const input = container.querySelector('#searchInOptions')
+	if (!input) return
+	const searchItems = select.querySelectorAll('option')
+
+	input.addEventListener('input', function (e) {
+		const target = e.target
+		const val = target.value.trim().toUpperCase()
+		const fragment = document.createDocumentFragment()
+
+		if (!target.classList.contains('keyboard__key')) return
+
+		for (const elem of searchItems) {
+			elem.remove()
+
+			if (val === '' || elem.textContent.toUpperCase().includes(val)) {
+				fragment.append(elem)
+			}
+		}
+
+		select.append(fragment)
+	})
 }
 
 function sendStatus(text, idRoute) {

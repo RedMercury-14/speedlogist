@@ -22,7 +22,9 @@
 		</div>
 	</div>
 	<div class="container-fluid px-1" style="margin-top: 80px;">
-		<h1 class="mb-1 px-3">Текущие маршруты</h1>
+		<div class="d-flex justify-content-between">
+			<h1 class="my-1 px-3">Текущие маршруты</h1>
+		</div>
 		<input type="hidden" value="<sec:authentication property="principal.username" />" id="login">
 		<input type="hidden" value='${user.companyName}' id="companyName">
 		<div class="form-group mb-0">
@@ -71,7 +73,8 @@
 										</c:choose>
 									</c:when>
 									<c:otherwise>
-										<select id="isTruck" name="isTruck" class="form-control" required>
+										<input id="searchInOptions" class="keyboard__key w-100 px-2" placeholder="Поиск в списке">
+										<select id="isTruck" name="isTruck" class="form-control isTruck" required>
 											<option></option>
 											<option value="addTruck">+ Добавить машину</option>
 											<c:forEach var="truck" items="${trucks}">
@@ -96,7 +99,8 @@
 										${route.driver.surname} ${route.driver.name}
 									</c:when>
 									<c:otherwise>
-										<select id="isDriver" name="isDriver" class="form-control" required>
+										<input id="searchInOptions" class="keyboard__key w-100 px-2" placeholder="Поиск в списке">
+										<select id="isDriver" name="isDriver" class="form-control isDriver" required>
 											<option></option>
 											<option value="addDriver">+ Добавить водителя</option>
 											<c:forEach var="driver" items="${drivers}">
@@ -131,7 +135,30 @@
 								<div><span class="text-muted">Колличество точек: </span>${route.numPoint}</div>
 							</td>
 							<td class="text-center font-weight-bold">${route.dateUnloadPreviouslyStock} ${route.timeUnloadPreviouslyStock}</td>
-							<td class="text-center">${route.finishPrice} ${route.startCurrency}</td>
+							<td class="text-center">
+								<div>
+									${route.finishPrice} ${route.startCurrency}
+								</div>
+								<c:choose>
+									<c:when test="${route.way == 'Импорт'}">
+										<c:choose>
+											<c:when test="${route.expeditionCost == null}">
+												<c:choose>
+													<c:when test="${route.driver == null}">
+														<div class="pt-1 text-danger">Укажите стоимость экспедиторских услуг:</div>
+														<input type="number" class="form-control mt-1" name="expeditionCost" id="expeditionCost" min="0" max="${route.finishPrice}" required>
+														<span>${route.startCurrency}</span>
+													</c:when>
+												</c:choose>
+											</c:when>
+											<c:when test="${route.expeditionCost != null}">
+												<div class="pt-1">Стоимость экспедиторских услуг:</div>
+												<div class="pt-1">${route.expeditionCost} ${route.startCurrency}</div>
+											</c:when>
+										</c:choose>
+									</c:when>
+								</c:choose>
+							</td>
 							<td>
 								<input type="date" name="dateLoadActually" id="dateLoadActually" min="${route.dateLoadPreviously}" value="${route.dateLoadActually}" class="form-control" required="true">
 								<script type="text/javascript">

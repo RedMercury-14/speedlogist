@@ -421,7 +421,7 @@ public class MainRestController {
 	 * @return
 	 */
 	@GetMapping("/manager/getMarketOrder/{idMarket}")
-	public Map<String, Object> getMarketOrder(HttpServletRequest request, @PathVariable String idMarket) {
+	public Map<String, Object> getMarketOrder(HttpServletRequest request, @PathVariable String idMarket) {		
 		try {			
 			checkJWT(marketUrl);			
 		} catch (Exception e) {
@@ -1856,7 +1856,10 @@ public class MainRestController {
 			text = text + "Водитель: " + r.getDriver().getSurname() + " " + r.getDriver().getName() + " " + r.getDriver().getPatronymic()+"\n";
 			text = text + "Телефон: " + r.getDriver().getTelephone()+"\n";
 			text = text + "Паспортные данные водителя: " +r.getDriver().getNumPass() + "; водительское удостоверение:" + r.getDriver().getNumDriverCard() +"\n";
-			text = text + "Цена за перевозку составила: " +r.getFinishPrice() + " " + r.getStartCurrency() +"\n";			
+			if(r.getExpeditionCost() != null) {
+				text = text + "Экспедиторские услуги составили: " + r.getExpeditionCost() + " " + r.getStartCurrency() + "\n";
+			}
+			text = text + "Итоговая цена за перевозку составила: " +r.getFinishPrice() + " " + r.getStartCurrency() +"\n";	
 			text = text + "Дата подачи машины на загрузку: " +r.getDateLoadActually().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + " в " + r.getTimeLoadActually().format(DateTimeFormatter.ofPattern("HH:mm")) +"\n";			
 			text = text + "Дата подачи машины на выгрузку: " +r.getDateUnloadActually().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + " в " + r.getTimeUnloadActually().format(DateTimeFormatter.ofPattern("HH:mm")) +"\n";	
 		}

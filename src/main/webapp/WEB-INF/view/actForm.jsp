@@ -49,6 +49,12 @@
 			max-width: 320px;
 			display: inline-block;
 		}
+		thead tr {
+			font-weight: bold;
+		}
+		.table-bordered .whiteBorderRight {
+			border-right-color: #fff;
+		}
 		@media (max-width: 1534px) {
 			.table-scroll {
 				overflow-x: scroll;
@@ -112,7 +118,7 @@
 						<tr>
 							<th>Дата загрузки</th>
 							<th>Дата выгрузки</th>
-							<th>Номер рейса</th>
+							<th>№ рейса</th>
 							<th>Маршрут</th>
 							<th>№ ТС</th>
 							<th>№ Путевого листа</th>
@@ -120,7 +126,16 @@
 							<th>Объем Груза (тонн)</th>
 							<th>Сумма без НДС</th>
 							<th>Сумма НДС</th>
-							<th>Платные дороги</th>
+							<c:forEach var="route" items="${routes}" end="0">
+								<c:choose>
+									<c:when test="${route.way == 'Импорт'}">
+										<th class="p-0"></th>
+									</c:when>
+									<c:otherwise>
+										<th>Платные дороги</th>
+									</c:otherwise>
+								</c:choose>
+							</c:forEach>
 							<th>Сумма c НДС</th>
 						</tr>
 					</thead>
@@ -165,32 +180,108 @@
 									style="width: 155px;"
 									required>
 							</td>
-							<td>${route.finishPrice} ${route.startCurrency}</td>
+							<c:choose>
+								<c:when test="${route.expeditionCost != null && route.expeditionCost != 0}">
+									<td>${route.finishPrice - route.expeditionCost} ${route.startCurrency}</td>
+								</c:when>
+								<c:otherwise>
+									<td>${route.finishPrice} ${route.startCurrency}</td>
+								</c:otherwise>
+							</c:choose>
 							<c:choose>
 								<c:when test="${isNDS}">
 									<td>${route.nds} ${route.startCurrency}</td>
-									<td>
-										<input type="text" name="costWay" placeholder="платные дороги"
-											value="0"
-											onkeyup="this.value = this.value.replace(/[A-Za-zА-Яа-яЁё,]/g,'.');"
-											style="width: 100px;"
-											required>
-									</td>
+									<c:choose>
+										<c:when test="${route.way == 'Импорт'}">
+											<td class="p-0">
+												<input type="hidden" name="costWay" placeholder="платные дороги"
+													value="0"
+													onkeyup="this.value = this.value.replace(/[A-Za-zА-Яа-яЁё,]/g,'.');"
+													style="width: 100px;"
+													required>
+											</td>
+										</c:when>
+										<c:otherwise>
+											<td>
+												<input type="text" name="costWay" placeholder="платные дороги"
+													value="0"
+													onkeyup="this.value = this.value.replace(/[A-Za-zА-Яа-яЁё,]/g,'.');"
+													style="width: 100px;"
+													required>
+											</td>
+										</c:otherwise>
+									</c:choose>
 									<td>${route.finishPrice + route.nds} ${route.startCurrency}</td>
 								</c:when>
 								<c:otherwise>
 									<td>0</td>
-									<td>
-										<input type="text" name="costWay" placeholder="платные дороги"
-											value="0"
-											onkeyup="this.value = this.value.replace(/[A-Za-zА-Яа-яЁё,]/g,'.');"
-											style="width: 100px;"
-											required>
-									</td>
-									<td>${route.finishPrice} ${route.startCurrency}</td>
+									<c:choose>
+										<c:when test="${route.way == 'Импорт'}">
+											<td class="p-0">
+												<input type="hidden" name="costWay" placeholder="платные дороги"
+													value="0"
+													onkeyup="this.value = this.value.replace(/[A-Za-zА-Яа-яЁё,]/g,'.');"
+													style="width: 100px;"
+													required>
+											</td>
+										</c:when>
+										<c:otherwise>
+											<td>
+												<input type="text" name="costWay" placeholder="платные дороги"
+													value="0"
+													onkeyup="this.value = this.value.replace(/[A-Za-zА-Яа-яЁё,]/g,'.');"
+													style="width: 100px;"
+													required>
+											</td>
+										</c:otherwise>
+									</c:choose>
+									<c:choose>
+										<c:when test="${route.expeditionCost != null && route.expeditionCost != 0}">
+											<td>${route.finishPrice - route.expeditionCost} ${route.startCurrency}</td>
+										</c:when>
+										<c:otherwise>
+											<td>${route.finishPrice} ${route.startCurrency}</td>
+										</c:otherwise>
+									</c:choose>
 								</c:otherwise>
 							</c:choose>
 						</tr>
+						<c:choose>
+							<c:when test="${route.way == 'Импорт'}">
+								<tr class="expedition">
+									<td class="whiteBorderRight">
+										<span class="font-weight-bold position-absolute">Услуги экспедитора:</span>
+									</td>
+									<td class="whiteBorderRight"></td>
+									<td class="whiteBorderRight"></td>
+									<td class="whiteBorderRight"></td>
+									<td class="whiteBorderRight"></td>
+									<td class="whiteBorderRight"></td>
+									<td class="whiteBorderRight"></td>
+									<td></td>
+									<td>${route.expeditionCost} ${route.startCurrency}</td>
+									<td>0</td>
+									<td class="p-0"></td>
+									<td>${route.expeditionCost} ${route.startCurrency}</td>
+								</tr>
+								<tr class="expedition">
+									<td class="whiteBorderRight">
+										<span class="font-weight-bold position-absolute">Итого:</span>
+									</td>
+									<td class="whiteBorderRight"></td>
+									<td class="whiteBorderRight"></td>
+									<td class="whiteBorderRight"></td>
+									<td class="whiteBorderRight"></td>
+									<td class="whiteBorderRight"></td>
+									<td class="whiteBorderRight"></td>
+									<td></td>
+									<td>${route.finishPrice} ${route.startCurrency}</td>
+									<td>0</td>
+									<td class="p-0"></td>
+									<td>${route.finishPrice} ${route.startCurrency}</td>
+								</tr>
+							</c:when>
+					</c:choose>
 					</c:forEach>
 				</table>
 			</div>

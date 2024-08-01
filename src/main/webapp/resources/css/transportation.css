@@ -30,7 +30,7 @@
     padding-right: 8px;
 }
 .info-cell div {
-    padding-bottom: 10px;
+    padding-bottom: 5px;
 }
 .info-cell div:last-child {
     padding-bottom: 0;
@@ -104,12 +104,12 @@
 #createTruckForm .form-check-label {
     cursor: pointer;
 }
-.modal input::-webkit-outer-spin-button,
-.modal input::-webkit-inner-spin-button {
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
-.modal input[type=number] {
+input[type=number] {
     -moz-appearance: textfield;
 }
 .modal .close {
@@ -163,4 +163,52 @@ footer.to-bottom {
     footer.to-bottom {
         position: relative;
     }
+}
+
+/* ----- переключатель ------ */
+.toggler-container {
+	padding: 5px;
+}
+.toggler-container span, .toggler {
+   cursor: pointer;
+}
+.toggler {
+	appearance: none;
+	position: relative;
+	display: inline-block;
+	background: lightgrey;
+	height: 1.65rem;
+	width: 2.75rem;
+	margin-right: 5px;
+	vertical-align: middle;
+	border-radius: 2rem;
+	box-shadow: 0px 1px 3px #0003 inset;
+	transition: 0.25s linear background;
+}
+.toggler::before {
+	content: "";
+	display: block;
+	width: 1.25rem;
+	height: 1.25rem;
+	background: #fff;
+	border-radius: 1.2rem;
+	position: absolute;
+	top: 0.2rem;
+	left: 0.2rem;
+	box-shadow: 0px 1px 3px #0003;
+	transition: 0.25s linear transform;
+	transform: translateX(0rem);
+}
+.toggler:checked {
+	background: #0e377b;
+}
+.toggler:checked::before {
+	transform: translateX(1rem);
+}
+.toggler:focus {
+	outline-color: transparent;
+}
+.toggler:focus-visible {
+	outline: 2px solid dodgerblue;
+	outline-offset: 2px;
 }

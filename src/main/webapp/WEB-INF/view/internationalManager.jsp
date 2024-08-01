@@ -409,7 +409,16 @@ body {font-family: Arial, Helvetica, sans-serif;}
 							<td class="col-2" style="white-space: nowrap;">${route.simpleDateStart}</td>
 							<td id="timeLoadPreviously" class="col-4">${route.timeLoadPreviously}</td>
 							<td class="col-3" style="white-space: nowrap;">${route.dateUnloadPreviouslyStock} ${route.timeUnloadPreviouslyStock}</td>
-							<td id="finishCost" class="col-5">${route.finishPrice} ${route.startCurrency}</td>
+							<c:choose>
+								<c:when test="${route.expeditionCost != null}">
+									<td id="finishCost" class="col-5">
+										${route.finishPrice} ${route.startCurrency} (${route.expeditionCost} ${route.startCurrency})
+									</td>
+								</c:when>
+								<c:otherwise>
+									<td id="finishCost" class="col-5">${route.finishPrice} ${route.startCurrency}</td>
+								</c:otherwise>
+							</c:choose>
 							<td id="economy" class="col-6"></td>
 							<td class="col-7">${route.user.companyName}</td>
 							<td class="col-8"><p data-tooltip = "${route.truck.typeTrailer}"><a id="myBtn2">${route.truck.numTruck} / ${route.truck.numTrailer}</a></p></td>
@@ -489,9 +498,7 @@ body {font-family: Arial, Helvetica, sans-serif;}
       <p>Номер телефона: ${route.driver.telephone}</p>
       <p>Дата подачи машины на загрузку: ${route.dateLoadActuallySimple}; время: ${route.timeLoadActually};</p>
       <p>Дата прибытия авто под выгрузку: ${route.dateUnloadActuallySimple}; время: ${route.timeUnloadActually};</p>
-      <p><b>Тип транспорта: ${route.truck.typeTrailer}</b></p>
       <p>Стоимость перевозки: ${route.finishPrice} ${route.startCurrency}</p>
-      
     </div>
   </div>
 </div>

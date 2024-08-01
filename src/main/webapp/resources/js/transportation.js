@@ -30,11 +30,11 @@ window.onload = function() {
 	const driverImgInput = document.querySelector("#drivercard_file")
 	const driverImgContainer = document.querySelector("#driverImageContainer")
 
-	// const searchInSelectToggler = document.querySelector('#searchInSelectToggler')
-	// searchInSelectToggler && searchInSelectToggler.addEventListener('click', searchInSelectTogglerOnClickHandler)
-
 	for (let i = 0; i < truckSelects.length; i++) {
 		const truckSelect = truckSelects[i]
+
+		addSearchInSelectOptions(truckSelect)
+
 		truckSelect.addEventListener('change', function(e) {
 			if (this.value === 'addTruck') {
 				targetTruckSelect = truckSelect
@@ -44,6 +44,9 @@ window.onload = function() {
 	}
 	for (let i = 0; i < driverSelects.length; i++) {
 		const driverSelect = driverSelects[i]
+
+		addSearchInSelectOptions(driverSelect)
+
 		driverSelect.addEventListener('change', function(e) {
 			if (this.value === 'addDriver') {
 				targetDriverSelect = driverSelect
@@ -116,6 +119,32 @@ for (let i = 1; i < rows.length; i++) {
 		})
 
 	}
+}
+
+// поиск в списке селекта
+function addSearchInSelectOptions(select) {
+	const container = select.parentElement
+	const input = container.querySelector('#searchInOptions')
+	if (!input) return
+	const searchItems = select.querySelectorAll('option')
+
+	input.addEventListener('input', function (e) {
+		const target = e.target
+		const val = target.value.trim().toUpperCase()
+		const fragment = document.createDocumentFragment()
+
+		if (!target.classList.contains('keyboard__key')) return
+
+		for (const elem of searchItems) {
+			elem.remove()
+
+			if (val === '' || elem.textContent.toUpperCase().includes(val)) {
+				fragment.append(elem)
+			}
+		}
+
+		select.append(fragment)
+	})
 }
 
 function sendStatus(text, idRoute) {
@@ -330,73 +359,4 @@ function changeFooterPosition() {
 	if (viewWidth < 500 && (bodyHeight + 80) < viewHeight) {
 		document.querySelector('footer').style.position = 'fixed'
 	}
-}
-
-
-function searchInSelectTogglerOnClickHandler(e) {
-	const hasSearchInSelect = e.target.checked
-	console.log("🚀 ~ searchInSelectTogglerOnClickHandler ~ hasSearchInSelect:", hasSearchInSelect)
-
-	if (hasSearchInSelect) {
-		// показать алерт с сообщением о включении функции поиска
-		// в выпадающих списках выбора водителя и авто и обновлении
-		// страницы
-		const answer = confirm(`Включить функцию поиска в выпадающих списках выбора водителя и авто?
-Внимание, это может повлиять на производительность.
-Страница будет обновлена.`)
-
-		if (answer) {
-			// записать в ЛС значение флага hasSearchInSelect как true
-			// обновить страницу
-		} else {
-			// изменить чекбокс на false
-			e.target.checked = false
-		}
-
-	} else {
-		// показать алерт с сообщением о выключении функции поиска
-		// в выпадающих списках выбора водителя и авто и обновлении
-		// страницы
-		const answer = confirm(`Выключить функцию поиска в выпадающих списках?`)
-
-		if (answer) {
-			// записать в ЛС значение флага hasSearchInSelect как false
-			// обновить страницу
-		} else {
-			// изменить чекбокс на true
-			e.target.checked = true
-		}
-	}
-}
-
-function createSelectWithSearch(selectId, options) {
-	const select = document.createElement('select')
-	select.name = selectId
-	select.id = selectId
-	select.classList.add('selectpicker')
-	select.setAttribute('required', 'true')
-	select.setAttribute('data-live-search', 'true')
-	select.setAttribute('data-size', '8')
-	select.setAttribute('data-width', '75%')
-
-	select.append(options)
-
-	// const option = document.createElement('option')
-	// option.value = ''
-	// option.innerHTML = 'Выберите склад'
-	// option.selected = true
-	// option.disabled = true
-	// option.hidden = true
-	// select.append(option)
-
-	for (let i = 0; i < options.length; i++) {
-		const item = options[i];
-		const option = document.createElement('option')
-		option.value = item.value
-		option.innerHTML = item.text
-		select.append(option)
-		
-	}
-
-	return select
 }

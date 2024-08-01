@@ -194,7 +194,7 @@
 									<c:choose>
 										<c:when test="${route.way == 'Импорт'}">
 											<td class="p-0">
-												<input type="text" name="costWay" placeholder="платные дороги"
+												<input type="hidden" name="costWay" placeholder="платные дороги"
 													value="0"
 													onkeyup="this.value = this.value.replace(/[A-Za-zА-Яа-яЁё,]/g,'.');"
 													style="width: 100px;"
@@ -203,7 +203,7 @@
 										</c:when>
 										<c:otherwise>
 											<td>
-												<input type="hidden" name="costWay" placeholder="платные дороги"
+												<input type="text" name="costWay" placeholder="платные дороги"
 													value="0"
 													onkeyup="this.value = this.value.replace(/[A-Za-zА-Яа-яЁё,]/g,'.');"
 													style="width: 100px;"

@@ -1683,8 +1683,6 @@ public class MainController {
 		}
 		
 		
-		
-		
 		if(numPage>2) {
 			//тут сгенерить ошибку
 			return null;

@@ -321,6 +321,11 @@ public class MainController {
 		return "slots";
 	}
 	
+	@GetMapping("/main/slots/delivery-schedule")
+	public String getDeliverySchedulePage(Model model, HttpServletRequest request) {
+		return "deliverySchedule";
+	}
+	
 	@GetMapping("/main/analytics")
 	public String getAnalyticsPage(Model model, HttpServletRequest request) {
 		return "analyticsMain";

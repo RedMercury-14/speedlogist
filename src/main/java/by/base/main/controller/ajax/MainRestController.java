@@ -434,6 +434,8 @@ public class MainRestController {
 		MarketRequestDto requestDto3 = new MarketRequestDto("", packetDto3);
 		String marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto3));
 		
+		System.out.println(marketOrder2);
+		
 		if(marketOrder2.equals("503")) { // означает что связь с маркетом потеряна
 			//в этом случае проверяем бд
 			System.err.println("Связь с маркетом потеряна");
@@ -1147,6 +1149,29 @@ public class MainRestController {
 	@RequestMapping(value = "/order-support/control/487", method = RequestMethod.POST, consumes = {
 			MediaType.MULTIPART_FORM_DATA_VALUE })
 	public Map<String, String> postOrderSupportLoad487(Model model, HttpServletRequest request, HttpSession session,
+			@RequestParam(value = "excel", required = false) MultipartFile excel)
+			throws InvalidFormatException, IOException, ServiceException {
+		Map<String, String> response = new HashMap<String, String>();	
+		File file1 = poiExcel.getFileByMultipartTarget(excel, request, "487.xlsx");
+//		String text = poiExcel.testHeaderOrderHasExcel(file1);
+		String text;
+//		if(text != null) {
+//			response.put("150", text);
+//			return response;
+//		}
+		//основной метод создания заказов со статусом 5
+		text = poiExcel.loadOrderHasExcelV2(file1, request);
+//		text = poiExcel.loadBalanceStock(file1, request);
+		
+		
+		response.put("200", text);
+//		System.out.println(text);
+		return response;
+	}
+	
+	@RequestMapping(value = "/slots/delivery-schedule/load", method = RequestMethod.POST, consumes = {
+			MediaType.MULTIPART_FORM_DATA_VALUE }) // остановился тут
+	public Map<String, String> postLoadExcelPlan (Model model, HttpServletRequest request, HttpSession session,
 			@RequestParam(value = "excel", required = false) MultipartFile excel)
 			throws InvalidFormatException, IOException, ServiceException {
 		Map<String, String> response = new HashMap<String, String>();	

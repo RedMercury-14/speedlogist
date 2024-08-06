@@ -111,6 +111,7 @@ import by.base.main.model.Rates;
 import by.base.main.model.Role;
 import by.base.main.model.Route;
 import by.base.main.model.RouteHasShop;
+import by.base.main.model.Schedule;
 import by.base.main.model.Shop;
 import by.base.main.model.SimpleRoute;
 import by.base.main.model.Truck;
@@ -123,6 +124,7 @@ import by.base.main.service.RatesService;
 import by.base.main.service.RoleService;
 import by.base.main.service.RouteHasShopService;
 import by.base.main.service.RouteService;
+import by.base.main.service.ScheduleService;
 import by.base.main.service.ServiceException;
 import by.base.main.service.ShopService;
 import by.base.main.service.TruckService;
@@ -226,6 +228,9 @@ public class MainRestController {
 	
 	@Autowired
 	private ProductService productService;
+	
+	@Autowired
+	private ScheduleService scheduleService;
 	
 	private static String classLog;
 	private static String marketJWT;
@@ -1170,25 +1175,26 @@ public class MainRestController {
 	}
 	
 	@RequestMapping(value = "/slots/delivery-schedule/load", method = RequestMethod.POST, consumes = {
-			MediaType.MULTIPART_FORM_DATA_VALUE }) // остановился тут
+			MediaType.MULTIPART_FORM_DATA_VALUE })
 	public Map<String, String> postLoadExcelPlan (Model model, HttpServletRequest request, HttpSession session,
 			@RequestParam(value = "excel", required = false) MultipartFile excel)
 			throws InvalidFormatException, IOException, ServiceException {
 		Map<String, String> response = new HashMap<String, String>();	
-		File file1 = poiExcel.getFileByMultipartTarget(excel, request, "487.xlsx");
-//		String text = poiExcel.testHeaderOrderHasExcel(file1);
-		String text;
-//		if(text != null) {
-//			response.put("150", text);
-//			return response;
-//		}
-		//основной метод создания заказов со статусом 5
-		text = poiExcel.loadOrderHasExcelV2(file1, request);
-//		text = poiExcel.loadBalanceStock(file1, request);
+		File file1 = poiExcel.getFileByMultipartTarget(excel, request, "delivery-schedule.xlsx");
 		
+		List<Schedule> schedules = new ArrayList<Schedule>();
+		try {
+			schedules = poiExcel.loadDeliverySchedule(file1);
+		} catch (InvalidFormatException | IOException | java.text.ParseException | ServiceException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		schedules.forEach(s-> {
+			scheduleService.saveOrder(s);
+		});
 		
-		response.put("200", text);
-//		System.out.println(text);
+		response.put("200", "ads");
+//		response.put("body", schedules.toString());
 		return response;
 	}
 	

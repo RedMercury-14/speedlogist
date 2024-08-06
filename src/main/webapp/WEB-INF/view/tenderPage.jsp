@@ -11,6 +11,7 @@
 	<title>Маршрут</title>
 	<link rel="icon" href="${pageContext.request.contextPath}/resources/img/favicon.ico">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/tenderPage.css">
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/snackbar.css">
 </head>
 <body>
 	<jsp:include page="headerNEW.jsp" />
@@ -81,6 +82,14 @@
 										<div class="dateUnloadInfo font-weight-bold">
 											<span>Погрузочный номер:</span>
 											<span>${route.loadNumber}</span>
+										</div>
+									</c:when>
+								</c:choose>
+								<c:choose>
+									<c:when test="${route.finishPrice != null}">
+										<div class="dateUnloadInfo font-weight-bold">
+											<span>Стоимость перевозки:</span>
+											<span>${route.finishPrice} ${route.startCurrency}</span>
 										</div>
 									</c:when>
 								</c:choose>
@@ -270,6 +279,14 @@
 										</div>
 									</c:when>
 								</c:choose>
+								<c:choose>
+									<c:when test="${route.finishPrice != null}">
+										<div class="dateUnloadInfo font-weight-bold">
+											<span>Стоимость перевозки:</span>
+											<span>${route.finishPrice} ${route.startCurrency}</span>
+										</div>
+									</c:when>
+								</c:choose>
 								<div class="info-container pt-2">
 									<div class="route-info">
 										<strong>Дата загрузки:</strong>
@@ -428,6 +445,14 @@
 										<div class="dateUnloadInfo font-weight-bold">
 											<span>Погрузочный номер:</span>
 											<span>${route.loadNumber}</span>
+										</div>
+									</c:when>
+								</c:choose>
+								<c:choose>
+									<c:when test="${route.finishPrice != null}">
+										<div class="dateUnloadInfo font-weight-bold">
+											<span>Стоимость перевозки:</span>
+											<span>${route.finishPrice} ${route.startCurrency}</span>
 										</div>
 									</c:when>
 								</c:choose>
@@ -734,6 +759,14 @@
 										</div>
 									</c:when>
 								</c:choose>
+								<c:choose>
+									<c:when test="${route.finishPrice != null}">
+										<div class="dateUnloadInfo font-weight-bold">
+											<span>Стоимость перевозки:</span>
+											<span>${route.finishPrice} ${route.startCurrency}</span>
+										</div>
+									</c:when>
+								</c:choose>
 								<div class="info-container pt-2">
 									<div class="route-info">
 										<strong>Дата загрузки:</strong>
@@ -977,6 +1010,8 @@
 			</div>
 		</c:otherwise>
 	</c:choose>
+
+	<div id="snackbar"></div>
 
 	<!-- контейнер для отображения полученных сообщений -->
 	<div id="toasts" class="position-fixed bottom-0 right-0 p-3" style="z-index: 100; right: 0; bottom: 0;"></div>

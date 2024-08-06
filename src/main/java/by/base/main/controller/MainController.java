@@ -332,8 +332,13 @@ public class MainController {
 	}
 	
 	@GetMapping("/main/analytics/shortage")
-	public String getAnalyticsЫhortagePage(Model model, HttpServletRequest request) {
+	public String getAnalyticsShortagePage(Model model, HttpServletRequest request) {
 		return "analytics";
+	}
+	
+	@GetMapping("/main/analytics/changing-matrix")
+	public String getAnalyticsChangingMatrixPage(Model model, HttpServletRequest request) {
+	return "changingMatrix";
 	}
 	
 	@GetMapping("/main/analytics/logistics")

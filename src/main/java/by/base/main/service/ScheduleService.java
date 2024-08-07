@@ -12,9 +12,9 @@ public interface ScheduleService {
 		
 	Schedule getScheduleByNumContract(Integer num);
 		
-	Integer saveOrder (Schedule schedule);
+	Integer saveSchedule (Schedule schedule);
 	
-	void updateOrder (Schedule schedule);
+	void updateSchedule (Schedule schedule);
 	
 	void deleteOrderById(Integer id);
 }

@@ -34,14 +34,14 @@ public class ScheduleServiceImpl implements ScheduleService{
 	}
 
 	@Override
-	public Integer saveOrder(Schedule schedule) {
+	public Integer saveSchedule(Schedule schedule) {
 		// TODO Auto-generated method stub
 		return scheduleDAO.saveOrder(schedule);
 	}
 
 	@Override
-	public void updateOrder(Schedule schedule) {
-		// TODO Auto-generated method stub
+	public void updateSchedule(Schedule schedule) {
+		scheduleDAO.updateOrder(schedule);
 		
 	}
 

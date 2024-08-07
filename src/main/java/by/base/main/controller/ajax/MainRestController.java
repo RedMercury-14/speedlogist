@@ -249,6 +249,119 @@ public class MainRestController {
 	public static final Comparator<Address> comparatorAddressIdForView = (Address e1, Address e2) -> (e2.getType().charAt(0) - e1.getType().charAt(0));
 	
 	
+	/**
+	 * едактирование поставок
+	 * @param request
+	 * @param str
+	 * @return
+	 * @throws ParseException
+	 * @throws IOException
+	 */
+	@PostMapping("/slots/delivery-schedule/edit")
+	public Map<String, String> postEditDeliverySchedule(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+		Map<String, String> response = new HashMap<String, String>();
+		if(str == null) {
+			response.put("status", "100");
+			response.put("message", "Тело запроса = null");
+			return response;
+		}
+			
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		if(jsonMainObject.get("idSchedule") == null) {
+			response.put("status", "100");
+			response.put("message", "idSchedule = null");
+			return response;
+		}
+		
+		Schedule schedule = scheduleService.getScheduleById(Integer.parseInt(jsonMainObject.get("idSchedule").toString()));
+		schedule.setCounterpartyCode(jsonMainObject.get("counterpartyCode") == null ? null : Long.parseLong(jsonMainObject.get("counterpartyCode").toString()));
+		schedule.setCounterpartyContractCode(jsonMainObject.get("counterpartyContractCode") == null ? null : Long.parseLong(jsonMainObject.get("counterpartyContractCode").toString()));
+		schedule.setSupplies(jsonMainObject.get("supplies") == null ? null : Integer.parseInt(jsonMainObject.get("supplies").toString()));
+		schedule.setNumStock(jsonMainObject.get("numStock") == null ? null : Integer.parseInt(jsonMainObject.get("numStock").toString()));
+		schedule.setRunoffCalculation(jsonMainObject.get("runoffCalculation") == null ? null : Integer.parseInt(jsonMainObject.get("runoffCalculation").toString()));
+		schedule.setName(jsonMainObject.get("name") == null ? null : jsonMainObject.get("name").toString());
+		schedule.setNote(jsonMainObject.get("note") == null ? null : jsonMainObject.get("note").toString());
+		schedule.setMonday(jsonMainObject.get("monday") == null ? null : jsonMainObject.get("monday").toString());
+		schedule.setTuesday(jsonMainObject.get("tuesday") == null ? null : jsonMainObject.get("tuesday").toString());
+		schedule.setWednesday(jsonMainObject.get("wednesday") == null ? null : jsonMainObject.get("wednesday").toString());
+		schedule.setThursday(jsonMainObject.get("thursday") == null ? null : jsonMainObject.get("thursday").toString());
+		schedule.setFriday(jsonMainObject.get("friday") == null ? null : jsonMainObject.get("friday").toString());
+		schedule.setSaturday(jsonMainObject.get("saturday") == null ? null : jsonMainObject.get("saturday").toString());
+		schedule.setSunday(jsonMainObject.get("sunday") == null ? null : jsonMainObject.get("sunday").toString());
+		schedule.setTz(jsonMainObject.get("tz") == null ? null : jsonMainObject.get("tz").toString());
+		schedule.setTp(jsonMainObject.get("tp") == null ? null : jsonMainObject.get("tp").toString());
+		schedule.setComment(jsonMainObject.get("comment") == null ? null : jsonMainObject.get("comment").toString());
+		schedule.setDescription(jsonMainObject.get("description") == null ? null : jsonMainObject.get("description").toString());
+		schedule.setMultipleOfPallet(jsonMainObject.get("multipleOfPallet") == null ? null : jsonMainObject.get("multipleOfPallet").toString().equals("true") ? true : false );
+		schedule.setMultipleOfPallet(jsonMainObject.get("multipleOfTruck") == null ? null : jsonMainObject.get("multipleOfTruck").toString().equals("true") ? true : false );
+		
+		scheduleService.updateSchedule(schedule);		
+		response.put("status", "200");
+		return response;		
+	}
+	
+	/**
+	 * Создание графика поставок
+	 * @param request
+	 * @param str
+	 * @return
+	 * @throws ParseException
+	 * @throws IOException
+	 */
+	@PostMapping("/slots/delivery-schedule/create")
+	public Map<String, String> postCreateDeliverySchedule(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+		Map<String, String> response = new HashMap<String, String>();
+		if(str == null) {
+			response.put("status", "100");
+			response.put("message", "Тело запроса = null");
+			return response;
+		}
+		
+		Schedule schedule = new Schedule();
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		schedule.setCounterpartyCode(jsonMainObject.get("counterpartyCode") == null ? null : Long.parseLong(jsonMainObject.get("counterpartyCode").toString()));
+		schedule.setCounterpartyContractCode(jsonMainObject.get("counterpartyContractCode") == null ? null : Long.parseLong(jsonMainObject.get("counterpartyContractCode").toString()));
+		schedule.setSupplies(jsonMainObject.get("supplies") == null ? null : Integer.parseInt(jsonMainObject.get("supplies").toString()));
+		schedule.setNumStock(jsonMainObject.get("numStock") == null ? null : Integer.parseInt(jsonMainObject.get("numStock").toString()));
+		schedule.setRunoffCalculation(jsonMainObject.get("runoffCalculation") == null ? null : Integer.parseInt(jsonMainObject.get("runoffCalculation").toString()));
+		schedule.setName(jsonMainObject.get("name") == null ? null : jsonMainObject.get("name").toString());
+		schedule.setNote(jsonMainObject.get("note") == null ? null : jsonMainObject.get("note").toString());
+		schedule.setMonday(jsonMainObject.get("monday") == null ? null : jsonMainObject.get("monday").toString());
+		schedule.setTuesday(jsonMainObject.get("tuesday") == null ? null : jsonMainObject.get("tuesday").toString());
+		schedule.setWednesday(jsonMainObject.get("wednesday") == null ? null : jsonMainObject.get("wednesday").toString());
+		schedule.setThursday(jsonMainObject.get("thursday") == null ? null : jsonMainObject.get("thursday").toString());
+		schedule.setFriday(jsonMainObject.get("friday") == null ? null : jsonMainObject.get("friday").toString());
+		schedule.setSaturday(jsonMainObject.get("saturday") == null ? null : jsonMainObject.get("saturday").toString());
+		schedule.setSunday(jsonMainObject.get("sunday") == null ? null : jsonMainObject.get("sunday").toString());
+		schedule.setTz(jsonMainObject.get("tz") == null ? null : jsonMainObject.get("tz").toString());
+		schedule.setTp(jsonMainObject.get("tp") == null ? null : jsonMainObject.get("tp").toString());
+		schedule.setComment(jsonMainObject.get("comment") == null ? null : jsonMainObject.get("comment").toString());
+		schedule.setDescription(jsonMainObject.get("description") == null ? null : jsonMainObject.get("description").toString());
+		schedule.setMultipleOfPallet(jsonMainObject.get("multipleOfPallet") == null ? null : jsonMainObject.get("multipleOfPallet").toString().equals("true") ? true : false );
+		schedule.setMultipleOfPallet(jsonMainObject.get("multipleOfTruck") == null ? null : jsonMainObject.get("multipleOfTruck").toString().equals("true") ? true : false );
+		Integer id = scheduleService.saveSchedule(schedule);		
+		response.put("status", "200");
+		response.put("message", "График поставок  "+schedule.getName()+" создан");
+		response.put("idSchedule", id.toString());
+		return response;		
+	}
+	
+	/**
+	 * метод, который отдаёт все графики поставок
+	 * @param request
+	 * @param code
+	 * @param stock
+	 * @return
+	 */
+	@GetMapping("/slots/delivery-schedule/getList")
+	public Map<String, Object> getListDeliverySchedule(HttpServletRequest request) {
+		Map<String, Object> response = new HashMap<String, Object>();		
+		response.put("status", "200");
+		response.put("body", scheduleService.getSchedules());
+		return response;		
+	}
 	
 	@PostMapping("/carrier/cost")
 	public Map<String, String> postSetCarrierCost(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
@@ -274,8 +387,7 @@ public class MainRestController {
 		message.setDatetime(LocalDateTime.now().format(formatter1));
 		chatEnpoint.onMessageFromRest(message);
 		response.put("status", "200");
-		return response;
-		
+		return response;		
 	}
 	
 	/**
@@ -1174,6 +1286,17 @@ public class MainRestController {
 		return response;
 	}
 	
+	/**
+	 * прогрузка графика поставок из excel
+	 * @param model
+	 * @param request
+	 * @param session
+	 * @param excel
+	 * @return
+	 * @throws InvalidFormatException
+	 * @throws IOException
+	 * @throws ServiceException
+	 */
 	@RequestMapping(value = "/slots/delivery-schedule/load", method = RequestMethod.POST, consumes = {
 			MediaType.MULTIPART_FORM_DATA_VALUE })
 	public Map<String, String> postLoadExcelPlan (Model model, HttpServletRequest request, HttpSession session,
@@ -1190,7 +1313,7 @@ public class MainRestController {
 			e.printStackTrace();
 		}
 		schedules.forEach(s-> {
-			scheduleService.saveOrder(s);
+			scheduleService.saveSchedule(s);
 		});
 		
 		response.put("200", "ads");

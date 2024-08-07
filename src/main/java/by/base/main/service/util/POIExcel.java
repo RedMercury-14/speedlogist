@@ -1059,9 +1059,12 @@ public class POIExcel {
             	continue;
             }
             
-            schedule.setCounterpartyCode((int) row.getCell(0).getNumericCellValue());
+            String counterpartyCode = row.getCell(0).getNumericCellValue()+"";
+            String counterpartyContractCode = row.getCell(2).getNumericCellValue() + "";
+            
+            schedule.setCounterpartyCode(Long.parseLong(counterpartyCode.split("\\.")[0]));
             schedule.setName(row.getCell(1).getStringCellValue().trim());
-            schedule.setCounterpartyContractCode((int) row.getCell(2).getNumericCellValue());
+            schedule.setCounterpartyContractCode(Long.parseLong(counterpartyContractCode.split("\\.")[0]));
             schedule.setNote(row.getCell(3).getStringCellValue());
             schedule.setMonday(row.getCell(4).getStringCellValue().equals("") ? null : row.getCell(4).getStringCellValue());
             schedule.setTuesday(row.getCell(5).getStringCellValue().equals("") ? null : row.getCell(5).getStringCellValue());
@@ -1073,6 +1076,7 @@ public class POIExcel {
             schedule.setSupplies((int) row.getCell(11).getNumericCellValue());
             schedule.setTz(row.getCell(12) == null || row.getCell(12).getStringCellValue().equals("") ? null : row.getCell(12).getStringCellValue());
             schedule.setTp(row.getCell(13) == null || row.getCell(13).getStringCellValue().equals("") ? null : row.getCell(13).getStringCellValue());
+            schedule.setRunoffCalculation(row.getCell(14) == null ? null : (int) row.getCell(14).getNumericCellValue());
             schedule.setComment(row.getCell(15) == null || row.getCell(15).getStringCellValue().equals("") ? null : row.getCell(15).getStringCellValue());
             schedule.setMultipleOfPallet(row.getCell(16) == null || row.getCell(16).getStringCellValue().equals("") ? false : true);
             schedule.setMultipleOfTruck(row.getCell(17) == null || row.getCell(17).getStringCellValue().equals("") ? false : true);

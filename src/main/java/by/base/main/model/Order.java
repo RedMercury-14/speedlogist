@@ -207,6 +207,12 @@ public class Order {
 	@Column(name = "weight_fact_yard")
 	private Double weightFactYard;
 	
+	@Column(name = "market_order_sum_first")
+	private Double marketOrderSumFirst;
+	
+	@Column(name = "market_order_sum_final")
+	private Double marketOrderSumFinal;
+	
 	@Column(name = "arrival_fact_yard")
 	private Timestamp arrivalFactYard;
 	
@@ -261,6 +267,18 @@ public class Order {
 
 	
 	
+	public Double getMarketOrderSumFirst() {
+		return marketOrderSumFirst;
+	}
+	public void setMarketOrderSumFirst(Double marketOrderSumFirst) {
+		this.marketOrderSumFirst = marketOrderSumFirst;
+	}
+	public Double getMarketOrderSumFinal() {
+		return marketOrderSumFinal;
+	}
+	public void setMarketOrderSumFinal(Double marketOrderSumFinal) {
+		this.marketOrderSumFinal = marketOrderSumFinal;
+	}
 	public String getMarketContractType() {
 		return marketContractType;
 	}

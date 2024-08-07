@@ -198,3 +198,21 @@ form .form-check .form-check-label {
 	width: 180px;
 	padding: .375rem 0.5rem;
 }
+
+.grid-checkbox .ag-cell-wrapper {
+	justify-content: center;
+}
+#myGrid .grid-checkbox .ag-checkbox {
+	height: 100%;
+}
+.blue-cell.ag-cell {
+	background-color: #00b0f0;
+}
+
+.ag-theme-alpine .ag-side-buttons {
+	background-color: #a7bad3;
+	font-weight: 600;
+}
+.ag-header-cell-filtered {
+	background-color: #9e9e9e80 !important;
+}

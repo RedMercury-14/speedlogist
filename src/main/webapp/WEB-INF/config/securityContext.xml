@@ -22,7 +22,6 @@
 			<security:intercept-url pattern="/main/admin/**" access="hasAnyRole('ROLE_ADMIN', 'ROLE_TOPMANAGER')" />
 			<security:intercept-url	pattern="/main/logistics/**" access="hasAnyRole('ROLE_MANAGER','ROLE_TOPMANAGER', 'ROLE_ADMIN')" />
 			<security:intercept-url pattern="/main/shop/**" access="hasAnyRole('ROLE_ADMIN', 'ROLE_SHOP')"/>
-			<security:intercept-url pattern="/main/analytics/changing-matrix" access="hasAnyRole('ROLE_ADMIN', 'ROLE_ANALYTICS', 'ROLE_PROCUREMENT')"/>
 			<security:intercept-url pattern="/main/analytics/**" access="hasAnyRole('ROLE_ADMIN', 'ROLE_ANALYTICS', 'ROLE_TOPMANAGER')"/>
 			<security:intercept-url pattern="/main/carrier/**" access="hasAnyRole('ROLE_ADMIN', 'ROLE_CARRIER')"/>
 			<security:intercept-url pattern="/main/order-support/**" access="hasAnyRole('ROLE_ADMIN', 'ROLE_ORDERSUPPORT')"/>
@@ -30,6 +29,7 @@
 <!-- 			<security:intercept-url pattern="/main/map/**" access="hasAnyRole('ROLE_ADMIN', 'ROLE_CARRIER')"/> -->
 			<security:intercept-url pattern="/main/procurement/**" access="hasAnyRole('ROLE_ADMIN', 'ROLE_PROCUREMENT', 'ROLE_ORDERSUPPORT', 'ROLE_STOCKPROCUREMENT', 'ROLE_SLOTOBSERVER')"/>
 			<security:intercept-url pattern="/main/slots/**" access="hasAnyRole('ROLE_ADMIN', 'ROLE_PROCUREMENT', 'ROLE_ORDERSUPPORT', 'ROLE_TOPMANAGER','ROLE_MANAGER', 'ROLE_SLOTOBSERVER', 'ROLE_STOCKPROCUREMENT')"/>
+			<security:intercept-url pattern="/main/slots/delivery-schedule" access="hasAnyRole('ROLE_ADMIN', 'ROLE_PROCUREMENT', 'ROLE_ORDERSUPPORT')"/>
 			<security:intercept-url pattern="/main/depot/**" access="hasAnyRole('ROLE_ADMIN', 'ROLE_STOCK', 'ROLE_MANAGER', 'ROLE_TOPMANAGER')"/>
 			<security:intercept-url pattern="/main/registration/**" access="hasAnyRole('ROLE_ANONYMOUS', 'ROLE_ADMIN')" />	
 			<security:intercept-url pattern="/main/userpage/**" access="!isAnonymous()" />			

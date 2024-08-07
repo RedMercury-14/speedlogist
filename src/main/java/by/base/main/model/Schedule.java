@@ -19,13 +19,13 @@ public class Schedule {
     private Integer idSchedule;
 
     @Column(name = "counterparty_code")
-    private Integer counterpartyCode;
+    private Long counterpartyCode;
 
     @Column(name = "name", columnDefinition = "TEXT")
     private String name;
 
     @Column(name = "counterparty_contract_code")
-    private Integer counterpartyContractCode;
+    private Long counterpartyContractCode;
 
     @Column(name = "note", columnDefinition = "TEXT")
     private String note;
@@ -74,25 +74,38 @@ public class Schedule {
 
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
+    
+    @Column(name = "runoff_calculation")
+    private Integer runoffCalculation;
 
     @Column(name = "date_last_calculation")
     private Date dateLastCalculation;
 
     // Getters and Setters
 
+    
+    
     public Integer getIdSchedule() {
         return idSchedule;
     }
 
-    public void setIdSchedule(Integer idSchedule) {
+    public Integer getRunoffCalculation() {
+		return runoffCalculation;
+	}
+
+	public void setRunoffCalculation(Integer runoffCalculation) {
+		this.runoffCalculation = runoffCalculation;
+	}
+
+	public void setIdSchedule(Integer idSchedule) {
         this.idSchedule = idSchedule;
     }
 
-    public Integer getCounterpartyCode() {
+    public Long getCounterpartyCode() {
         return counterpartyCode;
     }
 
-    public void setCounterpartyCode(Integer counterpartyCode) {
+    public void setCounterpartyCode(Long counterpartyCode) {
         this.counterpartyCode = counterpartyCode;
     }
 
@@ -104,11 +117,11 @@ public class Schedule {
         this.name = name;
     }
 
-    public Integer getCounterpartyContractCode() {
+    public Long getCounterpartyContractCode() {
         return counterpartyContractCode;
     }
 
-    public void setCounterpartyContractCode(Integer counterpartyContractCode) {
+    public void setCounterpartyContractCode(Long counterpartyContractCode) {
         this.counterpartyContractCode = counterpartyContractCode;
     }
 

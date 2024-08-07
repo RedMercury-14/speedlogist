@@ -1,88 +1,126 @@
 import { AG_GRID_LOCALE_RU } from './AG-Grid/ag-grid-locale-RU.js'
+import { gridColumnLocalState, gridFilterLocalState, ResetStateToolPanel } from './AG-Grid/ag-grid-utils.js'
 import { ajaxUtils } from './ajaxUtils.js'
-import { testData } from './delData.js'
 import { snackbar } from "./snackbar/snackbar.js"
 import { uiIcons } from './uiIcons.js'
-import { changeGridTableMarginTop, getData, hideLoadingSpinner, showLoadingSpinner } from './utils.js'
+import { changeGridTableMarginTop, debounce, getData, hideLoadingSpinner, showLoadingSpinner } from './utils.js'
 
 const loadExcelUrl = '../../api/slots/delivery-schedule/load'
+const getScheduleUrl = '../../api/slots/delivery-schedule/getList'
+const addScheduleItemUrl = '../../api/slots/delivery-schedule/create'
+const editScheduleItemUrl = '../../api/slots/delivery-schedule/edit'
 
+const PAGE_NAME = 'deliverySchedule'
+const LOCAL_STORAGE_KEY = `AG_Grid_settings_to_${PAGE_NAME}`
 
 const token = $("meta[name='_csrf']").attr("content")
+const role = document.querySelector('#role').value
+
+const debouncedSaveColumnState = debounce(saveColumnState, 300)
+const debouncedSaveFilterState = debounce(saveFilterState, 300)
 
 let error = false
 let table
-
-const options1 = [
+let scheduleData
+const stocks = ['1700', '1250', '1200']
+const defaultOptions = [
 	"",
 	"з",
-	"Понедельник",
-	"Вторник",
-	"Среда",
-	"Четверг",
-	"Пятница",
-	"Суббота",
-	"Воскресенье",
-	"з/Понедельник",
-	"з/Вторник",
-	"з/Среда",
-	"з/Четверг",
-	"з/Пятница",
-	"з/Суббота",
-	"з/Воскресенье"
+	"понедельник",
+	"вторник",
+	"среда",
+	"четверг",
+	"пятница",
+	"суббота",
+	"воскресенье",
+	"з/понедельник",
+	"з/вторник",
+	"з/среда",
+	"з/четверг",
+	"з/пятница",
+	"з/суббота",
+	"з/воскресенье"
 ]
-const options2 = [
+const weekOptions = [
 	"",
 	"з",
-	"з/н0/Понедельник",
-	"з/н0/Вторник",
-	"з/н0/Среда",
-	"з/н0/Четверг",
-	"з/н0/Пятница",
-	"з/н0/Суббота",
-	"з/н0/Воскресенье",
-	"з/н1/Понедельник",
-	"з/н1/Вторник",
-	"з/н1/Среда",
-	"з/н1/Четверг",
-	"з/н1/Пятница",
-	"з/н1/Суббота",
-	"з/н1/Воскресенье",
-	"з/н2/Понедельник",
-	"з/н2/Вторник",
-	"з/н2/Среда",
-	"з/н2/Четверг",
-	"з/н2/Пятница",
-	"з/н2/Суббота",
-	"з/н2/Воскресенье",
-	"н0/Понедельник",
-	"н0/Вторник",
-	"н0/Среда",
-	"н0/Четверг",
-	"н0/Пятница",
-	"н0/Суббота",
-	"н0/Воскресенье",
-	"н1/Понедельник",
-	"н1/Вторник",
-	"н1/Среда",
-	"н1/Четверг",
-	"н1/Пятница",
-	"н1/Суббота",
-	"н1/Воскресенье",
-	"н2/Понедельник",
-	"н2/Вторник",
-	"н2/Среда",
-	"н2/Четверг",
-	"н2/Пятница",
-	"н2/Суббота",
-	"н2/Воскресенье"
+	"з/н0/понедельник",
+	"з/н0/вторник",
+	"з/н0/среда",
+	"з/н0/четверг",
+	"з/н0/пятница",
+	"з/н0/суббота",
+	"з/н0/воскресенье",
+	"з/н1/понедельник",
+	"з/н1/вторник",
+	"з/н1/среда",
+	"з/н1/четверг",
+	"з/н1/пятница",
+	"з/н1/суббота",
+	"з/н1/воскресенье",
+	"з/н2/понедельник",
+	"з/н2/вторник",
+	"з/н2/среда",
+	"з/н2/четверг",
+	"з/н2/пятница",
+	"з/н2/суббота",
+	"з/н2/воскресенье",
+	"з/н3/понедельник",
+	"з/н3/вторник",
+	"з/н3/среда",
+	"з/н3/четверг",
+	"з/н3/пятница",
+	"з/н3/суббота",
+	"з/н3/воскресенье",
+	"з/н4/понедельник",
+	"з/н4/вторник",
+	"з/н4/среда",
+	"з/н4/четверг",
+	"з/н4/пятница",
+	"з/н4/суббота",
+	"з/н4/воскресенье",
+	"н0/понедельник",
+	"н0/вторник",
+	"н0/среда",
+	"н0/четверг",
+	"н0/пятница",
+	"н0/суббота",
+	"н0/воскресенье",
+	"н1/понедельник",
+	"н1/вторник",
+	"н1/среда",
+	"н1/четверг",
+	"н1/пятница",
+	"н1/суббота",
+	"н1/воскресенье",
+	"н2/понедельник",
+	"н2/вторник",
+	"н2/среда",
+	"н2/четверг",
+	"н2/пятница",
+	"н2/суббота",
+	"н2/воскресенье",
+	"н3/понедельник",
+	"н3/вторник",
+	"н3/среда",
+	"н3/четверг",
+	"н3/пятница",
+	"н3/суббота",
+	"н3/воскресенье",
+	"н4/понедельник",
+	"н4/вторник",
+	"н4/среда",
+	"н4/четверг",
+	"н4/пятница",
+	"н4/суббота",
+	"н4/воскресенье"
 ]
 
 const columnDefs = [
 	{
 		headerName: 'Код контрагента', field: 'counterpartyCode',
 		cellClass: 'px-1 py-0 text-center',
-		width: 120,
+		width: 120, pinned: 'left',
 	},
 	{
 		headerName: 'Наименование контрагента', field: 'name',
@@ -91,12 +129,15 @@ const columnDefs = [
 	},
 	{
 		headerName: 'Номер контракта', field: 'counterpartyContractCode',
-		cellClass: 'px-1 py-0 text-center',
+		cellClass: 'px-1 py-0 text-center font-weight-bold',
 		width: 150,
 	},
 	{
 		headerName: 'Пометка "Сроки/Неделя"', field: 'note',
 		cellClass: 'px-1 py-0 text-center',
+		cellClassRules: {
+			'blue-cell': params => params.value === 'неделя',
+		},
 		width: 125,
 	},
 	{
@@ -126,7 +167,7 @@ const columnDefs = [
 	},
 	{
 		headerName: 'Сб', field: 'saturday',
-		cellClass: 'px-1 py-0 text-center',
+		cellClass: 'px-1 py-0 text-center ',
 		width: 135,
 	},
 	{
@@ -139,48 +180,49 @@ const columnDefs = [
 		cellClass: 'px-1 py-0 text-center',
 		width: 75,
 	},
-	// {
-	// 	headerName: 'Расчет стока до Y-ой поставки', field: 'stockCalculation',
-	// 	cellClass: 'px-1 py-0 text-center',
-	// 	width: 100,
-	// },
+	{
+		headerName: 'Расчет стока до Y-й поставки', field: 'runoffCalculation',
+		cellClass: 'px-1 py-0 text-center blue-cell',
+		width: 100,
+	},
 	{
 		headerName: 'Примечание', field: 'comment',
 		cellClass: 'px-1 py-0 text-center',
-		width: 110,
+		width: 300,
 	},
 	{
 		headerName: 'Кратно поддону', field: 'multipleOfPallet',
-		cellClass: 'px-1 py-0 text-center',
+		cellClass: 'px-1 py-0 text-center grid-checkbox',
 		width: 75,
 	},
 	{
 		headerName: 'Кратно машине', field: 'multipleOfTruck',
-		cellClass: 'px-1 py-0 text-center',
+		cellClass: 'px-1 py-0 text-center grid-checkbox',
 		width: 75,
 	},
-	{
-		headerName: 'Номер склада', field: 'numStock',
-		cellClass: 'px-1 py-0 text-center',
-	},
-	{
-		headerName: 'Описание контракта', field: 'description',
-		cellClass: 'px-1 py-0 text-center',
-	},
-	{
-		headerName: 'Дата последнего расчета', field: 'dateLasCalculation',
-		cellClass: 'px-1 py-0 text-center',
-	},
-	{
-		headerName: 'tz', field: 'tz',
-		cellClass: 'px-1 py-0 text-center',
-		width: 75,
-	},
-	{
-		headerName: 'tp', field: 'tp',
-		cellClass: 'px-1 py-0 text-center',
-		width: 75,
-	},
+	// {
+	// 	headerName: 'Номер склада', field: 'numStock',
+	// 	cellClass: 'px-1 py-0 text-center font-weight-bold',
+	// 	width: 75,
+	// },
+	// {
+	// 	headerName: 'Описание контракта', field: 'description',
+	// 	cellClass: 'px-1 py-0 text-center',
+	// },
+	// {
+	// 	headerName: 'Дата последнего расчета', field: 'dateLasCalculation',
+	// 	cellClass: 'px-1 py-0 text-center',
+	// },
+	// {
+	// 	headerName: 'tz', field: 'tz',
+	// 	cellClass: 'px-1 py-0 text-center',
+	// 	width: 75,
+	// },
+	// {
+	// 	headerName: 'tp', field: 'tp',
+	// 	cellClass: 'px-1 py-0 text-center',
+	// 	width: 75,
+	// },
 ]
 
 const gridOptions = {
@@ -201,27 +243,81 @@ const gridOptions = {
 	enableBrowserTooltips: true,
 	localeText: AG_GRID_LOCALE_RU,
 	getContextMenuItems: getContextMenuItems,
+	getRowId: (params) => params.data.idSchedule,
+	onSortChanged: debouncedSaveColumnState,
+	onColumnResized: debouncedSaveColumnState,
+	onColumnMoved: debouncedSaveColumnState,
+	onColumnVisible: debouncedSaveColumnState,
+	onColumnPinned: debouncedSaveColumnState,
+	onFilterChanged: debouncedSaveFilterState,
+	sideBar: {
+		toolPanels: [
+			{
+				id: 'columns',
+				labelDefault: 'Columns',
+				labelKey: 'columns',
+				iconKey: 'columns',
+				toolPanel: 'agColumnsToolPanel',
+				toolPanelParams: {
+					suppressRowGroups: true,
+					suppressValues: true,
+					suppressPivots: true,
+					suppressPivotMode: true,
+				},
+			},
+			{
+				id: 'filters',
+				labelDefault: 'Filters',
+				labelKey: 'filters',
+				iconKey: 'filter',
+				toolPanel: 'agFiltersToolPanel',
+			},
+			{
+				id: 'resetState',
+				iconKey: 'menu',
+				labelDefault: 'Сброс настроек',
+				toolPanel: ResetStateToolPanel,
+				toolPanelParams: {
+					localStorageKey: LOCAL_STORAGE_KEY,
+				},
+			},
+		],
+	},
 }
 
 window.onload = async () => {
-	// const addShopForm = document.querySelector("#addShopForm")
-	const sendExcelForm = document.querySelector("#sendExcelForm")
-	// const editShopForm = document.querySelector("#editShopForm")
 	const gridDiv = document.querySelector('#myGrid')
 
-	const data = testData
+	// форма загрузки графика из Эксель
+	const sendExcelForm = document.querySelector("#sendExcelForm")
+	sendExcelForm && sendExcelForm.addEventListener("submit", sendExcelFormHandler)
+
+	// форма редактирования элемента поставки
+	const editScheduleItemForm = document.querySelector('#editScheduleItemForm')
+	editScheduleItemForm && editScheduleItemForm.addEventListener('submit', editScheduleItemFormHandler)
+
+	// выпадающий список выбора отображаемого склада
+	// const numStockSelect = document.querySelector("#numStockSelect")
+	// createNumStockOptions(numStockSelect)
+	// numStockSelect && numStockSelect.addEventListener('change', onNumStockSelectChangeHandler)
+
+	// выпадающие списки выбора пометки "Неделя/Сроки"
+	const noteSelectInEditForm = editScheduleItemForm.querySelector('#note')
+	noteSelectInEditForm && noteSelectInEditForm.addEventListener('change', onNoteSelectChangeHandler)
+
+	// получение данных графика
+	const res = await getData(getScheduleUrl)
+	scheduleData = res.body
 
 	// изменение отступа для таблицы
 	changeGridTableMarginTop()
+	// создание таблицы
+	renderTable(gridDiv, gridOptions, scheduleData)
+	// получение настроек таблицы из localstorage
+	restoreColumnState()
+	restoreFilterState()
 
-	renderTable(gridDiv, gridOptions, data)
-
-	// addShopForm.addEventListener("submit", (e) => addShopFormHandler(e))
-	sendExcelForm.addEventListener("submit", (e) => sendExcelFormHandler(e))
-	// editShopForm.addEventListener("submit", (e) => editShopFormHandler(e))
-	// $('#numshop').change(checkSopNumber)
-	// $('#addShopModal').on('hidden.bs.modal', (e) => addShopForm.reset())
-	// $('#editShopModal').on('hidden.bs.modal', (e) => editShopForm.reset())
+	$('#editShopModal').on('hidden.bs.modal', (e) => clearForm(e, editScheduleItemForm))
 }
 
 function renderTable(gridDiv, gridOptions, data) {
@@ -239,15 +335,16 @@ function renderTable(gridDiv, gridOptions, data) {
 	gridOptions.api.hideOverlay()
 }
 async function updateTable() {
-	const data = testData
+	const res = await getData(getScheduleUrl)
+	scheduleData = res.body
 
-	if (!data || !data.length) {
+	if (!scheduleData || !scheduleData.length) {
 		gridOptions.api.setRowData([])
 		gridOptions.api.showNoRowsOverlay()
 		return
 	}
 
-	const mappingData = getMappingData(data)
+	const mappingData = getMappingData(scheduleData)
 
 	gridOptions.api.setRowData(mappingData)
 	gridOptions.api.hideOverlay()
@@ -257,13 +354,12 @@ function getMappingData(data) {
 	return data
 }
 function getContextMenuItems(params) {
-	// const shop = params.node.data
-	// const numshop = params.node.data.numshop
+	const scheduleItem = params.node.data
 	const result = [
 		{
 			name: `Редактировать поставку`,
 			action: () => {
-				editDelivery()
+				editScheduleItem(scheduleItem)
 			},
 			icon: uiIcons.pencil,
 		},
@@ -282,31 +378,27 @@ function getContextMenuItems(params) {
 	return result
 }
 
-// обработчик отправки формы добавления магазина
-function addShopFormHandler(e) {
-	e.preventDefault()
-
-	const formData = new FormData(e.target)
-	const data = shopFormDataFormatter(formData)
-
-	if (error) {
-		snackbar.show('Ошибка заполнения формы!')
-		return
-	}
-
-	ajaxUtils.postJSONdata({
-		url: addShopUrl,
-		token: token,
-		data: data,
-		successCallback: (res) => {
-			snackbar.show(res.message)
-			updateTable()
-			$(`#addShopModal`).modal('hide')
-		}
-	})
+// редактирование поставки
+function editScheduleItem(scheduleItem) {
+	setDataToForm(scheduleItem)
+	$(`#editScheduleItemModal`).modal('show')
 }
 
-// обработчик отправки формы добавления магазинов в формате excel
+// обработчик смены склада
+function onNumStockSelectChangeHandler(e) {
+	const numStock = e.target.value
+	const numStockData = scheduleData.filter((item) => item.numStock === numStock)
+	updateTable(numStockData)
+}
+
+// обработчик смены пометки Сроки/Неделя
+function onNoteSelectChangeHandler(e) {
+	const note = e.target.value
+	const form = e.target.form
+	changeScheduleOptions(form, note)
+}
+
+// обработчик отправки формы загрузки таблицы эксель
 function sendExcelFormHandler(e) {
 	e.preventDefault()
 
@@ -322,19 +414,20 @@ function sendExcelFormHandler(e) {
 		successCallback: (res) => {
 			snackbar.show(res[200])
 			updateTable()
-			$(`#addShopsInExcelModal`).modal('hide')
+			$(`#sendExcelModal`).modal('hide')
 			hideLoadingSpinner(submitButton, 'Загрузить')
 		},
 		errorCallback: () => hideLoadingSpinner(submitButton, 'Загрузить')
 	})
 }
 
-// обработчик отправки формы редактирования магазина
-function editShopFormHandler(e) {
+// обработчик отправки формы редактирования поставки
+function editScheduleItemFormHandler(e) {
 	e.preventDefault()
 
 	const formData = new FormData(e.target)
-	const data = shopFormDataFormatter(formData)
+	const data = scheduleItemDataFormatter(formData)
+	console.log("🚀 Данные на сервер:", data)
 
 	if (error) {
 		snackbar.show('Ошибка заполнения формы!')
@@ -342,106 +435,144 @@ function editShopFormHandler(e) {
 	}
 
 	ajaxUtils.postJSONdata({
-		url: editShopUrl,
+		url: editScheduleItemUrl,
 		token: token,
 		data: data,
 		successCallback: (res) => {
-			snackbar.show(res.message)
+			console.log("🚀 Ответ:", res)
+			snackbar.show('Обновлено')
 			updateTable()
-			$(`#editShopModal`).modal('hide')
+			$(`#editScheduleItemModal`).modal('hide')
 		}
 	})
 }
 
-// форматирование данных магазина для отправки на сервер
-function shopFormDataFormatter(formData) {
+// форматирование данных поставки для отправки на сервер
+function scheduleItemDataFormatter(formData) {
 	const data = Object.fromEntries(formData)
-	const address = data.address.includes(data.type)
-		? data.address : data.type + ' ' + data.address
-
-	// const cleaning = data.cleaning === 'Да'
-
-	return {
+	const supplies = getSupplies(data)
+	const multipleOfPallet = !!data.multipleOfPallet
+	const multipleOfTruck = !!data.multipleOfTruck
+	const counterpartyCode = Number(data.counterpartyCode)
+	const counterpartyContractCode = Number(data.counterpartyContractCode)
+	const runoffCalculation = Number(data.runoffCalculation)
+	let res = {
 		...data,
-		address,
-		// cleaning,
-		numshop: data.numshop ? Number(data.numshop) : '',
-		maxPall: data.maxPall ? Number(data.maxPall) : '',
-		width: data.width ? Number(data.width) : '',
-		length: data.length ? Number(data.length) : '',
-		height: data.height ? Number(data.height) : '',
-		isTailLift: data.isTailLift ? 'true' : 'false',
-		isInternalMovement: data.isInternalMovement ? 'true' : 'false',
+		supplies,
+		multipleOfPallet,
+		multipleOfTruck,
+		counterpartyCode,
+		counterpartyContractCode,
+		runoffCalculation,
 	}
-}
-
-// проверка наличия наличия номера магазина в базе
-async function checkSopNumber(e) {
-	const input = e.target
-	const hasShop = await getData(`../../api/manager/existShop/${input.value}`)
-
-	if (hasShop) {
-		$('#messageNumshop').text('Такой магазин уже зарегистрирован')
-		input.classList.add('is-invalid')
-		error = true
-	}
-	else {
-		$('#messageNumshop').text('')
-		input.classList.remove('is-invalid')
-		error = false
-	}
-}
-
-// редактирование магазина
-function editDelivery(shop) {
-	// setEditShopForm(shop)
-	$(`#editDeliveryModal`).modal('show')
-}
-
-// удаление магазина
-function deleteShop(numshop) {
-	ajaxUtils.postJSONdata({
-		url: deleteShopUrl,
-		token: token,
-		data: { numshop: numshop },
-		successCallback: (res) => {
-			snackbar.show(res.message)
-			updateTable()
-			$(`#addShopModal`).modal('hide')
+	if (data.idSchedule) {
+		res = {
+			...res,
+			idSchedule: Number(data.idSchedule)
 		}
-	})
+	}
+	return res
+}
+
+// получение количества поставок по данным графика поставок
+function getSupplies(data) {
+	const reg = /^з$|з\//
+	const schedule = [
+		data.monday,
+		data.tuesday,
+		data.wednesday,
+		data.thursday,
+		data.friday,
+		data.saturday,
+		data.sunday,
+	]
+	return schedule.filter(el => reg.test(el)).length
 }
 
 // заполнение формы редактирования магазина данными
-function setEditShopForm(shop) {
-	const editShopForm = document.querySelector("#editShopForm")
-	const editShopModalLabel = document.querySelector("#editShopModalLabel")
+function setDataToForm(scheduleItem) {
+	const editScheduleItemForm = document.querySelector('#editScheduleItemForm')
 
-	editShopModalLabel.innerText = `Редактирование точки №${shop.numshop}`
-	editShopForm.numshop.value = shop.numshop
-	editShopForm.address.value = shop.address
-	editShopForm.lat.value = shop.lat
-	editShopForm.lng.value = shop.lng
-	editShopForm.maxPall.value = shop.maxPall
-	editShopForm.width.value = shop.width
-	editShopForm.length.value = shop.length
-	editShopForm.height.value = shop.height
-	editShopForm.isTailLift.checked = shop.isTailLift
-	editShopForm.isInternalMovement.checked = shop.isInternalMovement
+	// создаем опции в селектах с установкой графика
+	changeScheduleOptions(editScheduleItemForm, scheduleItem.note)
 
-	const typeOptions = editShopForm.type.options
-	for (let i = 0; i < typeOptions.length; i++) {
-		const option = typeOptions[i]
-		if (option.value === shop.type) {
-			option.selected = true
-		}
-	}
+	// заполняем скрытые поля
+	editScheduleItemForm.idSchedule.value = scheduleItem.idSchedule ? scheduleItem.idSchedule : ''
+	editScheduleItemForm.supplies.value = scheduleItem.supplies ? scheduleItem.supplies : ''
+	// editScheduleItemForm.numStock.value = scheduleItem.numStock ? scheduleItem.numStock : ''
+	// editScheduleItemForm.description.value = scheduleItem.description ? scheduleItem.description : ''
+	// editScheduleItemForm.dateLasCalculation.value = scheduleItem.dateLasCalculation ? scheduleItem.dateLasCalculation : ''
+	// editScheduleItemForm.tz.value = scheduleItem.tz ? scheduleItem.tz : ''
+	// editScheduleItemForm.tp.value = scheduleItem.tp ? scheduleItem.tp : ''
 
-	// const cleaningOptions = editShopForm.cleaning.options
-	// for (let i = 0; i < cleaningOptions.length; i++) {
-	// 	const option = cleaningOptions[i]
-	// 	if (option.value === shop.cleaning) {
-	// 		option.selected = true
-	// 	}
-	// }
+	// заполняем видимые поля
+	editScheduleItemForm.counterpartyCode.value = scheduleItem.counterpartyCode ? scheduleItem.counterpartyCode : ''
+	editScheduleItemForm.name.value = scheduleItem.name ? scheduleItem.name : ''
+	editScheduleItemForm.counterpartyContractCode.value = scheduleItem.counterpartyContractCode ? scheduleItem.counterpartyContractCode : ''
+	editScheduleItemForm.comment.value = scheduleItem.comment ? scheduleItem.comment : ''
+	editScheduleItemForm.runoffCalculation.value = scheduleItem.runoffCalculation ? scheduleItem.runoffCalculation : ''
+	editScheduleItemForm.note.value = scheduleItem.note ? scheduleItem.note : ''
+	editScheduleItemForm.multipleOfPallet.checked = !!scheduleItem.multipleOfPallet
+	editScheduleItemForm.multipleOfTruck.checked = !!scheduleItem.multipleOfTruck
+
+	// заполняем график
+	editScheduleItemForm.monday.value = scheduleItem.monday ? scheduleItem.monday : ''
+	editScheduleItemForm.tuesday.value = scheduleItem.tuesday ? scheduleItem.tuesday : ''
+	editScheduleItemForm.wednesday.value = scheduleItem.wednesday ? scheduleItem.wednesday : ''
+	editScheduleItemForm.thursday.value = scheduleItem.thursday ? scheduleItem.thursday : ''
+	editScheduleItemForm.friday.value = scheduleItem.friday ? scheduleItem.friday : ''
+	editScheduleItemForm.saturday.value = scheduleItem.saturday ? scheduleItem.saturday : ''
+	editScheduleItemForm.sunday.value = scheduleItem.sunday ? scheduleItem.sunday : ''
+}
+
+// создание опций складов
+function createNumStockOptions(numStockSelect) {
+	if (!numStockSelect) return
+	stocks.forEach((stock) => {
+		const option = document.createElement("option")
+		option.value = stock
+		option.text = `Склад ${stock}`
+		numStockSelect.append(option)
+	})
+}
+
+// изменение набора опций для графика
+function changeScheduleOptions(form, note) {
+	const scheduleSelects = form.querySelectorAll('.scheduleSelect')
+	const optionData = note === 'неделя'
+		? weekOptions
+		: defaultOptions
+	scheduleSelects.forEach(select => select.innerHTML = '')
+	scheduleSelects.forEach(select => createOptions(optionData, select))
+}
+
+// создание опций
+function createOptions(optionData, select) {
+	optionData.forEach((option) => {
+		const optionElement = document.createElement('option')
+		optionElement.value = option
+		optionElement.text = option
+		select.append(optionElement)
+	})
+}
+
+// очистка формы
+function clearForm(form) {
+	form.reset()
+}
+
+// функции управления состоянием колонок
+function saveColumnState() {
+	gridColumnLocalState.saveState(gridOptions, LOCAL_STORAGE_KEY)
+}
+function restoreColumnState() {
+	gridColumnLocalState.restoreState(gridOptions, LOCAL_STORAGE_KEY)
+}
+
+// функции управления фильтрами колонок
+function saveFilterState() {
+	gridFilterLocalState.saveState(gridOptions, LOCAL_STORAGE_KEY)
+}
+function restoreFilterState() {
+	gridFilterLocalState.restoreState(gridOptions, LOCAL_STORAGE_KEY)
 }

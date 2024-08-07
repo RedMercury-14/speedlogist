@@ -22,6 +22,7 @@
 			<strong><h3>График поставок контрагентов</h3></strong>
 		</div>
 		<div class="toolbar">
+			<!-- <select class="btn tools-btn font-weight-bold" name="numStockSelect" id="numStockSelect"></select> -->
 			<button type="button" class="btn tools-btn font-weight-bold text-muted" data-toggle="modal" data-target="#sendExcelModal">
 				Загрузить Excel
 			</button>
@@ -31,144 +32,165 @@
 	</div>
 
 	<!-- модальное окно редактирования поставки -->
-	<div class="modal fade" id="editDeliveryModal" tabindex="-1" aria-labelledby="editDeliveryModalLabel" aria-hidden="true">
+	<div class="modal fade" id="editScheduleItemModal" tabindex="-1" aria-labelledby="editScheduleItemModalLabel" aria-hidden="true">
 		<div class="modal-dialog modal-lg">
 			<div class="modal-content">
 				<div class="modal-header">
-					<h1 class="modal-title fs-5 mt-0" id="editDeliveryModalLabel">Редактирование поставки</h1>
+					<h1 class="modal-title fs-5 mt-0" id="editScheduleItemModalLabel">Редактирование поставки</h1>
 					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 						<span aria-hidden="true">&times;</span>
 					</button>
 				</div>
-				<form id="editDeliveryForm" action="">
+				<form id="editScheduleItemForm" action="">
 					<div class="modal-body">
 						<div class="inputs-container">
+							<input type="hidden" name="idSchedule" id="idSchedule">
+							<input type="hidden" name="supplies" id="supplies">
+							<!-- <input type="hidden" name="numStock" id="numStock">
+							<input type="hidden" name="description" id="description">
+							<input type="hidden" name="dateLasCalculation" id="dateLasCalculation">
+							<input type="hidden" name="tz" id="tz">
+							<input type="hidden" name="tp" id="tp"> -->
+
 							<div>
 								<label class="sr-only" for="counterpartyCode">Код контрагента</label>
 								<div class="input-group mb-3">
 									<div class="input-group-prepend">
 										<div class="input-group-text">Код контрагента</div>
 									</div>
-									<input type="text" class="form-control" name="counterpartyCode" id="counterpartyCode" placeholder="Код контрагента">
+									<input type="number" class="form-control" name="counterpartyCode" id="counterpartyCode" min="0" placeholder="Код контрагента" required>
 								</div>
 							</div>
 							<div>
-								<label class="sr-only" for="counterpartyName">Наименование контрагента</label>
+								<label class="sr-only" for="name">Наименование контрагента</label>
 								<div class="input-group mb-3">
 									<div class="input-group-prepend">
 										<div class="input-group-text">Наименование</div>
 									</div>
-									<input type="text" class="form-control" name="counterpartyName" id="counterpartyName" placeholder="Наименование контрагента">
+									<input type="text" class="form-control" name="name" id="name" placeholder="Наименование контрагента" required>
 								</div>
 							</div>
 							<div>
-								<label class="sr-only" for="contractNumber">Номер контракта</label>
+								<label class="sr-only" for="counterpartyContractCode">Номер контракта</label>
 								<div class="input-group mb-3">
 									<div class="input-group-prepend">
 										<div class="input-group-text">Номер контракта</div>
 									</div>
-									<input type="text" class="form-control" name="contractNumber" id="contractNumber" placeholder="Номер контракта">
+									<input type="number" class="form-control" name="counterpartyContractCode" id="counterpartyContractCode" min="0" placeholder="Номер контракта" required>
 								</div>
 							</div>
 							<div>
-								<label class="sr-only" for="note">Примечание</label>
+								<label class="sr-only" for="comment">Примечание</label>
 								<div class="input-group mb-3">
 									<div class="input-group-prepend">
 										<div class="input-group-text">Примечание</div>
 									</div>
-									<input type="text" class="form-control" name="note" id="note" placeholder="Примечание">
+									<input type="text" class="form-control" name="comment" id="comment" placeholder="Примечание">
 								</div>
 							</div>
-							<div class="mb-3">
-								<label class="sr-only" for="note">Неделя/Сроки</label>
-								<div class="input-group">
+							<div>
+								<label class="sr-only" for="comment">Расчет стока до Y-й поставки</label>
+								<div class="input-group mb-3">
 									<div class="input-group-prepend">
-										<div class="input-group-text">Неделя/Сроки <span class="text-red">*</span></div>
+										<div class="input-group-text">Расчет стока до Y-й поставки</div>
 									</div>
-									<select id="deliveryFrequency" name="deliveryFrequency" class="form-control" required>
-										<option value="" hidden disabled selected>Выберите один из пунктов</option>
-										<option value=""></option>
-										<option value="Магазин">Неделя</option>
-										<option value="Склад">Сроки</option>
+									<select id="runoffCalculation" name="runoffCalculation" class="form-control" required>
+										<option value="" selected hidden disabled></option>
+										<option value="1">1</option>
+										<option value="2">2</option>
+										<option value="3">3</option>
+										<option value="4">4</option>
 									</select>
+								</div>
+							</div>
+							<div class="input-row-container flex-wrap">
+								<div class="form-check form-group">
+									<input type="checkbox" class="form-check-input" name="multipleOfPallet" id="multipleOfPallet">
+									<label for="multipleOfPallet" class="form-check-label text-muted font-weight-bold">Кратно поддону</label>
+								</div>
+								<div class="form-check form-group">
+									<input type="checkbox" class="form-check-input" name="multipleOfTruck" id="multipleOfTruck">
+									<label for="multipleOfTruck" class="form-check-label text-muted font-weight-bold">Кратно машине</label>
 								</div>
 							</div>
 
 							<div class="mb-2 text-muted font-weight-bold text-center">График поставок</div>
+							<div class="mb-3">
+								<label class="sr-only" for="note">Неделя/Сроки</label>
+								<div class="input-group">
+									<div class="input-group-prepend">
+										<div class="input-group-text">Неделя/Сроки</div>
+									</div>
+									<select id="note" name="note" class="form-control">
+										<option value=""></option>
+										<option value="неделя">Неделя</option>
+										<option value="сроки">Сроки</option>
+									</select>
+								</div>
+							</div>
 							<div id="scheduleContainer" class="scheduleContainer mb-3">
 								<div>
-									<label class="sr-only" for="note">Пн</label>
+									<label class="sr-only" for="monday">Пн</label>
 									<div class="input-group">
 										<div class="input-group-prepend">
 											<div class="input-group-text">Пн</div>
 										</div>
-										<select id="mon" name="mon" class="scheduleSelect form-control" required></select>
+										<select id="monday" name="monday" class="scheduleSelect form-control"></select>
 									</div>
 								</div>
 								<div>
-									<label class="sr-only" for="note">Вт</label>
+									<label class="sr-only" for="tuesday">Вт</label>
 									<div class="input-group">
 										<div class="input-group-prepend">
 											<div class="input-group-text">Вт</div>
 										</div>
-										<select id="tue" name="tue" class="scheduleSelect form-control" required></select>
+										<select id="tuesday" name="tuesday" class="scheduleSelect form-control"></select>
 									</div>
 								</div>
 								<div>
-									<label class="sr-only" for="note">Ср</label>
+									<label class="sr-only" for="wednesday">Ср</label>
 									<div class="input-group">
 										<div class="input-group-prepend">
 											<div class="input-group-text">Ср</div>
 										</div>
-										<select id="wed" name="wed" class="scheduleSelect form-control" required></select>
+										<select id="wednesday" name="wednesday" class="scheduleSelect form-control"></select>
 									</div>
 								</div>
 								<div>
-									<label class="sr-only" for="note">Чт</label>
+									<label class="sr-only" for="thursday">Чт</label>
 									<div class="input-group">
 										<div class="input-group-prepend">
 											<div class="input-group-text">Чт</div>
 										</div>
-										<select id="thu" name="thu" class="scheduleSelect form-control" required></select>
+										<select id="thursday" name="thursday" class="scheduleSelect form-control"></select>
 									</div>
 								</div>
 								<div>
-									<label class="sr-only" for="note">Пт</label>
+									<label class="sr-only" for="friday">Пт</label>
 									<div class="input-group">
 										<div class="input-group-prepend">
 											<div class="input-group-text">Пт</div>
 										</div>
-										<select id="fri" name="fri" class="scheduleSelect form-control" required></select>
+										<select id="friday" name="friday" class="scheduleSelect form-control"></select>
 									</div>
 								</div>
 								<div>
-									<label class="sr-only" for="note">Сб</label>
+									<label class="sr-only" for="saturday">Сб</label>
 									<div class="input-group">
 										<div class="input-group-prepend">
 											<div class="input-group-text">Сб</div>
 										</div>
-										<select id="sat" name="sat" class="scheduleSelect form-control" required></select>
+										<select id="saturday" name="saturday" class="scheduleSelect form-control"></select>
 									</div>
 								</div>
 								<div>
-									<label class="sr-only" for="note">Вс</label>
+									<label class="sr-only" for="sunday">Вс</label>
 									<div class="input-group">
 										<div class="input-group-prepend">
 											<div class="input-group-text">Вс</div>
 										</div>
-										<select id="sun" name="sun" class="scheduleSelect form-control" required></select>
+										<select id="sunday" name="sunday" class="scheduleSelect form-control"></select>
 									</div>
-								</div>
-							</div>
-
-							<div class="input-row-container flex-wrap">
-								<div class="form-check form-group">
-									<input type="checkbox" class="form-check-input" name="palletMultiple" id="palletMultiple">
-									<label for="palletMultiple" class="form-check-label text-muted font-weight-bold">Кратно поддону</label>
-								</div>
-								<div class="form-check form-group">
-									<input type="checkbox" class="form-check-input" name="carMultiple" id="carMultiple">
-									<label for="carMultiple" class="form-check-label text-muted font-weight-bold">Кратно машине</label>
 								</div>
 							</div>
 						</div>
@@ -182,6 +204,7 @@
 		</div>
 	</div>
 
+	<!-- модальное окно загрузки таблицы Эксель -->
 	<div class="modal fade" id="sendExcelModal" tabindex="-1" aria-labelledby="sendExcelModalLabel" aria-hidden="true">
 		<div class="modal-dialog">
 			<div class="modal-content">

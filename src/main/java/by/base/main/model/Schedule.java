@@ -1,5 +1,7 @@
 package by.base.main.model;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 import javax.persistence.Column;
@@ -8,6 +10,9 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Transient;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "schedule")
@@ -80,6 +85,10 @@ public class Schedule {
 
     @Column(name = "date_last_calculation")
     private Date dateLastCalculation;
+    
+    @JsonIgnore
+    @Transient
+    private List<String> days;
 
     // Getters and Setters
 
@@ -89,7 +98,40 @@ public class Schedule {
         return idSchedule;
     }
 
-    public Integer getRunoffCalculation() {
+    public List<String> getDays() {
+    	days = new ArrayList<String>();
+    	if(monday != null) {
+    		days.add("MONDAY");
+    	}
+    	
+    	if(tuesday != null) {
+    		days.add("TUESDAY");
+    	}
+    	
+    	if(wednesday != null) {
+    		days.add("WEDNESDAY");
+    	}
+    	
+    	if(thursday != null) {
+    		days.add("THURSDAY");
+    	}
+    	
+    	if(friday != null) {
+    		days.add("FRIDAY");
+    	}
+    	
+    	if(saturday != null) {
+    		days.add("SATURDAY");
+    	}
+    	
+    	if(sunday != null) {
+    		days.add("SUNDAY");
+    	}
+    	
+		return days;
+	}
+
+	public Integer getRunoffCalculation() {
 		return runoffCalculation;
 	}
 

@@ -50,7 +50,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	private static final String queryGetObjByNumContract = "from Schedule where counterpartyContractCode=:counterpartyContractCode";
 	@Transactional
 	@Override
-	public Schedule getScheduleByNumContract(Integer num) {
+	public Schedule getScheduleByNumContract(Long num) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<Schedule> theObject = currentSession.createQuery(queryGetObjByNumContract, Schedule.class);
 		theObject.setParameter("counterpartyContractCode", num);

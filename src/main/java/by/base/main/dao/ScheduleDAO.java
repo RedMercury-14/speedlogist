@@ -10,7 +10,7 @@ public interface ScheduleDAO {
 	
 	List<Schedule> getSchedules();
 		
-	Schedule getScheduleByNumContract(Integer num);
+	Schedule getScheduleByNumContract(Long num);
 		
 	Integer saveOrder (Schedule schedule);
 	

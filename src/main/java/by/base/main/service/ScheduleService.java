@@ -10,7 +10,7 @@ public interface ScheduleService {
 	
 	List<Schedule> getSchedules();
 		
-	Schedule getScheduleByNumContract(Integer num);
+	Schedule getScheduleByNumContract(Long num);
 		
 	Integer saveSchedule (Schedule schedule);
 	

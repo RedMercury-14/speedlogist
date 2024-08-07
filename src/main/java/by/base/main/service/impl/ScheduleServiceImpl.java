@@ -28,7 +28,7 @@ public class ScheduleServiceImpl implements ScheduleService{
 	}
 
 	@Override
-	public Schedule getScheduleByNumContract(Integer num) {
+	public Schedule getScheduleByNumContract(Long num) {
 		// TODO Auto-generated method stub
 		return scheduleDAO.getScheduleByNumContract(num);
 	}

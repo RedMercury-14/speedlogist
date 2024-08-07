@@ -248,9 +248,46 @@ public class MainRestController {
 	public static final Comparator<Address> comparatorAddressId = (Address e1, Address e2) -> (e1.getIdAddress() - e2.getIdAddress());
 	public static final Comparator<Address> comparatorAddressIdForView = (Address e1, Address e2) -> (e2.getType().charAt(0) - e1.getType().charAt(0));
 	
+	@GetMapping("/slots/delivery-schedule/checkSchedule/{num}&{date}")
+	public Map<String, Object> getCheckSchedule(HttpServletRequest request, @PathVariable String num, @PathVariable String date) {
+		Map<String, Object> response = new HashMap<String, Object>();	
+		Schedule schedule = scheduleService.getScheduleByNumContract(Long.parseLong(num));
+		
+		if(schedule == null) {
+			response.put("status", "200");
+			response.put("flag", false);
+			response.put("body", null);
+			return response;
+		}
+		
+		Date dateTarget = Date.valueOf(date);
+		String targetDayOfWeek = dateTarget.toLocalDate().getDayOfWeek().toString();
+		
+		boolean flag = false;
+		
+		for (String day : schedule.getDays()) {
+			if(targetDayOfWeek.equals(day)) {
+				flag = true;
+				break;
+			}
+		}
+		
+		response.put("status", "200");
+		response.put("flag", flag);
+		response.put("body", schedule);
+		return response;		
+	}
+	
+	@GetMapping("/slots/delivery-schedule/getScheduleNumContract/{num}")
+	public Map<String, Object> getScheduleNumContract(HttpServletRequest request, @PathVariable String num) {
+		Map<String, Object> response = new HashMap<String, Object>();	
+		response.put("status", "200");
+		response.put("body", scheduleService.getScheduleByNumContract(Long.parseLong(num)));
+		return response;		
+	}
 	
 	/**
-	 * едактирование поставок
+	 * Pедактирование поставок
 	 * @param request
 	 * @param str
 	 * @return
@@ -275,29 +312,31 @@ public class MainRestController {
 		}
 		
 		Schedule schedule = scheduleService.getScheduleById(Integer.parseInt(jsonMainObject.get("idSchedule").toString()));
-		schedule.setCounterpartyCode(jsonMainObject.get("counterpartyCode") == null ? null : Long.parseLong(jsonMainObject.get("counterpartyCode").toString()));
-		schedule.setCounterpartyContractCode(jsonMainObject.get("counterpartyContractCode") == null ? null : Long.parseLong(jsonMainObject.get("counterpartyContractCode").toString()));
-		schedule.setSupplies(jsonMainObject.get("supplies") == null ? null : Integer.parseInt(jsonMainObject.get("supplies").toString()));
-		schedule.setNumStock(jsonMainObject.get("numStock") == null ? null : Integer.parseInt(jsonMainObject.get("numStock").toString()));
-		schedule.setRunoffCalculation(jsonMainObject.get("runoffCalculation") == null ? null : Integer.parseInt(jsonMainObject.get("runoffCalculation").toString()));
-		schedule.setName(jsonMainObject.get("name") == null ? null : jsonMainObject.get("name").toString());
-		schedule.setNote(jsonMainObject.get("note") == null ? null : jsonMainObject.get("note").toString());
-		schedule.setMonday(jsonMainObject.get("monday") == null ? null : jsonMainObject.get("monday").toString());
-		schedule.setTuesday(jsonMainObject.get("tuesday") == null ? null : jsonMainObject.get("tuesday").toString());
-		schedule.setWednesday(jsonMainObject.get("wednesday") == null ? null : jsonMainObject.get("wednesday").toString());
-		schedule.setThursday(jsonMainObject.get("thursday") == null ? null : jsonMainObject.get("thursday").toString());
-		schedule.setFriday(jsonMainObject.get("friday") == null ? null : jsonMainObject.get("friday").toString());
-		schedule.setSaturday(jsonMainObject.get("saturday") == null ? null : jsonMainObject.get("saturday").toString());
-		schedule.setSunday(jsonMainObject.get("sunday") == null ? null : jsonMainObject.get("sunday").toString());
-		schedule.setTz(jsonMainObject.get("tz") == null ? null : jsonMainObject.get("tz").toString());
-		schedule.setTp(jsonMainObject.get("tp") == null ? null : jsonMainObject.get("tp").toString());
-		schedule.setComment(jsonMainObject.get("comment") == null ? null : jsonMainObject.get("comment").toString());
-		schedule.setDescription(jsonMainObject.get("description") == null ? null : jsonMainObject.get("description").toString());
-		schedule.setMultipleOfPallet(jsonMainObject.get("multipleOfPallet") == null ? null : jsonMainObject.get("multipleOfPallet").toString().equals("true") ? true : false );
-		schedule.setMultipleOfPallet(jsonMainObject.get("multipleOfTruck") == null ? null : jsonMainObject.get("multipleOfTruck").toString().equals("true") ? true : false );
+		schedule.setCounterpartyCode(jsonMainObject.get("counterpartyCode") == null || jsonMainObject.get("counterpartyCode").toString().isEmpty() ? null : Long.parseLong(jsonMainObject.get("counterpartyCode").toString()));
+		schedule.setCounterpartyContractCode(jsonMainObject.get("counterpartyContractCode") == null || jsonMainObject.get("counterpartyContractCode").toString().isEmpty() ? null : Long.parseLong(jsonMainObject.get("counterpartyContractCode").toString()));
+		schedule.setSupplies(jsonMainObject.get("supplies") == null || jsonMainObject.get("supplies").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("supplies").toString()));
+		schedule.setNumStock(jsonMainObject.get("numStock") == null || jsonMainObject.get("numStock").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("numStock").toString()));
+		schedule.setRunoffCalculation(jsonMainObject.get("runoffCalculation") == null || jsonMainObject.get("runoffCalculation").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("runoffCalculation").toString()));
+		schedule.setName(jsonMainObject.get("name") == null || jsonMainObject.get("name").toString().isEmpty() ? null : jsonMainObject.get("name").toString());
+		schedule.setNote(jsonMainObject.get("note") == null || jsonMainObject.get("note").toString().isEmpty() ? null : jsonMainObject.get("note").toString());
+		schedule.setMonday(jsonMainObject.get("monday") == null || jsonMainObject.get("monday").toString().isEmpty() ? null : jsonMainObject.get("monday").toString());
+		schedule.setTuesday(jsonMainObject.get("tuesday") == null || jsonMainObject.get("tuesday").toString().isEmpty() ? null : jsonMainObject.get("tuesday").toString());
+		schedule.setWednesday(jsonMainObject.get("wednesday") == null || jsonMainObject.get("wednesday").toString().isEmpty() ? null : jsonMainObject.get("wednesday").toString());
+		schedule.setThursday(jsonMainObject.get("thursday") == null || jsonMainObject.get("thursday").toString().isEmpty() ? null : jsonMainObject.get("thursday").toString());
+		schedule.setFriday(jsonMainObject.get("friday") == null || jsonMainObject.get("friday").toString().isEmpty() ? null : jsonMainObject.get("friday").toString());
+		schedule.setSaturday(jsonMainObject.get("saturday") == null || jsonMainObject.get("saturday").toString().isEmpty() ? null : jsonMainObject.get("saturday").toString());
+		schedule.setSunday(jsonMainObject.get("sunday") == null || jsonMainObject.get("sunday").toString().isEmpty() ? null : jsonMainObject.get("sunday").toString());
+		schedule.setTz(jsonMainObject.get("tz") == null || jsonMainObject.get("tz").toString().isEmpty() ? null : jsonMainObject.get("tz").toString());
+		schedule.setTp(jsonMainObject.get("tp") == null || jsonMainObject.get("tp").toString().isEmpty() ? null : jsonMainObject.get("tp").toString());
+		schedule.setComment(jsonMainObject.get("comment") == null || jsonMainObject.get("comment").toString().isEmpty() ? null : jsonMainObject.get("comment").toString());
+		schedule.setDescription(jsonMainObject.get("description") == null || jsonMainObject.get("description").toString().isEmpty() ? null : jsonMainObject.get("description").toString());
+		schedule.setMultipleOfPallet(jsonMainObject.get("multipleOfPallet") == null || jsonMainObject.get("multipleOfPallet").toString().isEmpty() ? null : jsonMainObject.get("multipleOfPallet").toString().equals("true") ? true : false);
+		schedule.setMultipleOfTruck(jsonMainObject.get("multipleOfTruck") == null || jsonMainObject.get("multipleOfTruck").toString().isEmpty() ? null : jsonMainObject.get("multipleOfTruck").toString().equals("true") ? true : false);
+
 		
 		scheduleService.updateSchedule(schedule);		
 		response.put("status", "200");
+		response.put("message", "Отредактировано");
 		return response;		
 	}
 	
@@ -310,37 +349,54 @@ public class MainRestController {
 	 * @throws IOException
 	 */
 	@PostMapping("/slots/delivery-schedule/create")
-	public Map<String, String> postCreateDeliverySchedule(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
-		Map<String, String> response = new HashMap<String, String>();
+	public Map<String, Object> postCreateDeliverySchedule(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+		Map<String, Object> response = new HashMap<String, Object>();
 		if(str == null) {
 			response.put("status", "100");
 			response.put("message", "Тело запроса = null");
 			return response;
 		}
 		
-		Schedule schedule = new Schedule();
 		JSONParser parser = new JSONParser();
 		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
-		schedule.setCounterpartyCode(jsonMainObject.get("counterpartyCode") == null ? null : Long.parseLong(jsonMainObject.get("counterpartyCode").toString()));
-		schedule.setCounterpartyContractCode(jsonMainObject.get("counterpartyContractCode") == null ? null : Long.parseLong(jsonMainObject.get("counterpartyContractCode").toString()));
-		schedule.setSupplies(jsonMainObject.get("supplies") == null ? null : Integer.parseInt(jsonMainObject.get("supplies").toString()));
-		schedule.setNumStock(jsonMainObject.get("numStock") == null ? null : Integer.parseInt(jsonMainObject.get("numStock").toString()));
-		schedule.setRunoffCalculation(jsonMainObject.get("runoffCalculation") == null ? null : Integer.parseInt(jsonMainObject.get("runoffCalculation").toString()));
-		schedule.setName(jsonMainObject.get("name") == null ? null : jsonMainObject.get("name").toString());
-		schedule.setNote(jsonMainObject.get("note") == null ? null : jsonMainObject.get("note").toString());
-		schedule.setMonday(jsonMainObject.get("monday") == null ? null : jsonMainObject.get("monday").toString());
-		schedule.setTuesday(jsonMainObject.get("tuesday") == null ? null : jsonMainObject.get("tuesday").toString());
-		schedule.setWednesday(jsonMainObject.get("wednesday") == null ? null : jsonMainObject.get("wednesday").toString());
-		schedule.setThursday(jsonMainObject.get("thursday") == null ? null : jsonMainObject.get("thursday").toString());
-		schedule.setFriday(jsonMainObject.get("friday") == null ? null : jsonMainObject.get("friday").toString());
-		schedule.setSaturday(jsonMainObject.get("saturday") == null ? null : jsonMainObject.get("saturday").toString());
-		schedule.setSunday(jsonMainObject.get("sunday") == null ? null : jsonMainObject.get("sunday").toString());
-		schedule.setTz(jsonMainObject.get("tz") == null ? null : jsonMainObject.get("tz").toString());
-		schedule.setTp(jsonMainObject.get("tp") == null ? null : jsonMainObject.get("tp").toString());
-		schedule.setComment(jsonMainObject.get("comment") == null ? null : jsonMainObject.get("comment").toString());
-		schedule.setDescription(jsonMainObject.get("description") == null ? null : jsonMainObject.get("description").toString());
-		schedule.setMultipleOfPallet(jsonMainObject.get("multipleOfPallet") == null ? null : jsonMainObject.get("multipleOfPallet").toString().equals("true") ? true : false );
-		schedule.setMultipleOfPallet(jsonMainObject.get("multipleOfTruck") == null ? null : jsonMainObject.get("multipleOfTruck").toString().equals("true") ? true : false );
+		
+		if(jsonMainObject.get("counterpartyContractCode") == null) {
+			response.put("status", "100");
+			response.put("message", "Отсутствует номер контаркта");
+			return response;
+		}
+		
+		Schedule scheduleOld = scheduleService.getScheduleByNumContract(Long.parseLong(jsonMainObject.get("counterpartyContractCode").toString()));
+		
+		if(scheduleOld != null) {
+			response.put("status", "100");
+			response.put("message", "Данный контракт уже имеется в базе данных");
+			response.put("body", scheduleOld);
+			return response;
+		}
+		
+		Schedule schedule = new Schedule();		
+		schedule.setCounterpartyCode(jsonMainObject.get("counterpartyCode") == null || jsonMainObject.get("counterpartyCode").toString().isEmpty() ? null : Long.parseLong(jsonMainObject.get("counterpartyCode").toString()));
+		schedule.setCounterpartyContractCode(jsonMainObject.get("counterpartyContractCode") == null || jsonMainObject.get("counterpartyContractCode").toString().isEmpty() ? null : Long.parseLong(jsonMainObject.get("counterpartyContractCode").toString()));
+		schedule.setSupplies(jsonMainObject.get("supplies") == null || jsonMainObject.get("supplies").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("supplies").toString()));
+		schedule.setNumStock(jsonMainObject.get("numStock") == null || jsonMainObject.get("numStock").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("numStock").toString()));
+		schedule.setRunoffCalculation(jsonMainObject.get("runoffCalculation") == null || jsonMainObject.get("runoffCalculation").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("runoffCalculation").toString()));
+		schedule.setName(jsonMainObject.get("name") == null || jsonMainObject.get("name").toString().isEmpty() ? null : jsonMainObject.get("name").toString());
+		schedule.setNote(jsonMainObject.get("note") == null || jsonMainObject.get("note").toString().isEmpty() ? null : jsonMainObject.get("note").toString());
+		schedule.setMonday(jsonMainObject.get("monday") == null || jsonMainObject.get("monday").toString().isEmpty() ? null : jsonMainObject.get("monday").toString());
+		schedule.setTuesday(jsonMainObject.get("tuesday") == null || jsonMainObject.get("tuesday").toString().isEmpty() ? null : jsonMainObject.get("tuesday").toString());
+		schedule.setWednesday(jsonMainObject.get("wednesday") == null || jsonMainObject.get("wednesday").toString().isEmpty() ? null : jsonMainObject.get("wednesday").toString());
+		schedule.setThursday(jsonMainObject.get("thursday") == null || jsonMainObject.get("thursday").toString().isEmpty() ? null : jsonMainObject.get("thursday").toString());
+		schedule.setFriday(jsonMainObject.get("friday") == null || jsonMainObject.get("friday").toString().isEmpty() ? null : jsonMainObject.get("friday").toString());
+		schedule.setSaturday(jsonMainObject.get("saturday") == null || jsonMainObject.get("saturday").toString().isEmpty() ? null : jsonMainObject.get("saturday").toString());
+		schedule.setSunday(jsonMainObject.get("sunday") == null || jsonMainObject.get("sunday").toString().isEmpty() ? null : jsonMainObject.get("sunday").toString());
+		schedule.setTz(jsonMainObject.get("tz") == null || jsonMainObject.get("tz").toString().isEmpty() ? null : jsonMainObject.get("tz").toString());
+		schedule.setTp(jsonMainObject.get("tp") == null || jsonMainObject.get("tp").toString().isEmpty() ? null : jsonMainObject.get("tp").toString());
+		schedule.setComment(jsonMainObject.get("comment") == null || jsonMainObject.get("comment").toString().isEmpty() ? null : jsonMainObject.get("comment").toString());
+		schedule.setDescription(jsonMainObject.get("description") == null || jsonMainObject.get("description").toString().isEmpty() ? null : jsonMainObject.get("description").toString());
+		schedule.setMultipleOfPallet(jsonMainObject.get("multipleOfPallet") == null || jsonMainObject.get("multipleOfPallet").toString().isEmpty() ? null : jsonMainObject.get("multipleOfPallet").toString().equals("true") ? true : false);
+		schedule.setMultipleOfTruck(jsonMainObject.get("multipleOfTruck") == null || jsonMainObject.get("multipleOfTruck").toString().isEmpty() ? null : jsonMainObject.get("multipleOfTruck").toString().equals("true") ? true : false);
+
 		Integer id = scheduleService.saveSchedule(schedule);		
 		response.put("status", "200");
 		response.put("message", "График поставок  "+schedule.getName()+" создан");

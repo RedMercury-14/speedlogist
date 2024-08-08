@@ -81,6 +81,7 @@ import by.base.main.model.Act;
 import by.base.main.model.MapResponse;
 import by.base.main.model.Message;
 import by.base.main.model.Order;
+import by.base.main.model.OrderProduct;
 import by.base.main.model.Product;
 import by.base.main.model.Route;
 import by.base.main.model.RouteHasShop;
@@ -1094,6 +1095,38 @@ public class POIExcel {
         wb.close();
         return schedules;
     }
+	
+	/**
+	 * Метод считывает ексель с потребностью и отдаёт мапу, где ключ - это код товара
+	 */
+	public Map<Integer, OrderProduct> loadNeedExcel(File file) throws ServiceException, InvalidFormatException, IOException, ParseException {
+		Map<Integer, OrderProduct> orderMap = new HashMap<>();
+        XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
+        XSSFSheet sheet = wb.getSheetAt(0);
+        for (int i = 3; i <= sheet.getLastRowNum(); i++) { // Начинаем с 1, чтобы пропустить заголовок
+            Row row = sheet.getRow(i);
+
+            if (row != null) {
+                Integer code = (int) row.getCell(0).getNumericCellValue();
+                String nameProduct = row.getCell(1).getStringCellValue();
+                int quantity = (int) row.getCell(2).getNumericCellValue();
+
+                OrderProduct orderProduct = new OrderProduct();
+                orderProduct.setQuantity(quantity);
+                orderProduct.setNameProduct(nameProduct);
+                orderProduct.setDateCreate(new Timestamp(System.currentTimeMillis()));
+                orderProduct.setDateCreate(Timestamp.valueOf(LocalDateTime.now()));
+
+                // Привязываем код как ключ и объект OrderProduct как значение
+                orderMap.put(code, orderProduct);
+            }
+        }
+
+        wb.close();
+        return orderMap;
+    }
+	
+	
 	
 	/**
      * Основной метод смчитки 487 отчёта

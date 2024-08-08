@@ -84,6 +84,7 @@
 										<a class="dropdown-item" href="<spring:url value="/main/analytics/shortage" />">Нехватка товаров на РЦ</a>
 										<a class="dropdown-item" href="<spring:url value="/main/analytics/logistics" />">Аналитика Биржи</a>
 										<a class="dropdown-item" href="<spring:url value="/main/analytics/zero" />">Аналитика нулей</a>
+										<a class="dropdown-item" href="<spring:url value="/main/analytics/changing-matrix" />">Изменения матрицы</a>
 									</div>
 								</li>
 								<li class="dropdown">
@@ -92,6 +93,14 @@
 										<a class="dropdown-item" href="<spring:url value="/main/order-support/orders" />">Остаток товара</a>
 										<a class="dropdown-item" href="<spring:url value="/main/order-support/control" />">Загрузить отчет</a>
 										<!-- <a class="dropdown-item" href="<spring:url value="/main/stock-support/orders" />">Таблица Башкиров</a> -->
+									</div>
+								</li>
+								<li class="dropdown">
+									<a href="#" class="nav-item nav-link" data-toggle="dropdown">ОРЛ</a>
+									<div class="dropdown-menu">
+										<a class="dropdown-item" href="<spring:url value="/main/orl/delivery-schedule" />">График поставок</a>
+										<a class="dropdown-item" href="<spring:url value="/main/orl/need" />">Потребности</a>
+										<a class="dropdown-item" href="<spring:url value="/main/orl/arrival" />">Аналитика нулей</a>
 									</div>
 								</li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/admin" />">Администрация</a></li>
@@ -144,6 +153,17 @@
 										<a class="dropdown-item" href="<spring:url value="/main/analytics/shortage" />">Нехватка товаров на РЦ</a>
 										<a class="dropdown-item" href="<spring:url value="/main/analytics/logistics" />">Аналитика Биржи</a>
 										<a class="dropdown-item" href="<spring:url value="/main/analytics/zero" />">Аналитика нулей</a>
+										<a class="dropdown-item" href="<spring:url value="/main/analytics/changing-matrix" />">Изменения матрицы</a>
+									</div>
+								</li>
+							</c:when>
+							<c:when test="${roles == '[ROLE_ORL]'}">
+								<li class="dropdown">
+									<a href="#" class="nav-item nav-link" data-toggle="dropdown">ОРЛ</a>
+									<div class="dropdown-menu">
+										<a class="dropdown-item" href="<spring:url value="/main/orl/delivery-schedule" />">График поставок</a>
+										<a class="dropdown-item" href="<spring:url value="/main/orl/need" />">Потребности</a>
+										<a class="dropdown-item" href="<spring:url value="/main/orl/arrival" />">Аналитика нулей</a>
 									</div>
 								</li>
 							</c:when>
@@ -197,6 +217,12 @@
 								</li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/slots" />">Слоты</a></li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/procurement/ordersBalance" />">Остаток товара</a></li>
+								<li class="dropdown">
+									<a href="#" class="nav-item nav-link" data-toggle="dropdown">Аналитика</a>
+									<div class="dropdown-menu">
+										<a class="dropdown-item" href="<spring:url value="/main/analytics/changing-matrix" />">Изменения матрицы</a>
+									</div>
+								</li>
 							</c:when>
 							<c:when test="${roles == '[ROLE_STOCKPROCUREMENT]'}">
 								<li class="dropdown">

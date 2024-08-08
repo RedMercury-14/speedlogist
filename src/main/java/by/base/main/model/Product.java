@@ -2,13 +2,18 @@ package by.base.main.model;
 
 import java.sql.Date;
 import java.sql.Timestamp;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 @Entity
@@ -103,6 +108,11 @@ public class Product {
 	
 	@Column(name = "is_exception")
 	private Boolean isException;
+	
+	@OneToMany(fetch=FetchType.LAZY, orphanRemoval = true,
+			   mappedBy="product",
+			   cascade= {CascadeType.ALL})
+	private Set<OrderProduct> orderProducts;
 
 	/**
 	 * @return the idProduct
@@ -509,6 +519,28 @@ public class Product {
 	 */
 	public void setIsException(Boolean isException) {
 		this.isException = isException;
+	}
+	
+	
+	/**
+	 * Возвращает заказы по данному продукту
+	 * @return
+	 */
+	public Set<OrderProduct> getOrderProducts() {
+		return orderProducts;
+	}
+
+	public void setOrderProducts(Set<OrderProduct> orderProducts) {
+		this.orderProducts = orderProducts;
+	}
+	
+	public void addOrderProducts(OrderProduct orderProduct) {
+		if(orderProducts == null) {
+			orderProducts = new HashSet<OrderProduct>();
+			orderProducts.add(orderProduct);
+		}else {
+			orderProducts.add(orderProduct);
+		}
 	}
 
 	@Override

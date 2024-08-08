@@ -106,6 +106,7 @@ import by.base.main.model.JsonResponsePolygon;
 import by.base.main.model.MapResponse;
 import by.base.main.model.Message;
 import by.base.main.model.Order;
+import by.base.main.model.OrderProduct;
 import by.base.main.model.Product;
 import by.base.main.model.Rates;
 import by.base.main.model.Role;
@@ -247,6 +248,53 @@ public class MainRestController {
 
 	public static final Comparator<Address> comparatorAddressId = (Address e1, Address e2) -> (e1.getIdAddress() - e2.getIdAddress());
 	public static final Comparator<Address> comparatorAddressIdForView = (Address e1, Address e2) -> (e2.getType().charAt(0) - e1.getType().charAt(0));
+	
+	@RequestMapping(value = "/orl/need/load", method = RequestMethod.POST, consumes = {
+			MediaType.MULTIPART_FORM_DATA_VALUE })
+	public Map<String, String> postLoadExcelNeed (Model model, HttpServletRequest request, HttpSession session,
+			@RequestParam(value = "excel", required = false) MultipartFile excel)
+			throws InvalidFormatException, IOException, ServiceException {
+		Map<String, String> response = new HashMap<String, String>();	
+		File file1 = poiExcel.getFileByMultipartTarget(excel, request, "need.xlsx");
+		
+		Map<Integer, OrderProduct> mapOrderProduct = new HashMap<Integer, OrderProduct>();
+		try {
+			mapOrderProduct = poiExcel.loadNeedExcel(file1);
+		} catch (InvalidFormatException | IOException | java.text.ParseException | ServiceException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+//		mapOrderProduct.entrySet().forEach(e-> System.out.println(e.getKey() + "   ---   " + e.getValue()));
+		List<Product> products = productService.getAllProductList();
+		Map<Integer, Product> productsMap = products.stream().collect(Collectors.toMap(
+		        Product::getCodeProduct,
+		        product -> product,
+		        (existing, replacement) -> existing // игнорируем дубликат
+		    ));
+		
+		for (Map.Entry<Integer, OrderProduct> entry : mapOrderProduct.entrySet()) {
+			Product product = productsMap.get(entry.getKey());
+			System.out.println(product);
+			if(product == null) {
+				System.err.println("Продукт не найден " + entry.getValue());
+				product = new Product();
+				product.setCodeProduct(entry.getKey());
+				product.setName(entry.getValue().getNameProduct());
+				entry.getValue().setProduct(product);
+				product.addOrderProducts(entry.getValue());
+				productService.saveProduct(product);
+				continue;
+			}
+			entry.getValue().setProduct(product);
+			product.addOrderProducts(entry.getValue());
+			productService.updateProduct(product);
+		}
+		
+		response.put("200", "ads");
+//		response.put("body", schedules.toString());
+		return response;
+	}
 	
 	@GetMapping("/slots/delivery-schedule/checkSchedule/{num}&{date}")
 	public Map<String, Object> getCheckSchedule(HttpServletRequest request, @PathVariable String num, @PathVariable String date) {

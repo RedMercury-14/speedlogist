@@ -1,7 +1,9 @@
 package by.base.main.model;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import javax.persistence.Column;
@@ -86,6 +88,9 @@ public class Schedule {
     @Column(name = "date_last_calculation")
     private Date dateLastCalculation;
     
+    @Column(name = "status")
+    private Integer status;
+    
     @JsonIgnore
     @Transient
     private List<String> days;
@@ -97,7 +102,26 @@ public class Schedule {
     public Integer getIdSchedule() {
         return idSchedule;
     }
+    
+    
 
+    public Integer getStatus() {
+		return status;
+	}
+
+
+
+	public void setStatus(Integer status) {
+		this.status = status;
+	}
+
+
+
+	/**
+     * Метод отдаёт лист с днями, которые не равны null
+     * 
+     * @return
+     */
     public List<String> getDays() {
     	days = new ArrayList<String>();
     	if(monday != null) {
@@ -129,6 +153,43 @@ public class Schedule {
     	}
     	
 		return days;
+	}
+    
+    /**
+     * Отдаёт мапу с днями, где ключи это день (в аппер кейсе) а значение - хначение этого дня
+     * @return
+     */
+    public Map<String, String> getDaysMap() {
+    	Map<String, String> map = new HashMap<String, String>();
+    	if(monday != null) {
+    		map.put("MONDAY", monday);
+    	}
+    	
+    	if(tuesday != null) {
+    		map.put("TUESDAY", tuesday);
+    	}
+    	
+    	if(wednesday != null) {
+    		map.put("WEDNESDAY", wednesday);
+    	}
+    	
+    	if(thursday != null) {
+    		map.put("THURSDAY", thursday);
+    	}
+    	
+    	if(friday != null) {
+    		map.put("FRIDAY", friday);
+    	}
+    	
+    	if(saturday != null) {
+    		map.put("SATURDAY", saturday);
+    	}
+    	
+    	if(sunday != null) {
+    		map.put("SUNDAY", sunday);
+    	}
+    	
+		return map;
 	}
 
 	public Integer getRunoffCalculation() {

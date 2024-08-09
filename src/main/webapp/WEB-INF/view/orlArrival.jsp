@@ -8,9 +8,9 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="${_csrf.parameterName}" content="${_csrf.token}" />
-	<title>Потребности</title>
+	<title>Приход</title>
 	<link rel="icon" href="${pageContext.request.contextPath}/resources/img/favicon.ico">
-	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/orlNeed.css">
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/orlArrival.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/snackbar.css">
 </head>
 
@@ -45,6 +45,6 @@
 	<jsp:include page="footer.jsp" />
 
 	<script src='${pageContext.request.contextPath}/resources/mainPage/js/nav-fixed-top.js'></script>
-	<script src="${pageContext.request.contextPath}/resources/js/orlNeed.js" type="module"></script>
+	<script src="${pageContext.request.contextPath}/resources/js/orlArrival.js" type="module"></script>
 </body>
 </html>

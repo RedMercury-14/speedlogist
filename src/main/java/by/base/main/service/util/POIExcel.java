@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -1060,12 +1061,16 @@ public class POIExcel {
             	continue;
             }
             
-            String counterpartyCode = row.getCell(0).getNumericCellValue()+"";
-            String counterpartyContractCode = row.getCell(2).getNumericCellValue() + "";
+            BigDecimal bigDecimalValueCode = new BigDecimal(row.getCell(0).getNumericCellValue()); // это отвечает за преобразование больших чисел
+            String counterpartyCode = bigDecimalValueCode.toString();
             
-            schedule.setCounterpartyCode(Long.parseLong(counterpartyCode.split("\\.")[0]));
+            BigDecimal bigDecimalValueContractCode = new BigDecimal(row.getCell(2).getNumericCellValue()); // это отвечает за преобразование больших чисел
+            String counterpartyContractCode = bigDecimalValueContractCode.toString();
+            
+            
+            schedule.setCounterpartyCode(Long.parseLong(counterpartyCode));
             schedule.setName(row.getCell(1).getStringCellValue().trim());
-            schedule.setCounterpartyContractCode(Long.parseLong(counterpartyContractCode.split("\\.")[0]));
+            schedule.setCounterpartyContractCode(Long.parseLong(counterpartyContractCode));
             schedule.setNote(row.getCell(3).getStringCellValue());
             schedule.setMonday(row.getCell(4).getStringCellValue().equals("") ? null : row.getCell(4).getStringCellValue());
             schedule.setTuesday(row.getCell(5).getStringCellValue().equals("") ? null : row.getCell(5).getStringCellValue());
@@ -1081,6 +1086,7 @@ public class POIExcel {
             schedule.setComment(row.getCell(15) == null || row.getCell(15).getStringCellValue().equals("") ? null : row.getCell(15).getStringCellValue());
             schedule.setMultipleOfPallet(row.getCell(16) == null || row.getCell(16).getStringCellValue().equals("") ? false : true);
             schedule.setMultipleOfTruck(row.getCell(17) == null || row.getCell(17).getStringCellValue().equals("") ? false : true);
+            schedule.setStatus(20);
 //            schedule.setNumStock((int) row.getCell(17).getNumericCellValue());
 //            schedule.setDescription(row.getCell(18).getStringCellValue());
 

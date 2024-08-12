@@ -236,7 +236,7 @@
 								<li class="dropdown">
 									<a href="#" class="nav-item nav-link" data-toggle="dropdown">Аналитика</a>
 									<div class="dropdown-menu">
-										<a class="dropdown-item" href="<spring:url value="/main/analytics/changing-matrix" />">Изменения матрицы</a>
+										<!-- <a class="dropdown-item" href="<spring:url value="/main/analytics/changing-matrix" />">Изменения матрицы</a> -->
 									</div>
 								</li>
 							</c:when>

@@ -35,7 +35,7 @@
 			<strong><h3>График поставок контрагентов</h3></strong>
 		</div>
 		<div class="toolbar">
-			<!-- <select class="btn tools-btn font-weight-bold" name="numStockSelect" id="numStockSelect"></select> -->
+			<select class="btn tools-btn font-weight-bold" name="numStockSelect" id="numStockSelect"></select>
 			<button type="button" class="btn tools-btn font-weight-bold text-muted" data-toggle="modal" data-target="#addScheduleItemModal">
 				+ Добавить новый график
 			</button>
@@ -66,8 +66,7 @@
 						<div class="inputs-container">
 							<!-- <input type="hidden" name="idSchedule" id="idSchedule"> -->
 							<input type="hidden" name="supplies" id="supplies">
-							<!-- <input type="hidden" name="numStock" id="numStock">
-							<input type="hidden" name="description" id="description">
+							<!-- <input type="hidden" name="description" id="description">
 							<input type="hidden" name="dateLasCalculation" id="dateLasCalculation">
 							<input type="hidden" name="tz" id="tz">
 							<input type="hidden" name="tp" id="tp"> -->
@@ -101,6 +100,17 @@
 									<input type="number" class="form-control counterpartyContractCode" name="counterpartyContractCode" id="counterpartyContractCode" min="0" placeholder="Номер контракта" required>
 								</div>
 								<div class="error-message" id="messageNumshop"></div>
+							</div>
+							<div class="mb-3">
+								<label class="sr-only" for="numStock">Номер склада</label>
+								<div class="input-group">
+									<div class="input-group-prepend">
+										<div class="input-group-text">Номер склада</div>
+									</div>
+									<select id="numStock" name="numStock" class="form-control" required>
+										<option value="" selected hidden disabled></option>
+									</select>
+								</div>
 							</div>
 							<div class="mb-3">
 								<label class="sr-only" for="comment">Примечание</label>
@@ -234,8 +244,7 @@
 						<div class="inputs-container">
 							<input type="hidden" name="idSchedule" id="idSchedule">
 							<input type="hidden" name="supplies" id="supplies">
-							<!-- <input type="hidden" name="numStock" id="numStock">
-							<input type="hidden" name="description" id="description">
+							<!-- <input type="hidden" name="description" id="description">
 							<input type="hidden" name="dateLasCalculation" id="dateLasCalculation">
 							<input type="hidden" name="tz" id="tz">
 							<input type="hidden" name="tp" id="tp"> -->
@@ -267,6 +276,17 @@
 									<input type="number" class="form-control counterpartyContractCode" name="counterpartyContractCode" id="counterpartyContractCode" min="0" placeholder="Номер контракта" required>
 								</div>
 								<div class="error-message" id="messageNumshop"></div>
+							</div>
+							<div class="mb-3">
+								<label class="sr-only" for="numStock">Номер склада</label>
+								<div class="input-group">
+									<div class="input-group-prepend">
+										<div class="input-group-text">Номер склада</div>
+									</div>
+									<select id="numStock" name="numStock" class="form-control" required>
+										<option value="" selected hidden disabled></option>
+									</select>
+								</div>
 							</div>
 							<div class="mb-3">
 								<label class="sr-only" for="comment">Примечание</label>
@@ -401,9 +421,6 @@
 								<label class="col-form-label text-muted font-weight-bold">Укажите номер склада</label>
 								<select id="numStock" name="numStock" class="form-control" required>
 									<option value="" selected hidden disabled></option>
-									<option value="1700">1700</option>
-									<option value="1200">1200</option>
-									<option value="1250">1250</option>
 								</select>
 							</div>
 							<div class="form-group">

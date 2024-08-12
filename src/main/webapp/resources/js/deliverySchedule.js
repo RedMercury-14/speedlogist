@@ -220,11 +220,11 @@ const columnDefs = [
 		cellClass: 'px-1 py-0 text-center grid-checkbox',
 		width: 75,
 	},
-	// {
-	// 	headerName: 'Номер склада', field: 'numStock',
-	// 	cellClass: 'px-1 py-0 text-center font-weight-bold',
-	// 	width: 75,
-	// },
+	{
+		headerName: 'Номер склада', field: 'numStock',
+		cellClass: 'px-1 py-0 text-center font-weight-bold',
+		width: 75,
+	},
 	// {
 	// 	headerName: 'Описание контракта', field: 'description',
 	// 	cellClass: 'px-1 py-0 text-center',
@@ -321,9 +321,18 @@ window.onload = async () => {
 	editScheduleItemForm && editScheduleItemForm.addEventListener('submit', editScheduleItemFormHandler)
 
 	// выпадающий список выбора отображаемого склада
-	// const numStockSelect = document.querySelector("#numStockSelect")
-	// createNumStockOptions(numStockSelect)
-	// numStockSelect && numStockSelect.addEventListener('change', onNumStockSelectChangeHandler)
+	const numStockSelect = document.querySelector("#numStockSelect")
+	createNumStockOptions(numStockSelect)
+	numStockSelect && numStockSelect.addEventListener('change', onNumStockSelectChangeHandler)
+
+	const excelNumStock = document.querySelector('#sendExcelModal #numStock')
+	const addNumStock = addScheduleItemForm.querySelector('#numStock')
+	const editNumStock = editScheduleItemForm.querySelector('#numStock')
+
+	// создаем опции складов
+	createOptions(stocks, excelNumStock)
+	createOptions(stocks, addNumStock)
+	createOptions(stocks, editNumStock)
 
 	// чекбоксы пометки "Неделя"
 	const addNoteCheckbox = addScheduleItemForm.querySelector('#addNote')
@@ -335,10 +344,13 @@ window.onload = async () => {
 	const res = await getData(getScheduleUrl)
 	scheduleData = res.body
 
+	// показываем стартовые данные
+	const numStockData = scheduleData.filter((item) => item.numStock === 1700)
+
 	// изменение отступа для таблицы
 	changeGridTableMarginTop()
 	// создание таблицы
-	renderTable(gridDiv, gridOptions, scheduleData)
+	renderTable(gridDiv, gridOptions, numStockData)
 	// получение настроек таблицы из localstorage
 	restoreColumnState()
 	restoreFilterState()
@@ -407,7 +419,10 @@ async function updateTable() {
 		return
 	}
 
-	const mappingData = getMappingData(scheduleData)
+	const numStockSelect = document.querySelector("#numStockSelect")
+	const numStock = Number(numStockSelect.value)
+	const numStockData = scheduleData.filter((item) => item.numStock === numStock)
+	const mappingData = getMappingData(numStockData)
 
 	gridOptions.api.setRowData(mappingData)
 	gridOptions.api.hideOverlay()
@@ -533,9 +548,10 @@ function showScheduleItem(rowNode) {
 
 // обработчик смены склада
 function onNumStockSelectChangeHandler(e) {
-	const numStock = e.target.value
+	const numStock = Number(e.target.value)
 	const numStockData = scheduleData.filter((item) => item.numStock === numStock)
-	updateTable(numStockData)
+	const mappingData = getMappingData(numStockData)
+	gridOptions.api.setRowData(mappingData)
 }
 
 // обработчик смены пометки Сроки/Неделя
@@ -697,6 +713,7 @@ function scheduleItemDataFormatter(formData) {
 	const counterpartyCode = Number(data.counterpartyCode)
 	const counterpartyContractCode = Number(data.counterpartyContractCode)
 	const runoffCalculation = Number(data.runoffCalculation)
+	const numStock = Number(data.numStock)
 	let res = {
 		...data,
 		note,
@@ -706,6 +723,7 @@ function scheduleItemDataFormatter(formData) {
 		counterpartyCode,
 		counterpartyContractCode,
 		runoffCalculation,
+		numStock,
 	}
 	if (data.idSchedule) {
 		res = {
@@ -755,16 +773,16 @@ function setDataToForm(scheduleItem) {
 	// заполняем скрытые поля
 	editScheduleItemForm.idSchedule.value = scheduleItem.idSchedule ? scheduleItem.idSchedule : ''
 	editScheduleItemForm.supplies.value = scheduleItem.supplies ? scheduleItem.supplies : ''
-	// editScheduleItemForm.numStock.value = scheduleItem.numStock ? scheduleItem.numStock : ''
 	// editScheduleItemForm.description.value = scheduleItem.description ? scheduleItem.description : ''
 	// editScheduleItemForm.dateLasCalculation.value = scheduleItem.dateLasCalculation ? scheduleItem.dateLasCalculation : ''
 	// editScheduleItemForm.tz.value = scheduleItem.tz ? scheduleItem.tz : ''
 	// editScheduleItemForm.tp.value = scheduleItem.tp ? scheduleItem.tp : ''
-
+	
 	// заполняем видимые поля
 	editScheduleItemForm.counterpartyCode.value = scheduleItem.counterpartyCode ? scheduleItem.counterpartyCode : ''
 	editScheduleItemForm.name.value = scheduleItem.name ? scheduleItem.name : ''
 	editScheduleItemForm.counterpartyContractCode.value = scheduleItem.counterpartyContractCode ? scheduleItem.counterpartyContractCode : ''
+	editScheduleItemForm.numStock.value = scheduleItem.numStock ? scheduleItem.numStock : ''
 	editScheduleItemForm.comment.value = scheduleItem.comment ? scheduleItem.comment : ''
 	editScheduleItemForm.runoffCalculation.value = scheduleItem.runoffCalculation ? scheduleItem.runoffCalculation : ''
 	editScheduleItemForm.note.checked = scheduleItem.note === 'неделя'

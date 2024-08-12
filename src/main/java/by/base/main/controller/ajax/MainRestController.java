@@ -335,7 +335,7 @@ public class MainRestController {
 	}
 	
 	/**
-	 * метод проверки ставится ли по графику на текущую дату заказ
+	 * метод проверки ставится ли по графику на текущую дату заказ	 * 
 	 * @param schedule - сам график поставок
 	 * @param date - день на который ставится
 	 * @return - если true - то всё ок. Если нет то false
@@ -366,11 +366,23 @@ public class MainRestController {
 	/**
 	 * Метод даёт инфу развернутую инфу для записи в стектрейс
 	 * <br> по простановке заказа согласно графика поставок
+	 * <br> тут же отправляется сообщение, если график поставок отсутствует
+	 * <br> название поставщика, для маил сообщения
+	 * 
 	 * @param num
 	 * @param date
 	 * @return
+	 * @throws IOException 
 	 */
-	private String chheckScheduleMethodAllInfo (String num, String date) {	
+	private String chheckScheduleMethodAllInfo (HttpServletRequest request ,String num, String date, String companyName) throws IOException {	
+		
+		//тут отправляем на почту сообщение
+		String appPath = request.getServletContext().getRealPath("");
+		FileInputStream fileInputStream = new FileInputStream(appPath + "resources/properties/email.properties");
+		properties = new Properties();
+		properties.load(fileInputStream);
+		User user = getThisUser();
+		
 		
 		if(num == null) {
 			return "ННЗ"; // нет номера заказа (в заказе)
@@ -379,6 +391,9 @@ public class MainRestController {
 		Schedule schedule = scheduleService.getScheduleByNumContract(Long.parseLong(num));
 		
 		if(schedule == null) {
+			//тут
+			String text = "Уведомление SpeedLogist: \nПоставщик  " + companyName + " с номером контракта " + num + " не найден в графике поставк. \nНеобходимо добавить график поставок данного контрагента.";
+			mailService.sendSimpleEmail(request, "Отсутствует график поставок", text, user.geteMail());
 			return "НГП"; // нет графика поставок в бд
 		}
 		
@@ -413,7 +428,8 @@ public class MainRestController {
 		
 		User user = getThisUser();
 		Integer role = user.getRoles().stream().findFirst().get().getIdRole();
-		if(role != 10 || role != 1) {
+
+		if(role != 10 && role != 1) {
 			response.put("status", "100");
 			response.put("message", "Отказано! Данная роль не обладает правами на действие");
 			return response;
@@ -448,7 +464,7 @@ public class MainRestController {
 		User user = getThisUser();
 		Integer role = user.getRoles().stream().findFirst().get().getIdRole();
 		
-		if(role != 10 || role != 1) {
+		if(role != 10 && role != 1) {
 			response.put("status", "100");
 			response.put("message", "Отказано! Данная роль не обладает правами на действие");
 			return response;
@@ -555,6 +571,16 @@ public class MainRestController {
 		schedule.setStatus(10);
 		
 		Integer id = scheduleService.saveSchedule(schedule);		
+		
+		//тут отправляем на почту сообщение
+		String appPath = request.getServletContext().getRealPath("");
+		FileInputStream fileInputStream = new FileInputStream(appPath + "resources/properties/email.properties");
+		properties = new Properties();
+		properties.load(fileInputStream);
+		User user = getThisUser();
+		String text = "Создан новый график поставок сотрудником: " + user.getSurname() + " " + user.getName() + " \nПоставщик: " + schedule.getName();
+		mailService.sendSimpleEmailTwiceUsers(request, "Новый график поставок", text, properties.getProperty("email.orderSupport.1"), properties.getProperty("email.orderSupport.2"));
+		
 		response.put("status", "200");
 		response.put("message", "График поставок  "+schedule.getName()+" создан");
 		response.put("idSchedule", id.toString());
@@ -985,7 +1011,7 @@ public class MainRestController {
 		case 8: // от поставщиков
 			order.setStatus(100);
 			orderService.updateOrder(order);
-			String info = chheckScheduleMethodAllInfo(order.getMarketContractType(), order.getTimeDelivery().toLocalDateTime().toLocalDate().toString());
+			String info = chheckScheduleMethodAllInfo(request, order.getMarketContractType(), order.getTimeDelivery().toLocalDateTime().toLocalDate().toString(), order.getCounterparty());
 			saveActionInFile(request, "resources/others/blackBox/slot", idOrder, order.getMarketNumber(), order.getNumStockDelivery(), order.getIdRamp(), null, order.getTimeDelivery(), null, user.getLogin(), "save", info);
 			Message message = new Message(user.getLogin(), null, "200", str, idOrder.toString(), "save");
 			slotWebSocket.sendMessage(message);	
@@ -998,7 +1024,7 @@ public class MainRestController {
 			order.setStatus(20);
 			order.setChangeStatus("Создал: " + user.getSurname() + " " + user.getName() + " " + user.getPatronymic() + " " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")));
 			orderService.updateOrder(order);
-			String info2 = chheckScheduleMethodAllInfo(order.getMarketContractType(), order.getTimeDelivery().toLocalDateTime().toLocalDate().toString());
+			String info2 = chheckScheduleMethodAllInfo(request, order.getMarketContractType(), order.getTimeDelivery().toLocalDateTime().toLocalDate().toString(), order.getCounterparty());
 			saveActionInFile(request, "resources/others/blackBox/slot", idOrder, order.getMarketNumber(), order.getNumStockDelivery(), order.getIdRamp(), null, order.getTimeDelivery(), null, user.getLogin(), "save", info2);
 			Message message7 = new Message(user.getLogin(), null, "200", str, idOrder.toString(), "save");
 			slotWebSocket.sendMessage(message7);	
@@ -1219,7 +1245,7 @@ public class MainRestController {
 			System.err.println("Не прошла проверку по пересечениям слотов");
 			return response;
 		}else {
-			String info = chheckScheduleMethodAllInfo(order.getMarketContractType(), order.getTimeDelivery().toLocalDateTime().toLocalDate().toString());
+			String info = chheckScheduleMethodAllInfo(request, order.getMarketContractType(), order.getTimeDelivery().toLocalDateTime().toLocalDate().toString(), order.getCounterparty());
 			saveActionInFile(request, "resources/others/blackBox/slot", idOrder, order.getMarketNumber(), order.getNumStockDelivery(), oldIdRamp, order.getIdRamp(), oldTimeDelivery, order.getTimeDelivery(), user.getLogin(), "update", info);
 			if(order.getRoutes() != null) {
 				order.getRoutes().forEach(r->{
@@ -1428,7 +1454,7 @@ public class MainRestController {
 			System.err.println("Не прошла проверку по лимитам паллет склада");
 			return response;
 		}else {
-			String info = chheckScheduleMethodAllInfo(order.getMarketContractType(), order.getTimeDelivery().toLocalDateTime().toLocalDate().toString());
+			String info = chheckScheduleMethodAllInfo(request, order.getMarketContractType(), order.getTimeDelivery().toLocalDateTime().toLocalDate().toString(), order.getCounterparty());
 			saveActionInFile(request, "resources/others/blackBox/slot", idOrder, order.getMarketNumber(), order.getNumStockDelivery(), null, order.getIdRamp(), null, order.getTimeDelivery(), user.getLogin(), "load", info);
 			Message message = new Message(user.getLogin(), null, "200", str, idOrder.toString(), "load");
 			slotWebSocket.sendMessage(message);	
@@ -1517,14 +1543,15 @@ public class MainRestController {
 	@RequestMapping(value = "/slots/delivery-schedule/load", method = RequestMethod.POST, consumes = {
 			MediaType.MULTIPART_FORM_DATA_VALUE })
 	public Map<String, String> postLoadExcelPlan (Model model, HttpServletRequest request, HttpSession session,
-			@RequestParam(value = "excel", required = false) MultipartFile excel)
+			@RequestParam(value = "excel", required = false) MultipartFile excel,
+			@RequestParam(value = "numStock", required = false) String num)
 			throws InvalidFormatException, IOException, ServiceException {
 		Map<String, String> response = new HashMap<String, String>();	
 		File file1 = poiExcel.getFileByMultipartTarget(excel, request, "delivery-schedule.xlsx");
 		
 		List<Schedule> schedules = new ArrayList<Schedule>();
 		try {
-			schedules = poiExcel.loadDeliverySchedule(file1);
+			schedules = poiExcel.loadDeliverySchedule(file1, Integer.parseInt(num));
 		} catch (InvalidFormatException | IOException | java.text.ParseException | ServiceException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -1533,7 +1560,7 @@ public class MainRestController {
 			scheduleService.saveSchedule(s);
 		});
 		
-		response.put("200", "ads");
+		response.put("200", "Загружено");
 //		response.put("body", schedules.toString());
 		return response;
 	}

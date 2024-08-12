@@ -28,6 +28,9 @@ footer.to-bottom {
 .modal {
 	font-family: var(--font-family-sans-serif);
 }
+.modal-header {
+	background-color: #b0c4de;
+}
 .title-container,
 .toolbar {
 	min-height: 30px;
@@ -215,4 +218,80 @@ form .form-check .form-check-label {
 }
 .ag-header-cell-filtered {
 	background-color: #9e9e9e80 !important;
+}
+
+.matrix-container {
+	display: grid;
+	gap: 1px;
+	background-color: #ccc;
+	grid-template-columns: repeat(8, 85px);
+}
+.matrix-container > div {
+	background-color: #fff;
+	padding: 10px 5px;
+	text-align: center;
+	border: 1px solid #ddd;
+	font-size: 1.2rem;
+	font-weight: bold;
+}
+.matrix-container > div.header-cell {
+	background-color: #f0f0f0;
+}
+.matrix-legend {
+	align-self: flex-start;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 40px;
+	margin-left: 10px;
+	list-style-position: inside;
+}
+
+.scheduleItem-container {
+	display: grid;
+	gap: 1px;
+	background-color: #ccc;
+	grid-template-columns: repeat(7, 100px);
+}
+.scheduleItem-container > div {
+	background-color: #fff;
+	padding: 10px 5px;
+	text-align: center;
+	border: 1px solid #ddd;
+	font-size: 0.8rem;
+	font-weight: bold;
+}
+.scheduleItem-container > div.header-cell {
+	background-color: #f0f0f0;
+	font-size: 1rem;
+}
+.color-1 {
+	color: #6A1F32
+}
+.color-2 {
+	color: #1E3087
+}
+.color-3 {
+	color: #1E5B1F
+}
+.color-4 {
+	color: #3D1E5B
+}
+.color-5 {
+	color: #4B2B1C
+}
+.color-6 {
+	color: #1F4947
+}
+.color-7 {
+	color: #2E2E2E
+}
+
+#myGrid .grey-row {
+	background-color: rgba(128, 128, 128, 0.3);
+}
+#myGrid .yellow-row {
+	background-color: rgba(255, 255, 0, 0.3);
+}
+#myGrid .red-row {
+	background-color: rgba(255, 0, 0, 0.3);
 }

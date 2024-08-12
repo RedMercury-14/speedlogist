@@ -50,6 +50,7 @@ import {
 	checkEventId,
 	checkPallCount,
 	checkPallCountForComingDates,
+	checkSchedule,
 	hasOrderInYard,
 	isBackgroundEvent,
 	isInvalidEventDate,
@@ -487,7 +488,7 @@ function eventDragStartHandler(info) {
 function eventDragStopHandler(info) {
 	// console.log(info)
 }
-function eventDropHandler(info) {
+async function eventDropHandler(info) {
 	const role = store.getRole()
 	const { event: fcEvent } = info
 	const order = fcEvent.extendedProps.data
@@ -530,9 +531,13 @@ function eventDropHandler(info) {
 		return
 	}
 
+	// проверка совпадения с графиком поставок
+	const scheduleData = await checkSchedule(order, eventDateStr)
+	if (scheduleData.message) alert (scheduleData.message)
+
 	updateOrder(info, false)
 }
-function eventReceiveHandler(info) {
+async function eventReceiveHandler(info) {
 	const role = store.getRole()
 	const { event: fcEvent } = info
 	const order = fcEvent.extendedProps.data
@@ -573,6 +578,10 @@ function eventReceiveHandler(info) {
 		alert(userMessages.internalMovementTimeError)
 		return
 	}
+
+	// проверка совпадения с графиком поставок
+	const scheduleData = await checkSchedule(order, eventDateStr)
+	if (scheduleData.message) alert (scheduleData.message)
 
 	// для логиста и админа - сложный апдейт
 	if (isAdmin(role) || isLogist(role)) {
@@ -847,6 +856,7 @@ function editMarketInfo(agGridParams) {
 		}
 	})
 }
+// метод получения данных о заказе из меркета
 function getOrderFromMarket(marketNumber, eventContainer, successCallback) {
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
 

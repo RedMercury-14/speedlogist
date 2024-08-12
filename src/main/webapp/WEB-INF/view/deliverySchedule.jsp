@@ -13,22 +13,39 @@
 	<script src="${pageContext.request.contextPath}/resources/js/AG-Grid/ag-grid-enterprise.min.js"></script>
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/variables.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/snackbar.css">
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/bootstrap5overlay.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/deliverySchedule.css">
 </head>
 <body>
 	<jsp:include page="headerNEW.jsp" />
+
+	<div id="overlay" class="none">
+		<div class="spinner-border text-primary" role="status">
+			<span class="sr-only">Загрузка...</span>
+		</div>
+	</div>
+
 	<div class="container-fluid my-container px-0">
+
+		<sec:authorize access="isAuthenticated()">
+			<sec:authentication property="principal.authorities" var="roles" />
+		</sec:authorize>
+
 		<div class="title-container">
 			<strong><h3>График поставок контрагентов</h3></strong>
 		</div>
 		<div class="toolbar">
 			<!-- <select class="btn tools-btn font-weight-bold" name="numStockSelect" id="numStockSelect"></select> -->
 			<button type="button" class="btn tools-btn font-weight-bold text-muted" data-toggle="modal" data-target="#addScheduleItemModal">
-				+ Добавить новый контракт
+				+ Добавить новый график
 			</button>
-			<button type="button" class="btn tools-btn font-weight-bold text-muted" data-toggle="modal" data-target="#sendExcelModal">
-				Загрузить Excel
-			</button>
+			<c:choose>
+				<c:when test="${roles == '[ROLE_ADMIN]'}">
+					<button type="button" class="btn tools-btn font-weight-bold text-muted" data-toggle="modal" data-target="#sendExcelModal">
+						Загрузить Excel
+					</button>
+				</c:when>
+			</c:choose>
 		</div>
 		<div id="myGrid" class="ag-theme-alpine"></div>
 		<div id="snackbar"></div>
@@ -61,8 +78,9 @@
 									<div class="input-group-prepend">
 										<div class="input-group-text">Код контрагента</div>
 									</div>
-									<input type="number" class="form-control" name="counterpartyCode" id="counterpartyCode" min="0" placeholder="Код контрагента" required>
+									<input type="number" class="form-control" name="counterpartyCode" id="counterpartyCode" list="counterpartyCodeList" min="0" placeholder="Код контрагента" required>
 								</div>
+								<datalist id="counterpartyCodeList"></datalist>
 							</div>
 							<div class="mb-3">
 								<label class="sr-only" for="name">Наименование контрагента</label>
@@ -70,8 +88,9 @@
 									<div class="input-group-prepend">
 										<div class="input-group-text">Наименование</div>
 									</div>
-									<input type="text" class="form-control" name="name" id="name" placeholder="Наименование контрагента" required>
+									<input type="text" class="form-control" name="name" id="name" list="counterpartyNameList" placeholder="Наименование контрагента" required>
 								</div>
+								<datalist id="counterpartyNameList"></datalist>
 							</div>
 							<div class="mb-3">
 								<label class="sr-only" for="counterpartyContractCode">Номер контракта</label>
@@ -109,28 +128,19 @@
 							</div>
 							<div class="input-row-container flex-wrap">
 								<div class="form-check form-group">
-									<input type="checkbox" class="form-check-input" name="multipleOfPallet" id="multipleOfPallet">
-									<label for="multipleOfPallet" class="form-check-label text-muted font-weight-bold">Кратно поддону</label>
+									<input type="checkbox" class="form-check-input" name="multipleOfPallet" id="AddMultipleOfPallet">
+									<label for="AddMultipleOfPallet" class="form-check-label text-muted font-weight-bold">Кратно поддону</label>
 								</div>
 								<div class="form-check form-group">
-									<input type="checkbox" class="form-check-input" name="multipleOfTruck" id="multipleOfTruck">
-									<label for="multipleOfTruck" class="form-check-label text-muted font-weight-bold">Кратно машине</label>
+									<input type="checkbox" class="form-check-input" name="multipleOfTruck" id="AddMultipleOfTruck">
+									<label for="AddMultipleOfTruck" class="form-check-label text-muted font-weight-bold">Кратно машине</label>
 								</div>
 							</div>
 
-							<div class="mb-2 text-muted font-weight-bold text-center">График поставок</div>
-							<div class="mb-3">
-								<label class="sr-only" for="note">Неделя/Сроки</label>
-								<div class="input-group">
-									<div class="input-group-prepend">
-										<div class="input-group-text">Неделя/Сроки</div>
-									</div>
-									<select id="note" name="note" class="form-control">
-										<option value=""></option>
-										<option value="неделя">Неделя</option>
-										<option value="сроки">Сроки</option>
-									</select>
-								</div>
+							<h5 class="mt-2 mb-0 text-muted font-weight-bold text-center">График поставок</h5>
+							<div class="form-check form-group">
+								<input type="checkbox" class="form-check-input" name="note" id="addNote">
+								<label for="addNote" class="form-check-label text-muted font-weight-bold">Пометка "Неделя"</label>
 							</div>
 							<div id="scheduleContainer" class="scheduleContainer mb-3">
 								<div>
@@ -284,28 +294,19 @@
 							</div>
 							<div class="input-row-container flex-wrap">
 								<div class="form-check form-group">
-									<input type="checkbox" class="form-check-input" name="multipleOfPallet" id="multipleOfPallet">
-									<label for="multipleOfPallet" class="form-check-label text-muted font-weight-bold">Кратно поддону</label>
+									<input type="checkbox" class="form-check-input" name="multipleOfPallet" id="editMultipleOfPallet">
+									<label for="editMultipleOfPallet" class="form-check-label text-muted font-weight-bold">Кратно поддону</label>
 								</div>
 								<div class="form-check form-group">
-									<input type="checkbox" class="form-check-input" name="multipleOfTruck" id="multipleOfTruck">
-									<label for="multipleOfTruck" class="form-check-label text-muted font-weight-bold">Кратно машине</label>
+									<input type="checkbox" class="form-check-input" name="multipleOfTruck" id="editMultipleOfTruck">
+									<label for="editMultipleOfTruck" class="form-check-label text-muted font-weight-bold">Кратно машине</label>
 								</div>
 							</div>
 
-							<div class="mb-2 text-muted font-weight-bold text-center">График поставок</div>
-							<div class="mb-3">
-								<label class="sr-only" for="note">Неделя/Сроки</label>
-								<div class="input-group">
-									<div class="input-group-prepend">
-										<div class="input-group-text">Неделя/Сроки</div>
-									</div>
-									<select id="note" name="note" class="form-control">
-										<option value=""></option>
-										<option value="неделя">Неделя</option>
-										<option value="сроки">Сроки</option>
-									</select>
-								</div>
+							<h5 class="mt-2 mb-0 text-muted font-weight-bold text-center">График поставок</h5>
+							<div class="form-check form-group">
+								<input type="checkbox" class="form-check-input" name="note" id="editNote">
+								<label for="editNote" class="form-check-label text-muted font-weight-bold">Пометка "Неделя"</label>
 							</div>
 							<div id="scheduleContainer" class="scheduleContainer mb-3">
 								<div>
@@ -397,6 +398,15 @@
 					<div class="modal-body">
 						<div class="inputs-container">
 							<div class="form-group">
+								<label class="col-form-label text-muted font-weight-bold">Укажите номер склада</label>
+								<select id="numStock" name="numStock" class="form-control" required>
+									<option value="" selected hidden disabled></option>
+									<option value="1700">1700</option>
+									<option value="1200">1200</option>
+									<option value="1250">1250</option>
+								</select>
+							</div>
+							<div class="form-group">
 								<label class="col-form-label text-muted font-weight-bold">Загрузите файл Excel</label>
 								<input type="file" class="form-control btn-outline-secondary" name="excel"
 									id="excel" required
@@ -430,6 +440,42 @@
 		</div>
 	</div>
 
+	<!-- Модальное окно для визуализации графика -->
+	<div class="modal fade" id="showScheduleModal" tabindex="-1" aria-labelledby="showScheduleModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header justify-content-center">
+					<h4 class="modal-title" id="showScheduleModalLabel">График поставки</h4>
+				</div>
+				<div class="modal-body">
+					<div class="d-flex flex-column align-items-center">
+						<div class="scheduleItem-container" id="scheduleItemContainer"></div>
+						<br>
+						<h5 class="modal-title">Визуализация графика</h5>
+						<div class="matrix-container" id="matrixContainer"></div>
+						<br>
+						<ul class="matrix-legend">
+							<li>
+								<span class="font-weight-bold">з</span> - заказ
+							</li>
+							<li>
+								<span class="font-weight-bold">п</span> - поставка
+							</li>
+							<li>
+								<span class="font-weight-bold">н0</span> - текущая неделя
+							</li>
+							<li>
+								<span class="font-weight-bold">н1</span> - следующая неделя
+							</li>
+						</ul>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+				</div>
+			</div>
+		</div>
+	</div>
 </body>
 <script src="${pageContext.request.contextPath}/resources/js/deliverySchedule.js" type="module"></script>
 <script src='${pageContext.request.contextPath}/resources/mainPage/js/nav-fixed-top.js'></script>

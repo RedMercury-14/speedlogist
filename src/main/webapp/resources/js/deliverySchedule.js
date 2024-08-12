@@ -1,15 +1,17 @@
 import { AG_GRID_LOCALE_RU } from './AG-Grid/ag-grid-locale-RU.js'
 import { gridColumnLocalState, gridFilterLocalState, ResetStateToolPanel } from './AG-Grid/ag-grid-utils.js'
 import { ajaxUtils } from './ajaxUtils.js'
+import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 import { snackbar } from "./snackbar/snackbar.js"
 import { uiIcons } from './uiIcons.js'
-import { changeGridTableMarginTop, debounce, getData, hideLoadingSpinner, showLoadingSpinner } from './utils.js'
+import { changeGridTableMarginTop, debounce, getData, getDeliveryScheduleMatrix, getScheduleStatus, hideLoadingSpinner, isAdmin, isOderSupport, showLoadingSpinner } from './utils.js'
 
 const loadExcelUrl = '../../api/slots/delivery-schedule/load'
 const getScheduleUrl = '../../api/slots/delivery-schedule/getList'
 const addScheduleItemUrl = '../../api/slots/delivery-schedule/create'
 const editScheduleItemUrl = '../../api/slots/delivery-schedule/edit'
 const getScheduleNumContractBaseUrl = '../../api/slots/delivery-schedule/getScheduleNumContract/'
+const changeScheduleStatusBaseUrl = '../../api/slots/delivery-schedule/changeStatus/'
 
 
 const PAGE_NAME = 'deliverySchedule'
@@ -118,6 +120,11 @@ const weekOptions = [
 	"н4/воскресенье"
 ]
 
+export const rowClassRules = {
+	'grey-row': params => params.node.data.status === 10,
+	'red-row': params => params.node.data.status === 0,
+}
+
 const columnDefs = [
 	{
 		headerName: 'Код контрагента', field: 'counterpartyCode',
@@ -135,12 +142,23 @@ const columnDefs = [
 		width: 150,
 	},
 	{
-		headerName: 'Пометка "Сроки/Неделя"', field: 'note',
+		headerName: 'Пометка "Неделя"', field: 'note',
 		cellClass: 'px-1 py-0 text-center',
 		cellClassRules: {
 			'blue-cell': params => params.value === 'неделя',
 		},
 		width: 125,
+	},
+	{
+		headerName: 'Статус', field: 'status',
+		cellClass: 'px-1 py-0 text-center',
+		hide: true,
+		width: 180,
+	},
+	{
+		headerName: 'Статус', field: 'statusToView',
+		cellClass: 'px-1 py-0 text-center',
+		width: 180,
 	},
 	{
 		headerName: 'Пн', field: 'monday',
@@ -184,7 +202,7 @@ const columnDefs = [
 	},
 	{
 		headerName: 'Расчет стока до Y-й поставки', field: 'runoffCalculation',
-		cellClass: 'px-1 py-0 text-center blue-cell',
+		cellClass: 'px-1 py-0 text-center',
 		width: 100,
 	},
 	{
@@ -229,6 +247,7 @@ const columnDefs = [
 
 const gridOptions = {
 	columnDefs: columnDefs,
+	rowClassRules: rowClassRules,
 	defaultColDef: {
 		headerClass: 'px-2',
 		resizable: true,
@@ -306,11 +325,11 @@ window.onload = async () => {
 	// createNumStockOptions(numStockSelect)
 	// numStockSelect && numStockSelect.addEventListener('change', onNumStockSelectChangeHandler)
 
-	// выпадающие списки выбора пометки "Неделя/Сроки"
-	const noteSelectInAddForm = addScheduleItemForm.querySelector('#note')
-	noteSelectInAddForm && noteSelectInAddForm.addEventListener('change', onNoteSelectChangeHandler)
-	const noteSelectInEditForm = editScheduleItemForm.querySelector('#note')
-	noteSelectInEditForm && noteSelectInEditForm.addEventListener('change', onNoteSelectChangeHandler)
+	// чекбоксы пометки "Неделя"
+	const addNoteCheckbox = addScheduleItemForm.querySelector('#addNote')
+	addNoteCheckbox && addNoteCheckbox.addEventListener('change', onNoteChangeHandler)
+	const editNoteCheckbox = editScheduleItemForm.querySelector('#editNote')
+	editNoteCheckbox && editNoteCheckbox.addEventListener('change', onNoteChangeHandler)
 
 	// получение данных графика
 	const res = await getData(getScheduleUrl)
@@ -324,6 +343,9 @@ window.onload = async () => {
 	restoreColumnState()
 	restoreFilterState()
 
+	// заполняем datalist кодов и названий контрагентов
+	createCounterpartyDatalist(scheduleData)
+
 	// проверка номера контракта
 	$('.counterpartyContractCode').change(checkContractNumber)
 	// обновление опций графика при открытии модалки создания графика поставки
@@ -331,6 +353,34 @@ window.onload = async () => {
 	// очистка форм при закрытии модалки
 	$('#addScheduleItemModal').on('hidden.bs.modal', (e) => clearForm(e, addScheduleItemForm))
 	$('#editScheduleItemModal').on('hidden.bs.modal', (e) => clearForm(e, editScheduleItemForm))
+}
+
+// функция наполнения списков кодов и названий контрагентов
+function createCounterpartyDatalist(scheduleData) {
+	const counterpartyCodeListElem = document.querySelector('#counterpartyCodeList')
+	const counterpartyNameListElem = document.querySelector('#counterpartyNameList')
+
+	if (!counterpartyCodeListElem || !counterpartyNameListElem) return
+
+	const counterpartyCodeList = new Set()
+	const counterpartyNameList = new Set()
+
+	scheduleData.forEach(item => {
+		counterpartyCodeList.add(item.counterpartyCode)
+		counterpartyNameList.add(item.name.trim())
+	})
+
+	counterpartyCodeList.forEach(code => {
+		const option = document.createElement('option')
+		option.value = code
+		counterpartyCodeListElem.append(option)
+	})
+
+	counterpartyNameList.forEach(name => {
+		const option = document.createElement('option')
+		option.value = name
+		counterpartyNameListElem.append(option)
+	})
 }
 
 function renderTable(gridDiv, gridOptions, data) {
@@ -368,18 +418,57 @@ function getMappingData(data) {
 function getMappingScheduleItem(scheduleItem) {
 	return {
 		...scheduleItem,
-		name: scheduleItem.name.trim()
+		name: scheduleItem.name.trim(),
+		statusToView: getScheduleStatus(scheduleItem.status),
 	}
 }
 function getContextMenuItems(params) {
-	const scheduleItem = params.node.data
+	const rowNode = params.node
+	const status = rowNode.data.status
+
+	const confirmUnconfirmItem = status === 10 || status === 0
+		? {
+			name: `Подтвердить график поставки`,
+			disabled: (!isAdmin(role) && !isOderSupport(role)) || (status !== 10 && status !== 0),
+			action: () => {
+				confirmScheduleItem(rowNode)
+			},
+			icon: uiIcons.check,
+		}
+		: {
+			name: `Снять подтверждение с графика`,
+			disabled: (!isAdmin(role) && !isOderSupport(role)) || status === 0,
+			action: () => {
+				unconfirmScheduleItem(rowNode)
+			},
+			icon: uiIcons.x_lg,
+		}
+
 	const result = [
 		{
-			name: `Редактировать график поставки`,
+			name: `Показать график поставки`,
 			action: () => {
-				editScheduleItem(scheduleItem)
+				showScheduleItem(rowNode)
+			},
+			icon: uiIcons.table,
+		},
+		"separator",
+		confirmUnconfirmItem,
+		{
+			name: `Редактировать график поставки`,
+			disabled: (!isAdmin(role) && !isOderSupport(role)),
+			action: () => {
+				editScheduleItem(rowNode)
 			},
 			icon: uiIcons.pencil,
+		},
+		{
+			name: `Удалить график поставки`,
+			disabled: (!isAdmin(role) && !isOderSupport(role)) || status === 0,
+			action: () => {
+				deleteScheduleItem(rowNode)
+			},
+			icon: uiIcons.trash,
 		},
 		"separator",
 		"copy",
@@ -389,10 +478,57 @@ function getContextMenuItems(params) {
 	return result
 }
 
+// подтверждение графика поставки
+function confirmScheduleItem(rowNode) {
+	const scheduleItem = rowNode.data
+	const counterpartyContractCode = scheduleItem.counterpartyContractCode
+	if (!counterpartyContractCode) return
+	const confirmStatus = 20
+	changeScheduleStatus(confirmStatus, counterpartyContractCode, rowNode)
+}
+
+// снятие подтверждения графика поставки
+function unconfirmScheduleItem(rowNode) {
+	const scheduleItem = rowNode.data
+	const counterpartyContractCode = scheduleItem.counterpartyContractCode
+	if (!counterpartyContractCode) return
+	const unconfirmStatus = 10
+	changeScheduleStatus(unconfirmStatus, counterpartyContractCode, rowNode)
+}
+
 // редактирование графика поставки
-function editScheduleItem(scheduleItem) {
+function editScheduleItem(rowNode) {
+	const scheduleItem = rowNode.data
 	setDataToForm(scheduleItem)
 	$(`#editScheduleItemModal`).modal('show')
+}
+// удалить графика поставки
+async function deleteScheduleItem(rowNode) {
+	const scheduleItem = rowNode.data
+	const counterpartyContractCode = scheduleItem.counterpartyContractCode
+	if (!counterpartyContractCode) return
+	const deleteStatus = 0
+	changeScheduleStatus(deleteStatus, counterpartyContractCode, rowNode)
+}
+
+// отображение графика поставки
+function showScheduleItem(rowNode) {
+	const scheduleItem = rowNode.data
+	const scheduleData = [
+		scheduleItem.monday,
+		scheduleItem.tuesday,
+		scheduleItem.wednesday,
+		scheduleItem.thursday,
+		scheduleItem.friday,
+		scheduleItem.saturday,
+		scheduleItem.sunday,
+	]
+	const schedule = scheduleData.map((item) => item ? item : '')
+	const note = scheduleItem.note ? scheduleItem.note : ''
+	const matrix = getDeliveryScheduleMatrix(schedule, note)
+	renderScheduleItem(schedule)
+	renderMatrix(matrix)
+	$(`#showScheduleModal`).modal('show')
 }
 
 // обработчик смены склада
@@ -403,10 +539,30 @@ function onNumStockSelectChangeHandler(e) {
 }
 
 // обработчик смены пометки Сроки/Неделя
-function onNoteSelectChangeHandler(e) {
-	const note = e.target.value
+function onNoteChangeHandler(e) {
+	const note = e.target.checked ? 'неделя' : ''
 	const form = e.target.form
 	changeScheduleOptions(form, note)
+}
+
+// запрос на изменение статуса графика поставки
+async function changeScheduleStatus(status, counterpartyContractCode, rowNode) {
+	if (!isAdmin(role) && !isOderSupport(role)) return
+	const statusText = getScheduleStatus(status)
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
+	const res = await getData(`${changeScheduleStatusBaseUrl}${counterpartyContractCode}&${status}`)
+	clearTimeout(timeoutId)
+	bootstrap5overlay.hideOverlay()
+
+	if (res.status === '200') {
+		snackbar.show('Выполнено!')
+		rowNode.setDataValue('status', status)
+		rowNode.setDataValue('statusToView', statusText)
+	} else {
+		console.log(res)
+		const message = res.message ? res.message : 'Неизвестная ошибка'
+		snackbar.show(message)
+	}
 }
 
 // проверка наличия номера контракта в базе
@@ -431,6 +587,8 @@ async function checkContractNumber(e) {
 // обработчик отправки формы загрузки таблицы эксель
 function sendExcelFormHandler(e) {
 	e.preventDefault()
+
+	if (!isAdmin(role)) return
 
 	const submitButton = e.submitter
 	const file = new FormData(e.target)
@@ -457,6 +615,11 @@ function addScheduleItemFormHandler(e) {
 
 	const formData = new FormData(e.target)
 	const data = scheduleItemDataFormatter(formData)
+
+	if (!isSuppliesEqualToOrders(data)) {
+		snackbar.show('Количество поставок должно быть равно количеству заказов, проверьте данные!')
+		return
+	}
 
 	if (error) {
 		snackbar.show('Ошибка заполнения формы!')
@@ -487,8 +650,15 @@ function addScheduleItemFormHandler(e) {
 function editScheduleItemFormHandler(e) {
 	e.preventDefault()
 
+	if (!isAdmin(role) && !isOderSupport(role)) return
+
 	const formData = new FormData(e.target)
 	const data = scheduleItemDataFormatter(formData)
+
+	if (!isSuppliesEqualToOrders(data)) {
+		snackbar.show('Количество поставок должно быть равно количеству заказов, проверьте данные!')
+		return
+	}
 
 	if (error) {
 		snackbar.show('Ошибка заполнения формы!')
@@ -520,6 +690,7 @@ function editScheduleItemFormHandler(e) {
 // форматирование данных графика поставки для отправки на сервер
 function scheduleItemDataFormatter(formData) {
 	const data = Object.fromEntries(formData)
+	const note = data.note ? 'неделя' : ''
 	const supplies = getSupplies(data)
 	const multipleOfPallet = !!data.multipleOfPallet
 	const multipleOfTruck = !!data.multipleOfTruck
@@ -528,6 +699,7 @@ function scheduleItemDataFormatter(formData) {
 	const runoffCalculation = Number(data.runoffCalculation)
 	let res = {
 		...data,
+		note,
 		supplies,
 		multipleOfPallet,
 		multipleOfTruck,
@@ -546,7 +718,7 @@ function scheduleItemDataFormatter(formData) {
 
 // получение количества поставок по данным графика поставок
 function getSupplies(data) {
-	const reg = /^з$|з\//
+	const supplyReg = /(понедельник|вторник|среда|четверг|пятница|суббота|воскресенье)/
 	const schedule = [
 		data.monday,
 		data.tuesday,
@@ -556,7 +728,21 @@ function getSupplies(data) {
 		data.saturday,
 		data.sunday,
 	]
-	return schedule.filter(el => reg.test(el)).length
+	return schedule.filter(el => supplyReg.test(el)).length
+}
+// получение количества заказов по данным графика поставок
+function getOrders(data) {
+	const orderReg = /^з$|з\//
+	const schedule = [
+		data.monday,
+		data.tuesday,
+		data.wednesday,
+		data.thursday,
+		data.friday,
+		data.saturday,
+		data.sunday,
+	]
+	return schedule.filter(el => orderReg.test(el)).length
 }
 
 // заполнение формы редактирования магазина данными
@@ -581,7 +767,7 @@ function setDataToForm(scheduleItem) {
 	editScheduleItemForm.counterpartyContractCode.value = scheduleItem.counterpartyContractCode ? scheduleItem.counterpartyContractCode : ''
 	editScheduleItemForm.comment.value = scheduleItem.comment ? scheduleItem.comment : ''
 	editScheduleItemForm.runoffCalculation.value = scheduleItem.runoffCalculation ? scheduleItem.runoffCalculation : ''
-	editScheduleItemForm.note.value = scheduleItem.note ? scheduleItem.note : ''
+	editScheduleItemForm.note.checked = scheduleItem.note === 'неделя'
 	editScheduleItemForm.multipleOfPallet.checked = !!scheduleItem.multipleOfPallet
 	editScheduleItemForm.multipleOfTruck.checked = !!scheduleItem.multipleOfTruck
 
@@ -652,4 +838,78 @@ function showMessageModal(message) {
 	const messageContainer = document.querySelector('#messageContainer')
 	messageContainer.innerText = message
 	$('#displayMessageModal').modal('show')
+}
+
+// отрисовка графика поставки
+function renderScheduleItem(schedule) {
+	const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
+
+	const container = document.querySelector('#scheduleItemContainer')
+	container.innerHTML = ''
+
+	days.forEach(day => {
+		const cellDiv = document.createElement('div')
+		cellDiv.textContent = day
+		cellDiv.classList.add('header-cell')
+		container.append(cellDiv)
+	})
+
+	schedule.forEach(item => {
+		const cellDiv = document.createElement('div')
+		cellDiv.textContent = item
+		container.append(cellDiv)
+	})
+}
+
+// отрисовка матрицы графика поставки
+function renderMatrix(matrix) {
+	const container = document.querySelector('#matrixContainer')
+	container.innerHTML = ''
+
+	matrix.forEach(row => {
+		row.forEach(cell => {
+			const cellDiv = document.createElement('div')
+			if (row[0] === '' || cell === row[0]) {
+				cellDiv.classList.add('header-cell')
+				cellDiv.textContent = cell
+			} else {
+				const parts = cell.split('/')
+				parts.forEach((part, i) => {
+					const span = document.createElement('span')
+					span.textContent = part
+					span.classList.add(getColorClass(part))
+					cellDiv.append(span)
+					if (parts[i + 1]) cellDiv.append('/')
+				})
+			}
+			container.append(cellDiv)
+		})
+	})
+}
+function getColorClass(value) {
+	const count = getCount(value)
+	return `color-${count}`
+}
+function getCount(value) {
+	const digitReg = /\d/
+	const countMatching = value.match(digitReg)
+	return countMatching ? countMatching[0] : 0
+}
+
+// проверка соответствия количества поставок и заказов
+function isSuppliesEqualToOrders(data) {
+	const schedule = [
+		data.monday,
+		data.tuesday,
+		data.wednesday,
+		data.thursday,
+		data.friday,
+		data.saturday,
+		data.sunday,
+	]
+	const supplyReg = /(понедельник|вторник|среда|четверг|пятница|суббота|воскресенье)/
+	const orderReg = /^з$|з\//
+	const supplies = schedule.filter(el => supplyReg.test(el)).length
+	const orders = schedule.filter(el => orderReg.test(el)).length
+	return supplies === orders
 }

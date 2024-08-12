@@ -1041,7 +1041,7 @@ public class POIExcel {
 	 * @throws IOException
 	 * @throws ParseException
 	 */
-	public List<Schedule> loadDeliverySchedule(File file) throws ServiceException, InvalidFormatException, IOException, ParseException {
+	public List<Schedule> loadDeliverySchedule(File file, Integer stock) throws ServiceException, InvalidFormatException, IOException, ParseException {
 		List<Schedule> schedules = new ArrayList<>();
         XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
         XSSFSheet sheet = wb.getSheetAt(0);
@@ -1087,6 +1087,7 @@ public class POIExcel {
             schedule.setMultipleOfPallet(row.getCell(16) == null || row.getCell(16).getStringCellValue().equals("") ? false : true);
             schedule.setMultipleOfTruck(row.getCell(17) == null || row.getCell(17).getStringCellValue().equals("") ? false : true);
             schedule.setStatus(20);
+            schedule.setNumStock(stock);
 //            schedule.setNumStock((int) row.getCell(17).getNumericCellValue());
 //            schedule.setDescription(row.getCell(18).getStringCellValue());
 

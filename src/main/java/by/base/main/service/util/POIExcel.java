@@ -1,5 +1,6 @@
 package by.base.main.service.util;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -154,6 +155,68 @@ public class POIExcel {
 		}
 
 		return convFile;
+	}
+	
+	/**
+	 * Метод для создания графика поставок в excel
+	 * @param schedules
+	 * @param filePath
+	 * @throws IOException 
+	 * @throws FileNotFoundException 
+	 */
+	public String exportToExcelScheduleList(List<Schedule> schedules, String filePath) throws FileNotFoundException, IOException {
+		Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet(schedules.get(0).getNumStock() + "");
+
+        // Заголовки колонок
+        String[] headers = {
+                "Код контрагента", "Наименование контрагента", "Номер контракта", "Пометка сроки / неделя" ,
+                "пн", "вт", "ср", "чт", "пт", "сб", "вс", 
+                "Поставок", "tz", "tp", "Расчет стока до Y-ой поставки", 
+                "Примечание", "кратно поддону", "кратно машине"
+        };
+
+        // Создаем строку заголовков
+        Row headerRow = sheet.createRow(0);
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]);
+        }
+
+        // Заполняем данные
+        int rowNum = 1;
+        for (Schedule schedule : schedules) {
+            Row row = sheet.createRow(rowNum++);
+
+            row.createCell(0).setCellValue(schedule.getCounterpartyCode());
+            row.createCell(1).setCellValue(schedule.getName());
+            row.createCell(2).setCellValue(schedule.getCounterpartyContractCode());
+            row.createCell(3).setCellValue(schedule.getNote());
+
+            row.createCell(4).setCellValue(schedule.getMonday());
+            row.createCell(5).setCellValue(schedule.getTuesday());
+            row.createCell(6).setCellValue(schedule.getWednesday());
+            row.createCell(7).setCellValue(schedule.getThursday());
+            row.createCell(8).setCellValue(schedule.getFriday());
+            row.createCell(9).setCellValue(schedule.getSaturday());
+            row.createCell(10).setCellValue(schedule.getSunday());
+
+            row.createCell(11).setCellValue(schedule.getSupplies());
+            row.createCell(12).setCellValue(schedule.getTz());
+            row.createCell(13).setCellValue(schedule.getTp());
+            row.createCell(14).setCellValue(schedule.getRunoffCalculation());
+            row.createCell(15).setCellValue(schedule.getComment());
+
+            row.createCell(16).setCellValue(schedule.getMultipleOfPallet() != null && schedule.getMultipleOfPallet() ? "+" : "");
+            row.createCell(17).setCellValue(schedule.getMultipleOfTruck() != null && schedule.getMultipleOfTruck() ? "+" : "");
+        }
+
+        // Сохраняем файл
+        try (FileOutputStream fileOut = new FileOutputStream(filePath)) {
+            workbook.write(fileOut);
+        }        
+        workbook.close();
+		return filePath;
 	}
 
 	public void addDBShops(File file) throws ServiceException {

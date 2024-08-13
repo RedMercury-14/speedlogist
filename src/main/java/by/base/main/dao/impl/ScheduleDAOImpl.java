@@ -82,6 +82,20 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	public void deleteOrderById(Integer id) {
 		System.err.println("В разработке");
 	}
+
+	private static final String queryGetSchedulesByStock = "from Schedule where numStock=:numStock";
+	@Transactional
+	@Override
+	public List<Schedule> getSchedulesByStock(Integer numStock) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Schedule> theObject = currentSession.createQuery(queryGetSchedulesByStock, Schedule.class);
+		theObject.setParameter("numStock", numStock);
+		List<Schedule> trucks = theObject.getResultList();
+		if(trucks.isEmpty()) {
+			return null;
+		}
+		return trucks;
+	}
 	
 	
 

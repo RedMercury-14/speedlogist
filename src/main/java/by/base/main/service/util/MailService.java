@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Date;
+import java.util.List;
 import java.util.Properties;
 
 import javax.mail.Message;
@@ -133,6 +134,66 @@ public class MailService {
 			e.printStackTrace();
 		}
 	}
+	
+	/**
+	 * Отправляет несколько объектов нескольким пользователям
+	 * <br>Модификация метода  sendEmailWhithFileToUser
+	 * @param request
+	 * @param subject
+	 * @param text
+	 * @param files
+	 * @param emailsToUsers
+	 */
+	public void sendEmailWithFilesToUsers(HttpServletRequest request, String subject, String text, List<File> files, List<String> emailsToUsers) {
+	    String appPath = request.getServletContext().getRealPath("");
+	    try {
+	        if (properties == null) {
+	            FileInputStream fileInputStream = new FileInputStream(appPath + "resources/properties/mail.properties");
+	            properties = new Properties();
+	            properties.load(fileInputStream);
+	        }
+	        Session mailSession = Session.getDefaultInstance(properties);
+	        Transport transport = mailSession.getTransport();
+	        transport.connect(properties.getProperty("mail.smtps.user"), properties.getProperty("mail.smtps.password"));
+
+	        MimeMessage message = new MimeMessage(mailSession);
+	        message.setSubject(subject);
+	        
+	        // Добавляем всех получателей
+	        for (String emailToUser : emailsToUsers) {
+	            InternetAddress internetAddress = new InternetAddress(emailToUser);
+	            message.addRecipient(Message.RecipientType.TO, internetAddress);
+	        }
+	        
+	        message.setSentDate(new Date());
+
+	        // Создаем контент письма
+	        Multipart multipart = new MimeMultipart();
+	        
+	        // Добавляем текст письма
+	        MimeBodyPart mailBody = new MimeBodyPart();
+	        mailBody.setText(text);
+	        multipart.addBodyPart(mailBody);
+
+	        // Добавляем файлы как вложения
+	        for (File file : files) {
+	            MimeBodyPart attachment = new MimeBodyPart();
+	            attachment.attachFile(file);
+	            multipart.addBodyPart(attachment);
+	        }
+
+	        // Устанавливаем контент в сообщение
+	        message.setContent(multipart);
+
+	        // Отправляем сообщение
+	        transport.sendMessage(message, message.getAllRecipients());
+
+	        transport.close();
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	}
+	
 	/**
 	 * Отправляет e-main сообщение с файлом на почту к нескольким юзерам
 	 * @param request

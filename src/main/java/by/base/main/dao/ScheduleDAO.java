@@ -9,6 +9,13 @@ public interface ScheduleDAO {
 	Schedule getScheduleById(Integer id);
 	
 	List<Schedule> getSchedules();
+	
+	/**
+	 * Возвращает лист Schedule по складу
+	 * @param numStock
+	 * @return
+	 */
+	List<Schedule> getSchedulesByStock(Integer numStock);
 		
 	Schedule getScheduleByNumContract(Long num);
 		

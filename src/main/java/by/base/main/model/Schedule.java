@@ -18,7 +18,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "schedule")
-public class Schedule {
+public class Schedule{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -95,11 +95,17 @@ public class Schedule {
     @Transient
     private List<String> days;
 
-    // Getters and Setters
+    
+    /**
+	 * 
+	 */
+	public Schedule() {
+		super();
+	}
 
-    
-    
-    public Integer getIdSchedule() {
+
+
+	public Integer getIdSchedule() {
         return idSchedule;
     }
     

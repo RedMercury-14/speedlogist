@@ -50,4 +50,9 @@ public class ScheduleServiceImpl implements ScheduleService{
 		scheduleDAO.deleteOrderById(id);
 	}
 
+	@Override
+	public List<Schedule> getSchedulesByStock(Integer numStock) {
+		return scheduleDAO.getSchedulesByStock(numStock);
+	}
+
 }

@@ -18,7 +18,7 @@ public class ProductDAOImpl implements ProductDAO{
 	@Autowired
 	private SessionFactory sessionFactory;
 	
-	private static final String queryGetList = "from Product order by idProduct";
+	private static final String queryGetList = "from Product p LEFT JOIN FETCH p.orderProducts op order by p.idProduct";
 	@Override
 	@Transactional
 	public List<Product> getAllProductList() {
@@ -37,7 +37,7 @@ public class ProductDAOImpl implements ProductDAO{
 	}
 
 	
-	private static final String queryGetObjByCode = "from Product where codeProduct=:codeProduct";
+	private static final String queryGetObjByCode = "from Product p LEFT JOIN FETCH p.orderProducts op where p.codeProduct=:codeProduct";
 	@Transactional
 	@Override
 	public Product getProductByCode(Integer id) {
@@ -59,7 +59,7 @@ public class ProductDAOImpl implements ProductDAO{
 		currentSession.update(product);		
 	}
 
-	private static final String queryGetObjByCodeAndStock = "from Product where codeProduct=:codeProduct AND numStock=:stock";
+	private static final String queryGetObjByCodeAndStock = "from Product p LEFT JOIN FETCH p.orderProducts op where p.codeProduct=:codeProduct AND p.numStock=:stock";
 	@Transactional
 	@Override
 	public Product getProductByCodeAndStock(Integer id, Integer stock) {

@@ -321,14 +321,38 @@ public class MainController {
 		return "slots";
 	}
 	
+	@GetMapping("/main/orl/arrival")
+	public String getArrivalForORL(Model model, HttpServletRequest request) {
+		return "orlArrival";
+	}
+	@GetMapping("/main/orl/need")
+	public String getNeedForORL(Model model, HttpServletRequest request) {
+		return "orlNeed";
+	}
+	
+	@GetMapping("/main/orl/delivery-schedule")
+	public String getDeliverySchedulePageForORL(Model model, HttpServletRequest request) {
+		return "deliverySchedule";
+	}
+	
+	@GetMapping("/main/slots/delivery-schedule")
+	public String getDeliverySchedulePage(Model model, HttpServletRequest request) {
+		return "deliverySchedule";
+	}
+	
 	@GetMapping("/main/analytics")
 	public String getAnalyticsPage(Model model, HttpServletRequest request) {
 		return "analyticsMain";
 	}
 	
 	@GetMapping("/main/analytics/shortage")
-	public String getAnalyticsЫhortagePage(Model model, HttpServletRequest request) {
+	public String getAnalyticsShortagePage(Model model, HttpServletRequest request) {
 		return "analytics";
+	}
+	
+	@GetMapping("/main/analytics/changing-matrix")
+	public String getAnalyticsChangingMatrixPage(Model model, HttpServletRequest request) {
+	return "changingMatrix";
 	}
 	
 	@GetMapping("/main/analytics/logistics")

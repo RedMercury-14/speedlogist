@@ -1,5 +1,5 @@
-import { dateHelper, isAdmin, isLogist, isSlotsObserver} from "../utils.js"
-import { adminLogins } from "./constants.js"
+import { dateHelper, getData, isAdmin, isLogist, isSlotsObserver} from "../utils.js"
+import { adminLogins, checkScheduleBaseUrl, userMessages } from "./constants.js"
 import {
 	getMinUnloadDateForLogist,
 	getMinUnloadDateForManager,
@@ -361,4 +361,43 @@ export function hasOrderInYard(order) {
 
 export function isBackgroundEvent(fcEvent) {
 	return fcEvent.display === 'background'
+}
+
+// проверка совпадения заказа с графика поставок
+export async function checkSchedule(order, eventDateStr) {
+	const isInternalMovement = order.isInternalMovement
+	if (isInternalMovement) return {
+		flag: true,
+		message: null,
+		body: null
+	}
+	const num = order.marketContractType
+	if (!num) return {
+		flag: true,
+		message: userMessages.contractCodeNotFound,
+		body: null
+	}
+	const scheduleData = await getData(`${checkScheduleBaseUrl}${num}&${eventDateStr}`)
+	if (!scheduleData) {
+		return {
+			flag: true,
+			message: userMessages.errorReadingSchedule,
+			body: null
+		}
+	}
+	if (!scheduleData.body) {
+		return {
+			flag: true,
+			message: userMessages.contractCodeIsMissing,
+			body: null
+		}
+	}
+	if (!scheduleData.flag) {
+		return {
+			...scheduleData,
+			message: userMessages.isScheduleNotMatch,
+		}
+	}
+
+	return scheduleData
 }

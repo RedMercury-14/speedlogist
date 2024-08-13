@@ -5,10 +5,12 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
+import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -58,6 +60,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.ibm.icu.text.RuleBasedNumberFormat;
+import com.ibm.icu.text.SimpleDateFormat;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Element;
@@ -79,9 +82,11 @@ import by.base.main.model.Act;
 import by.base.main.model.MapResponse;
 import by.base.main.model.Message;
 import by.base.main.model.Order;
+import by.base.main.model.OrderProduct;
 import by.base.main.model.Product;
 import by.base.main.model.Route;
 import by.base.main.model.RouteHasShop;
+import by.base.main.model.Schedule;
 import by.base.main.model.Shop;
 import by.base.main.service.ActService;
 import by.base.main.service.MessageService;
@@ -1025,6 +1030,109 @@ public class POIExcel {
         message = message + "Считка завершена без ошибок";
         return message;
     }
+	
+	/**
+	 * Метод считывает excel файл и отдаёт лист со строками графика поставок, для последующей записи в бд
+	 * @param file
+	 * @param request
+	 * @return
+	 * @throws ServiceException
+	 * @throws InvalidFormatException
+	 * @throws IOException
+	 * @throws ParseException
+	 */
+	public List<Schedule> loadDeliverySchedule(File file, Integer stock) throws ServiceException, InvalidFormatException, IOException, ParseException {
+		List<Schedule> schedules = new ArrayList<>();
+        XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
+        XSSFSheet sheet = wb.getSheetAt(0);
+        Iterator<Row> rowIterator = sheet.iterator();
+
+        // Assuming the first row is the header
+        rowIterator.next();
+
+        while (rowIterator.hasNext()) {
+            Row row = rowIterator.next();
+            Schedule schedule = new Schedule();
+           
+            if(row.getCell(0) == null) {
+            	continue;
+            }
+            if(row.getCell(0).getCellType().equals(CellType.STRING) || row.getCell(0).toString().equals("")) {
+            	continue;
+            }
+            
+            BigDecimal bigDecimalValueCode = new BigDecimal(row.getCell(0).getNumericCellValue()); // это отвечает за преобразование больших чисел
+            String counterpartyCode = bigDecimalValueCode.toString();
+            
+            BigDecimal bigDecimalValueContractCode = new BigDecimal(row.getCell(2).getNumericCellValue()); // это отвечает за преобразование больших чисел
+            String counterpartyContractCode = bigDecimalValueContractCode.toString();
+            
+            
+            schedule.setCounterpartyCode(Long.parseLong(counterpartyCode));
+            schedule.setName(row.getCell(1).getStringCellValue().trim());
+            schedule.setCounterpartyContractCode(Long.parseLong(counterpartyContractCode));
+            schedule.setNote(row.getCell(3).getStringCellValue());
+            schedule.setMonday(row.getCell(4).getStringCellValue().equals("") ? null : row.getCell(4).getStringCellValue());
+            schedule.setTuesday(row.getCell(5).getStringCellValue().equals("") ? null : row.getCell(5).getStringCellValue());
+            schedule.setWednesday(row.getCell(6).getStringCellValue().equals("") ? null : row.getCell(6).getStringCellValue());
+            schedule.setThursday(row.getCell(7).getStringCellValue().equals("") ? null : row.getCell(7).getStringCellValue());
+            schedule.setFriday(row.getCell(8).getStringCellValue().equals("") ? null : row.getCell(8).getStringCellValue());
+            schedule.setSaturday(row.getCell(9).getStringCellValue().equals("") ? null : row.getCell(9).getStringCellValue());
+            schedule.setSunday(row.getCell(10).getStringCellValue().equals("") ? null : row.getCell(10).getStringCellValue());
+            schedule.setSupplies((int) row.getCell(11).getNumericCellValue());
+            schedule.setTz(row.getCell(12) == null || row.getCell(12).getStringCellValue().equals("") ? null : row.getCell(12).getStringCellValue());
+            schedule.setTp(row.getCell(13) == null || row.getCell(13).getStringCellValue().equals("") ? null : row.getCell(13).getStringCellValue());
+            schedule.setRunoffCalculation(row.getCell(14) == null ? null : (int) row.getCell(14).getNumericCellValue());
+            schedule.setComment(row.getCell(15) == null || row.getCell(15).getStringCellValue().equals("") ? null : row.getCell(15).getStringCellValue());
+            schedule.setMultipleOfPallet(row.getCell(16) == null || row.getCell(16).getStringCellValue().equals("") ? false : true);
+            schedule.setMultipleOfTruck(row.getCell(17) == null || row.getCell(17).getStringCellValue().equals("") ? false : true);
+            schedule.setStatus(20);
+            schedule.setNumStock(stock);
+//            schedule.setNumStock((int) row.getCell(17).getNumericCellValue());
+//            schedule.setDescription(row.getCell(18).getStringCellValue());
+
+//            String dateString = row.getCell(19).getStringCellValue();
+//            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+//            Date date = (Date) dateFormat.parse(dateString);
+//            schedule.setDateLastCalculation(date);
+
+            schedules.add(schedule);
+        }
+
+        wb.close();
+        return schedules;
+    }
+	
+	/**
+	 * Метод считывает ексель с потребностью и отдаёт мапу, где ключ - это код товара
+	 */
+	public Map<Integer, OrderProduct> loadNeedExcel(File file) throws ServiceException, InvalidFormatException, IOException, ParseException {
+		Map<Integer, OrderProduct> orderMap = new HashMap<>();
+        XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
+        XSSFSheet sheet = wb.getSheetAt(0);
+        for (int i = 3; i <= sheet.getLastRowNum(); i++) { // Начинаем с 1, чтобы пропустить заголовок
+            Row row = sheet.getRow(i);
+
+            if (row != null) {
+                Integer code = (int) row.getCell(0).getNumericCellValue();
+                String nameProduct = row.getCell(1).getStringCellValue();
+                int quantity = (int) row.getCell(2).getNumericCellValue();
+
+                OrderProduct orderProduct = new OrderProduct();
+                orderProduct.setQuantity(quantity);
+                orderProduct.setNameProduct(nameProduct);
+                orderProduct.setDateCreate(new Timestamp(System.currentTimeMillis()));
+                orderProduct.setDateCreate(Timestamp.valueOf(LocalDateTime.now()));
+
+                // Привязываем код как ключ и объект OrderProduct как значение
+                orderMap.put(code, orderProduct);
+            }
+        }
+
+        wb.close();
+        return orderMap;
+    }
+	
 	
 	
 	/**

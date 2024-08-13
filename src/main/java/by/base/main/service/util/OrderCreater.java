@@ -23,6 +23,11 @@ public class OrderCreater {
 	@Autowired
 	private OrderService orderService;
 
+	/**
+	 * оздаёт объект Order из OrderBuyGroupDTO
+	 * @param orderBuyGroupDTO
+	 * @return
+	 */
 	public Order create(OrderBuyGroupDTO orderBuyGroupDTO) {
 		if(orderBuyGroupDTO.getCheckx() != 50 && orderBuyGroupDTO.getCheckx() != 51) {
 			Order order = new Order();
@@ -38,6 +43,10 @@ public class OrderCreater {
 		        order.setMarketContractNumber(orderBuyGroupDTO.getContractNumber() != null ? orderBuyGroupDTO.getContractNumber().toString() : null);
 		        order.setMarketContractorId(orderBuyGroupDTO.getContractorId() != null ? orderBuyGroupDTO.getContractorId().toString() : null);
 		        order.setMarketContractType(orderBuyGroupDTO.getContractType() != null ? orderBuyGroupDTO.getContractType().toString() : null);
+		        
+		        order.setMarketOrderSumFirst(orderBuyGroupDTO.getOrderSumFirst() != null ? orderBuyGroupDTO.getOrderSumFirst() : null);
+		        order.setMarketOrderSumFinal(orderBuyGroupDTO.getOrderSumFinal() != null ? orderBuyGroupDTO.getOrderSumFinal() : null);
+		        
 		        Date dateDelivery = Date.valueOf(orderBuyGroupDTO.getDeliveryDate().toLocalDateTime().toLocalDate());
 		        order.setDateDelivery(dateDelivery);
 		        order.setNumStockDelivery(orderBuyGroupDTO.getWarehouseId().toString());

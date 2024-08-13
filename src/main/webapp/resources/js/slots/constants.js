@@ -21,7 +21,12 @@ export const userMessages = {
 	messageLogistIsShort: 'Сообщение должно быть не менее 10 символов!',
 	shiftChangeError: 'Невозможно установить заказ на это время! Время выгрузки заказа пересекается со временем пересменки склада!',
 	internalMovementTimeError: 'Невозможно установить заказ на это время! Время с 12:00 до 20:00 на 1 рампе 1700 склада зарезервировано для внутренних перемещений!',
-	orderNotForSlot: 'Данный заказ не нуждается в слотах - проверьте склад в Маркете'
+	orderNotForSlot: 'Данный заказ не нуждается в слотах - проверьте склад в Маркете',
+	isScheduleMatch: 'Поставка соответствует графику',
+	isScheduleNotMatch: 'Поставка не соответствует графику',
+	contractCodeNotFound: 'Не найден код контракта в заказе',
+	errorReadingSchedule: 'Ошибка при чтении графика поставок',
+	contractCodeIsMissing: 'Код контракта отсутствует в графике поставок',
 }
 
 export const slotStocks = ['1700','1200','1230','1214','1250','1100']
@@ -42,6 +47,7 @@ export const deleteOrderUrl = `../api/slot/delete`
 export const confirmSlotUrl = `../api/slot/save`
 export const editMarketInfoBaseUrl = `../api/manager/editMarketInfo/`
 export const getMarketOrderUrl = `../api/manager/getMarketOrder/`
+export const checkScheduleBaseUrl = '../api/slots/delivery-schedule/checkSchedule/'
 
 export const messagePattern = {
 	idMessage: null,

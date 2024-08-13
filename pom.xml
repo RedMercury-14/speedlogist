@@ -24,7 +24,6 @@
 <!--    <artifactId>java-telegram-bot-calendar</artifactId>-->
 <!--    <version>2.3</version>-->
 <!--</dependency>-->
-
 		
 		<dependency>
 		    <groupId>com.google.guava</groupId>

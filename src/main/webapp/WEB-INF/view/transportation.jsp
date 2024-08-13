@@ -145,7 +145,7 @@
 											<c:when test="${route.expeditionCost == null}">
 												<c:choose>
 													<c:when test="${route.driver == null}">
-														<div class="pt-1 text-danger">Укажите стоимость экспедиторских услуг:</div>
+														<div class="pt-1 text-danger">Укажите комиссию экспедитора:</div>
 														<input type="number" class="form-control mt-1" name="expeditionCost" id="expeditionCost" min="0" max="${route.finishPrice}" required>
 														<span>${route.startCurrency}</span>
 													</c:when>

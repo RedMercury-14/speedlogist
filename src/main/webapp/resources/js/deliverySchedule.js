@@ -156,7 +156,7 @@ const columnDefs = [
 		headerName: 'Статус', field: 'status',
 		cellClass: 'px-1 py-0 text-center',
 		hide: true,
-		width: 180,
+		width: 80,
 	},
 	{
 		headerName: 'Статус', field: 'statusToView',
@@ -214,12 +214,12 @@ const columnDefs = [
 		width: 300,
 	},
 	{
-		headerName: 'Кратно поддону', field: 'multipleOfPallet',
+		headerName: 'Кратно поддону', field: 'multipleOfPalletToView',
 		cellClass: 'px-1 py-0 text-center grid-checkbox',
 		width: 75,
 	},
 	{
-		headerName: 'Кратно машине', field: 'multipleOfTruck',
+		headerName: 'Кратно машине', field: 'multipleOfTruckToView',
 		cellClass: 'px-1 py-0 text-center grid-checkbox',
 		width: 75,
 	},
@@ -438,6 +438,8 @@ function getMappingScheduleItem(scheduleItem) {
 		...scheduleItem,
 		name: scheduleItem.name.trim(),
 		statusToView: getScheduleStatus(scheduleItem.status),
+		multipleOfPalletToView: scheduleItem.multipleOfPallet ? '+' : '',
+		multipleOfTruckToView: scheduleItem.multipleOfTruck ? '+' : '',
 	}
 }
 function getContextMenuItems(params) {

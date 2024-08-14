@@ -10,7 +10,7 @@ import {
 	changeTnvdInputRequired,
 	showIncotermsInput,
 } from "./procurementFormUtils.js"
-import { excelStyles, getPointToView, getRouteInfo, getRoutePrice, pointSorting, procurementExcelExportParams } from './procurementControlUtils.js'
+import { excelStyles, getPointToView, getRouteInfo, getRoutePrice, getWayToView, pointSorting, procurementExcelExportParams } from './procurementControlUtils.js'
 import { autocomplete } from './autocomplete/autocomplete.js'
 import { countries } from './global.js'
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
@@ -96,7 +96,7 @@ const columnDefs = [
 	{ headerName: 'Дата выгрузки (последняя)', field: 'unloadDateToView', comparator: dateComparator, },
 	// { headerName: 'Дата и время выгрузки', field: 'unloadWindowToView', width: 200, },
 	// { headerName: 'Продолжительность выгрузки', field: 'onloadTime', width: 200, },
-	{ headerName: 'Тип маршрута', field: 'way', },
+	{ headerName: 'Тип маршрута', field: 'wayToView', },
 	{ headerName: 'Номер из Маркета', field: 'marketNumber', },
 	{ headerName: 'Погрузочный номер', field: 'loadNumber', },
 	{ headerName: 'Условия поставки', field: 'incoterms', wrapText: true, autoHeight: true, },
@@ -134,6 +134,8 @@ const columnDefs = [
 	{ headerName: 'Температурные условия', field: 'temperature', },
 	{ headerName: 'Штабелирование', field: 'stackingToView', },
 	{ headerName: 'Склад доставки (из Маркета)', field: 'numStockDelivery', },
+	{ headerName: 'Начальная сумма заказа без НДС', field: 'marketOrderSumFirst', },
+	{ headerName: 'Конечная сумма заказа с НДС', field: 'marketOrderSumFinal', },
 ]
 const gridOptions = {
 	columnDefs: columnDefs,
@@ -436,7 +438,7 @@ function getMappingData(data) {
 
 		const routeInfo = getRouteInfo(order)
 		const routePrice = getRoutePrice(order)
-
+		const wayToView = getWayToView(order)
 
 		return {
 			...order,
@@ -458,6 +460,7 @@ function getMappingData(data) {
 			summWeight: summWeight ? summWeight : null,
 			routeInfo,
 			routePrice,
+			wayToView,
 		}
 	})
 }

@@ -11,7 +11,7 @@ import {
 	showIncotermsInput,
 	showIncotermsInsuranseInfo
 } from "./procurementFormUtils.js"
-import { disableButton, enableButton, getData } from "./utils.js"
+import { disableButton, enableButton } from "./utils.js"
 
 const editProcurement = "../../../api/manager/editProcurement"
 const token = $("meta[name='_csrf']").attr("content")
@@ -28,13 +28,6 @@ window.onload = () => {
 	const methodLoadInput = document.querySelector('#methodLoad')
 	const wayInput = document.querySelector('#way')
 	const points = document.querySelectorAll('.point')
-
-	// проверка наличия заявки по номеру из маркета
-	const marketNumberMessageElem = document.querySelector('#marketNumberMessage')
-	const marketNumberInput = document.querySelector('#marketNumber')
-	marketNumberInput.addEventListener('change', async (e) => {
-		marketNumberInputOnChangeHandler(e, marketNumberMessageElem)
-	})
 
 	// установка значения адреса таможни точки выгрузки
 	const controlUKZSelect = document.querySelector('select#control')
@@ -68,7 +61,7 @@ window.onload = () => {
 
 	editOrderForm.addEventListener('submit', (e) => orderFormSubmitHandler(e))
 
-	// листнер на отмену создания заявки
+	// листнер на отмену редактирования заявки
 	cancelBtn.addEventListener('click', () => {
 		window.location.href = '../orders'
 	})
@@ -165,6 +158,7 @@ function orderFormDataFormatter(formData) {
 		typeLoad: data.typeLoad ? data.typeLoad : '',
 		methodLoad: data.methodLoad ? data.methodLoad : '',
 		typeTruck: data.typeTruck ? data.typeTruck : '',
+		incoterms: data.incoterms ? data.incoterms : '',
 		stacking,
 		cargo: data.cargo,
 		dateDelivery,
@@ -183,27 +177,4 @@ function validateForm(data) {
 	}
 
 	return true
-}
-
-function marketNumberInputOnChangeHandler(e, messageElem) {
-	const marketNumber = e.target.value
-	if (marketNumber) {
-		checkMarketCode(marketNumber, messageElem)
-	} else {
-		error = false
-		messageElem.innerHTML = ''
-	}
-}
-
-async function checkMarketCode(marketNumber, messageElem) {
-	const res = await getData(`../../../api/procurement/checkMarketCode/${marketNumber}`)
-	if (res.status === '200') {
-		if (res.message === 'true') {
-			error = true
-			messageElem.innerHTML = 'Заявка с таким номером уже существует'
-		} else {
-			error = false
-			messageElem.innerHTML = ''
-		}
-	}
 }

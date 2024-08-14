@@ -217,6 +217,7 @@ public class MainController {
 		}
 		
 	}
+	
 
 	@GetMapping("/main")
 	public String homePage(Model model, HttpSession session, HttpServletRequest request) {
@@ -227,6 +228,8 @@ public class MainController {
 		System.out.println(request.getRemoteAddr());
 		
 		System.out.println("list before = " + chatEnpoint.internationalMessegeList.size());
+		
+		
 		
 //		//ловим нарушителей
 //		if(userName.equals("catalina!%Ricoh") || userName.equals("catalina!%ricoh")){

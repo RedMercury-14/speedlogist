@@ -253,6 +253,7 @@ public class MainRestController {
 	public static final Comparator<Address> comparatorAddressId = (Address e1, Address e2) -> (e1.getIdAddress() - e2.getIdAddress());
 	public static final Comparator<Address> comparatorAddressIdForView = (Address e1, Address e2) -> (e2.getType().charAt(0) - e1.getType().charAt(0));
 	
+	
 	@GetMapping("/orl/send")
 	public Map<String, Object> getSendSchedule(HttpServletRequest request, HttpServletResponse response) throws FileNotFoundException, IOException {
 		
@@ -270,8 +271,6 @@ public class MainRestController {
 		poiExcel.exportToExcelScheduleList(scheduleService.getSchedulesByStock(1200), appPath + "resources/others/" + fileName1200);
 		poiExcel.exportToExcelScheduleList(scheduleService.getSchedulesByStock(1250), appPath + "resources/others/" + fileName1250);
 		poiExcel.exportToExcelScheduleList(scheduleService.getSchedulesByStock(1700), appPath + "resources/others/" + fileName1700);
-		
-		
 		
 //		response.setHeader("content-disposition", "attachment;filename="+fileName+".xlsx");
 		List<File> files = new ArrayList<File>();

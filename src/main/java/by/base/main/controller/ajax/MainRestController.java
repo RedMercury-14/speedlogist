@@ -99,6 +99,7 @@ import by.base.main.dto.MarketErrorDto;
 import by.base.main.dto.MarketPacketDto;
 import by.base.main.dto.MarketRequestDto;
 import by.base.main.dto.MarketTableDto;
+import by.base.main.dto.OrderBuyDTO;
 import by.base.main.dto.OrderBuyGroupDTO;
 import by.base.main.model.Address;
 import by.base.main.model.GeometryResponse;
@@ -254,37 +255,6 @@ public class MainRestController {
 	public static final Comparator<Address> comparatorAddressIdForView = (Address e1, Address e2) -> (e2.getType().charAt(0) - e1.getType().charAt(0));
 	
 	
-	@GetMapping("/orl/send")
-	public Map<String, Object> getSendSchedule(HttpServletRequest request, HttpServletResponse response) throws FileNotFoundException, IOException {
-		
-		// Получаем текущую дату для имени файла
-        LocalDate currentTime = LocalDate.now();
-        String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-		
-		List<String> emails = propertiesUtils.getValuesByPartialKey(request, "email.orl");
-		
-		String appPath = request.getServletContext().getRealPath("");
-		String fileName1200 = "1200.xlsx";
-		String fileName1250 = "1250.xlsx";
-		String fileName1700 = "1700.xlsx";
-		
-		poiExcel.exportToExcelScheduleList(scheduleService.getSchedulesByStock(1200), appPath + "resources/others/" + fileName1200);
-		poiExcel.exportToExcelScheduleList(scheduleService.getSchedulesByStock(1250), appPath + "resources/others/" + fileName1250);
-		poiExcel.exportToExcelScheduleList(scheduleService.getSchedulesByStock(1700), appPath + "resources/others/" + fileName1700);
-		
-//		response.setHeader("content-disposition", "attachment;filename="+fileName+".xlsx");
-		List<File> files = new ArrayList<File>();
-		files.add(new File(appPath + "resources/others/" + fileName1200));
-		files.add(new File(appPath + "resources/others/" + fileName1250));
-		files.add(new File(appPath + "resources/others/" + fileName1700));
-		
-		
-		mailService.sendEmailWithFilesToUsers(request, "Графики поставок на " + currentTimeString, "", files, emails);
-		
-		Map<String, Object> responseMap = new HashMap<String, Object>();
-		return responseMap;	
-				
-	}
 	
 	/**
 	 * Загрузка заказов (потребности) из excel
@@ -312,6 +282,7 @@ public class MainRestController {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
 		
 //		mapOrderProduct.entrySet().forEach(e-> System.out.println(e.getKey() + "   ---   " + e.getValue()));
 		List<Product> products = productService.getAllProductList();
@@ -877,8 +848,10 @@ public class MainRestController {
 			
 			//создаём свой парсер и парсим json в объекты, с которыми будем работать.
 			CustomJSONParser customJSONParser = new CustomJSONParser();
-			OrderBuyGroupDTO orderBuyGroupDTO = customJSONParser.parseOrderBuyGroupFromJSON(str3);
 			
+			//создаём OrderBuyGroup
+			OrderBuyGroupDTO orderBuyGroupDTO = customJSONParser.parseOrderBuyGroupFromJSON(str3);
+						
 			//создаём Order, записываем в бд и возвращаем или сам ордер или ошибку (тот же ордер, только с отрицательным id)
 			Order order = orderCreater.create(orderBuyGroupDTO);
 			if(order.getIdOrder() < 0) {

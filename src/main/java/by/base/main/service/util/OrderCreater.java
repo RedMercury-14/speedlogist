@@ -3,6 +3,9 @@ package by.base.main.service.util;
 import java.sql.Date;
 import java.sql.Time;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,6 +15,8 @@ import com.itextpdf.text.pdf.PdfStructTreeController.returnType;
 import by.base.main.dto.OrderBuyDTO;
 import by.base.main.dto.OrderBuyGroupDTO;
 import by.base.main.model.Order;
+import by.base.main.model.OrderLine;
+import by.base.main.service.OrderLineService;
 import by.base.main.service.OrderService;
 
 /**
@@ -22,6 +27,9 @@ public class OrderCreater {
 	
 	@Autowired
 	private OrderService orderService;
+	
+	@Autowired
+	private OrderLineService orderLineService;
 
 	/**
 	 * оздаёт объект Order из OrderBuyGroupDTO
@@ -147,10 +155,31 @@ public class OrderCreater {
 		        }else {
 		        	order.setIdOrder(Integer.parseInt(message.split("<")[1].trim()));
 		        	order.setMessage(message.split("<")[0].trim());
+		        	orderLineService.deleteOrderLineByOrder(order); // тут удаляем строки из бд, если они есть из прошлых прогрузок
+		        	List<OrderLine> orderLines =  createOrderLineList(orderBuyGroupDTO, order);
+		        	order.setOrderLines(orderLines.stream().collect(Collectors.toSet()));
 		        	return order;
 		        }
 		        
-		        
-				
+	}
+	
+	private List<OrderLine> createOrderLineList(OrderBuyGroupDTO orderBuyGroupDTO, Order order) {
+		List<OrderBuyDTO> orderBuyDTOs = orderBuyGroupDTO.getOrderBuy();
+		List<OrderLine> result = new ArrayList<OrderLine>();		
+		for (OrderBuyDTO orderBuyDTO : orderBuyDTOs) {
+			OrderLine orderLine = new OrderLine();
+			orderLine.setBarcode(orderBuyDTO.getBarcode());
+			orderLine.setGoodsGroupName(orderBuyDTO.getGoodsGroupName());
+			orderLine.setGoodsId(orderBuyDTO.getGoodsId());
+			orderLine.setGoodsName(orderBuyDTO.getGoodsName());
+			orderLine.setOrder(order);
+			orderLine.setQuantityOrder(Double.parseDouble(orderBuyDTO.getQuantityOrder()));
+			orderLine.setQuantityPack(Double.parseDouble(orderBuyDTO.getQuantityInPack()));
+			orderLine.setQuantityPallet(Double.parseDouble(orderBuyDTO.getQuantityInPallet()));
+			Integer id = orderLineService.saveOrderLine(orderLine);
+			orderLine.setId(id);
+			result.add(orderLine);
+		}		
+		return result;	
 	}
 }

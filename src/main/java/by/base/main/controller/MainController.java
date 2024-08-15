@@ -327,6 +327,11 @@ public class MainController {
 	public String getSlotsPage(Model model, HttpServletRequest request) {
 		return "slots";
 	}
+	@GetMapping("/main/error")
+	public String getErrorPage(Model model, HttpServletRequest request) {
+		request.setAttribute("message", "Это тестовое сообщение для тестовой страницы с ошибкой\nВторая строка");
+		return "errorPage";
+	}
 	
 	@GetMapping("/main/orl/arrival")
 	public String getArrivalForORL(Model model, HttpServletRequest request) {
@@ -2826,6 +2831,18 @@ public class MainController {
 	}
 	
 	//подтверждение цены маршрута
+	/**
+	 * Главный метод подтверждения перевозчика на маршрут
+	 * Завершение торгов
+	 * @param model
+	 * @param request
+	 * @param login
+	 * @param cost
+	 * @param idRoute
+	 * @param currency
+	 * @param status
+	 * @return
+	 */
 	@RequestMapping("/main/logistics/international/confrom")
 	public String confromCost(Model model, HttpServletRequest request,
 			@RequestParam("login") String login,
@@ -2840,14 +2857,15 @@ public class MainController {
 			return "redirect:/main/logistics/international";
 		}
 		
+//		System.out.println(login+ "-login " + cost + "-cost " + idRoute + "-idRoute" + currency + "-curre" + status + "-status ");
+		
 		if (status == null) {
 			status = "4";
 			routeService.updateRouteInBase(idRoute, cost, currency, user, status);
 		}else {
 			routeService.updateRouteInBase(idRoute, cost, currency, user, status);
-			Route route = routeService.getRouteById(idRoute);
+			Route route = routeService.getRouteById(idRoute);			
 			User userHasCarrier = userService.getUserByLogin(login);
-			java.util.Date t2 = new java.util.Date();
 			String message = "На маршрут "+route.getRouteDirection()+" принят единственный заявившийся перевозчик: " + userHasCarrier.getCompanyName() 
 					+ ". Заявленная стоимость перевозки составляет "+ route.getFinishPrice() + " "+ route.getStartCurrency() + ". \nОптимальная стоимость составляет " + route.getOptimalCost()+" BYN";
 			mailService.sendSimpleEmail(request, "Подтверждение единственного перевозчика", message, "YakubovE@dobronom.by");
@@ -2910,7 +2928,7 @@ public class MainController {
 				routeService.updateRouteInBase(idRoute, cost, currency, user, status);
 			}else {
 				routeService.updateRouteInBase(idRoute, cost, currency, user, status);
-				Route route = routeService.getRouteById(idRoute);
+				Route route = routeService.getRouteById(idRoute);						
 				User userHasCarrier = userService.getUserByLogin(login);
 				java.util.Date t2 = new java.util.Date();
 				String message = "На маршрут "+route.getRouteDirection()+" принят единственный заявившийся перевозчик: " + userHasCarrier.getCompanyName() 
@@ -2958,15 +2976,19 @@ public class MainController {
 	
 	//подтверждение цены маршрута ДЛЯ АДМИНА
 		@RequestMapping("/main/admin/international/confrom")
-		public String confromCostAdmin(Model model,
+		public String confromCostAdmin(Model model, HttpServletRequest request, HttpServletResponse response,
 				@RequestParam("idRoute") Integer idRoute) {	
 			//обработка, если удалось нажать на кнопку
 			Order order = orderService.getOrderByIdRoute(idRoute);
 			if(order != null && order.getStatus() == 10) {			
 				return "redirect:/main/logistics/international";
 			}
-			routeService.updateRouteInBase(idRoute, "4");
+			routeService.updateRouteInBase(idRoute, "4");			
 			Route routeTarget = routeService.getRouteById(idRoute);
+			if(routeTarget.getUser() == null) {
+				request.setAttribute("message", "Ошибка подтверждения маршрута. Отсутствует перевозчик после обновления в БД");
+				return "errorPage";
+			}
 			Set <Order> orders = routeTarget.getOrders();
 			if(orders != null && orders.size() != 0) {
 				orders.forEach(o->{
@@ -2978,7 +3000,7 @@ public class MainController {
 		}
 		
 		@RequestMapping("/main/admin/internationalNew/confrom")
-		public String confromCostAdminNew(Model model,
+		public String confromCostAdminNew(Model model, HttpServletRequest request, HttpServletResponse response,
 				@RequestParam("idRoute") Integer idRoute) {	
 			//обработка, если удалось нажать на кнопку
 			Order order = orderService.getOrderByIdRoute(idRoute);
@@ -2987,6 +3009,10 @@ public class MainController {
 			}
 			routeService.updateRouteInBase(idRoute, "4");
 			Route routeTarget = routeService.getRouteById(idRoute);
+			if(routeTarget.getUser() == null) {
+				request.setAttribute("message", "Ошибка подтверждения маршрута с новой страницы. Отсутствует перевозчик после обновления в БД");
+				return "errorPage";
+			}
 			Set <Order> orders = routeTarget.getOrders();
 			if(orders != null && orders.size() != 0) {
 				orders.forEach(o->{

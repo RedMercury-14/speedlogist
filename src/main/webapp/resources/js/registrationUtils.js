@@ -356,3 +356,14 @@ function getDirectionOfTransportation(data) {
 	})
 	return directionOfTransportation
 }
+
+export function prohibitionOfSpecialCharactersInput(e, messageLoginElem) {
+	const input = e.target
+	const reg = /[^a-zA-Z0-9@!%.]/g
+	if (input.value.match(reg)) {
+		input.value = input.value.replaceAll(reg, '')
+		messageLoginElem.innerText = 'Киррилица и специмволы, кроме @, !, %, ., запрещены для ввода'
+	} else {
+		messageLoginElem.innerText = ''
+	}
+}

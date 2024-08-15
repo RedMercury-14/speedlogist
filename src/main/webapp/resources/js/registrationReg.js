@@ -6,6 +6,7 @@ import {
 	isUIError,
 	next,
 	prev,
+	prohibitionOfSpecialCharactersInput,
 	registration,
 	validateStep,
 } from "./registrationUtils.js"
@@ -23,6 +24,7 @@ $(document).ready(function() {
 	const messageLoginElem = document.querySelector("#messageLogin")
 	const messageYnpElem = document.querySelector("#messageYNP")
 	$("#userLogin").change((e) => checkLogin(e.target.value, token, messageLoginElem))
+	$("#userLogin").on('input', (e) => prohibitionOfSpecialCharactersInput(e, messageLoginElem))
 	$("#numYNP").change((e) => checkNumYNP(e.target.value, token, messageYnpElem))
 
 	// форма и подзаголовок формы

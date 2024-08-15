@@ -23,6 +23,9 @@ const role = document.querySelector('#role').value
 const debouncedSaveColumnState = debounce(saveColumnState, 300)
 const debouncedSaveFilterState = debounce(saveFilterState, 300)
 
+const SUPPLY_REG = /(понедельник|вторник|среда|четверг|пятница|суббота|воскресенье)/
+const ORDER_REG = /^з$|з\//
+
 let error = false
 let table
 let scheduleData
@@ -153,7 +156,7 @@ const columnDefs = [
 		headerName: 'Статус', field: 'status',
 		cellClass: 'px-1 py-0 text-center',
 		hide: true,
-		width: 180,
+		width: 80,
 	},
 	{
 		headerName: 'Статус', field: 'statusToView',
@@ -211,12 +214,12 @@ const columnDefs = [
 		width: 300,
 	},
 	{
-		headerName: 'Кратно поддону', field: 'multipleOfPallet',
+		headerName: 'Кратно поддону', field: 'multipleOfPalletToView',
 		cellClass: 'px-1 py-0 text-center grid-checkbox',
 		width: 75,
 	},
 	{
-		headerName: 'Кратно машине', field: 'multipleOfTruck',
+		headerName: 'Кратно машине', field: 'multipleOfTruckToView',
 		cellClass: 'px-1 py-0 text-center grid-checkbox',
 		width: 75,
 	},
@@ -435,6 +438,8 @@ function getMappingScheduleItem(scheduleItem) {
 		...scheduleItem,
 		name: scheduleItem.name.trim(),
 		statusToView: getScheduleStatus(scheduleItem.status),
+		multipleOfPalletToView: scheduleItem.multipleOfPallet ? '+' : '',
+		multipleOfTruckToView: scheduleItem.multipleOfTruck ? '+' : '',
 	}
 }
 function getContextMenuItems(params) {
@@ -632,6 +637,11 @@ function addScheduleItemFormHandler(e) {
 	const formData = new FormData(e.target)
 	const data = scheduleItemDataFormatter(formData)
 
+	if (!isOrdersAndSupplies(data)) {
+		snackbar.show('Необходимо указать день заказа и поставки, проверьте данные!')
+		return
+	}
+
 	if (!isSuppliesEqualToOrders(data)) {
 		snackbar.show('Количество поставок должно быть равно количеству заказов, проверьте данные!')
 		return
@@ -670,6 +680,11 @@ function editScheduleItemFormHandler(e) {
 
 	const formData = new FormData(e.target)
 	const data = scheduleItemDataFormatter(formData)
+
+	if (!isOrdersAndSupplies(data)) {
+		snackbar.show('Необходимо указать день заказа и поставки, проверьте данные!')
+		return
+	}
 
 	if (!isSuppliesEqualToOrders(data)) {
 		snackbar.show('Количество поставок должно быть равно количеству заказов, проверьте данные!')
@@ -736,7 +751,6 @@ function scheduleItemDataFormatter(formData) {
 
 // получение количества поставок по данным графика поставок
 function getSupplies(data) {
-	const supplyReg = /(понедельник|вторник|среда|четверг|пятница|суббота|воскресенье)/
 	const schedule = [
 		data.monday,
 		data.tuesday,
@@ -746,11 +760,10 @@ function getSupplies(data) {
 		data.saturday,
 		data.sunday,
 	]
-	return schedule.filter(el => supplyReg.test(el)).length
+	return schedule.filter(el => SUPPLY_REG.test(el)).length
 }
 // получение количества заказов по данным графика поставок
 function getOrders(data) {
-	const orderReg = /^з$|з\//
 	const schedule = [
 		data.monday,
 		data.tuesday,
@@ -760,7 +773,7 @@ function getOrders(data) {
 		data.saturday,
 		data.sunday,
 	]
-	return schedule.filter(el => orderReg.test(el)).length
+	return schedule.filter(el => ORDER_REG.test(el)).length
 }
 
 // заполнение формы редактирования магазина данными
@@ -925,9 +938,23 @@ function isSuppliesEqualToOrders(data) {
 		data.saturday,
 		data.sunday,
 	]
-	const supplyReg = /(понедельник|вторник|среда|четверг|пятница|суббота|воскресенье)/
-	const orderReg = /^з$|з\//
-	const supplies = schedule.filter(el => supplyReg.test(el)).length
-	const orders = schedule.filter(el => orderReg.test(el)).length
+	const supplies = schedule.filter(el => SUPPLY_REG.test(el)).length
+	const orders = schedule.filter(el => ORDER_REG.test(el)).length
 	return supplies === orders
+}
+
+// проверка наличия хотя бы одного заказа и одной поставк
+function isOrdersAndSupplies(data) {
+	const schedule = [
+		data.monday,
+		data.tuesday,
+		data.wednesday,
+		data.thursday,
+		data.friday,
+		data.saturday,
+		data.sunday,
+	]
+	const supplies = schedule.filter(el => SUPPLY_REG.test(el)).length
+	const orders = schedule.filter(el => ORDER_REG.test(el)).length
+	return supplies > 0 && orders > 0
 }

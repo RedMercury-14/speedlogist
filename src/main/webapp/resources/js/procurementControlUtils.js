@@ -123,3 +123,9 @@ export function getRoutePrice(order) {
 
 	return successRoutes[0].finishPrice + ' ' + successRoutes[0].startCurrency
 }
+
+export function getWayToView(order) {
+	const way = order.way ? order.way : ''
+	const isInternalMovement = order.isInternalMovement === 'true'
+	return isInternalMovement ? 'Внутреннее перемещение' : way
+}

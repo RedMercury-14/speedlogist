@@ -3,7 +3,7 @@ import { ResetStateToolPanel, dateComparator, gridColumnLocalState, gridFilterLo
 import { debounce, getData, dateHelper, getStatus, changeGridTableMarginTop, rowClassRules, isAdminByLogin, isAdmin, isStockProcurement } from './utils.js'
 import { snackbar } from './snackbar/snackbar.js'
 import { uiIcons } from './uiIcons.js'
-import { excelStyles, getPointToView, getRouteInfo, pointSorting, procurementExcelExportParams } from "./procurementControlUtils.js"
+import { excelStyles, getPointToView, getRouteInfo, getWayToView, pointSorting, procurementExcelExportParams } from "./procurementControlUtils.js"
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 
 const PAGE_NAME = 'ProcurementControl'
@@ -39,7 +39,7 @@ const columnDefs = [
 	{ headerName: 'Слот на выгрузку', field: 'timeDeliveryToView', },
 	// { headerName: 'Дата и время выгрузки', field: 'unloadWindowToView', width: 200, },
 	// { headerName: 'Продолжительность выгрузки', field: 'onloadTime', width: 200, },
-	{ headerName: 'Тип маршрута', field: 'way', },
+	{ headerName: 'Тип маршрута', field: 'wayToView', },
 	{ headerName: 'Номер из Маркета', field: 'marketNumber', },
 	{ headerName: 'Погрузочный номер', field: 'loadNumber', },
 	{ headerName: 'Условия поставки', field: 'incoterms', wrapText: true, autoHeight: true, },
@@ -66,6 +66,8 @@ const columnDefs = [
 	{ headerName: 'Штабелирование', field: 'stackingToView', },
 	{ headerName: 'Склад доставки (из Маркета)', field: 'numStockDelivery', },
 	{ headerName: 'Информация (из Маркета)', field: 'marketInfo', },
+	{ headerName: 'Начальная сумма заказа без НДС', field: 'marketOrderSumFirst', },
+	{ headerName: 'Конечная сумма заказа с НДС', field: 'marketOrderSumFinal', },
 
 ]
 const gridOptions = {
@@ -279,10 +281,9 @@ function getMappingData(data) {
 			: []
 
 		const unloadDateToView = unloadPointsArr.length ? unloadPointsArr[0].dateToView : ''
-
 		const routeInfo = getRouteInfo(order)
-
 		const timeDeliveryToView = order.timeDelivery ? convertToDayMonthTime(order.timeDelivery) : ''
+		const wayToView = getWayToView(order)
 
 		return {
 			...order,
@@ -299,6 +300,7 @@ function getMappingData(data) {
 			logistToView,
 			routeInfo,
 			timeDeliveryToView,
+			wayToView,
 		}
 	})
 }

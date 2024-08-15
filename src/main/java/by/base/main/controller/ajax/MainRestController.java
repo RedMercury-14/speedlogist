@@ -134,6 +134,7 @@ import by.base.main.service.util.CustomJSONParser;
 import by.base.main.service.util.MailService;
 import by.base.main.service.util.OrderCreater;
 import by.base.main.service.util.POIExcel;
+import by.base.main.service.util.PropertiesUtils;
 import by.base.main.util.ChatEnpoint;
 import by.base.main.util.MainChat;
 import by.base.main.util.SlotWebSocket;
@@ -233,6 +234,9 @@ public class MainRestController {
 	@Autowired
 	private ScheduleService scheduleService;
 	
+	@Autowired
+	private PropertiesUtils propertiesUtils;
+	
 	private static String classLog;
 	private static String marketJWT;
 	//в отдельный файл
@@ -248,6 +252,39 @@ public class MainRestController {
 
 	public static final Comparator<Address> comparatorAddressId = (Address e1, Address e2) -> (e1.getIdAddress() - e2.getIdAddress());
 	public static final Comparator<Address> comparatorAddressIdForView = (Address e1, Address e2) -> (e2.getType().charAt(0) - e1.getType().charAt(0));
+	
+	
+	@GetMapping("/orl/send")
+	public Map<String, Object> getSendSchedule(HttpServletRequest request, HttpServletResponse response) throws FileNotFoundException, IOException {
+		
+		// Получаем текущую дату для имени файла
+        LocalDate currentTime = LocalDate.now();
+        String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+		
+		List<String> emails = propertiesUtils.getValuesByPartialKey(request, "email.orl");
+		
+		String appPath = request.getServletContext().getRealPath("");
+		String fileName1200 = "1200.xlsx";
+		String fileName1250 = "1250.xlsx";
+		String fileName1700 = "1700.xlsx";
+		
+		poiExcel.exportToExcelScheduleList(scheduleService.getSchedulesByStock(1200), appPath + "resources/others/" + fileName1200);
+		poiExcel.exportToExcelScheduleList(scheduleService.getSchedulesByStock(1250), appPath + "resources/others/" + fileName1250);
+		poiExcel.exportToExcelScheduleList(scheduleService.getSchedulesByStock(1700), appPath + "resources/others/" + fileName1700);
+		
+//		response.setHeader("content-disposition", "attachment;filename="+fileName+".xlsx");
+		List<File> files = new ArrayList<File>();
+		files.add(new File(appPath + "resources/others/" + fileName1200));
+		files.add(new File(appPath + "resources/others/" + fileName1250));
+		files.add(new File(appPath + "resources/others/" + fileName1700));
+		
+		
+		mailService.sendEmailWithFilesToUsers(request, "Графики поставок на " + currentTimeString, "", files, emails);
+		
+		Map<String, Object> responseMap = new HashMap<String, Object>();
+		return responseMap;	
+				
+	}
 	
 	/**
 	 * Загрузка заказов (потребности) из excel
@@ -456,9 +493,10 @@ public class MainRestController {
 	 * @return
 	 * @throws ParseException
 	 * @throws IOException
+	 * @throws CloneNotSupportedException 
 	 */
 	@PostMapping("/slots/delivery-schedule/edit")
-	public Map<String, String> postEditDeliverySchedule(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+	public Map<String, String> postEditDeliverySchedule(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException, CloneNotSupportedException {
 		Map<String, String> response = new HashMap<String, String>();
 		
 		User user = getThisUser();
@@ -506,7 +544,10 @@ public class MainRestController {
 		schedule.setMultipleOfPallet(jsonMainObject.get("multipleOfPallet") == null || jsonMainObject.get("multipleOfPallet").toString().isEmpty() ? null : jsonMainObject.get("multipleOfPallet").toString().equals("true") ? true : false);
 		schedule.setMultipleOfTruck(jsonMainObject.get("multipleOfTruck") == null || jsonMainObject.get("multipleOfTruck").toString().isEmpty() ? null : jsonMainObject.get("multipleOfTruck").toString().equals("true") ? true : false);
 
+//		saveActionInFileSchedule(request, "resources/others/blackBox/schedule", scheduleOld, scheduleOld, user.getSurname() + " " + user.getName());
+		
 		scheduleService.updateSchedule(schedule);		
+		
 		response.put("status", "200");
 		response.put("message", "Отредактировано");
 		return response;		
@@ -6220,5 +6261,75 @@ public class MainRestController {
 	        e.printStackTrace();
 	    }
 	}
+	
+	
+	/**
+	 *  метод для сохранения историй изменений
+	 * @param request
+	 * @param localPath
+	 * @param scheduleOld
+	 * @param schedule
+	 * @param loginManager
+	 */
+	public void saveActionInFileSchedule(HttpServletRequest request, String localPath, Schedule scheduleOld, Schedule schedule, String loginManager) {
+		String appPath = request.getServletContext().getRealPath("");
+		String currentDir = appPath+localPath; //(resources/others/...)
+//		System.out.println(currentDir);
+	    try {	
+	    	
+	        // Получаем текущее время и форматируем его
+	        LocalDateTime timeAction = LocalDateTime.now();
+	        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+	        String timeActionString = timeAction.format(formatter);
 
+	        // Получаем текущую дату для имени файла
+	        LocalDate currentTime = LocalDate.now();
+	        String currentTimeString = String.valueOf(currentTime);
+	        String fileName = currentDir + "/контроль_изменений.txt";
+	        
+	        System.out.println(fileName);
+	        
+	        //проверка директории
+	        File fileTest= new File(appPath + "resources/others/blackBox/");
+	        if (!fileTest.exists()) {
+	            fileTest.mkdir();
+	            File fileTest2= new File(appPath + "resources/others/blackBox/schedule/");
+		        if (!fileTest2.exists()) {
+		            fileTest2.mkdir();
+		        }
+	        }
+
+	        // Проверяем, существует ли файл с текущей датой, и создаем его, если не существует
+	        File file = new File(fileName);
+	        if (!file.exists()) {
+	            try {
+	                file.createNewFile();
+	                try {
+	    	            BufferedWriter writerHeader = new BufferedWriter(new FileWriter(fileName, true));
+	    	            writerHeader.write("Объект до изменения --- кто изменил --- новый объект --- дата и время изменения");
+	    	            writerHeader.newLine();
+	    	            writerHeader.close();
+	    	        } catch (IOException e) {
+	    	            e.printStackTrace();
+	    	        }
+	            } catch (IOException e) {
+	                e.printStackTrace();
+	            }
+	        }
+
+	        // Записываем информацию о действии в файл
+	        try {
+	            BufferedWriter writer = new BufferedWriter(new FileWriter(fileName, true));
+	            writer.write(scheduleOld + " --- " + loginManager + " --- " + schedule + " --- " +timeActionString);
+	            writer.newLine();
+	            writer.close();
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	        }
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	}
+	
+	
 }

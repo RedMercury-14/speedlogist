@@ -29,6 +29,8 @@ import javax.servlet.http.HttpSession;
 import javax.transaction.Transactional;
 
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -187,6 +189,7 @@ public class MainController {
 	@Autowired
 	private TelegramBotRouting telegramBotRouting;
 	
+	
 	public static final Map<String,String> distances = new HashMap<String, String>();
 	public static String path = null;
 	
@@ -214,15 +217,19 @@ public class MainController {
 		}
 		
 	}
+	
 
 	@GetMapping("/main")
 	public String homePage(Model model, HttpSession session, HttpServletRequest request) {
+		
 		String userName = SecurityContextHolder.getContext().getAuthentication().getName();
 		System.out.println("Зашел user = " + userName);
 		System.out.println("Session check status = "+session.getAttribute("check"));
 		System.out.println(request.getRemoteAddr());
 		
 		System.out.println("list before = " + chatEnpoint.internationalMessegeList.size());
+		
+		
 		
 //		//ловим нарушителей
 //		if(userName.equals("catalina!%Ricoh") || userName.equals("catalina!%ricoh")){

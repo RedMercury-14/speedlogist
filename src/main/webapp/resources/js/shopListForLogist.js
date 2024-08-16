@@ -2,7 +2,7 @@ import { AG_GRID_LOCALE_RU } from '../js/AG-Grid/ag-grid-locale-RU.js'
 import { ajaxUtils } from './ajaxUtils.js'
 import { snackbar } from "./snackbar/snackbar.js"
 import { uiIcons } from './uiIcons.js'
-import { changeGridTableMarginTop, getData, hideLoadingSpinner, showLoadingSpinner } from './utils.js'
+import { changeGridTableMarginTop, getData, hideLoadingSpinner, isAdmin, showLoadingSpinner } from './utils.js'
 
 const getAllShopsUrl = '../../api/manager/getAllShops'
 const loadShopsUrl = '../../api/map/loadShop'
@@ -11,6 +11,16 @@ const editShopUrl = "../../api/manager/editShop"
 const deleteShopUrl = '../../api/manager/deleteShop'
 
 const token = $("meta[name='_csrf']").attr("content")
+const login = document.querySelector("#login").value
+const role = document.querySelector("#role").value
+console.log("🚀 ~ login:", login)
+
+// логины, которым разрешено редактирование
+const editableLogins = [
+	'olga!%logist',
+	'slesarevi!%power',
+	'alexandra!%adam',
+]
 
 let error = false
 let table
@@ -92,6 +102,8 @@ const gridOptions = {
 }
 
 window.onload = async () => {
+	if (!isEditable(login, role)) hideEditableButtons()
+
 	const addShopForm = document.querySelector("#addShopForm")
 	const addShopsInExcelForm = document.querySelector("#addShopsInExcelForm")
 	const editShopForm = document.querySelector("#editShopForm")
@@ -149,6 +161,7 @@ function getContextMenuItems(params) {
 	const numshop = params.node.data.numshop
 	const result = [
 		{
+			disabled: !isEditable(login, role),
 			name: `Редактировать магазин`,
 			action: () => {
 				editShop(shop)
@@ -156,6 +169,7 @@ function getContextMenuItems(params) {
 			icon: uiIcons.pencil,
 		},
 		{
+			disabled: !isEditable(login, role),
 			name: `Удалить магазин`,
 			action: () => {
 				deleteShop(numshop)
@@ -173,6 +187,8 @@ function getContextMenuItems(params) {
 // обработчик отправки формы добавления магазина
 function addShopFormHandler(e) {
 	e.preventDefault()
+
+	if (!isEditable(login, role)) return
 
 	const formData = new FormData(e.target)
 	const data = shopFormDataFormatter(formData)
@@ -198,6 +214,8 @@ function addShopFormHandler(e) {
 function addShopsInExcelFormHandler(e) {
 	e.preventDefault()
 
+	if (!isEditable(login, role)) return
+
 	const submitButton = e.submitter
 	const file = new FormData(e.target)
 
@@ -220,6 +238,8 @@ function addShopsInExcelFormHandler(e) {
 // обработчик отправки формы редактирования магазина
 function editShopFormHandler(e) {
 	e.preventDefault()
+
+	if (!isEditable(login, role)) return
 
 	const formData = new FormData(e.target)
 	const data = shopFormDataFormatter(formData)
@@ -288,6 +308,8 @@ function editShop(shop) {
 
 // удаление магазина
 function deleteShop(numshop) {
+	if (!isEditable(login, role)) return
+
 	ajaxUtils.postJSONdata({
 		url: deleteShopUrl,
 		token: token,
@@ -332,4 +354,16 @@ function setEditShopForm(shop) {
 	// 		option.selected = true
 	// 	}
 	// }
+}
+
+// проверка, разрешено ли редактирование
+function isEditable(login, role) {
+	return isAdmin(role) || editableLogins.includes(login)
+}
+ function hideEditableButtons() {
+	const addShopBtn = document.querySelector('#addShopBtn')
+	const addShopsInExcelBtn = document.querySelector('#addShopsInExcelBtn')
+
+	addShopBtn.classList.add('d-none')
+	addShopsInExcelBtn.classList.add('d-none')
 }

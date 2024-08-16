@@ -17,15 +17,15 @@
 </head>
 <body>
 	<jsp:include page="headerNEW.jsp" />
-	<div class="container-fluid my-container">
+	<div class="container-fluid my-container px-0">
 		<div class="title-container">
 			<strong><h3>Список магазинов</h3></strong>
 		</div>
 		<div class="toolbar">
-			<button type="button" class="btn tools-btn font-weight-bold text-muted" data-toggle="modal" data-target="#addShopModal">
+			<button type="button" id="addShopBtn" class="btn tools-btn font-weight-bold text-muted" data-toggle="modal" data-target="#addShopModal">
 				+ Добавить магазин
 			</button>
-			<button type="button" class="btn tools-btn font-weight-bold text-muted" data-toggle="modal" data-target="#addShopsInExcelModal">
+			<button type="button" id="addShopsInExcelBtn" class="btn tools-btn font-weight-bold text-muted" data-toggle="modal" data-target="#addShopsInExcelModal">
 				++ Загрузить магазины из Excel
 			</button>
 		</div>

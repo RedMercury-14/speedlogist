@@ -167,7 +167,8 @@
 									</div>
 								</li>
 							</c:when>
-							<c:when test="${roles == '[ROLE_SLOTOBSERVER]'}">				
+							<c:when test="${roles == '[ROLE_SLOTOBSERVER]'}">
+								<li><a class="nav-item nav-link" href="<spring:url value="/main/procurement/orders" />">Контроль заявок</a></li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/slots" />">Слоты</a></li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/procurement/ordersBalance" />">Остаток товара</a></li>
 							</c:when>

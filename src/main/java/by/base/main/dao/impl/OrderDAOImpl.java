@@ -366,7 +366,7 @@ public class OrderDAOImpl implements OrderDAO{
 		theObject.setParameter("dateEnd", dateEnd, TemporalType.TIMESTAMP);
 		List<Order> trucks = theObject.getResultList();
 		java.util.Date t2 = new java.util.Date();
-		System.err.println(t2.getTime() - t1.getTime());
+		System.err.println( "Order DAO = " + (t2.getTime() - t1.getTime()) + " ms");
 		return trucks;
 	}
 

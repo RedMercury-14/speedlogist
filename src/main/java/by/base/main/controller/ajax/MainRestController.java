@@ -4408,7 +4408,7 @@ public class MainRestController {
 		Set<Order> res2 = orderService.getOrderByPeriodDeliveryAndSlots(dateStart, dateEnd).stream().filter(o -> o.getStatus() != 10)
 				.collect(Collectors.toSet());
 		java.util.Date t2 = new java.util.Date();		
-		System.out.println("Time getOrdersForSlots2 : res2 = " + (t2.getTime()-t1.getTime()) + " ms ;");
+		System.out.println("Time getOrdersForSlots2 : res3 = " + (t2.getTime()-t1.getTime()) + " ms ;");
 		return res2;
 	}
 	
@@ -6234,7 +6234,7 @@ public class MainRestController {
 		            fileTest2.mkdir();
 		        }
 	        }
-	        System.err.println(appPath + "resources/others/blackBox/slot/");
+//	        System.err.println(appPath + "resources/others/blackBox/slot/");
 	        // Проверяем, существует ли файл с текущей датой, и создаем его, если не существует
 	        File file = new File(fileName);
 	        if (!file.exists()) {

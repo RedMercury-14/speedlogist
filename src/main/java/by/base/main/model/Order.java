@@ -112,6 +112,12 @@ public class Order {
 			   cascade= {CascadeType.ALL})
 	private Set<Address> addresses;
 	
+	@OneToMany(fetch=FetchType.LAZY, orphanRemoval = true,
+			   mappedBy="order",
+			   cascade= {CascadeType.ALL})
+	@JsonIgnore
+	private Set<OrderLine> orderLines;
+	
 	@ManyToMany(fetch = FetchType.LAZY, 
 			cascade = { CascadeType.ALL })
 	@JoinTable(name = "route_has_order", joinColumns = @JoinColumn(name = "order_idorder"), inverseJoinColumns = @JoinColumn(name = "route_idroute"))
@@ -267,6 +273,12 @@ public class Order {
 
 	
 	
+	public Set<OrderLine> getOrderLines() {
+		return orderLines;
+	}
+	public void setOrderLines(Set<OrderLine> orderLines) {
+		this.orderLines = orderLines;
+	}
 	public Double getMarketOrderSumFirst() {
 		return marketOrderSumFirst;
 	}

@@ -1,6 +1,6 @@
 import { AG_GRID_LOCALE_RU } from '../js/AG-Grid/ag-grid-locale-RU.js'
 import { ResetStateToolPanel, dateComparator, gridColumnLocalState, gridFilterLocalState } from './AG-Grid/ag-grid-utils.js'
-import { debounce, getData, dateHelper, getStatus, changeGridTableMarginTop, rowClassRules, isAdminByLogin, isAdmin, isStockProcurement } from './utils.js'
+import { debounce, getData, dateHelper, getStatus, changeGridTableMarginTop, rowClassRules, isAdminByLogin, isAdmin, isStockProcurement, isSlotsObserver } from './utils.js'
 import { snackbar } from './snackbar/snackbar.js'
 import { uiIcons } from './uiIcons.js'
 import { excelStyles, getPointToView, getRouteInfo, getWayToView, pointSorting, procurementExcelExportParams } from "./procurementControlUtils.js"
@@ -319,6 +319,7 @@ function getContextMenuItems(params) {
 			icon: uiIcons.fileText,
 		},
 		{
+			disabled: isSlotsObserver(role),
 			name: `Копировать заявку`,
 			action: () => {
 				copyOrder(idOrder)
@@ -326,16 +327,16 @@ function getContextMenuItems(params) {
 			icon: uiIcons.files,
 		},
 		{
+			disabled: (status === 10 || status === 70) || isSlotsObserver(role),
 			name: `Редактировать заявку`,
-			disabled: status === 10 || status === 70,
 			action: () => {
 				editOrder(idOrder)
 			},
 			icon: uiIcons.pencil,
 		},
 		{
+			disabled: (status === 10 || status === 70) || isSlotsObserver(role),
 			name: `Отменить заявку`,
-			disabled: status === 10 || status === 70,
 			action: () => {
 				deleteOrder(idOrder, rowNode)
 			},

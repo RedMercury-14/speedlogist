@@ -55,8 +55,8 @@ public class CustomJSONParser {
 				for (Object object : array) {
 					OrderBuyDTO orderBuyDTO = new OrderBuyDTO();
 					JSONObject jsonObjectArray = (JSONObject) object;
-					orderBuyDTO.setBarcode(jsonObjectArray.get("Barcode") != null ? object.toString() : null);
-					orderBuyDTO.setGoodsGroupName(jsonObjectArray.get("GoodsGroupName") != null ? object.toString() : null);
+					orderBuyDTO.setBarcode(jsonObjectArray.get("Barcode") != null ? jsonObjectArray.get("Barcode").toString() : null);
+					orderBuyDTO.setGoodsGroupName(jsonObjectArray.get("GoodsGroupName") != null ? jsonObjectArray.get("GoodsGroupName").toString() : null);
 					orderBuyDTO.setGoodsId(jsonObjectArray.get("GoodsId") != null ? Long.parseLong(jsonObjectArray.get("GoodsId").toString()) : null);
 					orderBuyDTO.setGoodsName(jsonObjectArray.get("GoodsName") != null ? jsonObjectArray.get("GoodsName").toString() : null);
 					orderBuyDTO.setQuantityInPack(jsonObjectArray.get("QuantityInPack") != null ? jsonObjectArray.get("QuantityInPack").toString() : null);

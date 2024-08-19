@@ -24,7 +24,7 @@
 	<jsp:include page="headerNEW.jsp" />
 	<div class="fluid-container my-container">
 		<div class=" px-5 d-flex align-items-center justify-content-between">
-			<h3 class="mb-2">Изменения матрицы в 1200</h3>
+			<h3 class="mb-2">Изменение матрицы</h3>
 			<div>
 				<p class="mb-1">Логин: powerbi@proanalysesl.com</p>
 				<p class="mb-1">Пароль: Unks!89r</p>
@@ -33,7 +33,7 @@
 		<br>
 		<div class="frame-container">
 			<iframe
-				title="Изменения матрицы в 1200"
+				title="Изменение матрицы"
 				width="100%" height="780px"
 				src="https://app.powerbi.com/reportEmbed?reportId=bcc5fe37-bb58-4ee5-bb2e-82551625053a&autoAuth=true&ctid=a9af5edf-b4be-4591-ba34-a3a96434b108"
 				frameborder="0"

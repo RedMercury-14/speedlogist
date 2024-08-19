@@ -6,14 +6,17 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import by.base.main.dao.OrderDAO;
+import by.base.main.dto.OrderDTOForSlot;
 import by.base.main.model.Order;
 import by.base.main.model.Route;
 import by.base.main.service.OrderService;
@@ -331,6 +334,26 @@ public class OrderServiceImpl implements OrderService {
 	public Set<Order> getListOrdersLogist(Date dateStart, Date dateEnd) {
 		return orderDAO.getListOrdersLogist(dateStart, dateEnd);
 	}
+
+	@Override
+	public List<Order> getOrderByPeriodDeliveryAndSlots(Date dateStart, Date dateEnd) {
+		return orderDAO.getOrderByPeriodDeliveryAndSlots(dateStart, dateEnd);
+	}
+
+	@Override
+	public List<OrderDTOForSlot> getOrderDTOByPeriodDeliveryAndSlots(Date dateStart, Date dateEnd) {
+		
+		List<Order> orders = orderDAO.getOrderByPeriodDeliveryAndSlots(dateStart, dateEnd);
+	    List<OrderDTOForSlot> orderDTOs = new ArrayList<OrderDTOForSlot>();
+	    for (Order order : orders) {
+	    	OrderDTOForSlot dto = new OrderDTOForSlot();
+	        BeanUtils.copyProperties(order, dto);
+	        orderDTOs.add(dto);
+	    }
+
+	    return orderDTOs;
+	}
+
 
 	
 }

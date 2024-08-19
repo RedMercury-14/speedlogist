@@ -74,10 +74,10 @@
 	</bean>
 	
 	<!-- Включаем планирование задач -->
-	<task:annotation-driven/>
+<!-- 	<task:annotation-driven/> -->
 	
 	<!-- Определяем ваши задачи -->
-    <bean id="ScheduledTask" class="by.base.main.service.util.ScheduledTask"/>
+<!--     <bean id="ScheduledTask" class="by.base.main.service.util.ScheduledTask"/> -->
 	
 	
     <tx:annotation-driven transaction-manager="myTransactionManager" />

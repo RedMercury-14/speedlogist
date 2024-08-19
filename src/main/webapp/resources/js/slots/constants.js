@@ -40,7 +40,7 @@ export const eventColors = {
 export const roles = ['manager', 'admin']
 export const adminLogins = [ "catalina!%ricoh" ]
 
-export const getOrdersForSlotsBaseUrl = '../api/manager/getOrdersForSlots/'
+export const getOrdersForSlotsBaseUrl = '../api/manager/getOrdersForSlots2/'
 export const loadOrderUrl = `../api/slot/load`
 export const updateOrderUrl = `../api/slot/update`
 export const deleteOrderUrl = `../api/slot/delete`

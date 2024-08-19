@@ -4,6 +4,7 @@ import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -15,12 +16,14 @@ import javax.transaction.Transactional;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import com.itextpdf.text.pdf.PdfStructTreeController.returnType;
 
 import by.base.main.dao.OrderDAO;
+import by.base.main.dto.OrderDTOForSlot;
 import by.base.main.model.Address;
 import by.base.main.model.Order;
 import by.base.main.model.Route;
@@ -345,6 +348,28 @@ public class OrderDAOImpl implements OrderDAO{
 		Set<Order> trucks = theObject.getResultStream().collect(Collectors.toSet());
 		return trucks;
 	}
+
+	private static final String queryGetOrderByPeriodDeliveryAndSlots = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH o.addresses a where \r\n"
+			+ "(CASE \r\n"
+			+ "    WHEN o.timeDelivery IS NOT NULL THEN o.timeDelivery \r\n"
+			+ "    ELSE o.dateDelivery \r\n"
+			+ " END)\r\n"
+			+ "BETWEEN :dateStart AND :dateEnd";
+
+	@Transactional
+	@Override
+	public List<Order> getOrderByPeriodDeliveryAndSlots(Date dateStart, Date dateEnd) {
+		java.util.Date t1 = new java.util.Date();
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Order> theObject = currentSession.createQuery(queryGetOrderByPeriodDeliveryAndSlots, Order.class);
+		theObject.setParameter("dateStart", dateStart, TemporalType.TIMESTAMP);
+		theObject.setParameter("dateEnd", dateEnd, TemporalType.TIMESTAMP);
+		List<Order> trucks = theObject.getResultList();
+		java.util.Date t2 = new java.util.Date();
+		System.err.println(t2.getTime() - t1.getTime());
+		return trucks;
+	}
+
 
 
 }

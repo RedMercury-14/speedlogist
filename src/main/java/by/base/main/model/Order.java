@@ -115,6 +115,7 @@ public class Order {
 	@OneToMany(fetch=FetchType.LAZY, orphanRemoval = true,
 			   mappedBy="order",
 			   cascade= {CascadeType.ALL})
+	@JsonIgnore
 	private Set<OrderLine> orderLines;
 	
 	@ManyToMany(fetch = FetchType.LAZY, 

@@ -4,6 +4,7 @@ import java.sql.Date;
 import java.util.List;
 import java.util.Set;
 
+import by.base.main.dto.OrderDTOForSlot;
 import by.base.main.model.Order;
 import by.base.main.model.Route;
 
@@ -108,6 +109,25 @@ public interface OrderService {
 	 * @return
 	 */
 	Integer getSummPallInStockExternal (Order order);
+	
+	/**
+	 * Метод который возращает заказы по дате доставки 
+	 * <br>сложный метод, который сначала ищет по столбцу timeDelivery, если он не равен null
+	 * <br>а если он равен null -  то ищет по dateDelivery
+	 * @param dateStart
+	 * @param dateEnd
+	 * @return
+	 */
+	List<Order> getOrderByPeriodDeliveryAndSlots(Date dateStart, Date dateEnd);
+	/**
+	 * Метод который возращает заказы по дате доставки <b>(OrderDTOForSlot)</b>
+	 * <br>сложный метод, который сначала ищет по столбцу timeDelivery, если он не равен null
+	 * <br>а если он равен null -  то ищет по dateDelivery
+	 * @param dateStart
+	 * @param dateEnd
+	 * @return
+	 */
+	List<OrderDTOForSlot> getOrderDTOByPeriodDeliveryAndSlots(Date dateStart, Date dateEnd);
 	
 	int updateOrderFromStatus (Order order);
 	

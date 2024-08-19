@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import javax.persistence.TemporalType;
 import javax.transaction.Transactional;
 
+import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
@@ -359,17 +360,21 @@ public class OrderDAOImpl implements OrderDAO{
 	@Transactional
 	@Override
 	public List<Order> getOrderByPeriodDeliveryAndSlots(Date dateStart, Date dateEnd) {
-		java.util.Date t1 = new java.util.Date();
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<Order> theObject = currentSession.createQuery(queryGetOrderByPeriodDeliveryAndSlots, Order.class);
 		theObject.setParameter("dateStart", dateStart, TemporalType.TIMESTAMP);
 		theObject.setParameter("dateEnd", dateEnd, TemporalType.TIMESTAMP);
 		List<Order> trucks = theObject.getResultList();
-		java.util.Date t2 = new java.util.Date();
-		System.err.println( "Order DAO = " + (t2.getTime() - t1.getTime()) + " ms");
 		return trucks;
 	}
 
+	
+	private static final String queryGetOrderByPeriodDeliveryAndSlotsFAST =
+		    "SELECT new com.base.main.dto.OrderDTOForSlot (o.id, o.status, a.bodyAddress) " +
+		    	    "FROM Order o " +
+		    	    "LEFT JOIN o.addresses a " +
+		    	    "WHERE (CASE WHEN o.timeDelivery IS NOT NULL THEN o.timeDelivery ELSE o.dateDelivery END) " +
+		    	    "BETWEEN :dateStart AND :dateEnd";
 
 
 }

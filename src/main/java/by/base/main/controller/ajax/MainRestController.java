@@ -803,7 +803,7 @@ public class MainRestController {
 		MarketRequestDto requestDto3 = new MarketRequestDto("", packetDto3);
 		String marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto3));
 		
-		System.out.println(marketOrder2);
+//		System.out.println(marketOrder2);
 		
 		if(marketOrder2.equals("503")) { // означает что связь с маркетом потеряна
 			//в этом случае проверяем бд
@@ -4408,7 +4408,7 @@ public class MainRestController {
 		Set<Order> res2 = orderService.getOrderByPeriodDeliveryAndSlots(dateStart, dateEnd).stream().filter(o -> o.getStatus() != 10)
 				.collect(Collectors.toSet());
 		java.util.Date t2 = new java.util.Date();		
-		System.out.println("Time getOrdersForSlots2 : res3 = " + (t2.getTime()-t1.getTime()) + " ms ;");
+		System.out.println("Time getOrdersForSlots2 : res3 = " + (t2.getTime()-t1.getTime()) + " ms ; size = " + res2.size());
 		return res2;
 	}
 	

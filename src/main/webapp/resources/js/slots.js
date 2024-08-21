@@ -532,8 +532,8 @@ async function eventDropHandler(info) {
 	}
 
 	// проверка совпадения с графиком поставок
-	const scheduleData = await checkSchedule(order, eventDateStr)
-	if (scheduleData.message) alert (scheduleData.message)
+	// const scheduleData = await checkSchedule(order, eventDateStr)
+	// if (scheduleData.message) alert (scheduleData.message)
 
 	updateOrder(info, false)
 }
@@ -580,8 +580,8 @@ async function eventReceiveHandler(info) {
 	}
 
 	// проверка совпадения с графиком поставок
-	const scheduleData = await checkSchedule(order, eventDateStr)
-	if (scheduleData.message) alert (scheduleData.message)
+	// const scheduleData = await checkSchedule(order, eventDateStr)
+	// if (scheduleData.message) alert (scheduleData.message)
 
 	// для логиста и админа - сложный апдейт
 	if (isAdmin(role) || isLogist(role)) {
@@ -657,6 +657,7 @@ function loadOrder(info) {
 			bootstrap5overlay.hideOverlay()
 
 			if (data.status === '200') {
+				showMessageModal(data.info)
 				addCalendarEvent(orderTableGridOption, orderData, false)
 				return
 			}
@@ -718,6 +719,7 @@ function updateOrder(info, isComplexUpdate) {
 			bootstrap5overlay.hideOverlay()
 
 			if (data.status === '200') {
+				showMessageModal(data.info)
 				isComplexUpdate
 					? addCalendarEvent(orderTableGridOption, orderData, false)
 					: updateCalendarEvent(orderTableGridOption, orderData, false)

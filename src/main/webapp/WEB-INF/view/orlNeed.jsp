@@ -10,43 +10,79 @@
 	<meta name="${_csrf.parameterName}" content="${_csrf.token}" />
 	<title>Потребности</title>
 	<link rel="icon" href="${pageContext.request.contextPath}/resources/img/favicon.ico">
-	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/orlNeed.css">
+	<script src="${pageContext.request.contextPath}/resources/js/AG-Grid/ag-grid-enterprise.min.js"></script>
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/variables.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/snackbar.css">
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/bootstrap5overlay.css">
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/orlNeed.css">
 </head>
 
 <body>
 	<jsp:include page="headerNEW.jsp" />
 
-	<div class="container my-container">
-		<form id="reportForm" action="">
-			<div class="form-group mb-0">
-				<label class="col-form-label text-muted font-weight-bold">Укажите дату</label>
-				<input class="form-control w-25" type="date" name="date" id="date">
-			</div>
-			<div class="form-group mb-0">
-				<label class="col-form-label text-muted font-weight-bold">Загрузите файл Excel</label>
-				<input type="file" class="form-control btn-outline-secondary"
-						name="excel" id="excel"
-						accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-						required
-				>
-			</div>
-			<br>
-			<div class="formButton-container">
-				<button class="btn btn-primary" type="submit">Загрузить</button>
-			</div>
-		</form>
-
-		<br>
-		<br>
-		<div>
-			<textarea class="form-control" id="stackTrace" cols="30" rows="20"></textarea>
+	<div id="overlay" class="none">
+		<div class="spinner-border text-primary" role="status">
+			<span class="sr-only">Загрузка...</span>
 		</div>
+	</div>
 
+	<div class="container-fluid my-container px-0">
+
+		<sec:authorize access="isAuthenticated()">
+			<sec:authentication property="principal.authorities" var="roles" />
+		</sec:authorize>
+
+		<div class="title-container">
+			<strong><h3>Потребности</h3></strong>
+		</div>
+		<div class="toolbar">
+			<input class="btn tools-btn font-weight-bold" type="date" name="filterDate" id="filterDate">
+			<c:choose>
+				<c:when test="${roles == '[ROLE_ADMIN]'}">
+					<button type="button" class="btn tools-btn font-weight-bold text-muted" data-toggle="modal" data-target="#sendExcelModal">
+						Загрузить Excel
+					</button>
+				</c:when>
+			</c:choose>
+		</div>
+		<div id="myGrid" class="ag-theme-alpine"></div>
 		<div id="snackbar"></div>
 	</div>
 
-	<jsp:include page="footer.jsp" />
+	<!-- модальное окно загрузки таблицы Эксель -->
+	<div class="modal fade" id="sendExcelModal" tabindex="-1" aria-labelledby="sendExcelModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h1 class="modal-title fs-5 m-0" id="sendExcelModalLabel">Загрузить потребности</h1>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<form id="sendExcelForm" action="">
+					<div class="modal-body">
+						<div class="inputs-container">
+							<div class="form-group">
+								<label for="date" class="col-form-label text-muted font-weight-bold">Укажите дату</label>
+								<input class="form-control w-50" type="date" name="date" id="date">
+							</div>
+							<div class="form-group">
+								<label class="col-form-label text-muted font-weight-bold">Загрузите файл Excel</label>
+								<input type="file" class="form-control btn-outline-secondary" name="excel"
+									id="excel"
+									accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+									required>
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">Отменить</button>
+						<button type="submit" class="btn btn-primary">Загрузить</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
 
 	<script src='${pageContext.request.contextPath}/resources/mainPage/js/nav-fixed-top.js'></script>
 	<script src="${pageContext.request.contextPath}/resources/js/orlNeed.js" type="module"></script>

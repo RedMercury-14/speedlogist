@@ -1305,8 +1305,13 @@ public class MainRestController {
 			}
 			Message message = new Message(user.getLogin(), null, "200", str, idOrder.toString(), "update");
 			slotWebSocket.sendMessage(message);	
+			
+			//тут проверка по потребности
+			String infoCheck = checkOrderNeeds.check(order);
+			
 			response.put("status", "200");
 			response.put("message", str);
+			response.put("info", infoCheck);
 			return response;	
 		}			
 	}
@@ -1510,8 +1515,6 @@ public class MainRestController {
 			
 			//тут проверка по потребности
 			String infoCheck = checkOrderNeeds.check(order);
-			
-			System.out.println(infoCheck);
 			
 			response.put("status", "200");
 			response.put("message", str);

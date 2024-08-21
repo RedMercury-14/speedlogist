@@ -366,7 +366,7 @@ export function isBackgroundEvent(fcEvent) {
 // проверка совпадения заказа с графика поставок
 export async function checkSchedule(order, eventDateStr) {
 	const isInternalMovement = order.isInternalMovement
-	if (isInternalMovement) return {
+	if (isInternalMovement === 'true') return {
 		flag: true,
 		message: null,
 		body: null

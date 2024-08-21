@@ -1221,6 +1221,7 @@ public class MainController {
 			int seconds = route.getTime().getMinute()*60 + route.getTime().getSecond();
 			TenderTimer tenderTimer = new TenderTimer(seconds, addCostForRoute(route), routeService, chatEnpoint, mainChat);
 			timerList.addAndStart(tenderTimer);
+			System.err.println("Задейстован TenderTimer");
 		}else if(request.getParameter("agree") != null && finishPercent > route.getFinishPrice()){ //новая цена
 			User user = getThisUser();			
 			route.setFinishPrice(finishPercent);
@@ -1230,6 +1231,7 @@ public class MainController {
 			int seconds = route.getTime().getMinute()*60 + route.getTime().getSecond();
 			TenderTimer tenderTimer = new TenderTimer(seconds, addCostForRoute(route), routeService, chatEnpoint, mainChat);
 			timerList.replace(tenderTimer); // важно! меняем!
+			System.err.println("Задейстован TenderTimer");
 		}else {
 			System.out.println("pidor"); //валидацию в JS
 		}

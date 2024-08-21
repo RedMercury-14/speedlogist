@@ -1,7 +1,13 @@
 package by.base.main.dao.impl;
 
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.Date;
 import java.util.List;
 
+import javax.persistence.TemporalType;
 import javax.transaction.Transactional;
 
 import org.hibernate.Session;
@@ -57,6 +63,20 @@ public class OrderProductDAOImpl implements OrderProductDAO{
 	public void updateOrderProduct(OrderProduct orderProduct) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		currentSession.update(orderProduct);	
+	}
+
+	private static final String queryGetOrderProductListHasDate = "from OrderProduct where dateCreate BETWEEN :dateStart and :dateEnd";
+	@Transactional
+	@Override
+	public List<OrderProduct> getOrderProductListHasDate(Date date) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Timestamp start = Timestamp.valueOf(LocalDateTime.of(LocalDate.parse(date.toString()), LocalTime.of(00, 00)));
+		Timestamp end = Timestamp.valueOf(LocalDateTime.of(LocalDate.parse(date.toString()), LocalTime.of(23, 59)));
+		Query<OrderProduct> theObject = currentSession.createQuery(queryGetOrderProductListHasDate, OrderProduct.class);
+		theObject.setParameter("dateStart", start, TemporalType.TIMESTAMP);
+		theObject.setParameter("dateEnd", end, TemporalType.TIMESTAMP);
+		List<OrderProduct> trucks = theObject.getResultList();
+		return trucks;
 	}
 
 }

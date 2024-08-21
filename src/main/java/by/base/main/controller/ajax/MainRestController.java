@@ -88,6 +88,7 @@ import com.graphhopper.util.JsonFeature;
 import com.graphhopper.util.PointList;
 import com.graphhopper.util.Translation;
 import com.graphhopper.util.shapes.GHPoint;
+import com.itextpdf.text.log.SysoCounter;
 import com.itextpdf.text.pdf.PdfStructTreeController.returnType;
 
 import by.base.main.controller.MainController;
@@ -121,6 +122,7 @@ import by.base.main.model.Truck;
 import by.base.main.model.User;
 import by.base.main.service.AddressService;
 import by.base.main.service.MessageService;
+import by.base.main.service.OrderProductService;
 import by.base.main.service.OrderService;
 import by.base.main.service.ProductService;
 import by.base.main.service.RatesService;
@@ -132,6 +134,7 @@ import by.base.main.service.ServiceException;
 import by.base.main.service.ShopService;
 import by.base.main.service.TruckService;
 import by.base.main.service.UserService;
+import by.base.main.service.util.CheckOrderNeeds;
 import by.base.main.service.util.CustomJSONParser;
 import by.base.main.service.util.MailService;
 import by.base.main.service.util.OrderCreater;
@@ -239,6 +242,12 @@ public class MainRestController {
 	@Autowired
 	private PropertiesUtils propertiesUtils;
 	
+	@Autowired
+	private CheckOrderNeeds checkOrderNeeds;
+	
+	@Autowired
+	private OrderProductService orderProductService;
+	
 	private static String classLog;
 	private static String marketJWT;
 	//в отдельный файл
@@ -255,7 +264,22 @@ public class MainRestController {
 	public static final Comparator<Address> comparatorAddressId = (Address e1, Address e2) -> (e1.getIdAddress() - e2.getIdAddress());
 	public static final Comparator<Address> comparatorAddressIdForView = (Address e1, Address e2) -> (e2.getType().charAt(0) - e1.getType().charAt(0));
 	
-	
+	@GetMapping("/orl/need/getNeed/{date}")
+	public Map<String, Object> getNeedList(HttpServletRequest request, @PathVariable String date) {
+		Map<String, Object> response = new HashMap<String, Object>();	
+		
+		List<OrderProduct> products = orderProductService.getOrderProductListHasDate(Date.valueOf(LocalDate.parse(date)));
+		
+		if(products == null) {
+			response.put("status", "100");
+			response.put("message", "ошибка выполнения метода; Возвращен null");
+			return response;
+		}
+				
+		response.put("status", "200");
+		response.put("body", products);
+		return response;		
+	}
 	
 	/**
 	 * Загрузка заказов (потребности) из excel
@@ -271,14 +295,18 @@ public class MainRestController {
 	@RequestMapping(value = "/orl/need/load", method = RequestMethod.POST, consumes = {
 			MediaType.MULTIPART_FORM_DATA_VALUE })
 	public Map<String, String> postLoadExcelNeed (Model model, HttpServletRequest request, HttpSession session,
-			@RequestParam(value = "excel", required = false) MultipartFile excel)
+			@RequestParam(value = "excel", required = false) MultipartFile excel,
+			@RequestParam(value = "date", required = false) String dateStr)
 			throws InvalidFormatException, IOException, ServiceException {
-		Map<String, String> response = new HashMap<String, String>();	
+		
+		Map<String, String> response = new HashMap<String, String>();
+		dateStr = dateStr.isEmpty() ? null : dateStr;
 		File file1 = poiExcel.getFileByMultipartTarget(excel, request, "need.xlsx");
 		
 		Map<Integer, OrderProduct> mapOrderProduct = new HashMap<Integer, OrderProduct>();
 		try {
-			mapOrderProduct = poiExcel.loadNeedExcel(file1);
+			System.out.println(dateStr);
+			mapOrderProduct = poiExcel.loadNeedExcel(file1, dateStr);
 		} catch (InvalidFormatException | IOException | java.text.ParseException | ServiceException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -286,6 +314,7 @@ public class MainRestController {
 		
 		
 //		mapOrderProduct.entrySet().forEach(e-> System.out.println(e.getKey() + "   ---   " + e.getValue()));
+		
 		List<Product> products = productService.getAllProductList();
 		Map<Integer, Product> productsMap = products.stream().collect(Collectors.toMap(
 		        Product::getCodeProduct,
@@ -310,6 +339,9 @@ public class MainRestController {
 			product.addOrderProducts(entry.getValue());
 			productService.updateProduct(product);
 		}
+		
+		//Тут будут проверки по потребностям согласно таблице заказов
+		
 		
 		response.put("200", "ads");
 //		response.put("body", schedules.toString());
@@ -784,7 +816,7 @@ public class MainRestController {
 	 * Если в маркете есть - он обнавляет его в бд.
 	 * Если связи с маркетом нет - берет из бд.
 	 * Если нет в бд и связи с маркетом нет - выдаёт ошибку
-	 * Если нет в 
+	 * ордер из маркета 
 	 * @param request
 	 * @param idMarket
 	 * @return
@@ -863,6 +895,7 @@ public class MainRestController {
 				response.put("status", "200");
 				response.put("message", order.getMessage());
 				response.put("order", order);
+				System.out.println(checkOrderNeeds.check(order)); // тестовая проверка остановился тут
 				return response;
 			}
 		}		
@@ -1474,8 +1507,15 @@ public class MainRestController {
 			saveActionInFile(request, "resources/others/blackBox/slot", idOrder, order.getMarketNumber(), order.getNumStockDelivery(), null, order.getIdRamp(), null, order.getTimeDelivery(), user.getLogin(), "load", info, order.getMarketContractType());
 			Message message = new Message(user.getLogin(), null, "200", str, idOrder.toString(), "load");
 			slotWebSocket.sendMessage(message);	
+			
+			//тут проверка по потребности
+			String infoCheck = checkOrderNeeds.check(order);
+			
+			System.out.println(infoCheck);
+			
 			response.put("status", "200");
 			response.put("message", str);
+			response.put("info", infoCheck);
 			return response;	
 		}			
 	}

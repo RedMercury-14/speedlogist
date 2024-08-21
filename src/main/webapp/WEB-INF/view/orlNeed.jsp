@@ -20,6 +20,10 @@
 	<div class="container my-container">
 		<form id="reportForm" action="">
 			<div class="form-group mb-0">
+				<label class="col-form-label text-muted font-weight-bold">Укажите дату</label>
+				<input class="form-control w-25" type="date" name="date" id="date">
+			</div>
+			<div class="form-group mb-0">
 				<label class="col-form-label text-muted font-weight-bold">Загрузите файл Excel</label>
 				<input type="file" class="form-control btn-outline-secondary"
 						name="excel" id="excel"

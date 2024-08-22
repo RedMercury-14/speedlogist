@@ -76,25 +76,25 @@ export const tempMaxPallRestrictions = [
 	},
 	{
 		stockId: '1700',
-		date: '2024-07-17',
+		date: '2024-08-26',
 		maxPall:{
-			externalMovement: 1500,
+			externalMovement: 3000,
 			internalMovement: 500,
 		},
 	},
 	{
 		stockId: '1700',
-		date: '2024-07-18',
+		date: '2024-08-27',
 		maxPall:{
-			externalMovement: 1500,
+			externalMovement: 3000,
 			internalMovement: 500,
 		},
 	},
 	{
 		stockId: '1700',
-		date: '2024-07-19',
+		date: '2024-08-30',
 		maxPall:{
-			externalMovement: 1500,
+			externalMovement: 2000,
 			internalMovement: 500,
 		},
 	},

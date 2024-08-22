@@ -140,6 +140,7 @@ import by.base.main.service.util.MailService;
 import by.base.main.service.util.OrderCreater;
 import by.base.main.service.util.POIExcel;
 import by.base.main.service.util.PropertiesUtils;
+import by.base.main.service.util.ReaderSchedulePlan;
 import by.base.main.util.ChatEnpoint;
 import by.base.main.util.MainChat;
 import by.base.main.util.SlotWebSocket;
@@ -248,6 +249,9 @@ public class MainRestController {
 	@Autowired
 	private OrderProductService orderProductService;
 	
+	@Autowired
+	private ReaderSchedulePlan readerSchedulePlan;
+	
 	private static String classLog;
 	private static String marketJWT;
 	//в отдельный файл
@@ -263,6 +267,21 @@ public class MainRestController {
 
 	public static final Comparator<Address> comparatorAddressId = (Address e1, Address e2) -> (e1.getIdAddress() - e2.getIdAddress());
 	public static final Comparator<Address> comparatorAddressIdForView = (Address e1, Address e2) -> (e2.getType().charAt(0) - e1.getType().charAt(0));
+	
+	@GetMapping("/test/{num}")
+	public Map<String, Object> getTest(HttpServletRequest request, @PathVariable String num) {
+		Map<String, Object> response = new HashMap<String, Object>();	
+		
+//		Schedule schedule = scheduleService.getScheduleByNumContract(Long.parseLong(num));
+//		readerSchedulePlan.read(schedule);
+		Product product = productService.getProductByCode(Integer.parseInt(num));
+		readerSchedulePlan.name(product, null); // остановился тут
+				
+		response.put("status", "200");
+		response.put("body", product);
+		return response;		
+	}
+	
 	
 	@GetMapping("/orl/need/getNeed/{date}")
 	public Map<String, Object> getNeedList(HttpServletRequest request, @PathVariable String date) {
@@ -762,8 +781,8 @@ public class MainRestController {
 	 * @return
 	 */
 	@GetMapping("/order-support/getStockRemainder")
-	public List<Product> getStockRemainderSupport(HttpServletRequest request) {
-		List<Product> targetRoutes = productService.getAllProductList();		
+	public Set<Product> getStockRemainderSupport(HttpServletRequest request) {
+		Set<Product> targetRoutes = productService.getAllProductList().stream().collect(Collectors.toSet());		
 		return targetRoutes;
 	}
 	
@@ -1345,6 +1364,9 @@ public class MainRestController {
 			Product product = productService.getProductByCode(Integer.parseInt(string));
 			
 			if(product != null) {
+				if(product.getBalanceStockAndReserves() == null) {
+					continue;
+				}
 				if(product.getBalanceStockAndReserves() == 9999.0) {
 					continue;
 				}

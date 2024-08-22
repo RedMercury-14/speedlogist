@@ -657,7 +657,7 @@ function loadOrder(info) {
 			bootstrap5overlay.hideOverlay()
 
 			if (data.status === '200') {
-				showMessageModal(data.info)
+				data.info && showMessageModal(data.info)
 				addCalendarEvent(orderTableGridOption, orderData, false)
 				return
 			}
@@ -719,7 +719,7 @@ function updateOrder(info, isComplexUpdate) {
 			bootstrap5overlay.hideOverlay()
 
 			if (data.status === '200') {
-				showMessageModal(data.info)
+				data.info && showMessageModal(data.info)
 				isComplexUpdate
 					? addCalendarEvent(orderTableGridOption, orderData, false)
 					: updateCalendarEvent(orderTableGridOption, orderData, false)

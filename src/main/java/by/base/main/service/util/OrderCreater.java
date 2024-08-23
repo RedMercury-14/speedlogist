@@ -127,6 +127,11 @@ public class OrderCreater {
 				}
 		        
 		        order.setStatus(5);
+		        
+		      //TEST!!!!!!! УДАЛИТЬ ПОТОМ ТУТ
+				if(order.getMarketNumber().equals("19480247") || order.getMarketNumber().equals("19480250") || order.getMarketNumber().equals("19480251")) {
+					order.setMarketContractType("453228");
+				}
 
 		        Integer pallMono = Integer.valueOf(order.getMonoPall());
 		        Integer pallMix = Integer.valueOf(order.getMixPall());

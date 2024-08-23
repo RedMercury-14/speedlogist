@@ -272,13 +272,9 @@ public class MainRestController {
 	public Map<String, Object> getTest(HttpServletRequest request, @PathVariable String num) {
 		Map<String, Object> response = new HashMap<String, Object>();	
 		
-//		Schedule schedule = scheduleService.getScheduleByNumContract(Long.parseLong(num));
-//		readerSchedulePlan.read(schedule);
-		Product product = productService.getProductByCode(Integer.parseInt(num));
-		readerSchedulePlan.name(product, null); // остановился тут
-				
+//						
 		response.put("status", "200");
-		response.put("body", product);
+//		response.put("body", product);
 		return response;		
 	}
 	
@@ -905,7 +901,8 @@ public class MainRestController {
 			OrderBuyGroupDTO orderBuyGroupDTO = customJSONParser.parseOrderBuyGroupFromJSON(str3);
 						
 			//создаём Order, записываем в бд и возвращаем или сам ордер или ошибку (тот же ордер, только с отрицательным id)
-			Order order = orderCreater.create(orderBuyGroupDTO);
+			Order order = orderCreater.create(orderBuyGroupDTO);		
+			
 			if(order.getIdOrder() < 0) {
 				response.put("status", "100");
 				response.put("message", order.getMessage());
@@ -1327,6 +1324,7 @@ public class MainRestController {
 			
 			//тут проверка по потребности
 			String infoCheck = checkOrderNeeds.check(order);
+			readerSchedulePlan.process(order);
 			
 			response.put("status", "200");
 			response.put("message", str);
@@ -1537,6 +1535,7 @@ public class MainRestController {
 			
 			//тут проверка по потребности
 			String infoCheck = checkOrderNeeds.check(order);
+			readerSchedulePlan.process(order);
 			
 			response.put("status", "200");
 			response.put("message", str);

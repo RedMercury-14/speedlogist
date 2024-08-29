@@ -84,7 +84,7 @@ public class ReaderSchedulePlan {
                 || m.getValue().contains("суббота")
                 || m.getValue().contains("воскресенье")).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 					
-		List<OrderProduct> orderProductsHasNow = product.getOrderProductsListHasDateTarget(Date.valueOf(LocalDate.now().plusDays(2))); // это реализация п.2 УДАЛИТЬ .plusDays(2)!!
+		List<OrderProduct> orderProductsHasNow = product.getOrderProductsListHasDateTarget(Date.valueOf(LocalDate.now())); // это реализация п.2
 		OrderProduct orderProductTarget = orderProductsHasNow.get(0);
 		String dayOfPlanOrder = orderProductTarget.getDateCreate().toLocalDateTime().toLocalDate().plusDays(1).getDayOfWeek().toString(); // планируемый день заказа
 		
@@ -146,13 +146,14 @@ public class ReaderSchedulePlan {
 ////		orderProduct.getDateCreate().toLocalDateTime().toLocalDate().getDayOfWeek()
 //	}
 	
-	public void process(Order order) {
+	public String process(Order order) {
 		 Set<OrderLine> lines = order.getOrderLines(); // строки в заказе
 		 List<Product> products = new ArrayList<Product>(); //
 		 String numContract = order.getMarketContractType();
+		 String result = "";
 		 if(numContract == null) {
 			 System.err.println("ReaderSchedulePlan.process: numContract = null");
-			 return;
+			 return "ReaderSchedulePlan.process: numContract = null";
 		 }
 		 Date dateNow = Date.valueOf(LocalDate.now());
 		 for (OrderLine line : lines) {
@@ -166,25 +167,28 @@ public class ReaderSchedulePlan {
 		 
 		 if(checkHasLog(dateRange, order)) {
 			 //если входит в лог плече, то находим такие же заказы с такими же SKU
-			 System.err.println("true");
 			 List<Order> orders = orderService.getOrderByTimeDelivery(dateRange.start, dateRange.end);
-			 HashMap<Long, Double> map = calculateQuantityOrderSum(orders);
-			 map.forEach((k,v)->System.out.println(k + " -- " + v));
+			 HashMap<Long, Double> map = calculateQuantityOrderSum(orders); // тут я получил мапу с кодами товаров и суммой заказа за период.
+//			 map.forEach((k,v)->System.out.println(k + " -- " + v));
+			 for (OrderLine orderLine : lines) {
+				Double quantityOrderAll = map.get(orderLine.getGoodsId());
+				Product product = productService.getProductByCode(orderLine.getGoodsId().intValue());
+				if(product!=null) {
+					result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + quantityOrderAll + " шт. из " + product.getOrderProductsListHasDateTarget(dateNow).get(0).getQuantity() + " шт.";
+				}
+			}
+			 
 		 }else {
 			 //если не входит, то сообщаем, в виде ошибки
-			 System.err.println("false");
-			 List<Order> orders = orderService.getOrderByTimeDelivery(dateRange.start, dateRange.end);
-			 HashMap<Long, Double> map = calculateQuantityOrderSum(orders);
-			 map.forEach((k,v)->System.out.println(k + " -- " + v));
+			 System.err.println("false"); //остановился тут
 		 }
-		 
+		return result;
 		 
 	}
 	
 	/**
-	 * ЕЩЕ ТЕСТИРУЕТСЯ
 	 * Принимает лист List<Order> orders
-	 * <br>а возвращает HashMap<OrderLine, Double>, где значение - это сумма по заказам за текущий период.
+	 * <br>а возвращает HashMap<Long, Double>, где значение - это сумма по заказам за текущий период а ключ - это код товара.
 	 * @param orders
 	 * @return
 	 */

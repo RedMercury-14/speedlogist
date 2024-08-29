@@ -1323,8 +1323,7 @@ public class MainRestController {
 			slotWebSocket.sendMessage(message);	
 			
 			//тут проверка по потребности
-			String infoCheck = checkOrderNeeds.check(order);
-			readerSchedulePlan.process(order);
+			String infoCheck = readerSchedulePlan.process(order);
 			
 			response.put("status", "200");
 			response.put("message", str);
@@ -1534,8 +1533,7 @@ public class MainRestController {
 			slotWebSocket.sendMessage(message);	
 			
 			//тут проверка по потребности
-			String infoCheck = checkOrderNeeds.check(order);
-			readerSchedulePlan.process(order);
+			String infoCheck = readerSchedulePlan.process(order);
 			
 			response.put("status", "200");
 			response.put("message", str);

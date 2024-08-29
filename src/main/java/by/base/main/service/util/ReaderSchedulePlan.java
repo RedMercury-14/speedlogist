@@ -23,6 +23,7 @@ import by.base.main.model.OrderProduct;
 import by.base.main.model.Product;
 import by.base.main.model.Schedule;
 import by.base.main.service.OrderProductService;
+import by.base.main.service.OrderService;
 import by.base.main.service.ProductService;
 import by.base.main.service.ScheduleService;
 
@@ -36,7 +37,7 @@ public class ReaderSchedulePlan {
 	
 	/*
 	 * 1. Получаем заказ, и дату постановки заказа в слоты
-	 * 2. Определяем ближайший расчёт этого заказа согласно расчётам относительно текущей даты
+	 * 2. Определяем ближайший расчёт этого заказа согласно расчётам относительно текущей даты (!!!)
 	 * 3. определяем начальную дату заказа и ко-во дней лог плеча
 	 * 4. определяем, входит ли текущая поставка в лог плечо. 
 	 * 4.1 метод нахождения такихже заказов относительно лог плеча
@@ -52,6 +53,9 @@ public class ReaderSchedulePlan {
 	@Autowired
 	private ProductService productService;
 	
+	@Autowired
+	private OrderService orderService;
+	
 	private static final Map<String, DayOfWeek> RUSSIAN_DAYS = new HashMap<>();
 
     static {
@@ -64,6 +68,12 @@ public class ReaderSchedulePlan {
         RUSSIAN_DAYS.put("воскресенье", DayOfWeek.SUNDAY);
     }
 	
+    /**
+     * Метод отдаёт диапазон дат, когда можно ставить текущий заказ, <b>где график поставок подтягивает относительно сегодняшней даты</b>
+     * @param schedule
+     * @param product
+     * @return
+     */
 	public DateRange getDateRange (Schedule schedule, Product product) {
 		Map<String, String> days = schedule.getDaysMap();
 		Map<String, String> daysStep2 = days.entrySet().stream().filter(m->m.getValue().contains("понедельник")
@@ -74,10 +84,10 @@ public class ReaderSchedulePlan {
                 || m.getValue().contains("суббота")
                 || m.getValue().contains("воскресенье")).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 					
-		List<OrderProduct> orderProductsHasNow = product.getOrderProductsListHasDateTarget(Date.valueOf(LocalDate.now()));
+		List<OrderProduct> orderProductsHasNow = product.getOrderProductsListHasDateTarget(Date.valueOf(LocalDate.now().plusDays(2))); // это реализация п.2 УДАЛИТЬ .plusDays(2)!!
 		OrderProduct orderProductTarget = orderProductsHasNow.get(0);
 		String dayOfPlanOrder = orderProductTarget.getDateCreate().toLocalDateTime().toLocalDate().plusDays(1).getDayOfWeek().toString(); // планируемый день заказа
-		System.err.println(orderProductTarget.getDateCreate());
+		
 		//проверяем, есть ли по плану заказ
 		boolean flag = false;
 		String targetKey = null;
@@ -92,9 +102,9 @@ public class ReaderSchedulePlan {
 		}
 		long i = 0;
 		
-		System.out.println("orderProductTarget = " + orderProductTarget);
-		System.out.println("schedule = " + schedule);
-		System.out.println("dayOfPlanOrder = "+dayOfPlanOrder);
+//		System.out.println("orderProductTarget = " + orderProductTarget);
+//		System.out.println("schedule = " + schedule);
+//		System.out.println("dayOfPlanOrder = "+dayOfPlanOrder);
 		
 		if(flag) {
 			
@@ -151,8 +161,73 @@ public class ReaderSchedulePlan {
 		 
 		 //определяем дату старта расчёта и лог плечо для всего заказа
 		 Schedule schedule = scheduleService.getScheduleByNumContract(Long.parseLong(numContract));
-		 DateRange dateRange = getDateRange(schedule, products.get(0));
+		 DateRange dateRange = getDateRange(schedule, products.get(0)); // тут раелизуются пункты 2 и 3
 		 System.out.println(dateRange);
+		 
+		 if(checkHasLog(dateRange, order)) {
+			 //если входит в лог плече, то находим такие же заказы с такими же SKU
+			 System.err.println("true");
+			 List<Order> orders = orderService.getOrderByTimeDelivery(dateRange.start, dateRange.end);
+			 HashMap<Long, Double> map = calculateQuantityOrderSum(orders);
+			 map.forEach((k,v)->System.out.println(k + " -- " + v));
+		 }else {
+			 //если не входит, то сообщаем, в виде ошибки
+			 System.err.println("false");
+			 List<Order> orders = orderService.getOrderByTimeDelivery(dateRange.start, dateRange.end);
+			 HashMap<Long, Double> map = calculateQuantityOrderSum(orders);
+			 map.forEach((k,v)->System.out.println(k + " -- " + v));
+		 }
+		 
+		 
+	}
+	
+	/**
+	 * ЕЩЕ ТЕСТИРУЕТСЯ
+	 * Принимает лист List<Order> orders
+	 * <br>а возвращает HashMap<OrderLine, Double>, где значение - это сумма по заказам за текущий период.
+	 * @param orders
+	 * @return
+	 */
+    public HashMap<Long, Double> calculateQuantityOrderSum(List<Order> orders) {
+        // Используем HashMap для хранения результата
+        HashMap<Long, Double> orderLineQuantityMap = new HashMap<>();
+        
+        // Проходим по каждому заказу
+        for (Order order : orders) {
+            // Получаем список строк заказа (OrderLine)
+            Set<OrderLine> orderLines = order.getOrderLines();
+            
+            // Проходим по каждой строке заказа
+            for (OrderLine orderLine : orderLines) {
+            	if(!orderLineQuantityMap.containsKey(orderLine.getGoodsId())) {
+            		orderLineQuantityMap.put(orderLine.getGoodsId(), orderLine.getQuantityOrder());
+            	}else {
+            		// Если строка заказа уже есть в HashMap, то добавляем к существующему значению
+                    orderLineQuantityMap.put(orderLine.getGoodsId(), orderLineQuantityMap.get(orderLine.getGoodsId()) + orderLine.getQuantityOrder());
+            	}
+                
+            }
+        }
+        
+        return orderLineQuantityMap;
+    }
+	
+	/**
+	 * Проверяет, входит ли заказ в текущий DateRange
+	 * реализация пункта 4
+	 * @param dateRange
+	 * @return
+	 */
+	public boolean checkHasLog(DateRange dateRange, Order order) {		
+		LocalDate dateOrderTarget = order.getTimeDelivery().toLocalDateTime().toLocalDate();
+		
+		if(dateOrderTarget.isEqual(dateRange.start.toLocalDate()) 
+				|| dateOrderTarget.isEqual(dateRange.end.toLocalDate())
+				|| dateOrderTarget.isAfter(dateRange.start.toLocalDate()) && dateOrderTarget.isBefore(dateRange.end.toLocalDate())) {
+			return true;
+		}
+		
+		return false;		
 	}
 	
 	

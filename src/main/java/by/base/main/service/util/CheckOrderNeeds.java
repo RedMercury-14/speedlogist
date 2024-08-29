@@ -50,6 +50,10 @@ public class CheckOrderNeeds {
 		
 		for (Entry<Long, Double> entry : productHasOrder.entrySet()) {
 			Product product = productService.getProductByCode(entry.getKey().intValue());
+			if(product == null) {
+				result = result + "Отсутствует код товар в базе данных " +entry.getKey()+";\n";
+				continue;
+			}
 			List <OrderProduct> orderProducts = new ArrayList<OrderProduct>(product.getOrderProducts());
 			
 			if(orderProducts.isEmpty()) {

@@ -850,7 +850,7 @@ public class MainRestController {
 		MarketRequestDto requestDto3 = new MarketRequestDto("", packetDto3);
 		String marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto3));
 		
-//		System.out.println(marketOrder2);
+		System.out.println(marketOrder2);
 		
 		if(marketOrder2.equals("503")) { // означает что связь с маркетом потеряна
 			//в этом случае проверяем бд

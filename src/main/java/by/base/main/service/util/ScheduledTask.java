@@ -15,6 +15,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 
 import by.base.main.service.ScheduleService;
 
+/**
+ * Главный метод с заданиями. 
+ * отдельно прописывается в applicationContext. 
+ */
 public class ScheduledTask {
 
 	@Autowired

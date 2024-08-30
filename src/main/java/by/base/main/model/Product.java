@@ -552,7 +552,7 @@ public class Product {
 	 * @return
 	 */
 	public List<OrderProduct> getOrderProductsListHasDateTarget(Date targetDate) {
-		if(orderProducts != null) {
+		if(orderProducts != null && !orderProducts.isEmpty()) {
 			return orderProducts.stream()
 	                .filter(obj -> obj.getDateCreate().before(targetDate)) // Фильтруем только те, которые позднее targetDate
 	                .sorted((obj1, obj2) -> Long.compare(

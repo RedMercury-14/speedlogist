@@ -118,7 +118,15 @@ public class ReaderSchedulePlan {
 			
 			LocalDate dateOrderCalc = LocalDate.of(2024, 7, RUSSIAN_DAYS.get(targetValue).getValue());
 			
-			i = i + datePostavForCalc.getDayOfMonth() - dateOrderCalc.getDayOfMonth(); // лог плечо
+			int j = datePostavForCalc.getDayOfMonth() - dateOrderCalc.getDayOfMonth(); // лог плечо
+								
+			if(j<0) {
+				j = j + 7;
+			}
+			if(j==0) {
+				j=7;
+			}
+			i = i+j;
 			
 		}else {
 			System.err.println("план расчёта не совпадает с графиком поставок");
@@ -134,8 +142,8 @@ public class ReaderSchedulePlan {
 //		int i = datePostav.getDayOfMonth() - dateOrder.getDayOfMonth();
 //		System.out.println(i + " - " + dateOrder + " - " + datePostav);		
 		
-		return new DateRange(Date.valueOf(orderProductTarget.getDateCreate().toLocalDateTime().toLocalDate()),
-				Date.valueOf(orderProductTarget.getDateCreate().toLocalDateTime().toLocalDate().plusDays(i)), i, dayOfPlanOrder);
+		return new DateRange(Date.valueOf(orderProductTarget.getDateCreate().toLocalDateTime().toLocalDate().plusDays(1)),
+				Date.valueOf(orderProductTarget.getDateCreate().toLocalDateTime().toLocalDate().plusDays(i+1)), i, dayOfPlanOrder);
 	}
 	
 	
@@ -180,14 +188,19 @@ public class ReaderSchedulePlan {
 				Double quantityOrderAll = map.get(orderLine.getGoodsId());
 				Product product = productService.getProductByCode(orderLine.getGoodsId().intValue());
 				if(product!=null) {
-					result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + quantityOrderAll + " шт. из " + product.getOrderProductsListHasDateTarget(dateNow).get(0).getQuantity() + " шт.";
+					List<OrderProduct> quantity = product.getOrderProductsListHasDateTarget(dateNow);
+					if(quantity != null) {
+						result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + quantityOrderAll + " шт. из " + quantity.get(0).getQuantity() + " шт.\n";						
+					}else {
+						result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - отсутствует в плане заказа (Заказы поставщика от ОРЛ)\n";
+					}
 				}
 			}
 			 
 		 }else {
 			 //если не входит, то сообщаем, в виде ошибки
 			 System.err.println("false"); //остановился тут
-			 result = result + "Данный заказ " + order.getMarketNumber() + " " + order.getCounterparty() + " установлен не по графику поставок. Он должен быть установлен в диапазоне: с"
+			 result = result + "Данный заказ " + order.getMarketNumber() + " " + order.getCounterparty() + " установлен не по графику поставок. Он должен быть установлен в диапазоне: с "
 					 +dateRange.start.toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + ", по " + dateRange.end.toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
 		 }
 		return result;

@@ -367,52 +367,8 @@ public class MailService {
 		} catch (Exception e) {
 			System.out.println("Не удалось отправить сообщение! \nНеправильный eMail адрес");
 			e.printStackTrace();
-		}
-		
-	}
-	
-	/**
-	 * Отправляет e-main сообщение на почту к двум юзерам 
-	 * Поток используется только для отправки сообщения
-	 * НЕ РАБОТАЕТ ДОЛНЫМ ОБРАЗОМ!!!!!
-	 * @param request
-	 * @param subject
-	 * @param text
-	 * @param emailToFirstUser
-	 * @param emailToSecondUser
-	 */
-	@Deprecated
-	public void sendSimpleEmailTwiceUsersVer2(HttpServletRequest request, String subject, String text, String emailToFirstUser, String emailToSecondUser) {
-		String appPath = request.getServletContext().getRealPath("");
-		try {
-			if(properties == null) {
-				FileInputStream fileInputStream = new FileInputStream(appPath + "resources/properties/mail.properties");
-				properties = new Properties();
-				properties.load(fileInputStream);
-			}	
-			if(mailSession == null) {
-				mailSession = Session.getDefaultInstance(properties);
-			}
-			//mailSession.setDebug(true);
-			if(transport == null) {
-				transport = mailSession.getTransport();
-				transport.connect(properties.getProperty("mail.smtps.user"), properties.getProperty("mail.smtps.password"));
-			}			
-			MimeMessage message = new MimeMessage(mailSession);
-			message.setSubject(subject);
-			message.setText(text);
-			InternetAddress internetAddress = new InternetAddress(emailToFirstUser);
-			InternetAddress internetAddress2 = new InternetAddress(emailToSecondUser);
-			message.addRecipient(Message.RecipientType.TO, internetAddress);
-			message.addRecipient(Message.RecipientType.TO, internetAddress2);
-			message.setSentDate(new Date());	
-			transport.sendMessage(message, message.getRecipients(Message.RecipientType.TO));
-		} catch (Exception e) {
-			System.out.println("Не удалось отправить сообщение! \nНеправильный eMail адрес");
-			e.printStackTrace();
-		}
-		
-	}
+		}		
+	}	
 	
 	
 	private File convertMultiPartToFile(MultipartFile file, HttpServletRequest request ) throws IOException {

@@ -1322,12 +1322,14 @@ public class MainRestController {
 			Message message = new Message(user.getLogin(), null, "200", str, idOrder.toString(), "update");
 			slotWebSocket.sendMessage(message);	
 			
-			//тут проверка по потребности
-			String infoCheck = readerSchedulePlan.process(order);
+			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {
+				//тут проверка по потребности
+				String infoCheck = readerSchedulePlan.process(order);
+				response.put("info", infoCheck);
+			}
 			
 			response.put("status", "200");
 			response.put("message", str);
-			response.put("info", infoCheck);
 			return response;	
 		}			
 	}
@@ -1532,12 +1534,14 @@ public class MainRestController {
 			Message message = new Message(user.getLogin(), null, "200", str, idOrder.toString(), "load");
 			slotWebSocket.sendMessage(message);	
 			
-			//тут проверка по потребности
-			String infoCheck = readerSchedulePlan.process(order);
+			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {
+				//тут проверка по потребности
+				String infoCheck = readerSchedulePlan.process(order);
+				response.put("info", infoCheck);
+			}
 			
 			response.put("status", "200");
 			response.put("message", str);
-			response.put("info", infoCheck);
 			return response;	
 		}			
 	}
@@ -2282,7 +2286,7 @@ public class MainRestController {
 	
 	/**
 	 * Метод отвечает за отправку email сообщения менеджеру от логиста о данных по машине и водителю, когда тендер сыграл
-	 * Новый метод! Используется отдельный поток для отправки сообщений!
+	 * Новый метод!
 	 * @param request
 	 * @param id
 	 * @return
@@ -2341,10 +2345,9 @@ public class MainRestController {
 		}
 		
 		final String message = text;
-		String mailInfo = "Сообщение было отправлено " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")) + ". Водитель: " + driverStr;
+		String mailInfo = "Сообщение было отправлено " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")) + ". Водитель: " + driverStr + "\n";
 		order.setMailInfo(order.getMailInfo() + mailInfo);
 		orderService.updateOrder(order);
-//		mailService.sendSimpleEmail(request, "Данные по заявке №"+order.getIdOrder(), message, finalManagerEmail);
 		mailService.sendSimpleEmailTwiceUsers(request, "Данные по заявке №"+order.getIdOrder(), message, finalManagerEmail, logist.geteMail());
 		response.put("status", "200");
 		response.put("message", "Данные отправлены на почту: " + managerEmail);

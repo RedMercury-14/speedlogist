@@ -3,6 +3,7 @@ package by.base.main.service.util;
 import java.sql.Date;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -121,6 +122,7 @@ public class ReaderSchedulePlan {
 			
 		}else {
 			System.err.println("план расчёта не совпадает с графиком поставок");
+			return null;
 		}
 		
 		
@@ -165,6 +167,10 @@ public class ReaderSchedulePlan {
 		 DateRange dateRange = getDateRange(schedule, products.get(0)); // тут раелизуются пункты 2 и 3
 		 System.out.println(dateRange);
 		 
+		 if(dateRange == null) {
+			 return "Просчёт кол-ва товара на логистическое плече невозможен, т.к. расчёт ОРЛ не совпадает с графиком поставок";
+		 }
+		 
 		 if(checkHasLog(dateRange, order)) {
 			 //если входит в лог плече, то находим такие же заказы с такими же SKU
 			 List<Order> orders = orderService.getOrderByTimeDelivery(dateRange.start, dateRange.end);
@@ -181,6 +187,8 @@ public class ReaderSchedulePlan {
 		 }else {
 			 //если не входит, то сообщаем, в виде ошибки
 			 System.err.println("false"); //остановился тут
+			 result = result + "Данный заказ " + order.getMarketNumber() + " " + order.getCounterparty() + " установлен не по графику поставок. Он должен быть установлен в диапазоне: с"
+					 +dateRange.start.toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + ", по " + dateRange.end.toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
 		 }
 		return result;
 		 

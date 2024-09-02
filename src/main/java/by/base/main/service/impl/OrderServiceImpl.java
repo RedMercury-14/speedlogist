@@ -15,6 +15,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.dto.OrderDTO;
+
 import by.base.main.dao.OrderDAO;
 import by.base.main.dto.OrderDTOForSlot;
 import by.base.main.model.Order;
@@ -344,17 +346,9 @@ public class OrderServiceImpl implements OrderService {
 	 * очень долго работает!
 	 */
 	@Override
-	public List<OrderDTOForSlot> getOrderDTOByPeriodDeliveryAndSlots(Date dateStart, Date dateEnd) {
-		
-		List<Order> orders = orderDAO.getOrderByPeriodDeliveryAndSlots(dateStart, dateEnd);
-	    List<OrderDTOForSlot> orderDTOs = new ArrayList<by.base.main.dto.OrderDTOForSlot>();
-	    for (Order order : orders) {
-	    	OrderDTOForSlot dto = new OrderDTOForSlot();
-	        BeanUtils.copyProperties(order, dto);
-	        orderDTOs.add(dto);
-	    }
+	public List<OrderDTO> getOrderDTOByPeriodDeliveryAndSlots(Date dateStart, Date dateEnd) {		
 
-	    return orderDTOs;
+	    return orderDAO.getOrderDTOByPeriodDeliveryAndSlots(dateStart, dateEnd);
 	}
 	
 }

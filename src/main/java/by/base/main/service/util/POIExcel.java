@@ -210,6 +210,9 @@ public class POIExcel {
             row.createCell(16).setCellValue(schedule.getMultipleOfPallet() != null && schedule.getMultipleOfPallet() ? "+" : "");
             row.createCell(17).setCellValue(schedule.getMultipleOfTruck() != null && schedule.getMultipleOfTruck() ? "+" : "");
         }
+        
+        // Устанавливаем фильтры на все столбцы
+        sheet.setAutoFilter(new CellRangeAddress(0, 0, 0, headers.length - 1));
 
         // Сохраняем файл
         try (FileOutputStream fileOut = new FileOutputStream(filePath)) {
@@ -1169,7 +1172,8 @@ public class POIExcel {
 	/**
 	 * Метод считывает ексель с потребностью и отдаёт мапу, где ключ - это код товара
 	 */
-	public Map<Integer, OrderProduct> loadNeedExcel(File file) throws ServiceException, InvalidFormatException, IOException, ParseException {
+	public Map<Integer, OrderProduct> loadNeedExcel(File file, String date) throws ServiceException, InvalidFormatException, IOException, ParseException {
+		
 		Map<Integer, OrderProduct> orderMap = new HashMap<>();
         XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
         XSSFSheet sheet = wb.getSheetAt(0);
@@ -1184,8 +1188,14 @@ public class POIExcel {
                 OrderProduct orderProduct = new OrderProduct();
                 orderProduct.setQuantity(quantity);
                 orderProduct.setNameProduct(nameProduct);
-                orderProduct.setDateCreate(new Timestamp(System.currentTimeMillis()));
-                orderProduct.setDateCreate(Timestamp.valueOf(LocalDateTime.now()));
+                if(date != null) {
+                	Timestamp timestamp = Timestamp.valueOf(LocalDateTime.of(LocalDate.parse(date), LocalTime.now()));
+                	orderProduct.setDateCreate(timestamp);
+                }else {
+                    orderProduct.setDateCreate(new Timestamp(System.currentTimeMillis()));
+//                  orderProduct.setDateCreate(Timestamp.valueOf(LocalDateTime.now()));
+                }
+
 
                 // Привязываем код как ключ и объект OrderProduct как значение
                 orderMap.put(code, orderProduct);

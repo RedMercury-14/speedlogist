@@ -1,5 +1,7 @@
 package by.base.main.service.impl;
 
+import java.sql.Timestamp;
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +35,11 @@ public class OrderProductServiceImpl implements OrderProductService{
 	@Override
 	public void updateOrderProduct(OrderProduct orderProduct) {
 		productDAO.updateOrderProduct(orderProduct);
+	}
+
+	@Override
+	public List<OrderProduct> getOrderProductListHasDate(Date date) {
+		return productDAO.getOrderProductListHasDate(date);
 	}
 
 }

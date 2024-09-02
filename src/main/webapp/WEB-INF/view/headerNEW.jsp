@@ -85,6 +85,7 @@
 										<a class="dropdown-item" href="<spring:url value="/main/analytics/logistics" />">Аналитика Биржи</a>
 										<a class="dropdown-item" href="<spring:url value="/main/analytics/zero" />">Аналитика нулей</a>
 										<a class="dropdown-item" href="<spring:url value="/main/analytics/changing-matrix" />">Изменения матрицы</a>
+										<a class="dropdown-item" href="<spring:url value="/main/analytics/needs" />">Аналитика потребности фактических заказов</a>
 									</div>
 								</li>
 								<li class="dropdown">
@@ -154,6 +155,7 @@
 										<a class="dropdown-item" href="<spring:url value="/main/analytics/logistics" />">Аналитика Биржи</a>
 										<a class="dropdown-item" href="<spring:url value="/main/analytics/zero" />">Аналитика нулей</a>
 										<a class="dropdown-item" href="<spring:url value="/main/analytics/changing-matrix" />">Изменения матрицы</a>
+										<a class="dropdown-item" href="<spring:url value="/main/analytics/needs" />">Аналитика потребности фактических заказов</a>
 									</div>
 								</li>
 							</c:when>
@@ -163,7 +165,7 @@
 									<div class="dropdown-menu">
 										<a class="dropdown-item" href="<spring:url value="/main/orl/delivery-schedule" />">График поставок</a>
 										<a class="dropdown-item" href="<spring:url value="/main/orl/need" />">Потребности</a>
-										<a class="dropdown-item" href="<spring:url value="/main/orl/arrival" />">Приход</a>
+										<!-- <a class="dropdown-item" href="<spring:url value="/main/orl/arrival" />">Приход</a> -->
 									</div>
 								</li>
 							</c:when>
@@ -210,6 +212,14 @@
 									<div class="dropdown-menu">
 										<a class="dropdown-item" href="<spring:url value="/main/slots" />">Слоты</a>
 										<a class="dropdown-item" href="<spring:url value="/main/slots/delivery-schedule" />">График поставок</a>
+									</div>
+								</li>
+								<li class="dropdown">
+									<a href="#" class="nav-item nav-link" data-toggle="dropdown">ОРЛ</a>
+									<div class="dropdown-menu">
+										<a class="dropdown-item" href="<spring:url value="/main/orl/delivery-schedule" />">График поставок</a>
+										<a class="dropdown-item" href="<spring:url value="/main/orl/need" />">Потребности</a>
+										<!-- <a class="dropdown-item" href="<spring:url value="/main/orl/arrival" />">Приход</a> -->
 									</div>
 								</li>
 							</c:when>

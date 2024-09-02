@@ -340,11 +340,14 @@ public class OrderServiceImpl implements OrderService {
 		return orderDAO.getOrderByPeriodDeliveryAndSlots(dateStart, dateEnd);
 	}
 
+	/**
+	 * очень долго работает!
+	 */
 	@Override
 	public List<OrderDTOForSlot> getOrderDTOByPeriodDeliveryAndSlots(Date dateStart, Date dateEnd) {
 		
 		List<Order> orders = orderDAO.getOrderByPeriodDeliveryAndSlots(dateStart, dateEnd);
-	    List<OrderDTOForSlot> orderDTOs = new ArrayList<OrderDTOForSlot>();
+	    List<OrderDTOForSlot> orderDTOs = new ArrayList<by.base.main.dto.OrderDTOForSlot>();
 	    for (Order order : orders) {
 	    	OrderDTOForSlot dto = new OrderDTOForSlot();
 	        BeanUtils.copyProperties(order, dto);
@@ -353,7 +356,5 @@ public class OrderServiceImpl implements OrderService {
 
 	    return orderDTOs;
 	}
-
-
 	
 }

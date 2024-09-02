@@ -127,6 +127,35 @@ public class OrderCreater {
 				}
 		        
 		        order.setStatus(5);
+		        
+		      //TEST!!!!!!! УДАЛИТЬ ПОТОМ ТУТ
+//				if(order.getMarketNumber().equals("19480247") || order.getMarketNumber().equals("19480250") || order.getMarketNumber().equals("19480251")) {
+//					order.setMarketContractType("453228");
+//				}
+//				if(order.getMarketNumber().equals("19480255")) {
+//					order.setMarketContractType("1212");
+//				}
+//				if(order.getMarketNumber().equals("19480257")) {
+//					order.setMarketContractType("5454461");
+//				}
+//				if(order.getMarketNumber().equals("19480259")) {
+//					order.setMarketContractType("459");
+//				}
+//				if(order.getMarketNumber().equals("19480260")) {
+//					order.setMarketContractType("453228");
+//				}
+//				if(order.getMarketNumber().equals("19480258")) {
+//					order.setMarketContractType("659");
+//				}
+//				if(order.getMarketNumber().equals("19480261")) {
+//					order.setMarketContractType("453228");
+//				}
+//				if(order.getMarketNumber().equals("19480256")) {
+//					order.setMarketContractType("147750");
+//				}
+				
+				
+				//TEST!!!!!!! УДАЛИТЬ ПОТОМ ТУТ
 
 		        Integer pallMono = Integer.valueOf(order.getMonoPall());
 		        Integer pallMix = Integer.valueOf(order.getMixPall());

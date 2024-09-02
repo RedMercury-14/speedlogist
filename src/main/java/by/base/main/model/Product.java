@@ -3,8 +3,10 @@ package by.base.main.model;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -542,6 +544,27 @@ public class Product {
 			orderProducts.add(orderProduct);
 		}
 	}
+	
+	/**
+	 * Возвращает остортированный список с заказами <b>(потребностью)</b> продуктов начиная от самой раннего расчёта к targetDate
+	 * <br> Если заказов вообще нет - то возвращает null
+	 * @param targetDate
+	 * @return
+	 */
+	public List<OrderProduct> getOrderProductsListHasDateTarget(Date targetDate) {
+		if(orderProducts != null && !orderProducts.isEmpty()) {
+			return orderProducts.stream()
+	                .filter(obj -> obj.getDateCreate().before(targetDate)) // Фильтруем только те, которые позднее targetDate
+	                .sorted((obj1, obj2) -> Long.compare(
+	                        obj2.getDateCreate().getTime() - targetDate.getTime(),
+	                        obj1.getDateCreate().getTime() - targetDate.getTime()
+	                ))
+	                .collect(Collectors.toList());
+		}else {
+			return null;
+		}
+		
+    }
 
 	@Override
 	public int hashCode() {

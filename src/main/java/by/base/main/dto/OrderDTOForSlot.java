@@ -32,7 +32,6 @@ import by.base.main.model.Address;
 
 public class OrderDTOForSlot {
 
-	
 	private Integer idOrder;
 	
 	private String counterparty;
@@ -55,10 +54,8 @@ public class OrderDTOForSlot {
 	
 	private Integer status;
 	
-//	@JsonFormat(pattern = "yyyy-MM-dd", timezone="Europe/Moskow")
 	private Date dateCreate;
 	
-//	@JsonFormat(pattern = "yyyy-MM-dd", timezone="Europe/Moskow")
 	private Date dateDelivery;
 	
 	private String manager;
@@ -149,6 +146,29 @@ public class OrderDTOForSlot {
 
 	
 	
+	public OrderDTOForSlot() {
+		
+	}
+
+	/**
+	 * @param idOrder
+	 * @param status
+	 */
+	public OrderDTOForSlot(Integer idOrder, Integer status, String con) {
+		super();
+		this.idOrder = idOrder;
+		this.status = status;
+		this.counterparty = con;
+	}
+	
+	public OrderDTOForSlot(Integer idOrder, Integer status) {
+		super();
+		this.idOrder = idOrder;
+		this.status = status;
+	}
+
+
+
 	public Integer getIdOrder() {
 		return idOrder;
 	}

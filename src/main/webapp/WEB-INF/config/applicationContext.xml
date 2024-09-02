@@ -18,14 +18,7 @@
         http://www.springframework.org/schema/task/spring-task.xsd">
 	
 	<context:component-scan base-package="by.base.main" />
-	<mvc:annotation-driven/>
-	
-<!-- 	<bean --> 
-<!-- 		class="org.springframework.web.servlet.view.InternalResourceViewResolver"> -->
-<!-- 		<property name="prefix" value="/WEB-INF/view/" /> -->
-<!-- 		<property name="suffix" value=".jsp" />		 -->
-<!-- 	</bean> -->
-	
+	<mvc:annotation-driven/>	
 	
 	<bean id="myDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource"
           destroy-method="close">
@@ -34,7 +27,7 @@
         <property name="user" value="root" />
         <property name="password" value="5001020" /> 
 
-<!-- 		 <property name="jdbcUrl" value="jdbc:mysql://93.125.114.112:3311/logistdbNew6?serverTimezone=Europe/Moscow" /> -->
+<!-- 		 <property name="jdbcUrl" value="jdbc:mysql://93.125.114.112:3311/logistdbNew7?serverTimezone=Europe/Moscow" /> -->
 <!--          <property name="user" value="hdf" /> -->
 <!--          <property name="password" value="111403hdf" /> -->
         

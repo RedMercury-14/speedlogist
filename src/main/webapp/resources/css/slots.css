@@ -212,6 +212,14 @@ html, body {
 	border-radius: 50%;
 }
 
+#displayMessageModal .modal-header {
+	background-color: #0e377b;
+	color: white;
+}
+#displayMessageModal .modal-body {
+	line-height: 1.5;
+}
+
 
 /* ------- левая боковая панель ------- */
 .left-sidebar {

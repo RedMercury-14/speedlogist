@@ -33,7 +33,7 @@
 		<br>
 		<div class="frame-container">
 			<iframe
-				title="Нехватка товара на РЦ 2"
+				title="Аналитика Биржи"
 				width="100%" height="780px"
 				src="https://app.powerbi.com/reportEmbed?reportId=36af3ce2-6396-414b-bf00-ac156158500b&autoAuth=true&ctid=a9af5edf-b4be-4591-ba34-a3a96434b108"
 				frameborder="0"

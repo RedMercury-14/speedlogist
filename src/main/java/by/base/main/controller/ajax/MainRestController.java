@@ -268,13 +268,18 @@ public class MainRestController {
 	public static final Comparator<Address> comparatorAddressId = (Address e1, Address e2) -> (e1.getIdAddress() - e2.getIdAddress());
 	public static final Comparator<Address> comparatorAddressIdForView = (Address e1, Address e2) -> (e2.getType().charAt(0) - e1.getType().charAt(0));
 	
-	@GetMapping("/test/{num}")
-	public Map<String, Object> getTest(HttpServletRequest request, @PathVariable String num) {
+	@GetMapping("/test/{num}&{prod}")
+	public Map<String, Object> getTest(HttpServletRequest request, @PathVariable String num, @PathVariable String prod) {
 		Map<String, Object> response = new HashMap<String, Object>();	
-		
+		Product product = productService.getProductByCode(Integer.parseInt(prod));
+		List<OrderProduct> orderProductsHasNow = product.getOrderProductsListHasDateTarget(Date.valueOf(LocalDate.now())); // это реализация п.2
+		orderProductsHasNow.forEach(o-> System.out.println(o));
 //						
+		Schedule schedule = scheduleService.getScheduleByNumContract(Long.parseLong(num));
+		System.out.println("----> "+readerSchedulePlan.getDateRange(schedule, product) + " <----");
 		response.put("status", "200");
-//		response.put("body", product);
+		response.put("body", orderProductsHasNow);
+		response.put("DateRange", readerSchedulePlan.getDateRange(schedule, product));
 		return response;		
 	}
 	
@@ -1135,6 +1140,7 @@ public class MainRestController {
 //					System.out.println(checkMessage);
 //					return response;
 //				}
+		String infoCheck = null;
 		
 		switch (order.getStatus()) {
 		case 8: // от поставщиков
@@ -1144,6 +1150,12 @@ public class MainRestController {
 			saveActionInFile(request, "resources/others/blackBox/slot", idOrder, order.getMarketNumber(), order.getNumStockDelivery(), order.getIdRamp(), null, order.getTimeDelivery(), null, user.getLogin(), "save", info, order.getMarketContractType());
 			Message message = new Message(user.getLogin(), null, "200", str, idOrder.toString(), "save");
 			slotWebSocket.sendMessage(message);	
+			
+			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {
+				//тут проверка по потребности
+				infoCheck = readerSchedulePlan.process(order);
+				response.put("info", infoCheck);
+			}
 			java.util.Date t2 = new java.util.Date();
 			System.out.println(t2.getTime()-t1.getTime() + " ms - save" );
 			response.put("status", "200");
@@ -1158,6 +1170,12 @@ public class MainRestController {
 					order.getIdRamp(), null, order.getTimeDelivery(), null, user.getLogin(), "save", info2, order.getMarketContractType());
 			Message message7 = new Message(user.getLogin(), null, "200", str, idOrder.toString(), "save");
 			slotWebSocket.sendMessage(message7);	
+			
+			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {
+				//тут проверка по потребности
+				infoCheck = readerSchedulePlan.process(order);
+				response.put("info", infoCheck);
+			}
 			java.util.Date t3 = new java.util.Date();
 			System.out.println(t3.getTime()-t1.getTime() + " ms - save" );
 			String text = "Создана заявка №" + order.getIdOrder() + " " + order.getCounterparty() + " от менеджера " + order.getManager()+"; \nСлот на выгркузку: "+ order.getTimeDelivery() +"; " +
@@ -1172,6 +1190,12 @@ public class MainRestController {
 			saveActionInFile(request, "resources/others/blackBox/slot", idOrder, order.getMarketNumber(), order.getNumStockDelivery(), order.getIdRamp(), null, order.getTimeDelivery(), null, user.getLogin(), "unsave", null, order.getMarketContractType());
 			Message message100 = new Message(user.getLogin(), null, "200", str, idOrder.toString(), "unsave");
 			slotWebSocket.sendMessage(message100);	
+			
+			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {
+				//тут проверка по потребности
+				infoCheck = readerSchedulePlan.process(order);
+				response.put("info", infoCheck);
+			}
 			java.util.Date t4 = new java.util.Date();
 			System.out.println(t4.getTime()-t1.getTime() + " ms - save" );
 			response.put("status", "200");
@@ -1600,12 +1624,12 @@ public class MainRestController {
 			Message message = new Message(user.getLogin(), null, "200", str, idOrder.toString(), "load");
 			slotWebSocket.sendMessage(message);	
 			
-			String infoCheck = null;
-			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {
-				//тут проверка по потребности
-				infoCheck = readerSchedulePlan.process(order);
-				response.put("info", infoCheck);
-			}
+//			String infoCheck = null;
+//			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {
+//				//тут проверка по потребности
+//				infoCheck = readerSchedulePlan.process(order);
+//				response.put("info", infoCheck);
+//			}
 			saveActionInFile(request, "resources/others/blackBox/slot", idOrder, order.getMarketNumber(), order.getNumStockDelivery(), null, order.getIdRamp(), null, order.getTimeDelivery(), user.getLogin(), "load", info, order.getMarketContractType());
 			
 			java.util.Date t2 = new java.util.Date();

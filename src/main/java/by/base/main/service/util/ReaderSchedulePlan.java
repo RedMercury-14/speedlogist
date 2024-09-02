@@ -163,7 +163,7 @@ public class ReaderSchedulePlan {
 		 String result = "";
 		 if(numContract == null) {
 			 System.err.println("ReaderSchedulePlan.process: numContract = null");
-			 return "ReaderSchedulePlan.process: numContract = null";
+			 return "Не найден номер контракта в заказе";
 		 }
 		 Date dateNow = Date.valueOf(LocalDate.now());
 		 String infoRow = "Строк в заказе: " + lines.size();

@@ -27,7 +27,7 @@
 			<security:intercept-url pattern="/main/carrier/**" access="hasAnyRole('ROLE_ADMIN', 'ROLE_CARRIER')"/>
 			<security:intercept-url pattern="/main/order-support/**" access="hasAnyRole('ROLE_ADMIN', 'ROLE_ORDERSUPPORT')"/>
 			<security:intercept-url pattern="/main/stock-support/**" access="hasAnyRole('ROLE_ADMIN', 'ROLE_STOCKSUPPORT')"/>
-			<security:intercept-url pattern="/main/orl/**" access="hasAnyRole('ROLE_ADMIN', 'ROLE_ORL')"/>
+			<security:intercept-url pattern="/main/orl/**" access="hasAnyRole('ROLE_ADMIN', 'ROLE_ORL', 'ROLE_ORDERSUPPORT')"/>
 <!-- 			<security:intercept-url pattern="/main/map/**" access="hasAnyRole('ROLE_ADMIN', 'ROLE_CARRIER')"/> -->
 			<security:intercept-url pattern="/main/procurement/**" access="hasAnyRole('ROLE_ADMIN', 'ROLE_PROCUREMENT', 'ROLE_ORDERSUPPORT', 'ROLE_STOCKPROCUREMENT', 'ROLE_SLOTOBSERVER')"/>
 			<security:intercept-url pattern="/main/slots/**" access="hasAnyRole('ROLE_ADMIN', 'ROLE_PROCUREMENT', 'ROLE_ORDERSUPPORT', 'ROLE_TOPMANAGER','ROLE_MANAGER', 'ROLE_SLOTOBSERVER', 'ROLE_STOCKPROCUREMENT', 'ROLE_ORL')"/>

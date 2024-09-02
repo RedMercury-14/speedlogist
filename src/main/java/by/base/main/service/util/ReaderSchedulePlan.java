@@ -166,14 +166,23 @@ public class ReaderSchedulePlan {
 			 return "ReaderSchedulePlan.process: numContract = null";
 		 }
 		 Date dateNow = Date.valueOf(LocalDate.now());
+		 String infoRow = "Строк в заказе: " + lines.size();
 		 for (OrderLine line : lines) {
              products.add(productService.getProductByCode(line.getGoodsId().intValue()));
          }
 		 
 		 //определяем дату старта расчёта и лог плечо для всего заказа
 		 Schedule schedule = scheduleService.getScheduleByNumContract(Long.parseLong(numContract));
+		 if(products.isEmpty()) {
+			 if(lines.size() == 0) {
+				 return "Не найдены товары в заказе.";
+			 }else {
+				 return "Не найдены товары в базе данных. " + infoRow;
+				 
+			 }
+		 }
 		 DateRange dateRange = getDateRange(schedule, products.get(0)); // тут раелизуются пункты 2 и 3
-		 System.out.println(dateRange);
+//		 System.out.println(dateRange);
 		 
 		 if(dateRange == null) {
 			 return "Просчёт кол-ва товара на логистическое плече невозможен, т.к. расчёт ОРЛ не совпадает с графиком поставок";
@@ -190,7 +199,7 @@ public class ReaderSchedulePlan {
 				if(product!=null) {
 					List<OrderProduct> quantity = product.getOrderProductsListHasDateTarget(dateNow);
 					if(quantity != null) {
-						result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + quantityOrderAll + " шт. из " + quantity.get(0).getQuantity() + " шт.\n";						
+						result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + quantityOrderAll.intValue() + " шт. из " + quantity.get(0).getQuantity() + " шт.\n";						
 					}else {
 						result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - отсутствует в плане заказа (Заказы поставщика от ОРЛ)\n";
 					}

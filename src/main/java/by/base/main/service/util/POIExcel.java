@@ -210,6 +210,9 @@ public class POIExcel {
             row.createCell(16).setCellValue(schedule.getMultipleOfPallet() != null && schedule.getMultipleOfPallet() ? "+" : "");
             row.createCell(17).setCellValue(schedule.getMultipleOfTruck() != null && schedule.getMultipleOfTruck() ? "+" : "");
         }
+        
+        // Устанавливаем фильтры на все столбцы
+        sheet.setAutoFilter(new CellRangeAddress(0, 0, 0, headers.length - 1));
 
         // Сохраняем файл
         try (FileOutputStream fileOut = new FileOutputStream(filePath)) {

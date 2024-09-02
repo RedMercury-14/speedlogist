@@ -101,6 +101,9 @@ footer.to-bottom {
 #addShopsInExcelForm .form-control {
 	height: auto;
 }
+.modal input[type="file"] {
+	height: calc(1.5em + 0.75rem + 8px);
+}
 .modal input::-webkit-outer-spin-button,
 .modal input::-webkit-inner-spin-button {
 	-webkit-appearance: none;

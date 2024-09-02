@@ -278,6 +278,47 @@ public class MainRestController {
 		return response;		
 	}
 	
+	@GetMapping("/orl/sendEmail")
+	public Map<String, Object> getSendEmail(HttpServletRequest request) {
+		// Получаем текущую дату для имени файла
+		Map<String, Object> response = new HashMap<String, Object>();
+        LocalDate currentTime = LocalDate.now();
+        String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+        String appPath = request.getServletContext().getRealPath("");
+        User user = getThisUser();
+		List<String> emails = propertiesUtils.getValuesByPartialKey(request.getServletContext(), "email.orl");
+		List<String> emailsSupport = propertiesUtils.getValuesByPartialKey(request.getServletContext(), "email.orderSupport");
+		emails.addAll(emailsSupport);
+		
+		String fileName1200 = "1200.xlsx";
+		String fileName1250 = "1250.xlsx";
+		String fileName1700 = "1700.xlsx";
+		
+		try {
+			poiExcel.exportToExcelScheduleList(scheduleService.getSchedulesByStock(1200).stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+					appPath + "resources/others/" + fileName1200);
+			poiExcel.exportToExcelScheduleList(scheduleService.getSchedulesByStock(1250).stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+					appPath + "resources/others/" + fileName1250);
+			poiExcel.exportToExcelScheduleList(scheduleService.getSchedulesByStock(1700).stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+					appPath + "resources/others/" + fileName1700);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.err.println("Ошибка формирование EXCEL");
+		}
+		
+//		response.setHeader("content-disposition", "attachment;filename="+fileName+".xlsx");
+		List<File> files = new ArrayList<File>();
+		files.add(new File(appPath + "resources/others/" + fileName1200));
+		files.add(new File(appPath + "resources/others/" + fileName1250));
+		files.add(new File(appPath + "resources/others/" + fileName1700));
+		
+		
+		mailService.sendEmailWithFilesToUsers(request.getServletContext(), "Графики поставок на " + currentTimeString, "Сообщение отправлено вручную пользователем : " + user.getSurname() + " " + user.getName() , files, emails);
+		response.put("status", "200");
+		response.put("message", "Сообщение отправлено");
+		
+		return response;		
+	}
 	
 	@GetMapping("/orl/need/getNeed/{date}")
 	public Map<String, Object> getNeedList(HttpServletRequest request, @PathVariable String date) {
@@ -297,15 +338,30 @@ public class MainRestController {
 	}
 	
 	/**
-	 * Загрузка заказов (потребности) из excel
-	 * @param model
-	 * @param request
-	 * @param session
-	 * @param excel
-	 * @return
-	 * @throws InvalidFormatException
-	 * @throws IOException
-	 * @throws ServiceException
+	 * Обрабатывает загрузку и обработку Excel-файла с данными заказов и их потребностями.
+	 * 
+	 * @param model       Модель для передачи данных в представление (не используется в данном методе).
+	 * @param request     Объект HttpServletRequest для получения данных запроса.
+	 * @param session     Текущая HTTP-сессия пользователя.
+	 * @param excel       Файл Excel, содержащий данные, которые необходимо загрузить и обработать. Этот параметр не является обязательным.
+	 * @param dateStr     Строка, представляющая дату, для которой должны быть загружены данные. Этот параметр не является обязательным.
+	 * 
+	 * @return            Карта (Map) с ответом, содержащая статус и сообщение о результате обработки.
+	 * 
+	 * @throws InvalidFormatException  Если формат загружаемого файла Excel недопустим.
+	 * @throws IOException             Если произошла ошибка ввода-вывода при обработке файла.
+	 * @throws ServiceException        Если произошла ошибка в сервисном слое.
+	 * 
+	 * Метод выполняет следующие действия:
+	 * 1. Проверяет, если ли уже загруженные данные для указанной даты (если дата не указана, используется текущая дата).
+	 *    Если данные найдены, метод возвращает ответ с соответствующим сообщением и статусом.
+	 * 2. Сохраняет загруженный Excel-файл на сервере.
+	 * 3. Парсит Excel-файл и формирует карту (Map) объектов OrderProduct.
+	 * 4. Получает список всех продуктов и преобразует его в карту для быстрого поиска по коду продукта.
+	 * 5. Проходит по каждому элементу карты OrderProduct:
+	 *    - Если продукт найден в базе, привязывает его к заказу и обновляет продукт.
+	 *    - Если продукт не найден, создает новый продукт, связывает его с заказом и сохраняет его в базе.
+	 * 6. Возвращает ответ с сообщением о завершении обработки.
 	 */
 	@RequestMapping(value = "/orl/need/load", method = RequestMethod.POST, consumes = {
 			MediaType.MULTIPART_FORM_DATA_VALUE })
@@ -316,6 +372,15 @@ public class MainRestController {
 		
 		Map<String, String> response = new HashMap<String, String>();
 		dateStr = dateStr.isEmpty() ? null : dateStr;
+		
+		List<OrderProduct> orderProducts = orderProductService.getOrderProductListHasDate(Date.valueOf(dateStr == null ? LocalDate.now().toString() : dateStr));
+		if(orderProducts != null && !orderProducts.isEmpty()) {
+			response.put("status", "100");
+			response.put("message", "расчёт заказов на " + (dateStr == null ? LocalDate.now().toString() : dateStr) + " уже загружен");
+			return response;
+		}
+		
+		
 		File file1 = poiExcel.getFileByMultipartTarget(excel, request, "need.xlsx");
 		
 		Map<Integer, OrderProduct> mapOrderProduct = new HashMap<Integer, OrderProduct>();
@@ -358,8 +423,8 @@ public class MainRestController {
 		//Тут будут проверки по потребностям согласно таблице заказов
 		
 		
-		response.put("200", "ads");
-//		response.put("body", schedules.toString());
+		response.put("status", "200");
+		response.put("message", "Готово");
 		return response;
 	}
 	
@@ -1302,8 +1367,7 @@ public class MainRestController {
 		}
 		
 		String errorMessage = orderService.updateOrderForSlots(order);//проверка на пересечение со временим других слотов и лимит складов
-		java.util.Date t2 = new java.util.Date();
-		System.out.println(t2.getTime()-t1.getTime() + " ms - update" );
+		
 		if(errorMessage!=null) {
 			response.put("status", "100");
 			response.put("message", errorMessage);
@@ -1311,7 +1375,6 @@ public class MainRestController {
 			return response;
 		}else {
 			String info = chheckScheduleMethodAllInfo(request, order.getMarketContractType(), order.getTimeDelivery().toLocalDateTime().toLocalDate().toString(), order.getCounterparty());
-			saveActionInFile(request, "resources/others/blackBox/slot", idOrder, order.getMarketNumber(), order.getNumStockDelivery(), oldIdRamp, order.getIdRamp(), oldTimeDelivery, order.getTimeDelivery(), user.getLogin(), "update", info, order.getMarketContractType());
 			if(order.getRoutes() != null) {
 				order.getRoutes().forEach(r->{
 					r.setDateUnloadPreviouslyStock(order.getTimeDelivery().toLocalDateTime().toLocalDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
@@ -1322,12 +1385,17 @@ public class MainRestController {
 			Message message = new Message(user.getLogin(), null, "200", str, idOrder.toString(), "update");
 			slotWebSocket.sendMessage(message);	
 			
+			String infoCheck = null;
+			
 			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {
 				//тут проверка по потребности
-				String infoCheck = readerSchedulePlan.process(order);
+				infoCheck = readerSchedulePlan.process(order);
 				response.put("info", infoCheck);
 			}
 			
+			saveActionInFile(request, "resources/others/blackBox/slot", idOrder, order.getMarketNumber(), order.getNumStockDelivery(), oldIdRamp, order.getIdRamp(), oldTimeDelivery, order.getTimeDelivery(), user.getLogin(), "update", info, order.getMarketContractType());
+			java.util.Date t2 = new java.util.Date();
+			System.out.println(t2.getTime()-t1.getTime() + " ms - update" );
 			response.put("status", "200");
 			response.put("message", str);
 			return response;	
@@ -1521,8 +1589,7 @@ public class MainRestController {
 				}
 		
 		String errorMessage = orderService.updateOrderForSlots(order);//проверка на пересечение со временим других слотов
-		java.util.Date t2 = new java.util.Date();
-		System.out.println(t2.getTime()-t1.getTime() + " ms - load" );
+		
 		if(errorMessage != null) {
 			response.put("status", "100");
 			response.put("message", errorMessage);
@@ -1530,16 +1597,19 @@ public class MainRestController {
 			return response;
 		}else {
 			String info = chheckScheduleMethodAllInfo(request, order.getMarketContractType(), order.getTimeDelivery().toLocalDateTime().toLocalDate().toString(), order.getCounterparty());
-			saveActionInFile(request, "resources/others/blackBox/slot", idOrder, order.getMarketNumber(), order.getNumStockDelivery(), null, order.getIdRamp(), null, order.getTimeDelivery(), user.getLogin(), "load", info, order.getMarketContractType());
 			Message message = new Message(user.getLogin(), null, "200", str, idOrder.toString(), "load");
 			slotWebSocket.sendMessage(message);	
 			
+			String infoCheck = null;
 			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {
 				//тут проверка по потребности
-				String infoCheck = readerSchedulePlan.process(order);
+				infoCheck = readerSchedulePlan.process(order);
 				response.put("info", infoCheck);
 			}
+			saveActionInFile(request, "resources/others/blackBox/slot", idOrder, order.getMarketNumber(), order.getNumStockDelivery(), null, order.getIdRamp(), null, order.getTimeDelivery(), user.getLogin(), "load", info, order.getMarketContractType());
 			
+			java.util.Date t2 = new java.util.Date();
+			System.out.println(t2.getTime()-t1.getTime() + " ms - load" );
 			response.put("status", "200");
 			response.put("message", str);
 			return response;	

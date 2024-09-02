@@ -38,9 +38,9 @@
 		<div class="toolbar">
 			<input class="btn tools-btn font-weight-bold" type="date" name="filterDate" id="filterDate">
 			<c:choose>
-				<c:when test="${roles == '[ROLE_ADMIN]'}">
+				<c:when test="${roles == '[ROLE_ADMIN]' || roles == '[ROLE_ORDERSUPPORT]'}">
 					<button type="button" class="btn tools-btn font-weight-bold text-muted" data-toggle="modal" data-target="#sendExcelModal">
-						Загрузить Excel
+						Загрузить отчет с инф-й о потребности
 					</button>
 				</c:when>
 			</c:choose>
@@ -63,8 +63,12 @@
 					<div class="modal-body">
 						<div class="inputs-container">
 							<div class="form-group">
-								<label for="date" class="col-form-label text-muted font-weight-bold">Укажите дату</label>
+								<label for="date" class="col-form-label text-muted font-weight-bold">Укажите дату отчета*</label>
+								<span></span>
 								<input class="form-control w-50" type="date" name="date" id="date">
+								<small id="date" class="form-text text-muted">
+									* Если дата не указана, то отчет загрузится с датой сегодняшнего дня
+								</small>
 							</div>
 							<div class="form-group">
 								<label class="col-form-label text-muted font-weight-bold">Загрузите файл Excel</label>

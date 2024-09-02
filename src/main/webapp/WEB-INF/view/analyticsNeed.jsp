@@ -17,14 +17,14 @@
 	<meta charset="UTF-8">
 	<meta name="${_csrf.parameterName}" content="${_csrf.token}" />
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>Аналитика</title>
+	<title>Аналитика потребности фактических заказов</title>
 	<link rel="icon" href="${pageContext.request.contextPath}/resources/img/favicon.ico">
 </head>
 <body>
 	<jsp:include page="headerNEW.jsp" />
 	<div class="fluid-container my-container">
 		<div class=" px-5 d-flex align-items-center justify-content-between">
-			<h3 class="mb-2">Аналитика Биржи</h3>
+			<h3 class="mb-2">Аналитика потребности фактических заказов</h3>
 			<div>
 				<p class="mb-1">Логин: powerbi@proanalysesl.com</p>
 				<p class="mb-1">Пароль: Unks!89r</p>
@@ -33,9 +33,9 @@
 		<br>
 		<div class="frame-container">
 			<iframe
-				title="Аналитика Биржи"
+				title="Аналитика потребности фактических заказов"
 				width="100%" height="780px"
-				src="https://app.powerbi.com/reportEmbed?reportId=36af3ce2-6396-414b-bf00-ac156158500b&autoAuth=true&ctid=a9af5edf-b4be-4591-ba34-a3a96434b108"
+				src="https://app.powerbi.com/reportEmbed?reportId=3880d301-7fd1-4114-a6ac-8a3821046315&autoAuth=true&ctid=a9af5edf-b4be-4591-ba34-a3a96434b108"
 				frameborder="0"
 				allowFullScreen="true">
 			</iframe>

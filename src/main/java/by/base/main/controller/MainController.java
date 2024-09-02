@@ -357,6 +357,11 @@ public class MainController {
 		return "analyticsMain";
 	}
 	
+	@GetMapping("/main/analytics/needs")
+	public String getAnalyticsNeedPage(Model model, HttpServletRequest request) {
+		return "analyticsNeed";
+	}
+	
 	@GetMapping("/main/analytics/shortage")
 	public String getAnalyticsShortagePage(Model model, HttpServletRequest request) {
 		return "analytics";

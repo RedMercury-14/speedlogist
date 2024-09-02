@@ -54,16 +54,19 @@ const gridOptions = {
 }
 
 window.addEventListener('load', async () => {
-	const filterDateInput = document.querySelector('#filterDate')
 	// установка фильтра даты
+	const filterDateInput = document.querySelector('#filterDate')
 	const filterDate = dateHelper.getDateForInput(new Date())
-	filterDateInput && (filterDateInput.value = filterDate)
+	setFilterDate(filterDate)
 
+
+	// обработка изменений фильтра даты
 	filterDateInput && filterDateInput.addEventListener('change', (e) => {
 		const filterDate = e.target.value
 		updateTable(filterDate)
 	})
 
+	// загрузка даннных
 	const res = await getData(getOrlNeedBaseUrl + filterDate)
 	orlNeedData = res.body
 	
@@ -73,6 +76,7 @@ window.addEventListener('load', async () => {
 	// создание таблицы
 	renderTable(gridDiv, gridOptions, orlNeedData)
 
+	// обработка отправки формы отправки excel файла
 	const sendExcelForm = document.querySelector('#sendExcelForm')
 	sendExcelForm && sendExcelForm.addEventListener('submit', sendExcelFormHandler)
 })
@@ -135,11 +139,26 @@ function sendExcelFormHandler(e) {
 		token: token,
 		data: formData,
 		successCallback: (res) => {
-			snackbar.show(res[200])
-			updateTable(date)
-			$(`#sendExcelModal`).modal('hide')
 			hideLoadingSpinner(submitButton, submitButtonText)
+
+			if (res.status === '200') {
+				snackbar.show(res.message)
+				setFilterDate(date)
+				updateTable(date)
+				$(`#sendExcelModal`).modal('hide')
+			}
+
+			if (res.status === '100') {
+				snackbar.show(res.message)
+				return
+			}
 		},
 		errorCallback: () => hideLoadingSpinner(submitButton, submitButtonText)
 	})
+}
+
+// установка даты для отображения данных
+function setFilterDate(value) {
+	const filterDateInput = document.querySelector('#filterDate')
+	filterDateInput && (filterDateInput.value = value)
 }

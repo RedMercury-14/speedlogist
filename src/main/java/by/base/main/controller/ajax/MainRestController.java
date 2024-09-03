@@ -73,6 +73,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.dto.OrderDTO;
 import com.google.gson.Gson;
 import com.google.j2objc.annotations.AutoreleasePool;
 import com.graphhopper.GHRequest;
@@ -4530,6 +4531,7 @@ public class MainRestController {
 	 * @param dateEnd
 	 * @return
 	 */
+	@Deprecated
 	@GetMapping("/manager/getOrdersForSlots/{dateStart}&{dateEnd}")
 	public Set<Order> getOrdersForSlots(@PathVariable Date dateStart, @PathVariable Date dateEnd) {
 		Set<Order> res1 = orderService.getOrderByPeriodDelivery(dateStart, dateEnd).stream().filter(o -> o.getStatus() != 10)
@@ -4537,23 +4539,7 @@ public class MainRestController {
 		return res1;
 	}
 	
-	/**
-	 * отдаёт заявки по дате только 5 статуса
-	 * Основной метод для получения информации в слоты
-	 * @param dateStart
-	 * @param dateEnd
-	 * @return
-	 */
-	@GetMapping("/manager/getOrdersForSlots2/{dateStart}&{dateEnd}")
-	public Set<OrderDTOForSlot> getOrdersForSlots2(@PathVariable Date dateStart, @PathVariable Date dateEnd) {
-		java.util.Date t1 = new java.util.Date();
-		Set<OrderDTOForSlot> res2 = orderService.getOrderDTOByPeriodDeliveryAndSlots(dateStart, dateEnd).stream().filter(o -> o.getStatus() != 10)
-				.collect(Collectors.toSet());
-		java.util.Date t2 = new java.util.Date();		
-		System.out.println("Time getOrdersForSlots2 : res2 = " + (t2.getTime()-t1.getTime()) + " ms ;");
-		return res2;
-	}
-	
+		
 	/**
 	 * отдаёт заявки по дате только 5 статуса
 	 * Основной метод для получения информации в слоты
@@ -4568,6 +4554,16 @@ public class MainRestController {
 				.collect(Collectors.toSet());
 		java.util.Date t2 = new java.util.Date();		
 		System.out.println("Time getOrdersForSlots2 : res3 = " + (t2.getTime()-t1.getTime()) + " ms ; size = " + res2.size());
+		return res2;
+	}
+	
+	@GetMapping("/manager/getOrdersForSlots4/{dateStart}&{dateEnd}")
+	public Set<OrderDTO> getOrdersForSlots4(@PathVariable Date dateStart, @PathVariable Date dateEnd) {
+		java.util.Date t1 = new java.util.Date();
+		Set<OrderDTO> res2 = orderService.getOrderDTOByPeriodDeliveryAndSlots(dateStart, dateEnd).stream().filter(o -> o.getStatus() != 10)
+				.collect(Collectors.toSet());
+		java.util.Date t2 = new java.util.Date();		
+		System.out.println("Time getOrdersForSlots4 : res4 = " + (t2.getTime()-t1.getTime()) + " ms ; size = " + res2.size());
 		return res2;
 	}
 	

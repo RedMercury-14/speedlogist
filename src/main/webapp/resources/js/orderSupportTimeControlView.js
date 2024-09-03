@@ -19,7 +19,7 @@ function reportFormSubmitHandler(e) {
 
 	let url
 	if (submitButton.dataset.type === '487') url = send487ReportUrl
-	// if (submitButton.dataset.type === 'need') url = send490ReportUrl
+	if (submitButton.dataset.type === 'stockBalance') url = send490ReportUrl
 	if (submitButton.dataset.type === 'promotions') url = sendPromotionsReportUrl
 
 	const submitButtonText = submitButton.innerText

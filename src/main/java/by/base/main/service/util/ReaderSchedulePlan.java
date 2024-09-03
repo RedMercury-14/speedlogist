@@ -103,9 +103,9 @@ public class ReaderSchedulePlan {
 		}
 		long i = 0;
 		
-//		System.out.println("orderProductTarget = " + orderProductTarget);
-//		System.out.println("schedule = " + schedule);
-//		System.out.println("dayOfPlanOrder = "+dayOfPlanOrder);
+		System.out.println("orderProductTarget = " + orderProductTarget);
+		System.out.println("schedule = " + schedule);
+		System.out.println("dayOfPlanOrder = "+dayOfPlanOrder);
 		
 		if(flag) {
 			
@@ -155,7 +155,11 @@ public class ReaderSchedulePlan {
 //		System.out.println(orderProduct.getDateCreate().toLocalDateTime().toLocalDate().plusDays(1).getDayOfWeek());
 ////		orderProduct.getDateCreate().toLocalDateTime().toLocalDate().getDayOfWeek()
 //	}
-	
+	/**
+	 * Главный метод проврки заказа по потребностям. Возвращает текстовую информацию
+	 * @param order
+	 * @return
+	 */
 	public String process(Order order) {
 		 Set<OrderLine> lines = order.getOrderLines(); // строки в заказе
 		 List<Product> products = new ArrayList<Product>(); //
@@ -182,7 +186,7 @@ public class ReaderSchedulePlan {
 			 }
 		 }
 		 DateRange dateRange = getDateRange(schedule, products.get(0)); // тут раелизуются пункты 2 и 3
-//		 System.out.println(dateRange);
+		 System.out.println("dateRange = " + dateRange);
 		 
 		 if(dateRange == null) {
 			 return "Просчёт кол-ва товара на логистическое плече невозможен, т.к. расчёт ОРЛ не совпадает с графиком поставок";

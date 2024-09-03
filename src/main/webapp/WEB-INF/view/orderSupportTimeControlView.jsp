@@ -30,7 +30,7 @@
 			<br>
 			<div class="formButton-container">
 				<button class="btn btn-primary" data-type="487" type="submit">Загрузить 487 отчет</button>
-				<!-- <button class="btn btn-primary" data-type="need" type="submit">Загрузить отчет с инф-й о потребности</button> -->
+				<button class="btn btn-primary" data-type="stockBalance" type="submit">Загрузить отчет остатков на складах</button>
 				<button class="btn btn-primary" data-type="promotions" type="submit" disabled>Загрузить отчет с акциями</button>
 			</div>
 		</form>

@@ -21,6 +21,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import com.dto.AddressDTO;
+import com.dto.OrderDTO;
 import com.itextpdf.text.pdf.PdfStructTreeController.returnType;
 
 import by.base.main.dao.OrderDAO;
@@ -367,10 +369,112 @@ public class OrderDAOImpl implements OrderDAO{
 		List<Order> trucks = theObject.getResultList();
 		return trucks;
 	}
+	
+	private static final String adressConstruct = "SELECT new com.dto.AddressDTO(" +
+	        "a.idAddress, " +
+	        "a.bodyAddress, " +
+	        "a.date, " +
+	        "a.type, " +
+	        "a.pall, " +
+	        "a.weight, " +
+	        "a.volume, " +
+	        "a.comment, " +
+	        "a.timeFrame, " +
+	        "a.contact, " +
+	        "a.cargo, " +
+	        "a.customsAddress, " +
+	        "a.time, " +
+	        "a.isCorrect, " +
+	        "a.oldIdaddress, " +
+	        "a.tnvd, " +
+	        "a.pointNumber)";
+	
+	private static final String orderConstruct = "SELECT new com.dto.OrderDTO(" +
+	        "o.idOrder, " +
+	        "o.counterparty, " +
+	        "o.contact, " +
+	        "o.cargo, " +
+	        "o.typeLoad, " +
+	        "o.methodLoad, " +
+	        "o.typeTruck, " +
+	        "o.temperature, " +
+	        "o.control, " +
+	        "o.comment, " +
+	        "o.status, " +
+	        "o.dateCreate, " +
+	        "o.dateDelivery, " +
+	        "o.manager, " +
+	        "o.telephoneManager, " +
+	        "o.stacking, " +
+	        "o.logist, " +
+	        "o.logistTelephone, " +
+	        "o.marketNumber, " +
+	        "o.onloadWindowDate, " +
+	        "o.onloadWindowTime, " +
+	        "o.loadNumber, " +
+	        "o.numStockDelivery, " +
+	        "o.pall, " +
+	        "o.way, " +
+	        "o.onloadTime, " +
+	        "o.incoterms, " +
+	        "o.changeStatus, " +
+	        "o.needUnloadPoint, " +
+	        "o.idRamp, " +
+	        "o.timeDelivery, " +
+	        "o.timeUnload, " +
+	        "o.loginManager, " +
+	        "o.sku, " +
+	        "o.monoPall, " +
+	        "o.mixPall, " +
+	        "o.isInternalMovement, " +
+	        "o.mailInfo, " +
+	        "o.slotInfo, " +
+	        "o.dateCreateMarket, " +
+	        "o.marketInfo, " +
+	        "o.marketContractType, " +
+	        "o.marketContractGroupId, " +
+	        "o.marketContractNumber, " +
+	        "o.marketContractorId, " +
+	        "o.numProduct, " +
+	        "o.statusYard, " +
+	        "o.unloadStartYard, " +
+	        "o.unloadFinishYard, " +
+	        "o.pallFactYard, " +
+	        "o.weightFactYard, " +
+	        "o.marketOrderSumFirst, " +
+	        "o.marketOrderSumFinal, " +
+	        "o.arrivalFactYard, " +
+	        "o.registrationFactYard,"+
+	        "a.bodyAddress)";
+	
+	private static final String queryGetOrderDTOByPeriodDeliveryAndSlots = orderConstruct + " from Order o LEFT JOIN o.addresses a where \r\n"
+			+ "(CASE \r\n"
+			+ "    WHEN o.timeDelivery IS NOT NULL THEN o.timeDelivery \r\n"
+			+ "    ELSE o.dateDelivery \r\n"
+			+ " END)\r\n"
+			+ "BETWEEN :dateStart AND :dateEnd";
+
+	@Transactional
+	@Override
+	public List<OrderDTO> getOrderDTOByPeriodDeliveryAndSlots(Date dateStart, Date dateEnd) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<OrderDTO> theObject = currentSession.createQuery(queryGetOrderDTOByPeriodDeliveryAndSlots, OrderDTO.class);
+		theObject.setParameter("dateStart", dateStart, TemporalType.TIMESTAMP);
+		theObject.setParameter("dateEnd", dateEnd, TemporalType.TIMESTAMP);
+		List<OrderDTO> trucks = theObject.getResultList();
+		return trucks;
+	}
 
 	
 	private static final String queryGetOrderByPeriodDeliveryAndSlotsFAST =
 		    "SELECT new com.base.main.dto.OrderDTOForSlot (o.id, o.status, a.bodyAddress) " +
+		    	    "FROM Order o " +
+		    	    "LEFT JOIN o.addresses a " +
+		    	    "WHERE (CASE WHEN o.timeDelivery IS NOT NULL THEN o.timeDelivery ELSE o.dateDelivery END) " +
+		    	    "BETWEEN :dateStart AND :dateEnd";
+	
+	private static final String queryGetOrderByPeriodDeliveryAndSlotsFASTTEST =
+		    "SELECT new com.dto.OrderDTO (o.id, o.status, a.bodyAddress, o.timeDelivery) " +
 		    	    "FROM Order o " +
 		    	    "LEFT JOIN o.addresses a " +
 		    	    "WHERE (CASE WHEN o.timeDelivery IS NOT NULL THEN o.timeDelivery ELSE o.dateDelivery END) " +

@@ -4,6 +4,8 @@ import java.sql.Date;
 import java.util.List;
 import java.util.Set;
 
+import com.dto.OrderDTO;
+
 import by.base.main.dto.OrderDTOForSlot;
 import by.base.main.model.Order;
 import by.base.main.model.Route;
@@ -127,7 +129,7 @@ public interface OrderService {
 	 * @param dateEnd
 	 * @return
 	 */
-	List<OrderDTOForSlot> getOrderDTOByPeriodDeliveryAndSlots(Date dateStart, Date dateEnd);
+	List<OrderDTO> getOrderDTOByPeriodDeliveryAndSlots(Date dateStart, Date dateEnd);
 	
 	int updateOrderFromStatus (Order order);
 	

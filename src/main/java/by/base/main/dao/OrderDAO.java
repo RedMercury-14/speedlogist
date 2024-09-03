@@ -5,6 +5,8 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.Set;
 
+import com.dto.OrderDTO;
+
 import by.base.main.dto.OrderDTOForSlot;
 import by.base.main.model.Order;
 import by.base.main.model.Route;
@@ -93,6 +95,18 @@ public interface OrderDAO {
 	 * @return
 	 */
 	List<Order> getOrderByPeriodDeliveryAndSlots(Date dateStart, Date dateEnd);
+	
+	
+	/**
+	 * Метод который возращает заказы по дате доставки 
+	 * <br>сложный метод, который сначала ищет по столбцу timeDelivery, если он не равен null
+	 * <br>а если он равен null -  то ищет по dateDelivery
+	 * <br>Возвращает DTO
+	 * @param dateStart
+	 * @param dateEnd
+	 * @return
+	 */
+	List<OrderDTO> getOrderDTOByPeriodDeliveryAndSlots(Date dateStart, Date dateEnd);
 	
 	Integer saveOrder (Order order);
 	

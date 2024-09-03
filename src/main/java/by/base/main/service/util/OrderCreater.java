@@ -144,15 +144,15 @@ public class OrderCreater {
 //				if(order.getMarketNumber().equals("19480260")) {
 //					order.setMarketContractType("453228");
 //				}
-//				if(order.getMarketNumber().equals("19480258")) {
-//					order.setMarketContractType("659");
-//				}
-//				if(order.getMarketNumber().equals("19480261")) {
-//					order.setMarketContractType("453228");
-//				}
-//				if(order.getMarketNumber().equals("19480256")) {
-//					order.setMarketContractType("147750");
-//				}
+				if(order.getMarketNumber().equals("19480262")) {
+					order.setMarketContractType("11113");
+				}
+				if(order.getMarketNumber().equals("19480263")) {
+					order.setMarketContractType("11113");
+				}
+				if(order.getMarketNumber().equals("19480264")) {
+					order.setMarketContractType("11113");
+				}
 				
 				
 				//TEST!!!!!!! УДАЛИТЬ ПОТОМ ТУТ

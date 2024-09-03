@@ -85,7 +85,11 @@ public class ReaderSchedulePlan {
                 || m.getValue().contains("суббота")
                 || m.getValue().contains("воскресенье")).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 					
-		List<OrderProduct> orderProductsHasNow = product.getOrderProductsListHasDateTarget(Date.valueOf(LocalDate.now())); // это реализация п.2
+		List<OrderProduct> orderProductsHasNow = product.getOrderProductsListHasDateTarget(Date.valueOf(LocalDate.now().plusDays(1))); // это реализация п.2 (взял +1 день, т.к. заказывают за день поставки)
+		if(orderProductsHasNow == null) {
+			System.err.println("Расчёта заказов по продукту: " + product.getName() + " ("+product.getCodeProduct()+") нет в базе данных");
+			return null;
+		}
 		OrderProduct orderProductTarget = orderProductsHasNow.get(0);
 		String dayOfPlanOrder = orderProductTarget.getDateCreate().toLocalDateTime().toLocalDate().plusDays(1).getDayOfWeek().toString(); // планируемый день заказа
 		
@@ -103,9 +107,9 @@ public class ReaderSchedulePlan {
 		}
 		long i = 0;
 		
-		System.out.println("orderProductTarget = " + orderProductTarget);
-		System.out.println("schedule = " + schedule);
-		System.out.println("dayOfPlanOrder = "+dayOfPlanOrder);
+//		System.out.println("orderProductTarget = " + orderProductTarget);
+//		System.out.println("schedule = " + schedule);
+//		System.out.println("dayOfPlanOrder = "+dayOfPlanOrder);
 		
 		if(flag) {
 			

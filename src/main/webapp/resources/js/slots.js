@@ -809,7 +809,7 @@ function confirmSlot(fcEvent, action) {
 			bootstrap5overlay.hideOverlay()
 
 			if (data.status === '200') {
-				data.info && showMessageModal(data.info)
+				action === 'save' && data.info && showMessageModal(data.info)
 				updateCalendarEvent(orderTableGridOption, orderData, false)
 				hideEventInfoPopup()
 				return

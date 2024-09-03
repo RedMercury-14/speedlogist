@@ -244,12 +244,12 @@
 									</div>
 								</li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/procurement/ordersBalance" />">Остаток товара</a></li>
-								<li class="dropdown">
+								<!-- <li class="dropdown">
 									<a href="#" class="nav-item nav-link" data-toggle="dropdown">Аналитика</a>
 									<div class="dropdown-menu">
-										<!-- <a class="dropdown-item" href="<spring:url value="/main/analytics/changing-matrix" />">Изменения матрицы</a> -->
+										<a class="dropdown-item" href="<spring:url value="/main/analytics/changing-matrix" />">Изменения матрицы</a>
 									</div>
-								</li>
+								</li> -->
 							</c:when>
 							<c:when test="${roles == '[ROLE_STOCKPROCUREMENT]'}">
 								<li class="dropdown">

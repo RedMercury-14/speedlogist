@@ -88,7 +88,7 @@ public class ReaderSchedulePlan {
 		List<OrderProduct> orderProductsHasNow = product.getOrderProductsListHasDateTarget(Date.valueOf(LocalDate.now().plusDays(1))); // это реализация п.2 (взял +1 день, т.к. заказывают за день поставки)
 		if(orderProductsHasNow == null) {
 			System.err.println("Расчёта заказов по продукту: " + product.getName() + " ("+product.getCodeProduct()+") нет в базе данных");
-			return null;
+			return new DateRange(null, null, 0L, null);
 		}
 		OrderProduct orderProductTarget = orderProductsHasNow.get(0);
 		String dayOfPlanOrder = orderProductTarget.getDateCreate().toLocalDateTime().toLocalDate().plusDays(1).getDayOfWeek().toString(); // планируемый день заказа
@@ -194,6 +194,9 @@ public class ReaderSchedulePlan {
 		 
 		 if(dateRange == null) {
 			 return "Просчёт кол-ва товара на логистическое плече невозможен, т.к. расчёт ОРЛ не совпадает с графиком поставок";
+		 }
+		 if(dateRange.start == null && dateRange.days == 0) {
+			 return "Расчёта заказов по продукту: " + products.get(0).getName() + " ("+products.get(0).getCodeProduct()+") невозможен, т.к. нет в базе данных расчётов потребности";
 		 }
 		 
 		 if(checkHasLog(dateRange, order)) {

@@ -85,7 +85,11 @@ public class ReaderSchedulePlan {
                 || m.getValue().contains("суббота")
                 || m.getValue().contains("воскресенье")).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 					
-		List<OrderProduct> orderProductsHasNow = product.getOrderProductsListHasDateTarget(Date.valueOf(LocalDate.now())); // это реализация п.2
+		List<OrderProduct> orderProductsHasNow = product.getOrderProductsListHasDateTarget(Date.valueOf(LocalDate.now().plusDays(1))); // это реализация п.2 (взял +1 день, т.к. заказывают за день поставки)
+		if(orderProductsHasNow == null) {
+			System.err.println("Расчёта заказов по продукту: " + product.getName() + " ("+product.getCodeProduct()+") нет в базе данных");
+			return new DateRange(null, null, 0L, null);
+		}
 		OrderProduct orderProductTarget = orderProductsHasNow.get(0);
 		String dayOfPlanOrder = orderProductTarget.getDateCreate().toLocalDateTime().toLocalDate().plusDays(1).getDayOfWeek().toString(); // планируемый день заказа
 		
@@ -103,9 +107,9 @@ public class ReaderSchedulePlan {
 		}
 		long i = 0;
 		
-		System.out.println("orderProductTarget = " + orderProductTarget);
-		System.out.println("schedule = " + schedule);
-		System.out.println("dayOfPlanOrder = "+dayOfPlanOrder);
+//		System.out.println("orderProductTarget = " + orderProductTarget);
+//		System.out.println("schedule = " + schedule);
+//		System.out.println("dayOfPlanOrder = "+dayOfPlanOrder);
 		
 		if(flag) {
 			
@@ -190,6 +194,9 @@ public class ReaderSchedulePlan {
 		 
 		 if(dateRange == null) {
 			 return "Просчёт кол-ва товара на логистическое плече невозможен, т.к. расчёт ОРЛ не совпадает с графиком поставок";
+		 }
+		 if(dateRange.start == null && dateRange.days == 0) {
+			 return "Расчёта заказов по продукту: " + products.get(0).getName() + " ("+products.get(0).getCodeProduct()+") невозможен, т.к. нет в базе данных расчётов потребности";
 		 }
 		 
 		 if(checkHasLog(dateRange, order)) {

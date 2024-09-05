@@ -261,6 +261,18 @@ public class Route implements Serializable{
 	@Column(name = "onload_time")
 	private Time onloadTime;
 	
+	@Column(name="logist_comment")
+	private String logistComment;
+	
+	@Column(name="truck_info")
+	private String truckInfo;
+	
+	@Column(name="km_info")
+	private Integer kmInfo;
+	
+	@Column(name="cargo_info")
+	private String cargoInfo;
+	
 	@Transient
 	private Map<String, String> cost = new HashMap<String, String>();
 	/**
@@ -311,6 +323,47 @@ public class Route implements Serializable{
 			this.createTime = timeNow;
 		}
 	}
+
+	
+	public String getLogistComment() {
+		return logistComment;
+	}
+
+
+	public String getCargoInfo() {
+		return cargoInfo;
+	}
+
+
+	public void setCargoInfo(String cargoInfo) {
+		this.cargoInfo = cargoInfo;
+	}
+
+
+	public Integer getKmInfo() {
+		return kmInfo;
+	}
+
+
+	public void setKmInfo(Integer kmInfo) {
+		this.kmInfo = kmInfo;
+	}
+
+
+	public void setLogistComment(String logistComment) {
+		this.logistComment = logistComment;
+	}
+
+
+	public String getTruckInfo() {
+		return truckInfo;
+	}
+
+
+	public void setTruckInfo(String truckInfo) {
+		this.truckInfo = truckInfo;
+	}
+
 
 	public Integer getIdRoute() {
 		return idRoute;

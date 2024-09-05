@@ -269,21 +269,141 @@ public class MainRestController {
 	public static final Comparator<Address> comparatorAddressId = (Address e1, Address e2) -> (e1.getIdAddress() - e2.getIdAddress());
 	public static final Comparator<Address> comparatorAddressIdForView = (Address e1, Address e2) -> (e2.getType().charAt(0) - e1.getType().charAt(0));
 	
-	@GetMapping("/test/{num}&{prod}")
-	public Map<String, Object> getTest(HttpServletRequest request, @PathVariable String num, @PathVariable String prod) {
+	@GetMapping("/test")
+	public Map<String, Object> getTest(HttpServletRequest request) {
 		Map<String, Object> response = new HashMap<String, Object>();	
-		Product product = productService.getProductByCode(Integer.parseInt(prod));
-		List<OrderProduct> orderProductsHasNow = product.getOrderProductsListHasDateTarget(Date.valueOf(LocalDate.now())); // это реализация п.2
-		orderProductsHasNow.forEach(o-> System.out.println(o));
-//						
-		Schedule schedule = scheduleService.getScheduleByNumContract(Long.parseLong(num));
-		System.out.println("----> "+readerSchedulePlan.getDateRange(schedule, product) + " <----");
+		
+		User user = getThisUser();
+		Route route = new Route();
+		route.setDateLoadPreviously(Date.valueOf("2024-09-10"));
+		route.setTimeLoadPreviously(LocalTime.now());
+		route.setTotalLoadPall("33");
+		route.setTotalCargoWeight("1200");
+		route.setComments("maintenance");
+		route.setCustomer(user.getSurname() + " " + user.getName());
+		route.setTime(LocalTime.of(0, 5));
+		route.setTypeTrailer("Тент");
+		route.setStatusStock("0");
+		route.setUserComments("Таборы - Минск - Таборы");
+		route.setWay("АХО");
+		route.setTruckInfo("Маленькая лошадка");
+		route.setCargoInfo("Кокаин");
+		String routeDirectionMiddle = "Суперважный маршрут";		
+		String routeDirectionBeginning = "<АХО> ";
+		route.setRouteDirection(routeDirectionBeginning + routeDirectionMiddle);
+		
+		Integer idRoute = routeService.saveRouteAndReturnId(route);
+		
+		route.setRouteDirection(route.getRouteDirection() + " N"+idRoute.toString());
+		route.setStatusRoute("200");
+		
+		routeService.saveOrUpdateRoute(route);
+		
 		response.put("status", "200");
-		response.put("body", orderProductsHasNow);
-		response.put("DateRange", readerSchedulePlan.getDateRange(schedule, product));
+		response.put("body", route);
 		return response;		
 	}
 	
+	@GetMapping("/procurement/getMaintenanceList/{dateStart}&{dateEnd}")
+	public Map<String, Object> getMaintenanceListManager(HttpServletRequest request, @PathVariable String dateStart, @PathVariable String dateEnd) {
+		Map<String, Object> response = new HashMap<String, Object>();	
+		List<Route> routes = routeService.getMaintenanceListAsDate(Date.valueOf(dateStart), Date.valueOf(dateEnd));
+		response.put("status", "200");
+		response.put("body", routes);
+		return response;		
+	}
+	
+	@GetMapping("/logistics/getMaintenanceList/{dateStart}&{dateEnd}")
+	public Map<String, Object> getMaintenanceListLogistics(HttpServletRequest request, @PathVariable String dateStart, @PathVariable String dateEnd) {
+		Map<String, Object> response = new HashMap<String, Object>();	
+		List<Route> routes = routeService.getMaintenanceListAsDate(Date.valueOf(dateStart), Date.valueOf(dateEnd));
+		response.put("status", "200");
+		response.put("body", routes);
+		return response;		
+	}
+	@GetMapping("/carrier/getMaintenanceList/{dateStart}&{dateEnd}")
+	public Map<String, Object> getMaintenanceListCarrier(HttpServletRequest request, @PathVariable String dateStart, @PathVariable String dateEnd) {
+		Map<String, Object> response = new HashMap<String, Object>();	
+		List<Route> routes = routeService.getMaintenanceListAsDate(Date.valueOf(dateStart), Date.valueOf(dateEnd));
+		response.put("status", "200");
+		response.put("body", routes);
+		return response;		
+	}
+	
+	/**
+	 * Метод создаёт заявку/маршрут для АХО
+	 * @param request
+	 * @param str
+	 * @return
+	 * @throws ParseException
+	 * @throws IOException
+	 * @throws CloneNotSupportedException
+	 */
+	@PostMapping("/procurement/maintenance/add")
+	public Map<String, Object> postAddNewMaintenanceOrder(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+		Map<String, Object> response = new HashMap<String, Object>();
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		User user = getThisUser();
+		Route route = new Route();
+		route.setDateLoadPreviously(jsonMainObject.get("dateLoadPreviously") != null ? Date.valueOf(jsonMainObject.get("dateLoadPreviously").toString()) : null);
+		if (!jsonMainObject.get("timeLoadPreviously").toString().isEmpty()) {
+			route.setTimeLoadPreviously(
+					LocalTime.of(Integer.parseInt(jsonMainObject.get("timeLoadPreviously").toString().split(":")[0]),
+							Integer.parseInt(jsonMainObject.get("timeLoadPreviously").toString().split(":")[1])));
+		} else {
+			route.setTimeLoadPreviously(null);
+		}
+		route.setDateUnloadPreviouslyStock(jsonMainObject.get("dateUnloadPreviouslyStock") != null ? jsonMainObject.get("dateUnloadPreviouslyStock").toString() : null);
+		route.setTimeUnloadPreviouslyStock(jsonMainObject.get("timeUnloadPreviouslyStock") != null ? jsonMainObject.get("timeUnloadPreviouslyStock").toString() : null);
+		route.setTotalLoadPall(jsonMainObject.get("loadPallTotal") != null ? jsonMainObject.get("loadPallTotal").toString() : null);
+		route.setTotalCargoWeight(jsonMainObject.get("cargoWeightTotal") != null ? jsonMainObject.get("cargoWeightTotal").toString() : null);
+		route.setComments("maintenance");
+		route.setCustomer(user.getSurname() + " " + user.getName());
+		route.setTime(LocalTime.of(0, 5));
+		route.setTypeTrailer(jsonMainObject.get("typeTrailer") != null ? jsonMainObject.get("typeTrailer").toString() : null);
+		route.setStatusRoute("200");
+		route.setStatusStock("0");
+		route.setUserComments(jsonMainObject.get("userComments") != null ? jsonMainObject.get("userComments").toString() : null);
+		route.setWay("АХО");
+		route.setTruckInfo(jsonMainObject.get("truckInfo") != null ? jsonMainObject.get("truckInfo").toString() : null);
+		route.setCargoInfo(jsonMainObject.get("cargoInfo") != null ? jsonMainObject.get("cargoInfo").toString() : null);
+		String routeDirectionMiddle = jsonMainObject.get("routeDirection") != null ? jsonMainObject.get("routeDirection").toString() : "";		
+		String routeDirectionBeginning = "<АХО> ";
+		route.setRouteDirection(routeDirectionBeginning + routeDirectionMiddle);
+		
+		Integer idRoute = routeService.saveRouteAndReturnId(route);
+		
+		route.setRouteDirection(route.getRouteDirection() + " N"+idRoute.toString());
+		
+		routeService.saveOrUpdateRoute(route);
+		
+		response.put("status", "200");
+		response.put("message", "Заявка " + route.getRouteDirection() + " создана");
+		response.put("route", route);
+		return response;		
+	}
+	
+//	@GetMapping("/test/{num}&{prod}")
+//	public Map<String, Object> getTest(HttpServletRequest request, @PathVariable String num, @PathVariable String prod) {
+//		Map<String, Object> response = new HashMap<String, Object>();	
+//		Product product = productService.getProductByCode(Integer.parseInt(prod));
+//		List<OrderProduct> orderProductsHasNow = product.getOrderProductsListHasDateTarget(Date.valueOf(LocalDate.now())); // это реализация п.2
+//		orderProductsHasNow.forEach(o-> System.out.println(o));
+////						
+//		Schedule schedule = scheduleService.getScheduleByNumContract(Long.parseLong(num));
+//		System.out.println("----> "+readerSchedulePlan.getDateRange(schedule, product) + " <----");
+//		response.put("status", "200");
+//		response.put("body", orderProductsHasNow);
+//		response.put("DateRange", readerSchedulePlan.getDateRange(schedule, product));
+//		return response;		
+//	}
+	
+	/**
+	 * Ручная отправка сообщения с графиком поставок
+	 * @param request
+	 * @return
+	 */
 	@GetMapping("/orl/sendEmail")
 	public Map<String, Object> getSendEmail(HttpServletRequest request) {
 		// Получаем текущую дату для имени файла

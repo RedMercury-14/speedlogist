@@ -99,4 +99,12 @@ public interface RouteService {
 	 * @return
 	 */
 	List<Route> getRouteListByUserHasPeriod(User user, LocalDate start, LocalDate end);
+	
+	/**
+	 * Отдаёт лист с маршрутами/заказами АХО по <b>дате доставки (dateLoadPreviously)</b>
+	 * @param dateStart
+	 * @param dateFinish
+	 * @return
+	 */
+	List<Route> getMaintenanceListAsDate(Date dateStart, Date dateFinish);
 }

@@ -323,6 +323,25 @@ public class MainController {
 		return "main";		
 	}
 	
+	@GetMapping("/main/logistics/maintenance")
+	public String getMaintenanceLogistPage(Model model, HttpServletRequest request) {
+		return "maintenanceList";
+	}
+	@GetMapping("/main/logistics/test")
+	public String getLogistTestPage(Model model, HttpServletRequest request) {
+		return "logistTestPage";
+	}
+	
+	@GetMapping("/main/carrier/maintenance")
+	public String getMaintenanceCarrierPage(Model model, HttpServletRequest request) {
+		return "maintenanceList";
+	}
+	
+	@GetMapping("/main/procurement/maintenance")
+	public String getMaintenanceProcurementPage(Model model, HttpServletRequest request) {
+		return "maintenanceList";
+	}
+	
 	@GetMapping("/main/slots")
 	public String getSlotsPage(Model model, HttpServletRequest request) {
 		return "slots";

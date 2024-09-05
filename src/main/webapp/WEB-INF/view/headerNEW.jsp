@@ -57,6 +57,7 @@
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/ordersLogist" />">Менеджер заявок</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/documentflow" />">Документооборот</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/shopControl" />">Список магазинов</a>
+										<a class="dropdown-item" href="<spring:url value="/main/logistics/maintenance " />">Менеджер заявок АХО</a>
 									</div>
 								</li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/depot" />">Маршрутизатор</a></li>
@@ -118,6 +119,7 @@
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/ordersLogist" />">Менеджер заявок</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/documentflow" />">Документооборот</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/shopControl" />">Список магазинов</a>
+										<a class="dropdown-item" href="<spring:url value="/main/logistics/maintenance " />">Менеджер заявок АХО</a>
 									</div>
 								</li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/depot" />">Маршрутизатор</a></li>
@@ -136,6 +138,7 @@
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/documentflow" />">Документооборот</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/shopControl" />">Список магазинов</a>
 										<a class="dropdown-item" href="<spring:url value="/main/analytics/logistics" />">Аналитика Биржи</a>
+										<a class="dropdown-item" href="<spring:url value="/main/logistics/maintenance " />">Менеджер заявок АХО</a>
 									</div>
 								</li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/depot" />">Маршрутизатор</a></li>
@@ -179,6 +182,7 @@
 								<li class="dropdown">
 									<a href="#" class="nav-item nav-link" data-toggle="dropdown">Меню</a>
 									<div class="dropdown-menu">
+										<a class="dropdown-item" href="<spring:url value="/main/carrier/maintenance " />">Менеджер заявок АХО</a>
 										<a class="dropdown-item" href="<spring:url value="/main/carrier/tender"/>">Текущие тендеры</a>
 										<a class="dropdown-item" href="<spring:url value="/main/carrier/transportation"/>">Текущие перевозки</a>
 										<a class="dropdown-item" href="<spring:url value="/main/carrier/controlpark/trucklist"/>">Управление автопарком</a>
@@ -261,6 +265,7 @@
 								</li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/slots" />">Слоты</a></li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/procurement/ordersBalance" />">Остаток товара</a></li>
+								<li><a class="nav-item nav-link" href="<spring:url value="/main/procurement/maintenance " />">Менеджер заявок АХО</a></li>
 							</c:when>
 							<c:otherwise>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/registration" />">Регистрация</a></li>

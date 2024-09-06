@@ -7,7 +7,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="${_csrf.parameterName}" content="${_csrf.token}" />
-	<title>Создание заявки</title>
+	<title>Редактор заявки</title>
 	<link rel="icon" href="${pageContext.request.contextPath}/resources/img/favicon.ico">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/procurementForm2.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/autocomplete.css">
@@ -30,24 +30,21 @@
 		<div class="card">
 			<form id="orderForm" action="" method="post">
 				<div class="card-header d-flex justify-content-between">
-					<h3 class="mb-0" id="formName">Форма создания заявки</h3>
-					<button id="clearOrderForm" class="btn btn-secondary" type="button">Очистить форму</button>
+					<h3 id="formName" class="mb-0">Форма редактирования заявки</h3>
+					<input type="hidden" class="form-control" name="isInternalMovement" id="isInternalMovement">
+					<input type="hidden" class="form-control" name="needUnloadPoint" id="needUnloadPoint">
+					<input type="hidden" class="form-control" name="idOrder" id="idOrder">
 				</div>
 				<div class="card-body">
 					<div class="form-container">
 						<div class="form-section left">
-							<input type="hidden" class="form-control" name="isInternalMovement" id="isInternalMovement" value="false">
-							<input type="hidden" class="form-control" name="needUnloadPoint" id="needUnloadPoint" value="false">
 							<div class="form-group">
-								<label for="counterparty" class="col-form-label text-muted font-weight-bold">Наименование контрагента <span class="text-red">*</span></label>
+								<label class="col-form-label text-muted font-weight-bold">Наименование контрагента: <span class="text-red">*</span></label>
 								<input type="text" class="form-control" name="counterparty" id="counterparty" placeholder="Наименование контрагента (поставщика)" required>
 							</div>
 							<div class="form-group">
-								<label for="fio" class="col-form-label text-muted font-weight-bold">Контактное лицо контрагента</label>
-								<div class="form-group contact-inputs">
-									<input type="text" class="form-control" name="fio" id="fio" placeholder="ФИО">
-									<input type="text" class="form-control" name="tel" id="tel" autocomplete="off" placeholder="Телефон">
-								</div>
+								<label class="col-form-label text-muted font-weight-bold">Контактное лицо контрагента: </label>
+								<input type="text" class="form-control" name="contact" id="contact" placeholder="ФИО, тел.">
 							</div>
 							<div class="form-group none">
 								<label for="recipient" class="col-form-label text-muted font-weight-bold">Получатель</label>
@@ -71,7 +68,7 @@
 							</div>
 							<div class="form-group input-row-container">
 								<span class="text-muted font-weight-bold">Тип маршрута: <span class="text-red">*</span></span>
-								<input type="text" class="form-control" name="way" id="way" placeholder="" required readonly>
+								<input type="text" class="form-control" name="way" id="way" required readonly>
 							</div>
 							<div class="form-group input-row-container">
 								<span class="text-muted font-weight-bold">Номер заказа из Маркета:</span>
@@ -111,8 +108,8 @@
 								<span class="text-muted font-weight-bold">Способ загрузки: <span class="text-red">*</span></span>
 								<select id="methodLoad" name="methodLoad" class="form-control" required>
 									<option value="" hidden disabled selected>Выберите способ загрузки товара</option>
-									<option>На паллетах</option>
-									<option>Навалом</option>
+									<option value="На паллетах">На паллетах</option>
+									<option value="Навалом">Навалом</option>
 								</select>
 							</div>
 							<div class="form-group input-row-container">
@@ -124,14 +121,12 @@
 									<option>Изотермический</option>
 									<option>Мебельный фургон</option>
 									<option>Рефрижератор</option>
-									<option>Контейнер 20 футов</option>
-									<option>Контейнер 40 футов</option>
-									<!-- <option>Контейнер 20 футов (Dry Freight)</option>
+									<option>Контейнер 20 футов (Dry Freight)</option>
 									<option>Контейнер 40 футов (Dry Freight)</option>
 									<option>Контейнер 20 футов (High Cube)</option>
 									<option>Контейнер 40 футов (High Cube)</option>
 									<option>Контейнер рефрижератор 20 футов (Refer)</option>
-									<option>Контейнер рефрижератор 40 футов (Refer)</option> -->
+									<option>Контейнер рефрижератор 40 футов (Refer)</option>
 								</select>
 							</div>
 							<div id="incoterms-container" class="form-group input-row-container none">
@@ -157,7 +152,7 @@
 							</div>
 							<div class="form-group input-row-container none">
 								<span class="text-muted font-weight-bold">Место поставки: </span>
-								<input type="text" class="form-control" name="deliveryLocation" id="deliveryLocation" placeholder="Место поставки">
+								<input type="text" value="order.deliveryLocation" class="form-control" name="deliveryLocation" id="deliveryLocation" placeholder="Место поставки">
 							</div>
 							<div class="form-group input-row-container">
 								<span class="text-muted font-weight-bold" title="Возможность размещения паллеты на паллету">Штабелирование: <span class="text-red">*</span></span>
@@ -247,139 +242,23 @@
 					</div>
 					<div class="comment-container px-3">
 						<div class="form-group">
-							<label for="comment" class="col-form-label text-muted font-weight-bold">Комментарии:</label>
-							<textarea type="text" class="form-control" name="comment" id="comment" placeholder="Комментарии" value='${order.comment}'>${order.comment}</textarea>
+							<label class="col-form-label text-muted font-weight-bold">Комментарии:</label>
+							<textarea type="text" class="form-control" name="comment" id="comment" placeholder="Комментарии"></textarea>
 						</div>
 					</div>
 
-					<h3>Точки маршрута:</h3>
+					<!-- Контейнер с точками маршрута -->
+					<h4>Точки маршрута:</h4>
 					<div id="pointList" class="point-container"></div>
-					<div class="button-container my-3">
-						<button id="addLoadPoint"  type="submit" class="btn btn-outline-secondary">+ точка загрузки</button>
-						<button id="addUnloadPoint" type="submit" class="btn btn-outline-secondary">+ точка выгрузки</button>
-						<button id="deleteLastPoint" type="button" class="btn btn-outline-danger">Удалить последнюю точку</button>
-						<div class="text-red font-italic py-2">Важно: добавляйте точки в порядке их прохождения машиной (начните с точки загрузки)</div>
-					</div>
-					<div class="disableSlotRedirect-container">
-						<input id="disableSlotRedirect" type="checkbox">
-						<label for="disableSlotRedirect">Отключить переадресацию в слоты</label>
-					</div>
 				</div>
-				<div class="card-footer d-flex justify-content-center">
-					<button id="formSubmitBtn" class="btn btn-primary btn-lg" type="submit">Создать заявку</button>
+				<div class="card-footer">
+					<button id="cancelBtn" class="btn btn-secondary btn-lg" type="button">Отмена</button>
+					<button class="btn btn-primary btn-lg" type="submit">Создать заявку</button>
 				</div>
 			</form>
 		</div>
 		<div id="snackbar"></div>
 	</div>
-
-	<!-- Модальное окно типа маршрута -->
-	<div class="modal fade" id="wayTypeModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="wayTypeModalLabel" aria-hidden="true">
-		<div class="modal-dialog">
-			<div class="modal-content">
-				<div class="modal-header justify-content-center">
-					<h5 class="modal-title" id="wayTypeModalLabel">Выберите тип маршрута</h5>
-				</div>
-				<div class="modal-body">
-					<div id="wayButtons" class="modal-buttons">
-						<button data-value="РБ" class="btn btn-primary btn-lg" type="button" >РБ</button>
-						<button data-value="Импорт" class="btn btn-primary btn-lg" type="button">Импорт</button>
-						<button data-value="Экспорт" class="btn btn-primary btn-lg" type="button">Экспорт</button>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<!-- Модальное окно заказ уточнения по РБ -->
-	<div class="modal fade" id="RBModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="RBModalLabel" aria-hidden="true">
-		<div class="modal-dialog">
-			<div class="modal-content">
-				<div class="modal-header justify-content-center">
-					<h5 class="modal-title " id="RBModalLabel">Выберите необходимый вариант заявки</h5>
-				</div>
-				<div class="modal-body">
-					<div id="RBButtons" class="modal-buttons">
-						<button data-value="counterparty" class="btn btn-primary btn-lg" type="button">Заказ от контрагента</button>
-						<button data-value="domestic" class="btn btn-primary btn-lg" type="button">Внутреннее перемещение</button>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<!-- Модальное окно оклейка, УКЗ, СИ, акциз -->
-	<div class="modal fade" id="fullImportModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="fullImportModalLabel" aria-hidden="true">
-		<div class="modal-dialog">
-			<div class="modal-content">
-				<div class="modal-header justify-content-center">
-					<h5 class="modal-title" id="fullImportModalLabel">Требуется оклейка, УКЗ, СИ, акцизы?</h5>
-				</div>
-				<div class="modal-body">
-					<div id="fullImportButtons" class="modal-buttons">
-						<button data-value="Да" class="btn btn-primary btn-lg" type="button">Да</button>
-						<button data-value="Нет" class="btn btn-primary btn-lg" type="button">Нет</button>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<!-- Модальное окно оклейка, УКЗ, СИ, акциз -->
-	<div class="modal fade" id="EAEUImportModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="EAEUImportModalLabel" aria-hidden="true">
-		<div class="modal-dialog">
-			<div class="modal-content">
-				<div class="modal-header justify-content-center">
-					<h5 class="modal-title" id="EAEUImportModalLabel">Импорт из Таможенного Союза?</h5>
-				</div>
-				<div class="modal-body">
-					<div id="EAEUImportButtons" class="modal-buttons">
-						<button data-value="Да" class="btn btn-primary btn-lg" type="button">Да</button>
-						<button data-value="Нет" class="btn btn-primary btn-lg" type="button">Нет</button>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<!-- Модальное окно указания номера из Маркета -->
-	<div class="modal fade" id="setMarketNumberModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="setMarketNumberModalLabel" aria-hidden="true">
-		<div class="modal-dialog">
-			<div class="modal-content">
-				<div class="modal-header justify-content-center">
-					<h5 class="modal-title" id="setMarketNumberModalLabel">Укажите номер из Маркета</h5>
-				</div>
-				<div class="modal-body">
-					<form id="setMarketNumberForm" action="">
-						<div class="form-group input-row-container">
-							<input type="number" class="form-control form-control-lg" name="setMarketNumber" id="setMarketNumber" placeholder="Номер из Маркета" required>
-							<button class="btn btn-primary btn-lg text-nowrap" type="submit">Загрузить заказ</button>
-						</div>
-					</form>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<!-- Модальное окно промежуточной точки загрузки -->
-	<div class="modal fade" id="middleUnloadPointModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="middleUnloadPointModalLabel" aria-hidden="true">
-		<div class="modal-dialog">
-			<div class="modal-content">
-				<div class="modal-header justify-content-center">
-					<h5 class="modal-title" id="middleUnloadPointModalLabel">Необходима промежуточная точка загрузки?</h5>
-				</div>
-				<div class="modal-body">
-					<p>При наличии выгрузки и загрузки по одному адресу необходимо указывать как точку выгрузки, так и точку загрузки!</p>
-					<div id="middleUnloadPointButtons" class="modal-buttons">
-						<button data-value="Да" class="btn btn-primary btn-lg" data-dismiss="modal" type="button">Да (откроется окно точки ЗАГРУЗКИ)</button>
-						<button data-value="Нет" class="btn btn-primary btn-lg" data-dismiss="modal" type="button">Нет (откроется окно точки ВЫГРУЗКИ)</button>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-
-
 
 	<!-- Модальное окно информации о страховании груза -->
 	<div class="modal fade" id="incotermsInsuranceModal" tabindex="-1" aria-labelledby="incotermsInsuranceModalLabel" aria-hidden="true">
@@ -462,7 +341,7 @@
 	<jsp:include page="footer.jsp" />
 	<script src='${pageContext.request.contextPath}/resources/js/bootstrapSelect/bootstrapSelect.js'></script>
 	<script src='${pageContext.request.contextPath}/resources/js/bootstrapSelect/defaults-ru_RU.js'></script>
-	<script charset="utf-8" src="${pageContext.request.contextPath}/resources/js/procurementFormImport.js" type="module"></script>
+	<script charset="utf-8" src="${pageContext.request.contextPath}/resources/js/procurementEditImport.js" type="module"></script>
 	<script src='${pageContext.request.contextPath}/resources/mainPage/js/nav-fixed-top.js'></script>
 </body>
 </html>

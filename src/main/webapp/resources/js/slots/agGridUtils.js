@@ -114,7 +114,9 @@ function mapCallback(order) {
 }
 
 function getLoadAddress(order) {
-	if (!order || !order.addresses) return ''
+	if (!order) return ''
+	if (order.addressLoading) return order.addressLoading
+	if (!order.addresses) return ''
 	if (!order.addresses.length) return ''
 
 	const loadPoint = order.addresses

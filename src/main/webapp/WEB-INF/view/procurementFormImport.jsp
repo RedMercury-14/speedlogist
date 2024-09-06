@@ -124,14 +124,12 @@
 									<option>Изотермический</option>
 									<option>Мебельный фургон</option>
 									<option>Рефрижератор</option>
-									<option>Контейнер 20 футов</option>
-									<option>Контейнер 40 футов</option>
-									<!-- <option>Контейнер 20 футов (Dry Freight)</option>
+									<option>Контейнер 20 футов (Dry Freight)</option>
 									<option>Контейнер 40 футов (Dry Freight)</option>
 									<option>Контейнер 20 футов (High Cube)</option>
 									<option>Контейнер 40 футов (High Cube)</option>
 									<option>Контейнер рефрижератор 20 футов (Refer)</option>
-									<option>Контейнер рефрижератор 40 футов (Refer)</option> -->
+									<option>Контейнер рефрижератор 40 футов (Refer)</option>
 								</select>
 							</div>
 							<div id="incoterms-container" class="form-group input-row-container none">

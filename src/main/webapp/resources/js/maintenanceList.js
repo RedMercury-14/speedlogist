@@ -11,6 +11,10 @@ const LOCAL_STORAGE_KEY = `AG_Grid_settings_to_${PAGE_NAME}`
 const DATES_KEY = `searchDates_to_${PAGE_NAME}`
 const ROW_INDEX_KEY = `AG_Grid_rowIndex_to_${PAGE_NAME}`
 
+const role = document.querySelector('#role').value
+
+
+
 const getAhoRouteBaseUrl = '../../api/procurement/getMaintenanceList/'
 
 const addAhoRouteUrl = `../../api/procurement/maintenance/add`
@@ -30,51 +34,25 @@ const debouncedSaveColumnState = debounce(saveColumnState, 300)
 const debouncedSaveFilterState = debounce(saveFilterState, 300)
 
 let table
-
+let ahoRouteData
 let error
 
 
 
 const columnDefs = [
 	{ headerName: 'ID', field: 'idRoute', minWidth: 60, width: 80, pinned: 'left',},
-	// { headerName: 'Тип', field: 'simpleWay', minWidth: 50, width: 50, },
 	{ headerName: 'Название маршрута', field: 'routeDirection', minWidth: 240, width: 640, wrapText: true, autoHeight: true, },
-	// { headerName: 'Контрагент', field: 'counterparty', wrapText: true, autoHeight: true, },
 	{ headerName: 'Дата загрузки', field: 'dateLoadPreviously', comparator: dateComparator, },
 	{ headerName: 'Время загрузки', field: 'timeLoadPreviously', },
 	{ headerName: 'Дата доставки', field: 'dateUnloadPreviouslyStock', comparator: dateComparator, },
 	{ headerName: 'Время доставки', field: 'timeUnloadPreviouslyStock', },
-	// { headerName: 'Дата и время выгрузки', field: 'unloadToView', wrapText: true, autoHeight: true, },
-	// { headerName: 'Выставляемая стоимость', field: 'finishPriceToView', },
-	// { headerName: 'Экономия', field: 'economy', },
 	{ headerName: 'Перевозчик', field: 'carrier', wrapText: true, autoHeight: true, },
-	// {
-	// 	headerName: 'Номер машины / прицепа', field: 'truckInfo',
-	// 	wrapText: true, autoHeight: true,
-	// 	cellRenderer: truckInfoRenderer,
-	// },
-	// { headerName: 'Данные по водителю', field: 'driverInfo',  wrapText: true, autoHeight: true,},
-	// { headerName: 'Заказчик', field: 'customer', wrapText: true, autoHeight: true, minWidth: 160, width: 160, },
-	{ headerName: 'Паллеты', field: 'loadPallTotal', },
-	{ headerName: 'Масса груза', field: 'cargoWeightTotal', },
+	{ headerName: 'Паллеты', field: 'totalLoadPall', },
+	{ headerName: 'Масса груза', field: 'totalCargoWeight', },
 	{ headerName: 'Тип транспорта', field: 'typeTrailer', },
 	{ headerName: 'Информация о грузе', field: 'cargoInfo', },
 	{ headerName: 'Информация о транспорте', field: 'truckInfo', },
 	{ headerName: 'Маршрут', field: 'userComments', wrapText: true, autoHeight: true, minWidth: 240, width: 640, },
-	// { headerName: 'Начальная стоимость перевозки', field: 'startRouteCostInfo', wrapText: true, autoHeight: true, },
-	// {
-	// 	headerName: 'Статус', field: 'statusRoute',
-	// 	cellClass: 'px-2 text-center font-weight-bold',
-	// 	minWidth: 160, width: 160,
-	// 	wrapText: true, autoHeight: true,
-	// 	valueGetter: params => getRouteStatus(params.data.statusRoute),
-	// },
-	// {
-	// 	headerName: 'Предложения', field: 'offerCount',
-	// 	minWidth: 160, width: 160,
-	// 	wrapText: true, autoHeight: true,
-	// 	cellRenderer: offerCountRenderer,
-	// },
 ]
 const gridOptions = {
 	columnDefs: columnDefs,
@@ -152,11 +130,13 @@ window.addEventListener("load", async () => {
 
 	const dateStart = '2024-07-10'
 	const dateEnd = '2024-09-10'
-	const routes = await getData(`${getAhoRouteBaseUrl}${dateStart}&${dateEnd}`)
+	const res = await getData(`${getAhoRouteBaseUrl}${dateStart}&${dateEnd}`)
+	ahoRouteData = res.body
 
+	console.log("🚀 ~ window.addEventListener ~ ahoRouteData:", ahoRouteData)
 	// отрисовка таблицы
 	const gridDiv = document.querySelector('#myGrid')
-	await renderTable(gridDiv, gridOptions, routes)
+	await renderTable(gridDiv, gridOptions, ahoRouteData)
 
 	// получение настроек таблицы из localstorage
 	restoreColumnState()
@@ -194,10 +174,8 @@ async function addCarriersToSelect() {
 // отображение модального окна назначения перевозчика
 function showAddCarrierModal() {
 	$('#addCarrierModal').modal('show')
-	$('.modal-backdrop').addClass("whiteOverlay")
 }
 function hideAddCarrierModal() {
-	$('.modal-backdrop').removeClass("whiteOverlay")
 	$('#addCarrierModal').modal('hide')
 }
 // поиск в списке селекта
@@ -252,10 +230,10 @@ function ahoRouteFormSubmitHandler(e) {
 
 	const formId = e.target.id
 	const url = formId === 'addAhoRouteForm' ? addAhoRouteUrl : editAhoRouteUrl
+	const modalId = `#${formId.slice(0, -4)}Modal`
 
 	const formData = new FormData(e.target)
 	const data = ahoRouteFormDataFormatter(formData)
-	console.log("🚀 ~ editCarrierSubmitHandler ~ data:", data)
 
 	if (error) {
 		snackbar.show('Ошибка заполнения формы!')
@@ -268,8 +246,13 @@ function ahoRouteFormSubmitHandler(e) {
 		data: data,
 		successCallback: (res) => {
 			console.log(res)
-			// snackbar.show(res.message)
-			// $(`#addShopModal`).modal('hide')
+			res.message && snackbar.show(res.message)
+
+			if (res.status === '200') {
+				$(modalId).modal('hide')
+				updateTable()
+				return
+			}
 		}
 	})
 }
@@ -306,15 +289,16 @@ async function updateTable() {
 	const dateStart = '2024-07-10'
 	const dateEnd = '2024-09-10'
 
-	const routes = await getData(`${getAhoRouteBaseUrl}${dateStart}&${dateEnd}`)
+	const res = await getData(`${getAhoRouteBaseUrl}${dateStart}&${dateEnd}`)
+	ahoRouteData = res.body
 
-	if (!routes || !routes.length) {
+	if (!ahoRouteData || !ahoRouteData.length) {
 		gridOptions.api.setRowData([])
 		gridOptions.api.showNoRowsOverlay()
 		return
 	}
 
-	const mappingData = await getMappingData(routes)
+	const mappingData = await getMappingData(ahoRouteData)
 
 	gridOptions.api.setRowData(mappingData)
 	gridOptions.api.hideOverlay()

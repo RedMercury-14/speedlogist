@@ -529,6 +529,7 @@ function offerCountRenderer(params) {
 async function updateOfferCount(idRoute) {
 	const offerCount = await getData(getRouteMessageBaseUrl + idRoute)
 	const rowNode = gridOptions.api.getRowNode(idRoute)
+	if(!rowNode) return
 	const item = rowNode.data
 	const newItem = {
 		...item,

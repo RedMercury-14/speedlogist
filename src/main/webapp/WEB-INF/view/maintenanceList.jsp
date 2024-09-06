@@ -49,9 +49,9 @@
 
 	<!-- Модальное окно создания заявки АХО -->
 	<div class="modal fade" id="addAhoRouteModal" tabindex="-1" aria-labelledby="addAhoRouteModalLabel" aria-hidden="true">
-		<div class="modal-dialog">
+		<div class="modal-dialog modal-lg">
 			<div class="modal-content">
-				<div class="modal-header align-items-center bg-primary text-white">
+				<div class="modal-header align-items-center text-white">
 					<h5 class="modal-title" id="addAhoRouteModalLabel">Создание заявки на перевозку АХО</h5>
 					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 						<span aria-hidden="true">&times;</span>
@@ -72,6 +72,35 @@
 								<span class="text-muted font-weight-bold">Время загрузки</span>
 								<input list="times" type="time" id="timeLoadPreviously" name="timeLoadPreviously" class="form-control" required>
 							</div>
+							<div class="input-column-container">
+								<span class="text-muted font-weight-bold">Кол-во паллет, шт</span>
+								<input type="number" id="loadPallTotal" name="loadPallTotal" class="form-control" required>
+							</div>
+							<div class="input-column-container">
+								<span class="text-muted font-weight-bold text-nowrap">Масса груза, кг</span>
+								<input type="number" id="cargoWeightTotal" name="cargoWeightTotal" class="form-control" required>
+							</div>
+						</div>
+						<div class="input-column-container form-group">
+							<span class="text-muted font-weight-bold text-nowrap">Информация о грузе</span>
+							<textarea type="text" class="form-control" rows="2" name="cargoInfo" id="cargoInfo" required
+							placeholder="Информация о грузе"></textarea>
+						</div>
+						<div class="input-row-container align-items-center form-group">
+							<span class="text-muted font-weight-bold text-nowrap">Тип транспорта:</span>
+							<select id="typeTrailer" name="typeTrailer" class="form-control" required>
+								<option value="" hidden disabled selected>Выберите тип транспорта</option>
+								<option>Открытый</option>
+								<option>Тент</option>
+								<option>Изотермический</option>
+								<option>Мебельный фургон</option>
+								<option>Рефрижератор</option>
+							</select>
+						</div>
+						<div class="form-group input-column-container">
+							<span class="text-muted font-weight-bold">Требования к транспорту:</span>
+							<textarea type="text" class="form-control" rows="4" name="truckInfo" id="truckInfo" required
+							placeholder="всё касательно машины (длинна, высота, гидроборт) и способ загрузки (задняя боковая верхняя)"></textarea>
 						</div>
 						<div class="input-row-container form-group">
 							<div class="input-column-container">
@@ -83,63 +112,10 @@
 								<input list="times" type="time" id="timeUnloadPreviouslyStock" name="timeUnloadPreviouslyStock" class="form-control" required>
 							</div>
 						</div>
-						<div class="input-row-container align-items-center form-group">
-							<span class="text-muted font-weight-bold">Паллеты</span>
-							<input type="number" id="loadPallTotal" name="loadPallTotal" class="form-control" required>
-						</div>
-						<div class="input-row-container align-items-center form-group">
-							<span class="text-muted font-weight-bold text-nowrap">Масса груза, кг</span>
-							<input type="number" id="cargoWeightTotal" name="cargoWeightTotal" class="form-control" required>
-						</div>
-						<div class="input-row-container align-items-center form-group">
-							<span class="text-muted font-weight-bold text-nowrap">Информация о грузе</span>
-							<input type="text" id="cargoInfo" name="cargoInfo" class="form-control" required>
-						</div>
-						<!-- <div class="input-column-container form-group">
-							<span class="text-muted font-weight-bold">Тип транспорта:</span>
-							<select id="truckInfo_type" name="truckInfo_type" class="form-control" required>
-								<option value="" hidden disabled selected>Выберите тип транспорта</option>
-								<option>Задняя</option>
-								<option>Боковая</option>
-								<option>Задняя+боковая</option>
-								<option>Полная растентовка</option>
-								<option>Верхняя</option>
-							</select>
-						</div>
-						<div class="input-column-container form-group">
-							<span class="text-muted font-weight-bold">Тип размещения груза:</span>
-							<select id="methodLoad" name="methodLoad" class="form-control" required>
-								<option value="" hidden disabled selected>Выберите тип размещения груза</option>
-								<option>На паллетах</option>
-								<option>Навалом</option>
-							</select>
-						</div> -->
-						<div class="input-column-container form-group">
-							<span class="text-muted font-weight-bold">Тип транспорта:</span>
-							<select id="typeTrailer" name="typeTrailer" class="form-control" required>
-								<option value="" hidden disabled selected>Выберите тип транспорта</option>
-								<option>Открытый</option>
-								<option>Тент</option>
-								<option>Изотермический</option>
-								<option>Мебельный фургон</option>
-								<option>Рефрижератор</option>
-							</select>
-						</div>
-						
-						<div class="form-group input-column-container">
-							<span class="text-muted font-weight-bold">Требования к транспорту:</span>
-							<textarea
-								type="text"
-								class="form-control"
-								rows="4"
-								name="truckInfo"
-								id="truckInfo"
-								placeholder="всё касательно машины (длинна, высота, гидроборт) и способ загрузки (задняя боковая верхняя)"
-								required></textarea>
-						</div>
 						<div class="form-group input-column-container">
 							<span class="text-muted font-weight-bold">Маршрут:</span>
-							<textarea type="text" class="form-control" rows="6" placeholder="маршрут и время работы точек" name="userComments" id="userComments" required></textarea>
+							<textarea type="text" class="form-control" rows="6" name="userComments" id="userComments" required
+							placeholder="маршрут и время работы точек"></textarea>
 						</div>
 					</div>
 					<div class="modal-footer">
@@ -155,7 +131,7 @@
 	<div class="modal fade" id="editAhoRouteModal" tabindex="-1" aria-labelledby="editAhoRouteModalLabel" aria-hidden="true">
 		<div class="modal-dialog">
 			<div class="modal-content">
-				<div class="modal-header align-items-center bg-primary text-white">
+				<div class="modal-header align-items-center text-white">
 					<h5 class="modal-title" id="editAhoRouteModalLabel">Редактирование заявки на перевозку АХО</h5>
 					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 						<span aria-hidden="true">&times;</span>
@@ -186,7 +162,7 @@
 	<div class="modal fade" id="addCarrierModal" tabindex="-1" aria-labelledby="addCarrierModalLabel" aria-hidden="true">
 		<div class="modal-dialog">
 			<div class="modal-content">
-				<div class="modal-header align-items-center bg-primary text-white">
+				<div class="modal-header align-items-center text-white">
 					<h5 class="modal-title" id="addCarrierModalLabel">Назначить перевозчика на маршрут</h5>
 					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 						<span aria-hidden="true">&times;</span>

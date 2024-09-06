@@ -176,7 +176,10 @@ public class ReaderSchedulePlan {
 		 Date dateNow = Date.valueOf(LocalDate.now());
 		 String infoRow = "Строк в заказе: " + lines.size();
 		 for (OrderLine line : lines) {
-             products.add(productService.getProductByCode(line.getGoodsId().intValue()));
+			 Product product = productService.getProductByCode(line.getGoodsId().intValue());
+			 if(product != null) {
+				 products.add(product);				 
+			 }
          }
 		 
 		 //определяем дату старта расчёта и лог плечо для всего заказа
@@ -189,7 +192,11 @@ public class ReaderSchedulePlan {
 				 
 			 }
 		 }
+		 
+		 products.forEach(p-> System.out.println(p));
+		 
 		 DateRange dateRange = getDateRange(schedule, products.get(0)); // тут раелизуются пункты 2 и 3
+		 
 		 System.out.println("dateRange = " + dateRange);
 		 
 		 if(dateRange == null) {

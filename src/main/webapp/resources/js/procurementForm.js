@@ -648,7 +648,10 @@ function RBButtonsContainerOnClickHandler(e, addLoadPointForm, addUnloadPointFor
 		}
 
 		// установка минимальной даты загрузки/выгрузки
-		setMinValidDate({ isInternalMovement: isInternalMovement ? 'true' : 'false' })
+		setMinValidDate({
+			isInternalMovement: isInternalMovement ? 'true' : 'false',
+			way: 'РБ'
+		})
 	}
 }
 

@@ -97,7 +97,10 @@ window.onload = async () => {
 	})
 	
 	// установка минимальной даты загрузки/выгрузки
-	setMinValidDate({ isInternalMovement })
+	setMinValidDate({
+		isInternalMovement,
+		way: orderWay,
+	})
 	
 	// установка минимальных значений даты и времени выгрузки при изменении даты
 	const loadDateInputs = document.querySelectorAll('#loadDate')

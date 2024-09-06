@@ -75,7 +75,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.dto.OrderDTO;
 import com.google.gson.Gson;
-import com.google.j2objc.annotations.AutoreleasePool;
 import com.graphhopper.GHRequest;
 import com.graphhopper.GHResponse;
 import com.graphhopper.GraphHopper;
@@ -269,67 +268,83 @@ public class MainRestController {
 	public static final Comparator<Address> comparatorAddressId = (Address e1, Address e2) -> (e1.getIdAddress() - e2.getIdAddress());
 	public static final Comparator<Address> comparatorAddressIdForView = (Address e1, Address e2) -> (e2.getType().charAt(0) - e1.getType().charAt(0));
 	
-	@GetMapping("/test")
-	public Map<String, Object> getTest(HttpServletRequest request) {
-		Map<String, Object> response = new HashMap<String, Object>();	
-		
-		User user = getThisUser();
-		Route route = new Route();
-		route.setDateLoadPreviously(Date.valueOf("2024-09-10"));
-		route.setTimeLoadPreviously(LocalTime.now());
-		route.setTotalLoadPall("33");
-		route.setTotalCargoWeight("1200");
-		route.setComments("maintenance");
-		route.setCustomer(user.getSurname() + " " + user.getName());
-		route.setTime(LocalTime.of(0, 5));
-		route.setTypeTrailer("Тент");
-		route.setStatusStock("0");
-		route.setUserComments("Таборы - Минск - Таборы");
-		route.setWay("АХО");
-		route.setTruckInfo("Маленькая лошадка");
-		route.setCargoInfo("Кокаин");
-		String routeDirectionMiddle = "Суперважный маршрут";		
-		String routeDirectionBeginning = "<АХО> ";
-		route.setRouteDirection(routeDirectionBeginning + routeDirectionMiddle);
-		
-		Integer idRoute = routeService.saveRouteAndReturnId(route);
-		
-		route.setRouteDirection(route.getRouteDirection() + " N"+idRoute.toString());
-		route.setStatusRoute("200");
-		
-		routeService.saveOrUpdateRoute(route);
-		
-		response.put("status", "200");
-		response.put("body", route);
-		return response;		
+	@GetMapping("/{type}/getOrderById/{idOrder}")
+	public Map<String, Object> getOrderById(
+	        HttpServletRequest request,
+	        @PathVariable String type,
+	        @PathVariable String idOrder) {
+	    
+	    Map<String, Object> response = new HashMap<>();
+	    Order order = orderService.getOrderById(Integer.parseInt(idOrder));
+	    switch (type) {
+	        case "procurement":
+	            // Логика для procurement
+	            break;
+	        case "manager":
+	            // Логика для logistics
+	            break;
+	        default:
+	            throw new IllegalArgumentException("Неизвестная команда: " + type);
+	    }
+	    response.put("status", "200");
+	    response.put("body", order);	    	    
+	    return response;
 	}
 	
-	@GetMapping("/procurement/getMaintenanceList/{dateStart}&{dateEnd}")
-	public Map<String, Object> getMaintenanceListManager(HttpServletRequest request, @PathVariable String dateStart, @PathVariable String dateEnd) {
-		Map<String, Object> response = new HashMap<String, Object>();	
-		List<Route> routes = routeService.getMaintenanceListAsDate(Date.valueOf(dateStart), Date.valueOf(dateEnd));
-		response.put("status", "200");
-		response.put("body", routes);
-		return response;		
+	/**
+	 * назначет водителя на маршрут принудительно
+	 * @param request
+	 * @param idRoute
+	 * @param idCarrier
+	 * @return
+	 */
+	@GetMapping("/logistics/maintenance/setCarrier/{idRoute}&{idCarrier}")
+	public Map<String, Object> setCarrier(
+	        HttpServletRequest request,
+	        @PathVariable String idRoute,
+	        @PathVariable String idCarrier) {
+	    
+	    Map<String, Object> response = new HashMap<>();
+	    User user = new User();
+	    user.setIdUser(Integer.parseInt(idCarrier));
+	    Route route = routeService.getRouteById(Integer.parseInt(idRoute));
+	    route.setUser(user);
+	    routeService.saveOrUpdateRoute(route);
+	    response.put("status", "200");
+	    response.put("body", route);	    	    
+	    return response;
+	}
+
+	@GetMapping("/{type}/getMaintenanceList/{dateStart}&{dateEnd}")
+	public Map<String, Object> getMaintenanceList(
+	        HttpServletRequest request,
+	        @PathVariable String type,
+	        @PathVariable String dateStart,
+	        @PathVariable String dateEnd) {
+	    
+	    Map<String, Object> response = new HashMap<>();
+	    List<Route> routes = routeService.getMaintenanceListAsDate(Date.valueOf(dateStart), Date.valueOf(dateEnd));
+	    response.put("status", "200");
+	    response.put("body", routes);
+	    
+	    // В зависимости от типа можно добавить дополнительную логику
+	    switch (type) {
+	        case "procurement":
+	            // Логика для procurement
+	            break;
+	        case "logistics":
+	            // Логика для logistics
+	            break;
+	        case "carrier":
+	            // Логика для carrier
+	            break;
+	        default:
+	            throw new IllegalArgumentException("Неизвестная команда: " + type);
+	    }	    
+	    return response;
 	}
 	
-	@GetMapping("/logistics/getMaintenanceList/{dateStart}&{dateEnd}")
-	public Map<String, Object> getMaintenanceListLogistics(HttpServletRequest request, @PathVariable String dateStart, @PathVariable String dateEnd) {
-		Map<String, Object> response = new HashMap<String, Object>();	
-		List<Route> routes = routeService.getMaintenanceListAsDate(Date.valueOf(dateStart), Date.valueOf(dateEnd));
-		response.put("status", "200");
-		response.put("body", routes);
-		return response;		
-	}
-	@GetMapping("/carrier/getMaintenanceList/{dateStart}&{dateEnd}")
-	public Map<String, Object> getMaintenanceListCarrier(HttpServletRequest request, @PathVariable String dateStart, @PathVariable String dateEnd) {
-		Map<String, Object> response = new HashMap<String, Object>();	
-		List<Route> routes = routeService.getMaintenanceListAsDate(Date.valueOf(dateStart), Date.valueOf(dateEnd));
-		response.put("status", "200");
-		response.put("body", routes);
-		return response;		
-	}
-	
+		
 	/**
 	 * Метод создаёт заявку/маршрут для АХО
 	 * @param request
@@ -383,22 +398,7 @@ public class MainRestController {
 		response.put("route", route);
 		return response;		
 	}
-	
-//	@GetMapping("/test/{num}&{prod}")
-//	public Map<String, Object> getTest(HttpServletRequest request, @PathVariable String num, @PathVariable String prod) {
-//		Map<String, Object> response = new HashMap<String, Object>();	
-//		Product product = productService.getProductByCode(Integer.parseInt(prod));
-//		List<OrderProduct> orderProductsHasNow = product.getOrderProductsListHasDateTarget(Date.valueOf(LocalDate.now())); // это реализация п.2
-//		orderProductsHasNow.forEach(o-> System.out.println(o));
-////						
-//		Schedule schedule = scheduleService.getScheduleByNumContract(Long.parseLong(num));
-//		System.out.println("----> "+readerSchedulePlan.getDateRange(schedule, product) + " <----");
-//		response.put("status", "200");
-//		response.put("body", orderProductsHasNow);
-//		response.put("DateRange", readerSchedulePlan.getDateRange(schedule, product));
-//		return response;		
-//	}
-	
+		
 	/**
 	 * Ручная отправка сообщения с графиком поставок
 	 * @param request
@@ -4277,7 +4277,7 @@ public class MainRestController {
 		String points = jsonMainObject.get("points").toString();
 		String way = (String) jsonMainObject.get("way");
 		Order order = orderService.getOrderById(Integer.parseInt(jsonMainObject.get("idOrder").toString()));
-		if (order.getStatus() == 20 || order.getStatus() == 17 || order.getStatus() == 15) { // общее редактирование, пока маршрут не создан
+		if (order.getStatus() == 20 || order.getStatus() == 17 || order.getStatus() == 15 || order.getStatus() == 6) { // общее редактирование, пока маршрут не создан
 			order.setCounterparty((String) jsonMainObject.get("contertparty"));
 			order.setContact((String) jsonMainObject.get("contact"));
 			order.setCargo((String) jsonMainObject.get("cargo"));
@@ -4362,6 +4362,7 @@ public class MainRestController {
 				Address address = addressesOld.get(i);
 				// начинается обработка сравнения: если вдрес изменился - то создаётся
 				// корректировочный адрес
+				System.out.println(jsonpObject);
 				if (!jsonpObject.get("bodyAdress").toString().equals(address.getBodyAddress())) {
 					Integer oldId = jsonpObject.get("idAddress") == null ? null
 							: Integer.parseInt(jsonpObject.get("idAddress").toString());
@@ -4371,6 +4372,7 @@ public class MainRestController {
 						System.err.println("Отсутствует idAddress в теле запроса");
 						return response;
 					}
+					
 					if (!jsonpObject.get("oldIdaddress").toString().equals("0")) { // если опять корректируется
 																					// корректный адрес - он просто
 																					// редактируется
@@ -4408,7 +4410,7 @@ public class MainRestController {
 
 						response.put("status", "200");
 						response.put("message", "Корректировка обновлена");
-//						System.out.println("Корректировка обновлена");
+						System.out.println("Корректировка обновлена");
 					} else {
 						Address oldAddress = addressesOld.get(i);
 						oldAddress.setIsCorrect(false);
@@ -4443,7 +4445,7 @@ public class MainRestController {
 						addressService.saveAddress(correctAddress);
 						response.put("status", "200");
 						response.put("message", "Внесена корректировка");
-//						System.out.println("Внесена корректировка");
+						System.out.println("Внесена корректировка");
 					}
 				}
 			}

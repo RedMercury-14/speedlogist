@@ -251,6 +251,12 @@ export const dateHelper = {
 		}
 
 		// правила для Импорта и Экспорта
+		// если пятница, после 12:00, то на понедельник
+		if (day === 5 && now <= noonToday) {
+			const monday = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 3)
+			return this.getDateForInput(monday)
+		}
+
 		// если пятница, после 12:00, то на вторник
 		if (day === 5 &&  now > noonToday) {
 			const tuesday = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 4)
@@ -795,5 +801,13 @@ export function getDeliveryScheduleMatrix(schedule, note) {
 	function findDigitAfterZ(str) {
 		const match = str.match(/з(\d)/)
 		return match ? match[1] : ''
+	}
+}
+
+// запрет ввода
+export function inputBan(e, reg) {
+	const input = e.target
+	if (input.value.match(reg)) {
+		input.value = input.value.replaceAll(reg, '')
 	}
 }

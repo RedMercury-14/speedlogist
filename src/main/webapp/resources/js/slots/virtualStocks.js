@@ -11,8 +11,8 @@ export const stocks = [
 		internaMovementsTimes: ['12:00', '20:00'],
 		internalMovementsRamps: ['170001'],
 		maxPall: {
-			externalMovement: 1300,
-			internalMovement: 500,
+			externalMovement: 1300, // редактировать ПОСТОЯННУЮ паллетовместимость ЗДЕСЬ
+			internalMovement: 500, // паллетовместимость внутренних перевозок
 		},
 		weekends: [],
 		ramps: [
@@ -36,8 +36,8 @@ export const stocks = [
 		internaMovementsTimes: [],
 		internalMovementsRamps: [],
 		maxPall: {
-			externalMovement: 600,
-			internalMovement: 500,
+			externalMovement: 600, // редактировать ПОСТОЯННУЮ паллетовместимость ЗДЕСЬ
+			internalMovement: 500, // паллетовместимость внутренних перевозок
 		},
 		weekends: [],
 		ramps: [
@@ -59,8 +59,8 @@ export const stocks = [
 		internaMovementsTimes: [],
 		internalMovementsRamps: [],
 		maxPall: {
-			externalMovement: 100,
-			internalMovement: 500,
+			externalMovement: 100, // редактировать ПОСТОЯННУЮ паллетовместимость ЗДЕСЬ
+			internalMovement: 500, // паллетовместимость внутренних перевозок
 		},
 		weekends: [],
 		ramps: [
@@ -79,8 +79,8 @@ export const stocks = [
 		internaMovementsTimes: [],
 		internalMovementsRamps: [],
 		maxPall: {
-			externalMovement: 180,
-			internalMovement: 500,
+			externalMovement: 180, // редактировать ПОСТОЯННУЮ паллетовместимость ЗДЕСЬ
+			internalMovement: 500, // паллетовместимость внутренних перевозок
 		},
 		weekends: [],
 		ramps: [

@@ -1,4 +1,6 @@
-import { dateHelper } from './utils.js';
+import { autocomplete } from './autocomplete/autocomplete.js';
+import { countries } from './global.js';
+import { dateHelper, inputBan } from './utils.js';
 
 const IMPORT_CUSTOMS_ADDRESS = ' г. Минск, ул. Промышленная, 4'
 const IMPORT_CUSTOMS_FULL_ADDRESS = 'BY Беларусь; г. Минск, ул. Промышленная, 4'
@@ -131,9 +133,9 @@ export function controlUKZSelectOnChangeHandler(e, DOMobj, isFullAddress) {
 export function changeCargoInfoInputsRequired(DOMobj) {
 	const methodLoadInput = document.querySelector('#methodLoad')
 	const typeTruckInput = document.querySelector('#typeTruck')
-	const pallInput = DOMobj.querySelector('#pall')
-	const weightInput = DOMobj.querySelector('#weight')
-	const volumeInput = DOMobj.querySelector('#volume')
+	const pallInput = DOMobj.querySelector('#pall') || DOMobj.querySelector('input[name="pall"]')
+	const weightInput = DOMobj.querySelector('#weight') || DOMobj.querySelector('input[name="weight"]')
+	const volumeInput = DOMobj.querySelector('#volume') || DOMobj.querySelector('input[name="volume"]')
 
 	if (typeTruckInput.value.includes('Контейнер')) {
 		pallInput.required = false
@@ -154,12 +156,12 @@ export function changeCargoInfoInputsRequired(DOMobj) {
 
 // изменение значения аттрибута "required" для поля с температурой
 export function changeTemperatureInputRequired(typeTruck) {
-	const temperatureContainer = document.querySelector('.form-group:has(>#temperature)')
-	const temperatureTitle = temperatureContainer && temperatureContainer.querySelector('span')
 	const temperatureInput = document.querySelector('#temperature')
+	const temperatureTitle = temperatureInput && temperatureInput.parentElement.querySelector('span')
 
 	const condition = typeTruck === 'Изотермический'
 					|| typeTruck === 'Рефрижератор'
+					|| typeTruck.includes('рефрижератор')
 
 	if (temperatureInput) temperatureInput.required = condition
 	if (temperatureTitle) temperatureTitle.innerHTML = condition
@@ -169,16 +171,14 @@ export function changeTemperatureInputRequired(typeTruck) {
 
 // изменение значения аттрибута "required" для поля с кодами ТН ВЭД
 export function changeTnvdInputRequired(e) {
-	const tnvdContainers = document.querySelectorAll('.form-group:has(>#tnvd)')
 	const tnvdInputs = document.querySelectorAll('#tnvd')
-	
+
 	for (let i = 0; i < tnvdInputs.length; i++) {
-		const tnvdContainer = tnvdContainers && tnvdContainers[i]
-		const tnvdTitle = tnvdContainer && tnvdContainer.querySelector('label')
 		const tnvdInput = tnvdInputs[i]
+		const tnvdTitle = tnvdInput && tnvdInput.parentElement.querySelector('label')
 		const condition = e.target.value === 'РБ'
-	
-		if (condition) {
+
+		if (tnvdInput && condition) {
 			tnvdInput.removeAttribute('required')
 		} else {
 			tnvdInput.setAttribute('required', 'true')
@@ -198,9 +198,11 @@ export function showIncotermsInput(typeTruck) {
 	if (typeTruck.includes("Контейнер")) {
 		incotermsContainer.classList.remove('none')
 		incotermsInput.removeAttribute("disabled")
+		// showFormField('deliveryLocation', '', true)
 	} else {
 		incotermsContainer.classList.add('none')
 		incotermsInput.setAttribute("disabled", true)
+		// hideFormField('deliveryLocation')
 	}
 }
 
@@ -216,11 +218,10 @@ export function showIncotermsInsuranseInfo(e) {
 
 // удаление значения аттрибута "required" для поля с кодами ТН ВЭД
 export function removeTnvdInputRequired() {
-	const tnvdContainer = document.querySelector('.form-group:has(>#tnvd)')
-	const tnvdTitle = tnvdContainer && tnvdContainer.querySelector('label')
 	const tnvdInput = document.querySelector('#tnvd')
+	const tnvdTitle = tnvdInput && tnvdInput.parentElement.querySelector('label')
 
-	tnvdInput.removeAttribute('required')
+	tnvdInput && tnvdInput.removeAttribute('required')
 	tnvdTitle && (tnvdTitle.innerHTML = 'Коды ТН ВЭД:')
 }
 
@@ -285,19 +286,19 @@ export function hideAddUnloadPointButton() {
 
 // замена поля адреса на выпадающий список
 export function transformAddressInputToSelect(form, addresses) {
-	const addressInput = form.querySelector('#address')
+	const addressInput = form.querySelector('input[name="address"]')
+	const value = addressInput.value
 	const addressContainer = addressInput.parentElement
-	const addressSelect = createAddressSelect(addresses)
+	const addressSelect = createAddressSelect(addresses, value)
 
 	addressInput.remove()
 	addressContainer.append(addressSelect)
 }
 
-function createAddressSelect(addresses) {
+function createAddressSelect(addresses, value) {
 	const select = document.createElement('select')
 	select.name = 'address'
 	select.id = 'address'
-	// select.classList.add('form-control')
 	select.classList.add('selectpicker')
 	select.setAttribute('required', 'true')
 	select.setAttribute('data-live-search', 'true')
@@ -319,6 +320,7 @@ function createAddressSelect(addresses) {
 		select.append(option)
 	})
 
+	select.value = value
 	return select
 }
 
@@ -339,7 +341,7 @@ export function hideMarketInfoTextarea() {
 }
 
 export function setCounterparty(counterparty) {
-	const counterpartyInput = document.querySelector('#contertparty')
+	const counterpartyInput = document.querySelector('#counterparty')
 	counterpartyInput.value = counterparty
 	// counterpartyInput.setAttribute('readonly', 'true')
 }
@@ -362,7 +364,7 @@ export function setOrderDataToOrderForm(form, orderData) {
 	marketNumberInput.value = Number(orderData.marketNumber)
 	marketNumberInput.setAttribute('readonly', 'true')
 	marketInfoSpan.innerText = orderData.marketInfo
-	form.contertparty.value = orderData.counterparty
+	form.counterparty.value = orderData.counterparty
 	form.loadNumber.value = orderData.marketNumber
 	form.cargo.value = orderData.cargo
 }
@@ -396,16 +398,396 @@ export function showUnloadTime(addUnloadPointForm) {
 
 export function getStockAddress(stockNumber) {
 	switch (stockNumber) {
-		case '1700': return 'Склад 1700, Адрес: 223065, Беларусь, Луговослободской с/с,Минский р-н,Минская обл., РАД М4, 18км. 2а, склад W05'
-		case '1200': return 'Склад 1200, 223039, Республика Беларусь, Минская область, Минский район, Хатежинский с/с, 1'
-		case '1230': return 'Склад 1230, 223039, Республика Беларусь, Минская область, Минский район, Хатежинский с/с, 1'
-		case '1214': return 'Склад 1214, 223039, Республика Беларусь, Минская область, Минский район, Хатежинский с/с, 1'
-		case '1250': return 'Склад 1250, Адрес: 223050, Республика Беларусь, Минская область, Минский р-н, 9-ый км Московского шоссе'
-		case '1100': return 'Склад 1100, 223039, Республика Беларусь, Минская область, Минский район, Хатежинский с/с, 1'
+		case '1700': return 'Склад 1700, 223065, Минская обл., Минский р-н, Луговослободской с/с, РАД М4, 18км. 2а, склад W05'
+		case '1200': return 'Склад 1200, 223039, Минская обл., Минский р-н, Хатежинский с/с, 1'
+		case '1230': return 'Склад 1230, 223039, Минская обл., Минский р-н, Хатежинский с/с, 1'
+		case '1214': return 'Склад 1214, 223039, Минская обл., Минский р-н, Хатежинский с/с, 1'
+		case '1250': return 'Склад 1250, 223050, Минская обл., Минский р-н, 9-ый км Московского шоссе'
+		case '1100': return 'Склад 1100, 223039, Минская обл., Минский р-н, Хатежинский с/с, 1'
 		default: return ''
 	}
 }
 
+// изменяем аттрибут disabled всех опций, кроме выбранной и пустой
+export function changeEditingOptions(select, canEdit) {
+	const options = select.options
+	// изменяем аттрибут disabled всех опций, кроме выбранной и пустой
+	for (let i = 0; i < options.length; i++) {
+		const option = options[i];
+		const isTarget = option.value !== select.value && option.value !== ''
+		if (isTarget) option.disabled = !canEdit
+	}
+}
+
+// отображение поля формы
+export function showFormField(id, value, isRequired) {
+	const field = document.querySelector(`#${id}`)
+	if (field) {
+		const container = field.parentElement
+		field.parentElement.classList.remove('none')
+		field.value = value
+		if (isRequired) {
+			field.required = true
+			let label
+			label = container.querySelector('span')
+			if (!label) label = container.querySelector('label')
+			const labelText = label.innerText
+			if (labelText.includes('*')) return
+			const requiredMarker = ' <span class="text-red">*</span>'
+			label.innerHTML = labelText + (isRequired ? requiredMarker : '')
+		}
+	}
+}
+
+// скрытие поля формы
+export function hideFormField(id) {
+	const field = document.querySelector(`#${id}`)
+	if (field) {
+		const container = field.parentElement
+		container.classList.add('none')
+		const requiredMarker = ' <span class="text-red">*</span>'
+		const label = container.querySelector('span') || container.querySelector('label')
+		label.innerHTML = label.innerHTML.replace(requiredMarker, '')
+		field.value = ''
+		field.required = false
+	}
+}
+
+
+// ====================================================================================
+// ========================== функции для новой формы заявки ==========================
+// ====================================================================================
+
+// проверка наличия всех обязательных данных о точках
+export function isInvalidPointForms(routeForm) {
+	const pointForms = routeForm.querySelectorAll('.pointForm')
+	if (!pointForms.length) return false
+	const isValidPointForms = []
+
+	pointForms.forEach(form => {
+		const isValidForm = form.reportValidity()
+		isValidPointForms.push(isValidForm)
+	})
+
+	return isValidPointForms.includes(false)
+}
+
+// обработчик изменения значения поля Опасный груз
+export function dangerousInputOnChangeHandler(e) {
+	const value = e.target.value
+	dangerousInfoVisibleToggler(value === 'Да')
+}
+
+// обработчик изменения Типа кузова
+export function typeTruckOnChangeHandler(e) {
+	const typeTruck = e.target.value
+	changeTemperatureInputRequired(typeTruck)
+	showIncotermsInput(typeTruck)
+	// changeTruckLoadCapacityValue(typeTruck)
+	// truckVolumeVisibleToggler(typeTruck)
+}
+
+// отображение поля Объем кузова в зависимости от Типа кузова
+export function truckVolumeVisibleToggler(typeTruck, way) {
+	const wayInput = document.querySelector('#way')
+	const wayValue = way ? way :  wayInput && wayInput.value
+	if (wayValue !== 'Импорт') return
+	if (typeTruck.includes('Контейнер') || typeTruck === 'Открытый') {
+		hideFormField('truckVolume')
+	} else {
+		showFormField('truckVolume', '', true)
+	}
+}
+
+// изменение значения поля Грузоподъемность в зависимости от Типа кузова
+export function changeTruckLoadCapacityValue(typeTruck) {
+	const wayInput = document.querySelector('#way')
+	const way = wayInput && wayInput.value
+	if (way !== 'Импорт') return
+	const truckLoadCapacity = document.querySelector('#truckLoadCapacity')
+	if (!truckLoadCapacity) return
+	if (typeTruck.includes("Контейнер")) {
+		truckLoadCapacity.value = 22
+	} else {
+		truckLoadCapacity.value = ""
+	}
+}
+
+export function dangerousInfoVisibleToggler(dangerous) {
+	if (dangerous) {
+		showDangerousInfo()
+	} else {
+		hideDangerousInfo()
+	}
+}
+
+export function showDangerousInfo() {
+	showFormField('dangerousUN', '', true)
+	showFormField('dangerousClass', '', true)
+	showFormField('dangerousPackingGroup', '', true)
+	showFormField('dangerousRestrictionCodes', '', true)
+}
+export function hideDangerousInfo() {
+	hideFormField('dangerousUN')
+	hideFormField('dangerousClass')
+	hideFormField('dangerousPackingGroup')
+	hideFormField('dangerousRestrictionCodes')
+}
+
+// валидация полей адреса, запрещает вводить запятые
+export function addressFieldInputValidation(point, index) {
+	const reg = /[,]/g
+	const withoutСommasInputs = []
+	const countryInput = point.querySelector(`#country_${index}`)
+	const customsCountryInput = point.querySelector(`#customsCountry_${index}`)
+	const postIndexInput = point.querySelector(`#postIndex_${index}`)
+	const regionInput = point.querySelector(`#region_${index}`)
+	const cityInput = point.querySelector(`#city_${index}`)
+	const streetInput = point.querySelector(`#street_${index}`)
+	const buildingInput = point.querySelector(`#building_${index}`)
+	const buildingBodyInput = point.querySelector(`#buildingBody_${index}`)
+	const customsPostIndexInput = point.querySelector(`#customsPostIndex_${index}`)
+	const customsRegionInput = point.querySelector(`#customsRegion_${index}`)
+	const customsCityInput = point.querySelector(`#customsCity_${index}`)
+	const customsStreetInput = point.querySelector(`#customsStreet_${index}`)
+	const customsBuildingInput = point.querySelector(`#customsBuilding_${index}`)
+	const customsBuildingBodyInput = point.querySelector(`#customsBuildingBody_${index}`)
+	withoutСommasInputs.push(
+		countryInput, customsCountryInput, postIndexInput, regionInput, cityInput,
+		streetInput, buildingInput, buildingBodyInput, customsPostIndexInput, customsRegionInput,
+		customsCityInput, customsStreetInput, customsBuildingInput, customsBuildingBodyInput
+	)
+	withoutСommasInputs.forEach(input => input && input.addEventListener('input', (e) => inputBan(e, reg)))
+}
+
+// автозаполнение выпадающего списка стран для адресов в точке
+export function autocompleteCountryList(point, index) {
+	const countryInput = point.querySelector(`#country_${index}`)
+	const customsCountryInput = point.querySelector(`#customsCountry_${index}`)
+	autocomplete(countryInput, countries)
+	if (customsCountryInput) autocomplete(customsCountryInput, countries)
+}
+
+// отображение полей с таможенным оформлением в точке
+export function customsFieldsVisibilityToggler(point, index) {
+	const customsInPointAddress = point.querySelector(`#customsInPointAddress_${index}`)
+	customsInPointAddress && customsInPointAddress.addEventListener('change', (e) => {
+		const customsContainer = document.querySelector(`.customsContainer_${index}`)
+		const customsInputs = customsContainer.querySelectorAll('input')
+		if (e.target.value === 'Нет') {
+			customsContainer.classList.remove('none')
+			customsInputs.forEach(input => input.id !== `customsBuildingBody_${index}` && (input.required = true))
+		} else {
+			customsContainer.classList.add('none')
+			customsInputs.forEach(input => input.id !== `customsBuildingBody_${index}` && (input.required = false))
+		}
+	})
+}
+
+// отображение информационного окна в точке
+export function statusInfoVisibilityToggler(point, index) {
+	const statusInfoLabel = point.querySelector(`#statusInfoLabel_${index}`)
+	const statusInfo = point.querySelector(`#statusInfo_${index}`)
+	statusInfoLabel && statusInfoLabel.addEventListener('mouseover', (e) => statusInfo.classList.add('show'))
+	statusInfoLabel && statusInfoLabel.addEventListener('mouseout', (e) => statusInfo.classList.remove('show'))
+}
+
+// блокирование полей с режимом работы взависимости от чекбокса "Не работают"
+export function timeFrameInputsDisabledToggler(point, index) {
+	const saturdayTimeFrame_fromInput = point.querySelector(`#saturdayTimeFrame_from_${index}`)
+	const saturdayTimeFrame_toInput = point.querySelector(`#saturdayTimeFrame_to_${index}`)
+	const sundayTimeFrame_fromInput = point.querySelector(`#sundayTimeFrame_from_${index}`)
+	const sundayTimeFrame_toInput = point.querySelector(`#sundayTimeFrame_to_${index}`)
+	const saturdayTimeFrame_NotWorkCheckbox = point.querySelector(`#saturdayTimeFrame_NotWork_${index}`)
+	saturdayTimeFrame_NotWorkCheckbox && saturdayTimeFrame_NotWorkCheckbox.addEventListener('change', (e) => {
+		const isDisabled = e.target.checked
+		saturdayTimeFrame_fromInput.disabled = isDisabled
+		saturdayTimeFrame_toInput.disabled = isDisabled
+	})
+	const sundayTimeFrame_NotWorkCheckbox = point.querySelector(`#sundayTimeFrame_NotWork_${index}`)
+	sundayTimeFrame_NotWorkCheckbox && sundayTimeFrame_NotWorkCheckbox.addEventListener('change', (e) => {
+		const isDisabled = e.target.checked
+		sundayTimeFrame_fromInput.disabled = isDisabled
+		sundayTimeFrame_toInput.disabled = isDisabled
+	})
+}
+
+// обработчик при изменении даты выгрузки в точке
+export function pointUnloadDateOnChangeHandler(point, way) {
+	const unloadDateInput = point.querySelector('.unloadDate')
+	const unloadTimeSelect = point.querySelector('.unloadTime')
+	unloadDateInput && unloadTimeSelect && unloadDateInput.addEventListener('change', (e) => {
+		const loadDateInputs = document.querySelectorAll('.loadDate')
+		const loadTimeSelectElems = document.querySelectorAll('.loadTime')
+		const lastLoadDateInput = loadDateInputs[loadDateInputs.length - 1]
+		const lastLoadTimeInput = loadTimeSelectElems[loadTimeSelectElems.length - 1]
+		setUnloadTimeMinValue(lastLoadDateInput, lastLoadTimeInput, e.target, unloadTimeSelect, way)
+	})
+}
+
+// обработчик при изменении даты загрузки в точке
+export function pointLoadDateOnChangeHandler(point) {
+	const loadDateInput = point.querySelector('.loadDate')
+	loadDateInput && loadDateInput.addEventListener('change', (e) => {
+		const unloadDateInputs = document.querySelectorAll('.unloadDate')
+		unloadDateInputs.forEach(input => setUnloadDateMinValue(e, input))
+	})
+}
+
+// обработчик при изменении времени загрузки в точке
+export function pointLoadTimeOnChangeHandler(point) {
+	const loadTimeSelect = point.querySelector('.loadTime')
+	loadTimeSelect && loadTimeSelect.addEventListener('change', (e) => {
+		const unloadTimeSelects = document.querySelectorAll('.unloadTime')
+		unloadTimeSelects.forEach(input => (input.value = ''))
+	})
+}
+
+// изменение формы с данными заявки
+// (для копирования, редактирования и создания маршрута)
+export function changeForm(orderData, formType) {
+	const typeTruck = orderData.typeTruck
+	const dangerous = orderData.dangerous
+	const way = orderData.way
+	const isInternalMovement = orderData.isInternalMovement === 'true' 
+	const EAEUImport = orderData.EAEUImport === 'true'
+
+	// смена названия формы для копирования и редактирования
+	if (formType === 'copy' || formType === 'edit') {
+		const typeNames = {
+			copy: 'создания',
+			edit: 'редактирования'
+		}
+		const formName = isInternalMovement
+			? `Форма ${typeNames[formType]} заявки (внутреннее перемещение)`
+			: `Форма ${typeNames[formType]} заявки (${way})`
+		setFormName(formName)
+	}
+
+	// // отображение дополнительных полей для Импорта
+	if (way === 'Импорт') {
+	// 	showFormField('recipient', 'ЗАО "Доброном"', true)
+		showFormField('control', '', true)
+	// 	showFormField('routeComments', '', false)
+	// 	showFormField('truckLoadCapacity', '', true)
+	// 	showFormField('truckVolume', '', true)
+	// 	showFormField('phytosanitary', '', true)
+	// 	showFormField('veterinary', '', true)
+	// 	showFormField('dangerous', '', true)
+	// 	truckVolumeVisibleToggler(typeTruck, way)
+	// 	dangerousInfoVisibleToggler(dangerous)
+	} else {
+	// 	hideFormField('recipient')
+		hideFormField('control')
+	// 	hideFormField('routeComments')
+	// 	hideFormField('truckLoadCapacity')
+	// 	hideFormField('truckVolume')
+	// 	hideFormField('phytosanitary')
+	// 	hideFormField('veterinary')
+	// 	hideFormField('dangerous')
+	}
+
+	// if (EAEUImport && way === 'Импорт') {
+	// 	showFormField('tir', '', true)
+	// } else {
+	// 	hideFormField('tir')
+	// }
+
+	if (isInternalMovement || way === 'Экспорт') {
+		hideFormField('marketNumber')
+		hideFormField('marketInfo')
+	} else {
+		showFormField('marketNumber', '', true)
+		showFormField('marketInfo', '', false)
+	}
+
+	showIncotermsInput(typeTruck)
+	changeTemperatureInputRequired(typeTruck)
+}
+
+// установка слушателей для полей точек в формах заявок и маршрута
+export function addListnersToPoint(point, way, index) {
+	// установка минимального значения даты выгрузки при изменении даты загрузки
+	pointLoadDateOnChangeHandler(point)
+	// обнуление значений времени выгрузки при изменении времени загрузки
+	pointLoadTimeOnChangeHandler(point)
+	// установка минимального значеня времени выгрузки при изменении даты выгрузки
+	pointUnloadDateOnChangeHandler(point, way)
+	// отображение информационного окна
+	statusInfoVisibilityToggler(point, index)
+	// автозаполнение выпадающего списка стран для адресов
+	autocompleteCountryList(point, index)
+	// отображение полей с таможенным оформлением
+	customsFieldsVisibilityToggler(point, index)
+	// запрет на ввод запятой и точки с запятой в поля для подробного адреса
+	addressFieldInputValidation(point, index)
+	// обработка чекбоксов режима работы
+	timeFrameInputsDisabledToggler(point, index)
+}
+
+// добавление данных в форму заявки
+// (для копирования, редактирования и создания маршрута)
+export function addDataToRouteForm(data, routeForm, createPointMethod) {
+	const pointList = routeForm.querySelector('#pointList')
+	const points = data.addresses
+
+	routeForm.isInternalMovement.value = data.isInternalMovement
+	routeForm.counterparty.value = data.counterparty
+	routeForm.contact.value = data.contact ? data.contact : ''
+	routeForm.recipient.value = data.recipient ? data.recipient : ''
+	routeForm.control.value = data.control ? 'Да' : 'Нет'
+	routeForm.tir.value = data.tir ? 'Да' : 'Нет'
+	routeForm.way.value = data.way
+	routeForm.marketNumber.value = data.marketNumber ? data.marketNumber : ''
+	routeForm.loadNumber.value = data.loadNumber ? data.loadNumber : ''
+	routeForm.marketInfo.value = data.marketInfo ? data.marketInfo : ''
+	routeForm.routeComments.value = data.routeComments ? data.routeComments : ''
+	routeForm.comment.value = data.comment
+	routeForm.typeLoad.value = data.typeLoad
+	routeForm.methodLoad.value = data.methodLoad
+	routeForm.typeTruck.value = data.typeTruck
+	routeForm.incoterms.value = data.incoterms ? data.incoterms : ''
+	routeForm.deliveryLocation.value = data.deliveryLocation ? data.deliveryLocation : ''
+	routeForm.stacking.value = data.stacking ? 'Да' : 'Нет'
+	routeForm.cargo.value = data.cargo
+	routeForm.truckLoadCapacity.value = data.truckLoadCapacity ? data.truckLoadCapacity : ''
+	routeForm.truckVolume.value = data.truckVolume ? data.truckVolume : ''
+	routeForm.temperature.value = data.temperature
+	routeForm.phytosanitary.value = data.phytosanitary ? data.phytosanitary : ''
+	routeForm.veterinary.value = data.veterinary ? data.veterinary : ''
+	routeForm.dangerous.value = data.dangerous ? data.dangerous : ''
+	routeForm.dangerousUN.value = data.dangerousUN ? data.dangerousUN : ''
+	routeForm.dangerousClass.value = data.dangerousClass ? data.dangerousClass : ''
+	routeForm.dangerousPackingGroup.value = data.dangerousPackingGroup ? data.dangerousPackingGroup : ''
+	routeForm.dangerousRestrictionCodes.value = data.dangerousRestrictionCodes ? data.dangerousRestrictionCodes : ''
+
+	points.forEach((point, i) => {
+		const pointElement = createPointMethod(data, point, i)
+		pointList.append(pointElement)
+	})
+}
+
+// запрет на редактирование поля формы
+export function inputEditBan(container, selector, value) {
+	const input = container.querySelector(selector)
+	if (!input) return
+
+	const selectOptions = input.options
+	if (selectOptions) {
+		input.setAttribute('readonly', '')
+		// блокируем все опции, кроме выбранной
+		for (let i = 0; i < selectOptions.length; i++) {
+			const option = selectOptions[i]
+			if (option.value !== input.value) {
+				option.disabled = value
+			}
+		}
+	} else {
+		input.readOnly = value
+	}
+}
+
+// получение статута заявки в зависимости от склада доставки
 export function getOrderStatusByStockDelivery(numStockDelivery) {
 	switch (numStockDelivery) {
 		case '1700':
@@ -425,3 +807,4 @@ export function getOrderStatusByStockDelivery(numStockDelivery) {
 			return 20
 	}
 }
+

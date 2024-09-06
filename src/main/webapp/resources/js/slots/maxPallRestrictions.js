@@ -7,118 +7,6 @@ export const tempMaxPallRestrictions = [
 	// ------------------------------------
 	{
 		stockId: '1700',
-		date: '2024-08-12',
-		maxPall: {
-			externalMovement: 1400,
-			internalMovement: 500,
-		},
-	},
-	{
-		stockId: '1700',
-		date: '2024-08-13',
-		maxPall: {
-			externalMovement: 1400,
-			internalMovement: 500,
-		},
-	},
-	{
-		stockId: '1700',
-		date: '2024-08-14',
-		maxPall: {
-			externalMovement: 1400,
-			internalMovement: 500,
-		},
-	},
-	{
-		stockId: '1700',
-		date: '2024-08-15',
-		maxPall: {
-			externalMovement: 1400,
-			internalMovement: 500,
-		},
-	},
-	{
-		stockId: '1700',
-		date: '2024-08-16',
-		maxPall: {
-			externalMovement: 1400,
-			internalMovement: 500,
-		},
-	},
-	{
-		stockId: '1700',
-		date: '2024-08-17',
-		maxPall: {
-			externalMovement: 1300,
-			internalMovement: 500,
-		},
-	},
-	{
-		stockId: '1700',
-		date: '2024-08-18',
-		maxPall: {
-			externalMovement: 1200,
-			internalMovement: 500,
-		},
-	},
-	{
-		stockId: '1700',
-		date: '2024-08-19',
-		maxPall: {
-			externalMovement: 1500,
-			internalMovement: 500,
-		},
-	},
-	{
-		stockId: '1700',
-		date: '2024-08-20',
-		maxPall: {
-			externalMovement: 1500,
-			internalMovement: 500,
-		},
-	},
-	{
-		stockId: '1700',
-		date: '2024-08-21',
-		maxPall: {
-			externalMovement: 1500,
-			internalMovement: 500,
-		},
-	},
-	{
-		stockId: '1700',
-		date: '2024-08-22',
-		maxPall: {
-			externalMovement: 1500,
-			internalMovement: 500,
-		},
-	},
-	{
-		stockId: '1700',
-		date: '2024-08-23',
-		maxPall: {
-			externalMovement: 1500,
-			internalMovement: 500,
-		},
-	},
-	{
-		stockId: '1700',
-		date: '2024-08-24',
-		maxPall: {
-			externalMovement: 1000,
-			internalMovement: 500,
-		},
-	},
-	{
-		stockId: '1700',
-		date: '2024-08-25',
-		maxPall: {
-			externalMovement: 800,
-			internalMovement: 500,
-		},
-	},
-	{
-		stockId: '1700',
 		date: '2024-08-26',
 		maxPall: {
 			externalMovement: 1400,
@@ -224,6 +112,62 @@ export const tempMaxPallRestrictions = [
 	{
 		stockId: '1700',
 		date: '2024-09-08',
+		maxPall: {
+			externalMovement: 1300,
+			internalMovement: 500,
+		},
+	},
+	{
+		stockId: '1700',
+		date: '2024-09-09',
+		maxPall: {
+			externalMovement: 1400,
+			internalMovement: 500,
+		},
+	},
+	{
+		stockId: '1700',
+		date: '2024-09-10',
+		maxPall: {
+			externalMovement: 1400,
+			internalMovement: 500,
+		},
+	},
+	{
+		stockId: '1700',
+		date: '2024-09-11',
+		maxPall: {
+			externalMovement: 1500,
+			internalMovement: 500,
+		},
+	},
+	{
+		stockId: '1700',
+		date: '2024-09-12',
+		maxPall: {
+			externalMovement: 1400,
+			internalMovement: 500,
+		},
+	},
+	{
+		stockId: '1700',
+		date: '2024-09-13',
+		maxPall: {
+			externalMovement: 1400,
+			internalMovement: 500,
+		},
+	},
+	{
+		stockId: '1700',
+		date: '2024-09-14',
+		maxPall: {
+			externalMovement: 1400,
+			internalMovement: 500,
+		},
+	},
+	{
+		stockId: '1700',
+		date: '2024-09-15',
 		maxPall: {
 			externalMovement: 1300,
 			internalMovement: 500,

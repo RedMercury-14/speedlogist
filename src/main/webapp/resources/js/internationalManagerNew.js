@@ -105,6 +105,7 @@ const gridOptions = {
 	// отображение сохраненной строки таблицы
 	onRowDataUpdated: event => {
 		const rowNode = displaySavedRowId(event, ROW_INDEX_KEY)
+		if (!rowNode) return
 		// отображаем строку ещё раз после установки ширины строк
 		setTimeout(() => {
 			event.api.ensureNodeVisible(rowNode, 'top')
@@ -528,6 +529,7 @@ function offerCountRenderer(params) {
 async function updateOfferCount(idRoute) {
 	const offerCount = await getData(getRouteMessageBaseUrl + idRoute)
 	const rowNode = gridOptions.api.getRowNode(idRoute)
+	if(!rowNode) return
 	const item = rowNode.data
 	const newItem = {
 		...item,
@@ -555,6 +557,10 @@ function displaySavedRowId(gridOptions, key) {
 	if (!rowId) return
 
 	const rowNode = gridOptions.api.getRowNode(rowId)
+	if (!rowNode) {
+		localStorage.removeItem(key)
+		return
+	}
 	gridOptions.api.applyTransaction({ update: [{ ...rowNode.data, isSavedRow: true} ] })
 	gridOptions.api.ensureNodeVisible(rowNode, 'top')
 	localStorage.removeItem(key)

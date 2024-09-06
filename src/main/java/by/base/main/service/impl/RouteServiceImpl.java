@@ -188,5 +188,12 @@ public class RouteServiceImpl implements RouteService{
 		// TODO Auto-generated method stub
 		return routeDAO.getRouteListByUserHasPeriod(user, start, end);
 	}
+
+	@Override
+	public List<Route> getMaintenanceListAsDate(Date dateStart, Date dateFinish) {
+		// TODO Auto-generated method stub
+		return routeDAO.getMaintenanceListAsDate(dateStart, dateFinish);
+	}
+
 	
 }

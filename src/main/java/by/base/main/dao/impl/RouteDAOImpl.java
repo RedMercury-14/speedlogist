@@ -327,4 +327,16 @@ public class RouteDAOImpl implements RouteDAO {
 		objects.addAll(objectsSet);
 		return objects;
 	}
+
+	private static final String queryGetMaintenanceListAsDate = "from Route r LEFT JOIN FETCH r.orders ord LEFT JOIN FETCH ord.addresses addr LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d where r.comments ='maintenance' AND r.dateLoadPreviously BETWEEN :frmdate and :todate";
+	@Override
+	@Transactional
+	public List<Route> getMaintenanceListAsDate(Date dateStart, Date dateFinish) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Route> theObject = currentSession.createQuery(queryGetMaintenanceListAsDate, Route.class);
+		theObject.setParameter("frmdate", dateStart, TemporalType.DATE);
+		theObject.setParameter("todate", dateFinish, TemporalType.DATE);
+		List<Route> objects = theObject.getResultList();
+		return objects;
+	}
 }

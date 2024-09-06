@@ -69,8 +69,6 @@
 						<div class="modal-body">
 							<div class="routeInfo-container">
 								<div class="form-section left">
-									<input type="hidden" class="form-control" name="isInternalMovement" id="isInternalMovement">
-									<input type="hidden" class="form-control" name="needUnloadPoint" id="needUnloadPoint">
 									<div class="form-group">
 										<label for="counterparty" class="col-form-label text-muted font-weight-bold">Наименование контрагента <span class="text-red">*</span></label>
 										<input type="text" class="form-control" name="counterparty" id="counterparty" placeholder="Наименование контрагента (поставщика)" readonly required>
@@ -154,14 +152,12 @@
 											<option>Изотермический</option>
 											<option>Мебельный фургон</option>
 											<option>Рефрижератор</option>
-											<option>Контейнер 20 футов</option>
-											<option>Контейнер 40 футов</option>
-											<!-- <option>Контейнер 20 футов (Dry Freight)</option>
+											<option>Контейнер 20 футов (Dry Freight)</option>
 											<option>Контейнер 40 футов (Dry Freight)</option>
 											<option>Контейнер 20 футов (High Cube)</option>
 											<option>Контейнер 40 футов (High Cube)</option>
 											<option>Контейнер рефрижератор 20 футов (Refer)</option>
-											<option>Контейнер рефрижератор 40 футов (Refer)</option> -->
+											<option>Контейнер рефрижератор 40 футов (Refer)</option>
 										</select>
 									</div>
 									<div id="incoterms-container" class="form-group input-row-container none">

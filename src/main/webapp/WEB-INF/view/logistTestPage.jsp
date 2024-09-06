@@ -7,7 +7,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="${_csrf.parameterName}" content="${_csrf.token}" />
-	<title>Создание заявки</title>
+	<title>Тестовая форма Импорт</title>
 	<link rel="icon" href="${pageContext.request.contextPath}/resources/img/favicon.ico">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/procurementForm2.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/autocomplete.css">
@@ -105,6 +105,7 @@
 									<option>Боковая</option>
 									<option>Задняя+боковая</option>
 									<option>Полная растентовка</option>
+									<option>Верхняя</option>
 								</select>
 							</div>
 							<div class="form-group input-row-container">
@@ -121,17 +122,16 @@
 									<option value="" hidden disabled selected>Выберите тип кузова</option>
 									<option>Открытый</option>
 									<option>Тент</option>
+									<option>Тент или Рефрижератор</option>
 									<option>Изотермический</option>
 									<option>Мебельный фургон</option>
 									<option>Рефрижератор</option>
-									<option>Контейнер 20 футов</option>
-									<option>Контейнер 40 футов</option>
-									<!-- <option>Контейнер 20 футов (Dry Freight)</option>
+									<option>Контейнер 20 футов (Dry Freight)</option>
 									<option>Контейнер 40 футов (Dry Freight)</option>
 									<option>Контейнер 20 футов (High Cube)</option>
 									<option>Контейнер 40 футов (High Cube)</option>
 									<option>Контейнер рефрижератор 20 футов (Refer)</option>
-									<option>Контейнер рефрижератор 40 футов (Refer)</option> -->
+									<option>Контейнер рефрижератор 40 футов (Refer)</option>
 								</select>
 							</div>
 							<div id="incoterms-container" class="form-group input-row-container none">
@@ -177,7 +177,7 @@
 							</div>
 							<div class="form-group input-row-container none">
 								<span class="text-muted font-weight-bold">Объем кузова, м.куб.:</span>
-								<input type="number" class="form-control" name="truckVolume" id="truckVolume" placeholder="Объем, м.куб." min="0">
+								<input type="number" class="form-control" value="90" name="truckVolume" id="truckVolume" placeholder="Объем, м.куб." min="0">
 							</div>
 							<div class="form-group input-row-container">
 								<span class="text-muted font-weight-bold">Температура:</span>
@@ -462,7 +462,7 @@
 	<jsp:include page="footer.jsp" />
 	<script src='${pageContext.request.contextPath}/resources/js/bootstrapSelect/bootstrapSelect.js'></script>
 	<script src='${pageContext.request.contextPath}/resources/js/bootstrapSelect/defaults-ru_RU.js'></script>
-	<script charset="utf-8" src="${pageContext.request.contextPath}/resources/js/procurementFormImport.js" type="module"></script>
+	<script charset="utf-8" src="${pageContext.request.contextPath}/resources/js/logistTestPage.js" type="module"></script>
 	<script src='${pageContext.request.contextPath}/resources/mainPage/js/nav-fixed-top.js'></script>
 </body>
 </html>

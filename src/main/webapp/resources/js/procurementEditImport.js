@@ -7,6 +7,9 @@ import {
 	changeForm,
 	dangerousInputOnChangeHandler,
 	inputEditBan,
+	orderCargoInputOnChangeHandler,
+	orderPallInputOnChangeHandler,
+	orderWeightInputOnChangeHandler,
 	showIncotermsInsuranseInfo,
 	transformAddressInputToSelect,
 	typeTruckOnChangeHandler
@@ -73,6 +76,18 @@ window.onload = async () => {
 	editOrderForm.addEventListener('submit', (e) => orderFormSubmitHandler(e))
 	// листнер на отмену редактирования заявки
 	cancelBtn.addEventListener('click', () => window.location.href = '../orders')
+
+	// обработчик на поле Кол-во паллет ДЛЯ АХО
+	const orderPallInput = document.querySelector('#orderPall')
+	orderPallInput && orderPallInput.addEventListener('change', orderPallInputOnChangeHandler)
+
+	// обработчик на поле Масса груза ДЛЯ АХО
+	const orderWeightInput = document.querySelector('#orderWeight')
+	orderWeightInput && orderWeightInput.addEventListener('change', orderWeightInputOnChangeHandler)
+
+	// обработчик на поле Груз
+	const orderCargoInput = document.querySelector('#cargo')
+	orderCargoInput && orderCargoInput.addEventListener('change', orderCargoInputOnChangeHandler)
 }
 
 
@@ -269,19 +284,6 @@ function changeEditingRules(editableOrder, editOrderForm, points) {
 			inputEditBan(point, `#timeFrame_to_${pointIndex}`, true)
 			inputEditBan(point, `#pointContact_${pointIndex}`, true)
 			inputEditBan(point, `#customsAddress_${pointIndex}`, true)
-		}
-
-		if (way === 'РБ') {
-			inputEditBan(point, '.country', true)
-		}
-
-		if (way === 'РБ' && !isInternalMovement) {
-			inputEditBan(point, '.country', true)
-			inputEditBan(point, `#pall_${pointIndex}`, true)
-		}
-
-		if (way === 'Импорт') {
-			inputEditBan(point, `#pall_${pointIndex}`, true)
 		}
 	})
 }

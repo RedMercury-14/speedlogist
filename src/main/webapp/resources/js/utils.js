@@ -207,6 +207,7 @@ export const dateHelper = {
 	getMinValidDate(order) {
 		const isInternalMovement = order && order.isInternalMovement
 		const RBway = order && order.way === 'РБ'
+		const ahoWay = order && order.way === 'АХО'
 		const now = new Date()
 		const day = now.getDay()
 		const noonToday = this.getNoon(now)
@@ -222,8 +223,8 @@ export const dateHelper = {
 				: this.getDateForInput(dayAfterTomorrow)
 		}
 
-		// правила для перевозок по РБ
-		if (RBway) {
+		// правила для перевозок по РБ и перевозок АХО
+		if (RBway || ahoWay) {
 			// если пятница, после 11:00, то на вторник
 			if (day === 5 && now > TimeOfToday) {
 				const tuesday = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 4)
@@ -810,4 +811,28 @@ export function inputBan(e, reg) {
 	if (input.value.match(reg)) {
 		input.value = input.value.replaceAll(reg, '')
 	}
+}
+
+export function setInputValue(container, selector, value) {
+	const input = container.querySelector(selector)
+	if (!input) return
+
+	const selectOptions = input.options
+	if (selectOptions) {
+		for (let i = 0; i < selectOptions.length; i++) {
+			const option = selectOptions[i]
+			if (option.value === value) {
+				option.selected = true
+			}
+		}
+	} else {
+		input.value = value
+	}
+}
+
+export function getInputValue(container, selector) {
+	const input = container.querySelector(selector)
+	if (!input) return ''
+
+	return input.value
 }

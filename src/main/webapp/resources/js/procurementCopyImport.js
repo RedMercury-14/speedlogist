@@ -9,6 +9,9 @@ import {
 	getStockAddress,
 	inputEditBan,
 	isInvalidPointForms,
+	orderCargoInputOnChangeHandler,
+	orderPallInputOnChangeHandler,
+	orderWeightInputOnChangeHandler,
 	setOrderDataToOrderForm,
 	showIncotermsInsuranseInfo,
 	transformAddressInputToSelect,
@@ -28,9 +31,6 @@ import {
 } from "./procurementFormHtmlUtils.js"
 import { getOrderData, getOrderForForm, getOrderStatusByStockDelivery } from "./procurementFormDataUtils.js"
 
-const addNewProcurementUrl = (orderStatus) => orderStatus === 20
-	? "../../../api/manager/addNewProcurement"
-	: "../../../api/manager/addNewProcurementHasMarket"
 const redirectUrl = (orderStatus) => orderStatus === 20 || disableSlotRedirect ? "../orders" : "../../slots"
 const getInternalMovementShopsUrl = "../../../api/manager/getInternalMovementShops"
 // const getOrderHasMarketNumberBaseUrl = "../../../api/procurement/getOrderHasMarketNumber/"
@@ -101,8 +101,28 @@ window.onload = async () => {
 	disableSlotRedirectCheckbox.addEventListener('change', (e) => disableSlotRedirect = e.target.checked)
 	// обработчик на поле Опасный груз
 	// dangerousInput && dangerousInput.addEventListener('change', dangerousInputOnChangeHandler)
+
+	// обработчик на поле Кол-во паллет ДЛЯ АХО
+	const orderPallInput = document.querySelector('#orderPall')
+	orderPallInput && orderPallInput.addEventListener('change', orderPallInputOnChangeHandler)
+
+	// обработчик на поле Масса груза ДЛЯ АХО
+	const orderWeightInput = document.querySelector('#orderWeight')
+	orderWeightInput && orderWeightInput.addEventListener('change', orderWeightInputOnChangeHandler)
+
+	// обработчик на поле Груз
+	const orderCargoInput = document.querySelector('#cargo')
+	orderCargoInput && orderCargoInput.addEventListener('change', orderCargoInputOnChangeHandler)
 }
 
+// метод получения ссылки для отправки формы
+function getAddNewProcurementUrl(orderStatus, orderWay) {
+	// АХО
+	if (orderWay === 'АХО') return "../../../api/manager/addNewProcurementByMaintenance"
+	return orderStatus === 20
+		? "../../../api/manager/addNewProcurement"
+		: "../../../api/manager/addNewProcurementHasMarket"
+}
 
 // обработчик отправки формы заказа
 function orderFormSubmitHandler(e) {
@@ -113,6 +133,7 @@ function orderFormSubmitHandler(e) {
 
 	const formData = new FormData(e.target)
 	const data = getOrderData(formData, orderData, orderStatus)
+	const way = data.way
 
 	if (!validateForm(data)) {
 		return
@@ -121,7 +142,7 @@ function orderFormSubmitHandler(e) {
 	disableButton(e.submitter)
 
 	ajaxUtils.postJSONdata({
-		url: addNewProcurementUrl(orderStatus),
+		url: getAddNewProcurementUrl(orderStatus, way),
 		token: token,
 		data: data,
 		successCallback: (res) => {
@@ -308,20 +329,4 @@ function createPoint(routeData, pointData, index) {
 function changeEditingRules(oldOrder, editOrderForm, points) {
 	const way = oldOrder.way
 	const isInternalMovement = oldOrder.isInternalMovement === 'true'
-
-	points.forEach((point, i) => {
-		const pointIndex = i + 1
-		if (way === 'РБ') {
-			inputEditBan(point, '.country', true)
-		}
-	
-		if (way === 'РБ' && !isInternalMovement) {
-			inputEditBan(point, '.country', true)
-			inputEditBan(point, `#pall_${pointIndex}`, true)
-		}
-	
-		if (way === 'Импорт') {
-			inputEditBan(point, `#pall_${pointIndex}`, true)
-		}
-	})
 }

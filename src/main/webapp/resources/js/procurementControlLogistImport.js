@@ -13,6 +13,9 @@ import {
 	dangerousInputOnChangeHandler,
 	inputEditBan,
 	isInvalidPointForms,
+	orderCargoInputOnChangeHandler,
+	orderPallInputOnChangeHandler,
+	orderWeightInputOnChangeHandler,
 	typeTruckOnChangeHandler,
 } from "./procurementFormUtils.js"
 import { excelStyles, getPointToView, getRouteInfo, getRoutePrice, getWayToView, pointSorting, procurementExcelExportParams } from './procurementControlUtils.js'
@@ -26,7 +29,7 @@ const LOCAL_STORAGE_KEY = `AG_Grid_settings_to_${PAGE_NAME}`
 const DATES_KEY = `searchDates_to_${PAGE_NAME}`
 const getOrderBaseUrl ='../../api/manager/getOrdersForLogist/'
 const getSearchOrderBaseUrl ='../../api/manager/getOrdersHasCounterparty/'
-const createRouteUrl ='../../api/manager/createNewRoute'
+const createRouteUrl = (way) => way === 'АХО' ? '../../api/manager/maintenance/add' : '../../api/manager/createNewRoute'
 const getDataHasOrderBaseUrl ='../../api/manager/getDataHasOrder2/'
 
 const FORM_TYPE = 'routeForm'
@@ -263,6 +266,18 @@ window.onload = async () => {
 
 	// листнер на изменение типа маршрута
 	wayInput.addEventListener('change', (e) => changeTnvdInputRequired(e))
+
+	// обработчик на поле Кол-во паллет ДЛЯ АХО
+	const orderPallInput = document.querySelector('#orderPall')
+	orderPallInput && orderPallInput.addEventListener('change', orderPallInputOnChangeHandler)
+
+	// обработчик на поле Масса груза ДЛЯ АХО
+	const orderWeightInput = document.querySelector('#orderWeight')
+	orderWeightInput && orderWeightInput.addEventListener('change', orderWeightInputOnChangeHandler)
+
+	// обработчик на поле Груз
+	const orderCargoInput = document.querySelector('#cargo')
+	orderCargoInput && orderCargoInput.addEventListener('change', orderCargoInputOnChangeHandler)
 
 	// обработчик на поле Опасный груз
 	// dangerousInput && dangerousInput.addEventListener('change', dangerousInputOnChangeHandler)
@@ -656,7 +671,7 @@ function routeFormSubmitHandler(e) {
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
 
 	ajaxUtils.postJSONdata({
-		url: createRouteUrl,
+		url: createRouteUrl(data.way),
 		token: token,
 		data: data,
 		successCallback: (res) => {
@@ -725,6 +740,9 @@ function clearRouteForm() {
 
 // изменение правил редактирования формы
 function changeEditingRules(order, form) {
+	changeCounterpartyLabel(true)
+	inputEditBan(form, '#counterparty', false)
+
 	const points = document.querySelectorAll('.point')
 	const way = order.way
 	const isInternalMovement = order.isInternalMovement === 'true'
@@ -738,18 +756,14 @@ function changeEditingRules(order, form) {
 		const timeInput = point.querySelector(`#time_${pointIndex}`)
 		timeInput && dateInput.removeAttribute('min')
 		inputEditBan(point, `#time_${pointIndex}`, true)
-
-		if (way === 'РБ') {
-			inputEditBan(point, '.country', true)
-		}
-	
-		if (way === 'РБ' && !isInternalMovement) {
-			inputEditBan(point, '.country', true)
-			inputEditBan(point, `#pall_${pointIndex}`, true)
-		}
-	
-		if (way === 'Импорт') {
-			inputEditBan(point, `#pall_${pointIndex}`, true)
-		}
 	})
+}
+
+// изменение названия поля counterparty
+function changeCounterpartyLabel(isRequired) {
+	const counterpartyInput = document.querySelector('#counterparty')
+	const counterpartyContainer = counterpartyInput.parentElement
+	const counterpartyLabel = counterpartyContainer.querySelector('label')
+	const labelText = isRequired ? 'Название маршрута <span class="text-red">*</span>' : 'Название маршрута'
+	counterpartyLabel.innerHTML = labelText
 }

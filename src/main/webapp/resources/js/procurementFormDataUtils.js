@@ -197,6 +197,7 @@ function getPointContact(orderWay, form) {
 }
 function getCustomsAddress(orderWay, form) {
 	if (orderWay === 'РБ') return ''
+	if (orderWay === 'АХО') return ''
 	if (orderWay === 'Экспорт') {
 		const customsCountry = form.customsCountry.value
 		const customsAddress = form.customsAddress.value
@@ -265,14 +266,12 @@ export function getOrderStatusByStockDelivery(numStockDelivery) {
 export async function getOrderForForm(formType) {
 	const urlParams = new URLSearchParams(window.location.search)
 	const orderId = urlParams.get('idOrder')
-	console.log("🚀 ~ window.onload= ~ orderId:", orderId)
 	const getOrderByIdBaseUrl = `../../../api/procurement/getOrderById/`
 	const res = await getData(`${getOrderByIdBaseUrl}${orderId}`)
 	const order = res.body
 
 	const sortedPoints = order.addresses.sort((a, b) => a.pointNumber - b.pointNumber)
 	order.addresses = sortedPoints
-	console.log("🚀 ~ getOrderForForm ~ oldOrder:", order)
 	// удаляем значения даты и времени в точках заказадля формы копирования
 	if (formType === 'copy') {
 		order.addresses.forEach(address => {

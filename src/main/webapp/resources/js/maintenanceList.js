@@ -128,8 +128,8 @@ window.addEventListener("load", async () => {
 	// изменение отступа для таблицы
 	changeGridTableMarginTop()
 
-	const dateStart = '2024-07-10'
-	const dateEnd = '2024-09-10'
+	const dateStart = '2024-08-10'
+	const dateEnd = '2024-10-10'
 	const res = await getData(`${getAhoRouteBaseUrl}${dateStart}&${dateEnd}`)
 	ahoRouteData = res.body
 

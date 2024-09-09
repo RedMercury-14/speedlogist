@@ -33,6 +33,7 @@ import {
 	showMessageModal,
 	setCurrentDateAttr,
 	setStockAttr,
+	createCalendarDateInput,
 } from "./slots/calendarUtils.js"
 import { dateHelper, debounce, getData, isAdmin, isLogist, isSlotsObserver, isStockProcurement } from "./utils.js"
 import { uiIcons } from "./uiIcons.js"
@@ -156,7 +157,7 @@ const calendarOptions = {
 	headerToolbar: {
 		left: "prev,next today",
 		center: "title",
-		right: "resourceTimeGridDay,resourceTimeGridTwoDay",
+		right: "",
 	},
 
 	titleFormat: {
@@ -232,6 +233,9 @@ window.onload = async function() {
 	calendarEl.addEventListener('mousedown', (e) => {
 		if (e.button === 2) e.preventDefault()
 	})
+
+	// создание инпута даты календаря
+	createCalendarDateInput(calendar)
 
 	// создание графика для паллетовместимости
 	const ctx = document.querySelector('#pallLineChart')

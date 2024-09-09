@@ -1,6 +1,6 @@
 import { autocomplete } from './autocomplete/autocomplete.js';
 import { countries } from './global.js';
-import { dateHelper, inputBan } from './utils.js';
+import { dateHelper, inputBan, setInputValue } from './utils.js';
 
 const IMPORT_CUSTOMS_ADDRESS = ' г. Минск, ул. Промышленная, 4'
 const IMPORT_CUSTOMS_FULL_ADDRESS = 'BY Беларусь; г. Минск, ул. Промышленная, 4'
@@ -50,7 +50,7 @@ export function setUnloadTimeMinValue(loadDateInput, loadTimeSelect, unloadDateI
 	const unloadTimeOptions = unloadTimeSelect.options
 
 	// для заявок по РБ и Экспорт задержка от загрузки 4 часа
-	if (orderWay === 'РБ' || orderWay === 'Экспорт') {
+	if (orderWay === 'РБ' || orderWay === 'Экспорт' || orderWay === 'АХО') {
 		const delay = dateHelper.MILLISECONDS_IN_HOUR * 4
 		if (loadDate === unloadDate) {
 			// если даты совпадают, то проверяем список и блокируем время, меньше времени загрузки
@@ -701,6 +701,17 @@ export function changeForm(orderData, formType) {
 		showFormField('marketInfo', '', false)
 	}
 
+	if (way === 'АХО') {
+		hideFormField('contact')
+		transformToAhoComment()
+		showFormField('orderPall', '', true)
+		showFormField('orderWeight', '', true)
+		hideFormField('loadNumber')
+		hideFormField('marketNumber')
+		hideFormField('marketInfo')
+		hideFormField('stacking')
+	}
+
 	showIncotermsInput(typeTruck)
 	changeTemperatureInputRequired(typeTruck)
 }
@@ -761,6 +772,14 @@ export function addDataToRouteForm(data, routeForm, createPointMethod) {
 	routeForm.dangerousPackingGroup.value = data.dangerousPackingGroup ? data.dangerousPackingGroup : ''
 	routeForm.dangerousRestrictionCodes.value = data.dangerousRestrictionCodes ? data.dangerousRestrictionCodes : ''
 
+	// поля для АХО
+	if (data.way === 'АХО') {
+		const point = points[0]
+		if (!point) return
+		routeForm.orderPall.value = point.pall ? point.pall : ''
+		routeForm.orderWeight.value = point.weight ? point.weight : ''
+	}
+
 	points.forEach((point, i) => {
 		const pointElement = createPointMethod(data, point, i)
 		pointList.append(pointElement)
@@ -808,3 +827,38 @@ export function getOrderStatusByStockDelivery(numStockDelivery) {
 	}
 }
 
+// метод изменения поле комментарий для формы заявки АХО
+export function transformToAhoComment() {
+	const comment = document.querySelector('#comment')
+	const commentContainer = comment.parentElement
+	const commentLabel = commentContainer.querySelector('label')
+	commentLabel.innerText = 'Дополнительная информация'
+	comment.setAttribute('placeholder', 'Размеры груза, дополнительные требования к авто и др.')
+}
+
+// обработчик изменения поля Кол-во паллет для АХО
+export function orderPallInputOnChangeHandler(e) {
+	const value = e.target.value
+	changePointInfo('pall', value)
+}
+// обработчик изменения поля Масса груза для АХО
+export function orderWeightInputOnChangeHandler(e) {
+	const value = e.target.value
+	changePointInfo('weight', value)
+}
+// обработчик изменения поля Груз
+export function orderCargoInputOnChangeHandler(e) {
+	const value = e.target.value
+	changePointInfo('pointCargo', value)
+}
+
+// метод изменения значения поля в точке маршрута
+function changePointInfo(inputName, value) {
+	if (!value) return
+	const points = document.querySelectorAll('.point')
+	for (let i = 0; i < points.length; i++) {
+		const point = points[i]
+		const pointIndex = i + 1
+		setInputValue(point, `#${inputName}_${pointIndex}`, value)
+	}
+}

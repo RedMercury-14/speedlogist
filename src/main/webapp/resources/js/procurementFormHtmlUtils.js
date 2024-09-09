@@ -1,10 +1,20 @@
 import { getStockAddress } from "./procurementFormUtils.js"
-import { dateHelper } from "./utils.js"
+import { dateHelper, getInputValue } from "./utils.js"
 
 export function getDateHTML(isInternalMovement, type, way, index, value) {
 	const inputValue = value ? value : ''
 	const minValidDate = getMinValidDate(isInternalMovement, way)
 	const typeClassName = type === 'Загрузка' ? 'loadDate' : 'unloadDate'
+
+	if (way === 'АХО') {
+		return `<div class='pointDate'>
+					<div class="d-flex align-items-center position-relative">
+						<label for='date_${index}' class='col-form-label text-muted font-weight-bold mr-2'>Дата <span class="text-red">*</span></label>
+					</div>
+					<input value='${inputValue}' type='date' class='form-control ${typeClassName}' name='date' id='date_${index}' min='${minValidDate}' required>
+				</div>
+			`
+	}
 	const requiredMarker = way === "РБ" || way === 'Экспорт' || type === 'Загрузка' ? '<span class="text-red">*</span>' : ''
 	const required = way === "РБ" || way === 'Экспорт' || type === 'Загрузка' ? 'required' : ''
 	const infoMarker = type === 'Загрузка'
@@ -44,6 +54,17 @@ export function getTimeHTML(type, way, index, value) {
 	const required = type === 'Загрузка' ? 'required' : ''
 	const requiredMarker = type === 'Загрузка' ? '<span class="text-red">*</span>' : ''
 	const timeRemark = way !== 'РБ' ? '<span class="time-mark text-muted">По местному времени</span>' : ''
+
+	if (way === 'АХО') {
+		return `<div class='pointTime'>
+					<label for='time_${index}' class='col-form-label text-muted font-weight-bold '>Время</label>
+					<select id='time_${index}' name="time" class="form-control ${typeClassName}">
+						<option value="" hidden disabled selected> --:-- </option>
+						${timeOptions}
+					</select>
+				</div>
+			`
+	}
 	return `<div class='pointTime ${noneClassName}'>
 				<label for='time_${index}' class='col-form-label text-muted font-weight-bold '>Время ${requiredMarker}</label>
 				<select id='time_${index}' ${required} name="time" class="form-control ${typeClassName}">
@@ -69,6 +90,7 @@ function getTimeOptions(value) {
 
 export function getTnvdHTML(type, way, index, value) {
 	if (type !== 'Загрузка') return ''
+	if (way === 'АХО') return ''
 	const inputValue = value ? value : ''
 	const tnvdRequired = way === "РБ" ? '' : 'required'
 	const tnvdRequiredMarker = way === "РБ" ? '' : '<span class="text-red">*</span>'
@@ -81,28 +103,34 @@ export function getTnvdHTML(type, way, index, value) {
 
 export function getCargoInfoHTML(order, isInternalMovement, way, index, pointData) {
 	const { pallRequiredAttr, weightRequiredAttr, volumeRequiredAttr } = getRequiredAttrs()
-	const { pointCargo, pall, weight, volume } = getCargoInfo(order, index, pointData)
-	const pallReadonlyAttr = !isInternalMovement && way === 'РБ'
+	let { pointCargo, pall, weight, volume } = getCargoInfo(order, way, index, pointData)
+
+	const ahoReadonlyAttr = way === 'АХО' ? 'readonly' : ''
+	const ahoNoneClassName = way === 'АХО' ? 'none' : ''
+	const pallReadonlyAttr =
+		(!isInternalMovement && way === 'РБ')
+		|| way === 'АХО'
+		|| way === 'Импорт'
+		? 'readonly' : ''
+
 	return `<div class='cargoName'>
 				<label for='pointCargo_${index}' class='col-form-label text-muted font-weight-bold'>Наименование груза <span class='text-red'>*</span></label>
-				<input type='text' class='form-control' name='pointCargo' id='pointCargo_${index}' placeholder='Наименование' value='${pointCargo}' required>
+				<input type='text' class='form-control' name='pointCargo' id='pointCargo_${index}' placeholder='Наименование' value='${pointCargo}' ${ahoReadonlyAttr} required>
 			</div>
 			<div class='cargoPall'>
 				<label for='pall_${index}' class='col-form-label text-muted font-weight-bold'>Паллеты, шт</label>
-				<input type='number' class='form-control' name='pall' id='pall_${index}' placeholder='Паллеты, шт' min='0' value='${pall}' ${pallRequiredAttr}  ${pallReadonlyAttr}>
+				<input type='number' class='form-control' name='pall' id='pall_${index}' placeholder='Паллеты, шт' min='0' value='${pall}' ${pallRequiredAttr} ${pallReadonlyAttr}>
 			</div>
 			<div class='cargoWeight'>
 				<label for='weight_${index}' class='col-form-label text-muted font-weight-bold'>Масса, кг</label>
-				<input type='number' class='form-control' name='weight' id='weight_${index}' placeholder='Масса, кг' min='0' value='${weight}' ${weightRequiredAttr}>
+				<input type='number' class='form-control' name='weight' id='weight_${index}' placeholder='Масса, кг' min='0' value='${weight}' ${ahoReadonlyAttr} ${weightRequiredAttr}>
 			</div>
-			<div class='cargoVolume'>
+			<div class='cargoVolume ${ahoNoneClassName}'>
 				<label for='volume_${index}' class='col-form-label text-muted font-weight-bold'>Объем, м.куб.</label>
-				<input type='number' class='form-control' name='volume' id='volume_${index}' placeholder='Объем, м.куб.' min='0' value='${volume}' ${volumeRequiredAttr}>
+				<input type='number' class='form-control' name='volume' id='volume_${index}' placeholder='Объем, м.куб.' min='0' value='${volume}' ${ahoReadonlyAttr} ${volumeRequiredAttr}>
 			</div>`
-
-	
 }
-function getCargoInfo(order, pointIndex, pointData) {
+function getCargoInfo(order, way, pointIndex, pointData) {
 	const cargoInfo = {
 		pointCargo: '',
 		pall: '',
@@ -122,6 +150,14 @@ function getCargoInfo(order, pointIndex, pointData) {
 	// если точка не первая, то берем данные из предыдущей точки
 	if (pointIndex > 1) {
 		return getPrevPointCargoInfo(pointIndex)
+	}
+
+	// если заявка АХО
+	if (way === 'АХО') {
+		cargoInfo.pointCargo = getInputValue(document, '#cargo')
+		cargoInfo.pall = getInputValue(document, '#orderPall')
+		cargoInfo.weight = getInputValue(document, '#orderWeight')
+		return cargoInfo
 	}
 
 	// если данных от заказа нет, то поля пустые
@@ -182,6 +218,7 @@ function getRequiredAttrs() {
 export function getAddressHTML(order, type, way, index, value) {
 	const addressName = type === 'Загрузка' ? 'загрузки' : 'выгрузки'
 	const country = getCountry(type, way, value)
+	const countryReadonlyAttr = way === 'РБ' || way === 'АХО' ? 'readonly' : ''
 	if (way === 'HHH') { // way === 'Импорт' && type === 'Загрузка'
 		const { postIndex, region, city, street, building, buildingBody } = getImportAddressObj(value)
 		return `
@@ -210,7 +247,7 @@ export function getAddressHTML(order, type, way, index, value) {
 				<label for="country_${index}" class="col-form-label text-muted font-weight-bold">Адрес ${addressName} <span class="text-red">*</span></label>
 				<div class="form-group address-container">
 					<div class="autocomplete">
-						<input type="text" class="form-control country" name="country" id="country_${index}" placeholder="Страна" autocomplete="off" value='${country}' required>
+						<input type="text" class="form-control country" ${countryReadonlyAttr} name="country" id="country_${index}" placeholder="Страна" autocomplete="off" value='${country}' required>
 					</div>
 					<input type="text" class="form-control address-input" name="address" id="address_${index}" autocomplete="off" placeholder="Город, улица и т.д." value='${address}' required>
 				</div>
@@ -254,7 +291,7 @@ function getAddress(order, type, way, addressValue) {
 function getCountry(type, way, addressValue) {
 	let country = ''
 	if (type === 'Выгрузка' && way === 'Импорт') country = 'BY Беларусь'
-	if (way === 'РБ') country = 'BY Беларусь'
+	if (way === 'РБ' || way === 'АХО') country = 'BY Беларусь'
 	if (type === 'Загрузка' && way === 'Экспорт') country = 'BY Беларусь'
 	if (addressValue) country = addressValue.split('; ')[0]
 	return country
@@ -417,7 +454,7 @@ function getTimeFrameOrStatus(text) {
 
 export function getCustomsAddressHTML(EAEUImport, type, way, index, value) {
 	const addressName = type === 'Загрузка' ? '(таможня отправления)' : '(таможня назначения)'
-	if (way === 'РБ' || EAEUImport) return ''
+	if (way === 'РБ' || way === 'АХО' || EAEUImport) return ''
 	if (way === 'Экспорт') {
 		const customsCountry = getCountry(null, null, value)
 		const customsAddress = getAddress(null, type, way, value)

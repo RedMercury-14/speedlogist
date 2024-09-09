@@ -17,10 +17,14 @@ import {
 	changeSubmitButtonText,
 	dangerousInputOnChangeHandler,
 	hideAddUnloadPointButton,
+	hideFormField,
 	hideMarketInfoTextarea,
 	hideMarketNumberInput,
 	inputEditBan,
 	isInvalidPointForms,
+	orderCargoInputOnChangeHandler,
+	orderPallInputOnChangeHandler,
+	orderWeightInputOnChangeHandler,
 	setCounterparty,
 	setFormName,
 	setOrderDataToOrderForm,
@@ -28,15 +32,13 @@ import {
 	showFormField,
 	showIncotermsInsuranseInfo,
 	transformAddressInputToSelect,
+	transformToAhoComment,
 	typeTruckOnChangeHandler,
 	validatePointDates,
 } from "./procurementFormUtils.js"
 import { snackbar } from "./snackbar/snackbar.js"
 import { disableButton, enableButton, getData, isStockProcurement, } from './utils.js'
 
-const addNewProcurementUrl = (orderStatus) => orderStatus === 20
-	? "../../api/manager/addNewProcurement"
-	: "../../api/manager/addNewProcurementHasMarket"
 const redirectUrl = (orderStatus) => orderStatus === 20 || disableSlotRedirect ? "orders" : "../slots"
 const getInternalMovementShopsUrl = "../../api/manager/getInternalMovementShops"
 // const getOrderHasMarketNumberBaseUrl = "../../api/procurement/getOrderHasMarketNumber/"
@@ -69,13 +71,9 @@ window.onload = async () => {
 	const domesticStocksData = await getData(getInternalMovementShopsUrl)
 	domesticStocks = domesticStocksData.map(stock => `${stock.numshop}-${stock.address}`)
 
-	const addLoadPointForm = document.querySelector('#addLoadPointForm')
-	const addUnloadPointForm = document.querySelector('#addUnloadPointForm')
-
 	const role = document.querySelector('#role').value
 	if (isStockProcurement(role)) {
-		// превращение в форму для внутренних перемещений
-		transformToInternalMovementForm(addLoadPointForm, domesticStocks, addUnloadPointForm)
+		showStockProcFormTypeModal()
 	} else {
 		// отображение модального окна для выбора типа маршрута
 		showWayTypeModal()
@@ -123,6 +121,10 @@ window.onload = async () => {
 	const RBButtonsContainer = document.querySelector('#RBButtons')
 	RBButtonsContainer.addEventListener('click', (e) => RBButtonsContainerOnClickHandler(e))
 
+	// обработчик для модального окна типа заявки для роли закупок внутренних перемещений
+	const stockProcFormTypeButtonsContainer = document.querySelector('#stockProcFormTypeButtons')
+	stockProcFormTypeButtonsContainer.addEventListener('click', (e) => stockProcFormTypeButtonsContainerOnClickHandler(e))
+
 	// обработчик отключения редиректа на слоты
 	const disableSlotRedirectCheckbox = document.querySelector('#disableSlotRedirect')
 	disableSlotRedirectCheckbox.addEventListener('change', (e) => disableSlotRedirect = e.target.checked)
@@ -130,6 +132,27 @@ window.onload = async () => {
 	// обработчик на поле Опасный груз
 	const dangerousInput = document.querySelector('#dangerous')
 	// dangerousInput && dangerousInput.addEventListener('change', dangerousInputOnChangeHandler)
+
+	// обработчик на поле Кол-во паллет ДЛЯ АХО
+	const orderPallInput = document.querySelector('#orderPall')
+	orderPallInput && orderPallInput.addEventListener('change', orderPallInputOnChangeHandler)
+
+	// обработчик на поле Масса груза ДЛЯ АХО
+	const orderWeightInput = document.querySelector('#orderWeight')
+	orderWeightInput && orderWeightInput.addEventListener('change', orderWeightInputOnChangeHandler)
+
+	// обработчик на поле Груз
+	const orderCargoInput = document.querySelector('#cargo')
+	orderCargoInput && orderCargoInput.addEventListener('change', orderCargoInputOnChangeHandler)
+}
+
+// метод получения ссылки для отправки формы
+function getAddNewProcurementUrl(orderStatus, orderWay) {
+	// АХО
+	if (orderWay === 'АХО') return "../../api/manager/addNewProcurementByMaintenance"
+	return orderStatus === 20
+		? "../../api/manager/addNewProcurement"
+		: "../../api/manager/addNewProcurementHasMarket"
 }
 
 // превращение формы в форму внутренних перевозок
@@ -149,6 +172,32 @@ function transformToInternalMovementForm() {
 	// скрываем поля с информацией из Маркета
 	hideMarketNumberInput()
 	hideMarketInfoTextarea()
+}
+
+// превращение формы в форму перевозок АХО
+function transformToAhoForm() {
+	orderWay = 'АХО'
+	// изменяем название формы
+	setFormName('Форма создания заявки (перевозка АХО)')
+	// установка контрагента для АХО
+	setCounterparty('ЗАО "Доброном"')
+	// установка типа маршрута
+	setWayType(orderWay)
+	// скрываем поля с контактом контрагента
+	const fio = document.querySelector('#fio')
+	const contactContainer = fio.parentElement.parentElement
+	contactContainer.classList.add('none')
+	// изменяем поле Комментарий
+	transformToAhoComment()
+
+	showFormField('orderPall', '', true)
+	showFormField('orderWeight', '', true)
+	hideFormField('loadNumber')
+	hideFormField('marketNumber')
+	hideFormField('marketInfo')
+	hideFormField('stacking')
+
+	changeSubmitButtonText('перевозка АХО')
 }
 
 // обработчик нажатия на кнопки модального окна выбора типа маршрута
@@ -276,6 +325,24 @@ function middleUnloadPointButtonsOnClichHandler(e) {
 	}
 }
 
+// обработчик нажатия на кнопки модального окна типа заявки для роли закупок внутренних перемещений
+function stockProcFormTypeButtonsContainerOnClickHandler(e) {
+	if (e.target.classList.contains('btn')) {
+		const value = e.target.dataset.value
+		
+		if (value === 'internalMovement') {
+			// превращение в форму для внутренних перемещений
+			transformToInternalMovementForm()
+		}
+		if (value === 'aho') {
+			// превращение в форму для перевозок АХО
+			transformToAhoForm()
+		}
+
+		hideStockProcFormTypeModal()
+	}
+}
+
 // обработчик отправки формы указания номера из маркета
 async function setMarketNumberFormSubmitHandler(e, orderForm) {
 	e.preventDefault()
@@ -347,7 +414,7 @@ function orderFormSubmitHandler(e) {
 
 	const formData = new FormData(e.target)
 	const data = getOrderData(formData, orderData, orderStatus)
-
+	console.log("🚀 ~ orderFormSubmitHandler ~ data:", data)
 	if (isInvalidOrderForm(data)) {
 		return
 	}
@@ -355,7 +422,7 @@ function orderFormSubmitHandler(e) {
 	disableButton(e.submitter)
 
 	ajaxUtils.postJSONdata({
-		url: addNewProcurementUrl(orderStatus),
+		url: getAddNewProcurementUrl(orderStatus, orderWay),
 		token: token,
 		data: data,
 		successCallback: (res) => {
@@ -466,6 +533,10 @@ function pointEditableRules(point, way, pointIndex) {
 		inputEditBan(point, '.country', true)
 	}
 
+	if (way === 'АХО') {
+		inputEditBan(point, '.country', true)
+	}
+
 	if (way === 'РБ' && !isInternalMovement) {
 		inputEditBan(point, '.country', true)
 		inputEditBan(point, `#pall_${pointIndex}`, true)
@@ -551,6 +622,16 @@ function hideRBModal() {
 }
 
 // отображение модального окна ввода номера из Маркета
+function showStockProcFormTypeModal() {
+	$('#stockProcFormTypeModal').modal('show')
+	$('.modal-backdrop').addClass("whiteOverlay")
+}
+function hideStockProcFormTypeModal() {
+	$('.modal-backdrop').removeClass("whiteOverlay")
+	$('#stockProcFormTypeModal').modal('hide')
+}
+
+// отображение модального окна типа заявки для роли закупок внутренних перемещений
 function showSetMarketNumberModal() {
 	$('#setMarketNumberModal').modal('show')
 	$('.modal-backdrop').addClass("whiteOverlay")

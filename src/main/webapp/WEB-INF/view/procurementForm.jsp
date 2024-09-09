@@ -73,6 +73,14 @@
 								<span class="text-muted font-weight-bold">Тип маршрута: <span class="text-red">*</span></span>
 								<input type="text" class="form-control" name="way" id="way" placeholder="" required readonly>
 							</div>
+							<div class="form-group input-row-container none">
+								<span class="text-muted font-weight-bold">Кол-во паллет: <span class="text-red">*</span></span>
+								<input type="number" class="form-control" name="orderPall" id="orderPall" placeholder="" required>
+							</div>
+							<div class="form-group input-row-container none">
+								<span class="text-muted font-weight-bold">Масса груза, кг: <span class="text-red">*</span></span>
+								<input type="number" class="form-control" name="orderWeight" id="orderWeight" placeholder="" required>
+							</div>
 							<div class="form-group input-row-container">
 								<span class="text-muted font-weight-bold">Номер заказа из Маркета:</span>
 								<input type="number" class="form-control" name="marketNumber" id="marketNumber">
@@ -105,6 +113,7 @@
 									<option>Боковая</option>
 									<option>Задняя+боковая</option>
 									<option>Полная растентовка</option>
+									<option>Верхняя</option>
 								</select>
 							</div>
 							<div class="form-group input-row-container">
@@ -373,6 +382,23 @@
 					<div id="middleUnloadPointButtons" class="modal-buttons">
 						<button data-value="Да" class="btn btn-primary btn-lg" data-dismiss="modal" type="button">Да (откроется окно точки ЗАГРУЗКИ)</button>
 						<button data-value="Нет" class="btn btn-primary btn-lg" data-dismiss="modal" type="button">Нет (откроется окно точки ВЫГРУЗКИ)</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Модальное окно типа заявки для роли закупок внутренних перемещений -->
+	<div class="modal fade" id="stockProcFormTypeModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="stockProcFormTypeModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header justify-content-center">
+					<h5 class="modal-title" id="stockProcFormTypeModalLabel">Выберите тип заявки</h5>
+				</div>
+				<div class="modal-body">
+					<div id="stockProcFormTypeButtons" class="modal-buttons">
+						<button data-value="internalMovement" class="btn btn-primary btn-lg" data-dismiss="modal" type="button">Внутренние перемещения</button>
+						<button data-value="aho" class="btn btn-primary btn-lg" data-dismiss="modal" type="button">Перевозка АХО</button>
 					</div>
 				</div>
 			</div>

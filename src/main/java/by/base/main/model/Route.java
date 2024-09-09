@@ -273,6 +273,15 @@ public class Route implements Serializable{
 	@Column(name="cargo_info")
 	private String cargoInfo;
 	
+	@Column(name="routeDirectionInternational")
+	private String routeDirectionInternational;
+	
+	@Column(name="type_load")
+	private String typeLoad;
+	
+	@Column(name="method_load")
+	private String methodLoad;
+	
 	@Transient
 	private Map<String, String> cost = new HashMap<String, String>();
 	/**
@@ -325,6 +334,31 @@ public class Route implements Serializable{
 	}
 
 	
+	
+	public String getTypeLoad() {
+		return typeLoad;
+	}
+
+	public void setTypeLoad(String typeLoad) {
+		this.typeLoad = typeLoad;
+	}
+
+	public String getMethodLoad() {
+		return methodLoad;
+	}
+
+	public void setMethodLoad(String methodLoad) {
+		this.methodLoad = methodLoad;
+	}
+
+	public String getRouteDirectionInternational() {
+		return routeDirectionInternational;
+	}
+
+	public void setRouteDirectionInternational(String routeDirectionInternational) {
+		this.routeDirectionInternational = routeDirectionInternational;
+	}
+
 	public String getLogistComment() {
 		return logistComment;
 	}
@@ -568,6 +602,9 @@ public class Route implements Serializable{
 	}
 
 	public String getRouteDirection() {
+		if(way != null && routeDirectionInternational!= null && way.equals("Импорт")) {
+			return routeDirectionInternational.trim();
+		}
 		return routeDirection.trim().replaceAll(" +", " ");
 	}
 

@@ -70,6 +70,14 @@
 								<span class="text-muted font-weight-bold">Тип маршрута: <span class="text-red">*</span></span>
 								<input type="text" class="form-control" name="way" id="way" required readonly>
 							</div>
+							<div class="form-group input-row-container none">
+								<span class="text-muted font-weight-bold">Кол-во паллет: <span class="text-red">*</span></span>
+								<input type="number" class="form-control" name="orderPall" id="orderPall" placeholder="" required>
+							</div>
+							<div class="form-group input-row-container none">
+								<span class="text-muted font-weight-bold">Масса груза, кг: <span class="text-red">*</span></span>
+								<input type="number" class="form-control" name="orderWeight" id="orderWeight" placeholder="" required>
+							</div>
 							<div class="form-group input-row-container">
 								<span class="text-muted font-weight-bold">Номер заказа из Маркета:</span>
 								<input type="number" class="form-control" name="marketNumber" id="marketNumber">
@@ -102,6 +110,7 @@
 									<option>Боковая</option>
 									<option>Задняя+боковая</option>
 									<option>Полная растентовка</option>
+									<option>Верхняя</option>
 								</select>
 							</div>
 							<div class="form-group input-row-container">

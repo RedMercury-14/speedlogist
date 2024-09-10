@@ -276,6 +276,13 @@ function dateToNum(date) {
 		return null
 	}
 
+	// форматируем даты, которые начинаются с года
+	const arr = date.split('-')
+	if (arr[0].length === 4) {
+		arr.reverse()
+	}
+	date = arr.join('-')
+
 	const yearNumber = date.substring(6, 10)
 	const monthNumber = date.substring(3, 5)
 	const dayNumber = date.substring(0, 2)

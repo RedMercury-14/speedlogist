@@ -271,7 +271,7 @@ export async function getOrderForForm(formType) {
 	const order = res.body
 
 	const sortedPoints = order.addresses.sort((a, b) => a.pointNumber - b.pointNumber)
-	order.addresses = sortedPoints
+	order.addresses = sortedPoints.filter(point => point.isCorrect)
 	// удаляем значения даты и времени в точках заказадля формы копирования
 	if (formType === 'copy') {
 		order.addresses.forEach(address => {

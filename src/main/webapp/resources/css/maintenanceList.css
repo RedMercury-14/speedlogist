@@ -95,7 +95,7 @@ footer.to-bottom {
 }
 .input-row-container {
 	display: flex;
-	align-items: flex-start;
+	align-items: center;
 	gap: 10px;
 }
 #addShopsInExcelForm .form-control {
@@ -142,7 +142,7 @@ footer.to-bottom {
 	--ag-value-change-value-highlight-background-color: #ff8800d2;
 }
 .ag-theme-alpine .ag-side-buttons {
-	background-color: #a7bad3;
+	background-color: #81c8c7;
 	font-weight: 600;
 }
 .ag-header-cell-filtered {
@@ -221,4 +221,123 @@ form .form-check .form-check-label {
 	display: flex;
 	flex-direction: column;
 	gap: 10px;
+}
+
+.title-container,
+.search-form-container {
+	min-height: 30px;
+	border-left: 1px solid #babfc7;
+	border-right: 1px solid #babfc7;
+	background-color: #81c8c7;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	padding: 1px 10px;
+}
+.title-container {
+	position: relative;
+	align-items: center;
+	border-top: 1px solid #babfc7;
+	background-color: #43adac !important;
+}
+.title-container h3 {
+	margin-bottom: 0;
+	font-size: 22px;
+	color: #393737;
+}
+.search-form-container {
+	display: flex;
+	gap: 0;
+	align-items: center;
+	justify-content: center;
+	font-family: var(--font-family-sans-serif);
+}
+.search-form-container form {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+	justify-content: center;
+	flex-wrap: wrap;
+	padding: 2px 0;
+}
+.search-form-container label {
+	text-wrap: nowrap;
+}
+.search-form-container .form-control,
+.search-form-container .btn {
+	padding: 0 8px;
+	height: 30px;
+}
+.search-form-container input[type="date"] {
+	width: 120px;
+}
+.search-form-container input[type="text"] {
+	width: 260px;
+}
+.accordion .search-form-container .accordion-btn {
+	position: relative;
+	width: 100%;
+	padding: 5px 0;
+}
+.accordion .search-form-container .accordion-btn.collapsed::after {
+	content: '\276E';
+	position: absolute;
+	top: 5px;
+	right: 10px;
+	transform: rotate(-90deg);
+}
+.accordion .search-form-container .accordion-btn::after {
+	content: '\276E';
+	position: absolute;
+	top: 5px;
+	right: 10px;
+	transform: rotate(90deg);
+}
+@media (min-width: 992px) {
+	.search-form-container form.collapse {
+		display: flex;
+	}
+	.accordion .search-form-container .accordion-btn {
+		display: none;
+	}
+}
+
+.accordion .accordion-btn {
+	position: relative;
+	display: inline-block;
+	text-align: center;
+	width: auto;
+	padding: 0;
+	color: #7288a2;
+	font-size: 1.15rem;
+	font-weight: 400;
+	border: none;
+	background: none;
+	outline: none;
+}
+.accordion .accordion-btn:hover {
+	color: #495a6e;
+}
+
+
+#myGrid .activRow{
+	background-color: #494f5252;
+}
+#myGrid .finishRow{
+	background-color: #c4ffe1db;
+}
+#myGrid .attentionRow{
+	background-color: #dce37266;
+}
+#myGrid .endRow{
+	background-color: #9ee9ffdb;
+}
+#myGrid .oncePersonRoute{
+	background-color: #ca44e366;
+}
+#myGrid .cancelRow {
+	background-color: #e3444466;
+}
+#myGrid .savedRow {
+	border: 2px solid #06bed5;
 }

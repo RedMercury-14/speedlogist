@@ -195,5 +195,11 @@ public class RouteServiceImpl implements RouteService{
 		return routeDAO.getMaintenanceListAsDate(dateStart, dateFinish);
 	}
 
+	@Override
+	public List<Route> getMaintenanceListAsDateAndLogin(Date dateStart, Date dateFinish, User user) {
+		// TODO Auto-generated method stub
+		return routeDAO.getMaintenanceListAsDateAndLogin(dateStart, dateFinish, user);
+	}
+
 	
 }

@@ -268,6 +268,85 @@ public class MainRestController {
 	public static final Comparator<Address> comparatorAddressId = (Address e1, Address e2) -> (e1.getIdAddress() - e2.getIdAddress());
 	public static final Comparator<Address> comparatorAddressIdForView = (Address e1, Address e2) -> (e2.getType().charAt(0) - e1.getType().charAt(0));
 	
+	/**
+	 * Удаление стоимости рейса
+	 * @param request
+	 * @param idRoute
+	 * @param cost
+	 * @param currency
+	 * @return
+	 */
+	@GetMapping("/logistics/maintenance/clearCost/{idRoute}")
+	public Map<String, Object> setCost(
+	        HttpServletRequest request,
+	        @PathVariable String idRoute) {	    
+	    Map<String, Object> response = new HashMap<>();
+	    Route route = routeService.getRouteById(Integer.parseInt(idRoute));
+	    if(!route.getComments().equals("maintenance")) {
+	    	response.put("status", "100");
+		    response.put("messsage", "Неправильный тип маршрута. Выбран маршрут с типом " + route.getComments() + " а должен быть с типом maintenance");	    	    
+		    return response;
+	    }
+	    route.setStatusRoute("220");
+	    route.setFinishPrice(null);
+	    route.setStartCurrency(null);
+	    routeService.saveOrUpdateRoute(route);	        
+	    response.put("status", "200");
+	    response.put("body", route);	    	    
+	    return response;
+	}
+	
+	/**
+	 * Установка стоимости за рейс
+	 * @param request
+	 * @param idRoute
+	 * @param cost
+	 * @param currency
+	 * @return
+	 */
+	@GetMapping("/logistics/maintenance/setCost/{idRoute}&{cost}&{currency}")
+	public Map<String, Object> setCost(
+	        HttpServletRequest request,
+	        @PathVariable String idRoute,
+	        @PathVariable String cost,
+	        @PathVariable String currency) {	    
+	    Map<String, Object> response = new HashMap<>();
+	    Route route = routeService.getRouteById(Integer.parseInt(idRoute));
+	    if(!route.getComments().equals("maintenance")) {
+	    	response.put("status", "100");
+		    response.put("messsage", "Неправильный тип маршрута. Выбран маршрут с типом " + route.getComments() + " а должен быть с типом maintenance");	    	    
+		    return response;
+	    }
+	    route.setStatusRoute("225");
+	    route.setFinishPrice(Integer.parseInt(cost));
+	    route.setStartCurrency(currency == null ? "BYN" : currency);
+	    routeService.saveOrUpdateRoute(route);	        
+	    response.put("status", "200");
+	    response.put("body", route);	    	    
+	    return response;
+	}
+	
+	@GetMapping("/carrier/getMaintenanceList/{dateStart}&{dateEnd}")
+	public Map<String, Object> getMaintenanceListAsCarrier(
+	        HttpServletRequest request,
+	        @PathVariable String dateStart,
+	        @PathVariable String dateEnd) {
+	    
+	    Map<String, Object> response = new HashMap<>();
+	    List<Route> routes = routeService.getMaintenanceListAsDateAndLogin(Date.valueOf(dateStart), Date.valueOf(dateEnd), getThisUser());
+	    Set<Route> routes2 = new HashSet<>(routes);
+	    response.put("status", "200");
+	    response.put("body", routes2);   
+	    return response;
+	}
+	
+	/**
+	 * Возвращает заказ по id
+	 * @param request
+	 * @param type
+	 * @param idOrder
+	 * @return
+	 */
 	@GetMapping("/{type}/getOrderById/{idOrder}")
 	public Map<String, Object> getOrderById(
 	        HttpServletRequest request,
@@ -291,6 +370,151 @@ public class MainRestController {
 	    return response;
 	}
 	
+	@GetMapping("/logistics/maintenance/closeRoute/{idRoute}")
+	public Map<String, Object> setMileage(
+	        HttpServletRequest request,
+	        @PathVariable String idRoute) {	    
+	    Map<String, Object> response = new HashMap<>();
+	    Route route = routeService.getRouteById(Integer.parseInt(idRoute));
+	    if(!route.getComments().equals("maintenance")) {
+	    	response.put("status", "100");
+		    response.put("messsage", "Неправильный тип маршрута. Выбран маршрут с типом " + route.getComments() + " а должен быть с типом maintenance");	    	    
+		    return response;
+	    }
+	    route.setStatusRoute("230");
+	    Order order =  route.getOrders().stream().findFirst().get();
+	    order.setStatus(70);
+	    Set<Order> orders = new HashSet<Order>();
+	    orders.add(order);
+	    route.setOrders(orders);
+	    routeService.saveOrUpdateRoute(route);
+	        
+	    response.put("status", "200");
+	    response.put("body", route);	    	    
+	    return response;
+	}
+	
+	/**
+	 * удаляет киллометраж из маршрута
+	 * @param request
+	 * @param idRoute
+	 * @param type
+	 * @return
+	 */
+	@GetMapping("/{type}/maintenance/clearMileage/{idRoute}")
+	public Map<String, Object> clearMileage(
+	        HttpServletRequest request,
+	        @PathVariable String idRoute,
+	        @PathVariable String type) {	    
+	    Map<String, Object> response = new HashMap<>();
+	    switch (type) {
+        case "logistics":
+            // Логика для logistics
+            break;
+        case "carrier":
+            // Логика для carrier
+            break;
+        default:
+            throw new IllegalArgumentException("Неизвестная команда: " + type);
+    }
+	    Route route = routeService.getRouteById(Integer.parseInt(idRoute));
+	    if(!route.getComments().equals("maintenance")) {
+	    	response.put("status", "100");
+		    response.put("messsage", "Неправильный тип маршрута. Выбран маршрут с типом " + route.getComments() + " а должен быть с типом maintenance");	    	    
+		    return response;
+	    }
+	    if(!route.getStatusRoute().equals("220")) {
+	    	response.put("status", "100");
+            response.put("messsage", "Неправильная команда. Статус маршрута не 220");                
+            return response;
+	    }
+	    route.setKmInfo(null);
+	    route.setFinishPrice(null);
+	    route.setStartCurrency(null);
+	    route.setStatusRoute("210");
+	    routeService.saveOrUpdateRoute(route);
+	    response.put("status", "200");
+	    response.put("body", route);	    	    
+	    return response;
+	}
+	
+	/**
+	 * добавляет пробег к выбранному маршруту
+	 * @param request
+	 * @param idRoute
+	 * @return
+	 */
+	@GetMapping("/{type}/maintenance/setMileage/{idRoute}&{mileage}")
+	public Map<String, Object> setMileage(
+	        HttpServletRequest request,
+	        @PathVariable String idRoute,
+	        @PathVariable String mileage,
+	        @PathVariable String type) {	    
+	    Map<String, Object> response = new HashMap<>();
+	    switch (type) {
+        case "logistics":
+            // Логика для logistics
+            break;
+        case "carrier":
+            // Логика для carrier
+            break;
+        default:
+            throw new IllegalArgumentException("Неизвестная команда: " + type);
+    }
+	    Route route = routeService.getRouteById(Integer.parseInt(idRoute));
+	    if(!route.getComments().equals("maintenance")) {
+	    	response.put("status", "100");
+		    response.put("messsage", "Неправильный тип маршрута. Выбран маршрут с типом " + route.getComments() + " а должен быть с типом maintenance");	    	    
+		    return response;
+	    }
+//	    if(route.getKmInfo() != null) {
+//	    	response.put("status", "100");
+//		    response.put("messsage", "На маршрут уже назначен пробег.");	    	    
+//		    return response;
+//	    }
+//	    if(!route.getStatusRoute().equals("210")) {
+//	    	response.put("status", "100");
+//            response.put("messsage", "Неправильная команда. Статус маршрута не 210");                
+//            return response;
+//	    }
+	    route.setKmInfo(Integer.parseInt(mileage));
+	    route.setStatusRoute("220");
+	    //сюда вставить расчёт стоимости
+	    routeService.saveOrUpdateRoute(route);
+	    response.put("status", "200");
+	    response.put("body", route);	    	    
+	    return response;
+	}
+	
+	/**
+	 * Удаляет из маршрута перевозчика
+	 * @param request
+	 * @param idRoute
+	 * @return
+	 */
+	@GetMapping("/logistics/maintenance/clearCarrier/{idRoute}")
+	public Map<String, Object> clearCarrier(
+	        HttpServletRequest request,
+	        @PathVariable String idRoute) {	    
+	    Map<String, Object> response = new HashMap<>();
+	    Route route = routeService.getRouteById(Integer.parseInt(idRoute));
+	    if(!route.getComments().equals("maintenance")) {
+	    	response.put("status", "100");
+		    response.put("messsage", "Неправильный тип маршрута. Выбран маршрут с типом " + route.getComments() + " а должен быть с типом maintenance");	    	    
+		    return response;
+	    }
+	    route.setUser(null);
+	    route.setTruck(null);
+	    route.setKmInfo(null);
+	    route.setFinishPrice(null);
+	    route.setStartCurrency(null);
+	    route.setStatusRoute("200");
+	    routeService.saveOrUpdateRoute(route);
+	    response.put("status", "200");
+	    response.put("body", route);	    	    
+	    return response;
+	}
+	
 	/**
 	 * назначет водителя на маршрут принудительно
 	 * @param request
@@ -305,16 +529,31 @@ public class MainRestController {
 	        @PathVariable String idCarrier) {
 	    
 	    Map<String, Object> response = new HashMap<>();
-	    User user = new User();
-	    user.setIdUser(Integer.parseInt(idCarrier));
+	    User user = userService.getUserById(Integer.parseInt(idCarrier));
+	    user.setRoute(null);
+	    user.setTrucks(null);
 	    Route route = routeService.getRouteById(Integer.parseInt(idRoute));
+	    if(!route.getComments().equals("maintenance")) {
+	    	response.put("status", "100");
+		    response.put("messsage", "Неправильный тип маршрута. Выбран маршрут с типом " + route.getComments() + " а должен быть с типом maintenance");	    	    
+		    return response;
+	    }
 	    route.setUser(user);
+	    route.setStatusRoute("210");
 	    routeService.saveOrUpdateRoute(route);
 	    response.put("status", "200");
 	    response.put("body", route);	    	    
 	    return response;
 	}
 
+	/**
+	 * возвращает все маршруты с пометкой АХО
+	 * @param request
+	 * @param type
+	 * @param dateStart
+	 * @param dateEnd
+	 * @return
+	 */
 	@GetMapping("/{type}/getMaintenanceList/{dateStart}&{dateEnd}")
 	public Map<String, Object> getMaintenanceList(
 	        HttpServletRequest request,
@@ -336,9 +575,6 @@ public class MainRestController {
 	        case "logistics":
 	            // Логика для logistics
 	            break;
-	        case "carrier":
-	            // Логика для carrier
-	            break;
 	        default:
 	            throw new IllegalArgumentException("Неизвестная команда: " + type);
 	    }	    
@@ -347,7 +583,7 @@ public class MainRestController {
 	
 		
 	/**
-	 * Метод создаёт заявку/маршрут для АХО
+	 * Метод создаёт маршрут для АХО
 	 * @param request
 	 * @param str
 	 * @return
@@ -358,28 +594,14 @@ public class MainRestController {
 	@PostMapping("/manager/maintenance/add")
 	public Map<String, Object> postAddNewMaintenanceOrder(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
 		Map<String, Object> response = new HashMap<String, Object>();
-		System.out.println(str);
 		JSONParser parser = new JSONParser();
 		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
 		JSONArray idOrdersJSON = (JSONArray) parser.parse(jsonMainObject.get("idOrders").toString());
 		String points = jsonMainObject.get("points").toString();
 		Set<Order> orders = new HashSet<Order>();
-		
+//		System.out.println(str);
 		for (Object string : idOrdersJSON) {
 			Order order = orderService.getOrderById(Integer.parseInt(string.toString()));
-			//блок определеящий обязательность постановки окна на выгруцзку от Карины (временно отключен)
-			if(order.getOnloadWindowDate() == null && order.getWay().equals("РБ") && order.getStatus().equals("17")) {
-				response.put("status", "100");
-				response.put("message", "Невозможно создать маршрут без окна на выгрузку");
-				System.out.println("Невозможно создать маршрут без окна на выгрузку");
-				return response;
-			}else if(order.getOnloadWindowDate() != null && order.getOnloadWindowDate().toLocalDate().isBefore(LocalDate.now()) && order.getWay().equals("РБ") && !order.getWay().equals("Экспорт")) {
-				response.put("status", "100");
-				response.put("message", "Окно на выгрузку просрочено! Необходимо назначить новое коно на выгрузку!");
-				System.out.println("Окно на выгрузку просрочено! Необходимо назначить новое коно на выгрузку!");
-				//возможна доп обработка самого ордера
-				return response;
-			}
 			orders.add(order);			
 		}
 		Order order = orders.stream().findFirst().get();
@@ -412,9 +634,12 @@ public class MainRestController {
 		route.setMethodLoad(jsonMainObject.get("methodLoad") != null ? jsonMainObject.get("methodLoad").toString() : null);
 //		route.setTruckInfo(jsonMainObject.get("truckInfo") != null ? jsonMainObject.get("truckInfo").toString() : null);
 //		route.setCargoInfo(jsonMainObject.get("cargoInfo") != null ? jsonMainObject.get("cargoInfo").toString() : null);
-		route.setOnloadWindowDate(order.getOnloadWindowDate());
-		route.setOnloadWindowTime(order.getOnloadWindowTime());
+//		route.setOnloadWindowDate(order.getOnloadWindowDate());
+//		route.setOnloadWindowTime(order.getOnloadWindowTime());
 		route.setLoadNumber(order.getLoadNumber());
+		List <Address> addresses = new ArrayList<Address>(order.getAddresses());
+		route.setDateUnloadPreviouslyStock(addresses.get(addresses.size()-1).getDate() != null ? addresses.get(addresses.size()-1).getDate().toLocalDate().toString() : null);
+		route.setTimeUnloadPreviouslyStock(addresses.get(addresses.size()-1).getTime() != null ? (addresses.get(addresses.size()-1).getTime().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"))) : null);
 		route.setOrders(orders);
 		String tnvd = null;
 		String routeDirectionMiddle = jsonMainObject.get("counterparty") != null ? jsonMainObject.get("counterparty").toString() : "";		
@@ -1273,11 +1498,14 @@ public class MainRestController {
 	 */
 	@GetMapping("/manager/getRouteForInternational/{dateStart}&{dateFinish}")
 	public Set<Route> getRouteForInternational(HttpServletRequest request, @PathVariable Date dateStart, @PathVariable Date dateFinish) {
+		java.util.Date t1 = new java.util.Date();
 		Set<Route> routes = new HashSet<Route>();
 		List<Route>targetRoutes = routeService.getRouteListAsDate(dateStart, dateFinish);
 		targetRoutes.stream()
 			.filter(r-> r.getComments() != null && r.getComments().equals("international") && Integer.parseInt(r.getStatusRoute())<=8)
-			.forEach(r -> routes.add(r)); // проверяет созданы ли точки вручную, и отдаёт только международные маршруты		
+			.forEach(r -> routes.add(r)); // проверяет созданы ли точки вручную, и отдаёт только международные маршруты	
+		java.util.Date t2 = new java.util.Date();
+		System.out.println("getRouteForInternational :" + (t2.getTime() - t1.getTime()) + " ms");
 		return routes;
 	}
 	
@@ -1556,6 +1784,7 @@ public class MainRestController {
 			return response;
 		}
 		Order order = orderService.getOrderById(idOrder);
+		Timestamp oldDateTimeDelivery = order.getTimeDelivery();
 		Integer oldIdRamp = order.getIdRamp();
 		Timestamp oldTimeDelivery = order.getTimeDelivery();
 		Timestamp timestamp = Timestamp.valueOf(jsonMainObject.get("timeDelivery").toString());
@@ -1648,9 +1877,14 @@ public class MainRestController {
 			String infoCheck = null;
 			
 			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {
-				//тут проверка по потребности
+//				if(!oldDateTimeDelivery.toLocalDateTime().toLocalDate().equals(order.getTimeDelivery().toLocalDateTime().toLocalDate())) {//если дата не меняется при update то проверки не происходит
+//					//тут проверка по потребности
+//					infoCheck = readerSchedulePlan.process(order);
+//					response.put("info", infoCheck);
+//				}
 				infoCheck = readerSchedulePlan.process(order);
 				response.put("info", infoCheck);
+				
 			}
 			
 			saveActionInFile(request, "resources/others/blackBox/slot", idOrder, order.getMarketNumber(), order.getNumStockDelivery(), oldIdRamp, order.getIdRamp(), oldTimeDelivery, order.getTimeDelivery(), user.getLogin(), "update", info, order.getMarketContractType());
@@ -4488,7 +4722,7 @@ public class MainRestController {
 				Address address = addressesOld.get(i);
 				// начинается обработка сравнения: если вдрес изменился - то создаётся
 				// корректировочный адрес
-				System.out.println(jsonpObject);
+//				System.out.println(jsonpObject);
 				if (!jsonpObject.get("bodyAdress").toString().equals(address.getBodyAddress())) {
 					Integer oldId = jsonpObject.get("idAddress") == null ? null
 							: Integer.parseInt(jsonpObject.get("idAddress").toString());
@@ -4522,6 +4756,8 @@ public class MainRestController {
 						addressNewCorrect.setTnvd(jsonpObject.get("tnvd") != null ? jsonpObject.get("tnvd").toString() : null);
 						addressNewCorrect.setCargo(jsonpObject.get("cargo").toString().isEmpty() ? null
 								: (String) jsonpObject.get("cargo"));
+						addressNewCorrect.setPointNumber(jsonpObject.get("pointNumer") == null ? null
+								: Integer.parseInt(jsonpObject.get("pointNumer").toString()));
 						addressNewCorrect
 								.setCustomsAddress(jsonpObject.get("customsAddress").toString().isEmpty() ? null
 										: (String) jsonpObject.get("customsAddress"));

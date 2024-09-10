@@ -696,9 +696,9 @@ function getEconomy(route) {
 }
 function getCarrier(route) {
 	if (!route) return ''
-	const driver = route.driver ? route.driver : ''
-	if (!driver) return ''
-	return driver.companyName ? driver.companyName : ''
+	const user = route.user ? route.user : ''
+	if (!user) return ''
+	return user.companyName ? user.companyName : ''
 }
 function getTruckOwner(route) {
 	if (!route) return ''

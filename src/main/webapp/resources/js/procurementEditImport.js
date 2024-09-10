@@ -258,6 +258,8 @@ function changeEditingRules(editableOrder, editOrderForm, points) {
 		inputEditBan(editOrderForm, '#dangerousPackingGroup', true)
 		inputEditBan(editOrderForm, '#dangerousRestrictionCodes', true)
 		inputEditBan(editOrderForm, '#comment', true)
+		inputEditBan(editOrderForm, '#orderPall', true)
+		inputEditBan(editOrderForm, '#orderWeight', true)
 	}
 
 	points.forEach((point, i) => {

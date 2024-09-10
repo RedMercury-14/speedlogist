@@ -624,6 +624,22 @@ export function getScheduleStatus(status) {
 	}
 }
 
+// метод с расшифровкойц статусов маршрутов АХО
+export function getAhoStatusRoute(status) {
+	switch (status) {
+		case '200':
+			return 'Ожидает назначения перевозчика'
+		case '210':
+			return 'Перевозчик назначен'
+		case '220':
+			return 'Указан пробег'
+		case '230':
+			return 'Завершен'
+		default:
+			return 'Неизвестно'
+	}
+}
+
 export const rowClassRules = {
 	'orange-row': params => params.node.data.status === 6,
 	'turquoise-row': params => params.node.data.status === 7,
@@ -679,6 +695,9 @@ export function isStockProcurement(role) {
 }
 export function isOderSupport(role) {
 	return role === '[ROLE_ORDERSUPPORT]'
+}
+export function isCarrier(role) {
+	return role === '[ROLE_CARRIER]'
 }
 
 export function disableButton(button) {

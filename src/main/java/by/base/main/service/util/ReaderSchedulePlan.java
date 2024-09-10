@@ -76,6 +76,9 @@ public class ReaderSchedulePlan {
      * @return
      */
 	public DateRange getDateRange (Schedule schedule, Product product) {
+		if(schedule == null) {
+			return null;
+		}
 		Map<String, String> days = schedule.getDaysMap();
 		Map<String, String> daysStep2 = days.entrySet().stream().filter(m->m.getValue().contains("понедельник")
 				|| m.getValue().contains("вторник")

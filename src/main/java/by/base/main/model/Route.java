@@ -208,7 +208,7 @@ public class Route implements Serializable{
 	@JoinColumn(name = "user_iduser_manager") // перевозчик
 //	@JsonBackReference
 //	@JsonManagedReference
-	@JsonIgnore
+//	@JsonIgnore
 	private User user;
 	
 	@OneToMany(fetch=FetchType.LAZY, orphanRemoval = true,

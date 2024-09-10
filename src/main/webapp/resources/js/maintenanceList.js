@@ -15,13 +15,16 @@ const methodBase = isCarrier(role) ? 'carrier' : 'logistics'
 const getAhoRouteBaseUrl = `../../api/${methodBase}/getMaintenanceList/`
 const addCarrierBaseUrl = `../../api/logistics/maintenance/setCarrier/`
 const clearCarrierBaseUrl = `../../api/logistics/maintenance/clearCarrier/`
-const closeRouteBaseUrl = `../../api/logistics/maintenance/closeRoute/`
 const setMileageBaseUrl = `../../api/${methodBase}/maintenance/setMileage/`
 const clearMileageBaseUrl = `../../api/${methodBase}/maintenance/clearMileage/`
+const setFinishPriceBaseUrl = `../../api/logistics/maintenance/setCost/`
+const clearFinishPriceBaseUrl = `../../api/logistics/maintenance/clearCost/`
+const closeRouteBaseUrl = `../../api/logistics/maintenance/closeRoute/`
 
 export const rowClassRules = {
-	'finishRow': params => params.node.data.statusRoute === '220',
-	'attentionRow': params => params.node.data.statusRoute === '200',
+	'activRow': params => params.node.data.statusRoute === '200',
+	'attentionRow': params => params.node.data.statusRoute === '220',
+	'finishRow': params => params.node.data.statusRoute === '225',
 	'endRow': params => params.node.data.statusRoute === '230',
 }
 
@@ -86,14 +89,14 @@ const columnDefs = [
 			valueFormatter: kmInfoValueFormatter,
 		},
 	},
-	// {
-	// 	headerName: 'Стоимость перевозки', field: 'finishPrice',
-	// 	width: 120,
-	// 	valueFormatter: finishPriceFormatter,
-	// 	filterParams: {
-	// 		valueFormatter: finishPriceFormatter,
-	// 	},
-	// },
+	{
+		headerName: 'Стоимость перевозки', field: 'finishPrice',
+		width: 120,
+		valueFormatter: finishPriceFormatter,
+		filterParams: {
+			valueFormatter: finishPriceFormatter,
+		},
+	},
 	{ headerName: 'Маршрут', field: 'addressInfo', wrapText: true, autoHeight: true, minWidth: 240, },
 	{ headerName: 'Информация о грузе', field: 'cargoInfo', wrapText: true, autoHeight: true, },
 	{ headerName: 'Информация о транспорте', field: 'truckInfo', wrapText: true, autoHeight: true, },
@@ -182,6 +185,7 @@ window.addEventListener("load", async () => {
 	const routeSearchForm = document.querySelector('#routeSearchForm')
 	const addCarrierForm = document.querySelector('#addCarrierForm')
 	const addMileageForm = document.querySelector('#addMileageForm')
+	const addFinishPriceForm = document.querySelector('#addFinishPriceForm')
 	const date_fromInput = document.querySelector('#date_from')
 	const date_toInput = document.querySelector('#date_to')
 
@@ -209,10 +213,12 @@ window.addEventListener("load", async () => {
 	addCarrierForm.addEventListener('submit', addCarrierSubmitHandler)
 	// обработчик формы установки пробега по маршруту
 	addMileageForm.addEventListener('submit', addMileageSubmitHandler)
-	// очищение формы назначения перевозчика
+	// обработчик формы установки стоимости по маршруту
+	addFinishPriceForm.addEventListener('submit', addFinishPriceSubmitHandler)
+	// очистка форм
 	$('#addCarrierModal').on('hide.bs.modal', (e) => resetCarrierForm(e, addCarrierForm))
-	// очищение формы назначения перевозчика
 	$('#addMileageModal').on('hide.bs.modal', (e) => addMileageForm.reset())
+	$('#addFinishPriceModal').on('hide.bs.modal', (e) => addFinishPriceForm.reset())
 
 	// добавляем перевозчиков в список
 	await addCarriersToSelect()
@@ -254,6 +260,13 @@ function showAddMileageModal() {
 }
 function hideAddMileageModal() {
 	$('#addMileageModal').modal('hide')
+}
+// отображение модального окна установки стоимости перевозки
+function showAddFinishPriceModal() {
+	$('#addFinishPriceModal').modal('show')
+}
+function hideAddFinishPriceModal() {
+	$('#addFinishPriceModal').modal('hide')
 }
 
 // поиск в списке селекта
@@ -302,6 +315,14 @@ async function addMileageSubmitHandler(e) {
 	const idRoute = formData.get('idRoute')
 	const mileage = formData.get('mileage')
 	await setMileage(idRoute, mileage)
+}
+// обработчик формы назначения перевозчика
+async function addFinishPriceSubmitHandler(e) {
+	e.preventDefault()
+	const formData = new FormData(e.target)
+	const idRoute = formData.get('idRoute')
+	const finishPrice = formData.get('finishPrice')
+	await setFinishPrice(idRoute, finishPrice)
 }
 // очищение формы назначения превозчика
 function resetCarrierForm(e, form) {
@@ -381,7 +402,9 @@ function getContextMenuItems(params) {
 	const isAddMileageDisabled = status !== '210' && status !== '220'
 	const isCarrierAddMileageDisabled = status !== '210'
 	const isRemoveMileageDisabled = status !== '220'
-	const isCloseRouteDisabled = status !== '220'
+	const isAddFinishPriceDisabled = status !== '220' && status !== '225'
+	const isRemoveFinishPriceDisabled = status !== '225'
+	const isCloseRouteDisabled = status !== '225'
 
 	const logistResult = [
 		{
@@ -414,6 +437,22 @@ function getContextMenuItems(params) {
 			icon: uiIcons.eraser,
 			action: () => {
 				removeMileage(idRoute)
+			},
+		},
+		{
+			disabled: isAddFinishPriceDisabled,
+			name: `Указать стоимость перевозки`,
+			icon: uiIcons.route2,
+			action: () => {
+				addFinishPrice(routeData)
+			},
+		},
+		{
+			disabled: isRemoveFinishPriceDisabled,
+			name: `Удалить стоимость`,
+			icon: uiIcons.eraser,
+			action: () => {
+				removeFinishPrice(idRoute)
 			},
 		},
 		{
@@ -458,6 +497,14 @@ function addMileage(routeData) {
 	addMileageForm.routeDirection.value = routeData.routeDirection
 	addMileageForm.mileage.value = mileage
 	showAddMileageModal()
+}
+function addFinishPrice(routeData) {
+	const finishPrice = routeData.finishPrice ? routeData.finishPrice : ''
+	const addFinishPriceForm = document.querySelector('#addFinishPriceForm')
+	addFinishPriceForm.idRoute.value = routeData.idRoute
+	addFinishPriceForm.routeDirection.value = routeData.routeDirection
+	addFinishPriceForm.finishPrice.value = finishPrice
+	showAddFinishPriceModal()
 }
 
 // функция обновления данных ячейки таблицы
@@ -624,7 +671,43 @@ async function removeMileage(idRoute) {
 	if (res.status === '200') {
 		snackbar.show('Выполнено!')
 		updateTable()
-		hideAddCarrierModal()
+	} else {
+		console.log(res)
+		const message = res.message ? res.message : 'Неизвестная ошибка'
+		snackbar.show(message)
+	}
+}
+async function setFinishPrice(idRoute, finishPrice) {
+	if (isCarrier(role)) return
+	const url = `${setFinishPriceBaseUrl}${idRoute}&${finishPrice}&BYN`
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
+	const res = await getData(url)
+	
+	clearTimeout(timeoutId)
+	bootstrap5overlay.hideOverlay()
+	
+	if (res.status === '200') {
+		snackbar.show('Выполнено!')
+		updateTable()
+		hideAddFinishPriceModal()
+	} else {
+		console.log(res)
+		const message = res.message ? res.message : 'Неизвестная ошибка'
+		snackbar.show(message)
+	}
+}
+async function removeFinishPrice(idRoute) {
+	if (isCarrier(role)) return
+	const url = `${clearFinishPriceBaseUrl}${idRoute}`
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
+	const res = await getData(url)
+	
+	clearTimeout(timeoutId)
+	bootstrap5overlay.hideOverlay()
+	
+	if (res.status === '200') {
+		snackbar.show('Выполнено!')
+		updateTable()
 	} else {
 		console.log(res)
 		const message = res.message ? res.message : 'Неизвестная ошибка'

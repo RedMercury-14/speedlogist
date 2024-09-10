@@ -633,6 +633,8 @@ export function getAhoStatusRoute(status) {
 			return 'Перевозчик назначен'
 		case '220':
 			return 'Указан пробег'
+		case '225':
+			return 'Указан пробег и стоимость перевозки'
 		case '230':
 			return 'Завершен'
 		default:

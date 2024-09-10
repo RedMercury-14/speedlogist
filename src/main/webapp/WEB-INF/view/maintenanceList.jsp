@@ -236,7 +236,41 @@
 					</div>
 					<div class="modal-footer">
 						<button class="btn btn-secondary" type="button" data-dismiss="modal">Отмена</button>
-						<button class="btn btn-primary" type="submit">Подтвердить данные</button>
+						<button class="btn btn-primary" type="submit">Подтвердить</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<!-- Модальное окно с установкой цены перевозки -->
+	<div class="modal fade" id="addFinishPriceModal" tabindex="-1" aria-labelledby="addFinishPriceModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header align-items-center text-white">
+					<h5 class="modal-title" id="addFinishPriceModalLabel">Установка цены за перевозку</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<form id="addFinishPriceForm" name="addFinishPriceForm" action="">
+					<div class="modal-body">
+						<div class="form-group input-column-container">
+							<span class="text-muted font-weight-bold">Номер маршрута:</span>
+							<input type="text" class="form-control" name="idRoute" id="idRoute" readonly required>
+						</div>
+						<div class="form-group input-column-container">
+							<span class="text-muted font-weight-bold">Название маршрута:</span>
+							<textarea type="text" class="form-control" rows="5" name="routeDirection" id="routeDirection" readonly required></textarea>
+						</div>
+						<div class="form-group input-column-container">
+							<span class="text-muted font-weight-bold">Укажите цену за перевозку в BYN:</span>
+							<input type="number" id="finishPrice" name="finishPrice" min="0" class="form-control">
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button class="btn btn-secondary" type="button" data-dismiss="modal">Отмена</button>
+						<button class="btn btn-primary" type="submit">Подтвердить</button>
 					</div>
 				</form>
 			</div>

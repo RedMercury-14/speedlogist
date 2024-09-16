@@ -267,6 +267,10 @@ public class MainRestController {
 
 	public static final Comparator<Address> comparatorAddressId = (Address e1, Address e2) -> (e1.getIdAddress() - e2.getIdAddress());
 	public static final Comparator<Address> comparatorAddressIdForView = (Address e1, Address e2) -> (e2.getType().charAt(0) - e1.getType().charAt(0));
+	/**
+	 * сортирует от последней точки загрузки
+	 */
+	public static final Comparator<Address> comparatorAddressForLastLoad = (Address e1, Address e2) -> (e2.getPointNumber() - e1.getPointNumber());
 	
 	/**
 	 * Удаление стоимости рейса
@@ -5447,6 +5451,7 @@ public class MainRestController {
 	
 	/**
 	 * Метод сохраняет заявку заявки создание заявки ИМПОРТ И РБ
+	 * после этого метода ожидаются слоты
 	 * ожидает статус и idOrder!!
 	 * @param str
 	 * @param request
@@ -5556,6 +5561,7 @@ public class MainRestController {
 		Set<Address> addresses = new HashSet<Address>();
 		List<JSONObject> arrayJSON = new ArrayList<>();
 		String[] mass = firstJsonRequest.split("},");
+		List <Address> addressesLoad = new ArrayList<Address>(); // лист с отдельными адресами загрузок
 		for (String string : mass) {
 			if (string.charAt(string.length() - 1) != '}') {
 				string = string + "}";
@@ -5607,7 +5613,16 @@ public class MainRestController {
 			address.setOrder(order);
 			addressService.saveAddress(address);
 			addresses.add(address);
+			if(address.getType().equals("Загрузка")) {
+				addressesLoad.add(address);
+			}
 		}
+		//тут просчитываем и записываем крайнюю точку загрузки 
+		addressesLoad.sort(comparatorAddressForLastLoad);
+		Timestamp dateTimeLastLoad = Timestamp.valueOf(LocalDateTime.of(addressesLoad.get(0).getDate().toLocalDate(), addressesLoad.get(0).getTime().toLocalTime()));
+		order.setLastDatetimePointLoad(dateTimeLastLoad);
+		orderService.updateOrder(order); // не лишнее ли. возмоно отдельным запросом
+		
 		response.put("status", "200");
 		response.put("message", "Заявка создана");
 		//отправляем на почту к логистам в отдельных потоках
@@ -5787,7 +5802,7 @@ public class MainRestController {
 			order.setIdOrder(orderService.saveOrder(order));
 		}
 		
-		
+		List <Address> addressesLoad = new ArrayList<Address>(); // лист с отдельными адресами загрузок
 		for (String string : mass) {
 			if (string.charAt(string.length() - 1) != '}') {
 				string = string + "}";
@@ -5837,7 +5852,17 @@ public class MainRestController {
 			address.setOrder(order);
 			addressService.saveAddress(address);
 			addresses.add(address);
+			if(address.getType().equals("Загрузка")) {
+				addressesLoad.add(address);
+			}
+
 		}
+		//тут просчитываем и записываем крайнюю точку загрузки 
+		addressesLoad.sort(comparatorAddressForLastLoad);
+		Timestamp dateTimeLastLoad = Timestamp.valueOf(LocalDateTime.of(addressesLoad.get(0).getDate().toLocalDate(), addressesLoad.get(0).getTime().toLocalTime()));
+		order.setLastDatetimePointLoad(dateTimeLastLoad);
+		orderService.updateOrder(order); // не лишнее ли. возмоно отдельным запросом
+				
 		response.put("status", "200");
 		response.put("message", "Заявка создана");
 		//отправляем на почту к логистам в отдельных потоках

@@ -18,14 +18,11 @@ import {
 	dangerousInputOnChangeHandler,
 	hideAddUnloadPointButton,
 	hideFormField,
-	hideMarketInfoTextarea,
-	hideMarketNumberInput,
 	inputEditBan,
 	isInvalidPointForms,
 	orderCargoInputOnChangeHandler,
 	orderPallInputOnChangeHandler,
 	orderWeightInputOnChangeHandler,
-	setCounterparty,
 	setFormName,
 	setOrderDataToOrderForm,
 	setWayType,
@@ -37,7 +34,7 @@ import {
 	validatePointDates,
 } from "./procurementFormUtils.js"
 import { snackbar } from "./snackbar/snackbar.js"
-import { disableButton, enableButton, getData, isStockProcurement, } from './utils.js'
+import { disableButton, enableButton, getData, isStockProcurement, setInputValue, } from './utils.js'
 
 const redirectUrl = (orderStatus) => orderStatus === 20 || disableSlotRedirect ? "orders" : "../slots"
 const getInternalMovementShopsUrl = "../../api/manager/getInternalMovementShops"
@@ -164,14 +161,14 @@ function transformToInternalMovementForm() {
 	// изменяем название формы
 	setFormName('Форма создания заявки (внутреннее перемещение)')
 	// установка контрагента для внутренних перемещений
-	setCounterparty('ЗАО "Доброном"')
+	setInputValue(document, '#counterparty', 'ЗАО "Доброном"')
 	// установка типа маршрута
 	setWayType(orderWay)
 	// добавляем тип маршрута в текст кнопки создания заявки
 	changeSubmitButtonText('внутреннее перемещение')
 	// скрываем поля с информацией из Маркета
-	hideMarketNumberInput()
-	hideMarketInfoTextarea()
+	hideFormField('marketNumber')
+	hideFormField('marketInfo')
 }
 
 // превращение формы в форму перевозок АХО
@@ -180,7 +177,7 @@ function transformToAhoForm() {
 	// изменяем название формы
 	setFormName('Форма создания заявки (перевозка АХО)')
 	// установка контрагента для АХО
-	setCounterparty('ЗАО "Доброном"')
+	setInputValue(document, '#counterparty', 'ЗАО "Доброном"')
 	// установка типа маршрута
 	setWayType(orderWay)
 	// скрываем поля с контактом контрагента
@@ -240,8 +237,8 @@ function wayButtonsContainerOnClickHandler(e, wayTypeInput) {
 			// добавляем тип маршрута в текст кнопки создания заявки
 			changeSubmitButtonText(wayType)
 			// скрываем поля с информацией из Маркета
-			hideMarketNumberInput()
-			hideMarketInfoTextarea()
+			hideFormField('marketNumber')
+			hideFormField('marketInfo')
 		}
 	}
 }
@@ -298,12 +295,12 @@ function RBButtonsContainerOnClickHandler(e) {
 			// изменяем название формы
 			setFormName('Форма создания заявки (внутреннее перемещение)')
 			// установка контрагента для внутренних перемещений
-			setCounterparty('ЗАО "Доброном"')
+			setInputValue(document, '#counterparty', 'ЗАО "Доброном"')
 			// добавляем тип маршрута в текст кнопки создания заявки
 			changeSubmitButtonText('внутреннее перемещение')
 			// скрываем поля с информацией из Маркета
-			hideMarketNumberInput()
-			hideMarketInfoTextarea()
+			hideFormField('marketNumber')
+			hideFormField('marketInfo')
 		} else if (RBType === 'counterparty') {
 			// просим указать номер из маркета
 			showSetMarketNumberModal()
@@ -414,12 +411,13 @@ function orderFormSubmitHandler(e) {
 
 	const formData = new FormData(e.target)
 	const data = getOrderData(formData, orderData, orderStatus)
-	console.log("🚀 ~ orderFormSubmitHandler ~ data:", data)
+
 	if (isInvalidOrderForm(data)) {
 		return
 	}
 
 	disableButton(e.submitter)
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
 
 	ajaxUtils.postJSONdata({
 		url: getAddNewProcurementUrl(orderStatus, orderWay),
@@ -435,9 +433,13 @@ function orderFormSubmitHandler(e) {
 				snackbar.show('Возникла ошибка - попробуйте очистить форму и заполнить заново')
 				enableButton(e.submitter)
 			}
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
 		},
 		errorCallback: () => {
 			enableButton(e.submitter)
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
 		}
 	})
 }

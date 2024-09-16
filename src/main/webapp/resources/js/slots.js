@@ -160,6 +160,10 @@ const calendarOptions = {
 		right: "",
 	},
 
+	viewDidMount: (info) => {
+		createCalendarDateInput(calendar)
+	},
+
 	titleFormat: {
 		year: 'numeric', month: 'long', day: 'numeric', weekday: 'short'
 	},
@@ -233,9 +237,6 @@ window.onload = async function() {
 	calendarEl.addEventListener('mousedown', (e) => {
 		if (e.button === 2) e.preventDefault()
 	})
-
-	// создание инпута даты календаря
-	createCalendarDateInput(calendar)
 
 	// создание графика для паллетовместимости
 	const ctx = document.querySelector('#pallLineChart')

@@ -72,11 +72,11 @@
 							</div>
 							<div class="form-group input-row-container none">
 								<span class="text-muted font-weight-bold">Кол-во паллет: <span class="text-red">*</span></span>
-								<input type="number" class="form-control" name="orderPall" id="orderPall" placeholder="" required>
+								<input type="number" class="form-control" name="orderPall" id="orderPall" placeholder="Количество паллет в штуках">
 							</div>
 							<div class="form-group input-row-container none">
 								<span class="text-muted font-weight-bold">Масса груза, кг: <span class="text-red">*</span></span>
-								<input type="number" class="form-control" name="orderWeight" id="orderWeight" placeholder="" required>
+								<input type="number" class="form-control" name="orderWeight" id="orderWeight" placeholder="Общая масса перевозимого груза">
 							</div>
 							<div class="form-group input-row-container">
 								<span class="text-muted font-weight-bold">Номер заказа из Маркета:</span>

@@ -5222,6 +5222,24 @@ public class MainRestController {
 	}
 	
 	/**
+	 * Отдаёт все заявки по периоду создания заявки. pattern = "yyyy-MM-dd"
+	 * @param dateStart
+	 * @param dateEnd
+	 * @return
+	 */
+	@GetMapping("/manager/getOrders2/{dateStart}&{dateEnd}")
+	public Set<OrderDTO> getListOrdersDAO(@PathVariable Date dateStart, @PathVariable Date dateEnd) {
+		java.util.Date t1 = new java.util.Date();
+		Set<OrderDTO> dtos = orderService.getOrderDTOByPeriodDelivery(dateStart, dateEnd).stream()
+				.collect(Collectors.toSet());
+		java.util.Date t2 = new java.util.Date();
+		System.out.println("/manager/getOrders2 : " + (t2.getTime()-t1.getTime()) + " ms; " + dtos.size() + " items");
+		return dtos;		
+	}
+	
+	
+	
+	/**
 	 *  Отдаёт заявки только на внутреннние перемещения по периоду создания заявки. pattern = "yyyy-MM-dd"
 	 * @param dateStart
 	 * @param dateEnd

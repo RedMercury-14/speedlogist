@@ -25,6 +25,7 @@ import {
 	getTimeHTML,
 	getTnvdHTML,
 } from "./procurementFormHtmlUtils.js";
+import { bootstrap5overlay } from "./bootstrap5overlay/bootstrap5overlay.js"
 
 const editProcurement = "../../../api/manager/editProcurement"
 const getInternalMovementShopsUrl = "../../../api/manager/getInternalMovementShops"
@@ -98,12 +99,14 @@ function orderFormSubmitHandler(e) {
 	const formData = new FormData(e.target)
 	const data = getOrderData(formData, editableOrder, null)
 	const updatedData = updateEditFormData(data)
+	console.log("🚀 ~ orderFormSubmitHandler ~ updatedData:", updatedData)
 
 	if (!validateForm(updatedData)) {
 		return
 	}
 
 	disableButton(e.submitter)
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
 
 	ajaxUtils.postJSONdata({
 		url: editProcurement,
@@ -119,9 +122,13 @@ function orderFormSubmitHandler(e) {
 				snackbar.show('Возникла ошибка - обновите страницу!')
 				enableButton(e.submitter)
 			}
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
 		},
 		errorCallback: () => {
 			enableButton(e.submitter)
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
 		}
 	})
 }

@@ -189,7 +189,7 @@
 										<a class="dropdown-item" href="<spring:url value="/main/carrier/transportation/routecontrole"/>">Акты</a>
 										<a class="dropdown-item" href="<spring:url value="/main/carrier/transportation/archive"/>">Архив перевозок</a>
 										<a class="dropdown-item" href="<spring:url value="/main/carrier/tender/history"/>">История тендеров</a>
-										<a class="dropdown-item" href="<spring:url value="/main/carrier/maintenance " />">Менеджер маршрутов АХО</a>
+										<!-- <a class="dropdown-item" href="<spring:url value="/main/carrier/maintenance " />">Менеджер маршрутов АХО</a> -->
 									</div>
 								</li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/carrier/exchange"/>">О бирже</a></li>
@@ -224,6 +224,14 @@
 										<a class="dropdown-item" href="<spring:url value="/main/orl/delivery-schedule" />">График поставок</a>
 										<a class="dropdown-item" href="<spring:url value="/main/orl/need" />">Потребности</a>
 										<!-- <a class="dropdown-item" href="<spring:url value="/main/orl/arrival" />">Приход</a> -->
+									</div>
+								</li>
+								<li class="dropdown">
+									<a href="#" class="nav-item nav-link" data-toggle="dropdown">Аналитика</a>
+									<div class="dropdown-menu">
+										<a class="dropdown-item" href="<spring:url value="/main/analytics/shortage" />">Нехватка товаров на РЦ</a>
+										<a class="dropdown-item" href="<spring:url value="/main/analytics/changing-matrix" />">Изменения матрицы</a>
+										<a class="dropdown-item" href="<spring:url value="/main/analytics/needs" />">Аналитика потребности фактических заказов</a>
 									</div>
 								</li>
 							</c:when>

@@ -63,6 +63,7 @@ const columnDefs = [
 	{ headerName: 'Дата создания заявки', field: 'dateCreateToView', comparator: dateComparator, },
 	{ headerName: 'Дата загрузки (первая)', field: 'loadDateToView', comparator: dateComparator, },
 	{ headerName: 'Дата выгрузки (последняя)', field: 'unloadDateToView', comparator: dateComparator, },
+	{ headerName: 'Слот на выгрузку', field: 'timeDeliveryToView', },
 	// { headerName: 'Дата и время выгрузки', field: 'unloadWindowToView', width: 200, },
 	// { headerName: 'Продолжительность выгрузки', field: 'onloadTime', width: 200, },
 	{ headerName: 'Тип маршрута', field: 'wayToView', },
@@ -290,6 +291,8 @@ window.onload = async () => {
 		handle: '.dragItem',
 		animation: 150
 	})
+
+	bootstrap5overlay.hideOverlay()
 }
 
 window.addEventListener("unload", () => {
@@ -359,6 +362,8 @@ function getMappingData(data) {
 		const unloadWindowToView = order.onloadWindowDate && order.onloadWindowTime
 			? `${dateHelper.getFormatDate(order.onloadWindowDate)} ${order.onloadWindowTime.slice(0, 5)}`
 			: ''
+
+		const timeDeliveryToView = order.timeDelivery ? convertToDayMonthTime(order.timeDelivery) : ''
 
 		const filtredAdresses = order.addresses.filter(address => address.isCorrect)
 		const addressesToView = filtredAdresses
@@ -442,6 +447,7 @@ function getMappingData(data) {
 			routeInfo,
 			routePrice,
 			wayToView,
+			timeDeliveryToView,
 		}
 	})
 }
@@ -766,4 +772,15 @@ function changeCounterpartyLabel(isRequired) {
 	const counterpartyLabel = counterpartyContainer.querySelector('label')
 	const labelText = isRequired ? 'Название маршрута <span class="text-red">*</span>' : 'Название маршрута'
 	counterpartyLabel.innerHTML = labelText
+}
+
+function convertToDayMonthTime(eventDateStr) {
+	const date = new Date(eventDateStr)
+	const formatter = new Intl.DateTimeFormat('ru', {
+		day: '2-digit',
+		month: 'long', 
+		hour: '2-digit',
+		minute: '2-digit'
+	})
+	return formatter.format(date)
 }

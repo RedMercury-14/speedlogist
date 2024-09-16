@@ -214,16 +214,21 @@ export const dateHelper = {
 		const TimeOfToday = this.getTimesOfDay(now, '11:00:00')
 
 		// правила для внутренних перемещений
-		if (isInternalMovement === 'true') {
-			// до 12 - на завтра, после 12 - на послезавтра
-			const tomorrow = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 1)
-			const dayAfterTomorrow = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 2)
-			return now < noonToday
-				? this.getDateForInput(tomorrow)
-				: this.getDateForInput(dayAfterTomorrow)
+		// if (isInternalMovement === 'true') {
+		// 	// до 12 - на завтра, после 12 - на послезавтра
+		// 	const tomorrow = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 1)
+		// 	const dayAfterTomorrow = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 2)
+		// 	return now < noonToday
+		// 		? this.getDateForInput(tomorrow)
+		// 		: this.getDateForInput(dayAfterTomorrow)
+		// }
+
+		// правила для перевозок АХО
+		if (ahoWay) {
+			return this.getDateForInput(now)
 		}
 
-		// правила для перевозок по РБ и перевозок АХО
+		// правила для перевозок по РБ и Внутренних перемещений
 		if (RBway || ahoWay) {
 			// если пятница, после 11:00, то на вторник
 			if (day === 5 && now > TimeOfToday) {

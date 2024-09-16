@@ -1,9 +1,6 @@
-import { autocomplete } from './autocomplete/autocomplete.js';
-import { countries } from './global.js';
-import { dateHelper, inputBan, setInputValue } from './utils.js';
-
-const IMPORT_CUSTOMS_ADDRESS = ' г. Минск, ул. Промышленная, 4'
-const IMPORT_CUSTOMS_FULL_ADDRESS = 'BY Беларусь; г. Минск, ул. Промышленная, 4'
+import { autocomplete } from './autocomplete/autocomplete.js'
+import { countries } from './global.js'
+import { dateHelper, inputBan, setInputValue } from './utils.js'
 
 const INCOTERMS_INSURANCE_LIST = [
 	'FAS – Free Alongside Ship',
@@ -13,26 +10,6 @@ const INCOTERMS_INSURANCE_LIST = [
 	'FCA – Free Carrier',
 	'CPT – Carriage Paid To',
 ]
-
-// установка значения СТРАНЫ из полей с адресами склада
-export function addDataToCountryInputs() {
-	const counrtyInputs = document.querySelectorAll('.country-input')
-	const addressInputs = document.querySelectorAll('.address-input')
-
-	addressInputs.forEach((addressInput, i) => {
-		const value = addressInput.value
-		const separator = ';'
-		const separatorIndex = value.indexOf(separator)
-		
-		if (separatorIndex < 0) return
-
-		const country = value.substring(0, separatorIndex)
-		const address = value.substring(separatorIndex + 2)
-
-		counrtyInputs[i].value = country
-		addressInput.value = address
-	})
-}
 
 // установка минимального значения ДАТЫ для точки выгрузки
 export function setUnloadDateMinValue(e, unloadDateInput) {
@@ -99,13 +76,6 @@ export function setUnloadTimeMinValue(loadDateInput, loadTimeSelect, unloadDateI
 	}
 }
 
-// установка минимального значения ДАТЫ для точек загрузки и выгрузки
-export function setMinValidDate(order) {
-	const dateInputs = document.querySelectorAll('.date-input')
-	const minValidDate = dateHelper.getMinValidDate(order)
-	dateInputs.forEach(input => input.setAttribute('min', minValidDate))
-}
-
 // проверка правильности дат точек загрузки и выгрузки
 export function validatePointDates(data) {
 	const pointDates = data.points.map(point => point.date && new Date(point.date))
@@ -115,18 +85,6 @@ export function validatePointDates(data) {
 		if (date >= minValidDate) return true
 	})
 	return isValid
-}
-
-// обработчик изменения значения инпута "Сверка УКЗ"
-export function controlUKZSelectOnChangeHandler(e, DOMobj, isFullAddress) {
-	const unloadCustomsAddress = DOMobj.querySelector('#customsAddress')
-	const controlUKZ = e.target.value
-
-	unloadCustomsAddress.value = (controlUKZ === 'Да')
-		? isFullAddress
-			? IMPORT_CUSTOMS_FULL_ADDRESS
-			: IMPORT_CUSTOMS_ADDRESS
-		: ''
 }
 
 // изменение значения аттрибута "required" для полей с количеством паллет, объемом и массой
@@ -215,35 +173,6 @@ export function showIncotermsInsuranseInfo(e) {
 	}
 }
 
-
-// удаление значения аттрибута "required" для поля с кодами ТН ВЭД
-export function removeTnvdInputRequired() {
-	const tnvdInput = document.querySelector('#tnvd')
-	const tnvdTitle = tnvdInput && tnvdInput.parentElement.querySelector('label')
-
-	tnvdInput && tnvdInput.removeAttribute('required')
-	tnvdTitle && (tnvdTitle.innerHTML = 'Коды ТН ВЭД:')
-}
-
-// добавление значения аттрибута "required" номера из Маркета
-export function addMarketNumberInputRequired() {
-	const marketNumberInput = document.querySelector('#marketNumber')
-	const marketNumberLebel = marketNumberInput.parentElement.querySelector('span')
-	marketNumberInput.setAttribute('required', 'true')
-	marketNumberLebel.innerHTML = 'Номер из маркета <span class="text-red">*</span>'
-}
-
-// удаление значения аттрибута "required" для даты выгрузки
-export function removeUnloadDateInputRequired(form) {
-	// дата выгрузки необязательна
-	const unloadDateContainer = form.querySelector('.unloadDate-container')
-	const unloadDateLabel = unloadDateContainer.querySelector('label')
-	const unloadDateInput = unloadDateContainer.querySelector('#unloadDate')
-
-	unloadDateLabel.innerHTML = 'Дата выгрузки'
-	unloadDateInput.removeAttribute('required')
-}
-
 // автозаполнение значения страны в форме точки загрузки или выгрузки (Беларусь)
 export function addBelarusValueToCountryInputs(pointForm) {
 	const countryInput = pointForm.querySelector('#country')
@@ -253,20 +182,6 @@ export function addBelarusValueToCountryInputs(pointForm) {
 	// customsCountryInput.value = 'BY Беларусь'
 	countryInput.setAttribute('readonly', 'true')
 	// customsCountryInput.setAttribute('readonly', 'true')
-}
-
-// автозаполнение формы выгрузки
-export function addCargoInfoInUnloadForm(data) {
-	const addUnloadPointForm = document.querySelector('#addUnloadPointForm')
-	const pointCargoInput = addUnloadPointForm.querySelector('#pointCargo')
-	const pallInput = addUnloadPointForm.querySelector('#pall')
-	const weightInput = addUnloadPointForm.querySelector('#weight')
-	const volumeInput = addUnloadPointForm.querySelector('#volume')
-
-	pointCargoInput.value = data.cargo
-	pallInput.value = data.pall
-	weightInput.value = data.weight
-	volumeInput.value = data.volume
 }
 
 // изменение текста кнопки создания заявки
@@ -324,28 +239,6 @@ function createAddressSelect(addresses, value) {
 	return select
 }
 
-
-// скрывает поле номера из Маркета
-export function hideMarketNumberInput() {
-	const marketNumberInput = document.querySelector('#marketNumber')
-	const marketNumberContainer = marketNumberInput.parentElement
-	marketNumberContainer.classList.add('none')
-	marketNumberInput.removeAttribute('required')
-}
-
-export function hideMarketInfoTextarea() {
-	const marketInfoTextarea = document.querySelector('#marketInfo')
-	const marketInfoContainer = marketInfoTextarea.parentElement
-	marketInfoContainer.classList.add('none')
-	marketInfoTextarea.removeAttribute('required')
-}
-
-export function setCounterparty(counterparty) {
-	const counterpartyInput = document.querySelector('#counterparty')
-	counterpartyInput.value = counterparty
-	// counterpartyInput.setAttribute('readonly', 'true')
-}
-
 export function setWayType(wayType) {
 	const wayTypeInput = document.querySelector('#way')
 	wayTypeInput.value = wayType
@@ -362,40 +255,14 @@ export function setOrderDataToOrderForm(form, orderData) {
 	const marketNumberInput = form.querySelector('#marketNumber')
 	const marketInfoSpan = form.querySelector('#marketInfo')
 	marketNumberInput.value = Number(orderData.marketNumber)
-	marketNumberInput.setAttribute('readonly', 'true')
-	marketInfoSpan.innerText = orderData.marketInfo
+	marketNumberInput.readOnly = true
+	marketInfoSpan.value = orderData.marketInfo
 	form.counterparty.value = orderData.counterparty
 	form.loadNumber.value = orderData.marketNumber
 	form.cargo.value = orderData.cargo
 }
 
-// заполняет данные заказа в форме точки загрузки
-export function setOrderDataToLoadPointForm(form, orderData) {
-	const pallInput = form.querySelector('#pall')
-	pallInput.value = Number(orderData.pall)
-	pallInput.setAttribute('readonly', 'true')
-	form.pointCargo.value = orderData.cargo
-}
-
-// заполняет данные заказа в форме точки выгрузки
-export function setOrderDataToUnloadPointForm(form, orderData) {
-	const pallInput = form.querySelector('#pall')
-	pallInput.value = Number(orderData.pall)
-	pallInput.setAttribute('readonly', 'true')
-	form.pointCargo.value = orderData.cargo
-	form.address.value = getStockAddress(orderData.numStockDelivery)
-}
-
-// показываем время выгрузки и делаем обязательным
-export function showUnloadTime(addUnloadPointForm) {
-	const unloadTimeContainer = addUnloadPointForm.querySelector('.unloadTime-container')
-	const unloadTimeLabel = unloadTimeContainer.querySelector('label')
-	const unloadTimeInput = unloadTimeContainer.querySelector('#unloadTime')
-	unloadTimeContainer.classList.remove('none')
-	unloadTimeLabel.innerHTML = 'Время выгрузки <span class="text-red">*</span>'
-	unloadTimeInput.required = true
-}
-
+// метод получения адреса склада по номеру
 export function getStockAddress(stockNumber) {
 	switch (stockNumber) {
 		case '1700': return 'Склад 1700, 223065, Минская обл., Минский р-н, Луговослободской с/с, РАД М4, 18км. 2а, склад W05'
@@ -452,11 +319,6 @@ export function hideFormField(id) {
 		field.required = false
 	}
 }
-
-
-// ====================================================================================
-// ========================== функции для новой формы заявки ==========================
-// ====================================================================================
 
 // проверка наличия всех обязательных данных о точках
 export function isInvalidPointForms(routeForm) {
@@ -710,6 +572,9 @@ export function changeForm(orderData, formType) {
 		hideFormField('marketNumber')
 		hideFormField('marketInfo')
 		hideFormField('stacking')
+	} else {
+		hideFormField('orderPall')
+		hideFormField('orderWeight')
 	}
 
 	showIncotermsInput(typeTruck)

@@ -5,6 +5,7 @@ import { ws } from './global.js'
 import { wsHead } from './global.js'
 import { snackbar } from "./snackbar/snackbar.js"
 import { uiIcons } from "./uiIcons.js"
+import { bootstrap5overlay } from "./bootstrap5overlay/bootstrap5overlay.js"
 
 const token = $("meta[name='_csrf']").attr("content")
 const PAGE_NAME = 'internationalManagerNew'
@@ -184,6 +185,8 @@ window.addEventListener("load", async () => {
 
 	// обработчик получения сообщений о предложениях
 	ws.onmessage = onMessageHandler
+
+	bootstrap5overlay.hideOverlay()
 })
 
 

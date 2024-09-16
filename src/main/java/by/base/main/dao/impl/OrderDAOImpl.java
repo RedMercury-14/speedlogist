@@ -445,7 +445,8 @@ public class OrderDAOImpl implements OrderDAO{
 	        "o.marketOrderSumFinal, " +
 	        "o.arrivalFactYard, " +
 	        "o.registrationFactYard,"+
-	        "a.bodyAddress)";
+	        "a.bodyAddress, "+
+	        "o.lastDatetimePointLoad)";
 	
 	private static final String queryGetOrderDTOByPeriodDeliveryAndSlots = orderConstruct + " from Order o LEFT JOIN o.addresses a where \r\n"
 			+ "(CASE \r\n"
@@ -479,6 +480,19 @@ public class OrderDAOImpl implements OrderDAO{
 		    	    "LEFT JOIN o.addresses a " +
 		    	    "WHERE (CASE WHEN o.timeDelivery IS NOT NULL THEN o.timeDelivery ELSE o.dateDelivery END) " +
 		    	    "BETWEEN :dateStart AND :dateEnd";
+	
+	
+	private static final String queryGetOrderDTOByPeriodDelivery = orderConstruct +" from Order o LEFT JOIN o.addresses a where o.dateCreate BETWEEN :dateStart and :dateEnd";
+	@Transactional
+	@Override
+	public List<OrderDTO> getOrderDTOByPeriodDelivery(Date dateStart, Date dateEnd) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<OrderDTO> theObject = currentSession.createQuery(queryGetOrderDTOByPeriodDelivery, OrderDTO.class);
+		theObject.setParameter("dateStart", dateStart, TemporalType.DATE);
+		theObject.setParameter("dateEnd", dateEnd, TemporalType.DATE);
+		List<OrderDTO> trucks = theObject.getResultList();
+		return trucks;
+	}
 
 
 }

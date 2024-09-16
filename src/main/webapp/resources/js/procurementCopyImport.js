@@ -140,6 +140,7 @@ function orderFormSubmitHandler(e) {
 	}
 
 	disableButton(e.submitter)
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
 
 	ajaxUtils.postJSONdata({
 		url: getAddNewProcurementUrl(orderStatus, way),
@@ -155,9 +156,13 @@ function orderFormSubmitHandler(e) {
 				snackbar.show('Возникла ошибка - обновите страницу')
 				enableButton(e.submitter)
 			}
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
 		},
 		errorCallback: () => {
 			enableButton(e.submitter)
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
 		}
 	})
 }

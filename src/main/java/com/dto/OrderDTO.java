@@ -147,6 +147,8 @@ public class OrderDTO {
 	
 	private String addressLoading;
 	
+	private Timestamp lastDatetimePointLoad;
+	
 	public OrderDTO() {
 		
 	}
@@ -163,7 +165,7 @@ public class OrderDTO {
 			String marketInfo, String marketContractType, String marketContractGroupId, String marketContractNumber,
 			String marketContractorId, String numProduct, Integer statusYard, Object unloadStartYard,
 			Object unloadFinishYard, Integer pallFactYard, Double weightFactYard, Double marketOrderSumFirst,
-			Double marketOrderSumFinal, Object arrivalFactYard, Object registrationFactYard, String addressLoading) {
+			Double marketOrderSumFinal, Object arrivalFactYard, Object registrationFactYard, String addressLoading, Object lastDatetimePointLoad) {
 		super();
 		this.idOrder = idOrder;
 		this.counterparty = counterparty;
@@ -221,7 +223,10 @@ public class OrderDTO {
 		this.arrivalFactYard = (Timestamp) arrivalFactYard;
 		this.registrationFactYard = (Timestamp) registrationFactYard;
 		this.addressLoading = addressLoading;
+		this.lastDatetimePointLoad = (Timestamp) lastDatetimePointLoad;
 	}
+	
+	@Deprecated
 	public OrderDTO(Integer idOrder, String counterparty, String contact, String cargo, String typeLoad,
 			String methodLoad, String typeTruck, String temperature, Object control, String comment, Integer status,
 			Object dateCreate, Object dateDelivery, String manager, String telephoneManager, Object stacking,
@@ -321,6 +326,16 @@ public class OrderDTO {
 		this.status = status;
 	}
 
+
+
+	public Timestamp getLastDatetimePointLoad() {
+		return lastDatetimePointLoad;
+	}
+
+
+	public void setLastDatetimePointLoad(Timestamp lastDatetimePointLoad) {
+		this.lastDatetimePointLoad = lastDatetimePointLoad;
+	}
 
 
 	public String getAddressLoading() {

@@ -442,7 +442,7 @@ function getContextMenuItems(params) {
 		{
 			disabled: isAddFinishPriceDisabled,
 			name: `Указать стоимость перевозки`,
-			icon: uiIcons.route2,
+			icon: uiIcons.banknotes,
 			action: () => {
 				addFinishPrice(routeData)
 			},
@@ -450,7 +450,7 @@ function getContextMenuItems(params) {
 		{
 			disabled: isRemoveFinishPriceDisabled,
 			name: `Удалить стоимость`,
-			icon: uiIcons.eraser,
+			icon: uiIcons.banknotesRemoved,
 			action: () => {
 				removeFinishPrice(idRoute)
 			},
@@ -468,14 +468,14 @@ function getContextMenuItems(params) {
 	]
 
 	const carierResult = [
-		{
-			disabled: isCarrierAddMileageDisabled,
-			name: `Добавить пробег`,
-			icon: uiIcons.route2,
-			action: () => {
-				addMileage(routeData)
-			},
-		}
+		// {
+		// 	disabled: isCarrierAddMileageDisabled,
+		// 	name: `Добавить пробег`,
+		// 	icon: uiIcons.route2,
+		// 	action: () => {
+		// 		addMileage(routeData)
+		// 	},
+		// }
 	]
 
 	return isCarrier(role) ? carierResult : logistResult

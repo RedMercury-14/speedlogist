@@ -24,6 +24,7 @@ const debouncedSaveColumnState = debounce(saveColumnState, 300)
 const debouncedSaveFilterState = debounce(saveFilterState, 300)
 
 const SUPPLY_REG = /(понедельник|вторник|среда|четверг|пятница|суббота|воскресенье)/
+const SUPPLY_REG_GLOBAL = /(понедельник|вторник|среда|четверг|пятница|суббота|воскресенье)/g
 const ORDER_REG = /^з$|з\//
 
 let error = false
@@ -347,6 +348,9 @@ window.onload = async () => {
 	const res = await getData(getScheduleUrl)
 	scheduleData = res.body
 
+	// проверка, правильно ли заполнены графики
+	checkScheduleDate(scheduleData)
+
 	// показываем стартовые данные
 	const numStockData = scheduleData.filter((item) => item.numStock === 1700)
 
@@ -647,6 +651,11 @@ function addScheduleItemFormHandler(e) {
 		return
 	}
 
+	if (!isValidSchedule(data)) {
+		snackbar.show('Ошибка при заполнении графика, проверьте данные!')
+		return
+	}
+
 	if (error) {
 		snackbar.show('Ошибка заполнения формы!')
 		return
@@ -661,6 +670,7 @@ function addScheduleItemFormHandler(e) {
 				snackbar.show(res.message)
 				updateTable()
 				$(`#addScheduleItemModal`).modal('hide')
+				return
 			}
 
 			if (res.status === '105') {
@@ -691,6 +701,11 @@ function editScheduleItemFormHandler(e) {
 		return
 	}
 
+	if (!isValidSchedule(data)) {
+		snackbar.show('Ошибка при заполнении графика, проверьте данные!')
+		return
+	}
+
 	if (error) {
 		snackbar.show('Ошибка заполнения формы!')
 		return
@@ -713,7 +728,6 @@ function editScheduleItemFormHandler(e) {
 				showMessageModal(res.message)
 				return
 			}
-			
 		}
 	})
 }
@@ -957,4 +971,53 @@ function isOrdersAndSupplies(data) {
 	const supplies = schedule.filter(el => SUPPLY_REG.test(el)).length
 	const orders = schedule.filter(el => ORDER_REG.test(el)).length
 	return supplies > 0 && orders > 0
+}
+
+
+// проверка, что график заполнен правильно
+function isValidSchedule(data) {
+	if (!data) return false
+	const schedule = {
+		"понедельник": data.monday,
+		"вторник": data.tuesday,
+		"среда": data.wednesday,
+		"четверг": data.thursday,
+		"пятница": data.friday,
+		"суббота": data.saturday,
+		"воскресенье": data.sunday,
+	}
+
+	// получаем список дней заказов
+	const orderDays = Object.keys(schedule)
+		.filter(key => ORDER_REG.test(schedule[key]))
+		.sort()
+
+	// получаем значения дней доставок
+	const supplyValues = Object.values(schedule)
+		.filter(value => SUPPLY_REG.test(value))
+		.map(str => {
+			const matchedDays = str.match(SUPPLY_REG_GLOBAL)
+			return matchedDays ? matchedDays.join(' ') : ''
+		})
+		.sort()
+
+	// проверяем, что количество поставок равно количеству заказов
+	if (orderDays.length !== supplyValues.length) return false
+
+	// сравниваем значения доставок и дней заказов
+	return orderDays.every((day, index) => supplyValues[index].includes(day))
+}
+
+// отображение графиков с ошибками
+function checkScheduleDate(scheduleData) {
+	const title = 'Обнаружены ошибки в следующих графиках:\n\n'
+	if (!scheduleData) return
+	const scheduleWithError = scheduleData.filter(schedule => !isValidSchedule(schedule))
+	if (scheduleWithError.length === 0) return
+	const errorLines = scheduleWithError
+		.map((schedule, index) => {
+			return `${index + 1}. Склад ${schedule.numStock}, Номер контракта: ${schedule.counterpartyCode}, ${schedule.name}`
+		})
+		.join('\n')
+	showMessageModal(title + errorLines)
 }

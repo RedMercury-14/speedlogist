@@ -11,11 +11,8 @@ import {
 	getStockAddress,
 	hideAddUnloadPointButton,
 	hideFormField,
-	hideMarketInfoTextarea,
-	hideMarketNumberInput,
 	inputEditBan,
 	isInvalidPointForms,
-	setCounterparty,
 	setFormName,
 	setOrderDataToOrderForm,
 	setWayType,
@@ -201,14 +198,14 @@ function transformToInternalMovementForm() {
 	// изменяем название формы
 	setFormName('Форма создания заявки (внутреннее перемещение)')
 	// установка контрагента для внутренних перемещений
-	setCounterparty('ЗАО "Доброном"')
+	setInputValue(document, '#counterparty', 'ЗАО "Доброном"')
 	// установка типа маршрута
 	setWayType(orderWay)
 	// добавляем тип маршрута в текст кнопки создания заявки
 	changeSubmitButtonText('внутреннее перемещение')
 	// скрываем поля с информацией из Маркета
-	hideMarketNumberInput()
-	hideMarketInfoTextarea()
+	hideFormField('marketNumber')
+	hideFormField('marketInfo')
 }
 
 // обработчик нажатия на кнопки модального окна выбора типа маршрута
@@ -249,8 +246,8 @@ function wayButtonsContainerOnClickHandler(e, wayTypeInput) {
 			// добавляем тип маршрута в текст кнопки создания заявки
 			changeSubmitButtonText(wayType)
 			// скрываем поля с информацией из Маркета
-			hideMarketNumberInput()
-			hideMarketInfoTextarea()
+			hideFormField('marketNumber')
+			hideFormField('marketInfo')
 		}
 	}
 }
@@ -315,12 +312,12 @@ function RBButtonsContainerOnClickHandler(e) {
 			// изменяем название формы
 			setFormName('Форма создания заявки (внутреннее перемещение)')
 			// установка контрагента для внутренних перемещений
-			setCounterparty('ЗАО "Доброном"')
+			setInputValue(document, '#counterparty', 'ЗАО "Доброном"')
 			// добавляем тип маршрута в текст кнопки создания заявки
 			changeSubmitButtonText('внутреннее перемещение')
 			// скрываем поля с информацией из Маркета
-			hideMarketNumberInput()
-			hideMarketInfoTextarea()
+			hideFormField('marketNumber')
+			hideFormField('marketInfo')
 		} else if (RBType === 'counterparty') {
 			// просим указать номер из маркета
 			showSetMarketNumberModal()

@@ -7,6 +7,9 @@ import {
 	changeForm,
 	dangerousInputOnChangeHandler,
 	inputEditBan,
+	orderCargoInputOnChangeHandler,
+	orderPallInputOnChangeHandler,
+	orderWeightInputOnChangeHandler,
 	showIncotermsInsuranseInfo,
 	transformAddressInputToSelect,
 	typeTruckOnChangeHandler
@@ -22,6 +25,7 @@ import {
 	getTimeHTML,
 	getTnvdHTML,
 } from "./procurementFormHtmlUtils.js";
+import { bootstrap5overlay } from "./bootstrap5overlay/bootstrap5overlay.js"
 
 const editProcurement = "../../../api/manager/editProcurement"
 const getInternalMovementShopsUrl = "../../../api/manager/getInternalMovementShops"
@@ -73,6 +77,18 @@ window.onload = async () => {
 	editOrderForm.addEventListener('submit', (e) => orderFormSubmitHandler(e))
 	// листнер на отмену редактирования заявки
 	cancelBtn.addEventListener('click', () => window.location.href = '../orders')
+
+	// обработчик на поле Кол-во паллет ДЛЯ АХО
+	const orderPallInput = document.querySelector('#orderPall')
+	orderPallInput && orderPallInput.addEventListener('change', orderPallInputOnChangeHandler)
+
+	// обработчик на поле Масса груза ДЛЯ АХО
+	const orderWeightInput = document.querySelector('#orderWeight')
+	orderWeightInput && orderWeightInput.addEventListener('change', orderWeightInputOnChangeHandler)
+
+	// обработчик на поле Груз
+	const orderCargoInput = document.querySelector('#cargo')
+	orderCargoInput && orderCargoInput.addEventListener('change', orderCargoInputOnChangeHandler)
 }
 
 
@@ -83,12 +99,14 @@ function orderFormSubmitHandler(e) {
 	const formData = new FormData(e.target)
 	const data = getOrderData(formData, editableOrder, null)
 	const updatedData = updateEditFormData(data)
+	console.log("🚀 ~ orderFormSubmitHandler ~ updatedData:", updatedData)
 
 	if (!validateForm(updatedData)) {
 		return
 	}
 
 	disableButton(e.submitter)
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
 
 	ajaxUtils.postJSONdata({
 		url: editProcurement,
@@ -104,9 +122,13 @@ function orderFormSubmitHandler(e) {
 				snackbar.show('Возникла ошибка - обновите страницу!')
 				enableButton(e.submitter)
 			}
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
 		},
 		errorCallback: () => {
 			enableButton(e.submitter)
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
 		}
 	})
 }
@@ -243,6 +265,8 @@ function changeEditingRules(editableOrder, editOrderForm, points) {
 		inputEditBan(editOrderForm, '#dangerousPackingGroup', true)
 		inputEditBan(editOrderForm, '#dangerousRestrictionCodes', true)
 		inputEditBan(editOrderForm, '#comment', true)
+		inputEditBan(editOrderForm, '#orderPall', true)
+		inputEditBan(editOrderForm, '#orderWeight', true)
 	}
 
 	points.forEach((point, i) => {
@@ -269,19 +293,6 @@ function changeEditingRules(editableOrder, editOrderForm, points) {
 			inputEditBan(point, `#timeFrame_to_${pointIndex}`, true)
 			inputEditBan(point, `#pointContact_${pointIndex}`, true)
 			inputEditBan(point, `#customsAddress_${pointIndex}`, true)
-		}
-
-		if (way === 'РБ') {
-			inputEditBan(point, '.country', true)
-		}
-
-		if (way === 'РБ' && !isInternalMovement) {
-			inputEditBan(point, '.country', true)
-			inputEditBan(point, `#pall_${pointIndex}`, true)
-		}
-
-		if (way === 'Импорт') {
-			inputEditBan(point, `#pall_${pointIndex}`, true)
 		}
 	})
 }

@@ -385,3 +385,32 @@ export function setStockAttr(stockId) {
 	const calendarElem = document.querySelector('#calendar')
 	calendarElem.dataset.stock = stockId
 }
+
+// создание поля выбора даты для отображения в календаре
+export function createCalendarDateInput(calendar) {
+	const container = calendar.el
+	const letfHeaderToolbarContainer = container.querySelector('.fc-header-toolbar .fc-toolbar-chunk')
+	if (!letfHeaderToolbarContainer) return
+
+	const changeCalendarDateInput = document.createElement('input')
+	changeCalendarDateInput.type = 'date'
+	changeCalendarDateInput.classList.add('form-control', 'changeCalendarDate')
+	letfHeaderToolbarContainer.classList.add('d-flex', 'align-items-center')
+
+	// обработчик изменения даты
+	changeCalendarDateInput.onchange = (e) => {
+		const selectedDate = (e.target.value)
+		if (!selectedDate) return
+		calendar.gotoDate(selectedDate)
+	}
+
+	// удаляем содержимое поля с датой при использовании кнопок иправления детой из календаря
+	const prevDayBtn = letfHeaderToolbarContainer.querySelector('.fc-prev-button')
+	const nextDayBtn = letfHeaderToolbarContainer.querySelector('.fc-next-button')
+	const todayBtn = letfHeaderToolbarContainer.querySelector('.fc-today-button')
+	prevDayBtn.addEventListener('click', () => changeCalendarDateInput.value = '')
+	nextDayBtn.addEventListener('click', () => changeCalendarDateInput.value = '')
+	todayBtn.addEventListener('click', () => changeCalendarDateInput.value = '')
+
+	letfHeaderToolbarContainer.append(changeCalendarDateInput)
+}

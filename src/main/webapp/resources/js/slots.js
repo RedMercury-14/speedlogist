@@ -33,6 +33,7 @@ import {
 	showMessageModal,
 	setCurrentDateAttr,
 	setStockAttr,
+	createCalendarDateInput,
 } from "./slots/calendarUtils.js"
 import { dateHelper, debounce, getData, isAdmin, isLogist, isSlotsObserver, isStockProcurement } from "./utils.js"
 import { uiIcons } from "./uiIcons.js"
@@ -156,7 +157,11 @@ const calendarOptions = {
 	headerToolbar: {
 		left: "prev,next today",
 		center: "title",
-		right: "resourceTimeGridDay,resourceTimeGridTwoDay",
+		right: "",
+	},
+
+	viewDidMount: (info) => {
+		createCalendarDateInput(calendar)
 	},
 
 	titleFormat: {

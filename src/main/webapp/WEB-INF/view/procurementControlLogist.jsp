@@ -20,7 +20,7 @@
 <body>
 	<jsp:include page="headerNEW.jsp" />
 
-	<div id="overlay" class="none">
+	<div id="overlay" class="">
 		<div class="spinner-border text-primary" role="status">
 			<span class="sr-only">Загрузка...</span>
 		</div>
@@ -103,6 +103,14 @@
 										<span class="text-muted font-weight-bold">Тип маршрута: <span class="text-red">*</span></span>
 										<input type="text" class="form-control" name="way" id="way" placeholder="" required readonly>
 									</div>
+									<div class="form-group input-row-container none">
+										<span class="text-muted font-weight-bold">Кол-во паллет: <span class="text-red">*</span></span>
+										<input type="number" class="form-control" name="orderPall" id="orderPall" placeholder="Количество паллет в штуках">
+									</div>
+									<div class="form-group input-row-container none">
+										<span class="text-muted font-weight-bold">Масса груза, кг: <span class="text-red">*</span></span>
+										<input type="number" class="form-control" name="orderWeight" id="orderWeight" placeholder="Общая масса перевозимого груза">
+									</div>
 									<div class="form-group input-row-container">
 										<span class="text-muted font-weight-bold">Номер заказа из Маркета:</span>
 										<input type="number" class="form-control" name="marketNumber" id="marketNumber" readonly>
@@ -135,6 +143,7 @@
 											<option>Боковая</option>
 											<option>Задняя+боковая</option>
 											<option>Полная растентовка</option>
+											<option>Верхняя</option>
 										</select>
 									</div>
 									<div class="form-group input-row-container">

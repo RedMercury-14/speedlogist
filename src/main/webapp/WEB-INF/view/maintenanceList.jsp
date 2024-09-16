@@ -12,7 +12,7 @@
 	<meta name="${_csrf.parameterName}" content="${_csrf.token}" />
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="icon" href="${pageContext.request.contextPath}/resources/img/favicon.ico">
-	<title>Менеджер заявок АХО</title>
+	<title>Менеджер маршрутов АХО</title>
 	<script src="${pageContext.request.contextPath}/resources/js/AG-Grid/ag-grid-enterprise.min.js"></script>
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/variables.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/maintenanceList.css">
@@ -32,13 +32,26 @@
 	</div>
 	<div class="fluid-container my-container">
 		<div class="title-container">
-			<strong><h3>Менеджер заявок АХО</h3></strong>
+			<strong><h3>Менеджер маршрутов АХО</h3></strong>
 		</div>
 
-		<div class="toolbar">
-			<button type="button" id="addShopBtn" class="btn tools-btn font-weight-bold text-muted" data-toggle="modal" data-target="#addAhoRouteModal">
-				+ Создать заявку
-			</button>
+		<div class="accordion">
+			<div class="search-form-container">
+				<button class="accordion-btn collapsed" data-toggle="collapse" href="#routeSearchForm" role="button" aria-expanded="true" aria-controls="routeSearchForm">
+					Поиск заявок
+				</button>
+				<form class="collapse" action="" id="routeSearchForm">
+					<div class="input-row-container">
+						<label class="text-muted font-weight-bold">С</label>
+						<input class="form-control" type="date" name="date_from" id="date_from" required>
+					</div>
+					<div class="input-row-container">
+						<label class="text-muted font-weight-bold">по</label>
+						<input class="form-control" type="date" name="date_to" id="date_to" required>
+					</div>
+					<button class="btn btn-outline-secondary" type="submit">Отобразить</button>
+				</form>
+			</div>
 		</div>
 
 		<div id="myGrid" class="ag-theme-alpine"></div>
@@ -190,6 +203,74 @@
 					<div class="modal-footer">
 						<button class="btn btn-secondary" type="button" data-dismiss="modal">Отмена</button>
 						<button class="btn btn-primary" type="submit">Назначить перевозчика</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<!-- Модальное окно с установки пробега на маршрут -->
+	<div class="modal fade" id="addMileageModal" tabindex="-1" aria-labelledby="addMileageModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header align-items-center text-white">
+					<h5 class="modal-title" id="addMileageModalLabel">Установка пробега по маршруту</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<form id="addMileageForm" name="addMileageForm" action="">
+					<div class="modal-body">
+						<div class="form-group input-column-container">
+							<span class="text-muted font-weight-bold">Номер маршрута:</span>
+							<input type="text" class="form-control" name="idRoute" id="idRoute" readonly required>
+						</div>
+						<div class="form-group input-column-container">
+							<span class="text-muted font-weight-bold">Название маршрута:</span>
+							<textarea type="text" class="form-control" rows="5" name="routeDirection" id="routeDirection" readonly required></textarea>
+						</div>
+						<div class="form-group input-column-container">
+							<span class="text-muted font-weight-bold">Укажите пробег в км:</span>
+							<input type="number" id="mileage" name="mileage" min="0" class="form-control">
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button class="btn btn-secondary" type="button" data-dismiss="modal">Отмена</button>
+						<button class="btn btn-primary" type="submit">Подтвердить</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<!-- Модальное окно с установкой цены перевозки -->
+	<div class="modal fade" id="addFinishPriceModal" tabindex="-1" aria-labelledby="addFinishPriceModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header align-items-center text-white">
+					<h5 class="modal-title" id="addFinishPriceModalLabel">Установка цены за перевозку</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<form id="addFinishPriceForm" name="addFinishPriceForm" action="">
+					<div class="modal-body">
+						<div class="form-group input-column-container">
+							<span class="text-muted font-weight-bold">Номер маршрута:</span>
+							<input type="text" class="form-control" name="idRoute" id="idRoute" readonly required>
+						</div>
+						<div class="form-group input-column-container">
+							<span class="text-muted font-weight-bold">Название маршрута:</span>
+							<textarea type="text" class="form-control" rows="5" name="routeDirection" id="routeDirection" readonly required></textarea>
+						</div>
+						<div class="form-group input-column-container">
+							<span class="text-muted font-weight-bold">Укажите цену за перевозку в BYN:</span>
+							<input type="number" id="finishPrice" name="finishPrice" min="0" class="form-control">
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button class="btn btn-secondary" type="button" data-dismiss="modal">Отмена</button>
+						<button class="btn btn-primary" type="submit">Подтвердить</button>
 					</div>
 				</form>
 			</div>

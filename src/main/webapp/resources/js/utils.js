@@ -207,23 +207,29 @@ export const dateHelper = {
 	getMinValidDate(order) {
 		const isInternalMovement = order && order.isInternalMovement
 		const RBway = order && order.way === 'РБ'
+		const ahoWay = order && order.way === 'АХО'
 		const now = new Date()
 		const day = now.getDay()
 		const noonToday = this.getNoon(now)
 		const TimeOfToday = this.getTimesOfDay(now, '11:00:00')
 
 		// правила для внутренних перемещений
-		if (isInternalMovement === 'true') {
-			// до 12 - на завтра, после 12 - на послезавтра
-			const tomorrow = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 1)
-			const dayAfterTomorrow = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 2)
-			return now < noonToday
-				? this.getDateForInput(tomorrow)
-				: this.getDateForInput(dayAfterTomorrow)
+		// if (isInternalMovement === 'true') {
+		// 	// до 12 - на завтра, после 12 - на послезавтра
+		// 	const tomorrow = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 1)
+		// 	const dayAfterTomorrow = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 2)
+		// 	return now < noonToday
+		// 		? this.getDateForInput(tomorrow)
+		// 		: this.getDateForInput(dayAfterTomorrow)
+		// }
+
+		// правила для перевозок АХО
+		if (ahoWay) {
+			return this.getDateForInput(now)
 		}
 
-		// правила для перевозок по РБ
-		if (RBway) {
+		// правила для перевозок по РБ и Внутренних перемещений
+		if (RBway || ahoWay) {
 			// если пятница, после 11:00, то на вторник
 			if (day === 5 && now > TimeOfToday) {
 				const tuesday = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 4)
@@ -623,6 +629,24 @@ export function getScheduleStatus(status) {
 	}
 }
 
+// метод с расшифровкойц статусов маршрутов АХО
+export function getAhoStatusRoute(status) {
+	switch (status) {
+		case '200':
+			return 'Ожидает назначения перевозчика'
+		case '210':
+			return 'Перевозчик назначен'
+		case '220':
+			return 'Указан пробег'
+		case '225':
+			return 'Указан пробег и стоимость перевозки'
+		case '230':
+			return 'Завершен'
+		default:
+			return 'Неизвестно'
+	}
+}
+
 export const rowClassRules = {
 	'orange-row': params => params.node.data.status === 6,
 	'turquoise-row': params => params.node.data.status === 7,
@@ -678,6 +702,9 @@ export function isStockProcurement(role) {
 }
 export function isOderSupport(role) {
 	return role === '[ROLE_ORDERSUPPORT]'
+}
+export function isCarrier(role) {
+	return role === '[ROLE_CARRIER]'
 }
 
 export function disableButton(button) {
@@ -810,4 +837,28 @@ export function inputBan(e, reg) {
 	if (input.value.match(reg)) {
 		input.value = input.value.replaceAll(reg, '')
 	}
+}
+
+export function setInputValue(container, selector, value) {
+	const input = container.querySelector(selector)
+	if (!input) return
+
+	const selectOptions = input.options
+	if (selectOptions) {
+		for (let i = 0; i < selectOptions.length; i++) {
+			const option = selectOptions[i]
+			if (option.value === value) {
+				option.selected = true
+			}
+		}
+	} else {
+		input.value = value
+	}
+}
+
+export function getInputValue(container, selector) {
+	const input = container.querySelector(selector)
+	if (!input) return ''
+
+	return input.value
 }

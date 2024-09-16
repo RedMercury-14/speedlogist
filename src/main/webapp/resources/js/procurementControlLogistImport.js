@@ -13,6 +13,9 @@ import {
 	dangerousInputOnChangeHandler,
 	inputEditBan,
 	isInvalidPointForms,
+	orderCargoInputOnChangeHandler,
+	orderPallInputOnChangeHandler,
+	orderWeightInputOnChangeHandler,
 	typeTruckOnChangeHandler,
 } from "./procurementFormUtils.js"
 import { excelStyles, getPointToView, getRouteInfo, getRoutePrice, getWayToView, pointSorting, procurementExcelExportParams } from './procurementControlUtils.js'
@@ -26,7 +29,7 @@ const LOCAL_STORAGE_KEY = `AG_Grid_settings_to_${PAGE_NAME}`
 const DATES_KEY = `searchDates_to_${PAGE_NAME}`
 const getOrderBaseUrl ='../../api/manager/getOrdersForLogist/'
 const getSearchOrderBaseUrl ='../../api/manager/getOrdersHasCounterparty/'
-const createRouteUrl ='../../api/manager/createNewRoute'
+const createRouteUrl = (way) => way === 'АХО' ? '../../api/manager/maintenance/add' : '../../api/manager/createNewRoute'
 const getDataHasOrderBaseUrl ='../../api/manager/getDataHasOrder2/'
 
 const FORM_TYPE = 'routeForm'
@@ -60,6 +63,7 @@ const columnDefs = [
 	{ headerName: 'Дата создания заявки', field: 'dateCreateToView', comparator: dateComparator, },
 	{ headerName: 'Дата загрузки (первая)', field: 'loadDateToView', comparator: dateComparator, },
 	{ headerName: 'Дата выгрузки (последняя)', field: 'unloadDateToView', comparator: dateComparator, },
+	{ headerName: 'Слот на выгрузку', field: 'timeDeliveryToView', },
 	// { headerName: 'Дата и время выгрузки', field: 'unloadWindowToView', width: 200, },
 	// { headerName: 'Продолжительность выгрузки', field: 'onloadTime', width: 200, },
 	{ headerName: 'Тип маршрута', field: 'wayToView', },
@@ -264,6 +268,18 @@ window.onload = async () => {
 	// листнер на изменение типа маршрута
 	wayInput.addEventListener('change', (e) => changeTnvdInputRequired(e))
 
+	// обработчик на поле Кол-во паллет ДЛЯ АХО
+	const orderPallInput = document.querySelector('#orderPall')
+	orderPallInput && orderPallInput.addEventListener('change', orderPallInputOnChangeHandler)
+
+	// обработчик на поле Масса груза ДЛЯ АХО
+	const orderWeightInput = document.querySelector('#orderWeight')
+	orderWeightInput && orderWeightInput.addEventListener('change', orderWeightInputOnChangeHandler)
+
+	// обработчик на поле Груз
+	const orderCargoInput = document.querySelector('#cargo')
+	orderCargoInput && orderCargoInput.addEventListener('change', orderCargoInputOnChangeHandler)
+
 	// обработчик на поле Опасный груз
 	// dangerousInput && dangerousInput.addEventListener('change', dangerousInputOnChangeHandler)
 
@@ -275,6 +291,8 @@ window.onload = async () => {
 		handle: '.dragItem',
 		animation: 150
 	})
+
+	bootstrap5overlay.hideOverlay()
 }
 
 window.addEventListener("unload", () => {
@@ -344,6 +362,8 @@ function getMappingData(data) {
 		const unloadWindowToView = order.onloadWindowDate && order.onloadWindowTime
 			? `${dateHelper.getFormatDate(order.onloadWindowDate)} ${order.onloadWindowTime.slice(0, 5)}`
 			: ''
+
+		const timeDeliveryToView = order.timeDelivery ? convertToDayMonthTime(order.timeDelivery) : ''
 
 		const filtredAdresses = order.addresses.filter(address => address.isCorrect)
 		const addressesToView = filtredAdresses
@@ -427,6 +447,7 @@ function getMappingData(data) {
 			routeInfo,
 			routePrice,
 			wayToView,
+			timeDeliveryToView,
 		}
 	})
 }
@@ -656,7 +677,7 @@ function routeFormSubmitHandler(e) {
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
 
 	ajaxUtils.postJSONdata({
-		url: createRouteUrl,
+		url: createRouteUrl(data.way),
 		token: token,
 		data: data,
 		successCallback: (res) => {
@@ -725,6 +746,9 @@ function clearRouteForm() {
 
 // изменение правил редактирования формы
 function changeEditingRules(order, form) {
+	changeCounterpartyLabel(true)
+	inputEditBan(form, '#counterparty', false)
+
 	const points = document.querySelectorAll('.point')
 	const way = order.way
 	const isInternalMovement = order.isInternalMovement === 'true'
@@ -738,18 +762,25 @@ function changeEditingRules(order, form) {
 		const timeInput = point.querySelector(`#time_${pointIndex}`)
 		timeInput && dateInput.removeAttribute('min')
 		inputEditBan(point, `#time_${pointIndex}`, true)
-
-		if (way === 'РБ') {
-			inputEditBan(point, '.country', true)
-		}
-	
-		if (way === 'РБ' && !isInternalMovement) {
-			inputEditBan(point, '.country', true)
-			inputEditBan(point, `#pall_${pointIndex}`, true)
-		}
-	
-		if (way === 'Импорт') {
-			inputEditBan(point, `#pall_${pointIndex}`, true)
-		}
 	})
+}
+
+// изменение названия поля counterparty
+function changeCounterpartyLabel(isRequired) {
+	const counterpartyInput = document.querySelector('#counterparty')
+	const counterpartyContainer = counterpartyInput.parentElement
+	const counterpartyLabel = counterpartyContainer.querySelector('label')
+	const labelText = isRequired ? 'Название маршрута <span class="text-red">*</span>' : 'Название маршрута'
+	counterpartyLabel.innerHTML = labelText
+}
+
+function convertToDayMonthTime(eventDateStr) {
+	const date = new Date(eventDateStr)
+	const formatter = new Intl.DateTimeFormat('ru', {
+		day: '2-digit',
+		month: 'long', 
+		hour: '2-digit',
+		minute: '2-digit'
+	})
+	return formatter.format(date)
 }

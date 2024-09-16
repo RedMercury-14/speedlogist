@@ -144,15 +144,15 @@ public class OrderCreater {
 //				if(order.getMarketNumber().equals("19480260")) {
 //					order.setMarketContractType("453228");
 //				}
-				if(order.getMarketNumber().equals("19480262")) {
-					order.setMarketContractType("11113");
-				}
-				if(order.getMarketNumber().equals("19480263")) {
-					order.setMarketContractType("11113");
-				}
-				if(order.getMarketNumber().equals("19480264")) {
-					order.setMarketContractType("11113");
-				}
+//				if(order.getMarketNumber().equals("19480262")) {
+//					order.setMarketContractType("11113");
+//				}
+//				if(order.getMarketNumber().equals("19480263")) {
+//					order.setMarketContractType("11113");
+//				}
+//				if(order.getMarketNumber().equals("19480264")) {
+//					order.setMarketContractType("11113");
+//				}
 				
 				
 				//TEST!!!!!!! УДАЛИТЬ ПОТОМ ТУТ
@@ -196,6 +196,9 @@ public class OrderCreater {
 		List<OrderBuyDTO> orderBuyDTOs = orderBuyGroupDTO.getOrderBuy();
 		List<OrderLine> result = new ArrayList<OrderLine>();		
 		for (OrderBuyDTO orderBuyDTO : orderBuyDTOs) {
+			if(Double.parseDouble(orderBuyDTO.getQuantityOrder()) <= 0) {
+        		continue;
+        	}
 			OrderLine orderLine = new OrderLine();
 			orderLine.setBarcode(orderBuyDTO.getBarcode());
 			orderLine.setGoodsGroupName(orderBuyDTO.getGoodsGroupName());

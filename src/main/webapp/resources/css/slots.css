@@ -72,10 +72,32 @@ html, body {
 	font-size: 1.1rem;
 	color: #444444;
 }
+
+/* поле выбора даты календаря */
+.changeCalendarDate.form-control,
+.changeCalendarDate.form-control:focus {
+	position: absolute;
+	width: 150px;
+	margin-left: 178px !important;
+	background-color: #2c3e50;
+	color: #ffffff;
+	font-weight: bold;
+}
+.changeCalendarDate.form-control:focus {
+	background-color: #2c3e50;
+	color: #ffffff;
+	font-weight: bold;
+}
+.changeCalendarDate.form-control:hover {
+	background-color: #1e2b37;
+	color: #ffffff;
+	font-weight: bold;
+}
+
 .pallInfo-container {
 	position: absolute;
 	top: 90px;
-	right:200px;
+	right: 10px;
 	font-size: 1rem;
 	font-weight: bold;
 	padding: 0 10px;
@@ -574,7 +596,7 @@ svg:not(:root) {
 	display: none;
 }
 .sidebar {
-	margin-top: 135px;
+	margin-top: 154px;
 	display: flex;
 	gap: 0;
 	position: absolute;
@@ -599,7 +621,7 @@ svg:not(:root) {
 	.sidebar {
 		top: 0px;
 		right: 0px;
-		height: calc(100% - 135px);
+		height: calc(100% - 154px);
 		border: 2px solid rgba(0, 0, 0, 0.2);
 		transition: width 500ms;
 	}

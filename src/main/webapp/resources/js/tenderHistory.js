@@ -98,6 +98,7 @@ function updateTable(gridOptions, data) {
 
 function getMappingData(data) {
 	return data
+		.filter((tender) => tender.comments === "international")
 		.map((tender) => {
 			const dateToView = tender.dateLoadPreviously ? tender.dateLoadPreviously.split('-').reverse().join('.') : ''
 			return {

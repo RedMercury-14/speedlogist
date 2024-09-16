@@ -1,33 +1,31 @@
 import { AG_GRID_LOCALE_RU } from "./AG-Grid/ag-grid-locale-RU.js"
 import { ResetStateToolPanel, dateComparator, gridColumnLocalState, gridFilterLocalState } from "./AG-Grid/ag-grid-utils.js"
-import { changeGridTableMarginTop, dateHelper, debounce, getData, getRouteStatus } from "./utils.js"
+import { changeGridTableMarginTop, dateHelper, debounce, getAhoStatusRoute, getData, isCarrier } from "./utils.js"
 import { snackbar } from "./snackbar/snackbar.js"
 import { uiIcons } from "./uiIcons.js"
-import { ajaxUtils } from "./ajaxUtils.js"
+import { bootstrap5overlay } from "./bootstrap5overlay/bootstrap5overlay.js"
 
-const token = $("meta[name='_csrf']").attr("content")
 const PAGE_NAME = 'maintenanceList'
 const LOCAL_STORAGE_KEY = `AG_Grid_settings_to_${PAGE_NAME}`
 const DATES_KEY = `searchDates_to_${PAGE_NAME}`
 const ROW_INDEX_KEY = `AG_Grid_rowIndex_to_${PAGE_NAME}`
 
 const role = document.querySelector('#role').value
-
-
-
-const getAhoRouteBaseUrl = '../../api/procurement/getMaintenanceList/'
-
-const addAhoRouteUrl = `../../api/procurement/maintenance/add`
-const editAhoRouteUrl = `../../api/manager/maintenance/edit`
+const methodBase = isCarrier(role) ? 'carrier' : 'logistics'
+const getAhoRouteBaseUrl = `../../api/${methodBase}/getMaintenanceList/`
+const addCarrierBaseUrl = `../../api/logistics/maintenance/setCarrier/`
+const clearCarrierBaseUrl = `../../api/logistics/maintenance/clearCarrier/`
+const setMileageBaseUrl = `../../api/${methodBase}/maintenance/setMileage/`
+const clearMileageBaseUrl = `../../api/${methodBase}/maintenance/clearMileage/`
+const setFinishPriceBaseUrl = `../../api/logistics/maintenance/setCost/`
+const clearFinishPriceBaseUrl = `../../api/logistics/maintenance/clearCost/`
+const closeRouteBaseUrl = `../../api/logistics/maintenance/closeRoute/`
 
 export const rowClassRules = {
-	// 'finishRow': params => params.node.data.statusRoute === '4',
-	// 'attentionRow': params => params.node.data.statusRoute === '0',
-	// 'cancelRow': params => params.node.data.statusRoute === '5',
-	// 'endRow': params => params.node.data.statusRoute === '6',
-	// 'oncePersonRoute': params => params.node.data.statusRoute === '8',
-	// 'activRow': params => params.node.data.offerCount !== 0,
-	// 'savedRow': params => params.node.data.isSavedRow === true,
+	'activRow': params => params.node.data.statusRoute === '200',
+	'attentionRow': params => params.node.data.statusRoute === '220',
+	'finishRow': params => params.node.data.statusRoute === '225',
+	'endRow': params => params.node.data.statusRoute === '230',
 }
 
 const debouncedSaveColumnState = debounce(saveColumnState, 300)
@@ -38,21 +36,79 @@ let ahoRouteData
 let error
 
 
-
 const columnDefs = [
 	{ headerName: 'ID', field: 'idRoute', minWidth: 60, width: 80, pinned: 'left',},
-	{ headerName: 'Название маршрута', field: 'routeDirection', minWidth: 240, width: 640, wrapText: true, autoHeight: true, },
-	{ headerName: 'Дата загрузки', field: 'dateLoadPreviously', comparator: dateComparator, },
-	{ headerName: 'Время загрузки', field: 'timeLoadPreviously', },
-	{ headerName: 'Дата доставки', field: 'dateUnloadPreviouslyStock', comparator: dateComparator, },
-	{ headerName: 'Время доставки', field: 'timeUnloadPreviouslyStock', },
-	{ headerName: 'Перевозчик', field: 'carrier', wrapText: true, autoHeight: true, },
-	{ headerName: 'Паллеты', field: 'totalLoadPall', },
-	{ headerName: 'Масса груза', field: 'totalCargoWeight', },
-	{ headerName: 'Тип транспорта', field: 'typeTrailer', },
-	{ headerName: 'Информация о грузе', field: 'cargoInfo', },
-	{ headerName: 'Информация о транспорте', field: 'truckInfo', },
-	{ headerName: 'Маршрут', field: 'userComments', wrapText: true, autoHeight: true, minWidth: 240, width: 640, },
+	{ headerName: 'Название маршрута', field: 'routeDirection', minWidth: 240, width: 240, wrapText: true, autoHeight: true, },
+	{
+		headerName: 'Дата загрузки', field: 'dateLoadPreviously',
+		width: 120,
+		comparator: dateComparator,
+		valueFormatter: dateValueFormatter,
+		filterParams: {
+			valueFormatter: dateValueFormatter,
+		},
+	},
+	{
+		headerName: 'Время загрузки', field: 'timeLoadPreviously',
+		width: 80,
+		valueFormatter: timeValueFormatter,
+		filterParams: {
+			valueFormatter: timeValueFormatter,
+		},
+	},
+	{
+		headerName: 'Дата доставки', field: 'dateUnloadPreviouslyStock',
+		width: 120,
+		comparator: dateComparator,
+		valueFormatter: dateValueFormatter,
+		filterParams: {
+			valueFormatter: dateValueFormatter,
+		},
+	},
+	{
+		headerName: 'Время доставки', field: 'timeUnloadPreviouslyStock',
+		width: 80,
+		valueFormatter: timeValueFormatter,
+		filterParams: {
+			valueFormatter: timeValueFormatter,
+		},
+	},
+	{ headerName: 'Перевозчик', field: 'carrier', },
+	{
+		headerName: 'Статус', field: 'statusRoute',
+		wrapText: true, autoHeight: true,
+		valueFormatter: statusRouteValueFormatter,
+		filterParams: {
+			valueFormatter: statusRouteValueFormatter,
+		},
+	},
+	{
+		headerName: 'Пробег', field: 'kmInfo',
+		valueFormatter: kmInfoValueFormatter,
+		filterParams: {
+			valueFormatter: kmInfoValueFormatter,
+		},
+	},
+	{
+		headerName: 'Стоимость перевозки', field: 'finishPrice',
+		width: 120,
+		valueFormatter: finishPriceFormatter,
+		filterParams: {
+			valueFormatter: finishPriceFormatter,
+		},
+	},
+	{ headerName: 'Маршрут', field: 'addressInfo', wrapText: true, autoHeight: true, minWidth: 240, },
+	{ headerName: 'Информация о грузе', field: 'cargoInfo', wrapText: true, autoHeight: true, },
+	{ headerName: 'Информация о транспорте', field: 'truckInfo', wrapText: true, autoHeight: true, },
+	{ headerName: 'Дополнительная информация', field: 'logistComment', wrapText: true, autoHeight: true, minWidth: 240, },
+	{
+		headerName: 'Комментарии заказчика, информация о точках маршрута', field: 'userComments',
+		wrapText: true, autoHeight: true, minWidth: 240, width: 440,
+		valueFormatter: userCommentsValueFormatter,
+		filterParams: {
+			valueFormatter: userCommentsValueFormatter,
+		},
+	},
 ]
 const gridOptions = {
 	columnDefs: columnDefs,
@@ -82,8 +138,6 @@ const gridOptions = {
 	onColumnPinned: debouncedSaveColumnState,
 	onFilterChanged: debouncedSaveFilterState,
 
-	// rowSelection: 'multiple',
-	// suppressRowClickSelection: true,
 	suppressDragLeaveHidesColumns: true,
 	getContextMenuItems: getContextMenuItems,
 	enableBrowserTooltips: true,
@@ -128,12 +182,25 @@ window.addEventListener("load", async () => {
 	// изменение отступа для таблицы
 	changeGridTableMarginTop()
 
-	const dateStart = '2024-07-10'
-	const dateEnd = '2024-09-10'
+	const routeSearchForm = document.querySelector('#routeSearchForm')
+	const addCarrierForm = document.querySelector('#addCarrierForm')
+	const addMileageForm = document.querySelector('#addMileageForm')
+	const addFinishPriceForm = document.querySelector('#addFinishPriceForm')
+	const date_fromInput = document.querySelector('#date_from')
+	const date_toInput = document.querySelector('#date_to')
+
+	const { dateStart, dateEnd } = dateHelper.getDatesToRoutesFetch(DATES_KEY)
+
+	// автозаполнение полей дат в форме поиска заявок
+	date_fromInput.value = dateStart
+	date_toInput.value = dateEnd
+
+	// листнер на отправку формы поиска заявок
+	routeSearchForm.addEventListener('submit', searchFormSubmitHandler)
+
 	const res = await getData(`${getAhoRouteBaseUrl}${dateStart}&${dateEnd}`)
 	ahoRouteData = res.body
 
-	console.log("🚀 ~ window.addEventListener ~ ahoRouteData:", ahoRouteData)
 	// отрисовка таблицы
 	const gridDiv = document.querySelector('#myGrid')
 	await renderTable(gridDiv, gridOptions, ahoRouteData)
@@ -142,21 +209,31 @@ window.addEventListener("load", async () => {
 	restoreColumnState()
 	restoreFilterState()
 
-	const addAhoRouteForm = document.querySelector('#addAhoRouteForm')
-	const editAhoRouteForm = document.querySelector('#editAhoRouteForm')
-	const addCarrierForm = document.querySelector('#addCarrierForm')
-
-	addAhoRouteForm.addEventListener('submit', ahoRouteFormSubmitHandler)
-	editAhoRouteForm.addEventListener('submit', ahoRouteFormSubmitHandler)
+	// обработчик формы назначения перевозчика на маршрут
 	addCarrierForm.addEventListener('submit', addCarrierSubmitHandler)
+	// обработчик формы установки пробега по маршруту
+	addMileageForm.addEventListener('submit', addMileageSubmitHandler)
+	// обработчик формы установки стоимости по маршруту
+	addFinishPriceForm.addEventListener('submit', addFinishPriceSubmitHandler)
+	// очистка форм
+	$('#addCarrierModal').on('hide.bs.modal', (e) => resetCarrierForm(e, addCarrierForm))
+	$('#addMileageModal').on('hide.bs.modal', (e) => addMileageForm.reset())
+	$('#addFinishPriceModal').on('hide.bs.modal', (e) => addFinishPriceForm.reset())
 
-	$('#addAhoRouteModal').on('hide.bs.modal', (e) => addAhoRouteForm.reset())
-	$('#editAhoRouteModal').on('hide.bs.modal', (e) => editAhoRouteForm.reset())
-	$('#addCarrierModal').on('hide.bs.modal', (e) => addCarrierForm.reset())
-	
+	// добавляем перевозчиков в список
 	await addCarriersToSelect()
 })
 
+
+window.addEventListener("unload", () => {
+	const date_fromInput = document.querySelector('#date_from')
+	const date_toInput = document.querySelector('#date_to')
+
+	// запоминаем даты для запроса данных из БД
+	dateHelper.setDatesToFetch(DATES_KEY, date_fromInput.value, date_toInput.value)
+})
+
+// добавление перевозчиков в выпадающий список формы назначения перевозчика
 async function addCarriersToSelect() {
 	const getAllCarrierUrl = `../../api/manager/getAllCarrier`
 	const carriers = await getData(getAllCarrierUrl)
@@ -170,7 +247,6 @@ async function addCarriersToSelect() {
 	addSearchInSelectOptions(carrierSelect)
 }
 
-
 // отображение модального окна назначения перевозчика
 function showAddCarrierModal() {
 	$('#addCarrierModal').modal('show')
@@ -178,6 +254,21 @@ function showAddCarrierModal() {
 function hideAddCarrierModal() {
 	$('#addCarrierModal').modal('hide')
 }
+// отображение модального окна установки пробега
+function showAddMileageModal() {
+	$('#addMileageModal').modal('show')
+}
+function hideAddMileageModal() {
+	$('#addMileageModal').modal('hide')
+}
+// отображение модального окна установки стоимости перевозки
+function showAddFinishPriceModal() {
+	$('#addFinishPriceModal').modal('show')
+}
+function hideAddFinishPriceModal() {
+	$('#addFinishPriceModal').modal('hide')
+}
+
 // поиск в списке селекта
 function addSearchInSelectOptions(select) {
 	const container = select.parentElement
@@ -204,62 +295,42 @@ function addSearchInSelectOptions(select) {
 	})
 }
 
-window.addEventListener("unload", () => {
-	const date_fromInput = document.querySelector('#date_from')
-	const date_toInput = document.querySelector('#date_to')
-
-	// запоминаем даты для запроса данных из БД
-	dateHelper.setDatesToFetch(DATES_KEY, date_fromInput.value, date_toInput.value)
-})
-
-
 // обработчик формы поиска заявок
 async function searchFormSubmitHandler(e) {
 	e.preventDefault()
 	updateTable()
 }
-function addCarrierSubmitHandler(e) {
+// обработчик формы назначения перевозчика
+async function addCarrierSubmitHandler(e) {
 	e.preventDefault()
-	
 	const formData = new FormData(e.target)
-	
+	const idRoute = formData.get('idRoute')
+	const idCarrier = formData.get('carrier')
+	await setCarrier(idRoute, idCarrier)
 }
-
-function ahoRouteFormSubmitHandler(e) {
+// обработчик формы назначения перевозчика
+async function addMileageSubmitHandler(e) {
 	e.preventDefault()
-
-	const formId = e.target.id
-	const url = formId === 'addAhoRouteForm' ? addAhoRouteUrl : editAhoRouteUrl
-	const modalId = `#${formId.slice(0, -4)}Modal`
-
 	const formData = new FormData(e.target)
-	const data = ahoRouteFormDataFormatter(formData)
-
-	if (error) {
-		snackbar.show('Ошибка заполнения формы!')
-		return
-	}
-
-	ajaxUtils.postJSONdata({
-		url: url,
-		token: token,
-		data: data,
-		successCallback: (res) => {
-			console.log(res)
-			res.message && snackbar.show(res.message)
-
-			if (res.status === '200') {
-				$(modalId).modal('hide')
-				updateTable()
-				return
-			}
-		}
-	})
+	const idRoute = formData.get('idRoute')
+	const mileage = formData.get('mileage')
+	await setMileage(idRoute, mileage)
 }
-
-function ahoRouteFormDataFormatter(formData) {
-	const data = Object.fromEntries(formData)
-	return data
+// обработчик формы назначения перевозчика
+async function addFinishPriceSubmitHandler(e) {
+	e.preventDefault()
+	const formData = new FormData(e.target)
+	const idRoute = formData.get('idRoute')
+	const finishPrice = formData.get('finishPrice')
+	await setFinishPrice(idRoute, finishPrice)
+}
+// очищение формы назначения превозчика
+function resetCarrierForm(e, form) {
+	form.reset()
+	const input = e.target.querySelector('#searchInOptions')
+	input.value = ''
+	const inputEvent = new Event('input')
+	input.dispatchEvent(inputEvent)
 }
 
 // -------------------------------------------------------------------------------//
@@ -286,8 +357,8 @@ async function updateTable() {
 
 	const routeSearchForm = document.querySelector('#routeSearchForm')
 
-	const dateStart = '2024-07-10'
-	const dateEnd = '2024-09-10'
+	const dateStart = routeSearchForm.date_from.value
+	const dateEnd = routeSearchForm.date_to.value
 
 	const res = await getData(`${getAhoRouteBaseUrl}${dateStart}&${dateEnd}`)
 	ahoRouteData = res.body
@@ -306,108 +377,134 @@ async function updateTable() {
 
 async function getMappingData(data) {
 	return data.map(route => {
-		const idRoute = route.idRoute
-
-		// const unloadToView = getUnloadToView(route)
-		// const finishPriceToView = getFinishPriceToView(route)
-		// const economy = getEconomy(route)
-		// const carrier = getCarrier(route)
-		// const truckOwner = getTruckOwner(route)
-		// const truckInfo = getTruckInfo(route)
-		// const driverInfo = getDriverInfo(route)
-		// const cargoInfo = getCargoInfo(route)
-		// const startRouteCostInfo = getStartRouteCostInfo(route)
-
-		// const counterparty = getCounterparty(route)
-
-
-
+		const cargoInfo = getCargoInfo(route)
+		const truckInfo = getTruckInfo(route)
+		const addressInfo = getAddressesInfo(route)
+		const carrier = getCarrier(route)
 		return {
 			...route,
-			// offerCount,
-			// isSavedRow,
-			// unloadToView,
-			// finishPriceToView,
-			// economy,
-			// carrier,
-			// truckOwner,
-			// truckInfo,
-			// driverInfo,
-			// cargoInfo,
-			// startRouteCostInfo,
-			// statusRouteToView,
-			// counterparty,
+			carrier,
+			truckInfo,
+			cargoInfo,
+			addressInfo,
 		}
 	})
 }
 
 function getContextMenuItems(params) {
 	if (!params.node) return
-
 	const routeData = params.node.data
 	const idRoute = routeData.idRoute
-	const routeDirection = routeData.routeDirection
 	const status = routeData.statusRoute
 
-	const selectedRowsData = params.api.getSelectedRows()
-	const isVerifySelectedRoutes = !selectedRowsData.filter(route => route.statusRoute !== '0').length
+	const isAddCarrierDisabled = status !== '200' && status !== '210'
+	const isRemoveCarrierDisabled = status !== '210'
+	const isAddMileageDisabled = status !== '210' && status !== '220'
+	const isCarrierAddMileageDisabled = status !== '210'
+	const isRemoveMileageDisabled = status !== '220'
+	const isAddFinishPriceDisabled = status !== '220' && status !== '225'
+	const isRemoveFinishPriceDisabled = status !== '225'
+	const isCloseRouteDisabled = status !== '225'
 
-	const result = [
+	const logistResult = [
 		{
-			name: `Редактировать заявку`,
-			// icon: uiIcons.offer,
-			action: () => {
-				// addCarrier(routeData)
-			},
-		},
-		{
-			name: `Удалить заявку`,
-			// icon: uiIcons.offer,
-			action: () => {
-				// addCarrier(routeData)
-			},
-		},
-		{
+			disabled: isAddCarrierDisabled,
 			name: `Назначить перевозчика`,
-			// icon: uiIcons.offer,
+			icon: uiIcons.personPlus,
 			action: () => {
 				addCarrier(routeData)
 			},
 		},
 		{
+			disabled: isRemoveCarrierDisabled,
 			name: `Удалить перевозчика`,
-			// icon: uiIcons.offer,
+			icon: uiIcons.trash,
 			action: () => {
-				// addCarrier(routeData)
+				removeCarrier(idRoute)
 			},
 		},
 		{
-			name: `Указать пробег`,
-			// icon: uiIcons.offer,
+			disabled: isAddMileageDisabled,
+			name: `Добавить пробег`,
+			icon: uiIcons.route2,
 			action: () => {
-				// addCarrier(routeData)
+				addMileage(routeData)
 			},
 		},
 		{
-			name: `Закрыть маршрут`,
-			// icon: uiIcons.offer,
+			disabled: isRemoveMileageDisabled,
+			name: `Удалить пробег`,
+			icon: uiIcons.eraser,
 			action: () => {
-				// addCarrier(routeData)
+				removeMileage(idRoute)
 			},
 		},
-		
+		{
+			disabled: isAddFinishPriceDisabled,
+			name: `Указать стоимость перевозки`,
+			icon: uiIcons.banknotes,
+			action: () => {
+				addFinishPrice(routeData)
+			},
+		},
+		{
+			disabled: isRemoveFinishPriceDisabled,
+			name: `Удалить стоимость`,
+			icon: uiIcons.banknotesRemoved,
+			action: () => {
+				removeFinishPrice(idRoute)
+			},
+		},
+		{
+			disabled: isCloseRouteDisabled,
+			name: `Завершить маршрут`,
+			icon: uiIcons.checks,
+			action: () => {
+				closeRoute(idRoute)
+			},
+		},
 		"separator",
 		"excelExport",
 	]
 
-	return result
+	const carierResult = [
+		// {
+		// 	disabled: isCarrierAddMileageDisabled,
+		// 	name: `Добавить пробег`,
+		// 	icon: uiIcons.route2,
+		// 	action: () => {
+		// 		addMileage(routeData)
+		// 	},
+		// }
+	]
+
+	return isCarrier(role) ? carierResult : logistResult
 }
 
+// обработчики нажатий кнопок контекстного меню
 function addCarrier(routeData) {
+	const idCarrier = routeData.user ? routeData.user.idUser : ''
 	const addCarrierForm = document.querySelector('#addCarrierForm')
 	addCarrierForm.idRoute.value = routeData.idRoute
 	addCarrierForm.routeDirection.value = routeData.routeDirection
+	addCarrierForm.carrier.value = idCarrier
 	showAddCarrierModal()
+}
+function addMileage(routeData) {
+	const mileage = routeData.kmInfo ? routeData.kmInfo : ''
+	const addMileageForm = document.querySelector('#addMileageForm')
+	addMileageForm.idRoute.value = routeData.idRoute
+	addMileageForm.routeDirection.value = routeData.routeDirection
+	addMileageForm.mileage.value = mileage
+	showAddMileageModal()
+}
+function addFinishPrice(routeData) {
+	const finishPrice = routeData.finishPrice ? routeData.finishPrice : ''
+	const addFinishPriceForm = document.querySelector('#addFinishPriceForm')
+	addFinishPriceForm.idRoute.value = routeData.idRoute
+	addFinishPriceForm.routeDirection.value = routeData.routeDirection
+	addFinishPriceForm.finishPrice.value = finishPrice
+	showAddFinishPriceModal()
 }
 
 // функция обновления данных ячейки таблицы
@@ -421,7 +518,31 @@ function highlightRow(rowNode) {
 	gridOptions.api.flashCells({ rowNodes: [rowNode] })
 }
 
-
+// форматирование ячейки со статусом маршрута
+function statusRouteValueFormatter(params) {
+	const status = params.value
+	return getAhoStatusRoute(status)
+}
+// форматирование ячейки спробегом по маршруту
+function kmInfoValueFormatter(params) {
+	return params.value ? `${params.value} км` : ''
+}
+// форматирование ячейки с датой загрузки/выгрузки
+function dateValueFormatter(params) {
+	return params.value ? dateHelper.changeFormatToView(params.value) : ''
+}
+// форматирование ячейки со временем загрузки/выгрузки
+function timeValueFormatter(params) {
+	return params.value ? params.value.slice(0,5) : ''
+}
+// форматирование ячейки с ценой
+function finishPriceFormatter(params) {
+	return params.value ? `${params.value} BYN` : ''
+}
+// форматирование ячейки с комментарием
+function userCommentsValueFormatter(params) {
+	return params.value ? params.value.replace(/null/gi, '') : ''
+}
 
 // функции управления состоянием колонок
 function saveColumnState() {
@@ -440,88 +561,175 @@ function restoreFilterState() {
 }
 
 
-
-
-
 // функции получения данных для таблицы
-function getUnloadToView(route) {
+function getAddressesInfo(route) {
 	if (!route) return ''
-	const dateUnload = route.dateUnloadPreviouslyStock ? route.dateUnloadPreviouslyStock : ''
-	const timeUnload = route.timeUnloadPreviouslyStock ? route.timeUnloadPreviouslyStock.slice(0,5) : ''
-	return `${dateUnload} ${timeUnload}`
-}
-function getFinishPriceToView(route) {
-	if (!route) return ''
-	const finishPrice = route.finishPrice ? route.finishPrice : ''
-	const currency = route.startCurrency ? route.startCurrency : ''
-	const expeditionCost = route.expeditionCost ? route.expeditionCost : ''
+	const rhs = route.roteHasShop
+	if (!rhs) return ''
+	if (!rhs.length) return ''
 
-	const res = expeditionCost
-		? `${finishPrice} ${currency} (${expeditionCost} ${currency})`
-		: `${finishPrice} ${currency}`
-
-	return res
-}
-function getEconomy(route) {
-	return ''
-}
-function getCarrier(route) {
-	if (!route) return ''
-	const driver = route.driver ? route.driver : ''
-	if (!driver) return ''
-	return driver.companyName ? driver.companyName : ''
-}
-function getTruckOwner(route) {
-	if (!route) return ''
-	const truck = route.truck ? route.truck : ''
-	if (!truck) return ''
-	return truck.ownerTruck ? truck.ownerTruck : ''
-}
-function getTruckInfo(route) {
-	if (!route) return ''
-	const truck = route.truck ? route.truck : ''
-	if (!truck) return ''
-	const numTruck = truck.numTruck ? truck.numTruck : ''
-	const numTrailer = truck.numTrailer ? truck.numTrailer : ''
-	const typeTrailer = truck.typeTrailer ? truck.typeTrailer : ''
-	return `${numTruck} / ${numTrailer},  ${typeTrailer}`
-}
-function getDriverInfo(route) {
-	if (!route) return ''
-	const driver = route.driver ? route.driver : ''
-	if (!driver) return ''
-	const name = driver.name ? driver.name : ''
-	const surname = driver.surname ? driver.surname : ''
-	const patronymic = driver.patronymic ? driver.patronymic : ''
-	return `${surname} ${name} ${patronymic}`
+	return rhs
+		.reduce((acc, item) => {
+			const index = item.order ? item.order : ''
+			const type = item.position ? item.position : ''
+			const address = item.address ? item.address : ''
+			acc.push(`${index}) ${type}: ${address}`)
+			return acc
+		}, [])
+		.join(' ● ')
 }
 function getCargoInfo(route) {
 	if (!route) return ''
 	const rhsItem = route.roteHasShop[0]
 	if (!rhsItem) return ''
-	const pall = route.totalLoadPall ? route.totalLoadPall : ''
-	const volume = rhsItem.volume ? rhsItem.volume : ''
-	return `${pall} / ${volume}`
+	const cargo = rhsItem.cargo ? rhsItem.cargo : ''
+	const pall = route.totalLoadPall ? `${route.totalLoadPall} палл` : ''
+	const weight = route.totalCargoWeight ? `${route.totalCargoWeight} кг` : ''
+	return [ cargo, pall, weight ].filter(item => item).join(' ● ')
 }
-function getStartRouteCostInfo(route) {
+function getTruckInfo(route) {
 	if (!route) return ''
-	const currency = route.startCurrency ? route.startCurrency : 'BYN'
-	const startPrice = route.startPrice ? route.startPrice : ''
-	const optimalCost = route.optimalCost ? route.optimalCost : ''
-
-	const res = startPrice
-		? `${startPrice} ${currency}`
-		: optimalCost
-			? `${optimalCost} ${currency} - оптимальная`
-			: ''
-
-	return res
+	const typeTrailer = route.typeTrailer ? route.typeTrailer : ''
+	const typeLoad = route.typeLoad ? route.typeLoad : ''
+	const methodLoad = route.methodLoad ? route.methodLoad : ''
+	return [ typeTrailer, typeLoad, methodLoad ].filter(item => item).join(' ● ')
 }
-function getCounterparty(route) {
+function getCarrier(route) {
 	if (!route) return ''
-	const routeDirection = route.routeDirection ? route.routeDirection : ''
-	const array = routeDirection.split('>')
-	if (array.length < 2) return ''
-	const counterparty = array[0].replace('<', '')
-	return counterparty
+	const user = route.user ? route.user : ''
+	if (!user) return ''
+	return user.companyName ? user.companyName : ''
+}
+
+
+// методы изменения данных на сервере
+async function setCarrier(idRoute, idCarrier) {
+	if (isCarrier(role)) return
+	const url = `${addCarrierBaseUrl}${idRoute}&${idCarrier}`
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
+	const res = await getData(url)
+	
+	clearTimeout(timeoutId)
+	bootstrap5overlay.hideOverlay()
+	
+	if (res.status === '200') {
+		snackbar.show('Выполнено!')
+		updateTable()
+		hideAddCarrierModal()
+	} else {
+		console.log(res)
+		const message = res.message ? res.message : 'Неизвестная ошибка'
+		snackbar.show(message)
+	}
+}
+async function removeCarrier(idRoute) {
+	if (isCarrier(role)) return
+	const url = `${clearCarrierBaseUrl}${idRoute}`
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
+	const res = await getData(url)
+	
+	clearTimeout(timeoutId)
+	bootstrap5overlay.hideOverlay()
+	
+	if (res.status === '200') {
+		snackbar.show('Выполнено!')
+		updateTable()
+		hideAddCarrierModal()
+	} else {
+		console.log(res)
+		const message = res.message ? res.message : 'Неизвестная ошибка'
+		snackbar.show(message)
+	}
+}
+async function setMileage(idRoute, mileage) {
+	const url = `${setMileageBaseUrl}${idRoute}&${mileage}`
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
+	const res = await getData(url)
+	
+	clearTimeout(timeoutId)
+	bootstrap5overlay.hideOverlay()
+	
+	if (res.status === '200') {
+		snackbar.show('Выполнено!')
+		updateTable()
+		hideAddMileageModal()
+	} else {
+		console.log(res)
+		const message = res.message ? res.message : 'Неизвестная ошибка'
+		snackbar.show(message)
+	}
+}
+async function removeMileage(idRoute) {
+	if (isCarrier(role)) return
+	const url = `${clearMileageBaseUrl}${idRoute}`
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
+	const res = await getData(url)
+	
+	clearTimeout(timeoutId)
+	bootstrap5overlay.hideOverlay()
+	
+	if (res.status === '200') {
+		snackbar.show('Выполнено!')
+		updateTable()
+	} else {
+		console.log(res)
+		const message = res.message ? res.message : 'Неизвестная ошибка'
+		snackbar.show(message)
+	}
+}
+async function setFinishPrice(idRoute, finishPrice) {
+	if (isCarrier(role)) return
+	const url = `${setFinishPriceBaseUrl}${idRoute}&${finishPrice}&BYN`
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
+	const res = await getData(url)
+	
+	clearTimeout(timeoutId)
+	bootstrap5overlay.hideOverlay()
+	
+	if (res.status === '200') {
+		snackbar.show('Выполнено!')
+		updateTable()
+		hideAddFinishPriceModal()
+	} else {
+		console.log(res)
+		const message = res.message ? res.message : 'Неизвестная ошибка'
+		snackbar.show(message)
+	}
+}
+async function removeFinishPrice(idRoute) {
+	if (isCarrier(role)) return
+	const url = `${clearFinishPriceBaseUrl}${idRoute}`
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
+	const res = await getData(url)
+	
+	clearTimeout(timeoutId)
+	bootstrap5overlay.hideOverlay()
+	
+	if (res.status === '200') {
+		snackbar.show('Выполнено!')
+		updateTable()
+	} else {
+		console.log(res)
+		const message = res.message ? res.message : 'Неизвестная ошибка'
+		snackbar.show(message)
+	}
+}
+async function closeRoute(idRoute) {
+	if (isCarrier(role)) return
+	const url = `${closeRouteBaseUrl}${idRoute}`
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
+	const res = await getData(url)
+	
+	clearTimeout(timeoutId)
+	bootstrap5overlay.hideOverlay()
+	
+	if (res.status === '200') {
+		snackbar.show('Выполнено!')
+		updateTable()
+		hideAddCarrierModal()
+	} else {
+		console.log(res)
+		const message = res.message ? res.message : 'Неизвестная ошибка'
+		snackbar.show(message)
+	}
 }

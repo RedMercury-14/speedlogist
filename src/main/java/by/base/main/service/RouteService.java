@@ -107,4 +107,13 @@ public interface RouteService {
 	 * @return
 	 */
 	List<Route> getMaintenanceListAsDate(Date dateStart, Date dateFinish);
+	
+	/**
+	 * Отдаёт лист с маршрутами/заказами АХО по <b>дате доставки (dateLoadPreviously)</b> и логину
+	 * @param dateStart
+	 * @param dateFinish
+	 * @param user
+	 * @return
+	 */
+	List<Route> getMaintenanceListAsDateAndLogin(Date dateStart, Date dateFinish, User user);
 }

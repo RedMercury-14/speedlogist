@@ -225,6 +225,9 @@ public class Order {
 	@Column(name = "registration_fact_yard")
 	private Timestamp registrationFactYard;
 	
+	@Column(name = "last_datetime_point_load")
+	private Timestamp lastDatetimePointLoad;
+	
 	@Transient
 	private List<Address> addressesSort;
 	
@@ -273,6 +276,12 @@ public class Order {
 
 	
 	
+	public Timestamp getLastDatetimePointLoad() {
+		return lastDatetimePointLoad;
+	}
+	public void setLastDatetimePointLoad(Timestamp lastDatetimePointLoad) {
+		this.lastDatetimePointLoad = lastDatetimePointLoad;
+	}
 	public Set<OrderLine> getOrderLines() {
 		return orderLines;
 	}

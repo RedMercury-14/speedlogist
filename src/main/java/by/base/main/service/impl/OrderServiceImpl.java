@@ -350,5 +350,10 @@ public class OrderServiceImpl implements OrderService {
 
 	    return orderDAO.getOrderDTOByPeriodDeliveryAndSlots(dateStart, dateEnd);
 	}
+
+	@Override
+	public List<OrderDTO> getOrderDTOByPeriodDelivery(Date dateStart, Date dateEnd) {
+		return orderDAO.getOrderDTOByPeriodDelivery(dateStart, dateEnd);
+	}
 	
 }

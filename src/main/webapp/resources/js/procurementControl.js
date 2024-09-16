@@ -205,6 +205,8 @@ window.onload = async () => {
 
 	// листнер на отправку формы поиска заявок
 	orderSearchForm.addEventListener('submit', async (e) => searchFormSubmitHandler(e))
+
+	bootstrap5overlay.hideOverlay()
 }
 
 window.addEventListener("unload", () => {
@@ -385,6 +387,7 @@ function orderLinkRenderer(params) {
 
 async function searchFormSubmitHandler(e) {
 	e.preventDefault()
+	gridOptions.api.showLoadingOverlay()
 
 	const formData = new FormData(e.target)
 	const data = Object.fromEntries(formData)
@@ -398,6 +401,7 @@ async function searchFormSubmitHandler(e) {
 		: await getData(`${getOrderBaseUrl}${dateStart}&${dateEnd}`)
 
 	updateTable(gridOptions, orders)
+	gridOptions.api.hideOverlay()
 }
 
 // функции управления состоянием колонок

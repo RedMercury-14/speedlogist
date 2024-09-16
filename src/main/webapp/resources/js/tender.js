@@ -193,7 +193,9 @@ window.onload = async () => {
 
 	function onMessage(msg) {
 		if (msg.currency) {
-			updateTable(gridOptions, tenders, myMessages, user)
+			// обновляем таблицу только на свои сообщения
+			const userUnp = user.numYNP
+			if (msg.ynp === userUnp) updateTable(gridOptions, tenders, myMessages, user)
 		}
 	}
 }

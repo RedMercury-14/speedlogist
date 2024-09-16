@@ -41,43 +41,30 @@ export function getMinUnloadDateForLogist(now, order) {
 
 // расчет времени выгрузки в зависимости от даты загрузки (4ч для РБ и 24 часа для импорта)
 function getUnloadDateWithDelay(order) {
+	const lastLoadDate = order.lastDatetimePointLoad
 	const way = order.way
-	const { loadDate, loadTime } = getLastLoadDateTime(order)
-	const [h, m, s] = loadTime.split(':')
+
+	if (!lastLoadDate) {
+		return order.dateDelivery
+			? new Date(order.dateDelivery).setHours(0,0,0,0)
+			: new Date().setHours(0,0,0,0)
+	}
 
 	// если маршрут РБ - добавляем 4 часа
 	if (way === 'РБ') {
-		return new Date(loadDate)
-			.setHours(h, m, s, 0) + (
+		return new Date(lastLoadDate)
+			.getTime() + (
 				slotsSettings.UNLOAD_DATE_HOUR_DELAY_FOR_RB * dateHelper.MILLISECONDS_IN_HOUR
 			)
 	}
 
 	// для остальных маршрутов (импорт) добавляем 24 часа
-	return new Date(loadDate)
-		.setHours(h, m, s, 0) + (
+	return new Date(lastLoadDate)
+		.getTime() + (
 			slotsSettings.UNLOAD_DATE_HOUR_DELAY_FOR_IMPORT * dateHelper.MILLISECONDS_IN_HOUR
 		)
 }
 
-
-// получение времени последней загрузки заказа из адресов заказа
-export function getLastLoadDateTime(order) {
-	if (!order.addresses || order.addresses.length === 0) {
-		return {
-			loadDate: order.dateDelivery ? order.dateDelivery : new Date().setHours(0,0,0,0),
-			loadTime: '00:00:00',
-		}
-	}
-
-	const loadPoints = order.addresses
-		.filter(point => point.type === 'Загрузка')
-		.sort((a, b) => b.date - a.date)
-	return {
-		loadDate: loadPoints[0].date,
-		loadTime: loadPoints[0].time,
-	}
-}
 
 // получение данных для запроса на сервер
 export function getOrderDataForAjax(info, currentStock, currentLogin, currentRole, method) {

@@ -35,7 +35,9 @@
 			<strong><h3>График поставок контрагентов</h3></strong>
 		</div>
 		<div class="toolbar">
-			<select class="btn tools-btn font-weight-bold" name="numStockSelect" id="numStockSelect"></select>
+			<select class="btn tools-btn font-weight-bold" name="numStockSelect" id="numStockSelect">
+				<option value="">Все склады</option>
+			</select>
 			<button type="button" class="btn tools-btn font-weight-bold text-muted" data-toggle="modal" data-target="#addScheduleItemModal">
 				+ Добавить новый график
 			</button>
@@ -442,7 +444,7 @@
 
 	<!-- Модальное окно для отображения текста -->
 	<div class="modal fade" id="displayMessageModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="displayMessageModalLabel" aria-hidden="true">
-		<div class="modal-dialog">
+		<div class="modal-dialog modal-lg">
 			<div class="modal-content">
 				<div class="modal-header justify-content-center">
 					<h5 class="modal-title" id="displayMessageModalLabel">Сообщение</h5>

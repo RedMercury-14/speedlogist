@@ -874,12 +874,13 @@ public class MainRestController {
 		
 		for (Map.Entry<Integer, OrderProduct> entry : mapOrderProduct.entrySet()) {
 			Product product = productsMap.get(entry.getKey());
-			System.out.println(product);
 			if(product == null) {
 				System.err.println("Продукт не найден " + entry.getValue());
+				//создаём новый продукт
 				product = new Product();
 				product.setCodeProduct(entry.getKey());
 				product.setName(entry.getValue().getNameProduct());
+				product.setIsException(false);
 				entry.getValue().setProduct(product);
 				product.addOrderProducts(entry.getValue());
 				productService.saveProduct(product);
@@ -1946,7 +1947,6 @@ public class MainRestController {
 				Double currentDate = (double) duration.toDays();
 				// считаем правильный остаток на текущий день
 				Double trueBalance = product.getBalanceStockAndReserves() + currentDate;
-				
 				
 				if(!product.getIsException()) {
 					if(trueBalance > product.getDayMax()) {

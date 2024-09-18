@@ -12,7 +12,7 @@
 	<meta name="${_csrf.parameterName}" content="${_csrf.token}" />
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="icon" href="${pageContext.request.contextPath}/resources/img/favicon.ico">
-	<title>Менеджер маршрутов АХО</title>
+	<title>Менеджер маршрутов АХО/СГИ</title>
 	<script src="${pageContext.request.contextPath}/resources/js/AG-Grid/ag-grid-enterprise.min.js"></script>
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/variables.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/maintenanceList.css">
@@ -32,7 +32,7 @@
 	</div>
 	<div class="fluid-container my-container">
 		<div class="title-container">
-			<strong><h3>Менеджер маршрутов АХО</h3></strong>
+			<strong><h3>Менеджер маршрутов АХО/СГИ</h3></strong>
 		</div>
 
 		<div class="accordion">

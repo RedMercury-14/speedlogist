@@ -398,7 +398,7 @@
 				<div class="modal-body">
 					<div id="stockProcFormTypeButtons" class="modal-buttons">
 						<button data-value="internalMovement" class="btn btn-primary btn-lg" data-dismiss="modal" type="button">Внутренние перемещения</button>
-						<button data-value="aho" class="btn btn-primary btn-lg" data-dismiss="modal" type="button">Перевозка АХО</button>
+						<button data-value="aho" class="btn btn-primary btn-lg" data-dismiss="modal" type="button">Перевозка АХО/СГИ</button>
 					</div>
 				</div>
 			</div>

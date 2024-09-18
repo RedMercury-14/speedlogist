@@ -175,7 +175,7 @@ function transformToInternalMovementForm() {
 function transformToAhoForm() {
 	orderWay = 'АХО'
 	// изменяем название формы
-	setFormName('Форма создания заявки (перевозка АХО)')
+	setFormName('Форма создания заявки (перевозка АХО/СГИ)')
 	// установка контрагента для АХО
 	setInputValue(document, '#counterparty', 'ЗАО "Доброном"')
 	// установка типа маршрута
@@ -194,7 +194,7 @@ function transformToAhoForm() {
 	hideFormField('marketInfo')
 	hideFormField('stacking')
 
-	changeSubmitButtonText('перевозка АХО')
+	changeSubmitButtonText('перевозка АХО/СГИ')
 }
 
 // обработчик нажатия на кнопки модального окна выбора типа маршрута

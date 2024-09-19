@@ -22,7 +22,7 @@ import {
 	showMobileTooltop,
 	setPallInfo,
 	createDraggableElement,
-	customErrorCallback,
+	errorHandler_100status,
 	showReloadWindowModal,
 	createPopupButton,
 	showEventInfoPopup,
@@ -34,6 +34,7 @@ import {
 	setCurrentDateAttr,
 	setStockAttr,
 	createCalendarDateInput,
+	errorHandler_105status,
 } from "./slots/calendarUtils.js"
 import { dateHelper, debounce, getData, isAdmin, isLogist, isSlotsObserver, isStockProcurement } from "./utils.js"
 import { uiIcons } from "./uiIcons.js"
@@ -414,6 +415,18 @@ function stockSelectOnChangeHandler(e, calendar) {
 // обработчик нажатия на кнопку подтверждения/снятия подтверждения
 function confirmSlotBtnClickHandler(e) {
 	const fcEvent = store.getSlotToConfirm()
+	// const role = store.getRole()
+	// const order = fcEvent.extendedProps.data
+
+	// // проверка даты начала ивента
+	// const minUnloadDate = getMinUnloadDate(order, role)
+	// const minUnloadDateStr = convertToDayMonthTime(minUnloadDate)
+	// console.log("🚀 ~ confirmSlotBtnClickHandler ~ minUnloadDateStr:", minUnloadDateStr)
+	// if (isInvalidEventDate({ event: fcEvent }, minUnloadDate)) {
+	// 	snackbar.show(userMessages.dateDropError(minUnloadDateStr))
+	// 	return
+	// }
+
 	const action = e.target.dataset.action
 	const status = fcEvent.extendedProps.data.status
 	if (action === 'unSave' && status === 20) return
@@ -668,12 +681,15 @@ function loadOrder(info) {
 			}
 
 			if (data.status === '105') {
-				info.revert()
-				showMessageModal(data.message)
+				errorHandler_105status(info, data)
 				return
 			}
 
-			customErrorCallback(info, data, method)
+			if (data.status === '100') {
+				errorHandler_100status(info, data)
+			} else {
+				snackbar.show(userMessages.actionNotCompleted)
+			}
 		},
 		errorCallback: () => {
 			info.revert()
@@ -732,12 +748,15 @@ function updateOrder(info, isComplexUpdate) {
 			}
 
 			if (data.status === '105') {
-				info.revert()
-				showMessageModal(data.message)
+				errorHandler_105status(info, data)
 				return
 			}
 
-			customErrorCallback(info, data, method)
+			if (data.status === '100') {
+				errorHandler_100status(info, data)
+			} else {
+				snackbar.show(userMessages.actionNotCompleted)
+			}
 		},
 		errorCallback: () => {
 			info.revert()
@@ -775,15 +794,18 @@ function deleteOrder(info) {
 			}
 
 			if (data.status === '105') {
-				info.revert()
-				showMessageModal(data.message)
+				errorHandler_105status(info, data)
 				return
 			}
 
-			customErrorCallback(info, data, method)
+			if (data.status === '100') {
+				errorHandler_100status(info, data)
+			} else {
+				snackbar.show(userMessages.actionNotCompleted)
+			}
 		},
 		errorCallback: () => {
-			// info.revert()
+			info.revert()
 			clearTimeout(timeoutId)
 			bootstrap5overlay.hideOverlay()
 		}
@@ -820,7 +842,16 @@ function confirmSlot(fcEvent, action) {
 				return
 			}
 
-			customErrorCallback(null, data, method)
+			if (data.status === '105') {
+				errorHandler_105status(null, data)
+				return
+			}
+
+			if (data.status === '100') {
+				errorHandler_100status(null, data)
+			} else {
+				snackbar.show(userMessages.actionNotCompleted)
+			}
 		},
 		errorCallback: () => {
 			clearTimeout(timeoutId)
@@ -854,7 +885,17 @@ function editMarketInfo(agGridParams) {
 
 			// устанавливаем старое значение
 			setOldMarketInfo(order, oldMarketInfo, orderTableGridOption)
-			customErrorCallback(null, data, method)
+
+			if (data.status === '105') {
+				errorHandler_105status(null, data)
+				return
+			}
+
+			if (data.status === '100') {
+				errorHandler_100status(null, data)
+			} else {
+				snackbar.show(userMessages.actionNotCompleted)
+			}
 		},
 		errorCallback: () => {
 			// устанавливаем старое значение
@@ -887,15 +928,12 @@ function getOrderFromMarket(marketNumber, eventContainer, successCallback) {
 			}
 
 			if (data.status === '105') {
-				showMessageModal(data.message)
+				errorHandler_105status(info, data)
 				return
 			}
 
 			if (data.status === '100') {
-				const errorMessage = data.message
-					? data.message
-					: userMessages.actionNotCompleted
-				snackbar.show(errorMessage)
+				errorHandler_100status(null, data)
 			} else {
 				snackbar.show(userMessages.actionNotCompleted)
 			}

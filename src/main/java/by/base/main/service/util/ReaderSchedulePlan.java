@@ -314,24 +314,33 @@ public class ReaderSchedulePlan {
 		 System.out.println("dateRange = " + dateRange);
 		 
 		 if(dateRange == null) {
-			 return new PlanResponce(0, "Просчёт кол-ва товара на логистическое плече невозможен, т.к. расчёт ОРЛ не совпадает с графиком поставок");
+			 return new PlanResponce(0, "Просчёт кол-ва товара на логистическое плечо невозможен, т.к. расчёт ОРЛ не совпадает с графиком поставок");
 		 }
 		 if(dateRange.start == null && dateRange.days == 0) {
 			 return new PlanResponce(200, "Расчёта заказов по продукту: " + products.get(0).getName() + " ("+products.get(0).getCodeProduct()+") невозможен, т.к. нет в базе данных расчётов потребности");
 		 }
-		 
+		 boolean isMistakeZAQ = false;
 		 if(checkHasLog(dateRange, order)) {
 			 //если входит в лог плече, то находим такие же заказы с такими же SKU
 			 List<Order> orders = orderService.getOrderByTimeDelivery(dateRange.start, dateRange.end);
 			 HashMap<Long, Double> map = calculateQuantityOrderSum(orders); // тут я получил мапу с кодами товаров и суммой заказа за период.
 //			 map.forEach((k,v)->System.out.println(k + " -- " + v));
+			
 			 for (OrderLine orderLine : lines) {
 				Double quantityOrderAll = map.get(orderLine.getGoodsId());
 				Product product = productService.getProductByCode(orderLine.getGoodsId().intValue());
 				if(product!=null) {
 					List<OrderProduct> quantity = product.getOrderProductsListHasDateTarget(dateNow);
 					if(quantity != null) {
-						result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + quantityOrderAll.intValue() + " шт. из " + quantity.get(0).getQuantity() + " шт.\n";						
+						//тут происходит построчная оценка заказанного товара и принятие решения
+						int zaq = quantityOrderAll.intValue();
+						int orlZaq = quantity.get(0).getQuantity();
+						if(zaq > orlZaq*1.1) {
+							result = result +" <ОШИБКА> "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + quantityOrderAll.intValue() + " шт. из " + quantity.get(0).getQuantity() + " шт.\n";	
+							isMistakeZAQ = true;
+						}else {
+							result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + quantityOrderAll.intValue() + " шт. из " + quantity.get(0).getQuantity() + " шт.\n";													
+						}
 					}else {
 						result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - отсутствует в плане заказа (Заказы поставщика от ОРЛ)\n";
 					}
@@ -344,8 +353,11 @@ public class ReaderSchedulePlan {
 			 result = result + "Данный заказ " + order.getMarketNumber() + " " + order.getCounterparty() + " установлен не по графику поставок. Он должен быть установлен в диапазоне: с "
 					 +dateRange.start.toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + ", по " + dateRange.end.toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
 		 }
-		return new PlanResponce(200, result);
-		 
+		 if(isMistakeZAQ) {
+			 return new PlanResponce(0, "Действие заблокировано!\n"+result);
+		 }else {
+			 return new PlanResponce(200, result);
+		 }		 
 	}
 	
 

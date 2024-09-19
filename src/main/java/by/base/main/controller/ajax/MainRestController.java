@@ -74,6 +74,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.dto.OrderDTO;
+import com.dto.PlanResponce;
 import com.google.gson.Gson;
 import com.graphhopper.GHRequest;
 import com.graphhopper.GHResponse;
@@ -1485,12 +1486,14 @@ public class MainRestController {
 		if(order == null) {
 			response.put("status", "100");
 			response.put("message", "Заказ не найден");
+			response.put("info", "Заказ не найден");
 			return response;
 		}
 		order.setMarketInfo(cleanXSS(text));
 		orderService.updateOrder(order);
 		response.put("status", "200");
 		response.put("message", "Комментарий изменен");
+		response.put("info", "Комментарий изменен");
 		return response;
 	}
 	
@@ -1597,79 +1600,98 @@ public class MainRestController {
 		if(idOrder == null) {
 			response.put("status", "100");
 			response.put("message", "Ошибка. Не пришел idOrder");
+			response.put("info", "Ошибка. Не пришел idOrder");
 			return response;
 		}
 		Order order = orderService.getOrderById(idOrder);
-//		//проверка на лимиты товара
-//				String checkMessage = checkNumProductHasStock(order, order.getTimeDelivery());		
-//				if(checkMessage != null) {
-//					response.put("status", "105");
-//					response.put("message", checkMessage);
-//					System.err.println("Не прошла проверку по лимитам товара");
-//					System.out.println(checkMessage);
-//					return response;
-//				}
 		String infoCheck = null;
 		
+		
 		switch (order.getStatus()) {
-		case 8: // от поставщиков
-			order.setStatus(100);
-			orderService.updateOrder(order);
-			String info = chheckScheduleMethodAllInfo(request, order.getMarketContractType(), order.getTimeDelivery().toLocalDateTime().toLocalDate().toString(), order.getCounterparty());
-			saveActionInFile(request, "resources/others/blackBox/slot", idOrder, order.getMarketNumber(), order.getNumStockDelivery(), order.getIdRamp(), null, order.getTimeDelivery(), null, user.getLogin(), "save", info, order.getMarketContractType());
-			Message message = new Message(user.getLogin(), null, "200", str, idOrder.toString(), "save");
-			slotWebSocket.sendMessage(message);	
+		case 8: // от поставщиков			
+			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {
+				//тут проверка поплану
+				PlanResponce planResponce = readerSchedulePlan.process(order);
+				if(planResponce.getStatus() == 0) {
+					infoCheck = planResponce.getMessage();
+					response.put("status", "105");
+					response.put("info", infoCheck);
+					return response;
+				}else {
+					order.setStatus(100);
+					orderService.updateOrder(order);
+					String info = chheckScheduleMethodAllInfo(request, order.getMarketContractType(), order.getTimeDelivery().toLocalDateTime().toLocalDate().toString(), order.getCounterparty());
+					saveActionInFile(request, "resources/others/blackBox/slot", idOrder, order.getMarketNumber(), order.getNumStockDelivery(), order.getIdRamp(), null, order.getTimeDelivery(), null, user.getLogin(), "save", info, order.getMarketContractType());
+					Message message = new Message(user.getLogin(), null, "200", str, idOrder.toString(), "save");
+					slotWebSocket.sendMessage(message);	
+					infoCheck = planResponce.getMessage();
+					response.put("status", "200");
+					response.put("info", infoCheck);
+					java.util.Date t2 = new java.util.Date();
+					System.out.println(t2.getTime()-t1.getTime() + " ms - save" );
+					response.put("message", str);			
+					return response;
+				}
+			}
 			
+			
+			
+		case 7: // сакмовывоз			
+			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {
+				//тут проверка по плану
+				PlanResponce planResponce = readerSchedulePlan.process(order);
+                if(planResponce.getStatus() == 0) {
+                    infoCheck = planResponce.getMessage();
+                    response.put("status", "105");
+                    response.put("info", infoCheck);
+                    return response;
+                }else {
+                	order.setStatus(20);
+        			order.setChangeStatus("Создал: " + user.getSurname() + " " + user.getName() + " " + user.getPatronymic() + " " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")));
+        			orderService.updateOrder(order);
+        			String info2 = chheckScheduleMethodAllInfo(request, order.getMarketContractType(), order.getTimeDelivery().toLocalDateTime().toLocalDate().toString(), order.getCounterparty());
+        			saveActionInFile(request, "resources/others/blackBox/slot", idOrder, order.getMarketNumber(), order.getNumStockDelivery(), 
+        					order.getIdRamp(), null, order.getTimeDelivery(), null, user.getLogin(), "save", info2, order.getMarketContractType());
+        			Message message7 = new Message(user.getLogin(), null, "200", str, idOrder.toString(), "save");
+        			slotWebSocket.sendMessage(message7);
+                    infoCheck = planResponce.getMessage();
+                    response.put("status", "200");
+                    response.put("info", infoCheck);
+                    java.util.Date t3 = new java.util.Date();
+        			System.out.println(t3.getTime()-t1.getTime() + " ms - save" );
+        			String text = "Создана заявка №" + order.getIdOrder() + " " + order.getCounterparty() + " от менеджера " + order.getManager()+"; \nСлот на выгркузку: "+ order.getTimeDelivery() +"; " +
+        					"\nНаправление: " + order.getWay();
+        			mailService.sendSimpleEmailTwiceUsers(request, "Новая заявка", text, properties.getProperty("email.addNewProcurement.rb.1"), properties.getProperty("email.addNewProcurement.rb.2"));
+        			response.put("message", str);			
+        			return response;
+                }
+			}
+						
+		case 100: // сакмовывоз			
 			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {
 				//тут проверка по потребности
-				infoCheck = readerSchedulePlan.process(order);
-				response.put("info", infoCheck);
+				PlanResponce planResponce = readerSchedulePlan.process(order);
+                if(planResponce.getStatus() == 0) {
+                    infoCheck = planResponce.getMessage();
+                    response.put("status", "105");
+                    response.put("info", infoCheck);
+                    return response;
+                }else {
+                    infoCheck = planResponce.getMessage();
+                    response.put("status", "200");
+                    response.put("info", infoCheck);
+                    order.setStatus(8);
+        			orderService.updateOrder(order);
+        			saveActionInFile(request, "resources/others/blackBox/slot", idOrder, order.getMarketNumber(), order.getNumStockDelivery(), order.getIdRamp(), null, order.getTimeDelivery(), null, user.getLogin(), "unsave", null, order.getMarketContractType());
+        			Message message100 = new Message(user.getLogin(), null, "200", str, idOrder.toString(), "unsave");
+        			slotWebSocket.sendMessage(message100);
+        			java.util.Date t4 = new java.util.Date();
+        			System.out.println(t4.getTime()-t1.getTime() + " ms - save" );
+        			response.put("message", str);			
+        			return response;
+                }
 			}
-			java.util.Date t2 = new java.util.Date();
-			System.out.println(t2.getTime()-t1.getTime() + " ms - save" );
-			response.put("status", "200");
-			response.put("message", str);			
-			return response;
-		case 7: // сакмовывоз
-			order.setStatus(20);
-			order.setChangeStatus("Создал: " + user.getSurname() + " " + user.getName() + " " + user.getPatronymic() + " " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")));
-			orderService.updateOrder(order);
-			String info2 = chheckScheduleMethodAllInfo(request, order.getMarketContractType(), order.getTimeDelivery().toLocalDateTime().toLocalDate().toString(), order.getCounterparty());
-			saveActionInFile(request, "resources/others/blackBox/slot", idOrder, order.getMarketNumber(), order.getNumStockDelivery(), 
-					order.getIdRamp(), null, order.getTimeDelivery(), null, user.getLogin(), "save", info2, order.getMarketContractType());
-			Message message7 = new Message(user.getLogin(), null, "200", str, idOrder.toString(), "save");
-			slotWebSocket.sendMessage(message7);	
 			
-			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {
-				//тут проверка по потребности
-				infoCheck = readerSchedulePlan.process(order);
-				response.put("info", infoCheck);
-			}
-			java.util.Date t3 = new java.util.Date();
-			System.out.println(t3.getTime()-t1.getTime() + " ms - save" );
-			String text = "Создана заявка №" + order.getIdOrder() + " " + order.getCounterparty() + " от менеджера " + order.getManager()+"; \nСлот на выгркузку: "+ order.getTimeDelivery() +"; " +
-					"\nНаправление: " + order.getWay();
-			mailService.sendSimpleEmailTwiceUsers(request, "Новая заявка", text, properties.getProperty("email.addNewProcurement.rb.1"), properties.getProperty("email.addNewProcurement.rb.2"));
-			response.put("status", "200");
-			response.put("message", str);			
-			return response;			
-		case 100: // сакмовывоз
-			order.setStatus(8);
-			orderService.updateOrder(order);
-			saveActionInFile(request, "resources/others/blackBox/slot", idOrder, order.getMarketNumber(), order.getNumStockDelivery(), order.getIdRamp(), null, order.getTimeDelivery(), null, user.getLogin(), "unsave", null, order.getMarketContractType());
-			Message message100 = new Message(user.getLogin(), null, "200", str, idOrder.toString(), "unsave");
-			slotWebSocket.sendMessage(message100);	
-			
-			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {
-				//тут проверка по потребности
-				infoCheck = readerSchedulePlan.process(order);
-				response.put("info", infoCheck);
-			}
-			java.util.Date t4 = new java.util.Date();
-			System.out.println(t4.getTime()-t1.getTime() + " ms - save" );
-			response.put("status", "200");
-			response.put("message", str);			
-			return response;
 
 		default:
 			response.put("status", "100");
@@ -1695,6 +1717,7 @@ public class MainRestController {
 		if(role.equals("ROLE_TOPMANAGER") || role.equals("ROLE_MANAGER")) {
 			response.put("status", "100");
 			response.put("message", "Неправомерный запрос от роли логиста");
+			response.put("info", "Неправомерный запрос от роли логиста");
 		}
 		JSONParser parser = new JSONParser();
 		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
@@ -1702,6 +1725,7 @@ public class MainRestController {
 		if(idOrder == null) {
 			response.put("status", "100");
 			response.put("message", "Ошибка. Не пришел idOrder");
+			response.put("info", "Ошибка. Не пришел idOrder");
 			return response;
 		}
 		Order order = orderService.getOrderById(idOrder);
@@ -1756,6 +1780,7 @@ public class MainRestController {
 		}else {
 			response.put("status", "100");
 			response.put("message", "Невозможно удалить заказ из плана выгрузки, т.к. оформлена заявка на поиск транспорта");
+			response.put("info", "Невозможно удалить заказ из плана выгрузки, т.к. оформлена заявка на поиск транспорта");
 			return response;
 		}				
 	}
@@ -1786,6 +1811,7 @@ public class MainRestController {
 		if(idOrder == null) {
 			response.put("status", "100");
 			response.put("message", "Ошибка. Не пришел idOrder");
+			response.put("info", "Ошибка. Не пришел idOrder");
 			return response;
 		}
 		Order order = orderService.getOrderById(idOrder);
@@ -1815,6 +1841,7 @@ public class MainRestController {
 			order.setSlotInfo(fullMessageTopManager);
 			break;
 		}
+		
 		//главные проверки
 		//проверка на лимит приемки паллет
 		if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) { // проверяем всё кроме вн перемещений
@@ -1824,40 +1851,38 @@ public class MainRestController {
 			if(summPallNew > Integer.parseInt(propertiesStock.getProperty(propKey))) {						
 				response.put("status", "100");
 				response.put("message", "Ошибка. Превышен лимит по паллетам на текущую дату");
+				response.put("info", "Ошибка. Превышен лимит по паллетам на текущую дату");
 				System.err.println("Не прошла проверку по лимитам паллет склада");
 				return response;
 			}			
 		}
 		
-		
-		
-//		//отдельно проверяем на внутренние перемещение и все остальные
-//		if(order.getIsInternalMovement() != null && order.getIsInternalMovement().equals("true")) {
-//			Integer summPall = orderService.getSummPallInStockInternal(order);
-//			Integer summPallNew =  summPall + Integer.parseInt(order.getPall().trim());
-//			String propKey = "limit.movment." + getTrueStock(order);
-//			if(summPallNew > Integer.parseInt(propertiesStock.getProperty(propKey))) {
-//				response.put("status", "100");
-//				response.put("message", "Ошибка. Превышен лимит по паллетам на текущую дату");
-//				return response;
-//			}
-//		}else {
-//			Integer summPall = orderService.getSummPallInStockExternal(order);
-//			Integer summPallNew =  summPall + Integer.parseInt(order.getPall().trim());
-//			String propKey = "limit." + getTrueStock(order);
-//			if(summPallNew > Integer.parseInt(propertiesStock.getProperty(propKey))) {						
-//				response.put("status", "100");
-//				response.put("message", "Ошибка. Превышен лимит по паллетам на текущую дату");
-//				return response;
-//			}
-//		}
 		//проверка на лимиты товара
 		String checkMessage = checkNumProductHasStock(order, timestamp);		
 		if(checkMessage != null) {
 			response.put("status", "105");
 			response.put("message", checkMessage);
+			response.put("info", checkMessage);
 			System.err.println("Не прошла проверку по лимитам товара");
 			return response;
+		}
+		
+		String infoCheck = null;
+		
+		if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {			
+			PlanResponce planResponce = readerSchedulePlan.process(order);
+			if(planResponce.getStatus() == 0) {
+				infoCheck = planResponce.getMessage();
+				response.put("status", "105");
+				response.put("info", infoCheck);
+				return response;
+			}else {
+				infoCheck = planResponce.getMessage();
+				response.put("info", infoCheck);
+				response.put("status", "200");
+			}
+			
+			
 		}
 		
 		String errorMessage = orderService.updateOrderForSlots(order);//проверка на пересечение со временим других слотов и лимит складов
@@ -1865,6 +1890,7 @@ public class MainRestController {
 		if(errorMessage!=null) {
 			response.put("status", "100");
 			response.put("message", errorMessage);
+			response.put("info", errorMessage);
 			System.err.println("Не прошла проверку по пересечениям слотов");
 			return response;
 		}else {
@@ -1879,23 +1905,10 @@ public class MainRestController {
 			Message message = new Message(user.getLogin(), null, "200", str, idOrder.toString(), "update");
 			slotWebSocket.sendMessage(message);	
 			
-			String infoCheck = null;
-			
-			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {
-//				if(!oldDateTimeDelivery.toLocalDateTime().toLocalDate().equals(order.getTimeDelivery().toLocalDateTime().toLocalDate())) {//если дата не меняется при update то проверки не происходит
-//					//тут проверка по потребности
-//					infoCheck = readerSchedulePlan.process(order);
-//					response.put("info", infoCheck);
-//				}
-				infoCheck = readerSchedulePlan.process(order);
-				response.put("info", infoCheck);
-				
-			}
-			
 			saveActionInFile(request, "resources/others/blackBox/slot", idOrder, order.getMarketNumber(), order.getNumStockDelivery(), oldIdRamp, order.getIdRamp(), oldTimeDelivery, order.getTimeDelivery(), user.getLogin(), "update", info, order.getMarketContractType());
 			java.util.Date t2 = new java.util.Date();
 			System.out.println(t2.getTime()-t1.getTime() + " ms - update" );
-			response.put("status", "200");
+			
 			response.put("message", str);
 			return response;	
 		}			
@@ -2016,18 +2029,21 @@ public class MainRestController {
 		if(idOrder == null) {
 			response.put("status", "100");
 			response.put("message", "Ошибка. Не пришел idOrder");
+			response.put("info", "Ошибка. Не пришел idOrder");
 			return response;
 		}
 		Order order = orderService.getOrderById(idOrder);
 		if(order.getLoginManager() != null) {//обработка одновременного вытягивания объекта из дроп зоны
 			response.put("status", "100");
 			response.put("message", "Ошибка доступа. Заказ не зафиксирован. Данный заказ уже поставлен другим пользователем");
+			response.put("info", "Ошибка доступа. Заказ не зафиксирован. Данный заказ уже поставлен другим пользователем");
 			return response;
 		}
 		if(order.getStatus() == 6 && Integer.parseInt(jsonMainObject.get("status").toString()) == 8) {
 			//означает что манагер заранее создал маршрут с 8 статусом а потом создал заявку на него
 			response.put("status", "100");
 			response.put("message", "Вы пытаетесь установить слот от поставщика как слот на самовывоз.");
+			response.put("info", "Вы пытаетесь установить слот от поставщика как слот на самовывоз.");
 			return response;
 		}
 		Timestamp timestamp = Timestamp.valueOf(jsonMainObject.get("timeDelivery").toString());
@@ -2046,6 +2062,7 @@ public class MainRestController {
 			if(summPallNew > Integer.parseInt(propertiesStock.getProperty(propKey))) {
 				response.put("status", "100");
 				response.put("message", "Ошибка. Превышен лимит по паллетам на текущую дату");
+				response.put("info", "Ошибка. Превышен лимит по паллетам на текущую дату");
 				System.err.println("Не прошла проверку по лимитам паллет склада");
 				return response;
 			}
@@ -2091,6 +2108,7 @@ public class MainRestController {
 		if(errorMessage != null) {
 			response.put("status", "100");
 			response.put("message", errorMessage);
+			response.put("info", errorMessage);
 			System.err.println("Не прошла проверку по лимитам паллет склада");
 			return response;
 		}else {

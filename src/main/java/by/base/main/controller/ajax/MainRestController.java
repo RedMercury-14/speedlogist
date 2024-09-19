@@ -1035,6 +1035,21 @@ public class MainRestController {
 		}
 		Schedule schedule = scheduleService.getScheduleByNumContract(Long.parseLong(num));
 		schedule.setStatus(Integer.parseInt(status));
+		
+		String statusStr = null;
+		
+		switch (status) {
+		case "10":
+			statusStr = "cancel";
+			break;
+		case "20":
+			statusStr = "confirm";
+			break;
+		}
+		
+		String history = user.getSurname() + " " + user.getName() + ";" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")) + ";"+statusStr+"\n"; 		
+		schedule.setHistory((schedule.getHistory() != null ? schedule.getHistory() : "") + history);		
+		
 		scheduleService.updateSchedule(schedule);
 		
 		response.put("status", "200");
@@ -1100,6 +1115,10 @@ public class MainRestController {
 		schedule.setMultipleOfPallet(jsonMainObject.get("multipleOfPallet") == null || jsonMainObject.get("multipleOfPallet").toString().isEmpty() ? null : jsonMainObject.get("multipleOfPallet").toString().equals("true") ? true : false);
 		schedule.setMultipleOfTruck(jsonMainObject.get("multipleOfTruck") == null || jsonMainObject.get("multipleOfTruck").toString().isEmpty() ? null : jsonMainObject.get("multipleOfTruck").toString().equals("true") ? true : false);
 
+		String history = user.getSurname() + " " + user.getName() + ";" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")) + ";update\n"; 
+		
+		schedule.setHistory((schedule.getHistory() != null ? schedule.getHistory() : "") + history);
+		schedule.setDateLastChanging(Date.valueOf(LocalDate.now()));
 //		saveActionInFileSchedule(request, "resources/others/blackBox/schedule", scheduleOld, scheduleOld, user.getSurname() + " " + user.getName());
 		
 		scheduleService.updateSchedule(schedule);		
@@ -1826,19 +1845,22 @@ public class MainRestController {
 		if(role.equals("ROLE_PROCUREMENT") || role.equals("ROLE_ORDERSUPPORT")) {
 			order.setLoginManager(user.getLogin());
 		}		
-		order.setStatus(order.getStatus());			
+		order.setStatus(order.getStatus());		
+		boolean isLogist = false;
 		switch (role) {
 		case "ROLE_MANAGER":
 			String messageManager = jsonMainObject.get("messageLogist") == null ? null : jsonMainObject.get("messageLogist").toString();
 			String fullMessageManager = "Слот перемещен с рампы " + oldIdRamp +" на рампу " + order.getIdRamp() + " со времени " + oldTimeDelivery + " на новое время " + order.getTimeDelivery() + 
 					" сотрудником " + user.getSurname() + " " + user.getName() + " по причине: " + messageManager + "\n";
 			order.setSlotInfo(fullMessageManager);
+			isLogist = true;
 			break;
 		case "ROLE_TOPMANAGER":
 			String messageTopManager = jsonMainObject.get("messageLogist") == null ? null : jsonMainObject.get("messageLogist").toString();
 			String fullMessageTopManager = "Слот перемещен с рампы " + oldIdRamp +" на рампу " + order.getIdRamp() + " со времени " + oldTimeDelivery + " на новое время " + order.getTimeDelivery() + 
 					" сотрудником " + user.getSurname() + " " + user.getName() + " по причине: " + messageTopManager + "\n";
 			order.setSlotInfo(fullMessageTopManager);
+			isLogist = true;
 			break;
 		}
 		
@@ -1867,23 +1889,27 @@ public class MainRestController {
 			return response;
 		}
 		
+		//главная проверка по графику поставок
 		String infoCheck = null;
 		
-		if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {			
-			PlanResponce planResponce = readerSchedulePlan.process(order);
-			if(planResponce.getStatus() == 0) {
-				infoCheck = planResponce.getMessage();
-				response.put("status", "105");
-				response.put("info", infoCheck);
-				return response;
-			}else {
-				infoCheck = planResponce.getMessage();
-				response.put("info", infoCheck);
-				response.put("status", "200");
+		if(!isLogist) { // если это не логист, то проверяем. Если логист - не проверяем при перемещении
+			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {			
+				PlanResponce planResponce = readerSchedulePlan.process(order);
+				if(planResponce.getStatus() == 0) {
+					infoCheck = planResponce.getMessage();
+					response.put("status", "105");
+					response.put("info", infoCheck);
+					return response;
+				}else {
+					infoCheck = planResponce.getMessage();
+					response.put("info", infoCheck);
+					response.put("status", "200");
+				}		
+				
 			}
-			
-			
 		}
+		//конец главная проверка по графику поставок
+		
 		
 		String errorMessage = orderService.updateOrderForSlots(order);//проверка на пересечение со временим других слотов и лимит складов
 		
@@ -2067,32 +2093,27 @@ public class MainRestController {
 				return response;
 			}
 		}
-		
-		
-		//отдельно проверяем на внутренние перемещение и все остальные
-//		if(order.getIsInternalMovement() != null && order.getIsInternalMovement().equals("true")) {
-//			Integer summPall = orderService.getSummPallInStockInternal(order);
-//			System.out.println("Сумма паллет перемещение = " + summPall);
-//			Integer summPallNew =  summPall + Integer.parseInt(order.getPall().trim());
-//			String propKey = "limit.movment." + getTrueStock(order);
-//			if(summPallNew > Integer.parseInt(propertiesStock.getProperty(propKey))) {
-//				response.put("status", "100");
-//				response.put("message", "Ошибка. Превышен лимит по паллетам на текущую дату");
-//				return response;
-//			}
-//		}else {
-//			Integer summPall = orderService.getSummPallInStockExternal(order);
-//			System.out.println("Сумма паллет обычного заказа = " + summPall);
-//			Integer summPallNew =  summPall + Integer.parseInt(order.getPall().trim());
-//			String propKey = "limit." + getTrueStock(order);
-//			if(summPallNew > Integer.parseInt(propertiesStock.getProperty(propKey))) {
-//				response.put("status", "100");
-//				response.put("message", "Ошибка. Превышен лимит по паллетам на текущую дату");
-//				return response;
-//			}
-//		}
-		
+						
 		//конец проверки на лимит приемки
+		//главная проверка по графику поставок
+		String infoCheck = null;
+		
+		
+		if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {			
+			PlanResponce planResponce = readerSchedulePlan.process(order);
+			if(planResponce.getStatus() == 0) {
+				infoCheck = planResponce.getMessage();
+				response.put("status", "105");
+				response.put("info", infoCheck);
+				return response;
+			}else {
+				infoCheck = planResponce.getMessage();
+				response.put("info", infoCheck);
+				response.put("status", "200");
+			}		
+			
+		}
+		//конец главная проверка по графику поставок
 		
 		//проверка на лимиты товара
 				String checkMessage = checkNumProductHasStock(order, timestamp);		
@@ -2116,12 +2137,6 @@ public class MainRestController {
 			Message message = new Message(user.getLogin(), null, "200", str, idOrder.toString(), "load");
 			slotWebSocket.sendMessage(message);	
 			
-//			String infoCheck = null;
-//			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {
-//				//тут проверка по потребности
-//				infoCheck = readerSchedulePlan.process(order);
-//				response.put("info", infoCheck);
-//			}
 			saveActionInFile(request, "resources/others/blackBox/slot", idOrder, order.getMarketNumber(), order.getNumStockDelivery(), null, order.getIdRamp(), null, order.getTimeDelivery(), user.getLogin(), "load", info, order.getMarketContractType());
 			
 			java.util.Date t2 = new java.util.Date();

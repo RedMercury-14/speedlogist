@@ -91,6 +91,12 @@ public class Schedule{
     @Column(name = "status")
     private Integer status;
     
+    @Column(name = "history")
+    private String history;
+    
+    @Column(name = "date_last_changing")
+    private Date dateLastChanging;
+    
     @JsonIgnore
     @Transient
     private List<String> days;
@@ -111,7 +117,19 @@ public class Schedule{
     
     
 
-    public Integer getStatus() {
+    public Date getDateLastChanging() {
+		return dateLastChanging;
+	}
+
+
+
+	public void setDateLastChanging(Date dateLastChanging) {
+		this.dateLastChanging = dateLastChanging;
+	}
+
+
+
+	public Integer getStatus() {
 		return status;
 	}
 
@@ -119,6 +137,18 @@ public class Schedule{
 
 	public void setStatus(Integer status) {
 		this.status = status;
+	}
+
+
+
+	public String getHistory() {
+		return history;
+	}
+
+
+
+	public void setHistory(String history) {
+		this.history = history;
 	}
 
 

@@ -40,7 +40,8 @@ import by.base.main.service.UserService;
 
 /**
  * Класс который реализует логику подсчётов / сведение
- * <br>а так же отдельные команды для крафика поставок.
+ * <br>а так же отдельные команды для графика поставок.
+ * <br>Реализует подсчёт стоков, относительно графика поставок.
  * <br>Осная цель этого класса - привести к датам и цифрам план
  */
 @Component
@@ -199,6 +200,7 @@ public class ReaderSchedulePlan {
 	 * @param order
 	 * @return
 	 */
+	@Deprecated
 	public Integer getActualStock(Order order) {
 		String numContract = order.getMarketContractType();
 		if(numContract == null) {
@@ -562,7 +564,7 @@ public class ReaderSchedulePlan {
 				if(product.getBalanceStockAndReserves() == 9999.0) {
 					continue;
 				}
-//				if(product.getRemainderStockInPall() < 33.0) { //если в паллетах товара меньшге чем 33 - то пропускаем
+//				if(product.getRemainderStockInPall() < 15.0) { //если в паллетах товара меньшге чем 33 - то пропускаем
 //					continue;
 //				}
 				//считаем разницу в днях сегодняшнеего дня и непосредственно записи
@@ -574,13 +576,6 @@ public class ReaderSchedulePlan {
 				// считаем правильный остаток на текущий день
 				Double trueBalance = roundВouble(product.getBalanceStockAndReserves() + currentDate, 0);
 				
-				//считаем разницу в днях между заказом и постановкой в слоты
-//				LocalDateTime startOrder = LocalDateTime.of(dateRange.start.toLocalDate(), LocalTime.of(0, 0));
-//				LocalDateTime endOrder = order.getTimeDelivery().toLocalDateTime();
-//				Duration durationOrder = Duration.between(startOrder, endOrder);
-//				Double currentDateOrder = (double) durationOrder.toDays();
-//				// считаем правильный жопустимый сток на сегодняшний день
-//				Double trueBalanceOrder = roundВouble(dateRange.stock - currentDateOrder, 0);
 				
 //				System.out.println("Проверка по стокам!");
 				

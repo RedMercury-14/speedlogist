@@ -1628,7 +1628,7 @@ public class MainRestController {
 		
 		switch (order.getStatus()) {
 		case 8: // от поставщиков			
-			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {
+			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false") && !checkDeepImport(order, request)) {
 				
 				//тут проверка поплану
 				PlanResponce planResponce = readerSchedulePlan.process(order);
@@ -1667,7 +1667,7 @@ public class MainRestController {
 			}
 			
 		case 7: // сакмовывоз			
-			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {
+			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false") && !checkDeepImport(order, request)) {
 				//тут проверка по плану
 				PlanResponce planResponce = readerSchedulePlan.process(order);
                 if(planResponce.getStatus() == 0) {
@@ -1715,7 +1715,7 @@ public class MainRestController {
 			}
 						
 		case 100: // сакмовывоз			
-			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {
+			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false") && !checkDeepImport(order, request)) {
 				//тут проверка по потребности
 				PlanResponce planResponce = readerSchedulePlan.process(order);
                 if(planResponce.getStatus() == 0) {
@@ -1922,9 +1922,8 @@ public class MainRestController {
 		
 		//главная проверка по графику поставок
 		String infoCheck = null;
-		List<String> deepImport = propertiesUtils.getValuesByPartialKeyDeepImport(request); // лист с кодами контрактов, которые исключаем
 		
-		if(!deepImport.contains(order.getMarketContractorId())) {
+		if(!checkDeepImport(order, request)) {
 			if(!isLogist) { // если это не логист, то проверяем. Если логист - не проверяем при перемещении
 				if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {			
 					PlanResponce planResponce = readerSchedulePlan.process(order);
@@ -2069,10 +2068,9 @@ public class MainRestController {
 						
 		//конец проверки на лимит приемки
 		//главная проверка по графику поставок
-		String infoCheck = null;
-		List<String> deepImport = propertiesUtils.getValuesByPartialKeyDeepImport(request);
+		String infoCheck = null;		
 		
-		if(!deepImport.contains(order.getMarketContractorId())) {
+		if(!checkDeepImport(order, request)) {
 			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {			
 				PlanResponce planResponce = readerSchedulePlan.process(order);
 				if(planResponce.getStatus() == 0) {
@@ -2114,6 +2112,23 @@ public class MainRestController {
 			return response;	
 		}			
 	}
+	
+	/**
+	 * Метод проверки, является ли контрагент дальним импортом. Если является - то возвращает true
+	 * resources/properties/deepImport.properties
+	 * @param order
+	 * @param request
+	 * @return
+	 */
+	private boolean checkDeepImport(Order order, HttpServletRequest request) {
+		List<String> deepImport = propertiesUtils.getValuesByPartialKeyDeepImport(request);
+		if(deepImport.contains(order.getMarketContractorId())) {
+			return true;
+		}else {
+			return false;
+		}
+	}
+	
 	/**
 	 * Метод отвечает за загрузку остатков на складах
 	 * @param model

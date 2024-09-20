@@ -1,9 +1,12 @@
 package by.base.main.service.util;
 
 import java.sql.Date;
+import java.sql.Timestamp;
 import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,6 +20,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import com.dto.PlanResponce;
@@ -25,11 +29,14 @@ import by.base.main.model.Order;
 import by.base.main.model.OrderLine;
 import by.base.main.model.OrderProduct;
 import by.base.main.model.Product;
+import by.base.main.model.Role;
 import by.base.main.model.Schedule;
+import by.base.main.model.User;
 import by.base.main.service.OrderProductService;
 import by.base.main.service.OrderService;
 import by.base.main.service.ProductService;
 import by.base.main.service.ScheduleService;
+import by.base.main.service.UserService;
 
 /**
  * Класс который реализует логику подсчётов / сведение
@@ -59,6 +66,9 @@ public class ReaderSchedulePlan {
 	
 	@Autowired
 	private OrderService orderService;
+	
+	@Autowired
+	private UserService userService;
 	
 	private static final Map<String, DayOfWeek> RUSSIAN_DAYS = new HashMap<>();
 
@@ -182,7 +192,10 @@ public class ReaderSchedulePlan {
 	 */
 	/**
 	 * Метод, котоырй определяет сколько дней стока долно быть минимально
-	 * <br> для товара согласно графику поставок
+	 * <br> для товара согласно графику поставок, до второй поставки
+	 * <br> Отдаёт количество дней стока, начиная от заказа согласно графику поставок
+	 * <br> т.е. Если заказ в понедельник а поставка в среду, то он берет плече с понедельника по среду
+	 * <br> и до второй поставки, т.е. до сл. среды <b>(лог плечо + неделя)</b>
 	 * @param order
 	 * @return
 	 */
@@ -256,17 +269,9 @@ public class ReaderSchedulePlan {
 		}
 		i = i+j;
 		
-		System.out.println(Date.valueOf(orderProductTarget.getDateCreate().toLocalDateTime().toLocalDate().plusDays(1)) + " - старт");
-		System.out.println(Date.valueOf(orderProductTarget.getDateCreate().toLocalDateTime().toLocalDate().plusDays(i+1)) + " - финиш");
-		
 		int log = (int) Duration.between(orderProductTarget.getDateCreate().toLocalDateTime().toLocalDate().plusDays(1).atStartOfDay(), 
 				orderProductTarget.getDateCreate().toLocalDateTime().toLocalDate().plusDays(i+1).atStartOfDay()).toDays();
-		
-		System.out.println(log +1 + " - logTrue ");
-		if(schedule.getSupplies() == 1) {
-			System.out.println("Минимальный сток должен составлять : " + (log +8));
-		}
-		return null;		
+		return log +8;		
 	}
 	
 	
@@ -337,7 +342,7 @@ public class ReaderSchedulePlan {
 						int orlZaq = quantity.get(0).getQuantity();
 						if(zaq > orlZaq*1.1) {
 							result = result +" <ОШИБКА> "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + quantityOrderAll.intValue() + " шт. из " + quantity.get(0).getQuantity() + " шт.\n";	
-							isMistakeZAQ = true;
+//							isMistakeZAQ = true;
 						}else {
 							result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + quantityOrderAll.intValue() + " шт. из " + quantity.get(0).getQuantity() + " шт.\n";													
 						}
@@ -353,6 +358,13 @@ public class ReaderSchedulePlan {
 			 result = result + "Данный заказ " + order.getMarketNumber() + " " + order.getCounterparty() + " установлен не по графику поставок. Он должен быть установлен в диапазоне: с "
 					 +dateRange.start.toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + ", по " + dateRange.end.toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
 		 }
+		 
+		 String dayStockMessage =  checkNumProductHasStock(order, dateRange);
+		 if(dayStockMessage!= null) {
+             result = dayStockMessage+"\n" + result;
+             isMistakeZAQ = true;
+         }
+		 
 		 if(isMistakeZAQ) {
 			 return new PlanResponce(0, "Действие заблокировано!\n"+result);
 		 }else {
@@ -426,10 +438,39 @@ public class ReaderSchedulePlan {
                 .collect(Collectors.toList());
     }
 	
+	
+	/**
+	 *  Объект, котоырй определяет сколько дней стока долно быть минимально а так же лог плечо и диапазон дат поставок
+	 * <br> Отдаёт количество дней стока (stock), начиная от заказа согласно графику поставок
+	 * <br> т.е. Если заказ в понедельник а поставка в среду, то он берет плече с понедельника по среду
+	 * <br> и до второй поставки, т.е. до сл. среды <b>(лог плечо + неделя)</b>
+	 */
 	class DateRange{
+		/**
+		 * Дата начала лог плеча
+		 * <br>Она же дата заказа
+		 */
 		public Date start;
+		
+		/**
+		 * Дата окончания лог плеча
+		 * <br>Она же дата поставки
+		 */
 		public Date end;
+		
+		/**
+		 * Непосредственно лог плечо
+		 */
 		public Long days;
+		
+		/**
+		 * Жинамический сток для текущего лог плеча (запас товара в днях до второй поставки)
+		 */
+		public Long stock; // динамический сток от даты заказа
+		
+		/**
+		 * Дата заказа согласно графику поставок
+		 */
 		public String dayOfWeekHasOrder;
 		
 		        
@@ -438,13 +479,13 @@ public class ReaderSchedulePlan {
             this.end = end;
             this.days = days;
             this.dayOfWeekHasOrder = dayOfWeekHasOrder;;
+            this.stock = days + 7;
         }
-
 
 		@Override
 		public String toString() {
-			return "DateRange [start=" + start + ", end=" + end + ", days=" + days + ", dayOfWeekHasOrder="
-					+ dayOfWeekHasOrder + "]";
+			return "DateRange [start=" + start + ", end=" + end + ", days=" + days + ", stock=" + stock
+					+ ", dayOfWeekHasOrder=" + dayOfWeekHasOrder + "]";
 		}
         
 	}
@@ -481,4 +522,91 @@ public class ReaderSchedulePlan {
         // Если ничего не найдено, возвращаем 0 или другое значение по умолчанию
         return 0;
     }
+    
+    /**
+	 * Метод для проверки кол-ва товара на текущий день
+	 * если всё ок, возвращает null, если что то не то - сообщение
+	 * @return
+	 */
+	private String checkNumProductHasStock(Order order, DateRange dateRange) {
+		String message = null;
+		User user = getThisUser();
+		Role role = user.getRoles().stream().findFirst().get();
+//		if(role.getIdRole() == 1 || role.getIdRole() == 2 || role.getIdRole() == 3) { // тут мы говорим что если это логист или админ - в проверке не нуждаемся
+//			return null;
+//		}
+		if(order.getIsInternalMovement() != null && order.getIsInternalMovement().equals("true")) {
+			return null;
+		}
+		if(order.getNumProduct() == null) {
+			message = "Данные по заказу " + order.getMarketNumber() + " устарели! Обновите заказ."; 
+//			return message; временно отключил
+			return null;
+		}
+		
+		String [] numProductMass = order.getNumProduct().split("\\^");
+		
+		
+		for (String string : numProductMass) {
+			Product product = productService.getProductByCode(Integer.parseInt(string));
+			
+			if(product != null) {
+				if(product.getBalanceStockAndReserves() == null) {
+					continue;
+				}
+				if(product.getBalanceStockAndReserves() == 9999.0) {
+					continue;
+				}
+				if(product.getRemainderStockInPall() < 33.0) { //если в паллетах товара меньшге чем 33 - то пропускаем
+					continue;
+				}
+				//считаем разницу в днях сегодняшнеего дня и непосредственно записи
+				LocalDateTime start = order.getTimeDelivery().toLocalDateTime();
+				LocalDateTime end = LocalDateTime.of(product.getDateUnload().toLocalDate(), LocalTime.now());
+
+				Duration duration = Duration.between(start, end);
+				Double currentDate = (double) duration.toDays();
+				// считаем правильный остаток на текущий день
+				Double trueBalance = roundВouble(product.getBalanceStockAndReserves() + currentDate, 0);
+				
+				//считаем разницу в днях между заказом и постановкой в слоты
+				LocalDateTime startOrder = LocalDateTime.of(dateRange.start.toLocalDate(), LocalTime.of(0, 0));
+				LocalDateTime endOrder = order.getTimeDelivery().toLocalDateTime();
+				Duration durationOrder = Duration.between(startOrder, endOrder);
+				Double currentDateOrder = (double) durationOrder.toDays();
+				// считаем правильный жопустимый сток на сегодняшний день
+				Double trueBalanceOrder = roundВouble(dateRange.stock - currentDateOrder, 0);
+				
+				if(!product.getIsException()) {
+					
+					if(trueBalance > trueBalanceOrder) {
+						//считаем сколько дней нужно прибавить, чтобы заказать товар
+						Long deltDate = (long) (trueBalance - trueBalanceOrder + 1);
+						if(message == null) {
+							message = "Товара " + product.getCodeProduct() + " ("+product.getName()+")" + " на складе хранится на " + trueBalance + " дней. Ограничение стока (на дату постановки слота), по данному товару: " + trueBalanceOrder + " дней."
+									+" Ближайшая дата на которую можно доставить данный товар: " + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy")) + "\n";
+						}else {
+							message = message + "\nТовара " + product.getCodeProduct() + " ("+product.getName()+")" + " на складе хранится на " + trueBalance + " дней. Ограничение стока (на дату постановки слота), по данному товару: " + trueBalanceOrder + " дней. "
+									+" Ближайшая дата на которую можно доставить данный товар: " + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy"))+ "\n";
+						}
+						 
+					}
+				}
+				
+			}
+		}
+		return message;
+	}
+	
+	private User getThisUser() {
+		String name = SecurityContextHolder.getContext().getAuthentication().getName();
+		User user = userService.getUserByLogin(name);
+		return user;
+	}
+	
+	// округляем числа до 2-х знаков после запятой
+		private static double roundВouble(double value, int places) {
+			double scale = Math.pow(10, places);
+			return Math.round(value * scale) / scale;
+		}
 }

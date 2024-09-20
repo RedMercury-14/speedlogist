@@ -582,10 +582,10 @@ public class ReaderSchedulePlan {
 //				// считаем правильный жопустимый сток на сегодняшний день
 //				Double trueBalanceOrder = roundВouble(dateRange.stock - currentDateOrder, 0);
 				
-				System.out.println("Проверка по стокам!");
+//				System.out.println("Проверка по стокам!");
 				
 				if(!product.getIsException()) {
-					System.out.println(trueBalance + " > " + dateRange.stock);
+//					System.out.println(trueBalance + " > " + dateRange.stock);
 					if(trueBalance > dateRange.stock) {
 						//считаем сколько дней нужно прибавить, чтобы заказать товар
 						Long deltDate = (long) (trueBalance - dateRange.stock );

@@ -1852,6 +1852,7 @@ public class MainRestController {
 			String messageManager = jsonMainObject.get("messageLogist") == null ? null : jsonMainObject.get("messageLogist").toString();
 			String fullMessageManager = "Слот перемещен с рампы " + oldIdRamp +" на рампу " + order.getIdRamp() + " со времени " + oldTimeDelivery + " на новое время " + order.getTimeDelivery() + 
 					" сотрудником " + user.getSurname() + " " + user.getName() + " по причине: " + messageManager + "\n";
+			response.put("status", "200");
 			order.setSlotInfo(fullMessageManager);
 			isLogist = true;
 			break;
@@ -1859,6 +1860,7 @@ public class MainRestController {
 			String messageTopManager = jsonMainObject.get("messageLogist") == null ? null : jsonMainObject.get("messageLogist").toString();
 			String fullMessageTopManager = "Слот перемещен с рампы " + oldIdRamp +" на рампу " + order.getIdRamp() + " со времени " + oldTimeDelivery + " на новое время " + order.getTimeDelivery() + 
 					" сотрудником " + user.getSurname() + " " + user.getName() + " по причине: " + messageTopManager + "\n";
+			response.put("status", "200");
 			order.setSlotInfo(fullMessageTopManager);
 			isLogist = true;
 			break;
@@ -1926,6 +1928,9 @@ public class MainRestController {
 			java.util.Date t2 = new java.util.Date();
 			System.out.println(t2.getTime()-t1.getTime() + " ms - update" );
 			
+			if(response.get("status") == null) {
+				response.put("status", "200");
+			}
 			response.put("message", str);
 			return response;	
 		}			

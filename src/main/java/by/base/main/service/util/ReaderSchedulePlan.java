@@ -288,7 +288,7 @@ public class ReaderSchedulePlan {
 		 String result = "";
 		 if(numContract == null) {
 			 System.err.println("ReaderSchedulePlan.process: numContract = null");
-			 return new PlanResponce(0, "Не найден номер контракта в заказе");
+			 return new PlanResponce(0, "Действие заблокировано!\nНе найден номер контракта в заказе");
 		 }
 		 Date dateNow = Date.valueOf(LocalDate.now());
 		 String infoRow = "Строк в заказе: " + lines.size();
@@ -303,7 +303,7 @@ public class ReaderSchedulePlan {
 		 Schedule schedule = scheduleService.getScheduleByNumContract(Long.parseLong(numContract));
 		 if(products.isEmpty()) {
 			 if(lines.size() == 0) {
-				 return new PlanResponce(0, "Не найдены товары в заказе.");
+				 return new PlanResponce(0, "Действие заблокировано!\nНе найдены товары в заказе.");
 			 }else {
 				 return new PlanResponce(200, "Не найдены товары в базе данных. " + infoRow);
 				 
@@ -319,12 +319,21 @@ public class ReaderSchedulePlan {
 		 System.out.println("dateRange = " + dateRange);
 		 
 		 if(dateRange == null) {
-			 return new PlanResponce(0, "Просчёт кол-ва товара на логистическое плечо невозможен, т.к. расчёт ОРЛ не совпадает с графиком поставок");
+			 return new PlanResponce(0, "Действие заблокировано!\nПросчёт кол-ва товара на логистическое плечо невозможен, т.к. расчёт ОРЛ не совпадает с графиком поставок");
 		 }
 		 if(dateRange.start == null && dateRange.days == 0) {
 			 return new PlanResponce(200, "Расчёта заказов по продукту: " + products.get(0).getName() + " ("+products.get(0).getCodeProduct()+") невозможен, т.к. нет в базе данных расчётов потребности");
 		 }
+		 
+		 //проверка по стокам отностительно графика поставок
 		 boolean isMistakeZAQ = false;
+		 String dayStockMessage =  checkNumProductHasStock(order, dateRange);
+		 if(dayStockMessage!= null) {
+             result = dayStockMessage+"\n" + result;
+             isMistakeZAQ = true;
+         }
+		// КОНЕЦ проверка по стокам отностительно графика поставок
+		 
 		 if(checkHasLog(dateRange, order)) {
 			 //если входит в лог плече, то находим такие же заказы с такими же SKU
 			 List<Order> orders = orderService.getOrderByTimeDelivery(dateRange.start, dateRange.end);
@@ -341,7 +350,7 @@ public class ReaderSchedulePlan {
 						int zaq = quantityOrderAll.intValue();
 						int orlZaq = quantity.get(0).getQuantity();
 						if(zaq > orlZaq*1.1) {
-							result = result +" <ОШИБКА> "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + quantityOrderAll.intValue() + " шт. из " + quantity.get(0).getQuantity() + " шт.\n";	
+							result = result +"<span style=\"color: red;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + quantityOrderAll.intValue() + " шт. из " + quantity.get(0).getQuantity() + " шт.</span>\n";	
 //							isMistakeZAQ = true;
 						}else {
 							result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + quantityOrderAll.intValue() + " шт. из " + quantity.get(0).getQuantity() + " шт.\n";													
@@ -359,11 +368,7 @@ public class ReaderSchedulePlan {
 					 +dateRange.start.toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + ", по " + dateRange.end.toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
 		 }
 		 
-		 String dayStockMessage =  checkNumProductHasStock(order, dateRange);
-		 if(dayStockMessage!= null) {
-             result = dayStockMessage+"\n" + result;
-             isMistakeZAQ = true;
-         }
+		 
 		 
 		 if(isMistakeZAQ) {
 			 return new PlanResponce(0, "Действие заблокировано!\n"+result);
@@ -557,9 +562,9 @@ public class ReaderSchedulePlan {
 				if(product.getBalanceStockAndReserves() == 9999.0) {
 					continue;
 				}
-				if(product.getRemainderStockInPall() < 33.0) { //если в паллетах товара меньшге чем 33 - то пропускаем
-					continue;
-				}
+//				if(product.getRemainderStockInPall() < 33.0) { //если в паллетах товара меньшге чем 33 - то пропускаем
+//					continue;
+//				}
 				//считаем разницу в днях сегодняшнеего дня и непосредственно записи
 				LocalDateTime start = order.getTimeDelivery().toLocalDateTime();
 				LocalDateTime end = LocalDateTime.of(product.getDateUnload().toLocalDate(), LocalTime.now());
@@ -570,24 +575,26 @@ public class ReaderSchedulePlan {
 				Double trueBalance = roundВouble(product.getBalanceStockAndReserves() + currentDate, 0);
 				
 				//считаем разницу в днях между заказом и постановкой в слоты
-				LocalDateTime startOrder = LocalDateTime.of(dateRange.start.toLocalDate(), LocalTime.of(0, 0));
-				LocalDateTime endOrder = order.getTimeDelivery().toLocalDateTime();
-				Duration durationOrder = Duration.between(startOrder, endOrder);
-				Double currentDateOrder = (double) durationOrder.toDays();
-				// считаем правильный жопустимый сток на сегодняшний день
-				Double trueBalanceOrder = roundВouble(dateRange.stock - currentDateOrder, 0);
+//				LocalDateTime startOrder = LocalDateTime.of(dateRange.start.toLocalDate(), LocalTime.of(0, 0));
+//				LocalDateTime endOrder = order.getTimeDelivery().toLocalDateTime();
+//				Duration durationOrder = Duration.between(startOrder, endOrder);
+//				Double currentDateOrder = (double) durationOrder.toDays();
+//				// считаем правильный жопустимый сток на сегодняшний день
+//				Double trueBalanceOrder = roundВouble(dateRange.stock - currentDateOrder, 0);
+				
+				System.out.println("Проверка по стокам!");
 				
 				if(!product.getIsException()) {
-					
-					if(trueBalance > trueBalanceOrder) {
+					System.out.println(trueBalance + " > " + dateRange.stock);
+					if(trueBalance > dateRange.stock) {
 						//считаем сколько дней нужно прибавить, чтобы заказать товар
-						Long deltDate = (long) (trueBalance - trueBalanceOrder + 1);
+						Long deltDate = (long) (trueBalance - dateRange.stock );
 						if(message == null) {
-							message = "Товара " + product.getCodeProduct() + " ("+product.getName()+")" + " на складе хранится на " + trueBalance + " дней. Ограничение стока (на дату постановки слота), по данному товару: " + trueBalanceOrder + " дней."
-									+" Ближайшая дата на которую можно доставить данный товар: " + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy")) + "\n";
+							message = "Товара " + product.getCodeProduct() + " ("+product.getName()+")" + " на складе хранится на <strong>" + trueBalance + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней."
+									+" Ближайшая дата на которую можно доставить данный товар: <strong>" + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy")) + ";</strong>\n";
 						}else {
-							message = message + "\nТовара " + product.getCodeProduct() + " ("+product.getName()+")" + " на складе хранится на " + trueBalance + " дней. Ограничение стока (на дату постановки слота), по данному товару: " + trueBalanceOrder + " дней. "
-									+" Ближайшая дата на которую можно доставить данный товар: " + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy"))+ "\n";
+							message = message + "\nТовара " + product.getCodeProduct() + " ("+product.getName()+")" + " на складе хранится на <strong>" + trueBalance + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней. "
+									+" Ближайшая дата на которую можно доставить данный товар: <strong>" + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy"))+ ";</strong>\n";
 						}
 						 
 					}

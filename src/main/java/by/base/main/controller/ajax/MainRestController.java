@@ -1634,7 +1634,7 @@ public class MainRestController {
 				if(planResponce.getStatus() == 0) {
 					infoCheck = planResponce.getMessage();
 					response.put("status", "105");
-					response.put("info", infoCheck);
+					response.put("info", infoCheck.replace("\n", "<br>"));
 					return response;
 				}else {
 					order.setStatus(100);
@@ -1645,7 +1645,7 @@ public class MainRestController {
 					slotWebSocket.sendMessage(message);	
 					infoCheck = planResponce.getMessage();
 					response.put("status", "200");
-					response.put("info", infoCheck);
+					response.put("info", infoCheck.replace("\n", "<br>"));
 					java.util.Date t2 = new java.util.Date();
 					System.out.println(t2.getTime()-t1.getTime() + " ms - save" );
 					response.put("message", str);			
@@ -1662,7 +1662,7 @@ public class MainRestController {
                 if(planResponce.getStatus() == 0) {
                     infoCheck = planResponce.getMessage();
                     response.put("status", "105");
-                    response.put("info", infoCheck);
+                    response.put("info", infoCheck.replace("\n", "<br>"));
                     return response;
                 }else {
                 	order.setStatus(20);
@@ -1675,7 +1675,7 @@ public class MainRestController {
         			slotWebSocket.sendMessage(message7);
                     infoCheck = planResponce.getMessage();
                     response.put("status", "200");
-                    response.put("info", infoCheck);
+                    response.put("info", infoCheck.replace("\n", "<br>"));
                     java.util.Date t3 = new java.util.Date();
         			System.out.println(t3.getTime()-t1.getTime() + " ms - save" );
         			String text = "Создана заявка №" + order.getIdOrder() + " " + order.getCounterparty() + " от менеджера " + order.getManager()+"; \nСлот на выгркузку: "+ order.getTimeDelivery() +"; " +
@@ -1693,12 +1693,12 @@ public class MainRestController {
                 if(planResponce.getStatus() == 0) {
                     infoCheck = planResponce.getMessage();
                     response.put("status", "105");
-                    response.put("info", infoCheck);
+                    response.put("info", infoCheck.replace("\n", "<br>"));
                     return response;
                 }else {
                     infoCheck = planResponce.getMessage();
                     response.put("status", "200");
-                    response.put("info", infoCheck);
+                    response.put("info", infoCheck.replace("\n", "<br>"));
                     order.setStatus(8);
         			orderService.updateOrder(order);
         			saveActionInFile(request, "resources/others/blackBox/slot", idOrder, order.getMarketNumber(), order.getNumStockDelivery(), order.getIdRamp(), null, order.getTimeDelivery(), null, user.getLogin(), "unsave", null, order.getMarketContractType());
@@ -1879,15 +1879,6 @@ public class MainRestController {
 			}			
 		}
 		
-		//проверка на лимиты товара
-		String checkMessage = checkNumProductHasStock(order, timestamp);		
-		if(checkMessage != null) {
-			response.put("status", "105");
-			response.put("message", checkMessage);
-			response.put("info", checkMessage);
-			System.err.println("Не прошла проверку по лимитам товара");
-			return response;
-		}
 		
 		//главная проверка по графику поставок
 		String infoCheck = null;
@@ -1898,11 +1889,11 @@ public class MainRestController {
 				if(planResponce.getStatus() == 0) {
 					infoCheck = planResponce.getMessage();
 					response.put("status", "105");
-					response.put("info", infoCheck);
+					response.put("info", infoCheck.replace("\n", "<br>"));
 					return response;
 				}else {
 					infoCheck = planResponce.getMessage();
-					response.put("info", infoCheck);
+					response.put("info", infoCheck.replace("\n", "<br>"));
 					response.put("status", "200");
 				}		
 				
@@ -1941,71 +1932,7 @@ public class MainRestController {
 	}
 	
 	
-	/**
-	 * Метод для проверки кол-ва товара на текущий день
-	 * если всё ок, возвращает null, если что то не то - сообщение
-	 * @return
-	 */
-	private String checkNumProductHasStock(Order order, Timestamp timeDelivery) {
-		String message = null;
-		User user = getThisUser();
-		Role role = user.getRoles().stream().findFirst().get();
-		if(role.getIdRole() == 1 || role.getIdRole() == 2 || role.getIdRole() == 3) { // тут мы говорим что если это логист или админ - в проверке не нуждаемся
-			return null;
-		}
-		if(order.getIsInternalMovement() != null && order.getIsInternalMovement().equals("true")) {
-			return null;
-		}
-		if(order.getNumProduct() == null) {
-			message = "Данные по заказу " + order.getMarketNumber() + " устарели! Обновите заказ.";
-//			return message; временно отключил
-			return null;
-		}
-		
-		String [] numProductMass = order.getNumProduct().split("\\^");
-		
-		
-		for (String string : numProductMass) {
-			Product product = productService.getProductByCode(Integer.parseInt(string));
-			
-			if(product != null) {
-				if(product.getBalanceStockAndReserves() == null) {
-					continue;
-				}
-				if(product.getBalanceStockAndReserves() == 9999.0) {
-					continue;
-				}
-				if(product.getRemainderStockInPall() < 33.0) { //если в паллетах товара меньшге чем 33 - то пропускаем
-					continue;
-				}
-				//считаем разницу в днях сегодняшнеего дня и непосредственно записи
-				LocalDateTime start = timeDelivery.toLocalDateTime();
-				LocalDateTime end = LocalDateTime.of(product.getDateUnload().toLocalDate(), LocalTime.now());
-
-				Duration duration = Duration.between(start, end);
-				Double currentDate = (double) duration.toDays();
-				// считаем правильный остаток на текущий день
-				Double trueBalance = product.getBalanceStockAndReserves() + currentDate;
-				
-				if(!product.getIsException()) {
-					if(trueBalance > product.getDayMax()) {
-						//считаем сколько дней нужно прибавить, чтобы заказать товар
-						Long deltDate = (long) (trueBalance - product.getDayMax() + 1);
-						if(message == null) {
-							message = "Товара " + product.getCodeProduct() + " ("+product.getName()+")" + " на складе хранится на " + trueBalance + " дней. Ограничение стока по данному товару: " + product.getDayMax() + " дней."
-									+"Ближайшая дата на которую можно доставить данный товар: " + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy")) + "\n";
-						}else {
-							message = message + "\nТовара " + product.getCodeProduct() + " ("+product.getName()+")" + " на складе хранится на " + trueBalance + " дней. Ограничение стока по данному товару: " + product.getDayMax() + " дней. "
-									+"Ближайшая дата на которую можно доставить данный товар: " + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy"))+ "\n";
-						}
-						 
-					}
-				}
-				
-			}
-		}
-		return message;
-	}
+	
 	
 	/**
 	 * Метод возвращает номер склада из idRump
@@ -2104,32 +2031,24 @@ public class MainRestController {
 			if(planResponce.getStatus() == 0) {
 				infoCheck = planResponce.getMessage();
 				response.put("status", "105");
-				response.put("info", infoCheck);
+				response.put("info", infoCheck.replace("\n", "<br>"));
 				return response;
 			}else {
 				infoCheck = planResponce.getMessage();
-				response.put("info", infoCheck);
+				response.put("info", infoCheck.replace("\n", "<br>"));
 				response.put("status", "200");
 			}		
 			
 		}
 		//конец главная проверка по графику поставок
 		
-		//проверка на лимиты товара
-				String checkMessage = checkNumProductHasStock(order, timestamp);		
-				if(checkMessage != null) {
-					response.put("status", "105");
-					response.put("message", checkMessage);
-					System.err.println("Не прошла проверку по лимитам товара");
-					return response;
-				}
-		
+				
 		String errorMessage = orderService.updateOrderForSlots(order);//проверка на пересечение со временим других слотов
 		
 		if(errorMessage != null) {
 			response.put("status", "100");
 			response.put("message", errorMessage);
-			response.put("info", errorMessage);
+			response.put("info", errorMessage.replace("\n", "<br>"));
 			System.err.println("Не прошла проверку по лимитам паллет склада");
 			return response;
 		}else {

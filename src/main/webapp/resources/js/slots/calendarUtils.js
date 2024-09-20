@@ -366,7 +366,7 @@ export function copyToClipboard(text) {
 
 export function showMessageModal(message) {
 	const messageContainer = document.querySelector('#messageContainer')
-	messageContainer.innerText = message
+	messageContainer.innerHTML = message
 	$('#displayMessageModal').modal('show')
 }
 

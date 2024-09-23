@@ -7,6 +7,8 @@ import {
 	changeForm,
 	dangerousInputOnChangeHandler,
 	inputEditBan,
+	isInvalidPointForms,
+	isValidPallCount,
 	orderCargoInputOnChangeHandler,
 	orderPallInputOnChangeHandler,
 	orderWeightInputOnChangeHandler,
@@ -77,18 +79,6 @@ window.onload = async () => {
 	editOrderForm.addEventListener('submit', (e) => orderFormSubmitHandler(e))
 	// листнер на отмену редактирования заявки
 	cancelBtn.addEventListener('click', () => window.location.href = '../orders')
-
-	// обработчик на поле Кол-во паллет ДЛЯ АХО
-	const orderPallInput = document.querySelector('#orderPall')
-	orderPallInput && orderPallInput.addEventListener('change', orderPallInputOnChangeHandler)
-
-	// обработчик на поле Масса груза ДЛЯ АХО
-	const orderWeightInput = document.querySelector('#orderWeight')
-	orderWeightInput && orderWeightInput.addEventListener('change', orderWeightInputOnChangeHandler)
-
-	// обработчик на поле Груз
-	const orderCargoInput = document.querySelector('#cargo')
-	orderCargoInput && orderCargoInput.addEventListener('change', orderCargoInputOnChangeHandler)
 }
 
 
@@ -96,10 +86,12 @@ window.onload = async () => {
 function orderFormSubmitHandler(e) {
 	e.preventDefault()
 
+	// проверяем, заполнена ли предыдущая точка
+	if (isInvalidPointForms(e.target)) return
+
 	const formData = new FormData(e.target)
 	const data = getOrderData(formData, editableOrder, null)
 	const updatedData = updateEditFormData(data)
-	console.log("🚀 ~ orderFormSubmitHandler ~ updatedData:", updatedData)
 
 	if (!validateForm(updatedData)) {
 		return
@@ -135,6 +127,11 @@ function orderFormSubmitHandler(e) {
 
 // валидация формы
 function validateForm(data) {
+	if (!isValidPallCount(data)) {
+		snackbar.show('Количество паллет на одну заявку на загрузке не может превышать 20!')
+		return true
+	}
+
 	if (error) {
 		snackbar.show('Проверьте данные!')
 		return false
@@ -164,40 +161,41 @@ function updateEditFormData(data) {
 
 
 // метод создания точки маршрута для заявки
-function createPoint(orderData, pointData, index) {
+function createPoint(order, pointData, index) {
 	const point = document.createElement('div')
 	const pointIndex = index + 1
 	const date = dateHelper.getDateForInput(pointData.date)
-	const type = pointData.type ? pointData.type : ''
+	const pointType = pointData.type ? pointData.type : ''
 	const time = pointData.time ? pointData.time.slice(0,5) : ''
 	const tnvd = pointData.tnvd ? pointData.tnvd : ''
 	const bodyAddress = pointData.bodyAddress ? pointData.bodyAddress : ''
 	const customsAddress = pointData.customsAddress ? pointData.customsAddress : ''
 
-	const isInternalMovement = orderData.isInternalMovement === 'true'
-	const way = orderData.way
+	const isInternalMovement = order.isInternalMovement === 'true'
+	const way = order.way
 	const EAEUImport = false
 
 	const idAddress = pointData.idAddress
 	const oldIdaddress = pointData.oldIdaddress
 	const isCorrect = pointData.isCorrect
+	const props = { order, isInternalMovement, EAEUImport, way, pointType, pointIndex }
 
-	const dateHTML = getDateHTML(isInternalMovement, type, way, pointIndex, date)
-	const timeHTML = getTimeHTML(type, way, pointIndex, time)
-	const tnvdHTML = getTnvdHTML(type, way, pointIndex, tnvd)
-	const cargoInfoHTML = getCargoInfoHTML(orderData, isInternalMovement, way, pointIndex, pointData)
-	const addressHTML = getAddressHTML(orderData, type, way, pointIndex, bodyAddress)
-	const addressInfoHTML = getAddressInfoHTML(type, way, pointIndex, pointData)
-	const customsAddressHTML = getCustomsAddressHTML(EAEUImport, type, way, pointIndex, customsAddress)
+	const dateHTML = getDateHTML({ ...props, value: date })
+	const timeHTML = getTimeHTML({ ...props, value: time })
+	const tnvdHTML = getTnvdHTML({ ...props, value: tnvd })
+	const cargoInfoHTML = getCargoInfoHTML({ ...props, pointData })
+	const addressHTML = getAddressHTML({ ...props, value: bodyAddress })
+	const addressInfoHTML = getAddressInfoHTML({ ...props, pointData })
+	const customsAddressHTML = getCustomsAddressHTML({ ...props, value: customsAddress })
 
 	point.className = 'card point'
 	point.innerHTML = `
 		<form class='pointForm' id='pointform_${pointIndex}' name='pointform_${pointIndex}' action=''>
 			<div class='card-header d-flex justify-content-between'>
 				<h5 class='d-flex align-items-center mb-0'>
-					Точка ${pointIndex}: ${type}
+					Точка ${pointIndex}: ${pointType}
 				</h5>
-				<input type='hidden' class='form-control' name='type' id='type' value='${type}'>
+				<input type='hidden' class='form-control' name='type' id='type' value='${pointType}'>
 				<input type="hidden" class="form-control" name="idAddress" id="idAddress_${pointIndex}" value='${idAddress}'>
 				<input type="hidden" class="form-control" name="oldIdaddress" id="oldIdaddress_${pointIndex}" value='${oldIdaddress}'>
 				<input type="hidden" class="form-control" name="isCorrect" id="isCorrect_${pointIndex}" value='${isCorrect}'>
@@ -265,8 +263,10 @@ function changeEditingRules(editableOrder, editOrderForm, points) {
 		inputEditBan(editOrderForm, '#dangerousPackingGroup', true)
 		inputEditBan(editOrderForm, '#dangerousRestrictionCodes', true)
 		inputEditBan(editOrderForm, '#comment', true)
-		inputEditBan(editOrderForm, '#orderPall', true)
-		inputEditBan(editOrderForm, '#orderWeight', true)
+		inputEditBan(editOrderForm, '#hydrolift', true)
+		inputEditBan(editOrderForm, '#carBodyLength', true)
+		inputEditBan(editOrderForm, '#carBodyWidth', true)
+		inputEditBan(editOrderForm, '#carBodyHeight', true)
 	}
 
 	points.forEach((point, i) => {

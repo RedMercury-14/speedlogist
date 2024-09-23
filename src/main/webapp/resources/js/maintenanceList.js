@@ -21,6 +21,10 @@ const setFinishPriceBaseUrl = `../../api/logistics/maintenance/setCost/`
 const clearFinishPriceBaseUrl = `../../api/logistics/maintenance/clearCost/`
 const closeRouteBaseUrl = `../../api/logistics/maintenance/closeRoute/`
 
+const getAllCarrierUrl = `../../api/manager/getAllCarrier`
+const getTrucksByCarrierBaseUrl =`../../api/carrier/getCarByIdUser/`
+const getDriverByCarrierBaseUrl =`../../api/carrier/getDriverByIdUser/`
+
 export const rowClassRules = {
 	'activRow': params => params.node.data.statusRoute === '200',
 	'attentionRow': params => params.node.data.statusRoute === '220',
@@ -74,6 +78,7 @@ const columnDefs = [
 		},
 	},
 	{ headerName: 'Перевозчик', field: 'carrier', },
+	// { headerName: 'Транспорт перевозчика', field: 'truckInfo',  wrapText: true, autoHeight: true, },
 	{
 		headerName: 'Статус', field: 'statusRoute',
 		wrapText: true, autoHeight: true,
@@ -99,7 +104,7 @@ const columnDefs = [
 	},
 	{ headerName: 'Маршрут', field: 'addressInfo', wrapText: true, autoHeight: true, minWidth: 240, },
 	{ headerName: 'Информация о грузе', field: 'cargoInfo', wrapText: true, autoHeight: true, },
-	{ headerName: 'Информация о транспорте', field: 'truckInfo', wrapText: true, autoHeight: true, },
+	{ headerName: 'Информация о транспорте из заявки', field: 'needTruckInfo', wrapText: true, autoHeight: true, },
 	{ headerName: 'Дополнительная информация', field: 'logistComment', wrapText: true, autoHeight: true, minWidth: 240, },
 	{
 		headerName: 'Комментарии заказчика, информация о точках маршрута', field: 'userComments',
@@ -109,6 +114,7 @@ const columnDefs = [
 			valueFormatter: userCommentsValueFormatter,
 		},
 	},
+	{ headerName: 'Инициатор заявки', field: 'customer', wrapText: true, autoHeight: true, width: 270, },
 ]
 const gridOptions = {
 	columnDefs: columnDefs,
@@ -221,7 +227,10 @@ window.addEventListener("load", async () => {
 	$('#addFinishPriceModal').on('hide.bs.modal', (e) => addFinishPriceForm.reset())
 
 	// добавляем перевозчиков в список
-	await addCarriersToSelect()
+	const carrierSelect = document.querySelector('#carrier')
+	const truckSelect = document.querySelector('#truck')
+	const driverSelect = document.querySelector('#driver')
+	await addCarriersToSelect(carrierSelect, truckSelect, driverSelect)
 })
 
 
@@ -234,17 +243,50 @@ window.addEventListener("unload", () => {
 })
 
 // добавление перевозчиков в выпадающий список формы назначения перевозчика
-async function addCarriersToSelect() {
-	const getAllCarrierUrl = `../../api/manager/getAllCarrier`
+async function addCarriersToSelect(carrierSelect, truckSelect, driverSelect) {
 	const carriers = await getData(getAllCarrierUrl)
-	const carrierSelect = document.querySelector('#carrier')
 	carriers.forEach((carrier) => {
 		const optionElement = document.createElement('option')
 		optionElement.value = carrier.idUser
-		optionElement.text = carrier.companyName
+		optionElement.text = `${carrier.companyName} / ${carrier.numYNP}`
 		carrierSelect.append(optionElement)
 	})
 	addSearchInSelectOptions(carrierSelect)
+
+	// // загружаем список авто перевозчика
+	// carrierSelect.addEventListener('change', async (e) => {
+	// 	const idCarrier = e.target.value
+	// 	await addTrucksToSelect(truckSelect, idCarrier)
+	// 	await addDriverToSelect(driverSelect, idCarrier)
+	// })
+}
+
+// добавление авто перевозчика в выпадающий список формы назначения перевозчика
+async function addTrucksToSelect(truckSelect, idCarrier) {
+	truckSelect.innerHTML = ''
+	const trucks = await getData(getTrucksByCarrierBaseUrl + idCarrier)
+	if (!trucks) return
+	trucks.forEach((truck) => {
+		const optionElement = document.createElement('option')
+		optionElement.value = truck.idTruck
+		const truckText = getTruckText(truck)
+		optionElement.text = truckText
+		truckSelect.append(optionElement)
+	})
+}
+// добавление водителей перевозчика в выпадающий список формы назначения перевозчика
+async function addDriverToSelect(driverSelect, idCarrier) {
+	driverSelect.innerHTML = ''
+	const drivers = await getData(getDriverByCarrierBaseUrl + idCarrier)
+	console.log("🚀 ~ addDriverToSelect ~ drivers:", drivers)
+	if (!drivers) return
+	drivers.forEach((driver) => {
+		const optionElement = document.createElement('option')
+		optionElement.value = driver.idUser
+		const driverText = getDriverText(driver)
+		optionElement.text = driverText
+		driverSelect.append(optionElement)
+	})
 }
 
 // отображение модального окна назначения перевозчика
@@ -378,15 +420,17 @@ async function updateTable() {
 async function getMappingData(data) {
 	return data.map(route => {
 		const cargoInfo = getCargoInfo(route)
-		const truckInfo = getTruckInfo(route)
+		const needTruckInfo = getNeedTruckInfo(route)
 		const addressInfo = getAddressesInfo(route)
 		const carrier = getCarrier(route)
+		const truckInfo = getTruckInfo(route)
 		return {
 			...route,
 			carrier,
-			truckInfo,
+			needTruckInfo,
 			cargoInfo,
 			addressInfo,
+			truckInfo,
 		}
 	})
 }
@@ -482,12 +526,23 @@ function getContextMenuItems(params) {
 }
 
 // обработчики нажатий кнопок контекстного меню
-function addCarrier(routeData) {
+async function addCarrier(routeData) {
 	const idCarrier = routeData.user ? routeData.user.idUser : ''
 	const addCarrierForm = document.querySelector('#addCarrierForm')
 	addCarrierForm.idRoute.value = routeData.idRoute
 	addCarrierForm.routeDirection.value = routeData.routeDirection
 	addCarrierForm.carrier.value = idCarrier
+	
+	// if (idCarrier) {
+	// 	await addTrucksToSelect(addCarrierForm.truck, idCarrier)
+	// 	const idTruck = routeData.truck ? routeData.truck.idTruck : ''
+	// 	addCarrierForm.truck.value = idTruck
+
+	// 	await addDriverToSelect(addCarrierForm.driver, idCarrier)
+	// 	const idDriver = routeData.driver ? routeData.driver.idUser : ''
+	// 	addCarrierForm.driver.value = idDriver
+	// }
+
 	showAddCarrierModal()
 }
 function addMileage(routeData) {
@@ -587,7 +642,7 @@ function getCargoInfo(route) {
 	const weight = route.totalCargoWeight ? `${route.totalCargoWeight} кг` : ''
 	return [ cargo, pall, weight ].filter(item => item).join(' ● ')
 }
-function getTruckInfo(route) {
+function getNeedTruckInfo(route) {
 	if (!route) return ''
 	const typeTrailer = route.typeTrailer ? route.typeTrailer : ''
 	const typeLoad = route.typeLoad ? route.typeLoad : ''
@@ -599,6 +654,29 @@ function getCarrier(route) {
 	const user = route.user ? route.user : ''
 	if (!user) return ''
 	return user.companyName ? user.companyName : ''
+}
+function getTruckInfo(route) {
+	if (!route) return ''
+	const truck = route.truck ? route.truck : ''
+	return getTruckText(truck)
+}
+function getTruckText(truck) {
+	if (!truck) return ''
+	const truckText = []
+	const numTruck = truck.numTruck ? truck.numTruck : ''
+	const numTrailer = truck.numTrailer ? truck.numTrailer : ''
+	const typeTrailer = truck.typeTrailer ? truck.typeTrailer : ''
+	const cargoCapacity = truck.cargoCapacity ? `${truck.cargoCapacity} кг` : ''
+	const pallCapacity = truck.pallCapacity ? `${truck.pallCapacity} палл` : ''
+	truckText.push(numTruck, numTrailer, typeTrailer, cargoCapacity, pallCapacity)
+	return truckText.filter(Boolean).join(' / ')
+}
+function getDriverText(driver) {
+	if (!driver) return ''
+	const name = driver.name ? driver.name : ''
+	const surname = driver.surname ? driver.surname : ''
+	const patronymic = driver.patronymic ? driver.patronymic : ''
+	return `${surname} ${name} ${patronymic}`
 }
 
 

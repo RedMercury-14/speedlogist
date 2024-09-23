@@ -225,11 +225,34 @@ export const dateHelper = {
 
 		// правила для перевозок АХО
 		if (ahoWay) {
-			return this.getDateForInput(now)
+			// если пятница, после 12:00, то на понедельник
+			if (day === 5 && now > noonToday) {
+				const monday = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 3)
+				return this.getDateForInput(monday)
+			}
+
+			// если суббота, то на вторник
+			if (day === 6) {
+				const tuesday = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 3)
+				return this.getDateForInput(tuesday)
+			}
+
+			// если воскресенье, то на вторник
+			if (day === 0) {
+				const tuesday = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 2)
+				return this.getDateForInput(tuesday)
+			}
+
+			// для иных случаев: до 12 - завтра, после 12 - на послезавтра
+			const tomorrow = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 1)
+			const dayAfterTomorrow = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 2)
+			return now < noonToday
+				? this.getDateForInput(tomorrow)
+				: this.getDateForInput(dayAfterTomorrow)
 		}
 
 		// правила для перевозок по РБ и Внутренних перемещений
-		if (RBway || ahoWay) {
+		if (RBway) {
 			// если пятница, после 11:00, то на вторник
 			if (day === 5 && now > TimeOfToday) {
 				const tuesday = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 4)

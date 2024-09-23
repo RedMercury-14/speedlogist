@@ -104,12 +104,46 @@
 										<input type="text" class="form-control" name="way" id="way" placeholder="" required readonly>
 									</div>
 									<div class="form-group input-row-container none">
-										<span class="text-muted font-weight-bold">Кол-во паллет: <span class="text-red">*</span></span>
-										<input type="number" class="form-control" name="orderPall" id="orderPall" placeholder="Количество паллет в штуках">
+										<span class="text-muted font-weight-bold">Необходим гидроборт:</span>
+										<select id="hydrolift" name="hydrolift" class="form-control">
+											<option value="" hidden selected disabled>Выберите один из пунктов</option>
+											<option value="Да">Да, гидроборт необходим</option>
+											<option value="Нет">Нет</option>
+										</select>
 									</div>
-									<div class="form-group input-row-container none">
-										<span class="text-muted font-weight-bold">Масса груза, кг: <span class="text-red">*</span></span>
-										<input type="number" class="form-control" name="orderWeight" id="orderWeight" placeholder="Общая масса перевозимого груза">
+									<div class="form-group input-row-container mb-0">
+										<div class="form-group none">
+											<span class="text-muted font-weight-bold">Длина кузова, м:</span>
+											<input type="number" class="form-control mt-2" list="carBodyLengthValues" name="carBodyLength" id="carBodyLength" min="0" step="0.01" placeholder="Длина в метрах">
+											<datalist id="carBodyLengthValues">
+												<option>3</option>
+												<option>4</option>
+												<option>5</option>
+												<option>6</option>
+												<option>7</option>
+												<option>8</option>
+											</datalist>
+										</div>
+										<div class="form-group none">
+											<span class="text-muted font-weight-bold">Ширина кузова, м:</span>
+											<input type="number" class="form-control mt-2" list="carBodyWidthValues" name="carBodyWidth" id="carBodyWidth" min="0" step="0.01" placeholder="Ширина в метрах">
+											<datalist id="carBodyWidthValues">
+												<option>1.5</option>
+												<option>2</option>
+												<option>2.5</option>
+												<option>3</option>
+											</datalist>
+										</div>
+										<div class="form-group none">
+											<span class="text-muted font-weight-bold">Высота кузова, м:</span>
+											<input type="number" class="form-control mt-2" list="carBodyHeightValues" name="carBodyHeight" id="carBodyHeight" min="0" step="0.01" placeholder="Ширина в метрах">
+											<datalist id="carBodyHeightValues">
+												<option>1.8</option>
+												<option>2</option>
+												<option>2.35</option>
+												<option>2.5</option>
+											</datalist>
+										</div>
 									</div>
 									<div class="form-group input-row-container">
 										<span class="text-muted font-weight-bold">Номер заказа из Маркета:</span>
@@ -163,6 +197,8 @@
 											<option>Изотермический</option>
 											<option>Мебельный фургон</option>
 											<option>Рефрижератор</option>
+											<option>Бус</option>
+											<option>Манипулятор</option>
 											<option>Контейнер 20 футов</option>
 											<option>Контейнер 40 футов</option>
 											<!-- <option>Контейнер 20 футов (Dry Freight)</option>

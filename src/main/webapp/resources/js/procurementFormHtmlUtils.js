@@ -1,25 +1,25 @@
 import { getStockAddress } from "./procurementFormUtils.js"
 import { dateHelper, getInputValue } from "./utils.js"
 
-export function getDateHTML(isInternalMovement, type, way, index, value) {
+export function getDateHTML({ isInternalMovement, pointType, way, pointIndex, value }) {
 	const inputValue = value ? value : ''
 	const minValidDate = getMinValidDate(isInternalMovement, way)
-	const typeClassName = type === 'Загрузка' ? 'loadDate' : 'unloadDate'
+	const typeClassName = pointType === 'Загрузка' ? 'loadDate' : 'unloadDate'
 
 	if (way === 'АХО') {
 		return `<div class='pointDate'>
 					<div class="d-flex align-items-center position-relative">
-						<label for='date_${index}' class='col-form-label text-muted font-weight-bold mr-2'>Дата <span class="text-red">*</span></label>
+						<label for='date_${pointIndex}' class='col-form-label text-muted font-weight-bold mr-2'>Дата <span class="text-red">*</span></label>
 					</div>
-					<input value='${inputValue}' type='date' class='form-control ${typeClassName}' name='date' id='date_${index}' min='${minValidDate}' required>
+					<input value='${inputValue}' type='date' class='form-control ${typeClassName}' name='date' id='date_${pointIndex}' min='${minValidDate}' required>
 				</div>
 			`
 	}
-	const requiredMarker = way === "РБ" || way === 'Экспорт' || type === 'Загрузка' ? '<span class="text-red">*</span>' : ''
-	const required = way === "РБ" || way === 'Экспорт' || type === 'Загрузка' ? 'required' : ''
-	const infoMarker = type === 'Загрузка'
-		? `<span id="statusInfoLabel_${index}" class="status-info-label">!</span>
-			<div id="statusInfo_${index}" class="status-info">
+	const requiredMarker = way === "РБ" || way === 'Экспорт' || pointType === 'Загрузка' ? '<span class="text-red">*</span>' : ''
+	const required = way === "РБ" || way === 'Экспорт' || pointType === 'Загрузка' ? 'required' : ''
+	const infoMarker = pointType === 'Загрузка'
+		? `<span id="statusInfoLabel_${pointIndex}" class="status-info-label">!</span>
+			<div id="statusInfo_${pointIndex}" class="status-info">
 				<p class="mb-1">При создании заявки до 11:00 текущего дня минимальная дата загрузки - завтра, после 11:00 - через 2 дня</p>
 				<p class="mb-0">Для внутренних перемещений до 12:00 - завтра, после 12:00 - через 2 дня</p>
 			</div>
@@ -27,10 +27,10 @@ export function getDateHTML(isInternalMovement, type, way, index, value) {
 		: ''
 	return `<div class='pointDate'>
 				<div class="d-flex align-items-center position-relative">
-					<label for='date_${index}' class='col-form-label text-muted font-weight-bold mr-2'>Дата ${requiredMarker}</label>
+					<label for='date_${pointIndex}' class='col-form-label text-muted font-weight-bold mr-2'>Дата ${requiredMarker}</label>
 					${infoMarker}
 				</div>
-				<input value='${inputValue}' type='date' class='form-control ${typeClassName}' name='date' id='date_${index}' min='${minValidDate}' ${required}>
+				<input value='${inputValue}' type='date' class='form-control ${typeClassName}' name='date' id='date_${pointIndex}' min='${minValidDate}' ${required}>
 			</div>
 		`
 }
@@ -46,19 +46,19 @@ function getMinValidDate(isInternalMovement, way) {
 }
 
 
-export function getTimeHTML(type, way, index, value) {
+export function getTimeHTML({ pointType, way, pointIndex, value }) {
 	const inputValue = value ? value : ''
 	const timeOptions = getTimeOptions(inputValue)
-	const typeClassName = type === 'Загрузка' ? 'loadTime' : 'unloadTime'
-	const noneClassName = type === 'Выгрузка' && way !== 'Импорт' ? 'none' : ''
-	const required = type === 'Загрузка' ? 'required' : ''
-	const requiredMarker = type === 'Загрузка' ? '<span class="text-red">*</span>' : ''
+	const typeClassName = pointType === 'Загрузка' ? 'loadTime' : 'unloadTime'
+	const noneClassName = pointType === 'Выгрузка' && way !== 'Импорт' ? 'none' : ''
+	const required = pointType === 'Загрузка' ? 'required' : ''
+	const requiredMarker = pointType === 'Загрузка' ? '<span class="text-red">*</span>' : ''
 	const timeRemark = way !== 'РБ' ? '<span class="time-mark text-muted">По местному времени</span>' : ''
 
 	if (way === 'АХО') {
 		return `<div class='pointTime'>
-					<label for='time_${index}' class='col-form-label text-muted font-weight-bold '>Время</label>
-					<select id='time_${index}' name="time" class="form-control ${typeClassName}">
+					<label for='time_${pointIndex}' class='col-form-label text-muted font-weight-bold '>Время</label>
+					<select id='time_${pointIndex}' name="time" class="form-control ${typeClassName}">
 						<option value="" hidden disabled selected> --:-- </option>
 						${timeOptions}
 					</select>
@@ -66,8 +66,8 @@ export function getTimeHTML(type, way, index, value) {
 			`
 	}
 	return `<div class='pointTime ${noneClassName}'>
-				<label for='time_${index}' class='col-form-label text-muted font-weight-bold '>Время ${requiredMarker}</label>
-				<select id='time_${index}' ${required} name="time" class="form-control ${typeClassName}">
+				<label for='time_${pointIndex}' class='col-form-label text-muted font-weight-bold '>Время ${requiredMarker}</label>
+				<select id='time_${pointIndex}' ${required} name="time" class="form-control ${typeClassName}">
 					<option value="" hidden disabled selected> --:-- </option>
 					${timeOptions}
 				</select>
@@ -88,49 +88,51 @@ function getTimeOptions(value) {
 }
 
 
-export function getTnvdHTML(type, way, index, value) {
-	if (type !== 'Загрузка') return ''
+export function getTnvdHTML({ pointType, way, pointIndex, value }) {
+	if (pointType !== 'Загрузка') return ''
 	if (way === 'АХО') return ''
 	const inputValue = value ? value : ''
 	const tnvdRequired = way === "РБ" ? '' : 'required'
 	const tnvdRequiredMarker = way === "РБ" ? '' : '<span class="text-red">*</span>'
 	return `<div class='form-group'>
-				<label for="tnvd_${index}" class='col-form-label text-muted font-weight-bold'>Коды ТН ВЭД ${tnvdRequiredMarker}</label>
-				<textarea class='form-control' name='tnvd' id='tnvd_${index}' placeholder='Коды ТН ВЭД' ${tnvdRequired}>${inputValue}</textarea>
+				<label for="tnvd_${pointIndex}" class='col-form-label text-muted font-weight-bold'>Коды ТН ВЭД ${tnvdRequiredMarker}</label>
+				<textarea class='form-control' name='tnvd' id='tnvd_${pointIndex}' placeholder='Коды ТН ВЭД' ${tnvdRequired}>${inputValue}</textarea>
 			</div>`
 }
 
 
-export function getCargoInfoHTML(order, isInternalMovement, way, index, pointData) {
+export function getCargoInfoHTML({ order, isInternalMovement, way, pointIndex, pointData, pointType }) {
 	const { pallRequiredAttr, weightRequiredAttr, volumeRequiredAttr } = getRequiredAttrs()
-	let { pointCargo, pall, weight, volume } = getCargoInfo(order, way, index, pointData)
+	let { pointCargo, pall, weight, volume } = getCargoInfo(order, way, pointIndex, pointData, pointType)
 
-	const ahoReadonlyAttr = way === 'АХО' ? 'readonly' : ''
+	// const ahoReadonlyAttr = way === 'АХО' ? 'readonly' : ''
+	const ahoReadonlyAttr = ''
+	const ahoMaxPallAttr = way === 'АХО' ? 20 : ''
 	const ahoNoneClassName = way === 'АХО' ? 'none' : ''
 	const pallReadonlyAttr =
 		(!isInternalMovement && way === 'РБ')
-		|| way === 'АХО'
+		// || way === 'АХО'
 		|| way === 'Импорт'
 		? 'readonly' : ''
 
 	return `<div class='cargoName'>
-				<label for='pointCargo_${index}' class='col-form-label text-muted font-weight-bold'>Наименование груза <span class='text-red'>*</span></label>
-				<input type='text' class='form-control' name='pointCargo' id='pointCargo_${index}' placeholder='Наименование' value='${pointCargo}' ${ahoReadonlyAttr} required>
+				<label for='pointCargo_${pointIndex}' class='col-form-label text-muted font-weight-bold'>Наименование груза <span class='text-red'>*</span></label>
+				<input type='text' class='form-control' name='pointCargo' id='pointCargo_${pointIndex}' placeholder='Наименование' value='${pointCargo}' ${ahoReadonlyAttr} required>
 			</div>
 			<div class='cargoPall'>
-				<label for='pall_${index}' class='col-form-label text-muted font-weight-bold'>Паллеты, шт</label>
-				<input type='number' class='form-control' name='pall' id='pall_${index}' placeholder='Паллеты, шт' min='0' value='${pall}' ${pallRequiredAttr} ${pallReadonlyAttr}>
+				<label for='pall_${pointIndex}' class='col-form-label text-muted font-weight-bold'>Паллеты, шт</label>
+				<input type='number' class='form-control' name='pall' id='pall_${pointIndex}' placeholder='Паллеты, шт' min='0' max='${ahoMaxPallAttr}' value='${pall}' ${pallRequiredAttr} ${pallReadonlyAttr}>
 			</div>
 			<div class='cargoWeight'>
-				<label for='weight_${index}' class='col-form-label text-muted font-weight-bold'>Масса, кг</label>
-				<input type='number' class='form-control' name='weight' id='weight_${index}' placeholder='Масса, кг' min='0' value='${weight}' ${ahoReadonlyAttr} ${weightRequiredAttr}>
+				<label for='weight_${pointIndex}' class='col-form-label text-muted font-weight-bold'>Масса, кг</label>
+				<input type='number' class='form-control' name='weight' id='weight_${pointIndex}' placeholder='Масса, кг' min='0' value='${weight}' ${ahoReadonlyAttr} ${weightRequiredAttr}>
 			</div>
 			<div class='cargoVolume ${ahoNoneClassName}'>
-				<label for='volume_${index}' class='col-form-label text-muted font-weight-bold'>Объем, м.куб.</label>
-				<input type='number' class='form-control' name='volume' id='volume_${index}' placeholder='Объем, м.куб.' min='0' value='${volume}' ${ahoReadonlyAttr} ${volumeRequiredAttr}>
+				<label for='volume_${pointIndex}' class='col-form-label text-muted font-weight-bold'>Объем, м.куб.</label>
+				<input type='number' class='form-control' name='volume' id='volume_${pointIndex}' placeholder='Объем, м.куб.' min='0' value='${volume}' ${ahoReadonlyAttr} ${volumeRequiredAttr}>
 			</div>`
 }
-function getCargoInfo(order, way, pointIndex, pointData) {
+function getCargoInfo(order, way, pointIndex, pointData, pointType) {
 	const cargoInfo = {
 		pointCargo: '',
 		pall: '',
@@ -147,17 +149,19 @@ function getCargoInfo(order, way, pointIndex, pointData) {
 		return cargoInfo
 	}
 
+	// если заявка АХО
+	if (way === 'АХО') {
+		if (pointIndex > 1 && pointType === 'Выгрузка') {
+			return getPrevPointCargoInfo(pointIndex)
+		}
+
+		return cargoInfo
+	}
+
+
 	// если точка не первая, то берем данные из предыдущей точки
 	if (pointIndex > 1) {
 		return getPrevPointCargoInfo(pointIndex)
-	}
-
-	// если заявка АХО
-	if (way === 'АХО') {
-		cargoInfo.pointCargo = getInputValue(document, '#cargo')
-		cargoInfo.pall = getInputValue(document, '#orderPall')
-		cargoInfo.weight = getInputValue(document, '#orderWeight')
-		return cargoInfo
 	}
 
 	// если данных от заказа нет, то поля пустые
@@ -215,41 +219,41 @@ function getRequiredAttrs() {
 }
 
 
-export function getAddressHTML(order, type, way, index, value) {
-	const addressName = type === 'Загрузка' ? 'загрузки' : 'выгрузки'
-	const country = getCountry(type, way, value)
+export function getAddressHTML({ order, pointType, way, pointIndex, value }) {
+	const addressName = pointType === 'Загрузка' ? 'загрузки' : 'выгрузки'
+	const country = getCountry(pointType, way, value)
 	const countryReadonlyAttr = way === 'РБ' || way === 'АХО' ? 'readonly' : ''
-	if (way === 'HHH') { // way === 'Импорт' && type === 'Загрузка'
+	if (way === 'HHH') { // way === 'Импорт' && pointType === 'Загрузка'
 		const { postIndex, region, city, street, building, buildingBody } = getImportAddressObj(value)
 		return `
 			<div class="form-group">
-				<label for="country_${index}" class='col-form-label text-muted font-weight-bold'>Адрес ${addressName} <span class='text-red'>*</span></label>
+				<label for="country_${pointIndex}" class='col-form-label text-muted font-weight-bold'>Адрес ${addressName} <span class='text-red'>*</span></label>
 				<div class="address-container--import">
 					<div class="row-container">
 						<div class="autocomplete">
-							<input value='${country}' type="text" class="form-control country withoutСommas" name="country" id="country_${index}" autocomplete="off" placeholder="Страна *" required>
+							<input value='${country}' type="text" class="form-control country withoutСommas" name="country" id="country_${pointIndex}" autocomplete="off" placeholder="Страна *" required>
 						</div>
-						<input value='${postIndex}' type="number" class="form-control postIndex withoutСommas" name="postIndex" id="postIndex_${index}" placeholder="Индекс *" required>
-						<input value='${region}' type="text" class="form-control region withoutСommas" name="region" id="region_${index}" autocomplete="off" placeholder="Регион/область *" required>
+						<input value='${postIndex}' type="number" class="form-control postIndex withoutСommas" name="postIndex" id="postIndex_${pointIndex}" placeholder="Индекс *" required>
+						<input value='${region}' type="text" class="form-control region withoutСommas" name="region" id="region_${pointIndex}" autocomplete="off" placeholder="Регион/область *" required>
 					</div>
 					<div class="row-container">
-						<input value='${city}' type="text" class="form-control city withoutСommas" name="city" id="city_${index}" placeholder="Город *" required>
-						<input value='${street}' type="text" class="form-control street withoutСommas" name="street" id="street_${index}" placeholder="Улица *" required>
-						<input value='${building}' type="text" class="form-control building withoutСommas" name="building" id="building_${index}" placeholder="Здание *" required>
-						<input value='${buildingBody}' type="text" class="form-control buildingBody withoutСommas" name="buildingBody" id="buildingBody_${index}" placeholder="Корпус">
+						<input value='${city}' type="text" class="form-control city withoutСommas" name="city" id="city_${pointIndex}" placeholder="Город *" required>
+						<input value='${street}' type="text" class="form-control street withoutСommas" name="street" id="street_${pointIndex}" placeholder="Улица *" required>
+						<input value='${building}' type="text" class="form-control building withoutСommas" name="building" id="building_${pointIndex}" placeholder="Здание *" required>
+						<input value='${buildingBody}' type="text" class="form-control buildingBody withoutСommas" name="buildingBody" id="buildingBody_${pointIndex}" placeholder="Корпус">
 					</div>
 				</div>
 			</div>
 		`
 	}
-	const address = getAddress(order, type, way, value)
+	const address = getAddress(order, pointType, way, value)
 	return `<div class="form-group">
-				<label for="country_${index}" class="col-form-label text-muted font-weight-bold">Адрес ${addressName} <span class="text-red">*</span></label>
+				<label for="country_${pointIndex}" class="col-form-label text-muted font-weight-bold">Адрес ${addressName} <span class="text-red">*</span></label>
 				<div class="form-group address-container">
 					<div class="autocomplete">
-						<input type="text" class="form-control country" ${countryReadonlyAttr} name="country" id="country_${index}" placeholder="Страна" autocomplete="off" value='${country}' required>
+						<input type="text" class="form-control country" ${countryReadonlyAttr} name="country" id="country_${pointIndex}" placeholder="Страна" autocomplete="off" value='${country}' required>
 					</div>
-					<input type="text" class="form-control address-input" name="address" id="address_${index}" autocomplete="off" placeholder="Город, улица и т.д." value='${address}' required>
+					<input type="text" class="form-control address-input" name="address" id="address_${pointIndex}" autocomplete="off" placeholder="Город, улица и т.д." value='${address}' required>
 				</div>
 			</div>`
 }
@@ -276,29 +280,29 @@ function getImportAddressObj(addressValue) {
 	return obj
 	
 }
-function getAddress(order, type, way, addressValue) {
+function getAddress(order, pointType, way, addressValue) {
 	let address = ''
 	if (addressValue) {
 		return addressValue.split('; ')[1]
 	}
 	if (!order || !order.numStockDelivery) return ''
-	if ((type === 'Выгрузка' && way === 'Импорт')
-		|| (type === 'Выгрузка' && way === 'РБ')
-		|| (type === 'Загрузка' && way === 'Экспорт')
+	if ((pointType === 'Выгрузка' && way === 'Импорт')
+		|| (pointType === 'Выгрузка' && way === 'РБ')
+		|| (pointType === 'Загрузка' && way === 'Экспорт')
 	) address = getStockAddress(order.numStockDelivery)
 	return address
 }
-function getCountry(type, way, addressValue) {
+function getCountry(pointType, way, addressValue) {
 	let country = ''
-	if (type === 'Выгрузка' && way === 'Импорт') country = 'BY Беларусь'
+	if (pointType === 'Выгрузка' && way === 'Импорт') country = 'BY Беларусь'
 	if (way === 'РБ' || way === 'АХО') country = 'BY Беларусь'
-	if (type === 'Загрузка' && way === 'Экспорт') country = 'BY Беларусь'
+	if (pointType === 'Загрузка' && way === 'Экспорт') country = 'BY Беларусь'
 	if (addressValue) country = addressValue.split('; ')[0]
 	return country
 }
 
 
-export function getAddressInfoHTML(type, way, index, pointData) {
+export function getAddressInfoHTML({ pointType, way, pointIndex, pointData }) {
 	const {
 		weekdaysTF_from,
 		weekdaysTF_to,
@@ -320,55 +324,55 @@ export function getAddressInfoHTML(type, way, index, pointData) {
 
 	// если есть данные (для маршрутов, копирования и редактирования), то общее поле контакта
 	const contactInputs = pointData
-		? `<textarea class="form-control contact" rows="${textareaRows}" name="pointContact" id="pointContact_${index}" placeholder="ФИО, телефон">${pointData.contact}</textarea>`
+		? `<textarea class="form-control contact" rows="${textareaRows}" name="pointContact" id="pointContact_${pointIndex}" placeholder="ФИО, телефон">${pointData.contact}</textarea>`
 		: `
-			<input type="text" class="form-control" name="pointContact_fio" id="pointContact_fio_${index}" placeholder="ФИО" required>
-			<input type="text" class="form-control" name="pointContact_tel" id="pointContact_tel_${index}" placeholder="Телефон" required>
+			<input type="text" class="form-control" name="pointContact_fio" id="pointContact_fio_${pointIndex}" placeholder="ФИО" required>
+			<input type="text" class="form-control" name="pointContact_tel" id="pointContact_tel_${pointIndex}" placeholder="Телефон" required>
 		`
-	const addressName = type === 'Загрузка' ? 'загрузки' : 'выгрузки'
+	const addressName = pointType === 'Загрузка' ? 'загрузки' : 'выгрузки'
 	return way === 'РРР' // way === 'Импорт' 
 		? `<div class="timeFrame-container--import">
 				<span class="col-form-label text-muted font-weight-bold d-inline-block">Время работы точки ${addressName} <span class="text-red">*</span></span>
 				<div class="timeFrame-inputs--import">
-					<label for='weekdaysTimeFrame_from_${index}' class="grid-item1 col-form-label text-muted text-nowrap">Будние дни:</label>
+					<label for='weekdaysTimeFrame_from_${pointIndex}' class="grid-item1 col-form-label text-muted text-nowrap">Будние дни:</label>
 					<span class="grid-item2 ">С</span>
-					<input value='${weekdaysTF_from}' list="times" type="time" class="grid-item3 form-control" name="weekdaysTimeFrame_from" id="weekdaysTimeFrame_from_${index}" required>
+					<input value='${weekdaysTF_from}' list="times" type="time" class="grid-item3 form-control" name="weekdaysTimeFrame_from" id="weekdaysTimeFrame_from_${pointIndex}" required>
 					<span class="grid-item4 ">по</span>
-					<input value='${weekdaysTF_to}' list="times" type="time" class="grid-item5 form-control" name="weekdaysTimeFrame_to" id="weekdaysTimeFrame_to_${index}" required>
-					<label for='saturdayTimeFrame_from_${index}' class="grid-item6 col-form-label text-muted text-nowrap">Суббота:</label>
+					<input value='${weekdaysTF_to}' list="times" type="time" class="grid-item5 form-control" name="weekdaysTimeFrame_to" id="weekdaysTimeFrame_to_${pointIndex}" required>
+					<label for='saturdayTimeFrame_from_${pointIndex}' class="grid-item6 col-form-label text-muted text-nowrap">Суббота:</label>
 					<span class="grid-item7 ">С</span>
-					<input value='${saturdayTF_from}' ${satutdayTFDisabledAttr} list="times" type="time" class="grid-item8 form-control" name="saturdayTimeFrame_from" id="saturdayTimeFrame_from_${index}" required>
+					<input value='${saturdayTF_from}' ${satutdayTFDisabledAttr} list="times" type="time" class="grid-item8 form-control" name="saturdayTimeFrame_from" id="saturdayTimeFrame_from_${pointIndex}" required>
 					<span class="grid-item9 ">по</span>
-					<input value='${saturdayTF_to}' ${satutdayTFDisabledAttr} list="times" type="time" class="grid-item10 form-control" name="saturdayTimeFrame_to" id="saturdayTimeFrame_to_${index}" required>
-					<input class="grid-item11 " type="checkbox" ${saturdayTF_NotWorkCheckedAttr} name="saturdayTimeFrame_NotWork" id="saturdayTimeFrame_NotWork_${index}">
-					<label class="grid-item12 form-check-label text-nowrap" for="saturdayTimeFrame_NotWork_${index}">Не работают</label>
-					<label for='sundayTimeFrame_from_${index}' class="grid-item13 col-form-label text-muted text-nowrap">Воскресенье:</label>
+					<input value='${saturdayTF_to}' ${satutdayTFDisabledAttr} list="times" type="time" class="grid-item10 form-control" name="saturdayTimeFrame_to" id="saturdayTimeFrame_to_${pointIndex}" required>
+					<input class="grid-item11 " type="checkbox" ${saturdayTF_NotWorkCheckedAttr} name="saturdayTimeFrame_NotWork" id="saturdayTimeFrame_NotWork_${pointIndex}">
+					<label class="grid-item12 form-check-label text-nowrap" for="saturdayTimeFrame_NotWork_${pointIndex}">Не работают</label>
+					<label for='sundayTimeFrame_from_${pointIndex}' class="grid-item13 col-form-label text-muted text-nowrap">Воскресенье:</label>
 					<span class="grid-item14 ">С</span>
-					<input value='${sundayTF_from}' ${sundayTFDisabledAttr} list="times" type="time" class="grid-item15 form-control" name="sundayTimeFrame_from" id="sundayTimeFrame_from_${index}" required>
+					<input value='${sundayTF_from}' ${sundayTFDisabledAttr} list="times" type="time" class="grid-item15 form-control" name="sundayTimeFrame_from" id="sundayTimeFrame_from_${pointIndex}" required>
 					<span class="grid-item16 ">по</span>
-					<input value='${sundayTF_to}' ${sundayTFDisabledAttr} list="times" type="time" class="grid-item17 form-control" name="sundayTimeFrame_to" id="sundayTimeFrame_to_${index}" required>
-					<input class="grid-item18 " type="checkbox" ${sundayTF_NotWorkCheckedAttr} name="sundayTimeFrame_NotWork" id="sundayTimeFrame_NotWork_${index}">
-					<label class="grid-item19 form-check-label text-nowrap" for="sundayTimeFrame_NotWork_${index}">Не работают</label>
+					<input value='${sundayTF_to}' ${sundayTFDisabledAttr} list="times" type="time" class="grid-item17 form-control" name="sundayTimeFrame_to" id="sundayTimeFrame_to_${pointIndex}" required>
+					<input class="grid-item18 " type="checkbox" ${sundayTF_NotWorkCheckedAttr} name="sundayTimeFrame_NotWork" id="sundayTimeFrame_NotWork_${pointIndex}">
+					<label class="grid-item19 form-check-label text-nowrap" for="sundayTimeFrame_NotWork_${pointIndex}">Не работают</label>
 				</div>
 			</div>
 			<div class="contact-container--import">
-				<label for="pointContact_fio_${index}" class="col-form-label text-muted font-weight-bold">Контактное лицо на точке ${addressName} <span class="text-red">*</span></label>
+				<label for="pointContact_fio_${pointIndex}" class="col-form-label text-muted font-weight-bold">Контактное лицо на точке ${addressName} <span class="text-red">*</span></label>
 				<div class="contact-inputs--import">
 					${contactInputs}
 				</div>
 			</div>
 		`	
 		: `<div class="timeFrame-container">
-				<label for='timeFrame_from_${index}' class="col-form-label text-muted font-weight-bold">Время работы точки ${addressName} <span class="text-red">*</span></label>
+				<label for='timeFrame_from_${pointIndex}' class="col-form-label text-muted font-weight-bold">Время работы точки ${addressName} <span class="text-red">*</span></label>
 				<div class="input-row-container">
 					С
-					<input value='${weekdaysTF_from}' list="times" type="time" class="form-control" name="timeFrame_from" id="timeFrame_from_${index}" required>
+					<input value='${weekdaysTF_from}' list="times" type="time" class="form-control" name="timeFrame_from" id="timeFrame_from_${pointIndex}" required>
 					по
-					<input value='${weekdaysTF_to}' list="times" type="time" class="form-control" name="timeFrame_to" id="timeFrame_to_${index}" required>
+					<input value='${weekdaysTF_to}' list="times" type="time" class="form-control" name="timeFrame_to" id="timeFrame_to_${pointIndex}" required>
 				</div>
 			</div>
 			<div class="contact-container">
-				<label for="pointContact_fio_${index}" class="col-form-label text-muted font-weight-bold">Контактное лицо на точке ${addressName} <span class="text-red">*</span></label>
+				<label for="pointContact_fio_${pointIndex}" class="col-form-label text-muted font-weight-bold">Контактное лицо на точке ${addressName} <span class="text-red">*</span></label>
 				<div class="contact-inputs">
 					${contactInputs}
 				</div>
@@ -452,33 +456,33 @@ function getTimeFrameOrStatus(text) {
 }
 
 
-export function getCustomsAddressHTML(EAEUImport, type, way, index, value) {
-	const addressName = type === 'Загрузка' ? '(таможня отправления)' : '(таможня назначения)'
+export function getCustomsAddressHTML({ EAEUImport, pointType, way, pointIndex, value }) {
+	const addressName = pointType === 'Загрузка' ? '(таможня отправления)' : '(таможня назначения)'
 	if (way === 'РБ' || way === 'АХО' || EAEUImport) return ''
 	if (way === 'Экспорт') {
 		const customsCountry = getCountry(null, null, value)
-		const customsAddress = getAddress(null, type, way, value)
+		const customsAddress = getAddress(null, pointType, way, value)
 		return `<div class="form-group">
-					<label for="customsCountry_${index}" class="col-form-label text-muted font-weight-bold">Место таможенного оформления ${addressName}</label>
+					<label for="customsCountry_${pointIndex}" class="col-form-label text-muted font-weight-bold">Место таможенного оформления ${addressName}</label>
 					<div class="form-group address-container">
 						<div class="autocomplete">
-							<input value='${customsCountry}' type="text" class="form-control country" name="customsCountry" id="customsCountry_${index}" placeholder="Страна">
+							<input value='${customsCountry}' type="text" class="form-control country" name="customsCountry" id="customsCountry_${pointIndex}" placeholder="Страна">
 						</div>
-						<input value='${customsAddress}' type="text" class="form-control address-input" name="customsAddress" id="customsAddress_${index}" placeholder="Адрес">
+						<input value='${customsAddress}' type="text" class="form-control address-input" name="customsAddress" id="customsAddress_${pointIndex}" placeholder="Адрес">
 					</div>
 				</div>
 			`
 	}
 
 	const customsCountry = getCountry(null, null, value)
-	const customsAddress = getAddress(null, type, way, value)
+	const customsAddress = getAddress(null, pointType, way, value)
 	return `<div class="form-group">
-				<label for="customsCountry_${index}" class="col-form-label text-muted font-weight-bold">Место таможенного оформления ${addressName}</label>
+				<label for="customsCountry_${pointIndex}" class="col-form-label text-muted font-weight-bold">Место таможенного оформления ${addressName}</label>
 				<div class="form-group address-container">
 					<div class="autocomplete">
-						<input value='${customsCountry}' type="text" class="form-control country" name="customsCountry" id="customsCountry_${index}" placeholder="Страна">
+						<input value='${customsCountry}' type="text" class="form-control country" name="customsCountry" id="customsCountry_${pointIndex}" placeholder="Страна">
 					</div>
-					<input value='${customsAddress}' type="text" class="form-control address-input" name="customsAddress" id="customsAddress_${index}" placeholder="Адрес">
+					<input value='${customsAddress}' type="text" class="form-control address-input" name="customsAddress" id="customsAddress_${pointIndex}" placeholder="Адрес">
 				</div>
 			</div>
 		`
@@ -489,15 +493,15 @@ export function getCustomsAddressHTML(EAEUImport, type, way, index, value) {
 	// const customsInPointAddress = getCustomsInPointAddress(value)
 	// const { country, postIndex, region, city, street, building, buildingBody } = getImportCustomsAddressObj(value, customsInPointAddress)
 	// const customsInPointAddressSelected = customsInPointAddress ? 'selected' : ''
-	// const header = type === 'Загрузка'
-	// 	? `<label for="customsInPointAddress_${index}" class='col-form-label text-muted font-weight-bold'>Место таможенного оформления ${addressName} <span class='text-red'>*</span></label>
+	// const header = pointType === 'Загрузка'
+	// 	? `<label for="customsInPointAddress_${pointIndex}" class='col-form-label text-muted font-weight-bold'>Место таможенного оформления ${addressName} <span class='text-red'>*</span></label>
 	// 		<div class="customsInPointAddress-container pb-3">
-	// 			<label class="sr-only" for="customsInPointAddress_${index}">Затаможка на месте?</label>
+	// 			<label class="sr-only" for="customsInPointAddress_${pointIndex}">Затаможка на месте?</label>
 	// 			<div class="input-group">
 	// 				<div class="input-group-prepend">
 	// 					<div class="input-group-text">Затаможка на месте загрузки?</div>
 	// 				</div>
-	// 				<select id="customsInPointAddress_${index}" name="customsInPointAddress" class="form-control" required>
+	// 				<select id="customsInPointAddress_${pointIndex}" name="customsInPointAddress" class="form-control" required>
 	// 					<option value="" selected hidden disabled></option>
 	// 					<option ${customsInPointAddressSelected} value="Да">Да</option>
 	// 					<option value="Нет">Нет</option>
@@ -505,25 +509,25 @@ export function getCustomsAddressHTML(EAEUImport, type, way, index, value) {
 	// 			</div>
 	// 		</div>
 	// 	`
-	// 	: `<label for="customsCountry_${index}" class='col-form-label text-muted font-weight-bold'>Место таможенного оформления ${addressName} <span class='text-red'>*</span></label>`
-	// let noneClassName = type === 'Загрузка' ? 'none' : ''
+	// 	: `<label for="customsCountry_${pointIndex}" class='col-form-label text-muted font-weight-bold'>Место таможенного оформления ${addressName} <span class='text-red'>*</span></label>`
+	// let noneClassName = pointType === 'Загрузка' ? 'none' : ''
 	// if (value && !customsInPointAddress) noneClassName = ''
-	// const required = type === 'Загрузка' ? '' : 'required'
+	// const required = pointType === 'Загрузка' ? '' : 'required'
 	// return `<div>
 	// 			${header}
-	// 			<div class="address-container--import customsContainer_${index} ${noneClassName}">
+	// 			<div class="address-container--import customsContainer_${pointIndex} ${noneClassName}">
 	// 				<div class="row-container">
 	// 					<div class="autocomplete">
-	// 						<input value='${country}' type="text" class="form-control country withoutСommas" name="customsCountry" id="customsCountry_${index}" placeholder="Страна *" ${required}>
+	// 						<input value='${country}' type="text" class="form-control country withoutСommas" name="customsCountry" id="customsCountry_${pointIndex}" placeholder="Страна *" ${required}>
 	// 					</div>
-	// 					<input value='${postIndex}' type="number" class="form-control postIndex withoutСommas" name="customsPostIndex" id="customsPostIndex_${index}" placeholder="Индекс *" ${required}>
-	// 					<input value='${region}' type="text" class="form-control region withoutСommas" name="customsRegion" id="customsRegion_${index}" placeholder="Регион/область *" ${required}>
+	// 					<input value='${postIndex}' type="number" class="form-control postIndex withoutСommas" name="customsPostIndex" id="customsPostIndex_${pointIndex}" placeholder="Индекс *" ${required}>
+	// 					<input value='${region}' type="text" class="form-control region withoutСommas" name="customsRegion" id="customsRegion_${pointIndex}" placeholder="Регион/область *" ${required}>
 	// 				</div>
 	// 				<div class="row-container">
-	// 					<input value='${city}' type="text" class="form-control city withoutСommas" name="customsCity" id="customsCity_${index}" placeholder="Город *" ${required}>
-	// 					<input value='${street}' type="text" class="form-control street withoutСommas" name="customsStreet" id="customsStreet_${index}" placeholder="Улица *" ${required}>
-	// 					<input value='${building}' type="text" class="form-control building withoutСommas" name="customsBuilding" id="customsBuilding_${index}" placeholder="Здание *" ${required}>
-	// 					<input value='${buildingBody}' type="text" class="form-control buildingBody withoutСommas" name="customsBuildingBody" id="customsBuildingBody_${index}" placeholder="Корпус">
+	// 					<input value='${city}' type="text" class="form-control city withoutСommas" name="customsCity" id="customsCity_${pointIndex}" placeholder="Город *" ${required}>
+	// 					<input value='${street}' type="text" class="form-control street withoutСommas" name="customsStreet" id="customsStreet_${pointIndex}" placeholder="Улица *" ${required}>
+	// 					<input value='${building}' type="text" class="form-control building withoutСommas" name="customsBuilding" id="customsBuilding_${pointIndex}" placeholder="Здание *" ${required}>
+	// 					<input value='${buildingBody}' type="text" class="form-control buildingBody withoutСommas" name="customsBuildingBody" id="customsBuildingBody_${pointIndex}" placeholder="Корпус">
 	// 				</div>
 	// 			</div>
 	// 		</div>

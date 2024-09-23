@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import by.base.main.service.ScheduleService;
+import by.base.main.util.MainChat;
 
 /**
  * Главный метод с заданиями. 
@@ -35,6 +36,9 @@ public class ScheduledTask {
 		
 	@Autowired
     private ServletContext servletContext;
+	
+	@Autowired
+	private MainChat mainChat;
 	
     @Scheduled(cron = "0 00 11 * * ?") // каждый день в 11:00
     public void sendSchedulesHasORL() {
@@ -74,5 +78,10 @@ public class ScheduledTask {
 		
 		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на " + currentTimeString, "Автоматическая отправка", files, emails);
 		System.out.println("Finish --- sendSchedulesHasORL");
+    }
+    
+    @Scheduled(cron = "0 00 20 * * ?") // каждый день в 20:00
+    public void clearMessageList() {
+    	mainChat.messegeList.clear();
     }
 }

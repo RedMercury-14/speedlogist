@@ -193,12 +193,26 @@
 						</div>
 						<div class="form-group input-column-container">
 							<span class="text-muted font-weight-bold">Выбрать перевозчика:</span>
-							<input id="searchInOptions" class="keyboard__key w-50 p-2" placeholder="Поиск в списке перевозчиков">
+							<input id="searchInOptions" class="keyboard__key w-75 p-2" placeholder="Поиск по названию или УНП">
 							<select id="carrier" name="carrier" class="form-control" required>
 								<option value="" hidden disabled selected>Выберите перевозчика</option>
 								<!-- здесь будет список всех перевозчиков -->
 							</select>
 						</div>
+						<!-- <div class="form-group input-column-container">
+							<span class="text-muted font-weight-bold">Выбрать транспорт:</span>
+							<select id="truck" name="truck" class="form-control" required>
+								<option value="" hidden disabled selected>Выберите авто</option>
+								
+							</select>
+						</div>
+						<div class="form-group input-column-container">
+							<span class="text-muted font-weight-bold">Выбрать водителя:</span>
+							<select id="driver" name="driver" class="form-control" required>
+								<option value="" hidden disabled selected>Выберите водителя</option>
+								
+							</select>
+						</div> -->
 					</div>
 					<div class="modal-footer">
 						<button class="btn btn-secondary" type="button" data-dismiss="modal">Отмена</button>

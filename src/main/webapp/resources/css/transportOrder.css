@@ -33,8 +33,12 @@ body {
 }
 .header-text p,
 .footer-text p {
-	font-size: 10px;
+	font-size: 12px;
 	line-height: 1.3;
+}
+.header-text p {
+	margin-top: 20px;
+	text-align: center;
 }
 .document-header {
 	margin-bottom: 10px;
@@ -75,6 +79,9 @@ tbody td:nth-child(3) {
 @media print {
 	body, .my-container {
 		margin: 0;
+	}
+	.header-text p {
+		margin-top: 0;
 	}
 	.table .subrow td {
 		border: none !important;

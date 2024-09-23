@@ -339,6 +339,7 @@ public class ReaderSchedulePlan {
 		 if(checkHasLog(dateRange, order)) {
 			 //если входит в лог плече, то находим такие же заказы с такими же SKU
 			 List<Order> orders = orderService.getOrderByTimeDelivery(dateRange.start, dateRange.end);
+			 orders.add(order);
 			 HashMap<Long, Double> map = calculateQuantityOrderSum(orders); // тут я получил мапу с кодами товаров и суммой заказа за период.
 //			 map.forEach((k,v)->System.out.println(k + " -- " + v));
 			
@@ -353,7 +354,7 @@ public class ReaderSchedulePlan {
 						int orlZaq = quantity.get(0).getQuantity();
 						if(zaq > orlZaq*1.1) {
 							result = result +"<span style=\"color: red;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + quantityOrderAll.intValue() + " шт. из " + quantity.get(0).getQuantity() + " шт.</span>\n";	
-//							isMistakeZAQ = true;
+//						isMistakeZAQ = true;
 						}else {
 							result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + quantityOrderAll.intValue() + " шт. из " + quantity.get(0).getQuantity() + " шт.\n";													
 						}

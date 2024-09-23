@@ -95,6 +95,11 @@ export function changeCargoInfoInputsRequired(DOMobj) {
 	const weightInput = DOMobj.querySelector('#weight') || DOMobj.querySelector('input[name="weight"]')
 	const volumeInput = DOMobj.querySelector('#volume') || DOMobj.querySelector('input[name="volume"]')
 
+	// для АХО
+	const wayInput = document.querySelector('#way')
+	const way = wayInput && wayInput.value
+	if (way === 'АХО') return
+
 	if (typeTruckInput.value.includes('Контейнер')) {
 		pallInput.required = false
 		weightInput.required = false

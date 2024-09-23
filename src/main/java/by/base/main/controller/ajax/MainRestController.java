@@ -1715,28 +1715,17 @@ public class MainRestController {
 			}
 						
 		case 100: // сакмовывоз			
-			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false") && !checkDeepImport(order, request)) {
-				//тут проверка по потребности
-				PlanResponce planResponce = readerSchedulePlan.process(order);
-                if(planResponce.getStatus() == 0) {
-                    infoCheck = planResponce.getMessage();
-                    response.put("status", "105");
-                    response.put("info", infoCheck.replace("\n", "<br>"));
-                    return response;
-                }else {
-                    infoCheck = planResponce.getMessage();
-                    response.put("status", "200");
-                    response.put("info", infoCheck.replace("\n", "<br>"));
-                    order.setStatus(8);
-        			orderService.updateOrder(order);
-        			saveActionInFile(request, "resources/others/blackBox/slot", idOrder, order.getMarketNumber(), order.getNumStockDelivery(), order.getIdRamp(), null, order.getTimeDelivery(), null, user.getLogin(), "unsave", null, order.getMarketContractType());
-        			Message message100 = new Message(user.getLogin(), null, "200", str, idOrder.toString(), "unsave");
-        			slotWebSocket.sendMessage(message100);
-        			java.util.Date t4 = new java.util.Date();
-        			System.out.println(t4.getTime()-t1.getTime() + " ms - save" );
-        			response.put("message", str);			
-        			return response;
-                }
+			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {
+				response.put("status", "200");
+                order.setStatus(8);
+    			orderService.updateOrder(order);
+    			saveActionInFile(request, "resources/others/blackBox/slot", idOrder, order.getMarketNumber(), order.getNumStockDelivery(), order.getIdRamp(), null, order.getTimeDelivery(), null, user.getLogin(), "unsave", null, order.getMarketContractType());
+    			Message message100 = new Message(user.getLogin(), null, "200", str, idOrder.toString(), "unsave");
+    			slotWebSocket.sendMessage(message100);
+    			java.util.Date t4 = new java.util.Date();
+    			System.out.println(t4.getTime()-t1.getTime() + " ms - save" );
+    			response.put("message", str);			
+    			return response;
 			}else {
                 response.put("status", "200");
                 order.setStatus(8);

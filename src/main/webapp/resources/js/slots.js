@@ -415,20 +415,22 @@ function stockSelectOnChangeHandler(e, calendar) {
 // обработчик нажатия на кнопку подтверждения/снятия подтверждения
 function confirmSlotBtnClickHandler(e) {
 	const fcEvent = store.getSlotToConfirm()
-	// const role = store.getRole()
-	// const order = fcEvent.extendedProps.data
-
-	// // проверка даты начала ивента
-	// const minUnloadDate = getMinUnloadDate(order, role)
-	// const minUnloadDateStr = convertToDayMonthTime(minUnloadDate)
-	// console.log("🚀 ~ confirmSlotBtnClickHandler ~ minUnloadDateStr:", minUnloadDateStr)
-	// if (isInvalidEventDate({ event: fcEvent }, minUnloadDate)) {
-	// 	snackbar.show(userMessages.dateDropError(minUnloadDateStr))
-	// 	return
-	// }
-
+	const role = store.getRole()
+	const order = fcEvent.extendedProps.data
 	const action = e.target.dataset.action
-	const status = fcEvent.extendedProps.data.status
+	const status = order.status
+
+	// проверка даты начала ивента при подтверждении слота
+	if (action === 'save') {
+		const minUnloadDate = getMinUnloadDate(order, role)
+		const minUnloadDateStr = convertToDayMonthTime(minUnloadDate)
+		if (isInvalidEventDate({ event: fcEvent }, minUnloadDate)) {
+			snackbar.show(userMessages.dateConfirmError(minUnloadDateStr))
+			return
+		}
+	}
+
+	// 
 	if (action === 'unSave' && status === 20) return
 	confirmSlot(fcEvent, action)
 }

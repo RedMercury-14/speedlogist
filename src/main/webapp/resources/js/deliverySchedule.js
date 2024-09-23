@@ -4,7 +4,7 @@ import { ajaxUtils } from './ajaxUtils.js'
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 import { snackbar } from "./snackbar/snackbar.js"
 import { uiIcons } from './uiIcons.js'
-import { changeGridTableMarginTop, debounce, getData, getDeliveryScheduleMatrix, getScheduleStatus, hideLoadingSpinner, isAdmin, isOderSupport, showLoadingSpinner } from './utils.js'
+import { changeGridTableMarginTop, dateHelper, debounce, getData, getDeliveryScheduleMatrix, getScheduleStatus, hideLoadingSpinner, isAdmin, isOderSupport, showLoadingSpinner } from './utils.js'
 
 const loadExcelUrl = '../../api/slots/delivery-schedule/load'
 const getScheduleUrl = '../../api/slots/delivery-schedule/getList'
@@ -258,6 +258,26 @@ const columnDefs = [
 	// },
 ]
 
+// доболнительные колонки для админа
+if (isAdmin(role)) {
+	columnDefs.push(
+		{
+			headerName: 'История', field: 'history',
+			cellClass: 'px-1 py-0 text-center',
+		},
+		{
+			headerName: 'Дата последнего расчета', field: 'dateLastCalculation',
+			cellClass: 'px-1 py-0 text-center',
+			valueFormatter: dateFormatter,
+		},
+		{
+			headerName: 'Дата последнего изменения', field: 'dateLastChanging',
+			cellClass: 'px-1 py-0 text-center',
+			valueFormatter: dateFormatter,
+		},
+	)
+}
+
 const gridOptions = {
 	columnDefs: columnDefs,
 	rowClassRules: rowClassRules,
@@ -501,6 +521,9 @@ function getContextMenuItems(params) {
 	]
 
 	return result
+}
+function dateFormatter(params) {
+	return params.value ? dateHelper.getFormatDate(params.value) : ''
 }
 
 // подтверждение графика поставки

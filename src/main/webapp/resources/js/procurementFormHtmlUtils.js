@@ -102,7 +102,7 @@ export function getTnvdHTML({ pointType, way, pointIndex, value }) {
 
 
 export function getCargoInfoHTML({ order, isInternalMovement, way, pointIndex, pointData, pointType }) {
-	const { pallRequiredAttr, weightRequiredAttr, volumeRequiredAttr } = getRequiredAttrs()
+	const { pallRequiredAttr, weightRequiredAttr, volumeRequiredAttr } = getRequiredAttrs(way)
 	let { pointCargo, pall, weight, volume } = getCargoInfo(order, way, pointIndex, pointData, pointType)
 
 	// const ahoReadonlyAttr = way === 'АХО' ? 'readonly' : ''
@@ -192,9 +192,17 @@ function getPrevPointCargoInfo(pointIndex) {
 	return cargoInfo
 }
 
-function getRequiredAttrs() {
+function getRequiredAttrs(way) {
 	const methodLoadInput = document.querySelector('#methodLoad')
 	const typeTruckInput = document.querySelector('#typeTruck')
+
+	// для АХО
+	if (way === 'АХО') return {
+		pallRequiredAttr: 'required',
+		weightRequiredAttr: 'required',
+		volumeRequiredAttr: '',
+	}
+
 	if (typeTruckInput.value.includes('Контейнер')) {
 		return {
 			pallRequiredAttr: '',

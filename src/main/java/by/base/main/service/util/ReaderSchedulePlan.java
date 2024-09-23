@@ -321,11 +321,14 @@ public class ReaderSchedulePlan {
 		 System.out.println("dateRange = " + dateRange);
 		 
 		 if(dateRange == null) {
-			 return new PlanResponce(0, "Действие заблокировано!\nПросчёт кол-ва товара на логистическое плечо невозможен, т.к. расчёт ОРЛ не совпадает с графиком поставок");
+//			 return new PlanResponce(0, "Действие заблокировано!\nПросчёт кол-ва товара на логистическое плечо невозможен, т.к. расчёт ОРЛ не совпадает с графиком поставок");
+			 return new PlanResponce(200, "Просчёт кол-ва товара на логистическое плечо невозможен, т.к. расчёт ОРЛ не совпадает с графиком поставок");
 		 }
 		 if(dateRange.start == null && dateRange.days == 0) {
 			 return new PlanResponce(200, "Расчёта заказов по продукту: " + products.get(0).getName() + " ("+products.get(0).getCodeProduct()+") невозможен, т.к. нет в базе данных расчётов потребности");
 		 }
+		 
+		 
 		 
 		 //проверка по стокам отностительно графика поставок
 		 boolean isMistakeZAQ = false;
@@ -539,10 +542,11 @@ public class ReaderSchedulePlan {
 	private String checkNumProductHasStock(Order order, DateRange dateRange) {
 		String message = null;
 		User user = getThisUser();
-		Role role = user.getRoles().stream().findFirst().get();
-//		if(role.getIdRole() == 1 || role.getIdRole() == 2 || role.getIdRole() == 3) { // тут мы говорим что если это логист или админ - в проверке не нуждаемся
-//			return null;
-//		}
+		Role role = user.getRoles().stream().findFirst().get();	
+		
+		if(role.getIdRole() == 1 || role.getIdRole() == 2 || role.getIdRole() == 3) { // тут мы говорим что если это логист или админ - в проверке не нуждаемся
+			return null;
+		}
 		if(order.getIsInternalMovement() != null && order.getIsInternalMovement().equals("true")) {
 			return null;
 		}
@@ -562,6 +566,9 @@ public class ReaderSchedulePlan {
 				if(product.getBalanceStockAndReserves() == null) {
 					continue;
 				}
+//				if(product.getOrderProducts() != null && !product.getOrderProducts().isEmpty()) {
+//					continue;
+//				}
 				if(product.getBalanceStockAndReserves() == 9999.0) {
 					continue;
 				}

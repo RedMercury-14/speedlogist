@@ -256,14 +256,14 @@ public class MainRestController {
 	private static String classLog;
 	private static String marketJWT;
 	//в отдельный файл
-//	private static final String marketUrl = "https://api.dobronom.by:10806/Json";
-//	private static final String serviceNumber = "BB7617FD-D103-4724-B634-D655970C7EC0";
-//	private static final String loginMarket = "191178504_SpeedLogist";
-//	private static final String passwordMarket = "SL!2024D@2005";
-	private static final String marketUrl = "https://api.dobronom.by:10896/Json";
-	private static final String serviceNumber = "CD6AE87C-2477-4852-A4E7-8BA5BD01C156";
-	private static final String loginMarket = "SpeedLogist";
-	private static final String passwordMarket = "12345678";
+	private static final String marketUrl = "https://api.dobronom.by:10806/Json";
+	private static final String serviceNumber = "BB7617FD-D103-4724-B634-D655970C7EC0";
+	private static final String loginMarket = "191178504_SpeedLogist";
+	private static final String passwordMarket = "SL!2024D@2005";
+//	private static final String marketUrl = "https://api.dobronom.by:10896/Json";
+//	private static final String serviceNumber = "CD6AE87C-2477-4852-A4E7-8BA5BD01C156";
+//	private static final String loginMarket = "SpeedLogist";
+//	private static final String passwordMarket = "12345678";
 
 
 	public static final Comparator<Address> comparatorAddressId = (Address e1, Address e2) -> (e1.getIdAddress() - e2.getIdAddress());
@@ -1715,28 +1715,17 @@ public class MainRestController {
 			}
 						
 		case 100: // сакмовывоз			
-			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false") && !checkDeepImport(order, request)) {
-				//тут проверка по потребности
-				PlanResponce planResponce = readerSchedulePlan.process(order);
-                if(planResponce.getStatus() == 0) {
-                    infoCheck = planResponce.getMessage();
-                    response.put("status", "105");
-                    response.put("info", infoCheck.replace("\n", "<br>"));
-                    return response;
-                }else {
-                    infoCheck = planResponce.getMessage();
-                    response.put("status", "200");
-                    response.put("info", infoCheck.replace("\n", "<br>"));
-                    order.setStatus(8);
-        			orderService.updateOrder(order);
-        			saveActionInFile(request, "resources/others/blackBox/slot", idOrder, order.getMarketNumber(), order.getNumStockDelivery(), order.getIdRamp(), null, order.getTimeDelivery(), null, user.getLogin(), "unsave", null, order.getMarketContractType());
-        			Message message100 = new Message(user.getLogin(), null, "200", str, idOrder.toString(), "unsave");
-        			slotWebSocket.sendMessage(message100);
-        			java.util.Date t4 = new java.util.Date();
-        			System.out.println(t4.getTime()-t1.getTime() + " ms - save" );
-        			response.put("message", str);			
-        			return response;
-                }
+			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {
+				response.put("status", "200");
+                order.setStatus(8);
+    			orderService.updateOrder(order);
+    			saveActionInFile(request, "resources/others/blackBox/slot", idOrder, order.getMarketNumber(), order.getNumStockDelivery(), order.getIdRamp(), null, order.getTimeDelivery(), null, user.getLogin(), "unsave", null, order.getMarketContractType());
+    			Message message100 = new Message(user.getLogin(), null, "200", str, idOrder.toString(), "unsave");
+    			slotWebSocket.sendMessage(message100);
+    			java.util.Date t4 = new java.util.Date();
+    			System.out.println(t4.getTime()-t1.getTime() + " ms - save" );
+    			response.put("message", str);			
+    			return response;
 			}else {
                 response.put("status", "200");
                 order.setStatus(8);

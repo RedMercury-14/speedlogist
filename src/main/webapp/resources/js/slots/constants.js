@@ -12,6 +12,7 @@ export const slotsSettings = {
 export const userMessages = {
 	start: 'Для начала работы выберите склад',
 	dateDropError: (unloadDate) => `Невозможно установить заказ на эту дату! Минимальная дата выгрузки ${unloadDate}`,
+	dateConfirmError: (unloadDate) => `Невозможно подтвердить заказ на эту дату! Минимальная дата выгрузки ${unloadDate}`,
 	pallDropError: 'Невозможно установить поставку: паллетовместимость склада превышена!',
 	eventRemove: 'Поставка удалена с рампы склада. Можете установить поставку снова',
 	checkEventId: 'Заказ с таким номером уже добавлен!',

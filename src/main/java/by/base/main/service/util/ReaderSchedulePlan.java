@@ -1,8 +1,12 @@
 package by.base.main.service.util;
 
 import java.sql.Date;
+import java.sql.Timestamp;
 import java.time.DayOfWeek;
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,21 +20,28 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+
+import com.dto.PlanResponce;
 
 import by.base.main.model.Order;
 import by.base.main.model.OrderLine;
 import by.base.main.model.OrderProduct;
 import by.base.main.model.Product;
+import by.base.main.model.Role;
 import by.base.main.model.Schedule;
+import by.base.main.model.User;
 import by.base.main.service.OrderProductService;
 import by.base.main.service.OrderService;
 import by.base.main.service.ProductService;
 import by.base.main.service.ScheduleService;
+import by.base.main.service.UserService;
 
 /**
  * Класс который реализует логику подсчётов / сведение
- * <br>а так же отдельные команды для крафика поставок.
+ * <br>а так же отдельные команды для графика поставок.
+ * <br>Реализует подсчёт стоков, относительно графика поставок.
  * <br>Осная цель этого класса - привести к датам и цифрам план
  */
 @Component
@@ -57,6 +68,9 @@ public class ReaderSchedulePlan {
 	@Autowired
 	private OrderService orderService;
 	
+	@Autowired
+	private UserService userService;
+	
 	private static final Map<String, DayOfWeek> RUSSIAN_DAYS = new HashMap<>();
 
     static {
@@ -75,7 +89,7 @@ public class ReaderSchedulePlan {
      * @param product
      * @return
      */
-	public DateRange getDateRange (Schedule schedule, Product product) {
+	public DateRange getDateRange (Schedule schedule, List<Product> products) {
 		if(schedule == null) {
 			return null;
 		}
@@ -88,12 +102,26 @@ public class ReaderSchedulePlan {
                 || m.getValue().contains("суббота")
                 || m.getValue().contains("воскресенье")).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 					
-		List<OrderProduct> orderProductsHasNow = product.getOrderProductsListHasDateTarget(Date.valueOf(LocalDate.now().plusDays(1))); // это реализация п.2 (взял +1 день, т.к. заказывают за день поставки)
-		if(orderProductsHasNow == null) {
-			System.err.println("Расчёта заказов по продукту: " + product.getName() + " ("+product.getCodeProduct()+") нет в базе данных");
+//		List<OrderProduct> orderProductsHasNow = product.getOrderProductsListHasDateTarget(Date.valueOf(LocalDate.now().plusDays(1))); // это реализация п.2 (взял +1 день, т.к. заказывают за день поставки)
+		
+		//тут проходимся по потребностям и выносим в отдельный лист orderProductsHasMin ближайший расчёт потребностей по каждому продукту
+				List<OrderProduct> orderProductsHasMin = new ArrayList<OrderProduct>();
+				for (Product product2 : products) {
+					List<OrderProduct> orderProductsHasNow = product2.getOrderProductsListHasDateTarget(Date.valueOf(LocalDate.now().plusDays(1))); // это реализация п.2 (взял +1 день, т.к. заказывают за день поставки)
+					if(orderProductsHasNow != null) {
+						orderProductsHasMin.add(orderProductsHasNow.get(0));						
+					}
+				}
+				orderProductsHasMin.sort((o1, o2) -> o2.getDateCreate().compareTo(o1.getDateCreate())); // сортируемся от самой ранней даты
+		
+		if(orderProductsHasMin.isEmpty()) {
+			System.err.println("Расчёта заказов по продуктам: невозможен, т.к. потребности нет в базе данных");
 			return new DateRange(null, null, 0L, null);
 		}
-		OrderProduct orderProductTarget = orderProductsHasNow.get(0);
+		
+		
+		
+		OrderProduct orderProductTarget = orderProductsHasMin.get(0);
 		String dayOfPlanOrder = orderProductTarget.getDateCreate().toLocalDateTime().toLocalDate().plusDays(1).getDayOfWeek().toString(); // планируемый день заказа
 		
 		//проверяем, есть ли по плану заказ
@@ -154,27 +182,115 @@ public class ReaderSchedulePlan {
 	}
 	
 	
-//	public void name(Product product, Schedule schedule) {
-//		List<OrderProduct> list = new ArrayList<OrderProduct>(product.getOrderProducts());
-//		List<OrderProduct> list2 = findNearestFutureDate(list, Date.valueOf(LocalDate.now()));
-//		OrderProduct orderProduct = list2.get(0);
-//		System.out.println(orderProduct);
-//		System.out.println(orderProduct.getDateCreate().toLocalDateTime().toLocalDate().plusDays(1).getDayOfWeek());
-////		orderProduct.getDateCreate().toLocalDateTime().toLocalDate().getDayOfWeek()
-//	}
+	
+	/*
+	 * описание метода getActualStock
+	 * 1. проходимся по каждому скю и убираем скю, которых нет в потребности на день заказа
+	 * принимая тот факт что это завоз их прошлого заказа
+	 * 2. По оставшимся скю определяем дату заказа и дату первой поставки.
+	 * 3. определяем дату второй поствки
+	 * 4. разница между датой заказа из плана и датой второй поставки - есть искомый минимальынй сток
+	 */
+	/**
+	 * Метод, котоырй определяет сколько дней стока долно быть минимально
+	 * <br> для товара согласно графику поставок, до второй поставки
+	 * <br> Отдаёт количество дней стока, начиная от заказа согласно графику поставок
+	 * <br> т.е. Если заказ в понедельник а поставка в среду, то он берет плече с понедельника по среду
+	 * <br> и до второй поставки, т.е. до сл. среды <b>(лог плечо + неделя)</b>
+	 * @param order
+	 * @return
+	 */
+	@Deprecated
+	public Integer getActualStock(Order order) {
+		String numContract = order.getMarketContractType();
+		if(numContract == null) {
+			 System.err.println("ReaderSchedulePlan.getActualStock: numContract = null");
+			 return null;
+		 }
+		Schedule schedule = scheduleService.getScheduleByNumContract(Long.parseLong(numContract));
+		if(schedule == null) {
+			 System.err.println("ReaderSchedulePlan.getActualStock: schedule = null");
+			 return null;
+		 }
+		List<OrderLine> orderProducts = order.getOrderLines().stream().collect(Collectors.toList());
+		//тут находим продукты в бд
+		List<Product> products = new ArrayList<Product>();
+		for (OrderLine line : orderProducts) {
+			 Product product = productService.getProductByCode(line.getGoodsId().intValue());
+			 if(product != null) {
+				 products.add(product);				 
+			 }
+        }
+		
+		//тут проходимся по потребностям и выносим в отдельный лист orderProductsHasMin ближайший расчёт потребностей по каждому продукту
+		List<OrderProduct> orderProductsHasMin = new ArrayList<OrderProduct>();
+		for (Product product2 : products) {
+			List<OrderProduct> orderProductsHasNow = product2.getOrderProductsListHasDateTarget(Date.valueOf(order.getTimeDelivery().toLocalDateTime().toLocalDate())); // это реализация п.2 (взял +1 день, т.к. заказывают за день поставки)
+			orderProductsHasMin.add(orderProductsHasNow.get(0));
+		}
+		orderProductsHasMin.sort((o1, o2) -> o2.getDateCreate().compareTo(o1.getDateCreate())); // сортируемся от самой ранней даты
+		
+		//от даты которую получим в orderProductsHasMin определяем количество дней до второй поставки
+		Map<String, String> days = schedule.getDaysMap();
+		Map<String, String> daysStep2 = days.entrySet().stream().filter(m->m.getValue().contains("понедельник")
+				|| m.getValue().contains("вторник")
+                || m.getValue().contains("среда")
+                || m.getValue().contains("четверг")
+                || m.getValue().contains("пятница")
+                || m.getValue().contains("суббота")
+                || m.getValue().contains("воскресенье")).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+		OrderProduct orderProductTarget = orderProductsHasMin.get(0);
+		String dayOfPlanOrder = orderProductTarget.getDateCreate().toLocalDateTime().toLocalDate().plusDays(1).getDayOfWeek().toString(); // планируемый день заказа
+		String targetKey = null;
+		String targetValue = null;
+		for (Entry<String, String> entry : daysStep2.entrySet()) {
+			if(entry.getValue().contains(translateToRussianWeek(dayOfPlanOrder))) {
+				targetKey = entry.getKey();
+				targetValue = entry.getValue();
+				break;
+			}
+		}
+		long i = 0;
+		
+		i = parseWeekNumber(targetValue);
+		LocalDate datePostavForCalc = LocalDate.of(2024, 7, DayOfWeek.valueOf(targetKey).getValue());
+		
+		if(targetValue.split("/").length>1) {
+			targetValue = targetValue.split("/")[targetValue.split("/").length - 1];
+		}
+		
+		LocalDate dateOrderCalc = LocalDate.of(2024, 7, RUSSIAN_DAYS.get(targetValue).getValue());
+		
+		int j = datePostavForCalc.getDayOfMonth() - dateOrderCalc.getDayOfMonth(); // лог плечо
+							
+		if(j<0) {
+			j = j + 7;
+		}
+		if(j==0) {
+			j=7;
+		}
+		i = i+j;
+		
+		int log = (int) Duration.between(orderProductTarget.getDateCreate().toLocalDateTime().toLocalDate().plusDays(1).atStartOfDay(), 
+				orderProductTarget.getDateCreate().toLocalDateTime().toLocalDate().plusDays(i+1).atStartOfDay()).toDays();
+		return log +8;		
+	}
+	
+	
+	
 	/**
 	 * Главный метод проврки заказа по потребностям. Возвращает текстовую информацию
 	 * @param order
 	 * @return
 	 */
-	public String process(Order order) {
+	public PlanResponce process(Order order) {
 		 Set<OrderLine> lines = order.getOrderLines(); // строки в заказе
 		 List<Product> products = new ArrayList<Product>(); //
 		 String numContract = order.getMarketContractType();
 		 String result = "";
 		 if(numContract == null) {
 			 System.err.println("ReaderSchedulePlan.process: numContract = null");
-			 return "Не найден номер контракта в заказе";
+			 return new PlanResponce(0, "Действие заблокировано!\nНе найден номер контракта в заказе");
 		 }
 		 Date dateNow = Date.valueOf(LocalDate.now());
 		 String infoRow = "Строк в заказе: " + lines.size();
@@ -189,38 +305,59 @@ public class ReaderSchedulePlan {
 		 Schedule schedule = scheduleService.getScheduleByNumContract(Long.parseLong(numContract));
 		 if(products.isEmpty()) {
 			 if(lines.size() == 0) {
-				 return "Не найдены товары в заказе.";
+				 return new PlanResponce(0, "Действие заблокировано!\nНе найдены товары в заказе.");
 			 }else {
-				 return "Не найдены товары в базе данных. " + infoRow;
+				 return new PlanResponce(200, "Не найдены товары в базе данных. " + infoRow);
 				 
 			 }
 		 }
 		 
-		 products.forEach(p-> System.out.println(p));
+//		 products.forEach(p-> System.out.println(p));
 		 
-		 DateRange dateRange = getDateRange(schedule, products.get(0)); // тут раелизуются пункты 2 и 3
+		 
+		 
+		 DateRange dateRange = getDateRange(schedule, products); // тут раелизуются пункты 2 и 3
 		 
 		 System.out.println("dateRange = " + dateRange);
 		 
 		 if(dateRange == null) {
-			 return "Просчёт кол-ва товара на логистическое плече невозможен, т.к. расчёт ОРЛ не совпадает с графиком поставок";
+			 return new PlanResponce(0, "Действие заблокировано!\nПросчёт кол-ва товара на логистическое плечо невозможен, т.к. расчёт ОРЛ не совпадает с графиком поставок");
 		 }
 		 if(dateRange.start == null && dateRange.days == 0) {
-			 return "Расчёта заказов по продукту: " + products.get(0).getName() + " ("+products.get(0).getCodeProduct()+") невозможен, т.к. нет в базе данных расчётов потребности";
+			 return new PlanResponce(200, "Расчёта заказов по продукту: " + products.get(0).getName() + " ("+products.get(0).getCodeProduct()+") невозможен, т.к. нет в базе данных расчётов потребности");
 		 }
+		 
+		 //проверка по стокам отностительно графика поставок
+		 boolean isMistakeZAQ = false;
+		 String dayStockMessage =  checkNumProductHasStock(order, dateRange);
+		 if(dayStockMessage!= null) {
+             result = dayStockMessage+"\n" + result;
+             isMistakeZAQ = true;
+         }
+		// КОНЕЦ проверка по стокам отностительно графика поставок
 		 
 		 if(checkHasLog(dateRange, order)) {
 			 //если входит в лог плече, то находим такие же заказы с такими же SKU
 			 List<Order> orders = orderService.getOrderByTimeDelivery(dateRange.start, dateRange.end);
+			 orders.add(order);
 			 HashMap<Long, Double> map = calculateQuantityOrderSum(orders); // тут я получил мапу с кодами товаров и суммой заказа за период.
 //			 map.forEach((k,v)->System.out.println(k + " -- " + v));
+			
 			 for (OrderLine orderLine : lines) {
 				Double quantityOrderAll = map.get(orderLine.getGoodsId());
 				Product product = productService.getProductByCode(orderLine.getGoodsId().intValue());
 				if(product!=null) {
 					List<OrderProduct> quantity = product.getOrderProductsListHasDateTarget(dateNow);
 					if(quantity != null) {
-						result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + quantityOrderAll.intValue() + " шт. из " + quantity.get(0).getQuantity() + " шт.\n";						
+						//тут происходит построчная оценка заказанного товара и принятие решения
+						int zaq = quantityOrderAll.intValue();
+						int orlZaq = quantity.get(0).getQuantity();
+						if(zaq > orlZaq*1.1) {
+							result = result +"<span style=\"color: red;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + quantityOrderAll.intValue() + " шт. из " + quantity.get(0).getQuantity() + " шт.</span>\n";	
+//						isMistakeZAQ = true;
+						}else {
+							result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + quantityOrderAll.intValue() + " шт. из " + quantity.get(0).getQuantity() + " шт.\n";													
+						}
 					}else {
 						result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - отсутствует в плане заказа (Заказы поставщика от ОРЛ)\n";
 					}
@@ -233,10 +370,17 @@ public class ReaderSchedulePlan {
 			 result = result + "Данный заказ " + order.getMarketNumber() + " " + order.getCounterparty() + " установлен не по графику поставок. Он должен быть установлен в диапазоне: с "
 					 +dateRange.start.toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + ", по " + dateRange.end.toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
 		 }
-		return result;
 		 
+		 
+		 
+		 if(isMistakeZAQ) {
+			 return new PlanResponce(0, "Действие заблокировано!\n"+result);
+		 }else {
+			 return new PlanResponce(200, result);
+		 }		 
 	}
 	
+
 	/**
 	 * Принимает лист List<Order> orders
 	 * <br>а возвращает HashMap<Long, Double>, где значение - это сумма по заказам за текущий период а ключ - это код товара.
@@ -302,10 +446,39 @@ public class ReaderSchedulePlan {
                 .collect(Collectors.toList());
     }
 	
+	
+	/**
+	 *  Объект, котоырй определяет сколько дней стока долно быть минимально а так же лог плечо и диапазон дат поставок
+	 * <br> Отдаёт количество дней стока (stock), начиная от заказа согласно графику поставок
+	 * <br> т.е. Если заказ в понедельник а поставка в среду, то он берет плече с понедельника по среду
+	 * <br> и до второй поставки, т.е. до сл. среды <b>(лог плечо + неделя)</b>
+	 */
 	class DateRange{
+		/**
+		 * Дата начала лог плеча
+		 * <br>Она же дата заказа
+		 */
 		public Date start;
+		
+		/**
+		 * Дата окончания лог плеча
+		 * <br>Она же дата поставки
+		 */
 		public Date end;
+		
+		/**
+		 * Непосредственно лог плечо
+		 */
 		public Long days;
+		
+		/**
+		 * Жинамический сток для текущего лог плеча (запас товара в днях до второй поставки)
+		 */
+		public Long stock; // динамический сток от даты заказа
+		
+		/**
+		 * Дата заказа согласно графику поставок
+		 */
 		public String dayOfWeekHasOrder;
 		
 		        
@@ -314,13 +487,13 @@ public class ReaderSchedulePlan {
             this.end = end;
             this.days = days;
             this.dayOfWeekHasOrder = dayOfWeekHasOrder;;
+            this.stock = days + 7;
         }
-
 
 		@Override
 		public String toString() {
-			return "DateRange [start=" + start + ", end=" + end + ", days=" + days + ", dayOfWeekHasOrder="
-					+ dayOfWeekHasOrder + "]";
+			return "DateRange [start=" + start + ", end=" + end + ", days=" + days + ", stock=" + stock
+					+ ", dayOfWeekHasOrder=" + dayOfWeekHasOrder + "]";
 		}
         
 	}
@@ -357,4 +530,86 @@ public class ReaderSchedulePlan {
         // Если ничего не найдено, возвращаем 0 или другое значение по умолчанию
         return 0;
     }
+    
+    /**
+	 * Метод для проверки кол-ва товара на текущий день
+	 * если всё ок, возвращает null, если что то не то - сообщение
+	 * @return
+	 */
+	private String checkNumProductHasStock(Order order, DateRange dateRange) {
+		String message = null;
+		User user = getThisUser();
+		Role role = user.getRoles().stream().findFirst().get();
+//		if(role.getIdRole() == 1 || role.getIdRole() == 2 || role.getIdRole() == 3) { // тут мы говорим что если это логист или админ - в проверке не нуждаемся
+//			return null;
+//		}
+		if(order.getIsInternalMovement() != null && order.getIsInternalMovement().equals("true")) {
+			return null;
+		}
+		if(order.getNumProduct() == null) {
+			message = "Данные по заказу " + order.getMarketNumber() + " устарели! Обновите заказ."; 
+//			return message; временно отключил
+			return null;
+		}
+		
+		String [] numProductMass = order.getNumProduct().split("\\^");
+		
+		
+		for (String string : numProductMass) {
+			Product product = productService.getProductByCode(Integer.parseInt(string));
+			
+			if(product != null) {
+				if(product.getBalanceStockAndReserves() == null) {
+					continue;
+				}
+				if(product.getBalanceStockAndReserves() == 9999.0) {
+					continue;
+				}
+//				if(product.getRemainderStockInPall() < 15.0) { //если в паллетах товара меньшге чем 33 - то пропускаем
+//					continue;
+//				}
+				//считаем разницу в днях сегодняшнеего дня и непосредственно записи
+				LocalDateTime start = order.getTimeDelivery().toLocalDateTime();
+				LocalDateTime end = LocalDateTime.of(product.getDateUnload().toLocalDate(), LocalTime.now());
+
+				Duration duration = Duration.between(start, end);
+				Double currentDate = (double) duration.toDays();
+				// считаем правильный остаток на текущий день
+				Double trueBalance = roundВouble(product.getBalanceStockAndReserves() + currentDate, 0);
+				
+				
+//				System.out.println("Проверка по стокам!");
+				
+				if(!product.getIsException()) {
+//					System.out.println(trueBalance + " > " + dateRange.stock);
+					if(trueBalance > dateRange.stock) {
+						//считаем сколько дней нужно прибавить, чтобы заказать товар
+						Long deltDate = (long) (trueBalance - dateRange.stock );
+						if(message == null) {
+							message = "Товара " + product.getCodeProduct() + " ("+product.getName()+")" + " на складе хранится на <strong>" + trueBalance + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней."
+									+" Ближайшая дата на которую можно доставить данный товар: <strong>" + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy")) + ";</strong>\n";
+						}else {
+							message = message + "\nТовара " + product.getCodeProduct() + " ("+product.getName()+")" + " на складе хранится на <strong>" + trueBalance + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней. "
+									+" Ближайшая дата на которую можно доставить данный товар: <strong>" + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy"))+ ";</strong>\n";
+						}
+						 
+					}
+				}
+				
+			}
+		}
+		return message;
+	}
+	
+	private User getThisUser() {
+		String name = SecurityContextHolder.getContext().getAuthentication().getName();
+		User user = userService.getUserByLogin(name);
+		return user;
+	}
+	
+	// округляем числа до 2-х знаков после запятой
+		private static double roundВouble(double value, int places) {
+			double scale = Math.pow(10, places);
+			return Math.round(value * scale) / scale;
+		}
 }

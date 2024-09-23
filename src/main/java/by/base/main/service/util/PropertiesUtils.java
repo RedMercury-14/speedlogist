@@ -12,6 +12,9 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.stereotype.Service;
 
+/**
+ * Класс отвечающий за парсинг файлов .properties
+ */
 @Service
 public class PropertiesUtils {
 	
@@ -45,6 +48,12 @@ public class PropertiesUtils {
         return valuesList;
     }
     
+    /**
+     * Метод парсит файл email.properties в лист с емайлами по префиксу
+     * @param servletContext
+     * @param partialKey
+     * @return
+     */
     public List<String> getValuesByPartialKey(ServletContext servletContext, String partialKey) {    	
     	String appPath = servletContext.getRealPath("/");
     	
@@ -66,6 +75,40 @@ public class PropertiesUtils {
                 if (key.startsWith(partialKey)) {
                     valuesList.add(properties.getProperty(key));
                 }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        
+        return valuesList;
+    }
+    
+    
+    /**
+     * Метод парсит файл deepImport.properties в лист 
+     * @param servletContext
+     * @return
+     */
+    public List<String> getValuesByPartialKeyDeepImport(HttpServletRequest request) {    	
+    	String appPath = request.getServletContext().getRealPath("");
+    	
+        // Путь к файлу properties
+        String filePath = appPath + "resources/properties/deepImport.properties";
+        
+        // Список для хранения значений
+        List<String> valuesList = new ArrayList<String>();
+
+        try (FileInputStream input = new FileInputStream(filePath)) {
+            Properties properties = new Properties();
+            properties.load(input);
+
+            // Получаем все ключи из файла
+            Set<String> keys = properties.stringPropertyNames();
+
+            // Фильтруем ключи и добавляем значения в список
+            for (String key : keys) {
+            	valuesList.add(properties.getProperty(key));
             }
 
         } catch (IOException e) {

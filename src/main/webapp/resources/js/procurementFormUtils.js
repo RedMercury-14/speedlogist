@@ -334,6 +334,19 @@ export function isInvalidPointForms(routeForm) {
 	return isValidPointForms.includes(false)
 }
 
+export function isValidPallCount(order) {
+	const way = order.way
+	const points = order.points
+	const pallCount = points
+		.filter(point => point.type === 'Загрузка')
+		.reduce((acc, point) => acc + Number(point.pall), 0)
+
+	// для АХО
+	if (way === 'АХО') return pallCount <= 20
+
+	return true
+}
+
 // обработчик изменения значения поля Опасный груз
 export function dangerousInputOnChangeHandler(e) {
 	const value = e.target.value
@@ -526,7 +539,7 @@ export function changeForm(orderData, formType) {
 		setFormName(formName)
 	}
 
-	// // отображение дополнительных полей для Импорта
+	// отображение дополнительных полей для Импорта
 	if (way === 'Импорт') {
 	// 	showFormField('recipient', 'ЗАО "Доброном"', true)
 		showFormField('control', '', true)
@@ -538,47 +551,58 @@ export function changeForm(orderData, formType) {
 	// 	showFormField('dangerous', '', true)
 	// 	truckVolumeVisibleToggler(typeTruck, way)
 	// 	dangerousInfoVisibleToggler(dangerous)
-	} else {
-	// 	hideFormField('recipient')
-		hideFormField('control')
-	// 	hideFormField('routeComments')
-	// 	hideFormField('truckLoadCapacity')
-	// 	hideFormField('truckVolume')
-	// 	hideFormField('phytosanitary')
-	// 	hideFormField('veterinary')
-	// 	hideFormField('dangerous')
 	}
 
 	// if (EAEUImport && way === 'Импорт') {
 	// 	showFormField('tir', '', true)
-	// } else {
-	// 	hideFormField('tir')
 	// }
 
 	if (isInternalMovement || way === 'Экспорт') {
 		hideFormField('marketNumber')
 		hideFormField('marketInfo')
-	} else {
-		showFormField('marketNumber', '', true)
-		showFormField('marketInfo', '', false)
 	}
 
 	if (way === 'АХО') {
 		hideFormField('contact')
 		transformToAhoComment()
-		showFormField('orderPall', '', true)
-		showFormField('orderWeight', '', true)
+		showFormField('hydrolift', '', true)
+		showFormField('carBodyLength', '', true)
+		showFormField('carBodyWidth', '', true)
+		showFormField('carBodyHeight', '', true)
 		hideFormField('loadNumber')
 		hideFormField('marketNumber')
 		hideFormField('marketInfo')
 		hideFormField('stacking')
-	} else {
-		hideFormField('orderPall')
-		hideFormField('orderWeight')
+		hideFormField('cargo')
 	}
 
 	showIncotermsInput(typeTruck)
 	changeTemperatureInputRequired(typeTruck)
+}
+
+// возвращение формы с данными заявки в стартовое состояние
+export function changeFormToDefault() {
+	showFormField('contact', '', false)
+	// hideFormField('recipient')
+	hideFormField('control')
+	// hideFormField('tir')
+	hideFormField('hydrolift')
+	hideFormField('carBodyLength')
+	hideFormField('carBodyWidth')
+	hideFormField('carBodyHeight')
+	showFormField('marketNumber', '', false)
+	showFormField('loadNumber', '', true)
+	showFormField('marketInfo', '', false)
+	// hideFormField('routeComments')
+	hideFormField('deliveryLocation')
+	hideFormField('stacking')
+	showFormField('cargo', '', true)
+	// hideFormField('truckLoadCapacity')
+	// hideFormField('truckVolume')
+	// hideFormField('phytosanitary')
+	// hideFormField('veterinary')
+	// hideFormField('dangerous')
+	transformToDefaultComment()
 }
 
 // установка слушателей для полей точек в формах заявок и маршрута
@@ -639,16 +663,44 @@ export function addDataToRouteForm(data, routeForm, createPointMethod) {
 
 	// поля для АХО
 	if (data.way === 'АХО') {
-		const point = points[0]
-		if (!point) return
-		routeForm.orderPall.value = point.pall ? point.pall : ''
-		routeForm.orderWeight.value = point.weight ? point.weight : ''
+		const { hydrolift, carBodyLength, carBodyWidth, carBodyHeight, comment } = getTruckInfoFromComment(data)
+		routeForm.hydrolift.value = hydrolift ? hydrolift : ''
+		routeForm.carBodyLength.value = carBodyLength ? carBodyLength : ''
+		routeForm.carBodyWidth.value = carBodyWidth ? carBodyWidth : ''
+		routeForm.carBodyHeight.value = carBodyHeight ? carBodyHeight : ''
+		routeForm.comment.value = comment ? comment : ''
 	}
 
 	points.forEach((point, i) => {
 		const pointElement = createPointMethod(data, point, i)
 		pointList.append(pointElement)
 	})
+}
+
+// извлечение информации об авто из поля комментария (для АХО)
+function getTruckInfoFromComment(data) {
+	const commentVaue = data.comment
+	const HYDROLIFT_REG = /Необходим гидроборт;/i
+	const CAR_BODY_LENGTH_REG = /Длина кузова:\s*(\d+[.,]?\d*)\s*м;/i
+	const CAR_BODY_WIDTH_REG = /Ширина кузова:\s*(\d+[.,]?\d*)\s*м;/i
+	const CAR_BODY_HEIGHT_REG = /Высота кузова:\s*(\d+[., ]?\d*)\s*м;/i
+	const hydrolift = commentVaue.match(HYDROLIFT_REG)
+	const carBodyLength = commentVaue.match(CAR_BODY_LENGTH_REG)
+	const carBodyWidth = commentVaue.match(CAR_BODY_WIDTH_REG)
+	const carBodyHeight = commentVaue.match(CAR_BODY_HEIGHT_REG)
+	const comment = commentVaue
+		.replace(HYDROLIFT_REG, '')
+		.replace(CAR_BODY_LENGTH_REG, '')
+		.replace(CAR_BODY_WIDTH_REG, '')
+		.replace(CAR_BODY_HEIGHT_REG, '')
+		.trim()
+	return {
+		hydrolift: hydrolift ? 'Да' : 'Нет',
+		carBodyLength: carBodyLength ? carBodyLength[1] : '',
+		carBodyWidth: carBodyWidth ? carBodyWidth[1] : '',
+		carBodyHeight: carBodyHeight ? carBodyHeight[1] : '',
+		comment: comment ? comment : ''
+	}
 }
 
 // запрет на редактирование поля формы
@@ -699,6 +751,15 @@ export function transformToAhoComment() {
 	const commentLabel = commentContainer.querySelector('label')
 	commentLabel.innerText = 'Дополнительная информация'
 	comment.setAttribute('placeholder', 'Размеры груза, дополнительные требования к авто и др.')
+}
+
+// метод возвращения поля комментарии в первоначальный вид
+export function transformToDefaultComment() {
+	const comment = document.querySelector('#comment')
+	const commentContainer = comment.parentElement
+	const commentLabel = commentContainer.querySelector('label')
+	commentLabel.innerText = 'Комментарии:'
+	comment.setAttribute('placeholder', 'Комментарии')
 }
 
 // обработчик изменения поля Кол-во паллет для АХО

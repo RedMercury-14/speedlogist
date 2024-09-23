@@ -57,7 +57,7 @@
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/ordersLogist" />">Менеджер заявок</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/documentflow" />">Документооборот</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/shopControl" />">Список магазинов</a>
-										<a class="dropdown-item" href="<spring:url value="/main/logistics/maintenance " />">Менеджер маршрутов АХО</a>
+										<a class="dropdown-item" href="<spring:url value="/main/logistics/maintenance " />">Менеджер маршрутов АХО/СГИ</a>
 									</div>
 								</li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/depot" />">Маршрутизатор</a></li>
@@ -119,7 +119,7 @@
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/ordersLogist" />">Менеджер заявок</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/documentflow" />">Документооборот</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/shopControl" />">Список магазинов</a>
-										<a class="dropdown-item" href="<spring:url value="/main/logistics/maintenance " />">Менеджер маршрутов АХО</a>
+										<a class="dropdown-item" href="<spring:url value="/main/logistics/maintenance " />">Менеджер маршрутов АХО/СГИ</a>
 									</div>
 								</li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/depot" />">Маршрутизатор</a></li>
@@ -138,7 +138,7 @@
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/documentflow" />">Документооборот</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/shopControl" />">Список магазинов</a>
 										<a class="dropdown-item" href="<spring:url value="/main/analytics/logistics" />">Аналитика Биржи</a>
-										<a class="dropdown-item" href="<spring:url value="/main/logistics/maintenance " />">Менеджер маршрутов АХО</a>
+										<a class="dropdown-item" href="<spring:url value="/main/logistics/maintenance " />">Менеджер маршрутов АХО/СГИ</a>
 									</div>
 								</li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/depot" />">Маршрутизатор</a></li>
@@ -189,7 +189,7 @@
 										<a class="dropdown-item" href="<spring:url value="/main/carrier/transportation/routecontrole"/>">Акты</a>
 										<a class="dropdown-item" href="<spring:url value="/main/carrier/transportation/archive"/>">Архив перевозок</a>
 										<a class="dropdown-item" href="<spring:url value="/main/carrier/tender/history"/>">История тендеров</a>
-										<!-- <a class="dropdown-item" href="<spring:url value="/main/carrier/maintenance " />">Менеджер маршрутов АХО</a> -->
+										<!-- <a class="dropdown-item" href="<spring:url value="/main/carrier/maintenance " />">Менеджер маршрутов АХО/СГИ</a> -->
 									</div>
 								</li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/carrier/exchange"/>">О бирже</a></li>

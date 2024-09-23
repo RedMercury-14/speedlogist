@@ -9,6 +9,7 @@ import {
 	getStockAddress,
 	inputEditBan,
 	isInvalidPointForms,
+	isValidPallCount,
 	orderCargoInputOnChangeHandler,
 	orderPallInputOnChangeHandler,
 	orderWeightInputOnChangeHandler,
@@ -101,18 +102,6 @@ window.onload = async () => {
 	disableSlotRedirectCheckbox.addEventListener('change', (e) => disableSlotRedirect = e.target.checked)
 	// обработчик на поле Опасный груз
 	// dangerousInput && dangerousInput.addEventListener('change', dangerousInputOnChangeHandler)
-
-	// обработчик на поле Кол-во паллет ДЛЯ АХО
-	const orderPallInput = document.querySelector('#orderPall')
-	orderPallInput && orderPallInput.addEventListener('change', orderPallInputOnChangeHandler)
-
-	// обработчик на поле Масса груза ДЛЯ АХО
-	const orderWeightInput = document.querySelector('#orderWeight')
-	orderWeightInput && orderWeightInput.addEventListener('change', orderWeightInputOnChangeHandler)
-
-	// обработчик на поле Груз
-	const orderCargoInput = document.querySelector('#cargo')
-	orderCargoInput && orderCargoInput.addEventListener('change', orderCargoInputOnChangeHandler)
 }
 
 // метод получения ссылки для отправки формы
@@ -172,6 +161,11 @@ function validateForm(data) {
 	if (!validatePointDates(data)) {
 		snackbar.show('Некорректная дата загрузки либо выгрузки')
 		return false
+	}
+
+	if (!isValidPallCount(data)) {
+		snackbar.show('Количество паллет на одну заявку на загрузке не может превышать 20!')
+		return true
 	}
 
 	if (error) {
@@ -269,37 +263,38 @@ function setOrderDataToPointForm(form, orderData) {
 }
 
 // метод создания точки маршрута для заявки
-function createPoint(routeData, pointData, index) {
+function createPoint(order, pointData, index) {
 	const point = document.createElement('div')
 	const pointIndex = index + 1
 	const date = dateHelper.getDateForInput(pointData.date)
-	const type = pointData.type ? pointData.type : ''
+	const pointType = pointData.type ? pointData.type : ''
 	const idOrder = pointData.idOrder ? pointData.idOrder : ''
 	const time = pointData.time ? pointData.time.slice(0,5) : ''
 	const tnvd = pointData.tnvd ? pointData.tnvd : ''
 	const bodyAddress = pointData.bodyAddress ? pointData.bodyAddress : ''
 	const customsAddress = pointData.customsAddress ? pointData.customsAddress : ''
 
-	const isInternalMovement = routeData.isInternalMovement === 'true'
-	const way = routeData.way
+	const isInternalMovement = order.isInternalMovement === 'true'
+	const way = order.way
 	const EAEUImport = false
+	const props = { order, isInternalMovement, EAEUImport, way, pointType, pointIndex }
 
-	const dateHTML = getDateHTML(isInternalMovement, type, way, pointIndex, date)
-	const timeHTML = getTimeHTML(type, way, pointIndex, time)
-	const tnvdHTML = getTnvdHTML(type, way, pointIndex, tnvd)
-	const cargoInfoHTML = getCargoInfoHTML(routeData, isInternalMovement, way, pointIndex, pointData)
-	const addressHTML = getAddressHTML(routeData, type, way, pointIndex, bodyAddress)
-	const addressInfoHTML = getAddressInfoHTML(type, way, pointIndex, pointData)
-	const customsAddressHTML = getCustomsAddressHTML(EAEUImport, type, way, pointIndex, customsAddress)
+	const dateHTML = getDateHTML({ ...props, value: date })
+	const timeHTML = getTimeHTML({ ...props, value: time })
+	const tnvdHTML = getTnvdHTML({ ...props, value: tnvd })
+	const cargoInfoHTML = getCargoInfoHTML({ ...props, pointData })
+	const addressHTML = getAddressHTML({ ...props, value: bodyAddress })
+	const addressInfoHTML = getAddressInfoHTML({ ...props, pointData })
+	const customsAddressHTML = getCustomsAddressHTML({ ...props, value: customsAddress })
 
 	point.className = 'card point'
 	point.innerHTML = `
 		<form class='pointForm' id='pointform_${pointIndex}' name='pointform_${pointIndex}' action=''>
 			<div class='card-header d-flex justify-content-between'>
 				<h5 class='d-flex align-items-center mb-0'>
-					Точка ${pointIndex}: ${type}
+					Точка ${pointIndex}: ${pointType}
 				</h5>
-				<input type='hidden' class='form-control' name='type' id='type' value='${type}'>
+				<input type='hidden' class='form-control' name='type' id='type' value='${pointType}'>
 			</div>
 			<div class='card-body'>
 				<div class='row-container info-container form-group'>

@@ -9,6 +9,7 @@ import {
 	addListnersToPoint,
 	changeCargoInfoInputsRequired,
 	changeForm,
+	changeFormToDefault,
 	changeTnvdInputRequired,
 	dangerousInputOnChangeHandler,
 	inputEditBan,
@@ -21,7 +22,7 @@ import {
 import { excelStyles, getPointToView, getRouteInfo, getRoutePrice, getWayToView, pointSorting, procurementExcelExportParams } from './procurementControlUtils.js'
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 import { getAddressHTML, getAddressInfoHTML, getCargoInfoHTML, getCustomsAddressHTML, getDateHTML, getTimeHTML, getTnvdHTML } from './procurementFormHtmlUtils.js'
-import { getPointsData } from './procurementFormDataUtils.js'
+import { getComment, getPointsData } from './procurementFormDataUtils.js'
 
 const token = $("meta[name='_csrf']").attr("content")
 const PAGE_NAME = 'ProcurementControlLogist'
@@ -267,18 +268,6 @@ window.onload = async () => {
 
 	// листнер на изменение типа маршрута
 	wayInput.addEventListener('change', (e) => changeTnvdInputRequired(e))
-
-	// обработчик на поле Кол-во паллет ДЛЯ АХО
-	const orderPallInput = document.querySelector('#orderPall')
-	orderPallInput && orderPallInput.addEventListener('change', orderPallInputOnChangeHandler)
-
-	// обработчик на поле Масса груза ДЛЯ АХО
-	const orderWeightInput = document.querySelector('#orderWeight')
-	orderWeightInput && orderWeightInput.addEventListener('change', orderWeightInputOnChangeHandler)
-
-	// обработчик на поле Груз
-	const orderCargoInput = document.querySelector('#cargo')
-	orderCargoInput && orderCargoInput.addEventListener('change', orderCargoInputOnChangeHandler)
 
 	// обработчик на поле Опасный груз
 	// dangerousInput && dangerousInput.addEventListener('change', dangerousInputOnChangeHandler)
@@ -548,29 +537,30 @@ function confirmRouteData(idOrder) {
 	})
 }
 
-// мтод создания точки маршрута в форме
-function createPoint(routeData, pointData, index) {
+// метод создания точки маршрута в форме
+function createPoint(order, pointData, index) {
 	const point = document.createElement('div')
 	const pointIndex = index + 1
 	const date = dateHelper.getDateForInput(pointData.date)
-	const type = pointData.type ? pointData.type : ''
+	const pointType = pointData.type ? pointData.type : ''
 	const idOrder = pointData.idOrder ? pointData.idOrder : ''
 	const time = pointData.time ? pointData.time.slice(0,5) : ''
 	const tnvd = pointData.tnvd ? pointData.tnvd : ''
 	const bodyAddress = pointData.bodyAddress ? pointData.bodyAddress : ''
 	const customsAddress = pointData.customsAddress ? pointData.customsAddress : ''
 
-	const isInternalMovement = routeData.isInternalMovement
-	const way = routeData.way
+	const isInternalMovement = order.isInternalMovement
+	const way = order.way
 	const EAEUImport = false
+	const props = { order, isInternalMovement, EAEUImport, way, pointType, pointIndex }
 
-	const dateHTML = getDateHTML(isInternalMovement, type, way, pointIndex, date)
-	const timeHTML = getTimeHTML(type, way, pointIndex, time)
-	const tnvdHTML = getTnvdHTML(type, way, pointIndex, tnvd)
-	const cargoInfoHTML = getCargoInfoHTML(routeData, isInternalMovement, way, pointIndex, pointData)
-	const addressHTML = getAddressHTML(routeData, type, way, pointIndex, bodyAddress)
-	const addressInfoHTML = getAddressInfoHTML(type, way, pointIndex, pointData)
-	const customsAddressHTML = getCustomsAddressHTML(EAEUImport, type, way, pointIndex, customsAddress)
+	const dateHTML = getDateHTML({ ...props, value: date })
+	const timeHTML = getTimeHTML({ ...props, value: time })
+	const tnvdHTML = getTnvdHTML({ ...props, value: tnvd })
+	const cargoInfoHTML = getCargoInfoHTML({ ...props, pointData })
+	const addressHTML = getAddressHTML({ ...props, value: bodyAddress })
+	const addressInfoHTML = getAddressInfoHTML({ ...props, pointData })
+	const customsAddressHTML = getCustomsAddressHTML({ ...props, value: customsAddress })
 
 	point.className = 'accordion'
 	point.innerHTML = `
@@ -578,9 +568,9 @@ function createPoint(routeData, pointData, index) {
 			<form class='pointForm' id='pointform_${pointIndex}' name='pointform_${pointIndex}' action=''>
 				<div class='card-header d-flex justify-content-between dragItem' id='heading1'>
 					<h5 class='d-flex align-items-center mb-0'>
-						Точка ${pointIndex}: ${type}
+						Точка ${pointIndex}: ${pointType}
 					</h5>
-					<input type='hidden' class='form-control' name='type' id='type' value='${type}'>
+					<input type='hidden' class='form-control' name='type' id='type' value='${pointType}'>
 					<input type='hidden' class='form-control' name='idOrder' id='idOrder' value='${idOrder}'>
 					<div class='control-btns'>
 						<button class='accordion-btn' type='button' data-toggle='collapse' data-target='#collapse1' aria-expanded='false' aria-controls='collapse1'>
@@ -721,6 +711,7 @@ function routeFormDataFormatter(routeForm) {
 		idOrders: updatedIdOrders,
 		dateDelivery,
 		points: updatedPoints,
+		comment: getComment(data)
 	}
 }
 
@@ -741,6 +732,7 @@ function clearRouteForm() {
 	const pointList = routeForm.querySelector('#pointList')
 
 	routeForm.reset()
+	changeFormToDefault()
 	pointList.innerHTML = ''
 }
 

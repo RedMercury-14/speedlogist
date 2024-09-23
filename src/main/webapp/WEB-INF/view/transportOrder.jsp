@@ -25,25 +25,24 @@
 		<!-- Колонтитул -->
 		<div class="header-info">
 			<!-- Контейнер для изображения -->
-			<img src="${pageContext.request.contextPath}/resources/img/logo.png" alt="Логотип компании">
+			<!-- <img src="${pageContext.request.contextPath}/resources/img/logo.png" alt="Логотип компании"> -->
 			
 			<!-- Текстовая информация -->
 			<div class="header-text">
 				<p>
 					Закрытое акционерное общество «Доброном»<br>
-					220073 г. Минск пер. Загородный 1-й 20-23<br>
+					<!-- 220073 г. Минск пер. Загородный 1-й 20-23<br>
 					УНП 191178504 ОКПО 378869615000<br>
 					Тел./факс (8-017) 362 98 76, e–mail: dobronom@tut.by<br>
 					р/с BY61ALFA30122365100050270000 в ЗАО «Альфа-банк»<br>
-					МФО ALFABY2X г. Минск ул. Сурганова 43-47
+					МФО ALFABY2X г. Минск ул. Сурганова 43-47 -->
 				</p>
 			</div>
 		</div>
 
 		<div class="document-header">
 			<p>Дата заявки: <strong>13.08.2024</strong></p>
-			<p>Заявка № 18313</p>
-			<p>В адрес "Новак Деливери"</p>
+			<p>Заявка № 18313 в адрес "Новак Деливери"</p>
 		</div>
 
 		<table class="table table-bordered">

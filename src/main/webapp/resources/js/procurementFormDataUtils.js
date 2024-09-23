@@ -14,6 +14,8 @@ export function getOrderData(formData, orderDataFromMarket, orderStatus) {
 	const numStockDelivery = getNumStockDelivery(isInternalMovement, points, orderDataFromMarket)
 	const status = isInternalMovement ? getOrderStatusByStockDelivery(numStockDelivery) : orderStatus
 	const marketNumber = getMarketNumber(isInternalMovement, status, data)
+	const comment = getComment(data)
+	const cargo = getCargo(data, points)
 
 	const recipient = data.recipient
 	const tir = data.tir === 'Да'
@@ -36,14 +38,14 @@ export function getOrderData(formData, orderDataFromMarket, orderStatus) {
 		way: data.way,
 		marketNumber,
 		orderCount: data.orderCount,
-		comment: data.comment,
+		comment,
 		temperature: data.temperature,
 		typeLoad: data.typeLoad ? data.typeLoad : '',
 		methodLoad: data.methodLoad ? data.methodLoad : '',
 		typeTruck: data.typeTruck ? data.typeTruck : '',
 		incoterms: data.incoterms ? data.incoterms : '',
 		stacking,
-		cargo: data.cargo,
+		cargo,
 		dateDelivery: orderDataFromMarket ? dateHelper.getDateForInput(orderDataFromMarket.dateDelivery) : dateDelivery,
 		points,
 		needUnloadPoint: data.needUnloadPoint === 'true' ? 'true' : '',
@@ -93,6 +95,24 @@ function getCounterpartyContact(data) {
 	if (fio) return `${fio}`
 	if (tel) return `Тел. ${tel}`
 	return ""
+}
+export function getComment(data) {
+	const { comment, hydrolift, carBodyLength, carBodyWidth, carBodyHeight } = data
+	const truckInfoData = []
+	const hydroliftText = hydrolift === 'Да' ? `Необходим гидроборт` : ''
+	const carBodyLengthText = carBodyLength ? `Длина кузова: ${carBodyLength} м` : ''
+	const carBodyWidthText = carBodyWidth ? `Ширина кузова: ${carBodyWidth} м` : ''
+	const carBodyHeightText = carBodyHeight ? `Высота кузова: ${carBodyHeight} м` : ''
+	truckInfoData.push(hydroliftText, carBodyLengthText, carBodyWidthText, carBodyHeightText)
+	const truckInfo = truckInfoData.filter(item => item).join('; ')
+	return truckInfo ? `${truckInfo};\n${comment}` : comment
+}
+function getCargo(data, points) {
+	return data.cargo
+		? data.cargo
+		: points.length
+			? points[0].cargo
+			: ''
 }
 
 

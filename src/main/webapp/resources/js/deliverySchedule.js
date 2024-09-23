@@ -27,6 +27,15 @@ const SUPPLY_REG = /(понедельник|вторник|среда|четве
 const SUPPLY_REG_GLOBAL = /(понедельник|вторник|среда|четверг|пятница|суббота|воскресенье)/g
 const ORDER_REG = /^з$|з\//
 
+const errorMessages = {
+	formError: 'Ошибка заполнения формы',
+	isNotCompareOrdersAndSupplies: 'Не совпадают дни поставок и заказов',
+	isNotValidSupplyWeekIndexes: 'Ошибка в указании номера недели для поставки',
+	isNotOrdersAndSupplies: 'Не указаны дни заказа и поставки',
+	isNotSuppliesEqualToOrders: 'Количество поставок и заказов не совпадает',
+	isNotValidSuppliesNumber: 'Указанное количество поставок не совпадает с фактическим',
+}
+
 let error = false
 let table
 let scheduleData
@@ -351,13 +360,10 @@ window.onload = async () => {
 	// проверка, правильно ли заполнены графики
 	checkScheduleDate(scheduleData)
 
-	// показываем стартовые данные
-	const numStockData = scheduleData.filter((item) => item.numStock === 1700)
-
 	// изменение отступа для таблицы
 	changeGridTableMarginTop()
 	// создание таблицы
-	renderTable(gridDiv, gridOptions, numStockData)
+	renderTable(gridDiv, gridOptions, scheduleData)
 	// получение настроек таблицы из localstorage
 	restoreColumnState()
 	restoreFilterState()
@@ -411,9 +417,7 @@ function renderTable(gridDiv, gridOptions, data) {
 		return
 	}
 
-	const mappingData = getMappingData(data)
-
-	gridOptions.api.setRowData(mappingData)
+	setScheduleData('')
 	gridOptions.api.hideOverlay()
 }
 async function updateTable() {
@@ -428,10 +432,7 @@ async function updateTable() {
 
 	const numStockSelect = document.querySelector("#numStockSelect")
 	const numStock = Number(numStockSelect.value)
-	const numStockData = scheduleData.filter((item) => item.numStock === numStock)
-	const mappingData = getMappingData(numStockData)
-
-	gridOptions.api.setRowData(mappingData)
+	setScheduleData(numStock)
 	gridOptions.api.hideOverlay()
 }
 function getMappingData(data) {
@@ -558,7 +559,14 @@ function showScheduleItem(rowNode) {
 // обработчик смены склада
 function onNumStockSelectChangeHandler(e) {
 	const numStock = Number(e.target.value)
-	const numStockData = scheduleData.filter((item) => item.numStock === numStock)
+	setScheduleData(numStock)
+}
+
+// установка данных в таблицу
+function setScheduleData(numStock) {
+	const numStockData = numStock
+		? scheduleData.filter((item) => item.numStock === numStock)
+		: scheduleData
 	const mappingData = getMappingData(numStockData)
 	gridOptions.api.setRowData(mappingData)
 }
@@ -642,22 +650,27 @@ function addScheduleItemFormHandler(e) {
 	const data = scheduleItemDataFormatter(formData)
 
 	if (!isOrdersAndSupplies(data)) {
-		snackbar.show('Необходимо указать день заказа и поставки, проверьте данные!')
+		snackbar.show(`${errorMessages.isNotOrdersAndSupplies}, проверьте данные!`)
 		return
 	}
 
 	if (!isSuppliesEqualToOrders(data)) {
-		snackbar.show('Количество поставок должно быть равно количеству заказов, проверьте данные!')
+		snackbar.show(`${errorMessages.isNotSuppliesEqualToOrders}, проверьте данные!`)
 		return
 	}
 
-	if (!isValidSchedule(data)) {
-		snackbar.show('Ошибка при заполнении графика, проверьте данные!')
+	if (!compareOrdersAndSupplies(data)) {
+		snackbar.show(`${errorMessages.isNotCompareOrdersAndSupplies}, проверьте данные!`)
+		return
+	}
+
+	if (!checkSupplyWeekIndexes(data)) {
+		snackbar.show(`${errorMessages.isNotValidSupplyWeekIndexes}, проверьте данные!`)
 		return
 	}
 
 	if (error) {
-		snackbar.show('Ошибка заполнения формы!')
+		snackbar.show(`${errorMessages.formError}!`)
 		return
 	}
 
@@ -692,22 +705,27 @@ function editScheduleItemFormHandler(e) {
 	const data = scheduleItemDataFormatter(formData)
 
 	if (!isOrdersAndSupplies(data)) {
-		snackbar.show('Необходимо указать день заказа и поставки, проверьте данные!')
+		snackbar.show(`${errorMessages.isNotOrdersAndSupplies}, проверьте данные!`)
 		return
 	}
 
 	if (!isSuppliesEqualToOrders(data)) {
-		snackbar.show('Количество поставок должно быть равно количеству заказов, проверьте данные!')
+		snackbar.show(`${errorMessages.isNotSuppliesEqualToOrders}, проверьте данные!`)
 		return
 	}
 
-	if (!isValidSchedule(data)) {
-		snackbar.show('Ошибка при заполнении графика, проверьте данные!')
+	if (!compareOrdersAndSupplies(data)) {
+		snackbar.show(`${errorMessages.isNotCompareOrdersAndSupplies}, проверьте данные!`)
+		return
+	}
+
+	if (!checkSupplyWeekIndexes(data)) {
+		snackbar.show(`${errorMessages.isNotValidSupplyWeekIndexes}, проверьте данные!`)
 		return
 	}
 
 	if (error) {
-		snackbar.show('Ошибка заполнения формы!')
+		snackbar.show(`${errorMessages.formError}!`)
 		return
 	}
 
@@ -976,7 +994,47 @@ function isOrdersAndSupplies(data) {
 
 // проверка, что график заполнен правильно
 function isValidSchedule(data) {
-	if (!data) return false
+	if (!data) return {
+		isValid: false,
+		message: ''
+	}
+
+	let isValid = true
+	const errorMessageData = []
+
+	if (!compareOrdersAndSupplies(data)) {
+		isValid = false
+		errorMessageData.push(errorMessages.isNotCompareOrdersAndSupplies)
+	}
+
+	if (!checkSupplyWeekIndexes(data)) {
+		isValid = false
+		errorMessageData.push(errorMessages.isNotValidSupplyWeekIndexes)
+	}
+
+	if (!isOrdersAndSupplies(data)) {
+		isValid = false
+		errorMessageData.push(errorMessages.isNotOrdersAndSupplies)
+	}
+
+	if (!isSuppliesEqualToOrders(data)) {
+		isValid = false
+		errorMessageData.push(errorMessages.isNotSuppliesEqualToOrders)
+	}
+
+	if (!checkSuppliesNumber(data)) {
+		isValid = false
+		errorMessageData.push(errorMessages.isNotValidSuppliesNumber)
+	}
+
+	return {
+		isValid,
+		message: errorMessageData.join('; ')
+	}
+}
+
+// проверка, что дни поставлк и заказов совпадают
+function compareOrdersAndSupplies(data) {
 	const schedule = {
 		"понедельник": data.monday,
 		"вторник": data.tuesday,
@@ -1008,16 +1066,83 @@ function isValidSchedule(data) {
 	return orderDays.every((day, index) => supplyValues[index].includes(day))
 }
 
+// проверка, правильно ли указаны пометки номера недели для поставок
+function checkSupplyWeekIndexes(data) {
+	if (data.note !== 'неделя') return true
+	if (data.supplies < 2) return true
+
+	const schedule = [
+		data.monday,
+		data.tuesday,
+		data.wednesday,
+		data.thursday,
+		data.friday,
+		data.saturday,
+		data.sunday,
+	]
+	const supplies = schedule.filter(el => SUPPLY_REG.test(el))
+	return checkWeekIndexes(supplies)
+}
+
+// рекурсивная проверка номеров недели, где каждый элемент сравнивается с последующими
+function checkWeekIndexes(arr) {
+	if (arr.length < 2) return true
+
+	const WEEK_INDEX_REG = /(?<=н)\d+/g
+	const dayNumberDictionary = {
+		"понедельник": 0,
+		"вторник": 1,
+		"среда": 2,
+		"четверг": 3,
+		"пятница": 4,
+		"суббота": 5,
+		"воскресенье": 6,
+	}
+	const first = arr.shift()
+
+	return arr.every(el => {
+		const firstIndex = first.match(WEEK_INDEX_REG)[0]
+		const firstDay = first.match(SUPPLY_REG)[0]
+		const firstDayNumber = dayNumberDictionary[firstDay]
+
+		const elDay = el.match(SUPPLY_REG)[0]
+		const elDayNumber = dayNumberDictionary[elDay]
+
+		if (firstDayNumber > elDayNumber) {
+			const elIndex = el.match(WEEK_INDEX_REG)[0]
+			return firstIndex > elIndex
+		}
+		return true
+	}) && checkWeekIndexes(arr)
+}
+
+// проверка фактического количества поставок и указанного
+
+function checkSuppliesNumber(data) {
+	const schedule = [
+		data.monday,
+		data.tuesday,
+		data.wednesday,
+		data.thursday,
+		data.friday,
+		data.saturday,
+		data.sunday,
+	]
+	const supplies = schedule.filter(el => SUPPLY_REG.test(el)).length
+	return supplies === Number(data.supplies)
+}
+
 // отображение графиков с ошибками
 function checkScheduleDate(scheduleData) {
 	const title = 'Обнаружены ошибки в следующих графиках:\n\n'
 	if (!scheduleData) return
-	const scheduleWithError = scheduleData.filter(schedule => !isValidSchedule(schedule))
-	if (scheduleWithError.length === 0) return
-	const errorLines = scheduleWithError
+	const errorLines = scheduleData
+		.filter(schedule => !isValidSchedule(schedule).isValid)
 		.map((schedule, index) => {
-			return `${index + 1}. Склад ${schedule.numStock}, Номер контракта: ${schedule.counterpartyCode}, ${schedule.name}`
+			const { message } = isValidSchedule(schedule)
+			return `${index + 1}. Склад ${schedule.numStock}, Номер контракта: ${schedule.counterpartyContractCode}, ${schedule.name}, Ошибки: ${message}`
 		})
 		.join('\n')
+	if (errorLines === '') return
 	showMessageModal(title + errorLines)
 }

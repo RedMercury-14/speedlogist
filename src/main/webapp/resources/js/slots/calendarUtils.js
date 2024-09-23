@@ -319,17 +319,17 @@ function changePallCountElemColor(pallCountElem, pallCount, maxPall) {
 }
 
 
-// функция обработки ошибок от сервера
-export function customErrorCallback(info, data, method) {
-	if (method === 'load' || method === 'update') info.revert()
-	if (data.status === '100') {
-		const errorMessage = data.message
-			? data.message + '. Обновите страницу!'
-			: userMessages.actionNotCompleted
-		snackbar.show(errorMessage)
-	} else {
-		snackbar.show(userMessages.actionNotCompleted)
-	}
+// функции обработки ошибок от сервера
+export function errorHandler_100status(info, data) {
+	if (info !== null) info.revert()
+	const errorMessage = data.info
+		? data.info
+		: userMessages.actionNotCompleted
+	snackbar.show(errorMessage)
+}
+export function errorHandler_105status(info, data) {
+	if (info !== null) info.revert()
+	data.info && showMessageModal(data.info)
 }
 
 
@@ -366,7 +366,7 @@ export function copyToClipboard(text) {
 
 export function showMessageModal(message) {
 	const messageContainer = document.querySelector('#messageContainer')
-	messageContainer.innerText = message
+	messageContainer.innerHTML = message
 	$('#displayMessageModal').modal('show')
 }
 

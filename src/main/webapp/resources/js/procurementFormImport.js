@@ -20,6 +20,7 @@ import {
 	hideFormField,
 	inputEditBan,
 	isInvalidPointForms,
+	isValidPallCount,
 	orderCargoInputOnChangeHandler,
 	orderPallInputOnChangeHandler,
 	orderWeightInputOnChangeHandler,
@@ -129,18 +130,6 @@ window.onload = async () => {
 	// обработчик на поле Опасный груз
 	const dangerousInput = document.querySelector('#dangerous')
 	// dangerousInput && dangerousInput.addEventListener('change', dangerousInputOnChangeHandler)
-
-	// обработчик на поле Кол-во паллет ДЛЯ АХО
-	const orderPallInput = document.querySelector('#orderPall')
-	orderPallInput && orderPallInput.addEventListener('change', orderPallInputOnChangeHandler)
-
-	// обработчик на поле Масса груза ДЛЯ АХО
-	const orderWeightInput = document.querySelector('#orderWeight')
-	orderWeightInput && orderWeightInput.addEventListener('change', orderWeightInputOnChangeHandler)
-
-	// обработчик на поле Груз
-	const orderCargoInput = document.querySelector('#cargo')
-	orderCargoInput && orderCargoInput.addEventListener('change', orderCargoInputOnChangeHandler)
 }
 
 // метод получения ссылки для отправки формы
@@ -175,7 +164,7 @@ function transformToInternalMovementForm() {
 function transformToAhoForm() {
 	orderWay = 'АХО'
 	// изменяем название формы
-	setFormName('Форма создания заявки (перевозка АХО)')
+	setFormName('Форма создания заявки (перевозка АХО/СГИ)')
 	// установка контрагента для АХО
 	setInputValue(document, '#counterparty', 'ЗАО "Доброном"')
 	// установка типа маршрута
@@ -187,14 +176,17 @@ function transformToAhoForm() {
 	// изменяем поле Комментарий
 	transformToAhoComment()
 
-	showFormField('orderPall', '', true)
-	showFormField('orderWeight', '', true)
+	showFormField('hydrolift', '', true)
+	showFormField('carBodyLength', '', true)
+	showFormField('carBodyWidth', '', true)
+	showFormField('carBodyHeight', '', true)
 	hideFormField('loadNumber')
 	hideFormField('marketNumber')
 	hideFormField('marketInfo')
 	hideFormField('stacking')
+	hideFormField('cargo')
 
-	changeSubmitButtonText('перевозка АХО')
+	changeSubmitButtonText('перевозка АХО/СГИ')
 }
 
 // обработчик нажатия на кнопки модального окна выбора типа маршрута
@@ -289,18 +281,7 @@ function RBButtonsContainerOnClickHandler(e) {
 		const RBType = e.target.dataset.value
 		hideRBModal()
 		if (RBType === 'domestic') {
-			isInternalMovement = true
-			const isInternalMovementInput = document.querySelector('#isInternalMovement')
-			isInternalMovementInput.value = 'true'
-			// изменяем название формы
-			setFormName('Форма создания заявки (внутреннее перемещение)')
-			// установка контрагента для внутренних перемещений
-			setInputValue(document, '#counterparty', 'ЗАО "Доброном"')
-			// добавляем тип маршрута в текст кнопки создания заявки
-			changeSubmitButtonText('внутреннее перемещение')
-			// скрываем поля с информацией из Маркета
-			hideFormField('marketNumber')
-			hideFormField('marketInfo')
+			transformToInternalMovementForm()
 		} else if (RBType === 'counterparty') {
 			// просим указать номер из маркета
 			showSetMarketNumberModal()
@@ -308,6 +289,8 @@ function RBButtonsContainerOnClickHandler(e) {
 			changeSubmitButtonText('РБ')
 			// изменяем название формы
 			setFormName('Форма создания заявки (заказ от контрагента)')
+		} else if (RBType === 'aho') {
+			transformToAhoForm()
 		}
 	}
 }
@@ -474,6 +457,11 @@ function isInvalidOrderForm(data) {
 		return true
 	}
 
+	if (!isValidPallCount(data)) {
+		snackbar.show('Количество паллет на одну заявку на загрузке не может превышать 20!')
+		return true
+	}
+
 	if (error) {
 		snackbar.show('Проверьте данные!')
 		return true
@@ -486,13 +474,15 @@ function isInvalidOrderForm(data) {
 function getPointElement(order, way, pointType, index) {
 	const point = document.createElement('div')
 	const pointIndex = index + 1
-	const dateHTML = getDateHTML(isInternalMovement, pointType, way, pointIndex)
-	const timeHTML = getTimeHTML(pointType, way, pointIndex)
-	const tnvdHTML = getTnvdHTML(pointType, way, pointIndex)
-	const cargoInfoHTML = getCargoInfoHTML(order, isInternalMovement, way, pointIndex)
-	const addressHTML = getAddressHTML(order, pointType, way, pointIndex)
-	const addressInfoHTML = getAddressInfoHTML(pointType, way, pointIndex)
-	const customsAddressHTML = getCustomsAddressHTML(EAEUImport, pointType, way, pointIndex)
+	const props = { order, isInternalMovement, EAEUImport, way, pointType, pointIndex }
+
+	const dateHTML = getDateHTML(props)
+	const timeHTML = getTimeHTML(props)
+	const tnvdHTML = getTnvdHTML(props)
+	const cargoInfoHTML = getCargoInfoHTML(props)
+	const addressHTML = getAddressHTML(props)
+	const addressInfoHTML = getAddressInfoHTML(props)
+	const customsAddressHTML = getCustomsAddressHTML(props)
 
 	point.className = 'card point'
 	point.innerHTML = `

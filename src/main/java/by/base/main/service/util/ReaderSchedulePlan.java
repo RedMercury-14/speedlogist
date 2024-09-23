@@ -357,7 +357,7 @@ public class ReaderSchedulePlan {
 						int orlZaq = quantity.get(0).getQuantity();
 						if(zaq > orlZaq*1.1) {
 							result = result +"<span style=\"color: red;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + quantityOrderAll.intValue() + " шт. из " + quantity.get(0).getQuantity() + " шт.</span>\n";	
-						isMistakeZAQ = true;
+//						isMistakeZAQ = true;
 						}else {
 							result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + quantityOrderAll.intValue() + " шт. из " + quantity.get(0).getQuantity() + " шт.\n";													
 						}
@@ -566,9 +566,9 @@ public class ReaderSchedulePlan {
 				if(product.getBalanceStockAndReserves() == null) {
 					continue;
 				}
-				if(product.getOrderProducts() != null && !product.getOrderProducts().isEmpty()) {
-					continue;
-				}
+//				if(product.getOrderProducts() != null && !product.getOrderProducts().isEmpty()) {
+//					continue;
+//				}
 				if(product.getBalanceStockAndReserves() == 9999.0) {
 					continue;
 				}

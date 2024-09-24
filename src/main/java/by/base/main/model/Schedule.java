@@ -417,6 +417,8 @@ public class Schedule{
 		return Objects.equals(idSchedule, other.idSchedule);
 	}
 
+
+
 	@Override
 	public String toString() {
 		return "Schedule [idSchedule=" + idSchedule + ", counterpartyCode=" + counterpartyCode + ", name=" + name
@@ -424,9 +426,12 @@ public class Schedule{
 				+ ", tuesday=" + tuesday + ", wednesday=" + wednesday + ", thursday=" + thursday + ", friday=" + friday
 				+ ", saturday=" + saturday + ", sunday=" + sunday + ", supplies=" + supplies + ", tz=" + tz + ", tp="
 				+ tp + ", comment=" + comment + ", multipleOfPallet=" + multipleOfPallet + ", multipleOfTruck="
-				+ multipleOfTruck + ", numStock=" + numStock + ", description=" + description + ", dateLastCalculation="
-				+ dateLastCalculation + "]";
+				+ multipleOfTruck + ", numStock=" + numStock + ", description=" + description + ", runoffCalculation="
+				+ runoffCalculation + ", dateLastCalculation=" + dateLastCalculation + ", STATUS=" + status
+				+ ", history=" + history + ", dateLastChanging=" + dateLastChanging + ", days=" + days + "]";
 	}
+
+	
     
     
 }

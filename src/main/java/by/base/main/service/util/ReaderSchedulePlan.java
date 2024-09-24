@@ -145,6 +145,7 @@ public class ReaderSchedulePlan {
 		if(flag) {
 			
 			i = parseWeekNumber(targetValue);
+			
 			LocalDate datePostavForCalc = LocalDate.of(2024, 7, DayOfWeek.valueOf(targetKey).getValue());
 			
 			if(targetValue.split("/").length>1) {
@@ -154,10 +155,12 @@ public class ReaderSchedulePlan {
 			LocalDate dateOrderCalc = LocalDate.of(2024, 7, RUSSIAN_DAYS.get(targetValue).getValue());
 			
 			int j = datePostavForCalc.getDayOfMonth() - dateOrderCalc.getDayOfMonth(); // лог плечо
-								
-			if(j<0) {
-				j = j + 7;
-			}
+			
+							
+			//test
+//			if(j<0) {
+//				j = j + 7;
+//			}
 			if(j==0) {
 				j=7;
 			}

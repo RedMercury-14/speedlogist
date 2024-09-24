@@ -31,6 +31,22 @@
 	<div class="fluid-container calendar-wrapper my-container">
 
 		<div class="left-sidebar">
+
+			<div class="border-bottom border-secondary pb-3">
+				<form id="slotSearchForm" action="">
+					<div class="input-group is-invalid">
+						<input type="number" name="searchValue" class="form-control border-info searchValue" min="0" placeholder="Поиск слота по id или номеру из Маркета" aria-label="Поиск слота по id или номеру из Маркета" aria-describedby="slotSearchBtn">
+						<div class="input-group-append">
+							<button class="btn btn-outline-info" id="slotSearchBtn" type="submit">
+								<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+									<path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+								</svg>
+							</button>
+						</div>
+					</div>
+				</form>
+			</div>
+
 			<div class="">
 				<p class="left-sidebar-title">1: выберите склад</p>
 				<select class="form-control" name="stockNumber" id="stockNumber">

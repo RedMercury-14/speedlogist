@@ -72,3 +72,8 @@ export function addNewOrderBtnListner(eventContainer, handler) {
 	const addNewOrderButton = document.querySelector("#addNewOrder")
 	addNewOrderButton.addEventListener('click', (e) => handler(e, eventContainer))
 }
+
+export function slotSearchFormListner(handler) {
+	const slotSearchForm = document.querySelector('#slotSearchForm')
+	slotSearchForm.addEventListener('submit', (e) => handler(e))
+}

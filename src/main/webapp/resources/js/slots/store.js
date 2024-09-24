@@ -380,6 +380,9 @@ export const store = {
 		if (stockIndex === -1) return null
 		return this._state.stocks[stockIndex].events.find(event => event.id === eventId)
 	},
+	getCalendarEvents() {
+		return this._state.stocks.flatMap(stock => stock.events)
+	},
 
 	subscribe (observer) {
 		this._callSubscriber = observer

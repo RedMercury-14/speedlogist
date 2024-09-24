@@ -35,6 +35,8 @@ import {
 	setStockAttr,
 	createCalendarDateInput,
 	errorHandler_105status,
+	displayStockAndDate,
+	highlightSlot,
 } from "./slots/calendarUtils.js"
 import { dateHelper, debounce, getData, isAdmin, isLogist, isSlotsObserver, isStockProcurement } from "./utils.js"
 import { uiIcons } from "./uiIcons.js"
@@ -68,6 +70,8 @@ import {
 	getMinUnloadDate,
 	getOrderDataForAjax,
 	getSlotInfoToCopy,
+	stockAndDayIsVisible,
+	stockIsVisible,
 } from "./slots/dataUtils.js"
 import { gridColumnLocalState } from "./AG-Grid/ag-grid-utils.js"
 import { tempMaxPallRestrictions } from "./slots/maxPallRestrictions.js"
@@ -80,6 +84,7 @@ import {
 	reloadBtnListner,
 	sidebarListners,
 	slotInfoListners,
+	slotSearchFormListner,
 	statusInfoLabelLIstners,
 	stockSelectListner,
 } from "./slots/listners.js"
@@ -259,6 +264,8 @@ window.onload = async function() {
 
 	// добавляем склады в селект и вешаем обработчик
 	stockSelectListner(stocks, calendar, stockSelectOnChangeHandler)
+	// поиск слота в календаре
+	slotSearchFormListner(slotSearchFormSubmitHandler)
 	// добавление нового заказа
 	addNewOrderBtnListner(eventContainer, addNewOrderButtonHandler)
 	// кнопки боковой панели
@@ -441,6 +448,42 @@ function copySlotInfoBtnClickHandler(e) {
 	const currentStock = store.getCurrentStock()
 	const slotInfo = getSlotInfoToCopy(fcEvent, currentStock)
 	copyToClipboard(slotInfo)
+}
+
+// обработчик отправки формы поиска слота в календаре
+function slotSearchFormSubmitHandler(e) {
+	e.preventDefault()
+	const formData = new FormData(e.target)
+	const searchValue = formData.get('searchValue')
+	if (!searchValue) return
+	searchSlot(searchValue)
+}
+// поиск слота на складах и его отображение
+function searchSlot(searchValue) {
+	const events = store.getCalendarEvents()
+
+	if (!events || events.length === 0) {
+		snackbar.show('Слот не найден')
+		return
+	}
+
+	const foundEvent = events.find(event => {
+		return event.extendedProps.data.idOrder === Number(searchValue)
+			|| event.extendedProps.data.marketNumber === searchValue
+	})
+
+	if (foundEvent) {
+		const order = foundEvent.extendedProps.data
+		const eventId = order.marketNumber
+		const currentDate = store.getCurrentDate()
+		const currentStock = store.getCurrentStock()
+		// отображаем нужные дату и склад
+		displayStockAndDate(calendar, currentStock, currentDate, foundEvent) 
+		// подсвечиваем слот на 3 сек
+		highlightSlot(calendar, eventId)
+	} else {
+		snackbar.show('Слот не найден')
+	}
 }
 
 

@@ -155,15 +155,15 @@ public class ReaderSchedulePlan {
 			LocalDate dateOrderCalc = LocalDate.of(2024, 7, RUSSIAN_DAYS.get(targetValue).getValue());
 			
 			int j = datePostavForCalc.getDayOfMonth() - dateOrderCalc.getDayOfMonth(); // лог плечо
-			
 							
-			//test
-//			if(j<0) {
-//				j = j + 7;
-//			}
+			
+			if(j < 0 && i == 0) {
+				j = j + 7;
+			}
 			if(j==0) {
 				j=7;
 			}
+			
 			i = i+j;
 			
 		}else {
@@ -331,16 +331,7 @@ public class ReaderSchedulePlan {
 			 return new PlanResponce(200, "Расчёта заказов по продукту: " + products.get(0).getName() + " ("+products.get(0).getCodeProduct()+") невозможен, т.к. нет в базе данных расчётов потребности");
 		 }
 		 
-		 
-		 
-		 //проверка по стокам отностительно графика поставок
 		 boolean isMistakeZAQ = false;
-		 String dayStockMessage =  checkNumProductHasStock(order, dateRange);
-		 if(dayStockMessage!= null) {
-             result = dayStockMessage+"\n" + result;
-             isMistakeZAQ = true;
-         }
-		// КОНЕЦ проверка по стокам отностительно графика поставок
 		 
 		 if(checkHasLog(dateRange, order)) {
 			 //если входит в лог плече, то находим такие же заказы с такими же SKU
@@ -360,6 +351,11 @@ public class ReaderSchedulePlan {
 						int orlZaq = quantity.get(0).getQuantity();
 						if(zaq > orlZaq*1.1) {
 							result = result +"<span style=\"color: red;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + quantityOrderAll.intValue() + " шт. из " + quantity.get(0).getQuantity() + " шт.</span>\n";	
+							String dayStockMessage =  checkNumProductHasStock(order, dateRange);
+							 if(dayStockMessage!= null) {
+					             result = dayStockMessage+"\n" + result;
+					             isMistakeZAQ = true;
+					         }
 //						isMistakeZAQ = true;
 						}else {
 							result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + quantityOrderAll.intValue() + " шт. из " + quantity.get(0).getQuantity() + " шт.\n";													
@@ -371,6 +367,15 @@ public class ReaderSchedulePlan {
 			}
 			 
 		 }else {
+			 
+			//проверка по стокам отностительно графика поставок
+			 
+			 String dayStockMessage =  checkNumProductHasStock(order, dateRange);
+			 if(dayStockMessage!= null) {
+	             result = dayStockMessage+"\n" + result;
+	             isMistakeZAQ = true;
+	         }
+			// КОНЕЦ проверка по стокам отностительно графика поставок
 			 //если не входит, то сообщаем, в виде ошибки
 			 System.err.println("false"); //остановился тут
 			 result = result + "Данный заказ " + order.getMarketNumber() + " " + order.getCounterparty() + " установлен не по графику поставок. Он должен быть установлен в диапазоне: с "

@@ -1,6 +1,7 @@
 import { snackbar } from "./snackbar/snackbar.js"
 import { store } from "./slots/store.js"
 import {
+	checkSlotBaseUrl,
 	confirmSlotUrl,
 	deleteOrderUrl,
 	editMarketInfoBaseUrl,
@@ -37,6 +38,7 @@ import {
 	errorHandler_105status,
 	displayStockAndDate,
 	highlightSlot,
+	createCheckSlotBtn,
 } from "./slots/calendarUtils.js"
 import { dateHelper, debounce, getData, isAdmin, isLogist, isSlotsObserver, isStockProcurement } from "./utils.js"
 import { uiIcons } from "./uiIcons.js"
@@ -519,6 +521,7 @@ function eventsHandler(info, successCallback, failureCallback) {
 }
 function eventContentHandler(info) {
 	const login = store.getLogin()
+	const role = store.getRole()
 	const eventElem = createEventElement(info)
 
 	// если ивент - подложка
@@ -527,11 +530,17 @@ function eventContentHandler(info) {
 	const showBtn = isOldSupplierOrder(info, login) && !hasOrderInYard(info.event.extendedProps.data)
 	const closeBtn = info.isDraggable || showBtn ? createCloseEventButton(info, showBtn) : ''
 	const popupBtn = createPopupButton(info, login)
+	const checkSlotBtn = createCheckSlotBtn(info)
+
+	const nodes = info.isDraggable || showBtn
+		? [ eventElem, closeBtn, popupBtn ]
+		: [ eventElem, popupBtn ]
+
+	// кнопка проверки слота для админа
+	if (isAdmin(role)) nodes.push(checkSlotBtn)
 
 	return {
-		domNodes: info.isDraggable || showBtn
-			? [ eventElem, closeBtn, popupBtn ]
-			: [ eventElem, popupBtn ]
+		domNodes: nodes
 	}
 }
 function eventDidMountHandler(info) {
@@ -682,10 +691,16 @@ function eventClickHandler(info) {
 		return
 	}
 
+	// обработчик клика на кнопку информации
 	if (jsEvent.target.dataset.action === 'popup') {
-		// обработчик клика на кнопку информации
 		store.setslotToConfirm(fcEvent)
 		showEventInfoPopup(fcEvent, login, role)
+		return
+	}
+
+	// обработчик клика на кнопку проверки слота
+	if (jsEvent.target.dataset.action === 'checkSlot') {
+		checkSlot(info)
 		return
 	}
 }
@@ -974,6 +989,53 @@ function getOrderFromMarket(marketNumber, eventContainer, successCallback) {
 
 			if (data.status === '105') {
 				errorHandler_105status(info, data)
+				return
+			}
+
+			if (data.status === '100') {
+				errorHandler_100status(null, data)
+			} else {
+				snackbar.show(userMessages.actionNotCompleted)
+			}
+		},
+		errorCallback: () => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+		}
+	})
+}
+// проверка слота
+function checkSlot(info) {
+	const method = 'checkSlot'
+	const currentLogin = store.getLogin()
+	const currentRole = store.getRole()
+
+	const { event: fcEvent } = info
+	const order = fcEvent.extendedProps.data
+	const idOrder = order.idOrder
+
+	
+	// проверка доступа к методу
+	if (!methodAccessRules(method, order, currentLogin, currentRole)) {
+		snackbar.show(userMessages.operationNotAllowed)
+		return
+	}
+	
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
+
+	ajaxUtils.get({
+		url: checkSlotBaseUrl + idOrder,
+		successCallback: (data) => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+
+			if (data.status === '200') {
+				data.info && showMessageModal(data.info)
+				return
+			}
+
+			if (data.status === '105') {
+				errorHandler_105status(null, data)
 				return
 			}
 

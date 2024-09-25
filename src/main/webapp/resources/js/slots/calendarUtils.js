@@ -129,6 +129,17 @@ export function createPopupButton(info, currentLogin) {
 	return popupBtn
 }
 
+export function createCheckSlotBtn(info) {
+	const checkSlotBtn = document.createElement('button')
+	checkSlotBtn.type = 'button'
+	checkSlotBtn.className = 'checkSlot'
+	checkSlotBtn.ariaLabel = 'Тест слота'
+	checkSlotBtn.dataset.action = 'checkSlot'
+	checkSlotBtn.innerHTML = `T`
+
+	return checkSlotBtn
+}
+
 // функция добавления всплывающей подсказки с информацией
 export function addTooltip(element, info) {
 	const { event: fcEvent, timeText } = info

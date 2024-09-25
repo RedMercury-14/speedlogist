@@ -256,14 +256,14 @@ public class MainRestController {
 	private static String classLog;
 	private static String marketJWT;
 	//в отдельный файл
-	private static final String marketUrl = "https://api.dobronom.by:10806/Json";
-	private static final String serviceNumber = "BB7617FD-D103-4724-B634-D655970C7EC0";
-	private static final String loginMarket = "191178504_SpeedLogist";
-	private static final String passwordMarket = "SL!2024D@2005";
-//	private static final String marketUrl = "https://api.dobronom.by:10896/Json";
-//	private static final String serviceNumber = "CD6AE87C-2477-4852-A4E7-8BA5BD01C156";
-//	private static final String loginMarket = "SpeedLogist";
-//	private static final String passwordMarket = "12345678";
+//	private static final String marketUrl = "https://api.dobronom.by:10806/Json";
+//	private static final String serviceNumber = "BB7617FD-D103-4724-B634-D655970C7EC0";
+//	private static final String loginMarket = "191178504_SpeedLogist";
+//	private static final String passwordMarket = "SL!2024D@2005";
+	private static final String marketUrl = "https://api.dobronom.by:10896/Json";
+	private static final String serviceNumber = "CD6AE87C-2477-4852-A4E7-8BA5BD01C156";
+	private static final String loginMarket = "SpeedLogist";
+	private static final String passwordMarket = "12345678";
 
 
 	public static final Comparator<Address> comparatorAddressId = (Address e1, Address e2) -> (e1.getIdAddress() - e2.getIdAddress());
@@ -1964,7 +1964,73 @@ public class MainRestController {
 		}			
 	}
 	
-	
+	/**
+	 * Метод который выводит сообщение о статусе проверки слота (такой же кк при перемещении и др.)
+	 * @param request
+	 * @param idOrder
+	 * @return
+	 * @throws ParseException
+	 * @throws IOException
+	 */
+	@GetMapping("/slot/getTest/{idOrder}")
+	public Map<String, String> getSlotTest(HttpServletRequest request, @PathVariable String idOrder) throws ParseException, IOException {
+		java.util.Date t1 = new java.util.Date();
+		
+		Map<String, String> response = new HashMap<String, String>();
+		Order order = orderService.getOrderById(Integer.parseInt(idOrder));
+				
+		
+		//главные проверки
+		//проверка на лимит приемки паллет
+//		if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) { // проверяем всё кроме вн перемещений
+//			Integer summPall = orderService.getSummPallInStockExternal(order);
+//			Integer summPallNew =  summPall + Integer.parseInt(order.getPall().trim());
+//			String propKey = "limit." + getTrueStock(order);
+//			if(summPallNew > Integer.parseInt(propertiesStock.getProperty(propKey))) {						
+//				response.put("status", "100");
+//				response.put("message", "Ошибка. Превышен лимит по паллетам на текущую дату");
+//				response.put("info", "Ошибка. Превышен лимит по паллетам на текущую дату");
+//				System.err.println("Не прошла проверку по лимитам паллет склада");
+//				return response;
+//			}			
+//		}
+		
+		
+		//главная проверка по графику поставок
+		String infoCheck = null;
+		
+		if(!checkDeepImport(order, request)) {
+				if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {			
+					PlanResponce planResponce = readerSchedulePlan.process(order);
+					if(planResponce.getStatus() == 0) {
+						infoCheck = planResponce.getMessage();
+						response.put("status", "105");
+						response.put("info", infoCheck.replace("\n", "<br>"));
+						return response;
+					}else {
+						infoCheck = planResponce.getMessage();
+						response.put("info", infoCheck.replace("\n", "<br>"));
+						response.put("status", "200");
+					}		
+					
+				}
+			//конец главная проверка по графику поставок
+		}
+		
+		
+//		String errorMessage = orderService.updateOrderForSlots(order);//проверка на пересечение со временим других слотов и лимит складов
+		
+		String info = chheckScheduleMethodAllInfo(request, order.getMarketContractType(), order.getTimeDelivery().toLocalDateTime().toLocalDate().toString(), order.getCounterparty());
+		
+		java.util.Date t2 = new java.util.Date();
+		System.out.println(t2.getTime()-t1.getTime() + " ms - testSlot" );
+		
+		if(response.get("status") == null) {
+			response.put("status", "200");
+		}
+		response.put("message", null);
+		return response;			
+	}
 	
 	
 	/**

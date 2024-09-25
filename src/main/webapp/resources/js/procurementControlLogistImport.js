@@ -35,7 +35,7 @@ const getDataHasOrderBaseUrl ='../../api/manager/getDataHasOrder2/'
 
 const FORM_TYPE = 'routeForm'
 
-let hasConfirmRouteDataResponse = true
+// let hasConfirmRouteDataResponse = true
 
 const debouncedSaveColumnState = debounce(saveColumnState, 300)
 const debouncedSaveFilterState = debounce(saveFilterState, 300)
@@ -477,9 +477,10 @@ function getContextMenuItems(params) {
 		},
 		{
 			name: `Подтвердить и отправить данные`,
-			disabled: status !== 60 || !hasConfirmRouteDataResponse,
+			// disabled: status !== 60 || !hasConfirmRouteDataResponse,
+			disabled: status !== 60,
 			action: () => {
-				hasConfirmRouteDataResponse = false
+				// hasConfirmRouteDataResponse = false
 				confirmRouteData(idOrder)
 			},
 			icon: uiIcons.checkAll,
@@ -528,7 +529,7 @@ function confirmRouteData(idOrder) {
 			bootstrap5overlay.hideOverlay()
 			const { status, message } = res
 			snackbar.show(message)
-			hasConfirmRouteDataResponse = true
+			// hasConfirmRouteDataResponse = true
 		},
 		errorCallback: () => {
 			clearTimeout(timeoutId)

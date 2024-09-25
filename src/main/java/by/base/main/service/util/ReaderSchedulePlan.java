@@ -336,7 +336,10 @@ public class ReaderSchedulePlan {
 		 if(checkHasLog(dateRange, order)) {
 			 //если входит в лог плече, то находим такие же заказы с такими же SKU
 			 List<Order> orders = orderService.getOrderByTimeDelivery(dateRange.start, dateRange.end);
-			 orders.add(order);
+			 if(!orders.contains(order)) {
+				 orders.add(order);
+			 }
+			 
 			 HashMap<Long, Double> map = calculateQuantityOrderSum(orders); // тут я получил мапу с кодами товаров и суммой заказа за период.
 //			 map.forEach((k,v)->System.out.println(k + " -- " + v));
 			
@@ -552,9 +555,9 @@ public class ReaderSchedulePlan {
 		User user = getThisUser();
 		Role role = user.getRoles().stream().findFirst().get();	
 		
-		if(role.getIdRole() == 1 || role.getIdRole() == 2 || role.getIdRole() == 3) { // тут мы говорим что если это логист или админ - в проверке не нуждаемся
-			return null;
-		}
+//		if(role.getIdRole() == 1 || role.getIdRole() == 2 || role.getIdRole() == 3) { // тут мы говорим что если это логист или админ - в проверке не нуждаемся
+//			return null;
+//		}
 		if(order.getIsInternalMovement() != null && order.getIsInternalMovement().equals("true")) {
 			return null;
 		}

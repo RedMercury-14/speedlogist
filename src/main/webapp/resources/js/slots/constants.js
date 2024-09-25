@@ -50,6 +50,7 @@ export const confirmSlotUrl = `../api/slot/save`
 export const editMarketInfoBaseUrl = `../api/manager/editMarketInfo/`
 export const getMarketOrderUrl = `../api/manager/getMarketOrder/`
 export const checkScheduleBaseUrl = '../api/slots/delivery-schedule/checkSchedule/'
+export const checkSlotBaseUrl = '../api/slot/getTest/'
 
 export const messagePattern = {
 	idMessage: null,

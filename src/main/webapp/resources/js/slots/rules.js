@@ -139,6 +139,7 @@ export function methodAccessRules(method, order, currentLogin, currentRole) {
 		case 'update': return updateMethodAccessRules(order, currentLogin, currentRole)
 		case 'delete': return deleteMethodAccessRules(order, currentLogin, currentRole)
 		case 'confirm': return confirmMethodAccessRules(order, currentLogin, currentRole)
+		case 'checkSlot': return isAdmin(currentRole)
 		default: return true
 	}
 }

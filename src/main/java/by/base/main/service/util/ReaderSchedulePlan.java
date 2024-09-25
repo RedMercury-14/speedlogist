@@ -116,7 +116,7 @@ public class ReaderSchedulePlan {
 		
 		if(orderProductsHasMin.isEmpty()) {
 			System.err.println("Расчёта заказов по продуктам: невозможен, т.к. потребности нет в базе данных");
-			return new DateRange(null, null, 0L, null);
+			return new DateRange(null, null, 0L, null, null);
 		}
 		
 		
@@ -181,7 +181,7 @@ public class ReaderSchedulePlan {
 //		System.out.println(i + " - " + dateOrder + " - " + datePostav);		
 		
 		return new DateRange(Date.valueOf(orderProductTarget.getDateCreate().toLocalDateTime().toLocalDate().plusDays(1)),
-				Date.valueOf(orderProductTarget.getDateCreate().toLocalDateTime().toLocalDate().plusDays(i+1)), i, dayOfPlanOrder);
+				Date.valueOf(orderProductTarget.getDateCreate().toLocalDateTime().toLocalDate().plusDays(i+1)), i, dayOfPlanOrder, schedule.getCounterpartyContractCode().toString());
 	}
 	
 	
@@ -340,11 +340,11 @@ public class ReaderSchedulePlan {
 				 orders.add(order);
 			 }
 			 
-			 HashMap<Long, Double> map = calculateQuantityOrderSum(orders); // тут я получил мапу с кодами товаров и суммой заказа за период.
+			 HashMap<Long, ProductDouble> map = calculateQuantityOrderSum(orders); // тут я получил мапу с кодами товаров и суммой заказа за период.
 //			 map.forEach((k,v)->System.out.println(k + " -- " + v));
 			
 			 for (OrderLine orderLine : lines) {
-				Double quantityOrderAll = map.get(orderLine.getGoodsId());
+				Double quantityOrderAll = map.get(orderLine.getGoodsId()).num;
 				Product product = productService.getProductByCode(orderLine.getGoodsId().intValue());
 				if(product!=null) {
 					List<OrderProduct> quantity = product.getOrderProductsListHasDateTarget(dateNow);
@@ -353,15 +353,15 @@ public class ReaderSchedulePlan {
 						int zaq = quantityOrderAll.intValue();
 						int orlZaq = quantity.get(0).getQuantity();
 						if(zaq > orlZaq*1.1) {
-							result = result +"<span style=\"color: red;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + quantityOrderAll.intValue() + " шт. из " + quantity.get(0).getQuantity() + " шт.</span>\n";	
-							String dayStockMessage =  checkNumProductHasStock(order, dateRange);
+							result = result +"<span style=\"color: red;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + quantityOrderAll.intValue() + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + quantity.get(0).getQuantity() + " шт.</span>\n";	
+							String dayStockMessage =  checkNumProductSingleHasStock(order, product, dateRange);
 							 if(dayStockMessage!= null) {
 					             result = dayStockMessage+"\n" + result;
 					             isMistakeZAQ = true;
 					         }
 //						isMistakeZAQ = true;
 						}else {
-							result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + quantityOrderAll.intValue() + " шт. из " + quantity.get(0).getQuantity() + " шт.\n";													
+							result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + quantityOrderAll.intValue() + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + quantity.get(0).getQuantity() + " шт.\n";													
 						}
 					}else {
 						result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - отсутствует в плане заказа (Заказы поставщика от ОРЛ)\n";
@@ -401,9 +401,11 @@ public class ReaderSchedulePlan {
 	 * @param orders
 	 * @return
 	 */
-    public HashMap<Long, Double> calculateQuantityOrderSum(List<Order> orders) {
+    public HashMap<Long, ProductDouble> calculateQuantityOrderSum(List<Order> orders) {
         // Используем HashMap для хранения результата
-        HashMap<Long, Double> orderLineQuantityMap = new HashMap<>();
+        HashMap<Long, ProductDouble> orderLineQuantityMap = new HashMap<>();
+        
+        
         
         // Проходим по каждому заказу
         for (Order order : orders) {
@@ -413,10 +415,11 @@ public class ReaderSchedulePlan {
             // Проходим по каждой строке заказа
             for (OrderLine orderLine : orderLines) {
             	if(!orderLineQuantityMap.containsKey(orderLine.getGoodsId())) {
-            		orderLineQuantityMap.put(orderLine.getGoodsId(), orderLine.getQuantityOrder());
+            		orderLineQuantityMap.put(orderLine.getGoodsId(), new ProductDouble(orderLine.getQuantityOrder(), order.getIdOrder().toString()));
             	}else {
             		// Если строка заказа уже есть в HashMap, то добавляем к существующему значению
-                    orderLineQuantityMap.put(orderLine.getGoodsId(), orderLineQuantityMap.get(orderLine.getGoodsId()) + orderLine.getQuantityOrder());
+                    orderLineQuantityMap.put(orderLine.getGoodsId(), new ProductDouble(orderLineQuantityMap.get(orderLine.getGoodsId()).num + orderLine.getQuantityOrder(),
+                    		orderLineQuantityMap.get(orderLine.getGoodsId()).orderHistory + ";"+order.getIdOrder().toString()));
             	}
                 
             }
@@ -495,21 +498,53 @@ public class ReaderSchedulePlan {
 		 */
 		public String dayOfWeekHasOrder;
 		
+		/**
+		 * Номер контракта
+		 */
+		public String numContruct;
+		
 		        
-        public DateRange(Date start, Date end, Long days, String dayOfWeekHasOrder) {
+        public DateRange(Date start, Date end, Long days, String dayOfWeekHasOrder, String numContruct) {
         	this.start = start;
             this.end = end;
             this.days = days;
             this.dayOfWeekHasOrder = dayOfWeekHasOrder;;
-            this.stock = days + 7;
+            this.stock = days + 8;
+            this.numContruct = numContruct;
         }
+
 
 		@Override
 		public String toString() {
 			return "DateRange [start=" + start + ", end=" + end + ", days=" + days + ", stock=" + stock
-					+ ", dayOfWeekHasOrder=" + dayOfWeekHasOrder + "]";
+					+ ", dayOfWeekHasOrder=" + dayOfWeekHasOrder + ", numContruct=" + numContruct + "]";
 		}
         
+        
+	}
+	
+	/**
+	 * Класс реализхует сумму продуктов и историю с каких заказов суммируется строки продуктов
+	 */
+	class ProductDouble{
+		public Double num;
+		public String orderHistory;
+		/**
+		 * @param num
+		 * @param orderHistory
+		 */
+		public ProductDouble(Double num, String orderHistory) {
+			super();
+			this.num = num;
+			this.orderHistory = orderHistory;
+		}
+		@Override
+		public String toString() {
+			return "ProductDouble [num=" + num + ", orderHistory=" + orderHistory + "]";
+		}
+		
+		
+		
 	}
 	
 	/**
@@ -545,6 +580,77 @@ public class ReaderSchedulePlan {
         return 0;
     }
     
+    
+    /**
+     * Метод для проверки кол-ва товара на текущий день <b>только по одному прдукту!</b>
+	 * если всё ок, возвращает null, если что то не то - сообщение
+	 * 
+	 * Прямая интерпретация метода checkNumProductHasStock
+     * @param product
+     * @param dateRange
+     * @return
+     */
+    private String checkNumProductSingleHasStock(Order order, Product product, DateRange dateRange) {
+    	String message = null;
+		User user = getThisUser();
+		Role role = user.getRoles().stream().findFirst().get();	
+		
+//		if(role.getIdRole() == 1 || role.getIdRole() == 2 || role.getIdRole() == 3) { // тут мы говорим что если это логист или админ - в проверке не нуждаемся
+//			return null;
+//		}
+		if(order.getIsInternalMovement() != null && order.getIsInternalMovement().equals("true")) {
+			return null;
+		}
+		if(order.getNumProduct() == null) {
+			message = "Данные по заказу " + order.getMarketNumber() + " устарели! Обновите заказ."; 
+//			return message; временно отключил
+			return null;
+		}
+		
+		
+		if(product != null) {
+			if(product.getBalanceStockAndReserves() == null) {
+				return null;
+			}
+//			if(product.getOrderProducts() != null && !product.getOrderProducts().isEmpty()) {
+//				return null;
+//			}
+			if(product.getBalanceStockAndReserves() == 9999.0) {
+				return null;
+			}
+			if(product.getRemainderStockInPall() < 15.0) { //если в паллетах товара меньшге чем 33 - то пропускаем
+				return null;
+			}
+			//считаем разницу в днях сегодняшнеего дня и непосредственно записи
+			LocalDateTime start = order.getTimeDelivery().toLocalDateTime();
+			LocalDateTime end = LocalDateTime.of(product.getDateUnload().toLocalDate(), LocalTime.now());
+
+			Duration duration = Duration.between(start, end);
+			Double currentDate = (double) duration.toDays();
+			// считаем правильный остаток на текущий день
+			Double trueBalance = roundВouble(product.getBalanceStockAndReserves() + currentDate, 0);
+			
+			if(!product.getIsException()) {
+//				System.out.println(trueBalance + " > " + dateRange.stock);
+				if(trueBalance > dateRange.stock) {
+					//считаем сколько дней нужно прибавить, чтобы заказать товар
+					Long deltDate = (long) (trueBalance - dateRange.stock );
+					if(message == null) {
+						message = "Товара " + product.getCodeProduct() + " ("+product.getName()+")" + " на складе хранится на <strong>" + trueBalance + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней."
+								+" Ближайшая дата на которую можно доставить данный товар: <strong>" + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy")) + ";</strong>\n";
+					}else {
+						message = message + "\nТовара " + product.getCodeProduct() + " ("+product.getName()+")" + " на складе хранится на <strong>" + trueBalance + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней. "
+								+" Ближайшая дата на которую можно доставить данный товар: <strong>" + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy"))+ ";</strong>\n";
+					}
+					 
+				}
+			}
+			
+		}
+		
+		return message;
+    }
+    
     /**
 	 * Метод для проверки кол-ва товара на текущий день
 	 * если всё ок, возвращает null, если что то не то - сообщение
@@ -570,6 +676,8 @@ public class ReaderSchedulePlan {
 		String [] numProductMass = order.getNumProduct().split("\\^");
 		
 		
+		
+		
 		for (String string : numProductMass) {
 			Product product = productService.getProductByCode(Integer.parseInt(string));
 			
@@ -583,9 +691,9 @@ public class ReaderSchedulePlan {
 				if(product.getBalanceStockAndReserves() == 9999.0) {
 					continue;
 				}
-//				if(product.getRemainderStockInPall() < 15.0) { //если в паллетах товара меньшге чем 33 - то пропускаем
-//					continue;
-//				}
+				if(product.getRemainderStockInPall() < 15.0) { //если в паллетах товара меньшге чем 33 - то пропускаем
+					continue;
+				}
 				//считаем разницу в днях сегодняшнеего дня и непосредственно записи
 				LocalDateTime start = order.getTimeDelivery().toLocalDateTime();
 				LocalDateTime end = LocalDateTime.of(product.getDateUnload().toLocalDate(), LocalTime.now());

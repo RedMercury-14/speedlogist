@@ -350,19 +350,37 @@ public class ReaderSchedulePlan {
 					List<OrderProduct> quantity = product.getOrderProductsListHasDateTarget(dateNow);
 					if(quantity != null) {
 						//тут происходит построчная оценка заказанного товара и принятие решения
-						int zaq = quantityOrderAll.intValue();
-						int orlZaq = quantity.get(0).getQuantity();
-						if(zaq > orlZaq*1.1) {
-							result = result +"<span style=\"color: red;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + quantityOrderAll.intValue() + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + quantity.get(0).getQuantity() + " шт.</span>\n";	
-							String dayStockMessage =  checkNumProductSingleHasStock(order, product, dateRange);
-							 if(dayStockMessage!= null) {
-					             result = dayStockMessage+"\n" + result;
-					             isMistakeZAQ = true;
-					         }
-//						isMistakeZAQ = true;
+						int zaq = quantityOrderAll.intValue(); // СУММА заказов по периоду 
+						int orlZaq = quantity.get(0).getQuantity(); // аказ от ОРЛ
+						int singleZaq = orderLine.getQuantityOrder().intValue(); //Заказ по ордеру (не суммированный)
+						// реализация специальной логики: если заказ от менеджера больше или равен заказу от ОРЛ - берем только его заказ
+						// если заказ меньше 80% от того что заказал ОРЛ - проверяем другие заказы
+						if (singleZaq < 0.8 * orlZaq) {
+							if(zaq > orlZaq*1.1) {
+								result = result +"<span style=\"color: red;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + zaq + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + quantity.get(0).getQuantity() + " шт.</span>\n";	
+								String dayStockMessage =  checkNumProductHasStock(order, product, dateRange); // проверяем по стокам относительно одного продукта
+								 if(dayStockMessage!= null) {
+						             result = dayStockMessage+"\n" + result;
+						             isMistakeZAQ = true;
+						         }
+//							isMistakeZAQ = true;
+							}else {
+								result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + zaq + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + quantity.get(0).getQuantity() + " шт.\n";													
+							}
 						}else {
-							result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + quantityOrderAll.intValue() + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + quantity.get(0).getQuantity() + " шт.\n";													
+							if(singleZaq > orlZaq*1.1) {
+								result = result +"<span style=\"color: red;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + singleZaq + " шт. из " + quantity.get(0).getQuantity() + " шт.</span>\n";	
+								String dayStockMessage =  checkNumProductHasStock(order, product, dateRange); // проверяем по стокам относительно одного продукта
+								 if(dayStockMessage!= null) {
+						             result = dayStockMessage+"\n" + result;
+						             isMistakeZAQ = true;
+						         }
+//							isMistakeZAQ = true;
+							}else {
+								result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + singleZaq + " шт. из " + quantity.get(0).getQuantity() + " шт.\n";													
+							}
 						}
+						
 					}else {
 						result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - отсутствует в плане заказа (Заказы поставщика от ОРЛ)\n";
 					}
@@ -373,7 +391,7 @@ public class ReaderSchedulePlan {
 			 
 			//проверка по стокам отностительно графика поставок
 			 
-			 String dayStockMessage =  checkNumProductHasStock(order, dateRange);
+			 String dayStockMessage =  checkNumProductHasStock(order, null,  dateRange);
 			 if(dayStockMessage!= null) {
 	             result = dayStockMessage+"\n" + result;
 	             isMistakeZAQ = true;
@@ -582,16 +600,12 @@ public class ReaderSchedulePlan {
     
     
     /**
-     * Метод для проверки кол-ва товара на текущий день <b>только по одному прдукту!</b>
+	 * Метод для проверки кол-ва товара на текущий день <b> если Product != null то проверка происходит только по одному прдукту!</b>
 	 * если всё ок, возвращает null, если что то не то - сообщение
-	 * 
-	 * Прямая интерпретация метода checkNumProductHasStock
-     * @param product
-     * @param dateRange
-     * @return
-     */
-    private String checkNumProductSingleHasStock(Order order, Product product, DateRange dateRange) {
-    	String message = null;
+	 * @return
+	 */
+	private String checkNumProductHasStock(Order order, Product product, DateRange dateRange) {
+		String message = null;
 		User user = getThisUser();
 		Role role = user.getRoles().stream().findFirst().get();	
 		
@@ -607,7 +621,9 @@ public class ReaderSchedulePlan {
 			return null;
 		}
 		
+		String [] numProductMass = order.getNumProduct().split("\\^");
 		
+		//реализация проверки, когда нужно проверить только один продукт
 		if(product != null) {
 			if(product.getBalanceStockAndReserves() == null) {
 				return null;
@@ -645,85 +661,53 @@ public class ReaderSchedulePlan {
 					 
 				}
 			}
-			
-		}
-		
-		return message;
-    }
-    
-    /**
-	 * Метод для проверки кол-ва товара на текущий день
-	 * если всё ок, возвращает null, если что то не то - сообщение
-	 * @return
-	 */
-	private String checkNumProductHasStock(Order order, DateRange dateRange) {
-		String message = null;
-		User user = getThisUser();
-		Role role = user.getRoles().stream().findFirst().get();	
-		
-//		if(role.getIdRole() == 1 || role.getIdRole() == 2 || role.getIdRole() == 3) { // тут мы говорим что если это логист или админ - в проверке не нуждаемся
-//			return null;
-//		}
-		if(order.getIsInternalMovement() != null && order.getIsInternalMovement().equals("true")) {
-			return null;
-		}
-		if(order.getNumProduct() == null) {
-			message = "Данные по заказу " + order.getMarketNumber() + " устарели! Обновите заказ."; 
-//			return message; временно отключил
-			return null;
-		}
-		
-		String [] numProductMass = order.getNumProduct().split("\\^");
-		
-		
-		
-		
-		for (String string : numProductMass) {
-			Product product = productService.getProductByCode(Integer.parseInt(string));
-			
-			if(product != null) {
-				if(product.getBalanceStockAndReserves() == null) {
-					continue;
-				}
-//				if(product.getOrderProducts() != null && !product.getOrderProducts().isEmpty()) {
-//					continue;
-//				}
-				if(product.getBalanceStockAndReserves() == 9999.0) {
-					continue;
-				}
-				if(product.getRemainderStockInPall() < 15.0) { //если в паллетах товара меньшге чем 33 - то пропускаем
-					continue;
-				}
-				//считаем разницу в днях сегодняшнеего дня и непосредственно записи
-				LocalDateTime start = order.getTimeDelivery().toLocalDateTime();
-				LocalDateTime end = LocalDateTime.of(product.getDateUnload().toLocalDate(), LocalTime.now());
-
-				Duration duration = Duration.between(start, end);
-				Double currentDate = (double) duration.toDays();
-				// считаем правильный остаток на текущий день
-				Double trueBalance = roundВouble(product.getBalanceStockAndReserves() + currentDate, 0);
+		}else { // реализация проверкиЮ когда нужно проверить все продукты, через цикл, которые указангы в заказе
+			for (String string : numProductMass) {
+				Product productTarget = productService.getProductByCode(Integer.parseInt(string));
 				
-				
-//				System.out.println("Проверка по стокам!");
-				
-				if(!product.getIsException()) {
-//					System.out.println(trueBalance + " > " + dateRange.stock);
-					if(trueBalance > dateRange.stock) {
-						//считаем сколько дней нужно прибавить, чтобы заказать товар
-						Long deltDate = (long) (trueBalance - dateRange.stock );
-						if(message == null) {
-							message = "Товара " + product.getCodeProduct() + " ("+product.getName()+")" + " на складе хранится на <strong>" + trueBalance + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней."
-									+" Ближайшая дата на которую можно доставить данный товар: <strong>" + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy")) + ";</strong>\n";
-						}else {
-							message = message + "\nТовара " + product.getCodeProduct() + " ("+product.getName()+")" + " на складе хранится на <strong>" + trueBalance + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней. "
-									+" Ближайшая дата на которую можно доставить данный товар: <strong>" + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy"))+ ";</strong>\n";
-						}
-						 
+				if(productTarget != null) {
+					if(productTarget.getBalanceStockAndReserves() == null) {
+						continue;
 					}
+//					if(product.getOrderProducts() != null && !product.getOrderProducts().isEmpty()) {
+//						continue;
+//					}
+					if(productTarget.getBalanceStockAndReserves() == 9999.0) {
+						continue;
+					}
+					if(productTarget.getRemainderStockInPall() < 15.0) { //если в паллетах товара меньшге чем 33 - то пропускаем
+						continue;
+					}
+					//считаем разницу в днях сегодняшнеего дня и непосредственно записи
+					LocalDateTime start = order.getTimeDelivery().toLocalDateTime();
+					LocalDateTime end = LocalDateTime.of(productTarget.getDateUnload().toLocalDate(), LocalTime.now());
+
+					Duration duration = Duration.between(start, end);
+					Double currentDate = (double) duration.toDays();
+					// считаем правильный остаток на текущий день
+					Double trueBalance = roundВouble(productTarget.getBalanceStockAndReserves() + currentDate, 0);
+					
+					if(!productTarget.getIsException()) {
+//						System.out.println(trueBalance + " > " + dateRange.stock);
+						if(trueBalance > dateRange.stock) {
+							//считаем сколько дней нужно прибавить, чтобы заказать товар
+							Long deltDate = (long) (trueBalance - dateRange.stock );
+							if(message == null) {
+								message = "Товара " + productTarget.getCodeProduct() + " ("+productTarget.getName()+")" + " на складе хранится на <strong>" + trueBalance + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней."
+										+" Ближайшая дата на которую можно доставить данный товар: <strong>" + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy")) + ";</strong>\n";
+							}else {
+								message = message + "\nТовара " + productTarget.getCodeProduct() + " ("+productTarget.getName()+")" + " на складе хранится на <strong>" + trueBalance + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней. "
+										+" Ближайшая дата на которую можно доставить данный товар: <strong>" + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy"))+ ";</strong>\n";
+							}
+							 
+						}
+					}
+					
 				}
-				
 			}
 		}
+		
+		
 		return message;
 	}
 	

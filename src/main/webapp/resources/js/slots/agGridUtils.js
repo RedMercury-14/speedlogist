@@ -30,6 +30,7 @@ const columnDefs = [
 		width: 90, wrapText: true, autoHeight: true,
 		valueGetter: (params) => params.data.isInternalMovement === 'true' ? 'Да': 'Нет',
 	},
+	{ headerName: "Номер контракта", field: "marketContractType", },
 ]
 
 export const gridOptions = {

@@ -1,7 +1,7 @@
 import { snackbar } from "../snackbar/snackbar.js"
 import { dateHelper } from "../utils.js"
 import { Draggable, eventColors, userMessages } from "./constants.js"
-import { convertToDDMMYYYY, convertToDayMonthTime, getEventBGColor, getSlotStatus, getSlotStatusYard } from "./dataUtils.js"
+import { convertToDDMMYYYY, convertToDayMonthTime, getEventBGColor, getSlotStatus, getSlotStatusYard, stockAndDayIsVisible, stockIsVisible } from "./dataUtils.js"
 import { editableRulesToConfirmBtn, hasOrderInYard, isAnotherUser, isBackgroundEvent } from "./rules.js"
 
 export function addNewStockOption(select, stock) {
@@ -413,4 +413,38 @@ export function createCalendarDateInput(calendar) {
 	todayBtn.addEventListener('click', () => changeCalendarDateInput.value = '')
 
 	letfHeaderToolbarContainer.append(changeCalendarDateInput)
+}
+
+// отображение выбранных даты и склада
+export function displayStockAndDate(calendarApi, currentStock, currentDate, foundEvent) {
+	const order = foundEvent.extendedProps.data
+	const [ eventDate, eventTime ] = foundEvent.start.split('T')
+	const idRamp = order.idRamp
+	const numStock = `${idRamp}`.slice(0, -2)
+
+	if (stockAndDayIsVisible(currentStock, currentDate, numStock, eventDate)) {
+		calendarApi.scrollToTime(eventTime)
+		return
+	}
+
+	if (stockIsVisible(currentStock, numStock)) {
+		calendarApi.gotoDate(eventDate)
+		calendarApi.scrollToTime(eventTime)
+		return
+	}
+	
+	const stockNumberSelect = document.querySelector('#stockNumber')
+	stockNumberSelect.value = numStock
+	stockNumberSelect.dispatchEvent(new Event('change'))
+	calendarApi.gotoDate(eventDate)
+	calendarApi.scrollToTime(eventTime)
+}
+
+// подсвечивание слота в календаре
+export function highlightSlot(calendarApi, eventId) {
+	const calendarEvent = calendarApi.getEventById(eventId)
+	if (!calendarEvent) return
+	const prevColor = calendarEvent.backgroundColor
+	calendarEvent.setProp('backgroundColor', eventColors.foundEvent)
+	setTimeout(() => calendarEvent.setProp('backgroundColor', prevColor), 3000)
 }

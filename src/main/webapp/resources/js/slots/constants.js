@@ -36,6 +36,7 @@ export const eventColors = {
 	disabled: '#65979f',
 	default: '#0195ae',
 	borderColor: '#0e377b',
+	foundEvent: '#ff8100'
 }
 
 export const roles = ['manager', 'admin']

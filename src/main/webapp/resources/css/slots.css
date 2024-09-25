@@ -73,6 +73,25 @@ html, body {
 	color: #444444;
 }
 
+#slotSearchForm input::-webkit-outer-spin-button,
+#slotSearchForm input::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+#slotSearchForm input[type=number] {
+	appearance: textfield;
+	-moz-appearance: textfield;
+}
+#slotSearchForm .searchValue,
+#slotSearchForm .searchValue::placeholder {
+	font-weight: bold;
+	color: #0195ae;
+}
+
+.separator-horizontal {
+	border-bottom: 3px solid grey;
+}
+
 /* поле выбора даты календаря */
 .changeCalendarDate.form-control,
 .changeCalendarDate.form-control:focus {
@@ -458,11 +477,11 @@ html, body {
 	flex-wrap: wrap;
 	align-content: flex-start;
 	gap: 0.5rem;
-	height: calc(100vh - 350px);
+	height: calc(100vh - 425px);
 	overflow-y: scroll;
 }
 #external-events .fc-event {
-	width: 48%;
+	/* width: 48%; */
 	height: fit-content;
 	cursor: move;
 	background-color: var(--secondary-color);

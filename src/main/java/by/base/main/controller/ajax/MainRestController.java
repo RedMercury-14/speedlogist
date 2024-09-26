@@ -1474,6 +1474,128 @@ public class MainRestController {
 	}
 	
 	/**
+	 * Тест отдельного ордера на предмето того, находится ли он в 50 статусе или нет
+	 * @param request
+	 * @param idMarket
+	 * @return
+	 */
+	@GetMapping("/manager/testMarketOrder/{idMarket}")
+	public Map<String, Object> testMarketOrder(HttpServletRequest request, @PathVariable String idMarket) {		
+		try {			
+			checkJWT(marketUrl);			
+		} catch (Exception e) {
+			System.err.println("Ошибка получения jwt токена");
+		}
+		
+		Map<String, Object> response = new HashMap<String, Object>();
+		MarketDataForRequestDto dataDto3 = new MarketDataForRequestDto(idMarket);
+		MarketPacketDto packetDto3 = new MarketPacketDto(marketJWT, "SpeedLogist.GetOrderBuyInfo", serviceNumber, dataDto3);
+		MarketRequestDto requestDto3 = new MarketRequestDto("", packetDto3);
+		String marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto3));
+		
+//		System.out.println(marketOrder2);
+		
+		if(marketOrder2.equals("503")) { // означает что связь с маркетом потеряна
+			//в этом случае проверяем бд
+			System.err.println("Связь с маркетом потеряна");
+			Order order = orderService.getOrderByMarketNumber(idMarket);
+			marketJWT = null; // сразу говорим что jwt устарел
+			if(order != null) {
+				response.put("status", "200");
+				response.put("message", "Заказ загружен из локальной базы данных SL. Связь с маркетом отсутствует");
+				response.put("order", order);
+				return response;
+			}else {
+				response.put("status", "100");
+				response.put("message", "Заказ с номером " + idMarket + " в базе данных SL не найден. Связь с Маркетом отсутствует. Обратитесь в отдел ОСиУЗ");
+				return response;
+			}
+			
+		}else{//если есть связь с маркетом
+			//проверяем на наличие сообщений об ошибке со стороны маркета
+			if(marketOrder2.contains("Error")) {
+				MarketErrorDto errorMarket = gson.fromJson(marketOrder2, MarketErrorDto.class);
+//				System.out.println(errorMarket);
+				if(errorMarket.getError().equals("99")) {//обработка случая, когда в маркете номера нет, а в бд есть.
+					Order orderFromDB = orderService.getOrderByMarketNumber(idMarket);
+					if(orderFromDB !=null) {
+						response.put("status", "100");
+						response.put("message", "Заказ " + idMarket + " не найден в маркете. Данные из SL устаревшие. Обновите данные в Маркете");
+						return response;
+					}else {
+						response.put("status", "100");
+						response.put("message", errorMarket.getErrorDescription());
+						return response;
+					}
+				}
+				response.put("status", "100");
+				response.put("message", errorMarket.getErrorDescription());
+				return response;
+			}
+			
+			//тут избавляемся от мусора в json
+			String str2 = marketOrder2.split("\\[", 2)[1];
+			String str3 = str2.substring(0, str2.length()-2);
+			
+			//создаём свой парсер и парсим json в объекты, с которыми будем работать.
+			CustomJSONParser customJSONParser = new CustomJSONParser();
+			
+			//создаём OrderBuyGroup
+			OrderBuyGroupDTO orderBuyGroupDTO = customJSONParser.parseOrderBuyGroupFromJSON(str3);
+						
+			//создаём Order, записываем в бд и возвращаем или сам ордер или ошибку (тот же ордер, только с отрицательным id)
+			Order order = orderCreater.create(orderBuyGroupDTO);
+			
+//			System.out.println(order);
+			
+			if(order.getIdOrder() < 0) {
+				Order badOrder = orderService.getOrderByMarketNumber(order.getMarketNumber());
+				switch (order.getMarketInfo()) {
+				case "0":
+					response.put("status", "100");
+					response.put("message", "Реальынй статус из маркета - ЧЕРНОВИК");
+					break;
+//				case "60":
+//					response.put("status", "100");
+//					response.put("message", "Реальынй статус из маркета - 60");					
+//					break;
+//				case "70":
+//					response.put("status", "100");
+//					response.put("message", "Реальынй статус из маркета - 60");
+//					break;
+
+				default:
+					response.put("status", "100");
+					response.put("message", "Неизвестный статус - " + order.getMarketInfo());
+					return response;
+				}
+				
+				if(badOrder != null) {						
+					if(badOrder.getStatus() == 8 || badOrder.getStatus() == 100 || badOrder.getStatus() == 7) {	
+						User user = getThisUser();
+						badOrder.setStatus(5);
+						badOrder.setChangeStatus(badOrder.getChangeStatus()+"\nУдалено системой как бронь!");
+						badOrder.setIdRamp(null);
+						badOrder.setTimeDelivery(null);
+						badOrder.setSlotInfo(badOrder.getSlotInfo()+"\nУдалено системой как бронь!");
+						orderService.updateOrder(badOrder);
+						Message message = new Message(user.getLogin(), null, "200", null, badOrder.toString(), "delete");
+						slotWebSocket.sendMessage(message);
+					}
+					
+				}
+				return response;
+			}else {
+				response.put("status", "200");
+				response.put("message", "Заказ в 50 статусе");
+//				System.out.println(checkOrderNeeds.check(order)); // тестовая проверка 
+				return response;
+			}
+		}		
+				
+	}
+	
+	/**
 	 * Метод проверки наличия jwt токена. Должен находится перед каждём запросом в маркет. 
 	 * @return
 	 */

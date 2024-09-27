@@ -10,6 +10,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -193,8 +194,6 @@ public class ReaderSchedulePlan {
 	 * @return
 	 */
 	public PlanResponce getPlanResponce(Order order) {
-		Set<OrderLine> lines = order.getOrderLines(); // строки в заказе
-		List<Product> products = new ArrayList<Product>(); //
 		String numContract = order.getMarketContractType();
 		if(numContract == null) {
 			 System.err.println("ReaderSchedulePlan.process: numContract = null");
@@ -204,11 +203,34 @@ public class ReaderSchedulePlan {
 		Date dateOld2Week = Date.valueOf(LocalDate.now().minusDays(14));
 		List <Order> orders = orderService.getOrderByPeriodDeliveryAndCodeContract(dateNow, dateOld2Week, numContract);
 		
-		orders.forEach(o-> System.out.println(o.toString()));
-//		List<OrderProduct> orderProducts = ОСТАНОВИСЛЯ ТУТ
+		if(!orders.contains(order)) {
+			orders.add(order);
+		}
 		
+		Schedule schedule = scheduleService.getScheduleByNumContract(Long.parseLong(order.getMarketContractType()));
 		
-		return null;		
+		//берем по первой строке заказа и делаем запрос в бд потребности с выгрузкой пяти заказов с совпадениями		
+		Set<OrderLine> lines = order.getOrderLines(); // каждая первая строка в заказе
+		for (Order orderI : orders) {
+			lines.add(orderI.getOrderLines().stream().findFirst().get());
+		}
+		
+		List<OrderProduct> orderProducts = new ArrayList<OrderProduct>();
+		Date dateNowOrderProducts = Date.valueOf(order.getTimeDelivery().toLocalDateTime().toLocalDate());
+		Date dateOld3WeekOrderProducts = Date.valueOf(order.getTimeDelivery().toLocalDateTime().toLocalDate().minusDays(30));
+		for (OrderLine orderLine : lines) {
+			orderProducts.addAll(orderProductService.getOrderProductListHasCodeProductAndPeriod(orderLine, dateOld3WeekOrderProducts, dateNowOrderProducts));
+		}		
+		orderProducts.sort((o1, o2) -> o2.getDateCreate().compareTo(o1.getDateCreate()));// сортируемся от самой ранней даты
+		
+		Set<Date> dates = new HashSet<Date>();
+		for (OrderProduct orderProduct : orderProducts) {
+			dates.add(Date.valueOf(orderProduct.getDateCreate().toLocalDateTime().toLocalDate().plusDays(1)));
+		}		
+		List<Date> result = new ArrayList<Date>(dates);
+		result.sort((o1, o2) -> o2.compareTo(o1));// сортируемся от самой ранней даты
+		
+		return new PlanResponce(200, "Информация о датах заказа", result, schedule);		
 	}
 	
 	/**

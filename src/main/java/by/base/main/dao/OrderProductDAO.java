@@ -25,6 +25,16 @@ public interface OrderProductDAO {
 	 * @return
 	 */
 	List<OrderProduct> getOrderProductListHasDate(Date date);
+	
+	/**
+	 * Метод принимает код продукта и по заданному периоду возвращает заказы по этому продукту
+	 * <br>Метод исключает дубликаты (Set<>)
+	 * @param codeProduct
+	 * @param start начало выборки
+	 * @param finish конец выборки
+	 * @return
+	 */
+	List<OrderProduct> getOrderProductListHasCodeProductAndPeriod(Integer codeProduct, Date start, Date finish);
 
 	void updateOrderProduct(OrderProduct orderProduct);
 	

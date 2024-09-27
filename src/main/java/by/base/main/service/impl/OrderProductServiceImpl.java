@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import by.base.main.dao.OrderProductDAO;
+import by.base.main.model.OrderLine;
 import by.base.main.model.OrderProduct;
 import by.base.main.service.OrderProductService;
 
@@ -40,6 +41,18 @@ public class OrderProductServiceImpl implements OrderProductService{
 	@Override
 	public List<OrderProduct> getOrderProductListHasDate(Date date) {
 		return productDAO.getOrderProductListHasDate(date);
+	}
+
+	@Override
+	public List<OrderProduct> getOrderProductListHasCodeProductAndPeriod(OrderLine orderLine, Date start, Date finish) {
+		Integer code = orderLine.getGoodsId().intValue();
+		List<OrderProduct> result = productDAO.getOrderProductListHasCodeProductAndPeriod(code, start, finish);
+		if(result != null && !result.isEmpty()) {
+			result.sort((o1, o2) -> o2.getDateCreate().compareTo(o1.getDateCreate()));// сортируемся от самой ранней даты
+			return result;
+		}else {
+			return null;
+		}
 	}
 
 }

@@ -4,8 +4,12 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.TemporalType;
 import javax.transaction.Transactional;
@@ -77,6 +81,21 @@ public class OrderProductDAOImpl implements OrderProductDAO{
 		theObject.setParameter("dateEnd", end, TemporalType.TIMESTAMP);
 		List<OrderProduct> trucks = theObject.getResultList();
 		return trucks;
+	}
+
+	private static final String queryGetOrderProductListHasCodeProductAndPeriod = "from OrderProduct where codeProduct =:codeProduct AND dateCreate BETWEEN :dateStart and :dateEnd";
+	@Transactional
+	@Override
+	public List<OrderProduct> getOrderProductListHasCodeProductAndPeriod(Integer codeProduct, Date start, Date finish) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Timestamp startTime = Timestamp.valueOf(LocalDateTime.of(LocalDate.parse(start.toString()), LocalTime.of(00, 00)));
+		Timestamp endTime = Timestamp.valueOf(LocalDateTime.of(LocalDate.parse(finish.toString()), LocalTime.of(23, 59)));
+		Query<OrderProduct> theObject = currentSession.createQuery(queryGetOrderProductListHasCodeProductAndPeriod, OrderProduct.class);
+		theObject.setParameter("dateStart", startTime, TemporalType.TIMESTAMP);
+		theObject.setParameter("dateEnd", endTime, TemporalType.TIMESTAMP);
+		theObject.setParameter("codeProduct", codeProduct);
+		Set<OrderProduct> trucks = new HashSet<OrderProduct>(theObject.getResultList());
+		return new ArrayList<OrderProduct>(trucks);
 	}
 
 }

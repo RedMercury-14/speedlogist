@@ -273,19 +273,36 @@ public class MainRestController {
 	 */
 	public static final Comparator<Address> comparatorAddressForLastLoad = (Address e1, Address e2) -> (e2.getPointNumber() - e1.getPointNumber());
 	
-	
 	@GetMapping("/test")
-	public Map<String, Object> test(HttpServletRequest request, HttpServletResponse response){
+	public List<Map<String, Object>> test2() {
+		List<Map<String, Object>> mainResponse = new ArrayList<Map<String,Object>>();
+		Map<String, Object> response1 = new HashMap<>();
+		response1.put("status", "200");
+		response1.put("info", "Дата заказа ОРЛ уже установлена");
+		mainResponse.add(response1);
+		
+		Map<String, Object> response2 = new HashMap<>();
+		response2.put("status", "200");
+		response2.put("info", "Поставка является внутренним перемещением");
+		mainResponse.add(response2);
+		
+		Map<String, Object> response3 = new HashMap<>();
+		response3.put("status", "200");
+		response3.put("info", "Поставка является дальним импортом");
+		mainResponse.add(response3);
+		return mainResponse;
+	}
+	
+	@GetMapping("/test/{idOrder}")
+	public Map<String, Object> test(HttpServletRequest request, HttpServletResponse response, @PathVariable String idOrder){
 		Map<String, Object> responseMap = new HashMap<>();
-		Date date = Date.valueOf(LocalDate.now().minusDays(1));
-		List<OrderProduct> orderProducts = orderProductService.getOrderProductListHasDate(date);
-		Order order = orderService.getOrderById(27735);
-		System.err.println(order);
-		readerSchedulePlan.getPlanResponce(order);
+		Order order = orderService.getOrderById(Integer.parseInt(idOrder));
+		order.setTimeDelivery(Timestamp.valueOf(LocalDateTime.now()));
+		PlanResponce planResponce = readerSchedulePlan.getPlanResponce(order);
 		
 		responseMap.put("status", "200");
-		responseMap.put("list", orderProducts);
-		responseMap.put("date", date.toString());
+		responseMap.put("timeDelivery", order.getTimeDelivery());
+		responseMap.put("planResponce", planResponce);
 		return responseMap;		
 	}
 	/**
@@ -2306,11 +2323,11 @@ public class MainRestController {
 	 * @throws IOException
 	 */
 	@PostMapping("/slot/preload")
-	public Map<String, String> postSlotPreLoad(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+	public Map<String, Object> postSlotPreLoad(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
 		java.util.Date t1 = new java.util.Date();
 		
 		User user = getThisUser();	
-		Map<String, String> response = new HashMap<String, String>();
+		Map<String, Object> response = new HashMap<String, Object>();
 		String role = user.getRoles().stream().findFirst().get().getAuthority();
 		if(role.equals("ROLE_TOPMANAGER") || role.equals("ROLE_MANAGER")) {
 			response.put("status", "100");
@@ -2321,14 +2338,12 @@ public class MainRestController {
 		Integer idOrder = jsonMainObject.get("idOrder") != null ? Integer.parseInt(jsonMainObject.get("idOrder").toString()) : null;
 		if(idOrder == null) {
 			response.put("status", "100");
-			response.put("message", "Ошибка. Не пришел idOrder");
 			response.put("info", "Ошибка. Не пришел idOrder");
 			return response;
 		}
 		Order order = orderService.getOrderById(idOrder);
 		if(order.getLoginManager() != null) {//обработка одновременного вытягивания объекта из дроп зоны
 			response.put("status", "100");
-			response.put("message", "Ошибка доступа. Заказ не зафиксирован. Данный заказ уже поставлен другим пользователем");
 			response.put("info", "Ошибка доступа. Заказ не зафиксирован. Данный заказ уже поставлен другим пользователем");
 			return response;
 		}
@@ -2340,32 +2355,40 @@ public class MainRestController {
 			return response;
 		}
 
-		//главные проверки
-
-		//главная проверка по графику поставок
-		String infoCheck = null;		
-		
-		if(!checkDeepImport(order, request)) {
-			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {			
-				PlanResponce planResponce = readerSchedulePlan.process(order);
-				if(planResponce.getStatus() == 0) {
-					infoCheck = planResponce.getMessage();
-					response.put("status", "105");
-					response.put("info", infoCheck.replace("\n", "<br>"));
-					return response;
-				}else {
-					infoCheck = planResponce.getMessage();
-					response.put("info", infoCheck.replace("\n", "<br>"));
-					response.put("status", "200");
-				}		
-				
-			}
+		//главные проверки		
+		if(order.getDateOrderOrl() != null) {
+			response.put("status", "200");
+			response.put("info", "Дата заказа ОРЛ уже установлена");
+			java.util.Date t2 = new java.util.Date();
+			System.out.println(t2.getTime()-t1.getTime() + " ms - preload" );
+			return response;
 		}
 		
-		//конец главная проверка по графику поставок
-		java.util.Date t2 = new java.util.Date();
-		System.out.println(t2.getTime()-t1.getTime() + " ms - preload" );
-		return response;			
+		if(!checkDeepImport(order, request)) {
+			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {
+				PlanResponce planResponce = readerSchedulePlan.getPlanResponce(order);
+				
+				response.put("status", "200");
+				response.put("timeDelivery", order.getTimeDelivery());
+				response.put("planResponce", planResponce);
+				java.util.Date t2 = new java.util.Date();
+				System.out.println(t2.getTime()-t1.getTime() + " ms - preload" );
+				return response;	
+			}else {
+				response.put("status", "200");
+				response.put("info", "Поставка является внутренним перемещением");
+				java.util.Date t2 = new java.util.Date();
+				System.out.println(t2.getTime()-t1.getTime() + " ms - preload" );
+				return response;
+			}
+		}else {
+			response.put("status", "200");
+			response.put("info", "Поставка является дальним импортом");
+			java.util.Date t2 = new java.util.Date();
+			System.out.println(t2.getTime()-t1.getTime() + " ms - preload" );
+			return response;
+		}
+			
 	}
 	
 	/**

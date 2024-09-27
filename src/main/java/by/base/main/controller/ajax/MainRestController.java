@@ -273,29 +273,12 @@ public class MainRestController {
 	 */
 	public static final Comparator<Address> comparatorAddressForLastLoad = (Address e1, Address e2) -> (e2.getPointNumber() - e1.getPointNumber());
 	
-	@GetMapping("/test")
-	public List<Map<String, Object>> test2() {
-		List<Map<String, Object>> mainResponse = new ArrayList<Map<String,Object>>();
-		Map<String, Object> response1 = new HashMap<>();
-		response1.put("status", "200");
-		response1.put("info", "Дата заказа ОРЛ уже установлена");
-		mainResponse.add(response1);
-		
-		Map<String, Object> response2 = new HashMap<>();
-		response2.put("status", "200");
-		response2.put("info", "Поставка является внутренним перемещением");
-		mainResponse.add(response2);
-		
-		Map<String, Object> response3 = new HashMap<>();
-		response3.put("status", "200");
-		response3.put("info", "Поставка является дальним импортом");
-		mainResponse.add(response3);
-		return mainResponse;
-	}
 	
 	@GetMapping("/test/{idOrder}")
 	public Map<String, Object> test(HttpServletRequest request, HttpServletResponse response, @PathVariable String idOrder){
+		java.util.Date t1 = new java.util.Date();
 		Map<String, Object> responseMap = new HashMap<>();
+		
 		Order order = orderService.getOrderById(Integer.parseInt(idOrder));
 		order.setTimeDelivery(Timestamp.valueOf(LocalDateTime.now()));
 		PlanResponce planResponce = readerSchedulePlan.getPlanResponce(order);
@@ -303,6 +286,8 @@ public class MainRestController {
 		responseMap.put("status", "200");
 		responseMap.put("timeDelivery", order.getTimeDelivery());
 		responseMap.put("planResponce", planResponce);
+		java.util.Date t2 = new java.util.Date();
+		System.out.println(t2.getTime()-t1.getTime() + " ms - preloadTEST" );
 		return responseMap;		
 	}
 	/**

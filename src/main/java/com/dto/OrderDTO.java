@@ -149,11 +149,87 @@ public class OrderDTO {
 	
 	private Timestamp lastDatetimePointLoad;
 	
+	private Date dateOrderOrl;
+	
 	public OrderDTO() {
 		
 	}
 	
 		
+	public OrderDTO(Integer idOrder, String counterparty, String contact, String cargo, String typeLoad,
+			String methodLoad, String typeTruck, String temperature, Object control, String comment, Integer status,
+			Object dateCreate, Object dateDelivery, String manager, String telephoneManager, Object stacking,
+			String logist, String logistTelephone, String marketNumber, Object onloadWindowDate, Object onloadWindowTime,
+			String loadNumber, String numStockDelivery, String pall, String way,
+			Object onloadTime, String incoterms, String changeStatus, String needUnloadPoint, Integer idRamp,
+			Object timeDelivery, Object timeUnload, String loginManager, Integer sku, Integer monoPall,
+			Integer mixPall, String isInternalMovement, String mailInfo, String slotInfo, Object dateCreateMarket,
+			String marketInfo, String marketContractType, String marketContractGroupId, String marketContractNumber,
+			String marketContractorId, String numProduct, Integer statusYard, Object unloadStartYard,
+			Object unloadFinishYard, Integer pallFactYard, Double weightFactYard, Double marketOrderSumFirst,
+			Double marketOrderSumFinal, Object arrivalFactYard, Object registrationFactYard, String addressLoading, Object lastDatetimePointLoad, Object dateOrderOrl) {
+		super();
+		this.idOrder = idOrder;
+		this.counterparty = counterparty;
+		this.contact = contact;
+		this.cargo = cargo;
+		this.typeLoad = typeLoad;
+		this.methodLoad = methodLoad;
+		this.typeTruck = typeTruck;
+		this.temperature = temperature;
+		this.control = (Boolean) control;
+		this.comment = comment;
+		this.status = status;
+		this.dateCreate = (Date) dateCreate;
+		this.dateDelivery = (Date) dateDelivery;
+		this.manager = manager;
+		this.telephoneManager = telephoneManager;
+		this.stacking = (Boolean) stacking;
+		this.logist = logist;
+		this.logistTelephone = logistTelephone;
+		this.marketNumber = marketNumber;
+		this.onloadWindowDate = (Date) onloadWindowDate;
+		this.onloadWindowTime = (Time) onloadWindowTime;
+		this.loadNumber = loadNumber;
+		this.numStockDelivery = numStockDelivery;
+		this.pall = pall;
+		this.way = way;
+		this.onloadTime = (Time) onloadTime;
+		this.incoterms = incoterms;
+		this.changeStatus = changeStatus;
+		this.needUnloadPoint = needUnloadPoint;
+		this.idRamp = idRamp;
+		this.timeDelivery = (Timestamp) timeDelivery;
+		this.timeUnload = (Time) timeUnload;
+		this.loginManager = loginManager;
+		this.sku = sku;
+		this.monoPall = monoPall;
+		this.mixPall = mixPall;
+		this.isInternalMovement = isInternalMovement;
+		this.mailInfo = mailInfo;
+		this.slotInfo = slotInfo;
+		this.dateCreateMarket = (Date) dateCreateMarket;
+		this.marketInfo = marketInfo;
+		this.marketContractType = marketContractType;
+		this.marketContractGroupId = marketContractGroupId;
+		this.marketContractNumber = marketContractNumber;
+		this.marketContractorId = marketContractorId;
+		this.numProduct = numProduct;
+		this.statusYard = statusYard;
+		this.unloadStartYard = (Timestamp) unloadStartYard;
+		this.unloadFinishYard = (Timestamp) unloadFinishYard;
+		this.pallFactYard = pallFactYard;
+		this.weightFactYard = weightFactYard;
+		this.marketOrderSumFirst = marketOrderSumFirst;
+		this.marketOrderSumFinal = marketOrderSumFinal;
+		this.arrivalFactYard = (Timestamp) arrivalFactYard;
+		this.registrationFactYard = (Timestamp) registrationFactYard;
+		this.addressLoading = addressLoading;
+		this.lastDatetimePointLoad = (Timestamp) lastDatetimePointLoad;
+		this.dateOrderOrl = (Date) dateOrderOrl;
+	}
+	
+	@Deprecated
 	public OrderDTO(Integer idOrder, String counterparty, String contact, String cargo, String typeLoad,
 			String methodLoad, String typeTruck, String temperature, Object control, String comment, Integer status,
 			Object dateCreate, Object dateDelivery, String manager, String telephoneManager, Object stacking,
@@ -224,78 +300,6 @@ public class OrderDTO {
 		this.registrationFactYard = (Timestamp) registrationFactYard;
 		this.addressLoading = addressLoading;
 		this.lastDatetimePointLoad = (Timestamp) lastDatetimePointLoad;
-	}
-	
-	@Deprecated
-	public OrderDTO(Integer idOrder, String counterparty, String contact, String cargo, String typeLoad,
-			String methodLoad, String typeTruck, String temperature, Object control, String comment, Integer status,
-			Object dateCreate, Object dateDelivery, String manager, String telephoneManager, Object stacking,
-			String logist, String logistTelephone, String marketNumber, Object onloadWindowDate, Object onloadWindowTime,
-			String loadNumber, String numStockDelivery, String pall, String way,
-			Object onloadTime, String incoterms, String changeStatus, String needUnloadPoint, Integer idRamp,
-			Object timeDelivery, Object timeUnload, String loginManager, Integer sku, Integer monoPall,
-			Integer mixPall, String isInternalMovement, String mailInfo, String slotInfo, Object dateCreateMarket,
-			String marketInfo, String marketContractType, String marketContractGroupId, String marketContractNumber,
-			String marketContractorId, String numProduct, Integer statusYard, Object unloadStartYard,
-			Object unloadFinishYard, Integer pallFactYard, Double weightFactYard, Double marketOrderSumFirst,
-			Double marketOrderSumFinal, Object arrivalFactYard, Object registrationFactYard, List<AddressDTO> addresses) {
-		super();
-		this.idOrder = idOrder;
-		this.counterparty = counterparty;
-		this.contact = contact;
-		this.cargo = cargo;
-		this.typeLoad = typeLoad;
-		this.methodLoad = methodLoad;
-		this.typeTruck = typeTruck;
-		this.temperature = temperature;
-		this.control = (Boolean) control;
-		this.comment = comment;
-		this.status = status;
-		this.dateCreate = (Date) dateCreate;
-		this.dateDelivery = (Date) dateDelivery;
-		this.manager = manager;
-		this.telephoneManager = telephoneManager;
-		this.stacking = (Boolean) stacking;
-		this.logist = logist;
-		this.logistTelephone = logistTelephone;
-		this.marketNumber = marketNumber;
-		this.onloadWindowDate = (Date) onloadWindowDate;
-		this.onloadWindowTime = (Time) onloadWindowTime;
-		this.loadNumber = loadNumber;
-		this.numStockDelivery = numStockDelivery;
-		this.pall = pall;
-		this.way = way;
-		this.onloadTime = (Time) onloadTime;
-		this.incoterms = incoterms;
-		this.changeStatus = changeStatus;
-		this.needUnloadPoint = needUnloadPoint;
-		this.idRamp = idRamp;
-		this.timeDelivery = (Timestamp) timeDelivery;
-		this.timeUnload = (Time) timeUnload;
-		this.loginManager = loginManager;
-		this.sku = sku;
-		this.monoPall = monoPall;
-		this.mixPall = mixPall;
-		this.isInternalMovement = isInternalMovement;
-		this.mailInfo = mailInfo;
-		this.slotInfo = slotInfo;
-		this.dateCreateMarket = (Date) dateCreateMarket;
-		this.marketInfo = marketInfo;
-		this.marketContractType = marketContractType;
-		this.marketContractGroupId = marketContractGroupId;
-		this.marketContractNumber = marketContractNumber;
-		this.marketContractorId = marketContractorId;
-		this.numProduct = numProduct;
-		this.statusYard = statusYard;
-		this.unloadStartYard = (Timestamp) unloadStartYard;
-		this.unloadFinishYard = (Timestamp) unloadFinishYard;
-		this.pallFactYard = pallFactYard;
-		this.weightFactYard = weightFactYard;
-		this.marketOrderSumFirst = marketOrderSumFirst;
-		this.marketOrderSumFinal = marketOrderSumFinal;
-		this.arrivalFactYard = (Timestamp) arrivalFactYard;
-		this.registrationFactYard = (Timestamp) registrationFactYard;
-		this.addresses = addresses;
 	}
 
 

@@ -446,7 +446,8 @@ public class OrderDAOImpl implements OrderDAO{
 	        "o.arrivalFactYard, " +
 	        "o.registrationFactYard,"+
 	        "a.bodyAddress, "+
-	        "o.lastDatetimePointLoad)";
+	        "o.lastDatetimePointLoad,"+
+	        "o.dateOrderOrl)"; // добавлено 27,09,2024
 	
 	private static final String queryGetOrderDTOByPeriodDeliveryAndSlots = orderConstruct + " from Order o LEFT JOIN o.addresses a where \r\n"
 			+ "(CASE \r\n"
@@ -492,6 +493,21 @@ public class OrderDAOImpl implements OrderDAO{
 		theObject.setParameter("dateEnd", dateEnd, TemporalType.DATE);
 		List<OrderDTO> trucks = theObject.getResultList();
 		return trucks;
+	}
+
+	private static final String queryGetOrderByPeriodDeliveryAndCodeContract = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH r.truck t LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH o.addresses a where o.status !=10 AND o.marketContractType =:marketContractType AND o.timeDelivery BETWEEN :dateStart and :dateEnd";
+	@Transactional
+	@Override
+	public List<Order> getOrderByPeriodDeliveryAndCodeContract(Date dateStart, Date dateEnd, String numContract) {
+		Timestamp dateStartFinal = Timestamp.valueOf(LocalDateTime.of(dateStart.toLocalDate(), LocalTime.of(00, 00)));
+		Timestamp dateEndFinal = Timestamp.valueOf(LocalDateTime.of(dateEnd.toLocalDate(), LocalTime.of(23, 59)));
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Order> theObject = currentSession.createQuery(queryGetOrderByPeriodDeliveryAndCodeContract, Order.class);
+		theObject.setParameter("dateStart", dateEndFinal, TemporalType.TIMESTAMP);
+		theObject.setParameter("dateEnd", dateStartFinal, TemporalType.TIMESTAMP);
+		theObject.setParameter("marketContractType", numContract.toString());
+		Set<Order> trucks = theObject.getResultList().stream().collect(Collectors.toSet());
+		return trucks.stream().collect(Collectors.toList());
 	}
 
 

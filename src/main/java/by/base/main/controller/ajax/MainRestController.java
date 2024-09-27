@@ -279,6 +279,10 @@ public class MainRestController {
 		Map<String, Object> responseMap = new HashMap<>();
 		Date date = Date.valueOf(LocalDate.now().minusDays(1));
 		List<OrderProduct> orderProducts = orderProductService.getOrderProductListHasDate(date);
+		Order order = orderService.getOrderById(27735);
+		System.err.println(order);
+		readerSchedulePlan.getPlanResponce(order);
+		
 		responseMap.put("status", "200");
 		responseMap.put("list", orderProducts);
 		responseMap.put("date", date.toString());
@@ -2290,6 +2294,78 @@ public class MainRestController {
 		}else {
 			return false;
 		}
+	}
+	
+	/**
+	 * Предварительный запрос при постановке слота.
+	 * Нужен для определения графика поставок. и отправки дат, для выбора
+	 * @param request
+	 * @param str
+	 * @return
+	 * @throws ParseException
+	 * @throws IOException
+	 */
+	@PostMapping("/slot/preload")
+	public Map<String, String> postSlotPreLoad(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+		java.util.Date t1 = new java.util.Date();
+		
+		User user = getThisUser();	
+		Map<String, String> response = new HashMap<String, String>();
+		String role = user.getRoles().stream().findFirst().get().getAuthority();
+		if(role.equals("ROLE_TOPMANAGER") || role.equals("ROLE_MANAGER")) {
+			response.put("status", "100");
+			response.put("message", "Неправомерный запрос от роли логиста");
+		}
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		Integer idOrder = jsonMainObject.get("idOrder") != null ? Integer.parseInt(jsonMainObject.get("idOrder").toString()) : null;
+		if(idOrder == null) {
+			response.put("status", "100");
+			response.put("message", "Ошибка. Не пришел idOrder");
+			response.put("info", "Ошибка. Не пришел idOrder");
+			return response;
+		}
+		Order order = orderService.getOrderById(idOrder);
+		if(order.getLoginManager() != null) {//обработка одновременного вытягивания объекта из дроп зоны
+			response.put("status", "100");
+			response.put("message", "Ошибка доступа. Заказ не зафиксирован. Данный заказ уже поставлен другим пользователем");
+			response.put("info", "Ошибка доступа. Заказ не зафиксирован. Данный заказ уже поставлен другим пользователем");
+			return response;
+		}
+		if(order.getStatus() == 6 && Integer.parseInt(jsonMainObject.get("status").toString()) == 8) {
+			//означает что манагер заранее создал маршрут с 8 статусом а потом создал заявку на него
+			response.put("status", "100");
+			response.put("message", "Вы пытаетесь установить слот от поставщика как слот на самовывоз.");
+			response.put("info", "Вы пытаетесь установить слот от поставщика как слот на самовывоз.");
+			return response;
+		}
+
+		//главные проверки
+
+		//главная проверка по графику поставок
+		String infoCheck = null;		
+		
+		if(!checkDeepImport(order, request)) {
+			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {			
+				PlanResponce planResponce = readerSchedulePlan.process(order);
+				if(planResponce.getStatus() == 0) {
+					infoCheck = planResponce.getMessage();
+					response.put("status", "105");
+					response.put("info", infoCheck.replace("\n", "<br>"));
+					return response;
+				}else {
+					infoCheck = planResponce.getMessage();
+					response.put("info", infoCheck.replace("\n", "<br>"));
+					response.put("status", "200");
+				}		
+				
+			}
+		}
+		
+		//конец главная проверка по графику поставок
+		java.util.Date t2 = new java.util.Date();
+		System.out.println(t2.getTime()-t1.getTime() + " ms - preload" );
+		return response;			
 	}
 	
 	/**

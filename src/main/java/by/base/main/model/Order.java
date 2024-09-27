@@ -228,6 +228,9 @@ public class Order {
 	@Column(name = "last_datetime_point_load")
 	private Timestamp lastDatetimePointLoad;
 	
+	@Column(name = "date_order_orl")
+	private Date dateOrderOrl;
+	
 	@Transient
 	private List<Address> addressesSort;
 	
@@ -276,6 +279,12 @@ public class Order {
 
 	
 	
+	public Date getDateOrderOrl() {
+		return dateOrderOrl;
+	}
+	public void setDateOrderOrl(Date dateOrderOrl) {
+		this.dateOrderOrl = dateOrderOrl;
+	}
 	public Timestamp getLastDatetimePointLoad() {
 		return lastDatetimePointLoad;
 	}

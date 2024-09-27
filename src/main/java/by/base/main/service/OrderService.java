@@ -141,6 +141,16 @@ public interface OrderService {
 	 */
 	List<OrderDTO> getOrderDTOByPeriodDelivery(Date dateStart, Date dateEnd);
 	
+	/**
+	 * Метод который возращает заказы по <b>дате доставки (timeDelivery)</b>
+	 * <br>
+	 * @param dateStart
+	 * @param dateEnd
+	 * @param numContract
+	 * @return
+	 */
+	List<Order> getOrderByPeriodDeliveryAndCodeContract(Date dateStart, Date dateEnd, String numContract);
+	
 	int updateOrderFromStatus (Order order);
 	
 	List<Order> getOrderByPeriodCreateAndCounterparty(Date dateStart, Date dateEnd, String counterparty);

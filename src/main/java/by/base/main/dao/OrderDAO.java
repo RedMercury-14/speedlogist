@@ -118,6 +118,16 @@ public interface OrderDAO {
 	 */
 	List<OrderDTO> getOrderDTOByPeriodDelivery(Date dateStart, Date dateEnd);
 	
+	/**
+	 * Метод который возращает заказы по <b>дате доставки (timeDelivery)</b>
+	 * <br>
+	 * @param dateStart
+	 * @param dateEnd
+	 * @param numContract
+	 * @return
+	 */
+	List<Order> getOrderByPeriodDeliveryAndCodeContract(Date dateStart, Date dateEnd, String numContract);
+	
 	Integer saveOrder (Order order);
 	
 	void updateOrder (Order order);

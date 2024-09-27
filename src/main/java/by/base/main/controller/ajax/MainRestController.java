@@ -1479,7 +1479,7 @@ public class MainRestController {
 	 * @param idMarket
 	 * @return
 	 */
-	@GetMapping("/manager/testMarketOrder/{idMarket}")
+	@GetMapping("/manager/testMarketOrderStatus/{idMarket}")
 	public Map<String, Object> testMarketOrder(HttpServletRequest request, @PathVariable String idMarket) {		
 		try {			
 			checkJWT(marketUrl);			
@@ -1502,12 +1502,12 @@ public class MainRestController {
 			marketJWT = null; // сразу говорим что jwt устарел
 			if(order != null) {
 				response.put("status", "200");
-				response.put("message", "Заказ загружен из локальной базы данных SL. Связь с маркетом отсутствует");
+				response.put("info", "Заказ загружен из локальной базы данных SL. Связь с маркетом отсутствует");
 				response.put("order", order);
 				return response;
 			}else {
 				response.put("status", "100");
-				response.put("message", "Заказ с номером " + idMarket + " в базе данных SL не найден. Связь с Маркетом отсутствует. Обратитесь в отдел ОСиУЗ");
+				response.put("info", "Заказ с номером " + idMarket + " в базе данных SL не найден. Связь с Маркетом отсутствует. Обратитесь в отдел ОСиУЗ");
 				return response;
 			}
 			
@@ -1520,16 +1520,16 @@ public class MainRestController {
 					Order orderFromDB = orderService.getOrderByMarketNumber(idMarket);
 					if(orderFromDB !=null) {
 						response.put("status", "100");
-						response.put("message", "Заказ " + idMarket + " не найден в маркете. Данные из SL устаревшие. Обновите данные в Маркете");
+						response.put("info", "Заказ " + idMarket + " не найден в маркете. Данные из SL устаревшие. Обновите данные в Маркете");
 						return response;
 					}else {
 						response.put("status", "100");
-						response.put("message", errorMarket.getErrorDescription());
+						response.put("info", errorMarket.getErrorDescription());
 						return response;
 					}
 				}
 				response.put("status", "100");
-				response.put("message", errorMarket.getErrorDescription());
+				response.put("info", errorMarket.getErrorDescription());
 				return response;
 			}
 			
@@ -1549,45 +1549,21 @@ public class MainRestController {
 //			System.out.println(order);
 			
 			if(order.getIdOrder() < 0) {
-				Order badOrder = orderService.getOrderByMarketNumber(order.getMarketNumber());
 				switch (order.getMarketInfo()) {
 				case "0":
-					response.put("status", "100");
-					response.put("message", "Реальынй статус из маркета - ЧЕРНОВИК");
-					break;
-//				case "60":
-//					response.put("status", "100");
-//					response.put("message", "Реальынй статус из маркета - 60");					
-//					break;
-//				case "70":
-//					response.put("status", "100");
-//					response.put("message", "Реальынй статус из маркета - 60");
-//					break;
+					response.put("status", "105");
+					response.put("info", "Реальынй статус из маркета - ЧЕРНОВИК");
+					return response;
 
 				default:
-					response.put("status", "100");
-					response.put("message", "Неизвестный статус - " + order.getMarketInfo());
+					response.put("status", "200");
+					response.put("info", "Заказ не в 50 статусе но и не в 0 статусе");
 					return response;
 				}
 				
-				if(badOrder != null) {						
-					if(badOrder.getStatus() == 8 || badOrder.getStatus() == 100 || badOrder.getStatus() == 7) {	
-						User user = getThisUser();
-						badOrder.setStatus(5);
-						badOrder.setChangeStatus(badOrder.getChangeStatus()+"\nУдалено системой как бронь!");
-						badOrder.setIdRamp(null);
-						badOrder.setTimeDelivery(null);
-						badOrder.setSlotInfo(badOrder.getSlotInfo()+"\nУдалено системой как бронь!");
-						orderService.updateOrder(badOrder);
-						Message message = new Message(user.getLogin(), null, "200", null, badOrder.toString(), "delete");
-						slotWebSocket.sendMessage(message);
-					}
-					
-				}
-				return response;
 			}else {
 				response.put("status", "200");
-				response.put("message", "Заказ в 50 статусе");
+				response.put("info", "Заказ в 50 статусе");
 //				System.out.println(checkOrderNeeds.check(order)); // тестовая проверка 
 				return response;
 			}

@@ -29,6 +29,9 @@ public class OrderProduct {
 
     @Column(name = "quantity")
     private Integer quantity;
+    
+    @Column(name = "code_product")
+    private Integer codeProduct;
 
     @Column(name = "date_create")
     private Timestamp dateCreate;
@@ -93,6 +96,14 @@ public class OrderProduct {
 	}
 
 
+	public Integer getCodeProduct() {
+		return codeProduct;
+	}
+
+	public void setCodeProduct(Integer codeProduct) {
+		this.codeProduct = codeProduct;
+	}
+
 	@Override
 	public int hashCode() {
 		return Objects.hash(idOrderProduct);
@@ -112,10 +123,9 @@ public class OrderProduct {
 
 	@Override
 	public String toString() {
-		return "OrderProduct [idOrderProduct=" + idOrderProduct + ", quantity=" + quantity + ", dateCreate="
-				+ dateCreate + ", comment=" + comment + ", nameProduct=" + nameProduct + ", product=" + product + "]";
+		return "OrderProduct [idOrderProduct=" + idOrderProduct + ", quantity=" + quantity + ", codeProduct="
+				+ codeProduct + ", dateCreate=" + dateCreate + ", comment=" + comment + ", nameProduct=" + nameProduct
+				+ ", product=" + product + "]";
 	}
-
-    
-    
+	
 }

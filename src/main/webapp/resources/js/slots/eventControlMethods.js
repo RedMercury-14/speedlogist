@@ -1,6 +1,6 @@
 import { snackbar } from "../snackbar/snackbar.js"
 import { dateHelper, isAdmin, isLogist } from "../utils.js"
-import { updateTableData, updateTableRow } from "./agGridUtils.js"
+import { addUpdateTableRow, removeTableRow, updateTableData, updateTableRow } from "./agGridUtils.js"
 import { createDraggableElement, updatePallInfo } from "./calendarUtils.js"
 import { userMessages } from "./constants.js"
 import { getOrderDataForAjax, getOrderType, getPallCoutnAction, stockAndDayIsVisible, stockIsVisible } from "./dataUtils.js"
@@ -12,6 +12,7 @@ export function addCalendarEvent(gridOptions, orderData, isAnotherUser) {
 	const updatedOrder = store.updateOrder(orderData)
 	// обновляем заказ в таблице
 	updateTableRow(gridOptions, updatedOrder)
+	// addUpdateTableRow(gridOptions, updatedOrder) -- ДЛЯ РАБОТЫ БЕЗ ВИРТУАЛЬНЫХ ЗАКАЗОВ
 	// добавляем ивент в виртуальный склад
 	store.addEvent(orderData, updatedOrder)
 	const currentStock = store.getCurrentStock()
@@ -67,8 +68,17 @@ export function deleteCalendarEvent(gridOptions, orderData, isAnotherUser) {
 	if ((isLogist(role) || isAdmin(role)) && isAnotherUser) orderData.loginManager = null
 	// обновляем заказ в сторе
 	const updatedOrder = store.updateOrder(orderData)
+	// // удаляем заказ из стора
+	// store.deleteOrder(orderData) -- ДЛЯ РАБОТЫ БЕЗ ВИРТУАЛЬНЫХ ЗАКАЗОВ
+
 	// обновляем заказ в таблице
 	updateTableRow(gridOptions, updatedOrder)
+
+	// // обновляем/удаляем заказ в таблице в зависимости от роли
+	// isLogist(role) || isAdmin(role) -- ДЛЯ РАБОТЫ БЕЗ ВИРТУАЛЬНЫХ ЗАКАЗОВ
+	// 	? updateTableRow(gridOptions, updatedOrder)
+	// 	: removeTableRow(gridOptions, orderData)
+
 	// удаляем ивент из стора
 	store.removeEvent(orderData.stockId, orderData.marketNumber)
 	// обновляем количество паллет для склада

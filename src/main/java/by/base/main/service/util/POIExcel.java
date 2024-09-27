@@ -1188,6 +1188,7 @@ public class POIExcel {
                 OrderProduct orderProduct = new OrderProduct();
                 orderProduct.setQuantity(quantity);
                 orderProduct.setNameProduct(nameProduct);
+                orderProduct.setCodeProduct(code);;
                 if(date != null) {
                 	Timestamp timestamp = Timestamp.valueOf(LocalDateTime.of(LocalDate.parse(date), LocalTime.now()));
                 	orderProduct.setDateCreate(timestamp);

@@ -136,6 +136,25 @@ export async function updateTableRow(gridOptions, orderData) {
 	gridOptions.api.applyTransactionAsync({ update: [newOrder] }, resultCallback)
 }
 
+export function removeTableRow(gridOptions, orderData) {
+	const rowId = Number(orderData.idOrder)
+	const rowNode = gridOptions.api.getRowNode(rowId)
+	if (!rowNode) return
+	gridOptions.api.applyTransactionAsync({ remove: [rowNode.data] })
+}
+
+export function addUpdateTableRow(gridOptions, orderData) {
+	const rowId = Number(orderData.idOrder)
+	const rowNode = gridOptions.api.getRowNode(rowId)
+	const newOrder = mapCallback(orderData)
+	if (rowNode) {
+		const resultCallback = () => highlightRow(gridOptions, rowNode)
+		gridOptions.api.applyTransactionAsync({ update: [newOrder] }, resultCallback)
+		return
+	}
+	gridOptions.api.applyTransactionAsync({ add: [newOrder] })
+}
+
 // выделение ("мигание") строки с изменениями
 function highlightRow(gridOptions, rowNode) {
 	gridOptions.api.flashCells({ rowNodes: [rowNode] })

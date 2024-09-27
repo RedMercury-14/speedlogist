@@ -140,6 +140,7 @@ export function methodAccessRules(method, order, currentLogin, currentRole) {
 		case 'delete': return deleteMethodAccessRules(order, currentLogin, currentRole)
 		case 'confirm': return confirmMethodAccessRules(order, currentLogin, currentRole)
 		case 'checkSlot': return isAdmin(currentRole)
+		case 'checkBooking': return isAdmin(currentRole)
 		default: return true
 	}
 }
@@ -162,6 +163,12 @@ function confirmMethodAccessRules(order, currentLogin, currentRole) {
 	const orderLogin = order.loginManager.toLowerCase()
 	if (isSlotsObserver(currentRole)) return false
 	return !isLogist(currentRole) && (!isAnotherUser(orderLogin, currentLogin) || isAdmin(currentRole))
+}
+
+export function removeDraggableElementRules(currentRole) {
+	return !isAdmin(currentRole)
+		&& !isLogist(currentRole)
+		&& !isSlotsObserver(currentRole)
 }
 
 

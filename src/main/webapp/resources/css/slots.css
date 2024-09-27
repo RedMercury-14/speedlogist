@@ -417,7 +417,9 @@ html, body {
 	cursor: default;
 }
 .fc-event-main .popup,
-.fc-event-main .checkSlot {
+.fc-event-main .checkSlot,
+.fc-event-main .checkBooking,
+.fc-event-main .deleteSlot {
 	position: absolute;
 	top: 0px;
 	right: 20px;
@@ -447,6 +449,14 @@ html, body {
 .fc-event-main .checkSlot {
 	top: 0px;
 	right: 40px;
+}
+.fc-event-main .checkBooking {
+	top: 0px;
+	right: 60px;
+}
+.fc-event-main .deleteSlot {
+	top: 0px;
+	right: 80px;
 }
 .fc-event-main .popup:hover,
 .fc-event-main .checkSlot:hover {
@@ -491,7 +501,7 @@ html, body {
 	overflow-y: scroll;
 }
 #external-events .fc-event {
-	/* width: 48%; */
+	width: 48%;
 	height: fit-content;
 	cursor: move;
 	background-color: var(--secondary-color);
@@ -499,6 +509,9 @@ html, body {
 	border-radius: 3px;
 	color: #fff;
 	box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
+}
+#external-events .fc-event .close {
+	transform: scale(1.5);
 }
 #external-events .event-title {
 	text-align: center;

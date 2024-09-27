@@ -273,6 +273,17 @@ public class MainRestController {
 	 */
 	public static final Comparator<Address> comparatorAddressForLastLoad = (Address e1, Address e2) -> (e2.getPointNumber() - e1.getPointNumber());
 	
+	
+	@GetMapping("/test")
+	public Map<String, Object> test(HttpServletRequest request, HttpServletResponse response){
+		Map<String, Object> responseMap = new HashMap<>();
+		Date date = Date.valueOf(LocalDate.now().minusDays(1));
+		List<OrderProduct> orderProducts = orderProductService.getOrderProductListHasDate(date);
+		responseMap.put("status", "200");
+		responseMap.put("list", orderProducts);
+		responseMap.put("date", date.toString());
+		return responseMap;		
+	}
 	/**
 	 * Удаление стоимости рейса
 	 * @param request

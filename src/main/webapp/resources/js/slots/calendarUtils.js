@@ -2,7 +2,8 @@ import { snackbar } from "../snackbar/snackbar.js"
 import { dateHelper } from "../utils.js"
 import { Draggable, eventColors, userMessages } from "./constants.js"
 import { convertToDDMMYYYY, convertToDayMonthTime, getEventBGColor, getSlotStatus, getSlotStatusYard, stockAndDayIsVisible, stockIsVisible } from "./dataUtils.js"
-import { editableRulesToConfirmBtn, hasOrderInYard, isAnotherUser, isBackgroundEvent } from "./rules.js"
+import { editableRulesToConfirmBtn, hasOrderInYard, isAnotherUser, isBackgroundEvent, removeDraggableElementRules } from "./rules.js"
+import { store } from "./store.js"
 
 export function addNewStockOption(select, stock) {
 	const option = document.createElement("option")
@@ -22,6 +23,7 @@ export function updateDropZone(dropZone, login, selectedStock) {
 export function createDraggableElement(container, order, login, currentStock) {
 	// устанавливаем логин менеджера, если его нет
 	!order.loginManager && (order.loginManager = login)
+	const eventId = order.marketNumber
 	const stockId = currentStock.id
 	const status = order.status
 	const bgColor = status === 5
@@ -29,14 +31,23 @@ export function createDraggableElement(container, order, login, currentStock) {
 			? getEventBGColor(7) : getEventBGColor(status)
 
 	const singleSlotElem = document.createElement("div")
-	singleSlotElem.id = `event_${order.marketNumber}`
+	singleSlotElem.id = `event_${eventId}`
 	singleSlotElem.className = status > 8 && status !== 100 ? "fc-event text-dark" : 'fc-event'
 	singleSlotElem.style.backgroundColor = bgColor
 	singleSlotElem.innerHTML = createSingleSlotHTML(order)
+
+	// кнопка удаления слота из дроп-зоны
+	const role = store.getRole()
+	if (removeDraggableElementRules(role)) {
+		const closeBtn = createCloseEventButton({ isDraggable: true }, true)
+		closeBtn.addEventListener('click',(e) => removeDraggableElement(e, singleSlotElem))
+		singleSlotElem.prepend(closeBtn)
+	}
+
 	container.appendChild(singleSlotElem)
 
 	const event = {
-		id: order.marketNumber,
+		id: eventId,
 		title: order.counterparty,
 		duration: order.timeUnload,
 		extendedProps: { data: order },
@@ -54,6 +65,13 @@ export function createDraggableElement(container, order, login, currentStock) {
 		singleSlotElem,
 		{ eventData: (eventEl) => event }
 	)
+}
+
+// обработка удаления слота из дроп-зоны
+function removeDraggableElement(e, draggableElement) {
+	const eventId = draggableElement.id.split('_')[1]
+	store.removeEventFromDropZone(eventId)
+	draggableElement.remove()
 }
 
 // функция создания контента ивента в дропзоне
@@ -138,6 +156,28 @@ export function createCheckSlotBtn(info) {
 	checkSlotBtn.innerHTML = `T`
 
 	return checkSlotBtn
+}
+
+export function createCheckBookingBtn(info) {
+	const checkBookingBtn = document.createElement('button')
+	checkBookingBtn.type = 'button'
+	checkBookingBtn.className = 'checkBooking'
+	checkBookingBtn.ariaLabel = 'Проверка на бронь'
+	checkBookingBtn.dataset.action = 'checkBooking'
+	checkBookingBtn.innerHTML = `B`
+
+	return checkBookingBtn
+}
+
+export function createDeleteSlotBtn(info) {
+	const checkBookingBtn = document.createElement('button')
+	checkBookingBtn.type = 'button'
+	checkBookingBtn.className = 'deleteSlot'
+	checkBookingBtn.ariaLabel = 'Удалить слот'
+	checkBookingBtn.dataset.action = 'deleteSlot'
+	checkBookingBtn.innerHTML = `D`
+
+	return checkBookingBtn
 }
 
 // функция добавления всплывающей подсказки с информацией

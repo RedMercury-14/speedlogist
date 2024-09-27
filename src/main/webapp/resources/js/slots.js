@@ -1,6 +1,7 @@
 import { snackbar } from "./snackbar/snackbar.js"
 import { store } from "./slots/store.js"
 import {
+	checkBookingBaseUrl,
 	checkSlotBaseUrl,
 	confirmSlotUrl,
 	deleteOrderUrl,
@@ -39,6 +40,8 @@ import {
 	displayStockAndDate,
 	highlightSlot,
 	createCheckSlotBtn,
+	createCheckBookingBtn,
+	createDeleteSlotBtn,
 } from "./slots/calendarUtils.js"
 import { dateHelper, debounce, getData, isAdmin, isLogist, isSlotsObserver, isStockProcurement } from "./utils.js"
 import { uiIcons } from "./uiIcons.js"
@@ -256,6 +259,9 @@ window.onload = async function() {
 		slotsSettings.DAY_COUNT_FORVARD
 	)
 	const marketData = await getData(`${getOrdersForSlotsBaseUrl}${startDateStr}&${endDateStr}`)
+	// не загружаем заказы в стор со статусов 5 (виртуальные заказы)
+	// const filtredOrders = marketData.filter(order => order.status !== 5) -- ДЛЯ РАБОТЫ БЕЗ ВИРТУАЛЬНЫХ ЗАКАЗОВ
+
 	// сохраняем заказы в стор
 	store.setOrders(marketData)
 	// добавляем ивенты на виртуальные склады
@@ -311,6 +317,7 @@ function getContextMenuItemsForOrderTable(params) {
 			action: () => {
 				const eventContainer = document.querySelector("#external-events")
 				createNewOrder(marketNumber, eventContainer)
+				// createNewOrder(order, eventContainer) -- ДЛЯ РАБОТЫ БЕЗ ВИРТУАЛЬНЫХ ЗАКАЗОВ
 			},
 			icon: uiIcons.clickBoadrPlus
 		},
@@ -320,6 +327,7 @@ function getContextMenuItemsForOrderTable(params) {
 			action: () => {
 				const eventContainer = document.querySelector("#external-events")
 				createNewOrder(marketNumber, eventContainer)
+				// createNewOrder(order, eventContainer) -- ДЛЯ РАБОТЫ БЕЗ ВИРТУАЛЬНЫХ ЗАКАЗОВ
 			},
 			icon: uiIcons.clickBoadrPlus
 		},
@@ -345,12 +353,14 @@ function createNewOrder(marketNumber, eventContainer) {
 	const dropeZone = store.getDropZone()
 	const login = store.getLogin()
 	const currentStock = store.getCurrentStock()
+	// const marketNumber = order.marketNumber -- ДЛЯ РАБОТЫ БЕЗ ВИРТУАЛЬНЫХ ЗАКАЗОВ
 
 	if (checkEventId(marketNumber, stocks, dropeZone)) {
 		snackbar.show(userMessages.checkEventId)
 		return
 	}
 
+	// const order = store.getOrderByMarketNumber(marketNumber) -- УДАЛИТЬ ДЛЯ РАБОТЫ БЕЗ ВИРТУАЛЬНЫХ ЗАКАЗОВ
 	const order = store.getOrderByMarketNumber(marketNumber)
 
 	if (!order) {
@@ -531,13 +541,15 @@ function eventContentHandler(info) {
 	const closeBtn = info.isDraggable || showBtn ? createCloseEventButton(info, showBtn) : ''
 	const popupBtn = createPopupButton(info, login)
 	const checkSlotBtn = createCheckSlotBtn(info)
+	const checkBookingBtn = createCheckBookingBtn(info)
+	const deleteSlotBtn = createDeleteSlotBtn(info)
 
 	const nodes = info.isDraggable || showBtn
 		? [ eventElem, closeBtn, popupBtn ]
 		: [ eventElem, popupBtn ]
 
 	// кнопка проверки слота для админа
-	if (isAdmin(role)) nodes.push(checkSlotBtn)
+	if (isAdmin(role)) nodes.push(checkSlotBtn, checkBookingBtn, deleteSlotBtn)
 
 	return {
 		domNodes: nodes
@@ -703,6 +715,18 @@ function eventClickHandler(info) {
 		checkSlot(info)
 		return
 	}
+
+	// обработчик клика на кнопку проверки на бронь
+	if (jsEvent.target.dataset.action === 'checkBooking') {
+		checkBooking(info)
+		return
+	}
+
+	// обработчик клика на кнопку проверки на бронь
+	if (jsEvent.target.dataset.action === 'deleteSlot') {
+		deleteOrder(info, true)
+		return
+	}
 }
 function eventsSetHandler(info) {
 	// console.log('ivents: ', info)
@@ -825,12 +849,15 @@ function updateOrder(info, isComplexUpdate) {
 		}
 	})
 }
-function deleteOrder(info) {
+function deleteOrder(info, deleteByAdmin) {
 	const method = 'delete'
 	const currentStock = store.getCurrentStock()
 	const currentLogin = store.getLogin()
 	const currentRole = store.getRole()
 	const orderData = getOrderDataForAjax(info, currentStock, currentLogin, currentRole, method)
+
+	// для админа - удалять заказ без переноса в дроп-зону
+	const isAnotherUser = !!deleteByAdmin
 
 	// проверка доступа к методу
 	if (!methodAccessRules(method, orderData, currentLogin, currentRole)) {
@@ -849,7 +876,7 @@ function deleteOrder(info) {
 			bootstrap5overlay.hideOverlay()
 
 			if (data.status === '200') {
-				deleteCalendarEvent(orderTableGridOption, orderData, false)
+				deleteCalendarEvent(orderTableGridOption, orderData, isAnotherUser)
 				return
 			}
 
@@ -988,7 +1015,7 @@ function getOrderFromMarket(marketNumber, eventContainer, successCallback) {
 			}
 
 			if (data.status === '105') {
-				errorHandler_105status(info, data)
+				errorHandler_105status(null, data)
 				return
 			}
 
@@ -1052,9 +1079,66 @@ function checkSlot(info) {
 	})
 }
 
+// проверка на бронь
+function checkBooking(info) {
+	const method = 'checkBooking'
+	const currentLogin = store.getLogin()
+	const currentRole = store.getRole()
+
+	const { event: fcEvent } = info
+	const order = fcEvent.extendedProps.data
+	const marketNumber = order.marketNumber
+
+	
+	// проверка доступа к методу
+	if (!methodAccessRules(method, order, currentLogin, currentRole)) {
+		snackbar.show(userMessages.operationNotAllowed)
+		return
+	}
+
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
+	
+	ajaxUtils.get({
+		url: getMarketOrderUrl + marketNumber,
+		successCallback: (data) => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+
+			if (data.status === '200') {
+				// если склад не на слотах, не создаем поставку
+				snackbar.show(data.message)
+				return
+			}
+
+			if (data.status === '100') {
+				snackbar.show(data.message)
+				return
+			}
+
+			if (data.status === '105') {
+				errorHandler_105status(null, data)
+				return
+			}
+		},
+		errorCallback: () => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+		}
+	})
+}
+
 // функция создания нового заказа по информации из Маркета
 function createNewOrderFromMarket(data, marketNumber, eventContainer) {
 	const order = data.order
+	//-------------------------------------------------------------
+	// ДЛЯ РАБОТЫ БЕЗ ВИРТУАЛЬНЫХ ЗАКАЗОВ
+	// // добавляем заказ в стор
+	// store.addNewOrderFromMarket(order) -- УДАЛИТЬ
+	// // обновляем данные таблицы
+	// updateTableData(orderTableGridOption, store.getCurrentStockOrders()) -- УДАЛИТЬ
+	// // добавляем заказ в дроп зону
+	// createNewOrder(order, eventContainer) ЗАМЕНА НА ORDER
+	//-------------------------------------------------------------
 	// добавляем заказ в стор
 	store.addNewOrderFromMarket(order)
 	// обновляем данные таблицы

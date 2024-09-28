@@ -1,6 +1,9 @@
 package by.base.main.dao.impl;
 
+import java.sql.Date;
+import java.time.DayOfWeek;
 import java.util.List;
+import java.util.Locale;
 
 import javax.transaction.Transactional;
 
@@ -12,7 +15,6 @@ import org.springframework.stereotype.Repository;
 
 import by.base.main.dao.ScheduleDAO;
 import by.base.main.model.Order;
-import by.base.main.model.Role;
 import by.base.main.model.Schedule;
 
 @Repository
@@ -89,6 +91,22 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	public List<Schedule> getSchedulesByStock(Integer numStock) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<Schedule> theObject = currentSession.createQuery(queryGetSchedulesByStock, Schedule.class);
+		theObject.setParameter("numStock", numStock);
+		List<Schedule> trucks = theObject.getResultList();
+		if(trucks.isEmpty()) {
+			return null;
+		}
+		return trucks;
+	}
+
+
+	@Transactional
+	@Override
+	public List<Schedule> getSchedulesByDateOrder(Date date, Integer numStock) {
+		String dayName = DayOfWeek.from(date.toLocalDate()).getDisplayName(java.time.format.TextStyle.FULL, new Locale("en")).toLowerCase();		
+		String queryGetSchedulesByDateOrder = "from Schedule where status=20 AND numStock=:numStock AND "+dayName+" LIKE '%з%'";
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Schedule> theObject = currentSession.createQuery(queryGetSchedulesByDateOrder, Schedule.class);
 		theObject.setParameter("numStock", numStock);
 		List<Schedule> trucks = theObject.getResultList();
 		if(trucks.isEmpty()) {

@@ -273,6 +273,25 @@ public class MainRestController {
 	 */
 	public static final Comparator<Address> comparatorAddressForLastLoad = (Address e1, Address e2) -> (e2.getPointNumber() - e1.getPointNumber());
 	
+	/*
+	 * 1. + Сначала разрабатываем метод который по дате определяет какие контракты должны быть заказаны в этот день (список Schedule) + 
+	 * 2. Разрабатываем метод, который принимает список кодов контрактов и по ним отдаёт заказы, в указаный период от текущей даты на 7 недель вперед
+	 * 3. Проверяем каждый заказ, сравнивая кол-во заказанного товара с тем что заказал отдел ОРЛ
+	 * 4. формируем отчёт в excel и отправляем на почту 
+	 */
+	@GetMapping("/test")
+	public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response){
+		java.util.Date t1 = new java.util.Date();
+		Map<String, Object> responseMap = new HashMap<>();
+		List<Schedule> schedules = scheduleService.getSchedulesByDateOrder(Date.valueOf(LocalDate.now()), 1700);
+		
+		responseMap.put("status", "200");
+		responseMap.put("schedules", schedules);
+		responseMap.put("size", schedules.size());
+		java.util.Date t2 = new java.util.Date();
+		System.out.println(t2.getTime()-t1.getTime() + " ms - testNewMethod" );
+		return responseMap;		
+	}
 	
 	@GetMapping("/test/{idOrder}")
 	public Map<String, Object> test(HttpServletRequest request, HttpServletResponse response, @PathVariable String idOrder){
@@ -290,6 +309,7 @@ public class MainRestController {
 		System.out.println(t2.getTime()-t1.getTime() + " ms - preloadTEST" );
 		return responseMap;		
 	}
+	
 	/**
 	 * Удаление стоимости рейса
 	 * @param request

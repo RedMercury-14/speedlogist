@@ -283,11 +283,14 @@ public class MainRestController {
 	public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response){
 		java.util.Date t1 = new java.util.Date();
 		Map<String, Object> responseMap = new HashMap<>();
-		List<Schedule> schedules = scheduleService.getSchedulesByDateOrder(Date.valueOf(LocalDate.now()), 1700);
+		Date dateStart = Date.valueOf(LocalDate.now().minusDays(2));
+		Date dateFinish7Week = Date.valueOf(LocalDate.now().plusMonths(2));
+		List<Schedule> schedules = scheduleService.getSchedulesByDateOrder(dateStart, 1700); // реализация 1 пункта
+		List<Order> ordersHas7Week = orderService.getOrderByPeriodDeliveryAndListCodeContract(dateStart, dateFinish7Week, schedules); // реализация 2 пункта
 		
 		responseMap.put("status", "200");
-		responseMap.put("schedules", schedules);
-		responseMap.put("size", schedules.size());
+		responseMap.put("ordersHas7Week", ordersHas7Week);
+		responseMap.put("sizeOrdersHas7Week", ordersHas7Week.size());
 		java.util.Date t2 = new java.util.Date();
 		System.out.println(t2.getTime()-t1.getTime() + " ms - testNewMethod" );
 		return responseMap;		

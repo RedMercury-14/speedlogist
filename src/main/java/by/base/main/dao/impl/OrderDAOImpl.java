@@ -30,6 +30,7 @@ import by.base.main.dto.OrderDTOForSlot;
 import by.base.main.model.Address;
 import by.base.main.model.Order;
 import by.base.main.model.Route;
+import by.base.main.model.Schedule;
 
 @Repository
 public class OrderDAOImpl implements OrderDAO{
@@ -508,6 +509,31 @@ public class OrderDAOImpl implements OrderDAO{
 		theObject.setParameter("marketContractType", numContract.toString());
 		Set<Order> trucks = theObject.getResultList().stream().collect(Collectors.toSet());
 		return trucks.stream().collect(Collectors.toList());
+	}
+
+	private static final String queryGgetOrderByPeriodDeliveryAndListCodeContract = 
+		    "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r " +
+		    "LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru " +
+		    "LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd " +
+		    "LEFT JOIN FETCH r.truck t LEFT JOIN FETCH r.roteHasShop rhs " +
+		    "LEFT JOIN FETCH o.addresses a " +
+		    "where o.status != 10 AND o.marketContractType IN :marketContractTypes " +
+		    "AND o.timeDelivery BETWEEN :dateStart and :dateEnd";
+
+	@Transactional
+	@Override
+	public List<Order> getOrderByPeriodDeliveryAndListCodeContract(Date dateStart, Date dateEnd, List<String> numContracts) {
+	    Timestamp dateStartFinal = Timestamp.valueOf(LocalDateTime.of(dateStart.toLocalDate(), LocalTime.of(00, 00)));
+	    Timestamp dateEndFinal = Timestamp.valueOf(LocalDateTime.of(dateEnd.toLocalDate(), LocalTime.of(23, 59)));
+	    Session currentSession = sessionFactory.getCurrentSession();
+	    
+	    Query<Order> theObject = currentSession.createQuery(queryGgetOrderByPeriodDeliveryAndListCodeContract, Order.class);
+	    theObject.setParameter("dateStart", dateStartFinal, TemporalType.TIMESTAMP);
+	    theObject.setParameter("dateEnd", dateEndFinal, TemporalType.TIMESTAMP);
+	    theObject.setParameterList("marketContractTypes", numContracts); // Используем setParameterList для списка
+	    
+	    Set<Order> orders = theObject.getResultList().stream().collect(Collectors.toSet());
+	    return new ArrayList<>(orders); 
 	}
 
 

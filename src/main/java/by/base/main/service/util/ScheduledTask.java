@@ -2,6 +2,7 @@ package by.base.main.service.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.Date;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -13,6 +14,9 @@ import javax.servlet.ServletContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 
+import by.base.main.model.Order;
+import by.base.main.model.Schedule;
+import by.base.main.service.OrderService;
 import by.base.main.service.ScheduleService;
 import by.base.main.util.MainChat;
 
@@ -39,6 +43,12 @@ public class ScheduledTask {
 	
 	@Autowired
 	private MainChat mainChat;
+	
+	@Autowired
+	private ServiceLevel serviceLevel;
+	
+	@Autowired
+	private OrderService orderService;
 	
     @Scheduled(cron = "0 00 11 * * ?") // каждый день в 11:00
     public void sendSchedulesHasORL() {
@@ -82,6 +92,29 @@ public class ScheduledTask {
     
     @Scheduled(cron = "0 00 20 * * ?") // каждый день в 20:00
     public void clearMessageList() {
+    	mainChat.messegeList.clear();
+    }
+    
+    /**
+     * Метод, отвечающий за формирование отчётов serviceLevel
+     * @throws IOException 
+     */
+    @Scheduled(cron = "0 00 08 * * ?") // каждый день в 20:00
+    public void sendServiceLevel() throws IOException {
+    	Date dateStart = Date.valueOf(LocalDate.now().minusDays(1));
+		Date dateFinish7Week = Date.valueOf(LocalDate.now().plusMonths(2));
+		List<Schedule> schedules = scheduleService.getSchedulesByDateOrder(dateStart, 1700); // реализация 1 пункта
+		List<Order> ordersHas7Week = orderService.getOrderByPeriodDeliveryAndListCodeContract(dateStart, dateFinish7Week, schedules); // реализация 2 пункта
+    	List<File> files = new ArrayList<File>();
+    	String appPath = servletContext.getRealPath("/");
+    	files.add(serviceLevel.checkingOrdersForORLNeeds(ordersHas7Week, dateStart, appPath));
+    	
+    	//получаем email
+    	List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.slevel");
+    	
+        LocalDate currentTime = LocalDate.now().minusDays(1);
+        String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+    	mailService.sendEmailWithFilesToUsers(servletContext, "Service level на " + currentTimeString, "Service level заказов, относительно заказов ОРЛ.\nВключает брони.\nVer 1.0", files, emails);
     	mainChat.messegeList.clear();
     }
 }

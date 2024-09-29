@@ -280,8 +280,8 @@ public class MainRestController {
 	/*
 	 * 1. + Сначала разрабатываем метод который по дате определяет какие контракты должны быть заказаны в этот день (список Schedule) + 
 	 * 2. + Разрабатываем метод, который принимает список кодов контрактов и по ним отдаёт заказы, в указаный период от текущей даты на 7 недель вперед
-	 * 3. Суммируем заказы по каждому коду контракта
-	 * 4. формируем отчёт в excel и отправляем на почту 
+	 * 3. + Суммируем заказы по каждому коду контракта
+	 * 4. + формируем отчёт в excel и отправляем на почту 
 	 */
 	@GetMapping("/test")
 	public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException{
@@ -291,7 +291,8 @@ public class MainRestController {
 		Date dateFinish7Week = Date.valueOf(LocalDate.now().plusMonths(2));
 		List<Schedule> schedules = scheduleService.getSchedulesByDateOrder(dateStart, 1700); // реализация 1 пункта
 		List<Order> ordersHas7Week = orderService.getOrderByPeriodDeliveryAndListCodeContract(dateStart, dateFinish7Week, schedules); // реализация 2 пункта
-		File file = serviceLevel.checkingOrdersForORLNeeds(ordersHas7Week, dateStart, request);
+		String appPath = request.getServletContext().getRealPath("");
+		File file = serviceLevel.checkingOrdersForORLNeeds(ordersHas7Week, dateStart, appPath);
 		
 		responseMap.put("status", 200);
 		responseMap.put("ordersHas7Week", ordersHas7Week);
@@ -2249,6 +2250,7 @@ public class MainRestController {
 		order.setIdRamp(idRamp);
 		order.setLoginManager(user.getLogin());
 		order.setStatus(jsonMainObject.get("status") == null ? 7 : Integer.parseInt(jsonMainObject.get("status").toString()));
+		order.setDateOrderOrl(jsonMainObject.get("dateOrderOrl") == null ? null : Date.valueOf(jsonMainObject.get("dateOrderOrl").toString()));
 		//главные проверки
 		//проверка на лимит приемки паллет	
 		if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) { // проверяем всё кроме вн перемещений

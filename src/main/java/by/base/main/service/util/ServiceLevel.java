@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.Date;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -16,9 +18,14 @@ import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -53,7 +60,7 @@ public class ServiceLevel {
 	 * 3. + Суммируем заказы по каждому коду контракта
 	 * 4. формируем отчёт в excel и отправляем на почту 
 	 */
-	public File checkingOrdersForORLNeeds(List<Order> orders, Date dateOrder, HttpServletRequest request) throws IOException {
+	public File checkingOrdersForORLNeeds(List<Order> orders, Date dateOrder, String appPath) throws IOException {
 		orders.sort(Comparator.comparing(Order::getMarketContractType)); // групируем номера контрактов
 		int sizeOrders = orders.size();
 		int sizeVoidOrder = 0;
@@ -98,75 +105,107 @@ public class ServiceLevel {
 		}		
 //		dataOrderHasNumContracts.forEach(d-> System.out.println(d));
 		//закончили формирование сводного списка
-		String appPath = request.getServletContext().getRealPath("");
-		String fileName = "reportORL-ZAQ.xlsx";		
+		String dateReport = LocalDate.now().minusDays(1).format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+		String fileName = "SLevel.xlsx";		
 		System.err.println(appPath + "resources/others/");
+		
+		
+		
 		return exportToExcel(dataOrderHasNumContracts, orderProductsORL, appPath + "resources/others/" + fileName);		
 	}
 	
-	public File exportToExcel(List<DataOrderHasNumContract> dataOrderHasNumContracts,Map <Integer, Integer> orderProductsORL, String filePath) throws IOException {
-		Map<Integer, Product> products = productService.getAllProductMap();
-        Workbook workbook = new XSSFWorkbook();
-        Sheet sheet = workbook.createSheet("Отчёт относительно заказов");
-//        Sheet sheet2 = workbook.createSheet("Отчёт относительно заказов ОРЛ");
+	public File exportToExcel(List<DataOrderHasNumContract> dataOrderHasNumContracts, Map<Integer, Integer> orderProductsORL, String filePath) throws IOException {
+	    Map<Integer, Product> products = productService.getAllProductMap();
+	    Workbook workbook = new XSSFWorkbook();
+	    Sheet sheet = workbook.createSheet("Отчёт относительно заказов");
 
-        // Создание заголовков
-        Row headerRow = sheet.createRow(0);
-        headerRow.createCell(0).setCellValue("Поставщик");
-        headerRow.createCell(1).setCellValue("Код контракта");
-        headerRow.createCell(2).setCellValue("Код товара");
-        headerRow.createCell(3).setCellValue("Товар");
-        headerRow.createCell(4).setCellValue("Заказ ОРЛ");
-        headerRow.createCell(5).setCellValue("Заказ менеджера");
-        headerRow.createCell(6).setCellValue("id Заказов");
-        
-        int rowNum = 1;
+	    // Создание заголовков
+	    Row headerRow = sheet.createRow(0);
+	    headerRow.createCell(0).setCellValue("Поставщик");
+	    headerRow.createCell(1).setCellValue("Код контракта");
+	    headerRow.createCell(2).setCellValue("Код товара");
+	    headerRow.createCell(3).setCellValue("Товар");
+	    headerRow.createCell(4).setCellValue("Заказ ОРЛ");
+	    headerRow.createCell(5).setCellValue("Заказ менеджера");
+	    headerRow.createCell(6).setCellValue("id Заказов");
+	    
 
-        // Заполнение данными 1 страницы
-        for (DataOrderHasNumContract contract : dataOrderHasNumContracts) {
-            String counterparty = contract.counterparty;
-            String numContract = contract.numContract;
+	    // Применение фильтров
+	    sheet.setAutoFilter(new CellRangeAddress(0, 0, 0, 6));
 
-            
-            // Обработка orderProductsManagerFact
-            for (Map.Entry<Long, Double> managerEntry : contract.orderProductsManagerFact.entrySet()) {
-                Long productCode = managerEntry.getKey();
-                Double productValue = managerEntry.getValue();
-                
-                // Обработка orderProductsORL
-                Integer orlValue = orderProductsORL.get(productCode.intValue());
-                
-                // Создание строки
-                Row row = sheet.createRow(rowNum++);
-                row.createCell(0).setCellValue(counterparty);
-                row.createCell(1).setCellValue(numContract);
-                row.createCell(2).setCellValue(productCode);
-                row.createCell(3).setCellValue(products.get(productCode.intValue()) == null ? "Товар отсутствует в базе данных" : products.get(productCode.intValue()).getName()); // Товар оставляем null
-				if(orlValue != null) {
-					row.createCell(4).setCellValue(orlValue);
-				}else {
-					row.createCell(4).setCellValue("Отсутствует заказ от ОРЛ");
-				}                
-                row.createCell(5).setCellValue(productValue);
-                
-                String idOrdersStr = "";
-                for (Integer id : contract.idOrders) {
-                	idOrdersStr = idOrdersStr + id + ";";
-				}
-                row.createCell(6).setCellValue(idOrdersStr);
-                    
-            }
-        }
+	    int rowNum = 1;
 
-        // Запись в файл
-        File excelFile = new File(filePath);
-        try (FileOutputStream fileOut = new FileOutputStream(excelFile)) {
-            workbook.write(fileOut);
-        }
+	    // Заполнение данными 1 страницы
+	    for (DataOrderHasNumContract contract : dataOrderHasNumContracts) {
+	        String counterparty = contract.counterparty;
+	        String numContract = contract.numContract;
 
-        workbook.close();
-        return excelFile; // Возвращаем созданный файл
-    }
+	        // Обработка orderProductsManagerFact
+	        for (Map.Entry<Long, Double> managerEntry : contract.orderProductsManagerFact.entrySet()) {
+	            Long productCode = managerEntry.getKey();
+	            Double productValue = managerEntry.getValue();
+
+	            // Обработка orderProductsORL
+	            Integer orlValue = orderProductsORL.get(productCode.intValue());
+
+	            // Создание строки
+	            Row row = sheet.createRow(rowNum++);
+	            row.createCell(0).setCellValue(counterparty);
+	            row.createCell(1).setCellValue(numContract);
+	            row.createCell(2).setCellValue(productCode);
+	            row.createCell(3).setCellValue(products.get(productCode.intValue()) == null ? "Товар отсутствует в базе данных" : products.get(productCode.intValue()).getName());
+	            
+	            if (orlValue != null) {
+	                row.createCell(4).setCellValue(orlValue);
+	            } else {
+	                row.createCell(4).setCellValue("Отсутствует заказ от ОРЛ");
+	            }
+
+	            row.createCell(5).setCellValue(productValue);
+
+	            String idOrdersStr = String.join(";", contract.idOrders.stream().map(String::valueOf).toArray(String[]::new));
+	            row.createCell(6).setCellValue(idOrdersStr);
+
+	            // Подсветка строки, если orlValue < productValue
+	            if (orlValue != null && orlValue < productValue) {
+	                CellStyle redStyle = workbook.createCellStyle();
+	                Font redFont = workbook.createFont();
+	                redFont.setColor(IndexedColors.RED.getIndex());
+	                redStyle.setFont(redFont);
+	                
+	                for (int i = 0; i < row.getPhysicalNumberOfCells(); i++) {
+	                    Cell cell = row.getCell(i);
+	                    cell.setCellStyle(redStyle);
+	                }
+	            }else if (orlValue != null && orlValue > productValue) {
+	            	CellStyle redStyle = workbook.createCellStyle();
+	                Font redFont = workbook.createFont();
+	                redFont.setColor(IndexedColors.BLUE.getIndex());
+	                redStyle.setFont(redFont);
+	                
+	                for (int i = 0; i < row.getPhysicalNumberOfCells(); i++) {
+	                    Cell cell = row.getCell(i);
+	                    cell.setCellStyle(redStyle);
+	                }
+	            }
+	        }
+	    }
+
+	    // Установка автоширины для всех столбцов
+	    for (int i = 0; i < 7; i++) {
+	        sheet.autoSizeColumn(i);
+	    }
+
+	    // Запись в файл
+	    File excelFile = new File(filePath);
+	    try (FileOutputStream fileOut = new FileOutputStream(excelFile)) {
+	        workbook.write(fileOut);
+	    }
+
+	    workbook.close();
+	    return excelFile; // Возвращаем созданный файл
+	}
+
 	
 	class DataOrderHasNumContract {
 		Map <Integer, Integer> orderProductsORL;

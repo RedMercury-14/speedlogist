@@ -2,7 +2,10 @@ package by.base.main.service.impl;
 
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -53,6 +56,18 @@ public class OrderProductServiceImpl implements OrderProductService{
 		}else {
 			return null;
 		}
+	}
+
+	@Override
+	public Map<Integer, Integer> getOrderProductMapHasDate(Date date) {
+		List<OrderProduct> orderProducts = productDAO.getOrderProductListHasDate(date);
+		Map<Integer, Integer> responce = orderProducts.stream()
+			    .collect(Collectors.toMap(
+			        OrderProduct::getCodeProduct, 
+			        OrderProduct::getQuantity
+			    ));
+		
+		return responce;
 	}
 
 }

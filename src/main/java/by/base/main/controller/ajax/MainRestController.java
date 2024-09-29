@@ -142,6 +142,7 @@ import by.base.main.service.util.OrderCreater;
 import by.base.main.service.util.POIExcel;
 import by.base.main.service.util.PropertiesUtils;
 import by.base.main.service.util.ReaderSchedulePlan;
+import by.base.main.service.util.ServiceLevel;
 import by.base.main.util.ChatEnpoint;
 import by.base.main.util.MainChat;
 import by.base.main.util.SlotWebSocket;
@@ -253,6 +254,9 @@ public class MainRestController {
 	@Autowired
 	private ReaderSchedulePlan readerSchedulePlan;
 	
+	@Autowired
+	private ServiceLevel serviceLevel;
+	
 	private static String classLog;
 	private static String marketJWT;
 	//в отдельный файл
@@ -275,22 +279,25 @@ public class MainRestController {
 	
 	/*
 	 * 1. + Сначала разрабатываем метод который по дате определяет какие контракты должны быть заказаны в этот день (список Schedule) + 
-	 * 2. Разрабатываем метод, который принимает список кодов контрактов и по ним отдаёт заказы, в указаный период от текущей даты на 7 недель вперед
-	 * 3. Проверяем каждый заказ, сравнивая кол-во заказанного товара с тем что заказал отдел ОРЛ
+	 * 2. + Разрабатываем метод, который принимает список кодов контрактов и по ним отдаёт заказы, в указаный период от текущей даты на 7 недель вперед
+	 * 3. Суммируем заказы по каждому коду контракта
 	 * 4. формируем отчёт в excel и отправляем на почту 
 	 */
 	@GetMapping("/test")
-	public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response){
+	public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException{
 		java.util.Date t1 = new java.util.Date();
 		Map<String, Object> responseMap = new HashMap<>();
 		Date dateStart = Date.valueOf(LocalDate.now().minusDays(2));
 		Date dateFinish7Week = Date.valueOf(LocalDate.now().plusMonths(2));
 		List<Schedule> schedules = scheduleService.getSchedulesByDateOrder(dateStart, 1700); // реализация 1 пункта
 		List<Order> ordersHas7Week = orderService.getOrderByPeriodDeliveryAndListCodeContract(dateStart, dateFinish7Week, schedules); // реализация 2 пункта
+		File file = serviceLevel.checkingOrdersForORLNeeds(ordersHas7Week, dateStart, request);
 		
-		responseMap.put("status", "200");
+		responseMap.put("status", 200);
 		responseMap.put("ordersHas7Week", ordersHas7Week);
 		responseMap.put("sizeOrdersHas7Week", ordersHas7Week.size());
+		responseMap.put("body", file);
+		responseMap.put("extension", ".xlsx");
 		java.util.Date t2 = new java.util.Date();
 		System.out.println(t2.getTime()-t1.getTime() + " ms - testNewMethod" );
 		return responseMap;		
@@ -3954,6 +3961,16 @@ public class MainRestController {
 		System.out.println("Конец программы");
 	}
 
+	/**
+	 * Метод отвечает за формирование отчёта.
+	 * Отлично отправляет его через rest
+	 * @param dateStart
+	 * @param dateFinish
+	 * @param request
+	 * @param response
+	 * @return
+	 * @throws IOException
+	 */
 	@GetMapping("/manager/getReport/{dateStart}&{dateFinish}")
 	public Map<String, Object> getReport(@PathVariable Date dateStart, @PathVariable Date dateFinish,
 			HttpServletRequest request, HttpServletResponse response) throws IOException {

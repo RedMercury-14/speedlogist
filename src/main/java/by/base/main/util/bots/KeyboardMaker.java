@@ -103,6 +103,7 @@ public class KeyboardMaker {
         row2.add(reg);
         KeyboardRow row3 = new KeyboardRow();
         row3.add(new KeyboardButton("Список машин заявленных на завтра"));
+        row3.add(new KeyboardButton("Список всех заявленных машин"));
         
         List<KeyboardRow> keyboard = new ArrayList<>();
         keyboard.add(row1);
@@ -363,17 +364,17 @@ public class KeyboardMaker {
     	
     	InlineKeyboardButton inlineKeyboardButton1 = new InlineKeyboardButton();
 	    inlineKeyboardButton1.setText("Отменить");
-	    inlineKeyboardButton1.setCallbackData(numTruck+"_cancel" );
+	    inlineKeyboardButton1.setCallbackData("cancelTruck_"+numTruck );
 	    rowInline.add(inlineKeyboardButton1);
 	    
-	    InlineKeyboardButton inlineKeyboardButton2 = new InlineKeyboardButton();
-	    inlineKeyboardButton2.setText("Удалить");
-	    inlineKeyboardButton2.setCallbackData(numTruck+"_delete");
-	    rowInline.add(inlineKeyboardButton2);
+//	    InlineKeyboardButton inlineKeyboardButton2 = new InlineKeyboardButton();
+//	    inlineKeyboardButton2.setText("Удалить");
+//	    inlineKeyboardButton2.setCallbackData("deleteTruck_"+numTruck);
+//	    rowInline.add(inlineKeyboardButton2);
 	    
 	    InlineKeyboardButton inlineKeyboardButton3 = new InlineKeyboardButton();
 	    inlineKeyboardButton3.setText("Редактировать");
-	    inlineKeyboardButton3.setCallbackData(numTruck+"_edit");
+	    inlineKeyboardButton3.setCallbackData("editTruck_"+numTruck);
 	    rowInline.add(inlineKeyboardButton3);
     	
 	    rowsInline.add(rowInline);

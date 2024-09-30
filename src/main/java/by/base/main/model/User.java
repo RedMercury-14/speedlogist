@@ -2,6 +2,7 @@ package by.base.main.model;
 
 import java.io.Serializable;
 import java.sql.Date;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -230,6 +231,10 @@ public class User implements Serializable{
 	@Transient
 	private String confirmPassword;
 	
+	@JsonIgnore
+	@Transient
+	private LocalDate dateOrderTruckOptimization;
+	
 	@Transient
 	@JsonIgnore // закрыл потому что ломает запрос от Route к User 
 	private int numCar;
@@ -331,6 +336,14 @@ public class User implements Serializable{
 
 	public boolean isEnablet() {
 		return enablet;
+	}
+
+	public LocalDate getDateOrderTruckOptimization() {
+		return dateOrderTruckOptimization;
+	}
+
+	public void setDateOrderTruckOptimization(LocalDate dateOrderTruckOptimization) {
+		this.dateOrderTruckOptimization = dateOrderTruckOptimization;
 	}
 
 	public void setEnablet(boolean enablet) {

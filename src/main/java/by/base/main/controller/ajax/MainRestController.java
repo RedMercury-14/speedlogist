@@ -142,6 +142,7 @@ import by.base.main.service.util.OrderCreater;
 import by.base.main.service.util.POIExcel;
 import by.base.main.service.util.PropertiesUtils;
 import by.base.main.service.util.ReaderSchedulePlan;
+import by.base.main.service.util.ServiceLevel;
 import by.base.main.util.ChatEnpoint;
 import by.base.main.util.MainChat;
 import by.base.main.util.SlotWebSocket;
@@ -253,6 +254,9 @@ public class MainRestController {
 	@Autowired
 	private ReaderSchedulePlan readerSchedulePlan;
 	
+	@Autowired
+	private ServiceLevel serviceLevel;
+	
 	private static String classLog;
 	private static String marketJWT;
 	//в отдельный файл
@@ -273,17 +277,50 @@ public class MainRestController {
 	 */
 	public static final Comparator<Address> comparatorAddressForLastLoad = (Address e1, Address e2) -> (e2.getPointNumber() - e1.getPointNumber());
 	
-	
+	/*
+	 * 1. + Сначала разрабатываем метод который по дате определяет какие контракты должны быть заказаны в этот день (список Schedule) + 
+	 * 2. + Разрабатываем метод, который принимает список кодов контрактов и по ним отдаёт заказы, в указаный период от текущей даты на 7 недель вперед
+	 * 3. + Суммируем заказы по каждому коду контракта
+	 * 4. + формируем отчёт в excel и отправляем на почту 
+	 */
 	@GetMapping("/test")
-	public Map<String, Object> test(HttpServletRequest request, HttpServletResponse response){
+	public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException{
+		java.util.Date t1 = new java.util.Date();
 		Map<String, Object> responseMap = new HashMap<>();
-		Date date = Date.valueOf(LocalDate.now().minusDays(1));
-		List<OrderProduct> orderProducts = orderProductService.getOrderProductListHasDate(date);
-		responseMap.put("status", "200");
-		responseMap.put("list", orderProducts);
-		responseMap.put("date", date.toString());
+		Date dateStart = Date.valueOf(LocalDate.now().minusDays(2));
+		Date dateFinish7Week = Date.valueOf(LocalDate.now().plusMonths(2));
+		List<Schedule> schedules = scheduleService.getSchedulesByDateOrder(dateStart, 1700); // реализация 1 пункта
+		List<Order> ordersHas7Week = orderService.getOrderByPeriodDeliveryAndListCodeContract(dateStart, dateFinish7Week, schedules); // реализация 2 пункта
+		String appPath = request.getServletContext().getRealPath("");
+		File file = serviceLevel.checkingOrdersForORLNeeds(ordersHas7Week, dateStart, appPath);
+		
+		responseMap.put("status", 200);
+		responseMap.put("ordersHas7Week", ordersHas7Week);
+		responseMap.put("sizeOrdersHas7Week", ordersHas7Week.size());
+		responseMap.put("body", file);
+		responseMap.put("extension", ".xlsx");
+		java.util.Date t2 = new java.util.Date();
+		System.out.println(t2.getTime()-t1.getTime() + " ms - testNewMethod" );
 		return responseMap;		
 	}
+	
+	@GetMapping("/test/{idOrder}")
+	public Map<String, Object> test(HttpServletRequest request, HttpServletResponse response, @PathVariable String idOrder){
+		java.util.Date t1 = new java.util.Date();
+		Map<String, Object> responseMap = new HashMap<>();
+		
+		Order order = orderService.getOrderById(Integer.parseInt(idOrder));
+		order.setTimeDelivery(Timestamp.valueOf(LocalDateTime.now()));
+		PlanResponce planResponce = readerSchedulePlan.getPlanResponce(order);
+		
+		responseMap.put("status", "200");
+		responseMap.put("timeDelivery", order.getTimeDelivery());
+		responseMap.put("planResponce", planResponce);
+		java.util.Date t2 = new java.util.Date();
+		System.out.println(t2.getTime()-t1.getTime() + " ms - preloadTEST" );
+		return responseMap;		
+	}
+	
 	/**
 	 * Удаление стоимости рейса
 	 * @param request
@@ -2213,6 +2250,7 @@ public class MainRestController {
 		order.setIdRamp(idRamp);
 		order.setLoginManager(user.getLogin());
 		order.setStatus(jsonMainObject.get("status") == null ? 7 : Integer.parseInt(jsonMainObject.get("status").toString()));
+		order.setDateOrderOrl(jsonMainObject.get("dateOrderOrl") == null ? null : Date.valueOf(jsonMainObject.get("dateOrderOrl").toString()));
 		//главные проверки
 		//проверка на лимит приемки паллет	
 		if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) { // проверяем всё кроме вн перемещений
@@ -2290,6 +2328,98 @@ public class MainRestController {
 		}else {
 			return false;
 		}
+	}
+	
+	/**
+	 * Предварительный запрос при постановке слота.
+	 * Нужен для определения графика поставок. и отправки дат, для выбора
+	 * @param request
+	 * @param str
+	 * @return
+	 * @throws ParseException
+	 * @throws IOException
+	 */
+	@PostMapping("/slot/preload")
+	public Map<String, Object> postSlotPreLoad(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+		java.util.Date t1 = new java.util.Date();
+		
+		User user = getThisUser();	
+		Map<String, Object> response = new HashMap<String, Object>();
+		String role = user.getRoles().stream().findFirst().get().getAuthority();
+		if(role.equals("ROLE_TOPMANAGER") || role.equals("ROLE_MANAGER")) {
+			response.put("status", "100");
+			response.put("message", "Неправомерный запрос от роли логиста");
+		}
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		Integer idOrder = jsonMainObject.get("idOrder") != null ? Integer.parseInt(jsonMainObject.get("idOrder").toString()) : null;
+		if(idOrder == null) {
+			response.put("status", "100");
+			response.put("info", "Ошибка. Не пришел idOrder");
+			return response;
+		}
+		Order order = orderService.getOrderById(idOrder);
+		if(order.getLoginManager() != null) {//обработка одновременного вытягивания объекта из дроп зоны
+			response.put("status", "100");
+			response.put("info", "Ошибка доступа. Заказ не зафиксирован. Данный заказ уже поставлен другим пользователем");
+			return response;
+		}
+//		if(order.getStatus() == 6 && Integer.parseInt(jsonMainObject.get("status").toString()) == 8) {
+//			//означает что манагер заранее создал маршрут с 8 статусом а потом создал заявку на него
+//			response.put("status", "100");
+//			response.put("message", "Вы пытаетесь установить слот от поставщика как слот на самовывоз.");
+//			response.put("info", "Вы пытаетесь установить слот от поставщика как слот на самовывоз.");
+//			return response;
+//		}
+
+		//главные проверки		
+		if(order.getDateOrderOrl() != null) {
+			response.put("status", "200");
+			response.put("info", "Дата заказа ОРЛ уже установлена");
+			java.util.Date t2 = new java.util.Date();
+			System.out.println(t2.getTime()-t1.getTime() + " ms - preload" );
+			return response;
+		}
+		
+		Timestamp timestamp = Timestamp.valueOf(jsonMainObject.get("timeDelivery").toString());
+		Integer idRamp = Integer.parseInt(jsonMainObject.get("idRamp").toString());
+		order.setTimeDelivery(timestamp);
+		order.setIdRamp(idRamp);
+		order.setLoginManager(user.getLogin());
+//		order.setStatus(jsonMainObject.get("status") == null ? 7 : Integer.parseInt(jsonMainObject.get("status").toString()));
+		order.setDateOrderOrl(jsonMainObject.get("dateOrderOrl") == null ? null : Date.valueOf(jsonMainObject.get("dateOrderOrl").toString()));
+		
+		if(!checkDeepImport(order, request)) {
+			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {
+				PlanResponce planResponce = readerSchedulePlan.getPlanResponce(order);
+				
+				if(planResponce.getStatus() == 0) {
+					response.put("status", "100");
+					response.put("message", planResponce.getMessage());
+					response.put("info", planResponce.getMessage());
+					return response;
+				}				
+				response.put("status", "200");
+				response.put("timeDelivery", order.getTimeDelivery());
+				response.put("planResponce", planResponce);
+				java.util.Date t2 = new java.util.Date();
+				System.out.println(t2.getTime()-t1.getTime() + " ms - preload" );
+				return response;	
+			}else {
+				response.put("status", "200");
+				response.put("info", "Поставка является внутренним перемещением");
+				java.util.Date t2 = new java.util.Date();
+				System.out.println(t2.getTime()-t1.getTime() + " ms - preload" );
+				return response;
+			}
+		}else {
+			response.put("status", "200");
+			response.put("info", "Поставка является дальним импортом");
+			java.util.Date t2 = new java.util.Date();
+			System.out.println(t2.getTime()-t1.getTime() + " ms - preload" );
+			return response;
+		}
+			
 	}
 	
 	/**
@@ -3847,6 +3977,16 @@ public class MainRestController {
 		System.out.println("Конец программы");
 	}
 
+	/**
+	 * Метод отвечает за формирование отчёта.
+	 * Отлично отправляет его через rest
+	 * @param dateStart
+	 * @param dateFinish
+	 * @param request
+	 * @param response
+	 * @return
+	 * @throws IOException
+	 */
 	@GetMapping("/manager/getReport/{dateStart}&{dateFinish}")
 	public Map<String, Object> getReport(@PathVariable Date dateStart, @PathVariable Date dateFinish,
 			HttpServletRequest request, HttpServletResponse response) throws IOException {

@@ -10,6 +10,7 @@ import {
 	getMarketOrderUrl,
 	getOrdersForSlotsBaseUrl,
 	loadOrderUrl,
+	preloadOrderUrl,
 	slotStocks,
 	slotsSettings,
 	updateOrderUrl,
@@ -93,6 +94,7 @@ import {
 	statusInfoLabelLIstners,
 	stockSelectListner,
 } from "./slots/listners.js"
+import { renderOrderDeliveryCalendar } from "./slots/deliveryCalendar.js"
 
 
 const LOCAL_STORAGE_KEY = 'AG_Grid_column_settings_to_Slots'
@@ -497,7 +499,21 @@ function searchSlot(searchValue) {
 		snackbar.show('Слот не найден')
 	}
 }
+// обработка выбора даты заказа согласно графику поставок
+function orderDateClickHandler(e) {
+	const orderDateCell = e.currentTarget
+	const dateOrderOrl = orderDateCell.dataset.orderDate
+	const info = store.getCalendarInfo()
 
+	$("#deliveryCalendarModal").modal('hide')
+
+	if (!dateOrderOrl) {
+		info.revert()
+		return
+	}
+
+	loadOrder(info, dateOrderOrl)
+}
 
 /* -------------- обработчики для календаря ------------------ */
 function resourcesHandler(info, successCallback, failureCallback) {
@@ -673,8 +689,14 @@ async function eventReceiveHandler(info) {
 		return
 	}
 
-	// загрузка заказа в БД
-	loadOrder(info)
+	// загрузка заказа в БД либо требование установки даты заказа
+	const isInternalMovement = order.isInternalMovement === 'true'
+	if (isInternalMovement) {
+		loadOrder(info)
+	} else {
+		preloadOrder(info)
+		store.setCalendarInfo(info)
+	}
 }
 function eventClickHandler(info) {
 	const { event: fcEvent, jsEvent } = info
@@ -734,12 +756,71 @@ function eventsSetHandler(info) {
 
 
 /* -------------- методы для обновления БД ------------------ */
-function loadOrder(info) {
+function preloadOrder(info) {
+	const method = 'preload'
+	const currentStock = store.getCurrentStock()
+	const currentLogin = store.getLogin()
+	const currentRole = store.getRole()
+	const orderData = getOrderDataForAjax(info, currentStock, currentLogin, currentRole, method)
+
+	// проверка доступа к методу
+	if (!methodAccessRules(method, orderData, currentLogin, currentRole)) {
+		info.revert()
+		snackbar.show(userMessages.operationNotAllowed)
+		return
+	}
+
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
+
+	ajaxUtils.postJSONdata({
+		url: preloadOrderUrl,
+		token: store.getToken(),
+		data: orderData,
+		successCallback: (data) => {
+			console.log("🚀 ~ preloadOrder ~ data:", data)
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+
+			if (data.status === '200') {
+				if (!data.planResponce) {
+					// нет данных о графике - загружаем заказ в БД
+					loadOrder(info)
+				} else {
+					// получаем даты заказов и поставок, ожидаем указание нужной даты
+					const orderDates = data.dates       // Заказы
+					const deliveryDates = data.deliveryDates    // Поставки
+					renderOrderDeliveryCalendar(orderDates, deliveryDates, orderDateClickHandler)
+					$('#deliveryCalendarModal').modal('show')
+				}
+				return
+			}
+
+			if (data.status === '105') {
+				errorHandler_105status(info, data)
+				return
+			}
+
+			if (data.status === '100') {
+				errorHandler_100status(info, data)
+			} else {
+				snackbar.show(userMessages.actionNotCompleted)
+			}
+		},
+		errorCallback: () => {
+			info.revert()
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+		}
+	})
+}
+function loadOrder(info, dateOrderOrl) {
 	const method = 'load'
 	const currentStock = store.getCurrentStock()
 	const currentLogin = store.getLogin()
 	const currentRole = store.getRole()
 	const orderData = getOrderDataForAjax(info, currentStock, currentLogin, currentRole, method)
+
+	if (dateOrderOrl) orderData.dateOrderOrl = dateOrderOrl
 
 	// проверка доступа к методу
 	if (!methodAccessRules(method, orderData, currentLogin, currentRole)) {

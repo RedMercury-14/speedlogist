@@ -1,5 +1,6 @@
 package by.base.main.service.impl;
 
+import java.sql.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +54,11 @@ public class ScheduleServiceImpl implements ScheduleService{
 	@Override
 	public List<Schedule> getSchedulesByStock(Integer numStock) {
 		return scheduleDAO.getSchedulesByStock(numStock);
+	}
+
+	@Override
+	public List<Schedule> getSchedulesByDateOrder(Date date, Integer numStock) {
+		return scheduleDAO.getSchedulesByDateOrder(date, numStock);
 	}
 
 }

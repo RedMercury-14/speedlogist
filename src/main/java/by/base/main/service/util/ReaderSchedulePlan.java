@@ -10,6 +10,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -184,107 +185,108 @@ public class ReaderSchedulePlan {
 				Date.valueOf(orderProductTarget.getDateCreate().toLocalDateTime().toLocalDate().plusDays(i+1)), i, dayOfPlanOrder, schedule.getCounterpartyContractCode().toString());
 	}
 	
-	
-	
-	/*
-	 * описание метода getActualStock
-	 * 1. проходимся по каждому скю и убираем скю, которых нет в потребности на день заказа
-	 * принимая тот факт что это завоз их прошлого заказа
-	 * 2. По оставшимся скю определяем дату заказа и дату первой поставки.
-	 * 3. определяем дату второй поствки
-	 * 4. разница между датой заказа из плана и датой второй поставки - есть искомый минимальынй сток
-	 */
 	/**
-	 * Метод, котоырй определяет сколько дней стока долно быть минимально
-	 * <br> для товара согласно графику поставок, до второй поставки
-	 * <br> Отдаёт количество дней стока, начиная от заказа согласно графику поставок
-	 * <br> т.е. Если заказ в понедельник а поставка в среду, то он берет плече с понедельника по среду
-	 * <br> и до второй поставки, т.е. до сл. среды <b>(лог плечо + неделя)</b>
-	 * @param order
-	 * @return
+	 * Метод, который определяет:
+	 * <br>1)Текущий график поставок
+	 * <br>2)Лог плечо
+	 * <br>3)Даты ближайшего и прошлого расчёта
+	 * @param order Заказ, для которого необходимо сгенерировать ответ плана.
+	 * @return Объект {@link PlanResponce}, содержащий статус, сообщение, 
+	 *         список соответствующих дат и связанное расписание.
+	 *         Возвращает ответ с ошибкой, если номер контракта не найден.
+	 *
+	 * @throws NullPointerException если переданный заказ равен null.
+	 * 
+	 * <p>
+	 * Метод выполняет следующие шаги:
+	 * <ol>
+	 *     <li>Проверяет, присутствует ли тип контракта на рынке в заказе.</li>
+	 *     <li>Логирует ошибку и возвращает ответ с ошибкой, если тип контракта равен null.</li>
+	 *     <li>Вызывает текущую дату и дату, которая была две недели назад.</li>
+	 *     <li>Получает список заказов в заданном диапазоне дат и по номеру контракта.</li>
+	 *     <li>Добавляет текущий заказ в список, если его там нет.</li>
+	 *     <li>Извлекает расписание, связанное с данным номером контракта.</li>
+	 *     <li>Собирает первые строки заказа из каждого заказа и объединяет их.</li>
+	 *     <li>Извлекает продукты заказа на основе собранных строк заказа в заданном диапазоне дат (30 дней).</li>
+	 *     <li>Сортирует продукты заказа по дате создания.</li>
+	 *     <li>Извлекает уникальные даты из продуктов заказа и сортирует их.</li>
+	 *     <li>Возвращает успешный ответ, содержащий отсортированные даты и расписание.</li>
+	 * </ol>
+	 * </p>
 	 */
-	@Deprecated
-	public Integer getActualStock(Order order) {
+	public PlanResponce getPlanResponce(Order order) {
 		String numContract = order.getMarketContractType();
 		if(numContract == null) {
-			 System.err.println("ReaderSchedulePlan.getActualStock: numContract = null");
-			 return null;
+			 System.err.println("ReaderSchedulePlan.process: numContract = null");
+			 return new PlanResponce(0, "Действие заблокировано!\nНе найден номер контракта в заказе");
 		 }
-		Schedule schedule = scheduleService.getScheduleByNumContract(Long.parseLong(numContract));
-		if(schedule == null) {
-			 System.err.println("ReaderSchedulePlan.getActualStock: schedule = null");
-			 return null;
-		 }
-		List<OrderLine> orderProducts = order.getOrderLines().stream().collect(Collectors.toList());
-		//тут находим продукты в бд
-		List<Product> products = new ArrayList<Product>();
-		for (OrderLine line : orderProducts) {
-			 Product product = productService.getProductByCode(line.getGoodsId().intValue());
-			 if(product != null) {
-				 products.add(product);				 
-			 }
-        }
+		Date dateNow = Date.valueOf(LocalDate.now());
+		Date dateOld2Week = Date.valueOf(LocalDate.now().minusDays(14));
+		List <Order> orders = orderService.getOrderByPeriodDeliveryAndCodeContract(dateNow, dateOld2Week, numContract);
 		
-		//тут проходимся по потребностям и выносим в отдельный лист orderProductsHasMin ближайший расчёт потребностей по каждому продукту
-		List<OrderProduct> orderProductsHasMin = new ArrayList<OrderProduct>();
-		for (Product product2 : products) {
-			List<OrderProduct> orderProductsHasNow = product2.getOrderProductsListHasDateTarget(Date.valueOf(order.getTimeDelivery().toLocalDateTime().toLocalDate())); // это реализация п.2 (взял +1 день, т.к. заказывают за день поставки)
-			orderProductsHasMin.add(orderProductsHasNow.get(0));
+		if(!orders.contains(order)) {
+			orders.add(order);
 		}
-		orderProductsHasMin.sort((o1, o2) -> o2.getDateCreate().compareTo(o1.getDateCreate())); // сортируемся от самой ранней даты
 		
-		//от даты которую получим в orderProductsHasMin определяем количество дней до второй поставки
-		Map<String, String> days = schedule.getDaysMap();
-		Map<String, String> daysStep2 = days.entrySet().stream().filter(m->m.getValue().contains("понедельник")
-				|| m.getValue().contains("вторник")
-                || m.getValue().contains("среда")
-                || m.getValue().contains("четверг")
-                || m.getValue().contains("пятница")
-                || m.getValue().contains("суббота")
-                || m.getValue().contains("воскресенье")).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-		OrderProduct orderProductTarget = orderProductsHasMin.get(0);
-		String dayOfPlanOrder = orderProductTarget.getDateCreate().toLocalDateTime().toLocalDate().plusDays(1).getDayOfWeek().toString(); // планируемый день заказа
-		String targetKey = null;
-		String targetValue = null;
-		for (Entry<String, String> entry : daysStep2.entrySet()) {
-			if(entry.getValue().contains(translateToRussianWeek(dayOfPlanOrder))) {
-				targetKey = entry.getKey();
-				targetValue = entry.getValue();
-				break;
+		Schedule schedule = scheduleService.getScheduleByNumContract(Long.parseLong(order.getMarketContractType()));
+		
+		//берем по первой строке заказа и делаем запрос в бд потребности с выгрузкой пяти заказов с совпадениями		
+		Set<OrderLine> lines = order.getOrderLines(); // каждая первая строка в заказе
+		for (Order orderI : orders) {
+			lines.add(orderI.getOrderLines().stream().findFirst().get());
+		}
+		
+		List<OrderProduct> orderProducts = new ArrayList<OrderProduct>();
+		Date dateNowOrderProducts = Date.valueOf(order.getTimeDelivery().toLocalDateTime().toLocalDate());
+		Date dateOld3WeekOrderProducts = Date.valueOf(order.getTimeDelivery().toLocalDateTime().toLocalDate().minusDays(30));
+		for (OrderLine orderLine : lines) {
+			List<OrderProduct> orderProductsTarget = orderProductService.getOrderProductListHasCodeProductAndPeriod(orderLine, dateOld3WeekOrderProducts, dateNowOrderProducts);
+			if(orderProductsTarget != null && !orderProductsTarget.isEmpty()) {
+				orderProducts.addAll(orderProductsTarget);				
 			}
-		}
-		long i = 0;
+		}		
+		orderProducts.sort((o1, o2) -> o2.getDateCreate().compareTo(o1.getDateCreate()));// сортируемся от самой ранней даты
 		
-		i = parseWeekNumber(targetValue);
-		LocalDate datePostavForCalc = LocalDate.of(2024, 7, DayOfWeek.valueOf(targetKey).getValue());
+		Set<Date> dates = new HashSet<Date>();
+		for (OrderProduct orderProduct : orderProducts) {
+			dates.add(Date.valueOf(orderProduct.getDateCreate().toLocalDateTime().toLocalDate().plusDays(1)));
+		}		
+		List<Date> result = new ArrayList<Date>(dates);
+		result.sort((o1, o2) -> o2.compareTo(o1));// сортируемся от самой ранней даты
 		
-		if(targetValue.split("/").length>1) {
-			targetValue = targetValue.split("/")[targetValue.split("/").length - 1];
-		}
-		
-		LocalDate dateOrderCalc = LocalDate.of(2024, 7, RUSSIAN_DAYS.get(targetValue).getValue());
-		
-		int j = datePostavForCalc.getDayOfMonth() - dateOrderCalc.getDayOfMonth(); // лог плечо
-							
-		if(j<0) {
-			j = j + 7;
-		}
-		if(j==0) {
-			j=7;
-		}
-		i = i+j;
-		
-		int log = (int) Duration.between(orderProductTarget.getDateCreate().toLocalDateTime().toLocalDate().plusDays(1).atStartOfDay(), 
-				orderProductTarget.getDateCreate().toLocalDateTime().toLocalDate().plusDays(i+1).atStartOfDay()).toDays();
-		return log +8;		
+		return new PlanResponce(200, "Информация о датах заказа", result, schedule);		
 	}
-	
-	
 	
 	/**
 	 * Главный метод проврки заказа по потребностям. Возвращает текстовую информацию
-	 * @param order
-	 * @return
+	 * <br>Обрабатывает заказ, проверяет наличие товаров, вычисляет количество и проверяет 
+	 * <br>соответствие заказа графику поставок.
+	 *
+	 * @param order Заказ, который необходимо обработать.
+	 * @return Объект {@link PlanResponce}, содержащий статус, сообщение о результатах обработки заказа.
+	 *         Возвращает ответ с ошибкой, если номер контракта не найден или если 
+	 *         имеются ошибки в количестве заказанных товаров.
+	 *
+	 * @throws NullPointerException если переданный заказ равен null.
+	 * 
+	 * <p>
+	 * Метод выполняет следующие шаги:
+	 * <ol>
+	 *     <li>Извлекает строки заказа.</li>
+	 *     <li>Получает номер контракта из заказа.</li>
+	 *     <li>Проверяет наличие номера контракта и возвращает ошибку, если он отсутствует.</li>
+	 *     <li>Определяет текущую дату и формирует сообщение о количестве строк в заказе.</li>
+	 *     <li>Для каждой строки заказа получает соответствующий продукт по его коду.</li>
+	 *     <li>Извлекает расписание по номеру контракта.</li>
+	 *     <li>Возвращает ошибку, если товары отсутствуют в базе данных.</li>
+	 *     <li>Получает диапазон дат для расчета логистического плеча.</li>
+	 *     <li>Проверяет, возможно ли провести расчет по предоставленным данным.</li>
+	 *     <li>Если расчеты возможны, проверяет наличие товаров в заказах, совпадающих с заданным логистическим плечом.</li>
+	 *     <li>Оценивает каждую строку заказа и формирует сообщение о результатах.</li>
+	 *     <li>Если заказ не соответствует графику поставок, возвращает сообщение об ошибке.</li>
+	 *     <li>Возвращает успешный ответ с результатами обработки или ошибку, если были обнаружены несоответствия.</li>
+	 * </ol>
+	 * </p>
 	 */
 	public PlanResponce process(Order order) {
 		 Set<OrderLine> lines = order.getOrderLines(); // строки в заказе
@@ -416,8 +418,29 @@ public class ReaderSchedulePlan {
 	/**
 	 * Принимает лист List<Order> orders
 	 * <br>а возвращает HashMap<Long, Double>, где значение - это сумма по заказам за текущий период а ключ - это код товара.
-	 * @param orders
-	 * @return
+	 * <br>Вычисляет сумму количеств товаров по строкам заказов и возвращает их в виде 
+	 * <br>карты, где ключом является идентификатор товара, а значением — количество и 
+	 * <br>история заказов.
+	 *
+	 * @param orders Список заказов, для которых необходимо вычислить суммы количеств товаров.
+	 * @return Объект {@link HashMap} с идентификаторами товаров в качестве ключей и 
+	 *         объектами {@link ProductDouble} в качестве значений, содержащими 
+	 *         сумму количеств товаров и историю заказов.
+	 *
+	 * <p>
+	 * Метод выполняет следующие шаги:
+	 * <ol>
+	 *     <li>Создает карту для хранения результатов.</li>
+	 *     <li>Проходит по каждому заказу в списке.</li>
+	 *     <li>Извлекает строки заказа (OrderLine) из каждого заказа.</li>
+	 *     <li>Для каждой строки заказа проверяет, есть ли товар уже в карте:</li>
+	 *     <ul>
+	 *         <li>Если нет, добавляет новый товар с его количеством и идентификатором заказа.</li>
+	 *         <li>Если да, обновляет количество товара и добавляет идентификатор заказа в историю.</li>
+	 *     </ul>
+	 *     <li>Возвращает заполненную карту.</li>
+	 * </ol>
+	 * </p>
 	 */
     public HashMap<Long, ProductDouble> calculateQuantityOrderSum(List<Order> orders) {
         // Используем HashMap для хранения результата

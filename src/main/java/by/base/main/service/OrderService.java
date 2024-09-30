@@ -9,6 +9,7 @@ import com.dto.OrderDTO;
 import by.base.main.dto.OrderDTOForSlot;
 import by.base.main.model.Order;
 import by.base.main.model.Route;
+import by.base.main.model.Schedule;
 
 public interface OrderService {
 
@@ -140,6 +141,26 @@ public interface OrderService {
 	 * @return
 	 */
 	List<OrderDTO> getOrderDTOByPeriodDelivery(Date dateStart, Date dateEnd);
+	
+	/**
+	 * Метод который возращает заказы по <b>дате доставки (timeDelivery)</b>
+	 * <br>
+	 * @param dateStart
+	 * @param dateEnd
+	 * @param numContract
+	 * @return
+	 */
+	List<Order> getOrderByPeriodDeliveryAndCodeContract(Date dateStart, Date dateEnd, String numContract);
+	
+	/**
+	 * Метод который возращает заказы по <b>дате доставки (timeDelivery) и списку из номеров  контратов</b>
+	 * <br>
+	 * @param dateStart
+	 * @param dateEnd
+	 * @param schedules
+	 * @return
+	 */
+	List<Order> getOrderByPeriodDeliveryAndListCodeContract(Date dateStart, Date dateEnd, List<Schedule> schedules);
 	
 	int updateOrderFromStatus (Order order);
 	

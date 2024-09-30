@@ -2,12 +2,16 @@ package by.base.main.service.impl;
 
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import by.base.main.dao.OrderProductDAO;
+import by.base.main.model.OrderLine;
 import by.base.main.model.OrderProduct;
 import by.base.main.service.OrderProductService;
 
@@ -40,6 +44,30 @@ public class OrderProductServiceImpl implements OrderProductService{
 	@Override
 	public List<OrderProduct> getOrderProductListHasDate(Date date) {
 		return productDAO.getOrderProductListHasDate(date);
+	}
+
+	@Override
+	public List<OrderProduct> getOrderProductListHasCodeProductAndPeriod(OrderLine orderLine, Date start, Date finish) {
+		Integer code = orderLine.getGoodsId().intValue();
+		List<OrderProduct> result = productDAO.getOrderProductListHasCodeProductAndPeriod(code, start, finish);
+		if(result != null && !result.isEmpty()) {
+			result.sort((o1, o2) -> o2.getDateCreate().compareTo(o1.getDateCreate()));// сортируемся от самой ранней даты
+			return result;
+		}else {
+			return null;
+		}
+	}
+
+	@Override
+	public Map<Integer, Integer> getOrderProductMapHasDate(Date date) {
+		List<OrderProduct> orderProducts = productDAO.getOrderProductListHasDate(date);
+		Map<Integer, Integer> responce = orderProducts.stream()
+			    .collect(Collectors.toMap(
+			        OrderProduct::getCodeProduct, 
+			        OrderProduct::getQuantity
+			    ));
+		
+		return responce;
 	}
 
 }

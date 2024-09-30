@@ -844,3 +844,79 @@ svg:not(:root) {
 		transform: scaleX(1)
 	}
 }
+
+/* ------- календарь заказов и поставок ------- */
+/* Стили для шапки таблицы */
+#deliveryCalendar th {
+	font-weight: bold; /* Все даты жирным шрифтом */
+}
+/* Общие стили для всех дат */
+#deliveryCalendar td {
+	font-weight: bold; /* Все даты жирным шрифтом */
+	color: lightgray; /* По умолчанию светло-серый цвет для остальных дат */
+	position: relative;
+}
+/* Контейнер для даты, чтобы увеличить только дату, а не ячейку */
+#deliveryCalendar .date-container {
+	display: inline-block;
+	padding: 8px; /* Отступы внутри контейнера даты */
+	transition: transform 0.075s ease-in-out, opacity 0.075s ease-in-out; /* Плавная анимация увеличения */
+}
+/* Стили для столбца с указанием недели */
+.week-label {
+	color: black !important; /* Черный цвет для недели */
+	vertical-align: middle !important; /* Центральное расположение содержимого ячейки */
+}
+/* Стили для заказов */
+.order-highlight {
+	background-color: #d4edda !important; /* Слабый зеленый фон для заказа */
+	color: black !important; /* Черный текст для заказов */
+	cursor: pointer; /* Курсор указывает, что элемент кликабельный */
+}
+/* Стили для поставок */
+.delivery-highlight {
+	background-color: white !important; /* Белый фон для поставки */
+	color: lightgray !important; /* Поставки светло-серые по умолчанию */
+}
+/* Псевдоэлементы для "Заказ" и "Поставка" */
+.order-highlight:hover::after {
+	content: "Заказ";
+	position: absolute;
+	top: 110%; /* Появляется ниже ячейки */
+	left: 50%;
+	transform: translateX(-50%);
+	font-size: 0.75em;
+	color: white;
+	background-color: #000; /* Черный фон для псевдоэлемента */
+	padding: 2px 5px;
+	z-index: 10; /* Отображение псевдоэлемента поверх других элементов */
+	border-radius: 3px; /* Небольшие скругления для псевдоэлемента */
+	transition: transform 0.075s ease-in-out, opacity 0.075s ease-in-out; /* Плавная анимация появления псевдоэлементов */
+}
+/* Псевдоэлемент для поставки */
+.highlighted-delivery::after {
+	content: "Поставка";
+	position: absolute;
+	top: 110%;
+	left: 50%;
+	transform: translateX(-50%);
+	font-size: 0.75em;
+	color: white;
+	background-color: #000; /* Черный фон для псевдоэлемента */
+	padding: 2px 5px;
+	z-index: 10;
+	border-radius: 3px;
+	transition: transform 0.075s ease-in-out, opacity 0.075s ease-in-out;
+}
+/* Увеличение текста заказа при наведении */
+.order-highlight:hover .date-container {
+	transform: scale(1.2); /* Немного увеличиваем дату заказа при наведении */
+}
+/* Увеличение текста поставки при наведении на заказ */
+.highlighted-delivery .date-container {
+	transform: scale(1.2); /* Немного увеличиваем дату поставки */
+}
+/* Изменение цвета текста поставки при наведении на заказ */
+.highlighted-delivery {
+	color: black !important; /* Поставка становится черной */
+}

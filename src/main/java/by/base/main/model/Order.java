@@ -4,8 +4,10 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -183,6 +185,9 @@ public class Order {
 	@Column(name = "market_info")
 	private String marketInfo;
 	
+	/**
+	 * Номер контракта!
+	 */
 	@Column(name = "market_contract_type")
 	private String marketContractType;
 	
@@ -227,6 +232,9 @@ public class Order {
 	
 	@Column(name = "last_datetime_point_load")
 	private Timestamp lastDatetimePointLoad;
+	
+	@Column(name = "date_order_orl")
+	private Date dateOrderOrl;
 	
 	@Transient
 	private List<Address> addressesSort;
@@ -276,6 +284,12 @@ public class Order {
 
 	
 	
+	public Date getDateOrderOrl() {
+		return dateOrderOrl;
+	}
+	public void setDateOrderOrl(Date dateOrderOrl) {
+		this.dateOrderOrl = dateOrderOrl;
+	}
 	public Timestamp getLastDatetimePointLoad() {
 		return lastDatetimePointLoad;
 	}
@@ -285,6 +299,27 @@ public class Order {
 	public Set<OrderLine> getOrderLines() {
 		return orderLines;
 	}
+	
+	/**
+	 * Возвращает Map<код товара, кол-во>
+	 * <br>Суммируем количество, если ключ уже существует
+	 * @return
+	 */
+	public Map<Long, Double> getOrderLinesMap() {
+		if(orderLines!=null) {
+			Map<Long, Double> responce = orderLines.stream()
+				    .collect(Collectors.toMap(
+				    	OrderLine::getGoodsId, 
+				    	OrderLine::getQuantityOrder,
+				    	Double::sum // Суммируем количество, если ключ уже существует
+				    ));
+			return responce;
+		}else {
+			return null;
+		}
+		
+	}
+	
 	public void setOrderLines(Set<OrderLine> orderLines) {
 		this.orderLines = orderLines;
 	}

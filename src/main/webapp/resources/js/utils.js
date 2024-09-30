@@ -166,6 +166,18 @@ export const dateHelper = {
 
 
 	/**
+	 * Метод `formatToDDMM` принимает объект даты и возвращает строку формата "DD.MM".
+	 * @param {Date} date - объект даты.
+	 * @returns {string} дата в формате "DD.MM".
+	 */
+	formatToDDMM(date) {
+		const day = String(date.getDate()).padStart(2, '0')
+		const month = String(date.getMonth() + 1).padStart(2, '0')
+		return `${day}.${month}`
+	},
+
+
+	/**
 	 * Метод `getDayNumber` возвращает номер дня данного объекта даты
 	 * с ведущим нулем, если номер дня меньше 10.
 	 * @param {Date} dateObj - является экземпляром объекта `Date`.
@@ -225,10 +237,22 @@ export const dateHelper = {
 
 		// правила для перевозок АХО
 		if (ahoWay) {
-			// если пятница, после 12:00, то на понедельник
-			if (day === 5 && now > noonToday) {
+			// если четверг, после 12:00, то на понедельник
+			if (day === 4 && now > noonToday) {
+				const monday = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 4)
+				return this.getDateForInput(monday)
+			}
+
+			// если пятница, до 12:00, то на понедельник
+			if (day === 5 && now <= noonToday) {
 				const monday = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 3)
 				return this.getDateForInput(monday)
+			}
+
+			// если пятница, после 12:00, то на вторник
+			if (day === 5 && now > noonToday) {
+				const tuesday = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 4)
+				return this.getDateForInput(tuesday)
 			}
 
 			// если суббота, то на вторник
@@ -853,6 +877,152 @@ export function getDeliveryScheduleMatrix(schedule, note) {
 		return match ? match[1] : ''
 	}
 }
+
+// Функция для генерации измененной матрицы с датами
+export function getMatrixWithCalendar(matrix) {
+	// Определяем начало первой недели (понедельник текущей недели)
+	const today = new Date()
+	const dayOfWeek = today.getDay() === 0 ? 7 : today.getDay() // Преобразование воскресенья в 7
+	const startOfFirstWeek = new Date(today)
+	startOfFirstWeek.setDate(today.getDate() - dayOfWeek + 1)
+
+	// Создаем новую матрицу для обновленных данных
+	const updatedSchedule = matrix.map(row => [...row]) // Копируем исходную матрицу
+
+	// Обрабатываем строки, начиная со второй (где н0, н1 и т.д.)
+	for (let i = 1; i < matrix.length; i++) {
+		// Получаем даты для текущей недели (смещенной на i-1 недель от первой)
+		const weekDates = getWeekDates(startOfFirstWeek, i - 1)
+
+		// Обновляем каждую ячейку строки, кроме первой (где название недели)
+		for (let j = 1; j < matrix[i].length; j++) {
+			const date = weekDates[j - 1]
+			const dateStr = dateHelper.formatToDDMM(date)
+			// Если ячейка пуста, просто добавляем дату
+			updatedSchedule[i][j] = matrix[i][j] ? `${matrix[i][j]} (${dateStr})` : `(${dateStr})`
+		}
+	}
+
+	return updatedSchedule
+}
+// Функция для получения дат недели с учетом смещения на количество недель
+function getWeekDates(startDate, weekOffset) {
+	const firstDayOfWeek = new Date(startDate)
+	firstDayOfWeek.setDate(firstDayOfWeek.getDate() + (weekOffset * 7)) // Смещение на неделю
+
+	const weekDates = []
+	for (let i = 0; i < 7; i++) {
+		const date = new Date(firstDayOfWeek)
+		date.setDate(firstDayOfWeek.getDate() + i)
+		weekDates.push(date)
+	}
+	return weekDates
+}
+
+// функция создания матрицы по дням заказов
+export function createScheduleMatrix(importantDates) {
+	// Определяем начало текущей недели (понедельник текущей недели)
+	const today = new Date()
+	const dayOfWeek = today.getDay() === 0 ? 7 : today.getDay() // Преобразование воскресенья в 7
+	const startOfWeek = new Date(today)
+	startOfWeek.setDate(today.getDate() - dayOfWeek + 1)
+
+	// Получаем даты для 5 недель
+	const allWeeks = getAllWeekDates(startOfWeek)
+
+	// Выделяем важные даты жирным
+	const highlightedWeeks = highlightDatesInMatrix(allWeeks, importantDates)
+
+	// Создаем финальную матрицу
+	const scheduleMatrix = [
+		["", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"],
+		["н-4", ...highlightedWeeks[0]],
+		["н-3", ...highlightedWeeks[1]],
+		["н-2", ...highlightedWeeks[2]],
+		["н-1", ...highlightedWeeks[3]],
+		["н0", ...highlightedWeeks[4]]
+	]
+
+	return scheduleMatrix
+}
+// Функция для получения всех дат в пределах 5 недель (до текущей)
+function getAllWeekDates(startDate) {
+	const allWeeks = [];
+
+	for (let weekOffset = -4; weekOffset <= 0; weekOffset++) {
+		const weekDates = [];
+		const firstDayOfWeek = new Date(startDate);
+		firstDayOfWeek.setDate(firstDayOfWeek.getDate() + (weekOffset * 7)); // Смещение на неделю
+
+		for (let i = 0; i < 7; i++) {
+			const date = new Date(firstDayOfWeek);
+			date.setDate(firstDayOfWeek.getDate() + i);
+			weekDates.push(date);
+		}
+		allWeeks.push(weekDates);
+	}
+
+	return allWeeks;
+}
+// Функция для выделения жирным совпадающих дат
+function highlightDatesInMatrix(weeksMatrix, importantDates) {
+	// Массив дат, которые нужно выделить жирным
+	const formattedImportantDates = importantDates.map(date => dateHelper.formatToDDMM(new Date(date)))
+
+	// Преобразуем матрицу недель
+	return weeksMatrix.map(week =>
+		week.map(day => {
+			const formattedDay = dateHelper.formatToDDMM(day)
+			if (formattedImportantDates.includes(formattedDay)) {
+				// Если дата совпадает с одной из важных дат, выделяем жирным
+				return `**${formattedDay}**`
+			}
+			return formattedDay
+		})
+	)
+}
+
+// Функция для отрисовки матрицы календаря заказов
+export function renderScheduleMatrix(container, scheduleMatrix) {
+	const table = document.createElement('table')
+	table.className = 'table table-bordered text-center table-dark table-hover'
+	
+	scheduleMatrix.forEach((row, rowIndex) => {
+		const tr = document.createElement('tr')
+
+		row.forEach((cell, colIndex) => {
+			const td = document.createElement('td')
+
+			if (row[0] === '' || cell === row[0]) {
+				td.classList.add('font-weight-bold')
+			} else {
+				td.classList.add('bg-secondary'); // Установка белого фона для всех ячеек
+			}
+			
+			// Проверяем, является ли это важной датой
+			if (cell.startsWith('**') && cell.endsWith('**')) {
+				td.textContent = cell.replace(/\*\*/g, ''); // Убираем звездочки
+				td.classList.add('bg-info', 'font-weight-bold'); // Классы для выделения
+				td.classList.remove('bg-secondary'); // Классы для выделения
+			} else {
+				// Делаем даты надстрочными
+				td.innerHTML = cell.replace(/(\d{2}\.\d{2})/, '<sup>$1</sup>'); // Оборачиваем даты в тег sup
+			}
+
+			// Проверяем, нужно ли сделать подстрочным индекс
+			if (cell.startsWith('н')) {
+				td.innerHTML = cell.replace(/н/g, 'н<sub>').replace(/$/, '</sub>') // Подстрочный индекс
+			}
+
+			tr.appendChild(td)
+		})
+
+		table.appendChild(tr)
+	})
+
+	container.appendChild(table)
+}
+
 
 // запрет ввода
 export function inputBan(e, reg) {

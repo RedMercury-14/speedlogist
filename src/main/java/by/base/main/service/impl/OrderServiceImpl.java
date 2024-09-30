@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -21,6 +22,7 @@ import by.base.main.dao.OrderDAO;
 import by.base.main.dto.OrderDTOForSlot;
 import by.base.main.model.Order;
 import by.base.main.model.Route;
+import by.base.main.model.Schedule;
 import by.base.main.service.OrderService;
 
 @Service
@@ -354,6 +356,26 @@ public class OrderServiceImpl implements OrderService {
 	@Override
 	public List<OrderDTO> getOrderDTOByPeriodDelivery(Date dateStart, Date dateEnd) {
 		return orderDAO.getOrderDTOByPeriodDelivery(dateStart, dateEnd);
+	}
+
+	@Override
+	public List<Order> getOrderByPeriodDeliveryAndCodeContract(Date dateStart, Date dateEnd, String numContract) {
+		return orderDAO.getOrderByPeriodDeliveryAndCodeContract(dateStart, dateEnd, numContract);
+	}
+
+	@Override
+	public List<Order> getOrderByPeriodDeliveryAndListCodeContract(Date dateStart, Date dateEnd, List<Schedule> schedules) {
+//		Set<String> numContracts = new HashSet<String>();
+//		for (Schedule schedule : schedules) {
+//			numContracts.add(schedule.getCounterpartyContractCode().toString());
+//		}
+//		return orderDAO.getOrderByPeriodDeliveryAndListCodeContract(dateStart, dateEnd, new ArrayList<String>(numContracts));
+	    List<String> numContracts = schedules.stream()
+	            .map(Schedule::getCounterpartyContractCode)
+	            .distinct() // Убираем дубликаты
+	            .map(String::valueOf) // Преобразуем в строку
+	            .collect(Collectors.toList()); // Собираем в список
+	    return orderDAO.getOrderByPeriodDeliveryAndListCodeContract(dateStart, dateEnd, numContracts);
 	}
 	
 }

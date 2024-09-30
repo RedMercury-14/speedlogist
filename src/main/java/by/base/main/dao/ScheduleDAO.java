@@ -1,5 +1,6 @@
 package by.base.main.dao;
 
+import java.sql.Date;
 import java.util.List;
 
 import by.base.main.model.Schedule;
@@ -24,5 +25,12 @@ public interface ScheduleDAO {
 	void updateOrder (Schedule schedule);
 	
 	void deleteOrderById(Integer id);
+	
+	/**
+	 * Метод, который определяем список из графикоф поставок, дата которого соответствует дню недели заказа
+	 * @param date
+	 * @return
+	 */
+	List<Schedule> getSchedulesByDateOrder(Date date, Integer numStock);
 	
 }

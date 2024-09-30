@@ -228,6 +228,23 @@
 		</div>
 	</div>
 
+	<!-- Модальное окно выбора даты заказа согласно графику поставок-->
+	<div class="modal fade" id="deliveryCalendarModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="deliveryCalendarModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-lg modal-dialog-centered">
+			<div class="modal-content">
+				<div class="modal-header justify-content-center">
+					<h2 class="modal-title text-center" id="deliveryCalendarModalLabel">Выберите дату заказа</h2>
+				</div>
+				<div class="modal-body">
+					<p>Необходимо выбрать дату заказа согласно графику поставок, к которой относится поставка, которую вы устанавливаете в слоты</p>
+					<div class="modal-buttons d-flex justify-content-center">
+						<div id="deliveryCalendar"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
 	<script src="${pageContext.request.contextPath}/resources/js/chartJS/chart.js"></script>
 	<script src='${pageContext.request.contextPath}/resources/mainPage/js/nav-fixed-top.js'></script>
 	<script src="${pageContext.request.contextPath}/resources/js/slots.js" type="module"></script>

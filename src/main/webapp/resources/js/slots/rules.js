@@ -135,6 +135,7 @@ export function isEditableDate(nowMs, order) {
 // правила доступа к методам работы с БД
 export function methodAccessRules(method, order, currentLogin, currentRole) {
 	switch (method) {
+		case 'preload': return loadMethodAccessRules(order, currentLogin, currentRole)
 		case 'load': return loadMethodAccessRules(order, currentLogin, currentRole)
 		case 'update': return updateMethodAccessRules(order, currentLogin, currentRole)
 		case 'delete': return deleteMethodAccessRules(order, currentLogin, currentRole)

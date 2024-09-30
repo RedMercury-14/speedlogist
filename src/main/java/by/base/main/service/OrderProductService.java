@@ -3,7 +3,9 @@ package by.base.main.service;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
+import by.base.main.model.OrderLine;
 import by.base.main.model.OrderProduct;
 
 public interface OrderProductService {
@@ -25,6 +27,23 @@ public interface OrderProductService {
 	 * @return
 	 */
 	List<OrderProduct> getOrderProductListHasDate(Date date);
+	
+	/**
+	 * Возвращает Map<кодтовара, количество> заказы поставщикам за определенную дату
+	 * @param date
+	 * @return Map<Integer, Integer>, где key=код товара; value=кол-во
+	 */
+	Map<Integer, Integer> getOrderProductMapHasDate(Date date);
+	
+	/**
+	 * Метод принимает OrderLine и по заданному периоду возвращает заказы по этому продукту
+	 * <br>Метод исключает дубликаты (Set<>)
+	 * @param OrderLine
+	 * @param start начало выборки
+	 * @param finish конец выборки
+	 * @return <b>отсортирован от самой ранней даты</b>
+	 */
+	List<OrderProduct> getOrderProductListHasCodeProductAndPeriod(OrderLine orderLine, Date start, Date finish);
 
 	void updateOrderProduct(OrderProduct orderProduct);
 }

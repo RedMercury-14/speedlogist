@@ -83,7 +83,7 @@ public class KeyboardMaker {
         replyKeyboardMarkup.setKeyboard(keyboard);
         replyKeyboardMarkup.setSelective(true);
         replyKeyboardMarkup.setResizeKeyboard(true);
-        replyKeyboardMarkup.setOneTimeKeyboard(false);
+        replyKeyboardMarkup.setOneTimeKeyboard(true);
         
         return replyKeyboardMarkup;
     }
@@ -95,30 +95,57 @@ public class KeyboardMaker {
     public ReplyKeyboardMarkup getMainKeyboard () {
         KeyboardRow row1 = new KeyboardRow();
         row1.add(new KeyboardButton("Заявить машину на завтра"));
+        row1.add(new KeyboardButton("Заявить машину на дату"));
         KeyboardRow row2 = new KeyboardRow();
-        row2.add(new KeyboardButton("Заявить машину на дату"));
-        KeyboardButton reg = new KeyboardButton("Тест координат");
+        row2.add(new KeyboardButton("Список машин заявленных на сегодня и завтра"));
+        row2.add(new KeyboardButton("Список всех заявленных машин"));
+//        KeyboardButton reg = new KeyboardButton("Тест координат");
 //        reg.setRequestContact(true);
-        reg.setRequestLocation(true);
-        row2.add(reg);
-        KeyboardRow row3 = new KeyboardRow();
-        row3.add(new KeyboardButton("Список машин заявленных на завтра"));
-        row3.add(new KeyboardButton("Список всех заявленных машин"));
+//        reg.setRequestLocation(true);
+//        row2.add(reg);
+//        KeyboardRow row3 = new KeyboardRow();
+        
         
         List<KeyboardRow> keyboard = new ArrayList<>();
         keyboard.add(row1);
         keyboard.add(row2);
-        keyboard.add(row3);
+//        keyboard.add(row3);
 
         final ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
         replyKeyboardMarkup.setKeyboard(keyboard);
-        replyKeyboardMarkup.setSelective(true);
-        replyKeyboardMarkup.setResizeKeyboard(true);
-        replyKeyboardMarkup.setOneTimeKeyboard(true);
+        replyKeyboardMarkup.setSelective(true); // Указываем, что клавиатура должна быть показана только для определенного пользователя
+        replyKeyboardMarkup.setResizeKeyboard(true); // Устанавливаем флаг, который позволяет изменять размер кнопок в зависимости от содержимого
+        replyKeyboardMarkup.setOneTimeKeyboard(false); // Указываем, что клавиатура будет скрыта после использования (если это одноразовая клавиатура)
         
         return replyKeyboardMarkup;
     }
     
+    /**
+     * Глобальная отмена действия
+     * @return
+     */
+    public ReplyKeyboardMarkup getMainCancelKeyboard () {
+        KeyboardRow row1 = new KeyboardRow();
+        row1.add(new KeyboardButton("Отменить действие"));
+        
+        List<KeyboardRow> keyboard = new ArrayList<>();
+        keyboard.add(row1);
+
+        final ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+        replyKeyboardMarkup.setKeyboard(keyboard);
+        replyKeyboardMarkup.setSelective(true); // Указываем, что клавиатура должна быть показана только для определенного пользователя
+        replyKeyboardMarkup.setResizeKeyboard(true); // Устанавливаем флаг, который позволяет изменять размер кнопок в зависимости от содержимого
+        replyKeyboardMarkup.setOneTimeKeyboard(true); // Указываем, что клавиатура будет скрыта после использования (если это одноразовая клавиатура)
+        
+        return replyKeyboardMarkup;
+    }
+    
+    
+    
+    /**
+     * клава Войти по номеру телефона
+     * @return
+     */
     public ReplyKeyboardMarkup getStartKeyboard () {
         KeyboardRow row1 = new KeyboardRow();
         KeyboardButton reg = new KeyboardButton("Войти по номеру телефона");
@@ -372,10 +399,10 @@ public class KeyboardMaker {
 //	    inlineKeyboardButton2.setCallbackData("deleteTruck_"+numTruck);
 //	    rowInline.add(inlineKeyboardButton2);
 	    
-	    InlineKeyboardButton inlineKeyboardButton3 = new InlineKeyboardButton();
-	    inlineKeyboardButton3.setText("Редактировать");
-	    inlineKeyboardButton3.setCallbackData("editTruck_"+numTruck);
-	    rowInline.add(inlineKeyboardButton3);
+//	    InlineKeyboardButton inlineKeyboardButton3 = new InlineKeyboardButton();
+//	    inlineKeyboardButton3.setText("Редактировать");
+//	    inlineKeyboardButton3.setCallbackData("editTruck_"+numTruck);
+//	    rowInline.add(inlineKeyboardButton3);
     	
 	    rowsInline.add(rowInline);
 		

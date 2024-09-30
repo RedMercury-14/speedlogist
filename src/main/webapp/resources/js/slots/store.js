@@ -13,6 +13,7 @@ export const store = {
 		token,
 		login,
 		role,
+		calendarInfo: null,
 		slotToConfirm: null,
 		stocks,
 		dropZone: [],
@@ -38,6 +39,13 @@ export const store = {
 	},
 	getRole() {
 		return this._state.role
+	},
+
+	setCalendarInfo(info) {
+		this._state.calendarInfo = info
+	},
+	getCalendarInfo() {
+		return this._state.calendarInfo
 	},
 
 	setslotToConfirm(fcEvent) {

@@ -99,7 +99,7 @@ public class ScheduledTask {
      * Метод, отвечающий за формирование отчётов serviceLevel
      * @throws IOException 
      */
-    @Scheduled(cron = "0 00 08 * * ?") // каждый день в 20:00
+    @Scheduled(cron = "0 00 08 * * MON-SAT") // каждый день в 08:00 утра кроме воскресенья
     public void sendServiceLevel() throws IOException {
     	Date dateStart = Date.valueOf(LocalDate.now().minusDays(1));
 		Date dateFinish7Week = Date.valueOf(LocalDate.now().plusMonths(2));

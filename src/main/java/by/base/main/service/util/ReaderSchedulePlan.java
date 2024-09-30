@@ -240,7 +240,10 @@ public class ReaderSchedulePlan {
 		Date dateNowOrderProducts = Date.valueOf(order.getTimeDelivery().toLocalDateTime().toLocalDate());
 		Date dateOld3WeekOrderProducts = Date.valueOf(order.getTimeDelivery().toLocalDateTime().toLocalDate().minusDays(30));
 		for (OrderLine orderLine : lines) {
-			orderProducts.addAll(orderProductService.getOrderProductListHasCodeProductAndPeriod(orderLine, dateOld3WeekOrderProducts, dateNowOrderProducts));
+			List<OrderProduct> orderProductsTarget = orderProductService.getOrderProductListHasCodeProductAndPeriod(orderLine, dateOld3WeekOrderProducts, dateNowOrderProducts);
+			if(orderProductsTarget != null && !orderProductsTarget.isEmpty()) {
+				orderProducts.addAll(orderProductsTarget);				
+			}
 		}		
 		orderProducts.sort((o1, o2) -> o2.getDateCreate().compareTo(o1.getDateCreate()));// сортируемся от самой ранней даты
 		

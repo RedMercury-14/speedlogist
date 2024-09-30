@@ -2364,13 +2364,13 @@ public class MainRestController {
 			response.put("info", "Ошибка доступа. Заказ не зафиксирован. Данный заказ уже поставлен другим пользователем");
 			return response;
 		}
-		if(order.getStatus() == 6 && Integer.parseInt(jsonMainObject.get("status").toString()) == 8) {
-			//означает что манагер заранее создал маршрут с 8 статусом а потом создал заявку на него
-			response.put("status", "100");
-			response.put("message", "Вы пытаетесь установить слот от поставщика как слот на самовывоз.");
-			response.put("info", "Вы пытаетесь установить слот от поставщика как слот на самовывоз.");
-			return response;
-		}
+//		if(order.getStatus() == 6 && Integer.parseInt(jsonMainObject.get("status").toString()) == 8) {
+//			//означает что манагер заранее создал маршрут с 8 статусом а потом создал заявку на него
+//			response.put("status", "100");
+//			response.put("message", "Вы пытаетесь установить слот от поставщика как слот на самовывоз.");
+//			response.put("info", "Вы пытаетесь установить слот от поставщика как слот на самовывоз.");
+//			return response;
+//		}
 
 		//главные проверки		
 		if(order.getDateOrderOrl() != null) {
@@ -2381,10 +2381,24 @@ public class MainRestController {
 			return response;
 		}
 		
+		Timestamp timestamp = Timestamp.valueOf(jsonMainObject.get("timeDelivery").toString());
+		Integer idRamp = Integer.parseInt(jsonMainObject.get("idRamp").toString());
+		order.setTimeDelivery(timestamp);
+		order.setIdRamp(idRamp);
+		order.setLoginManager(user.getLogin());
+//		order.setStatus(jsonMainObject.get("status") == null ? 7 : Integer.parseInt(jsonMainObject.get("status").toString()));
+		order.setDateOrderOrl(jsonMainObject.get("dateOrderOrl") == null ? null : Date.valueOf(jsonMainObject.get("dateOrderOrl").toString()));
+		
 		if(!checkDeepImport(order, request)) {
 			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {
 				PlanResponce planResponce = readerSchedulePlan.getPlanResponce(order);
 				
+				if(planResponce.getStatus() == 0) {
+					response.put("status", "100");
+					response.put("message", planResponce.getMessage());
+					response.put("info", planResponce.getMessage());
+					return response;
+				}				
 				response.put("status", "200");
 				response.put("timeDelivery", order.getTimeDelivery());
 				response.put("planResponce", planResponce);

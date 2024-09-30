@@ -28,6 +28,10 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import by.base.main.controller.MainController;
 import by.base.main.model.Truck;
 import by.base.main.model.User;
+//import io.github.dostonhamrakulov.DateTimeUtil;
+//import io.github.dostonhamrakulov.InlineCalendarBuilder;
+//import io.github.dostonhamrakulov.InlineCalendarCommandUtil;
+//import io.github.dostonhamrakulov.LanguageEnum;
 
 @Component
 public class TelegramBotRouting extends TelegramLongPollingBot{
@@ -75,36 +79,41 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 			
 			long chatId = update.getCallbackQuery().getMessage().getChatId();
 			String data = update.getCallbackQuery().getData();
-//			if(data.split("_")[0].equals("CAL")) {
-//				System.err.println(1111);
-//				Message message = update.getMessage();
-//		        SendMessage sendMessage = new SendMessage();
-//		        sendMessage.setChatId(message.getChatId());
+			if(data.split("_")[0].equals("CAL")) {
+				System.err.println("CAL");
+				Message message = update.getMessage();
+		        SendMessage sendMessage = new SendMessage();
+		        System.out.println("asdsaasddasdasdassdaadsdsasda1");
+		        sendMessage.setChatId(chatId);
+//		        System.out.println("asdsaasddasdasdassdaadsdsasda2");
 //				EditMessageText editMessageText = new EditMessageText();
+//				System.out.println("asdsaasddasdasdassdaadsdsasda3");
 //		        editMessageText.setChatId(message.getChatId());
 //		        editMessageText.setMessageId(chatAndMessageIdMap.get(message.getChatId()));
-//
+//		        System.out.println("asdsaasddasdasdassdaadsdsasda4");
+
+		        // Проверяем, была ли нажата кнопка календаря
+//		        
 //		        if (InlineCalendarCommandUtil.isInlineCalendarClicked(update)) {
-//		            if (InlineCalendarCommandUtil.isCalendarIgnoreButtonClicked(update)) {
-//		                return;
-//		            }
-//
+//		            // Обрабатываем навигацию по месяцам
 //		            if (InlineCalendarCommandUtil.isCalendarNavigationButtonClicked(update)) {
-//		                editMessageText.setText("Selected date: ");
-//		                editMessageText.setReplyMarkup(inlineCalendarBuilder.build(update));
-//		                executeCommand(editMessageText);
-//
+//		                sendMessage.setReplyMarkup(inlineCalendarBuilder.build(update));
+//		                // Выполняем отправку сообщения
 //		                return;
 //		            }
 //
+//		            // Извлекаем выбранную дату
 //		            LocalDate localDate = InlineCalendarCommandUtil.extractDate(update);
-//		            sendMessage.setText("Selected date: " + DateTimeUtil.convertToString(localDate));
-//		            executeCommand(sendMessage);
+//		            sendMessage.setText("Вы выбрали дату: " + localDate.toString());
+//		            System.out.println("Вы выбрали дату: " + localDate.toString());
 //		        }
-//
-//		        sendMessage.setText("Please, send /start command to the bot");
-//		        executeCommand(sendMessage);
-//			}
+
+		        // Отправка сообщения
+		        executeCommand(sendMessage);
+
+		        sendMessage.setText("Please, send /start command to the bot");
+		        executeCommand(sendMessage);
+			}
 			
 			User user = users.get(chatId);
 			switch (user.getStatus()) {
@@ -341,13 +350,13 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
     					}
                 	});  
                     break;
-                case "заявить машину на дату": 
+                case "заявить машину на дату":
                 	SendMessage sendMessage = new SendMessage();
                     sendMessage.setChatId(chatId);
                     sendMessage.setText("Выберите дату");
 //                    sendMessage.setReplyMarkup(inlineCalendarBuilder.build(update));
-                    Message message1 = executeCommand(sendMessage);
-                    chatAndMessageIdMap.put(chatId, message1.getMessageId());
+//                    Message message1 = executeCommand(sendMessage);
+//                    chatAndMessageIdMap.put(chatId, message1.getMessageId());
                     
 				try {
 					execute(sendMessage);

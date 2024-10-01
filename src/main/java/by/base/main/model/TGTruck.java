@@ -17,10 +17,7 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "tg_truck")
 public class TGTruck implements Serializable{
-	
-	/**
-	 * 
-	 */
+
 	private static final long serialVersionUID = 1759554404124740447L;
 
 	@Id
@@ -48,6 +45,42 @@ public class TGTruck implements Serializable{
 	
 	@Column(name = "chat_id_user_truck")
 	private Integer chatIdUserTruck;
+	
+	@Column(name = "name_list")
+	private String nameList;
+	
+	@Column(name = "id_list")
+	private Integer idList;
+	
+	
+
+	/**
+	 * @return the nameList
+	 */
+	public String getNameList() {
+		return nameList;
+	}
+
+	/**
+	 * @param nameList the nameList to set
+	 */
+	public void setNameList(String nameList) {
+		this.nameList = nameList;
+	}
+
+	/**
+	 * @return the idList
+	 */
+	public Integer getIdList() {
+		return idList;
+	}
+
+	/**
+	 * @param idList the idList to set
+	 */
+	public void setIdList(Integer idList) {
+		this.idList = idList;
+	}
 
 	public Integer getIdTGTruck() {
 		return idTGTruck;

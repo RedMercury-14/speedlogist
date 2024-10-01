@@ -344,6 +344,11 @@ public class KeyboardMaker {
 	    inlineKeyboardButton2.setText("Реф");
 	    inlineKeyboardButton2.setCallbackData(numTruck+"_Рефрижератор");
 	    rowInline.add(inlineKeyboardButton2);
+	    
+	    InlineKeyboardButton inlineKeyboardButton3 = new InlineKeyboardButton();
+	    inlineKeyboardButton3.setText("Изотерма");
+	    inlineKeyboardButton3.setCallbackData(numTruck+"_Изотерма");
+	    rowInline.add(inlineKeyboardButton3);
     	
 	    rowsInline.add(rowInline);
 		

@@ -1,5 +1,6 @@
 package by.base.main.dao;
 
+import java.sql.Date;
 import java.util.List;
 
 import by.base.main.model.TGTruck;
@@ -22,4 +23,6 @@ public interface TGTruckDAO {
 	TGTruck getTGTruckByChatNumTruck(String numTruck, TGUser tgUser);
 	
 	void deleteTGTruckByNumTruck(String numTruck);
+	
+	boolean checkListName(String name, Date date);
 }

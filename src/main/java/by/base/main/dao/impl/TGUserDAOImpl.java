@@ -1,10 +1,6 @@
 package by.base.main.dao.impl;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import javax.transaction.Transactional;
 
 import org.hibernate.Session;
@@ -15,7 +11,6 @@ import org.springframework.stereotype.Repository;
 
 import by.base.main.dao.TGUserDAO;
 import by.base.main.model.TGUser;
-import by.base.main.model.User;
 
 @Repository
 public class TGUserDAOImpl implements TGUserDAO{

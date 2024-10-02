@@ -1,5 +1,6 @@
 package by.base.main.service.impl;
 
+import java.sql.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,6 +70,11 @@ public class TGTruckServiceImpl implements TGTruckService{
 	@Override
 	public List<TGTruck> getActualTGTruckList() {
 		return tgTruckDAO.getActualTGTruckList();
+	}
+
+	@Override
+	public boolean checkListName(String name, Date date) {
+		return tgTruckDAO.checkListName(name, date);
 	}
 
 	

@@ -1,5 +1,6 @@
 package by.base.main.service;
 
+import java.sql.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -46,5 +47,7 @@ public interface TGTruckService {
 	TGTruck getTGTruckByChatNumTruck(String numTruck, TGUser tgUser);
 	
 	void deleteTGTruckByNumTruck(String numTruck);
+	
+	boolean checkListName(String name, Date date);
 
 }

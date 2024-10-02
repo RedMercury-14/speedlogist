@@ -331,6 +331,23 @@ public class MainRestController {
 //		return responseMap;		
 //	}
 	
+	@GetMapping("/logistics/deliveryShops/CheckListName/{name}&{date}")
+	public Map<String, Object> getCheckListName(
+	        HttpServletRequest request,
+	        @PathVariable String name,
+	        @PathVariable String date) {	    
+	    Map<String, Object> response = new HashMap<>();
+	    response.put("status", "200");
+	    response.put("isListName", tgTruckService.checkListName(name, Date.valueOf(date)));	    	    
+	    return response;
+	}
+	
+	/**
+	 * отдаёт тг юзера по его chatId
+	 * @param request
+	 * @param chatId
+	 * @return
+	 */
 	@GetMapping("/logistics/deliveryShops/getTGUser/{chatId}")
 	public Map<String, Object> getTGUserByChatId(
 	        HttpServletRequest request,
@@ -342,6 +359,11 @@ public class MainRestController {
 	    return response;
 	}
 	
+	/**
+	 * Отдвёт все машины начиная с сегодняшней даты и позже
+	 * @param request
+	 * @return
+	 */
 	@GetMapping("/logistics/deliveryShops/getTGTrucks")
 	public Map<String, Object> getTGTruckList(
 	        HttpServletRequest request) {	    
@@ -1632,6 +1654,12 @@ public class MainRestController {
 				case "0":
 					response.put("status", "105");
 					response.put("info", "Реальынй статус из маркета - ЧЕРНОВИК");
+					return response;
+					
+				case "-1":
+					response.put("status", "105");
+					response.put("info", "Статус маркет = null");
+					response.put("orderDTO", orderBuyGroupDTO);
 					return response;
 
 				default:

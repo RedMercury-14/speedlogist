@@ -113,4 +113,20 @@ public class TGTruckDAOImpl  implements TGTruckDAO {
 		theQuery.setParameter("numTruck", numTruck);
 		theQuery.executeUpdate();
 	}
+
+	private static final String queryCheckListName = "from TGTruck tr where tr.nameList IS NOT NULL AND tr.nameList=:name AND tr.dateRequisition=:date";
+	@Transactional
+	@Override
+	public boolean checkListName(String name, Date date) {
+		Session currentSession = sessionFactory.getCurrentSession();		
+		Query<TGTruck> theObject = currentSession.createQuery(queryCheckListName, TGTruck.class);
+		theObject.setParameter("name", name);		
+		theObject.setParameter("date", date, TemporalType.DATE);		
+		List<TGTruck> trucks = theObject.getResultList();			
+		if(trucks.isEmpty()) {
+			return false;
+		}else {
+			return true;		
+		}
+	}
 }

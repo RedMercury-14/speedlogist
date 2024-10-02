@@ -8,6 +8,12 @@ import by.base.main.model.TGUser;
 public interface TGTruckDAO {
 	
 	List<TGTruck> getTGTruckList();
+	
+	/**
+	 * Отдаёт машины начная с сегодняшней даты и дальше
+	 * @return
+	 */
+	List<TGTruck> getActualTGTruckList();
 
 	Integer saveOrUpdateTGTruck(TGTruck tgTruck);
 	

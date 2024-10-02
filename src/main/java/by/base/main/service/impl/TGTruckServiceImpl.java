@@ -66,5 +66,10 @@ public class TGTruckServiceImpl implements TGTruckService{
 		
 	}
 
+	@Override
+	public List<TGTruck> getActualTGTruckList() {
+		return tgTruckDAO.getActualTGTruckList();
+	}
+
 	
 }

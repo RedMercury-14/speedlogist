@@ -229,6 +229,7 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 					
 					TGTruck truckForType = tgTruckService.getTGTruckByChatNumTruck(numTruckForType, user);
 					truckForType.setTypeTrailer(type);
+					truckForType.setCompanyName(user.getCompanyName());
 					String text;
 					String dateNext = LocalDate.now().plusDays(1).format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
 					if(user.getDateOrderTruckOptimization() != null) {

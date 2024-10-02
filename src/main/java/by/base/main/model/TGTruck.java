@@ -56,7 +56,22 @@ public class TGTruck implements Serializable{
 	@Column(name = "status")
 	private Integer status;
 	
+	@Column(name = "company_name")
+	private String companyName;
 	
+	/**
+	 * @return the companyName
+	 */
+	public String getCompanyName() {
+		return companyName;
+	}
+
+	/**
+	 * @param companyName the companyName to set
+	 */
+	public void setCompanyName(String companyName) {
+		this.companyName = companyName;
+	}
 
 	/**
 	 * @return the status

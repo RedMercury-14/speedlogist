@@ -119,6 +119,8 @@ import by.base.main.model.RouteHasShop;
 import by.base.main.model.Schedule;
 import by.base.main.model.Shop;
 import by.base.main.model.SimpleRoute;
+import by.base.main.model.TGTruck;
+import by.base.main.model.TGUser;
 import by.base.main.model.Truck;
 import by.base.main.model.User;
 import by.base.main.service.AddressService;
@@ -133,6 +135,8 @@ import by.base.main.service.RouteService;
 import by.base.main.service.ScheduleService;
 import by.base.main.service.ServiceException;
 import by.base.main.service.ShopService;
+import by.base.main.service.TGTruckService;
+import by.base.main.service.TGUserService;
 import by.base.main.service.TruckService;
 import by.base.main.service.UserService;
 import by.base.main.service.util.CheckOrderNeeds;
@@ -257,6 +261,12 @@ public class MainRestController {
 	@Autowired
 	private ServiceLevel serviceLevel;
 	
+	@Autowired 
+	private TGTruckService tgTruckService;
+	
+	@Autowired
+    private TGUserService tgUserService;
+	
 	private static String classLog;
 	private static String marketJWT;
 	//в отдельный файл
@@ -320,6 +330,27 @@ public class MainRestController {
 //		System.out.println(t2.getTime()-t1.getTime() + " ms - preloadTEST" );
 //		return responseMap;		
 //	}
+	
+	@GetMapping("/logistics/deliveryShops/getTGUser/{chatId}")
+	public Map<String, Object> getTGUserByChatId(
+	        HttpServletRequest request,
+	        @PathVariable String chatId) {	    
+	    Map<String, Object> response = new HashMap<>();
+	    TGUser user = tgUserService.getTGUserByChatId(Long.parseLong(chatId));	        
+	    response.put("status", "200");
+	    response.put("body", user);	    	    
+	    return response;
+	}
+	
+	@GetMapping("/logistics/deliveryShops/getTGTrucks")
+	public Map<String, Object> getTGTruckList(
+	        HttpServletRequest request) {	    
+	    Map<String, Object> response = new HashMap<>();
+	    List<TGTruck> tgTrucks = tgTruckService.getActualTGTruckList();	        
+	    response.put("status", "200");
+	    response.put("body", tgTrucks);	    	    
+	    return response;
+	}
 	
 	/**
 	 * Удаление стоимости рейса

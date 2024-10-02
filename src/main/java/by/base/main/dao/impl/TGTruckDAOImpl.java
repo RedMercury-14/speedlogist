@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.persistence.TemporalType;
 import javax.transaction.Transactional;
 
 import org.hibernate.Session;
@@ -32,7 +33,26 @@ public class TGTruckDAOImpl  implements TGTruckDAO {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<TGTruck> theObject = currentSession.createQuery(queryGetList, TGTruck.class);
 		List <TGTruck> objects = theObject.getResultList();
-		return objects;
+		if(objects.isEmpty()) {
+			return null;		
+		}else {
+			return objects;
+		}
+	}
+	
+	private static final String queryGetActualTGTruckList = "from TGTruck tr where tr.dateRequisition >= :date order by tr.idTGTruck";
+	@Transactional
+	@Override
+	public List<TGTruck> getActualTGTruckList() {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<TGTruck> theObject = currentSession.createQuery(queryGetActualTGTruckList, TGTruck.class);
+		theObject.setParameter("date", Date.valueOf(LocalDate.now()), TemporalType.DATE);
+		List <TGTruck> objects = theObject.getResultList();
+		if(objects.isEmpty()) {
+			return null;		
+		}else {
+			return objects;
+		}
 	}
 
 	@Transactional

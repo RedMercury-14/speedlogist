@@ -9,6 +9,12 @@ import by.base.main.model.TGUser;
 public interface TGTruckService {
 
 	List<TGTruck> getTGTruckList();
+	
+	/**
+	 * Отдаёт машины начная с сегодняшней даты и дальше
+	 * @return
+	 */
+	List<TGTruck> getActualTGTruckList();
 
 	Integer saveOrUpdateTGTruck(TGTruck tgTruck);
 	

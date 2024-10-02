@@ -22,9 +22,6 @@ import javax.persistence.Transient;
 @Table(name = "tg_user")
 public class TGUser implements Serializable{
 	
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = -2097537784597181301L;
 
 	@Id
@@ -53,7 +50,7 @@ public class TGUser implements Serializable{
 	@Transient
 	private Map<String, TGTruck> trucksForBot = null;
 	
-	@Transient
+	@Column(name = "validity_truck")
 	private String validityTruck;
 	
 	public TGUser() {
@@ -92,8 +89,8 @@ public class TGUser implements Serializable{
 		this.status = status;
 	}
 
-	public LocalDate getDateOrderTruckOptimization() {
-		return dateOrderTruckOptimization.toLocalDate();
+	public Date getDateOrderTruckOptimization() {
+		return dateOrderTruckOptimization;
 	}
 
 	public String getCommand() {
@@ -104,8 +101,8 @@ public class TGUser implements Serializable{
 		this.command = command;
 	}
 
-	public void setDateOrderTruckOptimization(LocalDate dateOrderTruckOptimization) {
-		this.dateOrderTruckOptimization = Date.valueOf(dateOrderTruckOptimization);
+	public void setDateOrderTruckOptimization(Date dateOrderTruckOptimization) {
+		this.dateOrderTruckOptimization = dateOrderTruckOptimization;
 	}
 	
 	public void setTrucksForBot(Map<String, TGTruck> trucksForBot) {

@@ -94,7 +94,7 @@ import {
 	statusInfoLabelLIstners,
 	stockSelectListner,
 } from "./slots/listners.js"
-import { renderOrderDeliveryCalendar } from "./slots/deliveryCalendar.js"
+import { renderOrderCalendar } from "./slots/deliveryCalendar.js"
 
 
 const LOCAL_STORAGE_KEY = 'AG_Grid_column_settings_to_Slots'
@@ -505,7 +505,7 @@ function orderDateClickHandler(e) {
 	const dateOrderOrl = orderDateCell.dataset.orderDate
 	const info = store.getCalendarInfo()
 
-	$("#deliveryCalendarModal").modal('hide')
+	$("#orderCalendarModal").modal('hide')
 
 	if (!dateOrderOrl) {
 		info.revert()
@@ -777,7 +777,6 @@ function preloadOrder(info) {
 		token: store.getToken(),
 		data: orderData,
 		successCallback: (data) => {
-			console.log("🚀 ~ preloadOrder ~ data:", data)
 			clearTimeout(timeoutId)
 			bootstrap5overlay.hideOverlay()
 
@@ -786,11 +785,25 @@ function preloadOrder(info) {
 					// нет данных о графике - загружаем заказ в БД
 					loadOrder(info)
 				} else {
+					const plan = data.planResponce
+
+					// нет данных о датах заказов и поставок
+					if (!plan.dates) {
+						loadOrder(info)
+						return
+					}
+
+					// нет данных о датах заказов и поставок
+					if (plan.dates.length === 0) {
+						loadOrder(info)
+						return
+					}
+
 					// получаем даты заказов и поставок, ожидаем указание нужной даты
-					const orderDates = data.dates       // Заказы
-					const deliveryDates = data.deliveryDates    // Поставки
-					renderOrderDeliveryCalendar(orderDates, deliveryDates, orderDateClickHandler)
-					$('#deliveryCalendarModal').modal('show')
+					const orderDates = plan.dates       // Заказы
+					const deliveryDates = plan.deliveryDates    // Поставки
+					renderOrderCalendar(orderDates, deliveryDates, orderDateClickHandler)
+					$('#orderCalendarModal').modal('show')
 				}
 				return
 			}
@@ -1180,7 +1193,7 @@ function checkBooking(info) {
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
 	
 	ajaxUtils.get({
-		url: getMarketOrderUrl + marketNumber,
+		url: checkBookingBaseUrl + marketNumber,
 		successCallback: (data) => {
 			clearTimeout(timeoutId)
 			bootstrap5overlay.hideOverlay()

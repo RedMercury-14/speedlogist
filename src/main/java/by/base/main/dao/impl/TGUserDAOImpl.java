@@ -49,8 +49,13 @@ public class TGUserDAOImpl implements TGUserDAO{
 		Query<TGUser> theObject = currentSession.createQuery(queryGetObjById, TGUser.class);
 		theObject.setParameter("idUser", id);
 		List<TGUser> trucks = theObject.getResultList();
-		TGUser object = trucks.stream().findFirst().get();
-		return object;
+		if(trucks.isEmpty()) {
+			return null;
+		}else {
+			TGUser object = trucks.stream().findFirst().get();		
+			return object;
+		}
+		
 	}
 
 	private static final String queryGetTGUserByChatId = "from TGUser u where u.chatId=:chatId";
@@ -60,8 +65,14 @@ public class TGUserDAOImpl implements TGUserDAO{
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<TGUser> theObject = currentSession.createQuery(queryGetTGUserByChatId, TGUser.class);
 		theObject.setParameter("chatId", chatId);
-		TGUser trucks = theObject.getResultList().stream().findFirst().get();
-		return trucks;
+		List<TGUser> trucks = theObject.getResultList();
+		if(trucks.isEmpty()) {
+			return null;
+		}else {
+			TGUser object = trucks.stream().findFirst().get();
+			return object;
+		}
+		
 	}
 
 }

@@ -3,6 +3,7 @@ package by.base.main.model;
 import java.io.Serializable;
 import java.sql.Date;
 import java.time.LocalDate;
+import java.util.Objects;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -22,7 +23,7 @@ public class TGTruck implements Serializable{
 
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_tg_user")
+    @Column(name = "id_tg_truck")
 	private Integer idTGTruck;
 	
 	@Column(name = "num_truck")
@@ -44,7 +45,7 @@ public class TGTruck implements Serializable{
 	private String cargoCapacity;
 	
 	@Column(name = "chat_id_user_truck")
-	private Integer chatIdUserTruck;
+	private Long chatIdUserTruck;
 	
 	@Column(name = "name_list")
 	private String nameList;
@@ -52,7 +53,24 @@ public class TGTruck implements Serializable{
 	@Column(name = "id_list")
 	private Integer idList;
 	
+	@Column(name = "status")
+	private Integer status;
 	
+	
+
+	/**
+	 * @return the status
+	 */
+	public Integer getStatus() {
+		return status;
+	}
+
+	/**
+	 * @param status the status to set
+	 */
+	public void setStatus(Integer status) {
+		this.status = status;
+	}
 
 	/**
 	 * @return the nameList
@@ -177,15 +195,41 @@ public class TGTruck implements Serializable{
 	/**
 	 * @return the chatIdUserTruck
 	 */
-	public Integer getChatIdUserTruck() {
+	public Long getChatIdUserTruck() {
 		return chatIdUserTruck;
 	}
 
 	/**
 	 * @param chatIdUserTruck the chatIdUserTruck to set
 	 */
-	public void setChatIdUserTruck(Integer chatIdUserTruck) {
+	public void setChatIdUserTruck(Long chatIdUserTruck) {
 		this.chatIdUserTruck = chatIdUserTruck;
+	}
+
+	
+	
+	@Override
+	public int hashCode() {
+		return Objects.hash(cargoCapacity, chatIdUserTruck, dateRequisition, idList, idTGTruck, modelTruck, nameList,
+				numTruck, pall, status, typeTrailer);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		TGTruck other = (TGTruck) obj;
+		return Objects.equals(cargoCapacity, other.cargoCapacity)
+				&& Objects.equals(chatIdUserTruck, other.chatIdUserTruck)
+				&& Objects.equals(dateRequisition, other.dateRequisition) && Objects.equals(idList, other.idList)
+				&& Objects.equals(idTGTruck, other.idTGTruck) && Objects.equals(modelTruck, other.modelTruck)
+				&& Objects.equals(nameList, other.nameList) && Objects.equals(numTruck, other.numTruck)
+				&& Objects.equals(pall, other.pall) && Objects.equals(status, other.status)
+				&& Objects.equals(typeTrailer, other.typeTrailer);
 	}
 
 	@Override

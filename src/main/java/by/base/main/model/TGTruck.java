@@ -247,11 +247,22 @@ public class TGTruck implements Serializable{
 				&& Objects.equals(typeTrailer, other.typeTrailer);
 	}
 
+	
+	public String toJSON() {
+		return "{\"idTGTruck\":\"" + idTGTruck + "\", \"numTruck\":\"" + numTruck + "\", \"modelTruck\":\"" + modelTruck
+				+ "\", \"pall\":\"" + pall + "\", \"typeTrailer\":\"" + typeTrailer + "\", \"dateRequisition\":\""
+				+ dateRequisition + "\", \"cargoCapacity\":\"" + cargoCapacity + "\", \"chatIdUserTruck\":\""
+				+ chatIdUserTruck + "\", \"nameList\":\"" + nameList + "\", \"idList\":\"" + idList
+				+ "\", \"status\":\"" + status + "\", \"companyName\":\"" + companyName + "\"}";
+	}
+
 	@Override
 	public String toString() {
 		return "TGTruck [idTGTruck=" + idTGTruck + ", numTruck=" + numTruck + ", modelTruck=" + modelTruck + ", pall="
 				+ pall + ", typeTrailer=" + typeTrailer + ", dateRequisition=" + dateRequisition + ", cargoCapacity="
 				+ cargoCapacity + ", chatIdUserTruck=" + chatIdUserTruck + "]";
 	}
+	
+	
 	
 }

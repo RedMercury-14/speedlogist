@@ -46,7 +46,19 @@ public interface TGTruckService {
 	 */
 	TGTruck getTGTruckByChatNumTruck(String numTruck, TGUser tgUser);
 	
-	void deleteTGTruckByNumTruck(String numTruck);
+	/**
+	 * Отдаёт TGTruck по номеру авто и Date
+	 * (Date = date_order_truck_optimization)
+	 * @param numTruck
+	 * @return
+	 */
+	TGTruck getTGTruckByChatNumTruck(String numTruck, Date date);
+	
+	TGTruck getTGTruckByChatId(Integer id);
+	
+	void deleteTGTruckByNumTruck(String numTruck, TGUser tgUser);
+	
+	void deleteTGTruckByNumTruck(String numTruck, Date date);
 	
 	boolean checkListName(String name, Date date);
 

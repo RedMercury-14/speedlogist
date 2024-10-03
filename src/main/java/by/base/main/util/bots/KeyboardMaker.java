@@ -1,5 +1,6 @@
 package by.base.main.util.bots;
 
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -389,14 +390,14 @@ public class KeyboardMaker {
      * @param numTruck
      * @return
      */
-    public InlineKeyboardMarkup getCancelDeleteEditKeyboard(String numTruck) {
+    public InlineKeyboardMarkup getCancelDeleteEditKeyboard(String numTruck, Date date) {
     	InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
     	List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
     	List<InlineKeyboardButton> rowInline = new ArrayList<>();
     	
     	InlineKeyboardButton inlineKeyboardButton1 = new InlineKeyboardButton();
 	    inlineKeyboardButton1.setText("Отменить");
-	    inlineKeyboardButton1.setCallbackData("cancelTruck_"+numTruck );
+	    inlineKeyboardButton1.setCallbackData("cancelTruck_"+numTruck + "_" + date.toString());
 	    rowInline.add(inlineKeyboardButton1);
 	    
 //	    InlineKeyboardButton inlineKeyboardButton2 = new InlineKeyboardButton();

@@ -41,7 +41,7 @@ public class TGUserServiceImpl implements TGUserService{
 	public TGUser getTGUserByChatId(long chatId) {
 		TGUser tgUser = tgUserDAO.getTGUserByChatId(chatId);		
 		Map<String, TGTruck> map = tgTruckService.getTGTruckByChatIdUser(chatId);
-		if(map != null) {
+		if(map != null && tgUser != null) {
 			tgUser.setTrucksForBot(map);
 		}
 		return tgUser;

@@ -331,6 +331,32 @@ public class MainRestController {
 //		return responseMap;		
 //	}
 	
+	@PostMapping("/logistics/deliveryShops/add")
+	public Map<String, Object> postdeliveryShopsAdd(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+		java.util.Date t1 = new java.util.Date();		
+		User user = getThisUser();			
+		Map<String, Object> response = new HashMap<String, Object>();
+		String role = user.getRoles().stream().findFirst().get().getAuthority();
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		Integer idTGTruck = jsonMainObject.get("idTGTruck") != null ? Integer.parseInt(jsonMainObject.get("idOrder").toString()) : null;
+		TGTruck tgTruck = tgTruckService.getTGTruckByChatId(idTGTruck);
+		
+		if(tgTruck == null) {
+			response.put("status", "100");
+			response.put("info", "Отсутствует машина в БД. Машина отменена заявителем.");
+			return response;			
+		}
+		
+		
+		
+		
+//		Message message = new Message(user.getLogin(), null, "200", str, idOrder.toString(), "load");
+//		slotWebSocket.sendMessage(message);	
+		
+		return response;
+	}
+	
 	@GetMapping("/logistics/deliveryShops/CheckListName/{name}&{date}")
 	public Map<String, Object> getCheckListName(
 	        HttpServletRequest request,

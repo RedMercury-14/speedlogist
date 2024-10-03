@@ -62,8 +62,8 @@ public class TGTruckServiceImpl implements TGTruckService{
 	}
 
 	@Override
-	public void deleteTGTruckByNumTruck(String numTruck) {
-		tgTruckDAO.deleteTGTruckByNumTruck(numTruck);
+	public void deleteTGTruckByNumTruck(String numTruck, TGUser tgUser) {
+		tgTruckDAO.deleteTGTruckByNumTruck(numTruck, tgUser);
 		
 	}
 
@@ -75,6 +75,21 @@ public class TGTruckServiceImpl implements TGTruckService{
 	@Override
 	public boolean checkListName(String name, Date date) {
 		return tgTruckDAO.checkListName(name, date);
+	}
+
+	@Override
+	public TGTruck getTGTruckByChatId(Integer id) {
+		return tgTruckDAO.getTGTruckByChatId(id);
+	}
+
+	@Override
+	public void deleteTGTruckByNumTruck(String numTruck, Date date) {
+		tgTruckDAO.deleteTGTruckByNumTruck(numTruck, date);
+	}
+
+	@Override
+	public TGTruck getTGTruckByChatNumTruck(String numTruck, Date date) {
+		return tgTruckDAO.getTGTruckByChatNumTruck(numTruck, date);
 	}
 
 	

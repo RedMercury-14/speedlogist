@@ -88,7 +88,6 @@ public class TGTruckDAOImpl  implements TGTruckDAO {
         } else {
             date = Date.valueOf(LocalDate.now().plusDays(1));
         }
-		System.out.println(date);
 		Session currentSession = sessionFactory.getCurrentSession();		
 		Query<TGTruck> theObject = currentSession.createQuery(queryGetTGTruckByChatNumTruck, TGTruck.class);
 		theObject.setParameter("numTruck", numTruck);	
@@ -103,14 +102,21 @@ public class TGTruckDAOImpl  implements TGTruckDAO {
 		
 	}
 
-	private static final String queryDeleteByNumTruck = "delete from TGTruck where numTruck=:numTruck";
+	private static final String queryDeleteByNumTruck = "delete from TGTruck where numTruck=:numTruck AND dateRequisition=:date";
 	@Override
 	@Transactional
-	public void deleteTGTruckByNumTruck(String numTruck) {
+	public void deleteTGTruckByNumTruck(String numTruck, TGUser tgUser) {
+		Date date;
+		if(tgUser.getDateOrderTruckOptimization() != null) {
+            date = tgUser.getDateOrderTruckOptimization();
+        } else {
+            date = Date.valueOf(LocalDate.now().plusDays(1));
+        }
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query theQuery = 
 				currentSession.createQuery(queryDeleteByNumTruck);
 		theQuery.setParameter("numTruck", numTruck);
+		theQuery.setParameter("date", date);
 		theQuery.executeUpdate();
 	}
 
@@ -127,6 +133,51 @@ public class TGTruckDAOImpl  implements TGTruckDAO {
 			return false;
 		}else {
 			return true;		
+		}
+	}
+
+	private static final String queryGetTGTruckByChatById = "from TGTruck tr where tr.idTGTruck=:idTGTruck";
+	@Transactional
+	@Override
+	public TGTruck getTGTruckByChatId(Integer id) {
+		Session currentSession = sessionFactory.getCurrentSession();		
+		Query<TGTruck> theObject = currentSession.createQuery(queryGetTGTruckByChatById, TGTruck.class);
+		theObject.setParameter("idTGTruck", id);	
+		List<TGTruck> tgTrucks = theObject.getResultList();
+		if(tgTrucks.isEmpty()) {
+			return null;
+		}else {
+			TGTruck trucks = tgTrucks.stream().findFirst().get();		
+			return trucks;
+		}
+	}
+
+	
+	@Override
+	@Transactional
+	public void deleteTGTruckByNumTruck(String numTruck, Date date) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query theQuery = 
+				currentSession.createQuery(queryDeleteByNumTruck);
+		theQuery.setParameter("numTruck", numTruck);
+		theQuery.setParameter("date", date);
+		theQuery.executeUpdate();
+		
+	}
+
+	@Override
+	@Transactional
+	public TGTruck getTGTruckByChatNumTruck(String numTruck, Date date) {
+		Session currentSession = sessionFactory.getCurrentSession();		
+		Query<TGTruck> theObject = currentSession.createQuery(queryGetTGTruckByChatNumTruck, TGTruck.class);
+		theObject.setParameter("numTruck", numTruck);	
+		theObject.setParameter("date", date);	
+		List<TGTruck> tgTrucks = theObject.getResultList();
+		if(tgTrucks.isEmpty()) {
+			return null;
+		}else {
+			TGTruck trucks = tgTrucks.stream().findFirst().get();		
+			return trucks;
 		}
 	}
 }

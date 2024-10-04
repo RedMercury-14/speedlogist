@@ -377,7 +377,7 @@ public class MainRestController {
     		tgTruckService.saveOrUpdateTGTruck(tgTruck);
         }
 					
-		Message message = new Message("TGBotRouting", user.getLogin(), null, "200", str, null, "update");
+		Message message = new Message("TGBotRouting", user.getLogin(), null, "200", str, null, "updateList");
 		slotWebSocket.sendMessage(message);	
 		
 		if(response.get("status") == null) {

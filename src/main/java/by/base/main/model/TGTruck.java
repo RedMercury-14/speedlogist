@@ -221,7 +221,25 @@ public class TGTruck implements Serializable{
 		this.chatIdUserTruck = chatIdUserTruck;
 	}
 
-	
+    // Метод клонирования
+    public TGTruck cloneWithNewId(Integer newIdTGTruck) {
+        TGTruck clonedTruck = new TGTruck();
+        
+        clonedTruck.idTGTruck = newIdTGTruck;
+        clonedTruck.numTruck = this.numTruck;
+        clonedTruck.modelTruck = this.modelTruck;
+        clonedTruck.pall = this.pall;
+        clonedTruck.typeTrailer = this.typeTrailer;
+        clonedTruck.dateRequisition = this.dateRequisition;
+        clonedTruck.cargoCapacity = this.cargoCapacity;
+        clonedTruck.chatIdUserTruck = this.chatIdUserTruck;
+        clonedTruck.nameList = this.nameList;
+        clonedTruck.idList = this.idList;
+        clonedTruck.status = this.status;
+        clonedTruck.companyName = this.companyName;
+
+        return clonedTruck;
+    }
 	
 	@Override
 	public int hashCode() {

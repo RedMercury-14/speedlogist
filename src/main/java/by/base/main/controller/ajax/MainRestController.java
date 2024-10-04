@@ -15,14 +15,13 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -76,6 +75,10 @@ import org.springframework.web.multipart.MultipartFile;
 import com.dto.OrderDTO;
 import com.dto.PlanResponce;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 import com.graphhopper.GHRequest;
 import com.graphhopper.GHResponse;
 import com.graphhopper.GraphHopper;
@@ -89,11 +92,7 @@ import com.graphhopper.util.JsonFeature;
 import com.graphhopper.util.PointList;
 import com.graphhopper.util.Translation;
 import com.graphhopper.util.shapes.GHPoint;
-import com.itextpdf.text.log.SysoCounter;
-import com.itextpdf.text.pdf.PdfStructTreeController.returnType;
-
 import by.base.main.controller.MainController;
-import by.base.main.dao.OrderDAO;
 import by.base.main.dto.MarketDataForClear;
 import by.base.main.dto.MarketDataForLoginDto;
 import by.base.main.dto.MarketDataForRequestDto;
@@ -101,9 +100,7 @@ import by.base.main.dto.MarketErrorDto;
 import by.base.main.dto.MarketPacketDto;
 import by.base.main.dto.MarketRequestDto;
 import by.base.main.dto.MarketTableDto;
-import by.base.main.dto.OrderBuyDTO;
 import by.base.main.dto.OrderBuyGroupDTO;
-import by.base.main.dto.OrderDTOForSlot;
 import by.base.main.model.Address;
 import by.base.main.model.GeometryResponse;
 import by.base.main.model.JsonResponsePolygon;
@@ -155,7 +152,6 @@ import by.base.main.util.GraphHopper.CustomJsonFeature;
 import by.base.main.util.GraphHopper.JSpiritMachine;
 import by.base.main.util.GraphHopper.RoutingMachine;
 import by.base.main.util.bots.TelegramBot;
-import by.base.main.util.hcolossus.ColossusProcessorANDRestrictions2;
 import by.base.main.util.hcolossus.ColossusProcessorANDRestrictions3;
 import by.base.main.util.hcolossus.pojo.Solution;
 import by.base.main.util.hcolossus.pojo.Vehicle;
@@ -172,7 +168,18 @@ public class MainRestController {
 	
 	private static Map<Integer, Integer> stockLimits = null;
 
-	private Gson gson = new Gson();
+//	private Gson gson = new GsonBuilder()
+//            .setDateFormat("yyyy-MM-dd")  // Устанавливаем нужный формат
+//            .create();
+	
+	private static final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(Date.class, new JsonSerializer<Date>() {
+				@Override
+				public JsonElement serialize(Date src, Type typeOfSrc, JsonSerializationContext context) {
+					return context.serialize(src.getTime());  // Сериализация даты в миллисекундах
+				}
+            })
+            .create();
 
 	@Autowired
 	private RouteService routeService;
@@ -330,6 +337,57 @@ public class MainRestController {
 //		System.out.println(t2.getTime()-t1.getTime() + " ms - preloadTEST" );
 //		return responseMap;		
 //	}
+	
+	@GetMapping("/logistics/deliveryShops/test1000Truck")
+	public Map<String, Object> getTest1000Truck(
+	        HttpServletRequest request) {	    
+	    Map<String, Object> response = new HashMap<>();
+	    TGTruck tgTruck = tgTruckService.getTGTruckByChatId(4);
+	    
+	    List<TGTruck> tgTrucks = new ArrayList<TGTruck>();
+	    
+	    for (int i = 0; i < 1000; i++) {
+	    	tgTrucks.add(tgTruck.cloneWithNewId(i));
+		}	    
+    
+	    Message message = new Message("TGBotRouting", "test", null, "200",  gson.toJson(tgTrucks), null, "update");
+		slotWebSocket.sendMessage(message);	
+	    
+	    response.put("status", "200");
+	    response.put("WS-message", message);	    	    
+	    return response;
+	}
+	
+	@PostMapping("/logistics/deliveryShops/updateList")
+	public Map<String, Object> postdeliveryShopsAddList(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+		java.util.Date t1 = new java.util.Date();		
+		User user = getThisUser();			
+		Map<String, Object> response = new HashMap<String, Object>();
+		String role = user.getRoles().stream().findFirst().get().getAuthority();
+		JSONParser parser = new JSONParser();
+//		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		JSONArray jsonArray = (JSONArray) parser.parse(str);
+		
+        for (Object obj : jsonArray) {
+        	JSONObject jsonMainObject = (JSONObject) parser.parse(obj.toString());
+        	Integer idTGTruck = jsonMainObject.get("idTGTruck") != null ? Integer.parseInt(jsonMainObject.get("idTGTruck").toString()) : null;
+    		TGTruck tgTruck = tgTruckService.getTGTruckByChatId(idTGTruck);
+    		tgTruck.setStatus(jsonMainObject.get("status") != null ? Integer.parseInt(jsonMainObject.get("status").toString()) : null);
+    		tgTruck.setNameList(jsonMainObject.get("nameList") != null ? jsonMainObject.get("nameList").toString() : null);
+    		tgTruckService.saveOrUpdateTGTruck(tgTruck);
+        }
+					
+		Message message = new Message("TGBotRouting", user.getLogin(), null, "200", str, null, "update");
+		slotWebSocket.sendMessage(message);	
+		
+		if(response.get("status") == null) {
+			response.put("status", "200");
+		}
+		response.put("message", str);	
+		java.util.Date t2 = new java.util.Date();
+		System.out.println("deliveryShops/updateList " + (t2.getTime()-t1.getTime()) + " ms");
+		return response;
+	}
 	
 	@PostMapping("/logistics/deliveryShops/update")
 	public Map<String, Object> postdeliveryShopsAdd(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {

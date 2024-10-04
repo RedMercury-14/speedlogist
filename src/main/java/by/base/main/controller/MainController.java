@@ -323,6 +323,22 @@ public class MainController {
 		return "main";		
 	}
 	
+	@GetMapping("/main/logistics-delivery/route-handler")
+	public String getlogisticsDeliveryRouteHandlerPage(Model model, HttpServletRequest request) {
+		return "logisticsDeliveryRouteHandler";
+	}
+	@RequestMapping("/main/logistics-delivery/router")
+	public String routerPage(Model model) {
+		return "depot";
+	}
+	@GetMapping("/main/logistics-delivery")
+	public String getlogisticsDeliveryPage(Model model, HttpServletRequest request) {
+		return "logisticsDelivery";
+	}
+	@GetMapping("/main/logistics-delivery/truck")
+	public String getlogisticsDeliveryTruckPage(Model model, HttpServletRequest request) {
+		return "logisticsDeliveryTruck";
+	}
 	@GetMapping("/main/logistics/maintenance")
 	public String getMaintenanceLogistPage(Model model, HttpServletRequest request) {
 		return "maintenanceList";

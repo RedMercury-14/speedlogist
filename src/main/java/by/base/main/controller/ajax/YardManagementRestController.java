@@ -138,7 +138,7 @@ public class YardManagementRestController {
 		order.setRegistrationFactYard(timeRegistration != null && !timeRegistration.equals("null") ? new Timestamp(Long.parseLong(timeRegistration)) : null);
 		orderService.updateOrder(order);
 		//тправляем сообщение в WS
-		Message message = new Message("yard", null, "200", order.toJsonForYard(), idOrder.toString(), "changeStatusYard");
+		Message message = new Message("slot", "yard", null, "200", order.toJsonForYard(), idOrder.toString(), "changeStatusYard");
 		slotWebSocket.sendMessage(message);	
 		response.put("status", "200");
 		response.put("object", order.toJsonForYard());

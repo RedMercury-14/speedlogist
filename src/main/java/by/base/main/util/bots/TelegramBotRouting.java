@@ -192,7 +192,7 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
         		        }
 						return;
 					}else {
-						Message messageObject = new Message("tgBot", null, "200", tgTruckService.getTGTruckByChatNumTruck(data.split("_")[1], Date.valueOf(data.split("_")[2])).toJSON(), null, "delete");
+						Message messageObject = new Message("TGBotRouting", "tgBot", null, "200", tgTruckService.getTGTruckByChatNumTruck(data.split("_")[1], Date.valueOf(data.split("_")[2])).toJSON(), null, "delete");
 						slotWebSocket.sendMessage(messageObject);
 						tgTruckService.deleteTGTruckByNumTruck(data.split("_")[1], Date.valueOf(data.split("_")[2]));	
 						user.removeTrucksForBot(data.split("_")[1]);
@@ -334,7 +334,7 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 	            	sendKeyboard.setChatId(chatId);
 	            	
 					if(answer.equals("yes")) {					
-						Message messageObject = new Message("tgBot", null, "200", tgTruckService.getTGTruckByChatNumTruck(numTruckProof, user).toJSON(), null, "add");
+						Message messageObject = new Message("TGBotRouting", "tgBot", null, "200", tgTruckService.getTGTruckByChatNumTruck(numTruckProof, user).toJSON(), null, "add");
 						slotWebSocket.sendMessage(messageObject);
 						
 						user.setCommand(null);

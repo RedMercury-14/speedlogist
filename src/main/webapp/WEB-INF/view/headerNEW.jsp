@@ -60,25 +60,36 @@
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/maintenance " />">Менеджер маршрутов АХО/СГИ</a>
 									</div>
 								</li>
+								<li class="dropdown">
+									<a href="#" class="nav-item nav-link" data-toggle="dropdown">
+										Развоз
+									</a>
+									<div class="dropdown-menu">
+										<a class="dropdown-item" href="<spring:url value="/main/logistics-delivery/truck" />">Создание списка машин</a>
+										<!-- <a class="dropdown-item" href="<spring:url value="/main/logistics-delivery/router" />">Маршрутизатор</a> -->
+									</div>
+								</li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/depot" />">Маршрутизатор</a></li>
 								<!-- <li><a class="nav-item nav-link" href="<spring:url value="/main/slots" />">Слоты</a></li> -->
 								<li class="dropdown">
 									<a href="#" class="nav-item nav-link" data-toggle="dropdown">
-										Слоты
+										Заказы, слоты
 									</a>
 									<div class="dropdown-menu">
 										<a class="dropdown-item" href="<spring:url value="/main/slots" />">Слоты</a>
 										<a class="dropdown-item" href="<spring:url value="/main/slots/delivery-schedule" />">График поставок</a>
+										<a class="dropdown-item" href="<spring:url value="/main/procurement/add-order" />">Создание заявки</a>
+										<a class="dropdown-item" href="<spring:url value="/main/procurement/orders" />">Контроль заявок</a>
+										<a class="dropdown-item" href="<spring:url value="/main/order-support/orders" />">Остаток товара</a>
+										<a class="dropdown-item" href="<spring:url value="/main/order-support/control" />">Загрузить отчет</a>
+										<!-- <a class="dropdown-item" href="<spring:url value="/main/stock-support/orders" />">Таблица Башкиров</a> -->
+										<a class="dropdown-item" href="<spring:url value="/main/orl/delivery-schedule" />">График поставок</a>
+										<a class="dropdown-item" href="<spring:url value="/main/orl/need" />">Потребности</a>
+										<a class="dropdown-item" href="<spring:url value="/main/orl/arrival" />">Приход</a>
 									</div>
 								</li>
 								<!-- <li><a class="nav-item nav-link" href="<spring:url value="/main/shop" />">Магазин</a></li> -->
-								<li class="dropdown">
-									<a href="#" class="nav-item nav-link" data-toggle="dropdown">Заявки на перевозки</a>
-									<div class="dropdown-menu">
-										<a class="dropdown-item" href="<spring:url value="/main/procurement/add-order" />">Создание заявки</a>
-										<a class="dropdown-item" href="<spring:url value="/main/procurement/orders" />">Контроль заявок</a>
-									</div>
-								</li>
+								
 								<li class="dropdown">
 									<a href="#" class="nav-item nav-link" data-toggle="dropdown">Аналитика</a>
 									<div class="dropdown-menu">
@@ -89,22 +100,7 @@
 										<a class="dropdown-item" href="<spring:url value="/main/analytics/needs" />">Аналитика потребности фактических заказов</a>
 									</div>
 								</li>
-								<li class="dropdown">
-									<a href="#" class="nav-item nav-link" data-toggle="dropdown">Cопровождение заказов</a>
-									<div class="dropdown-menu">
-										<a class="dropdown-item" href="<spring:url value="/main/order-support/orders" />">Остаток товара</a>
-										<a class="dropdown-item" href="<spring:url value="/main/order-support/control" />">Загрузить отчет</a>
-										<!-- <a class="dropdown-item" href="<spring:url value="/main/stock-support/orders" />">Таблица Башкиров</a> -->
-									</div>
-								</li>
-								<li class="dropdown">
-									<a href="#" class="nav-item nav-link" data-toggle="dropdown">ОРЛ</a>
-									<div class="dropdown-menu">
-										<a class="dropdown-item" href="<spring:url value="/main/orl/delivery-schedule" />">График поставок</a>
-										<a class="dropdown-item" href="<spring:url value="/main/orl/need" />">Потребности</a>
-										<a class="dropdown-item" href="<spring:url value="/main/orl/arrival" />">Приход</a>
-									</div>
-								</li>
+								
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/admin" />">Администрация</a></li>
 							</c:when>	
 							<c:when test="${roles == '[ROLE_MANAGER]'}">
@@ -273,6 +269,10 @@
 								</li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/slots" />">Слоты</a></li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/procurement/ordersBalance" />">Остаток товара</a></li>
+							</c:when>
+							<c:when test="${roles == '[ROLE_LOGISTDELIVERY]'}">
+								<li><a class="nav-item nav-link" href="<spring:url value="/main/logistics-delivery/truck" />">Создание списков автомобилей</a></li>
+								<!-- <li><a class="nav-item nav-link" href="<spring:url value="/main/logistics-delivery/router" />">Маршрутизатор</a></li> -->
 							</c:when>
 							<c:otherwise>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/registration" />">Регистрация</a></li>

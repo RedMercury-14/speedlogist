@@ -74,6 +74,7 @@ import by.base.main.model.Role;
 import by.base.main.model.Route;
 import by.base.main.model.RouteHasShop;
 import by.base.main.model.Shop;
+import by.base.main.model.TGUser;
 import by.base.main.model.Tender;
 import by.base.main.model.Truck;
 import by.base.main.model.User;
@@ -86,6 +87,7 @@ import by.base.main.service.RouteHasShopService;
 import by.base.main.service.RouteService;
 import by.base.main.service.ServiceException;
 import by.base.main.service.ShopService;
+import by.base.main.service.TGUserService;
 import by.base.main.service.TruckService;
 import by.base.main.service.UserService;
 import by.base.main.service.util.CurrencyService;
@@ -178,7 +180,10 @@ public class MainController {
 	private PDFWriter pdfWriter;
 	
 	@Autowired
-	MatrixMachine matrixMachine;
+	private MatrixMachine matrixMachine;
+	
+	@Autowired
+	private TGUserService tgUserService;
 	
 //	@Autowired
 //	private TenderCloseProcessor closeProcessor;
@@ -275,10 +280,10 @@ public class MainController {
 		//телеграмм бот!
 //		if(telegramBot.isRunning == false) {
 //			new BotInitializer(telegramBot).init();
+//			new BotInitializer(telegramBotRouting).initRoutingBot();
 //		}
-		System.err.println("ТЕЛЕГРАММ БОТ ОТКЛЮЧЕН!");
-		
-//		new BotInitializer(telegramBotRouting).initRoutingBot();
+		System.err.println("ТЕЛЕГРАММ БОТ ОТКЛЮЧЕН!");	
+//		
 		
 		
 		try {
@@ -319,10 +324,26 @@ public class MainController {
 				
 				return "redirect:/main/carrier";
 			}
-		}		
+		}	
 		return "main";		
 	}
 	
+	@GetMapping("/main/logistics-delivery/route-handler")
+	public String getlogisticsDeliveryRouteHandlerPage(Model model, HttpServletRequest request) {
+		return "logisticsDeliveryRouteHandler";
+	}
+	@RequestMapping("/main/logistics-delivery/router")
+	public String routerPage(Model model) {
+		return "depot";
+	}
+	@GetMapping("/main/logistics-delivery")
+	public String getlogisticsDeliveryPage(Model model, HttpServletRequest request) {
+		return "logisticsDelivery";
+	}
+	@GetMapping("/main/logistics-delivery/truck")
+	public String getlogisticsDeliveryTruckPage(Model model, HttpServletRequest request) {
+		return "logisticsDeliveryTruck";
+	}
 	@GetMapping("/main/logistics/maintenance")
 	public String getMaintenanceLogistPage(Model model, HttpServletRequest request) {
 		return "maintenanceList";
@@ -806,6 +827,13 @@ public class MainController {
 		return "registrationWorker";
 	}
 	
+	/**
+	 * Мтод создания нового аккаунта
+	 * @param model
+	 * @param user
+	 * @param role
+	 * @return
+	 */
 	@PostMapping("/main/admin/userlist/save")
 	public String addWorkerPost(Model model,
 			@ModelAttribute ("user") User user,

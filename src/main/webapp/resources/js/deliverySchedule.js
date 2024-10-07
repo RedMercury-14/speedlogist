@@ -4,7 +4,7 @@ import { ajaxUtils } from './ajaxUtils.js'
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 import { snackbar } from "./snackbar/snackbar.js"
 import { uiIcons } from './uiIcons.js'
-import { changeGridTableMarginTop, dateHelper, debounce, getData, getDeliveryScheduleMatrix, getScheduleStatus, hideLoadingSpinner, isAdmin, isOderSupport, showLoadingSpinner } from './utils.js'
+import { changeGridTableMarginTop, dateHelper, debounce, disableButton, enableButton, getData, getDeliveryScheduleMatrix, getScheduleStatus, hideLoadingSpinner, isAdmin, isOderSupport, showLoadingSpinner } from './utils.js'
 
 const loadExcelUrl = '../../api/slots/delivery-schedule/load'
 const getScheduleUrl = '../../api/slots/delivery-schedule/getList'
@@ -697,11 +697,14 @@ function addScheduleItemFormHandler(e) {
 		return
 	}
 
+	disableButton(e.submitter)
+
 	ajaxUtils.postJSONdata({
 		url: addScheduleItemUrl,
 		token: token,
 		data: data,
 		successCallback: (res) => {
+			enableButton(e.submitter)
 			if (res.status === '200') {
 				snackbar.show(res.message)
 				updateTable()
@@ -714,6 +717,9 @@ function addScheduleItemFormHandler(e) {
 				showMessageModal(res.message)
 				return
 			}
+		},
+		errorCallback: () => {
+			enableButton(e.submitter)
 		}
 	})
 }
@@ -752,11 +758,14 @@ function editScheduleItemFormHandler(e) {
 		return
 	}
 
+	disableButton(e.submitter)
+
 	ajaxUtils.postJSONdata({
 		url: editScheduleItemUrl,
 		token: token,
 		data: data,
 		successCallback: (res) => {
+			enableButton(e.submitter)
 			if (res.status === '200') {
 				snackbar.show(res.message)
 				updateTable()
@@ -769,6 +778,9 @@ function editScheduleItemFormHandler(e) {
 				showMessageModal(res.message)
 				return
 			}
+		},
+		errorCallback: () => {
+			enableButton(e.submitter)
 		}
 	})
 }

@@ -1,0 +1,117 @@
+import { dateHelper } from '../../utils.js'
+
+// изменение машины в зависимости от действия
+export function getTruckDateForAjax(trucks, nameList, action) {
+	return trucks.map((truck) => {
+		switch (action) {
+			case 'toSelect': {
+				return { 
+					...truck, 
+					nameList,
+					status: 50
+				}
+			}
+			case 'toAll': {
+				return { 
+					...truck, 
+					nameList,
+					status: 10
+				}
+			}
+			default:
+				return truck
+		}
+	})
+	
+}
+
+// функция адаптирования объекта машины при загрузке из БД
+export function truckAdapter(truck) {
+	return {
+		...truck,
+		dateRequisition: dateHelper.getDateForInput(truck.dateRequisition),
+	}
+}
+
+// функция адаптирования объекта машины при загрузке из сообщения WS
+export function truckAdapterFromWS(truck) {
+	return {
+		...truck,
+		idTGTruck: toNumberFromWS(truck.idTGTruck),
+		numTruck: toStringFromWS(truck.numTruck),
+		modelTruck: toStringFromWS(truck.modelTruck),
+		pall: toNumberFromWS(truck.pall),
+		typeTrailer: toStringFromWS(truck.typeTrailer),
+		dateRequisition: toStringFromWS(truck.dateRequisition),
+		cargoCapacity: toStringFromWS(truck.cargoCapacity),
+		chatIdUserTruck: toNumberFromWS(truck.chatIdUserTruck),
+		nameList: toStringFromWS(truck.nameList),
+		idList: toNumberFromWS(truck.idList),
+		status: toNumberFromWS(truck.status),
+		companyName: toStringFromWS(truck.companyName),
+	}
+}
+function toNumberFromWS(value) {
+	return value === 'null' ? null : Number(value)
+}
+function toStringFromWS(value) {
+	return value === 'null' ? null : value
+}
+
+// функция получения действия для обновления машины
+export function getUpdateAction(truck) {
+	const status = truck.status
+	return status === 50 ? 'toSelected' : 'toFree'
+}
+
+// функция обновления опций селекта списков машин
+export function updateTruckListsOptions(truckLists, nameListToSelect) {
+	const truckListsSelect = document.querySelector("#truckListsSelect")
+
+	// выбираем стартовый элемент, если нет списков
+	const defaultOptionSelected = truckLists.length === 0 ? "selected" : ""
+
+	// стартовый элемент
+	truckListsSelect.innerHTML = `<option ${defaultOptionSelected} disabled value=''>Выберите список автомобилей</option>`
+
+	// опции названий списков машин
+	truckLists.forEach((list) => {
+		const option = document.createElement("option")
+		option.value = list.nameList
+		option.text = list.nameList
+		// выделяем выбранный элемент, если он есть
+		if (nameListToSelect === list.nameList) option.selected = true
+		truckListsSelect.appendChild(option)
+	})
+
+	if (nameListToSelect === "") {
+		truckListsSelect.selectedIndex = 0
+		truckListsSelect.dispatchEvent(new Event("change"))
+		return
+	}
+
+	// выделяем вторую опцию, если список не пустой и нет выбранного эдемента
+	if (truckLists.length !== 0 && !nameListToSelect) {
+		truckListsSelect.selectedIndex = 1
+		truckListsSelect.dispatchEvent(new Event("change"))
+		return
+	}
+}
+
+// функции управдения датой
+export function nextDate(dateInput) {
+	const currentDate = dateInput.value
+	const nextMs = new Date(currentDate).getTime() + dateHelper.DAYS_TO_MILLISECONDS
+	const nextDate = dateHelper.getDateForInput(nextMs)
+
+	dateInput.value = nextDate
+	dateInput.dispatchEvent(new Event("change"))
+}
+export function prevDate(dateInput) {
+	const currentDate = dateInput.value
+	const prevMs = new Date(currentDate).getTime() - dateHelper.DAYS_TO_MILLISECONDS
+	const prevDate = dateHelper.getDateForInput(prevMs)
+
+	dateInput.value = prevDate
+	dateInput.dispatchEvent(new Event("change"))
+}

@@ -78,6 +78,9 @@ public class Message implements Serializable{
 	@Transient
 	private String numMarket;
 	
+	@Transient
+	private String WSPath;
+	
 
 	public Message() {
 		super();
@@ -99,7 +102,7 @@ public class Message implements Serializable{
 		this.idOrder = idOrder;
 	}
 	
-	public Message(String fromUser, String text, String status, String payload, String idOrder, String action) {
+	public Message(String WSPath, String fromUser, String text, String status, String payload, String idOrder, String action) {
 		super();
 		this.fromUser = fromUser;
 		this.text = text;
@@ -107,7 +110,9 @@ public class Message implements Serializable{
 		this.payload = payload;
 		this.idOrder = idOrder;
 		this.action = action;
+		this.WSPath = WSPath;
 	}
+	
 	public String getFromUser() {
 		return fromUser;
 	}
@@ -235,6 +240,21 @@ public class Message implements Serializable{
 	public void setAction(String action) {
 		this.action = action;
 	}
+	
+	/**
+	 * @return the wSPath
+	 */
+	public String getWSPath() {
+		return WSPath;
+	}
+
+	/**
+	 * @param wSPath the wSPath to set
+	 */
+	public void setWSPath(String wSPath) {
+		WSPath = wSPath;
+	}
+
 	@Override
 	public int hashCode() {
 		return Objects.hash(comment, companyName, currency, datetime, fromUser, fullName, idMessage, idRoute, nds,

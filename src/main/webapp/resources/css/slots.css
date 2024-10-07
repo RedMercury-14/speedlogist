@@ -846,52 +846,55 @@ svg:not(:root) {
 }
 
 /* ------- календарь заказов и поставок ------- */
+#orderCalendarModal .modal-header {
+	background-color: cadetblue;
+}
 /* Стили для шапки таблицы */
-#deliveryCalendar th {
-	font-weight: bold; /* Все даты жирным шрифтом */
+#orderCalendar th {
+	font-weight: bold;
 }
 /* Общие стили для всех дат */
-#deliveryCalendar td {
-	font-weight: bold; /* Все даты жирным шрифтом */
-	color: lightgray; /* По умолчанию светло-серый цвет для остальных дат */
+#orderCalendar td {
+	font-weight: bold;
+	color: lightgray;
 	position: relative;
 }
 /* Контейнер для даты, чтобы увеличить только дату, а не ячейку */
-#deliveryCalendar .date-container {
+#orderCalendar .date-container {
 	display: inline-block;
-	padding: 8px; /* Отступы внутри контейнера даты */
-	transition: transform 0.075s ease-in-out, opacity 0.075s ease-in-out; /* Плавная анимация увеличения */
+	padding: 8px;
+	transition: transform 0.075s ease-in-out, opacity 0.075s ease-in-out;
 }
 /* Стили для столбца с указанием недели */
 .week-label {
-	color: black !important; /* Черный цвет для недели */
-	vertical-align: middle !important; /* Центральное расположение содержимого ячейки */
+	color: black !important;
+	vertical-align: middle !important;
 }
 /* Стили для заказов */
 .order-highlight {
-	background-color: #d4edda !important; /* Слабый зеленый фон для заказа */
-	color: black !important; /* Черный текст для заказов */
-	cursor: pointer; /* Курсор указывает, что элемент кликабельный */
+	background-color: #d4edda !important;
+	color: black !important;
+	cursor: pointer;
 }
 /* Стили для поставок */
 .delivery-highlight {
-	background-color: white !important; /* Белый фон для поставки */
-	color: lightgray !important; /* Поставки светло-серые по умолчанию */
+	background-color: white !important;
+	color: lightgray !important;
 }
 /* Псевдоэлементы для "Заказ" и "Поставка" */
 .order-highlight:hover::after {
 	content: "Заказ";
 	position: absolute;
-	top: 110%; /* Появляется ниже ячейки */
+	top: 110%;
 	left: 50%;
 	transform: translateX(-50%);
 	font-size: 0.75em;
 	color: white;
-	background-color: #000; /* Черный фон для псевдоэлемента */
+	background-color: #000;
 	padding: 2px 5px;
-	z-index: 10; /* Отображение псевдоэлемента поверх других элементов */
-	border-radius: 3px; /* Небольшие скругления для псевдоэлемента */
-	transition: transform 0.075s ease-in-out, opacity 0.075s ease-in-out; /* Плавная анимация появления псевдоэлементов */
+	z-index: 10;
+	border-radius: 3px;
+	transition: transform 0.075s ease-in-out, opacity 0.075s ease-in-out;
 }
 /* Псевдоэлемент для поставки */
 .highlighted-delivery::after {
@@ -902,7 +905,7 @@ svg:not(:root) {
 	transform: translateX(-50%);
 	font-size: 0.75em;
 	color: white;
-	background-color: #000; /* Черный фон для псевдоэлемента */
+	background-color: #000;
 	padding: 2px 5px;
 	z-index: 10;
 	border-radius: 3px;
@@ -910,13 +913,28 @@ svg:not(:root) {
 }
 /* Увеличение текста заказа при наведении */
 .order-highlight:hover .date-container {
-	transform: scale(1.2); /* Немного увеличиваем дату заказа при наведении */
+	transform: scale(1.2);
 }
 /* Увеличение текста поставки при наведении на заказ */
 .highlighted-delivery .date-container {
-	transform: scale(1.2); /* Немного увеличиваем дату поставки */
+	transform: scale(1.2);
 }
 /* Изменение цвета текста поставки при наведении на заказ */
 .highlighted-delivery {
-	color: black !important; /* Поставка становится черной */
+	color: black !important;
+}
+/* Легенда для календаря */
+.orderCalendar-legend {
+	align-self: flex-start;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 40px;
+	margin-left: 10px;
+	list-style-position: inside;
+}
+.orderCalendar-legend span {
+	padding: 0.75rem;
+}
+.orderCalendar-legend .order-date {
+	background-color: #d4edda !important;
 }

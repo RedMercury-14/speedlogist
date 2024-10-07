@@ -60,20 +60,24 @@ import {
 	сheckboxParams,
 } from "./map/optimizeRouteParamsUtils.js";
 
-const testOptimizationUrl = `../api/map/myoptimization3`
-const saveOptimizeRouteParamsUrl = `../api/map/set`
+const currentUrl = window.location.href
+const isLogisticsDelivery = currentUrl.includes('logistics-delivery')
+const apiUrl = isLogisticsDelivery ? '../../api/' : '../api/'
 
-const getAllShopsUrl = '../api/manager/getAllShops'
-const getAllPolygonsUrl = '../api/map/getAllPolygons'
-const sendGeojsonDataUrl = `../api/map/savePolygon`
-const deletePolygonBaseUrl = `../api/map/delPolygon/`
-const checkNamePolygonBaseUrl = `../api/map/checkNamePolygon/`
-const getRouterParamsUrl = '../api/map/getDefaultParameters'
-const setRouterParamsUrl = '../api/map/setDefaultParameters'
-const getRoutingListUrl = '../api/map/way/4'
-const getServerMessageUrl = '../api/map/getStackTrace'
-const sendExcelFileUrl = '../api/map/5'
-const sendExcelFileWithReportUrl = '../api/map/6'
+const testOptimizationUrl = `${apiUrl}map/myoptimization3`
+const saveOptimizeRouteParamsUrl = `${apiUrl}map/set`
+
+const getAllShopsUrl = `${apiUrl}manager/getAllShops`
+const getAllPolygonsUrl = `${apiUrl}map/getAllPolygons`
+const sendGeojsonDataUrl = `${apiUrl}map/savePolygon`
+const deletePolygonBaseUrl = `${apiUrl}map/delPolygon/`
+const checkNamePolygonBaseUrl = `${apiUrl}map/checkNamePolygon/`
+const getRouterParamsUrl = `${apiUrl}map/getDefaultParameters`
+const setRouterParamsUrl = `${apiUrl}map/setDefaultParameters`
+const getRoutingListUrl = `${apiUrl}map/way/4`
+const getServerMessageUrl = `${apiUrl}map/getStackTrace`
+const sendExcelFileUrl = `${apiUrl}map/5`
+const sendExcelFileWithReportUrl = `${apiUrl}map/6`
 
 const token = $("meta[name='_csrf']").attr("content")
 

@@ -17,6 +17,9 @@ export function wsSlotOnMessageHandler(e, gridOptions) {
 		const fromUser = data.fromUser.toLowerCase()
 		const login = store.getLogin()
 
+		// заглушка для игнорирования сообщений о машинах
+		if (data.WSPath !== 'slot') return
+
 		if (fromUser === login) return
 
 		const action = data.action

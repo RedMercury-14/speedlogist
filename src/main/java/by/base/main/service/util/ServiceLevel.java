@@ -73,6 +73,7 @@ public class ServiceLevel {
 		List<Integer> idOrders = new ArrayList<Integer>();
 		
 		String codeContract = null;
+		Order orderBefore = null;
 		for (Order order : orders) {	
 			if(codeContract != null && codeContract.equals(order.getMarketContractType())) {
 				for (Entry<Long, Double> entry: order.getOrderLinesMap().entrySet()) {
@@ -86,7 +87,7 @@ public class ServiceLevel {
 				idOrders.add(order.getIdOrder());
 			}else {
 				if(!orderProductsManagerFact.isEmpty()) {
-					dataOrderHasNumContracts.add(new DataOrderHasNumContract(orderProductsORL, orderProductsManagerFact, codeContract, idOrders, order.getCounterparty()));
+					dataOrderHasNumContracts.add(new DataOrderHasNumContract(orderProductsORL, orderProductsManagerFact, codeContract, idOrders, orderBefore.getCounterparty()));
 					orderProductsManagerFact = new HashMap<Long, Double>();
 					idOrders = new ArrayList<Integer>();
 					
@@ -101,7 +102,7 @@ public class ServiceLevel {
 				orderProductsManagerFact = new HashMap<Long, Double>();
 				idOrders = new ArrayList<Integer>();
 			}
-			
+			orderBefore = order;
 		}		
 //		dataOrderHasNumContracts.forEach(d-> System.out.println(d));
 		//закончили формирование сводного списка
@@ -132,6 +133,9 @@ public class ServiceLevel {
 
 	    // Применение фильтров
 	    sheet.setAutoFilter(new CellRangeAddress(0, 0, 0, 6));
+	    
+	    //фиксируем верхнюю строку при скроле
+	    sheet.createFreezePane(0, 1);
 
 	    int rowNum = 1;
 

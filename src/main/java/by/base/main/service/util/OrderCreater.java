@@ -42,7 +42,7 @@ public class OrderCreater {
 			order.setMessage("Заказ найден в Маркете, однако он не в 50 или 51 статусе("+orderBuyGroupDTO.getCheckx()+").");
 			order.setIdOrder(-1);
 			order.setMarketNumber(orderBuyGroupDTO.getOrderBuyGroupId().toString());  
-			order.setMarketInfo(orderBuyGroupDTO.getCheckx().toString()); // тут временно записываю статус
+			order.setMarketInfo(orderBuyGroupDTO.getCheckx() !=null ? orderBuyGroupDTO.getCheckx().toString() : "-1"); // тут временно записываю статус
 			return order;
 		}
 		//cчитаем время и создаём Order

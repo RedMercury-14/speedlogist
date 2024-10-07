@@ -1,8 +1,8 @@
 import { dateHelper } from "../utils.js"
 
 // Функция для отрисовки календаря с выделенными заказами и поставками
-export function renderOrderDeliveryCalendar(orderDates, deliveryDates = [], orderDateClickHandler) {
-	const container = document.querySelector('#deliveryCalendar')
+export function renderOrderCalendar(orderDates, deliveryDates = [], orderDateClickHandler) {
+	const container = document.querySelector('#orderCalendar')
 	container.innerHTML = ''
 	const table = document.createElement('table')
 	table.className = 'table table-bordered text-center'

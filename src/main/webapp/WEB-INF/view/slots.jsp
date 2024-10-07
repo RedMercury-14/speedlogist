@@ -229,16 +229,25 @@
 	</div>
 
 	<!-- Модальное окно выбора даты заказа согласно графику поставок-->
-	<div class="modal fade" id="deliveryCalendarModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="deliveryCalendarModalLabel" aria-hidden="true">
+	<div class="modal fade" id="orderCalendarModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="orderCalendarModalLabel" aria-hidden="true">
 		<div class="modal-dialog modal-lg modal-dialog-centered">
 			<div class="modal-content">
 				<div class="modal-header justify-content-center">
-					<h2 class="modal-title text-center" id="deliveryCalendarModalLabel">Выберите дату заказа</h2>
+					<h2 class="modal-title text-center" id="orderCalendarModalLabel">Выберите дату заказа</h2>
 				</div>
 				<div class="modal-body">
 					<p>Необходимо выбрать дату заказа согласно графику поставок, к которой относится поставка, которую вы устанавливаете в слоты</p>
-					<div class="modal-buttons d-flex justify-content-center">
-						<div id="deliveryCalendar"></div>
+					<div class="modal-buttons d-flex flex-column justify-content-center">
+						<div id="orderCalendar"></div>
+						<br>
+						<ul class="orderCalendar-legend">
+							<li>
+								<span class="font-weight-bold order-date">25.09</span> - дата заказа
+							</li>
+							<li>
+								<span class="font-weight-bold">Н<sub>0</sub></span> - текущая неделя
+							</li>
+						</ul>
 					</div>
 				</div>
 			</div>

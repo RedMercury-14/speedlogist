@@ -219,6 +219,10 @@ export const store = {
 		this._state.lists.push({ nameList, date: this._state.currentDate })
 	},
 
+	addListByDate(nameList, date) {
+		this._state.lists.push({ nameList, date })
+	},
+
 	/**
 	 * @param {string} nameList
 	 */
@@ -274,7 +278,6 @@ export const store = {
 	* }>} trucks
 	 */
 	updateTrucks(trucks) {
-		console.log("🚀 ~ updateTrucks ~ trucks:", trucks)
 		const date = trucks[0].dateRequisition
 		const trucksByDate = this._state.trucks[date]
 		trucks.forEach(truck => {

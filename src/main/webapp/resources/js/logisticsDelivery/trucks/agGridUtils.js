@@ -4,11 +4,13 @@ import { CargoCapacitySumStatusBarComponent, CountStatusBarComponent, PallSumSta
 export const trucksColumnDefs = [
 	{ headerName: 'id', field: 'idTGTruck', minWidth: 60, flex: 1, sort: 'desc', },
 	{ headerName: 'Номер', field: 'numTruck', },
+	{ headerName: 'Контакты водителя', field: 'fio', flex: 4, wrapText: true, autoHeight: true, },
 	// { headerName: 'Модель', field: 'modelTruck', width: 150, },
 	{ headerName: 'Перевозчик', field: 'companyName', flex: 6, wrapText: true, autoHeight: true, },
 	{ headerName: 'Тип', field: 'typeTrailer', },
 	{ headerName: 'Паллеты', field: 'pall', flex: 2, },
 	{ headerName: 'Тоннаж', field: 'cargoCapacity', flex: 2, },
+	{ headerName: 'Доп. инф-я', field: 'otherInfo', flex: 4, wrapText: true, autoHeight: true,},
 ]
 
 export const trucksGridOptions = {
@@ -23,6 +25,9 @@ export const trucksGridOptions = {
 		floatingFilter: true,
 		wrapHeaderText: true,
 		autoHeaderHeight: true,
+	},
+	rowClassRules: {
+		'light-green-row': params => params.node.data.status === 50,
 	},
 	getRowId: (params) => params.data.idTGTruck,
 	animateRows: true,

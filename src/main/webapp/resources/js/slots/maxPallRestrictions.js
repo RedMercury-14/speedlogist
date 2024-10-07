@@ -109,6 +109,62 @@ export const tempMaxPallRestrictions = [
 			internalMovement: 500,
 		},
 	},
+	{
+		stockId: '1700',
+		date: '2024-10-07',
+		maxPall: {
+			externalMovement: 1500,
+			internalMovement: 500,
+		},
+	},
+	{
+		stockId: '1700',
+		date: '2024-10-08',
+		maxPall: {
+			externalMovement: 1600,
+			internalMovement: 500,
+		},
+	},
+	{
+		stockId: '1700',
+		date: '2024-10-09',
+		maxPall: {
+			externalMovement: 1600,
+			internalMovement: 500,
+		},
+	},
+	{
+		stockId: '1700',
+		date: '2024-10-10',
+		maxPall: {
+			externalMovement: 1600,
+			internalMovement: 500,
+		},
+	},
+	{
+		stockId: '1700',
+		date: '2024-10-11',
+		maxPall: {
+			externalMovement: 1500,
+			internalMovement: 500,
+		},
+	},
+	{
+		stockId: '1700',
+		date: '2024-10-12',
+		maxPall: {
+			externalMovement: 1400,
+			internalMovement: 500,
+		},
+	},
+	{
+		stockId: '1700',
+		date: '2024-10-13',
+		maxPall: {
+			externalMovement: 1300,
+			internalMovement: 500,
+		},
+	},
 
 	// ------------------------------------
 	// ------------ 1100 склад ------------

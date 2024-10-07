@@ -106,7 +106,14 @@
 											<option value="2">Топ менеджер</option>
 											<option value="3">Менеджер</option>
 											<option value="4">Магазин</option>
-											<option value="6">Склад</option>
+											<option value="6">Склад(Пока что тест карты)</option>
+											<option value="99">Отдел закупок</option>
+											<option value="10">Отдел сопровождения закупок</option>
+											<option value="11">Слот наблюдатель</option>
+											<option value="12">Аналитик</option>
+											<option value="13">Заказ транспорта для вн. пер-й</option>
+											<option value="14">Специалист ОРЛ</option>
+  											<option value="15">Специалист отдела транспортной логистики (занимается развозом)</option>
 										</select>
 									</div>
 								</div>

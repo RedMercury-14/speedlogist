@@ -98,7 +98,7 @@ public class KeyboardMaker {
         row1.add(new KeyboardButton("Заявить машину на завтра"));
         row1.add(new KeyboardButton("Заявить машину на дату"));
         KeyboardRow row2 = new KeyboardRow();
-        row2.add(new KeyboardButton("Список машин заявленных на сегодня и завтра"));
+        row2.add(new KeyboardButton("Список ближайших заявленных машин"));
         row2.add(new KeyboardButton("Список всех заявленных машин"));
 //        KeyboardButton reg = new KeyboardButton("Тест координат");
 //        reg.setRequestContact(true);

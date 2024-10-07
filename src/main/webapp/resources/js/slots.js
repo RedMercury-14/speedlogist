@@ -1199,13 +1199,12 @@ function checkBooking(info) {
 			bootstrap5overlay.hideOverlay()
 
 			if (data.status === '200') {
-				// если склад не на слотах, не создаем поставку
-				snackbar.show(data.message)
+				errorHandler_100status(null, data)
 				return
 			}
 
 			if (data.status === '100') {
-				snackbar.show(data.message)
+				errorHandler_100status(null, data)
 				return
 			}
 

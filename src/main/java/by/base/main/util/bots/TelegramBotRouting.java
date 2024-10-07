@@ -286,31 +286,19 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 					TGTruck truckForType = tgTruckService.getTGTruckByChatNumTruck(numTruckForType, user);
 					truckForType.setTypeTrailer(type);
 					truckForType.setCompanyName(user.getCompanyName());
-					String text;
-					String dateNext = LocalDate.now().plusDays(1).format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-					if(user.getDateOrderTruckOptimization() != null) {
-						text = "Заявляем машину на ("+user.getDateOrderTruckOptimization().toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))+")\n Авто: "+truckForType.getTruckForBot();
-						truckForType.setDateRequisition(user.getDateOrderTruckOptimization());
-					}else {
-						text = "Заявляем машину на завтра ("+dateNext+")\n Авто: "+truckForType.getTruckForBot();
-						truckForType.setDateRequisition(LocalDate.now().plusDays(1));
-						System.err.println(text);
-					}
 					
-					user.putTrucksForBot(numTruckForType, truckForType);	
-					tgTruckService.saveOrUpdateTGTruck(truckForType);
-					user.setValidityTruck(null); // сюза временно записываем номер авто которое обрабатывается но записывем null т.к. типо закончили
-					//создали машину, присвоили номер и записали сколько паллет.
 					
-					user.setCommand("/proofTruck");
+					tgTruckService.saveOrUpdateTGTruck(truckForType);					
+					user.setCommand("/setdriver");
 					tgUserService.saveOrUpdateTGUser(user);
+					
+					String text = "Тип принят. Укажите ФИО и телефон водителя";
 					
 //					long messageIdType = update.getCallbackQuery().getMessage().getMessageId();
 					EditMessageText messageProof = EditMessageText.builder()
 							.chatId(chatId)
 							.messageId(Math.toIntExact(messageId))
 							.text(text)
-							.replyMarkup(keyboardMaker.getYesNoKeyboard(numTruckForType))
 							.build();   
 	        		try {
 						execute(messageProof);
@@ -318,7 +306,7 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
-	        		return;
+	        		return;				
 				case "/setweigth":
 					TGUser userForTruck3 = tgUserService.getTGUserByChatId(chatId);
 					TGTruck truckForWeigth = tgTruckService.getTGTruckByChatNumTruck(userForTruck3.getValidityTruck(), userForTruck3);
@@ -404,10 +392,10 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 					break;
 				} 			
 			}
-			
+			long chatId = update.getMessage().getChatId();
 	        if(update.hasMessage() && update.getMessage().hasText()){
-	            String messageText = update.getMessage().getText();
-	            long chatId = update.getMessage().getChatId();
+	            String messageText = update.getMessage().getText();            
+	            String onlyText = new String(update.getMessage().getText());     
 	            TGUser user = tgUserService.getTGUserByChatId(chatId);
 	            
 	            if(user != null && user.getCommand() != null && messageText.split("~")[0].equals("/start")) {
@@ -428,16 +416,6 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 	            	command = messageText.split("~")[0];
 	            }
 	            
-//	            if(!idAllUsers.contains(chatId)) {
-//	            	idAllUsers.add(chatId);                    	
-//	            	serializableIdAllUsers();
-//	            }
-	            
-//	            Map<String, TGTruck> trucks = null;
-//	            if(user != null) {
-//	            	trucks = user.getTrucksForBot();
-//	            }
-	        	 
 	            
 	            System.err.println(command);
 	            switch (command.toLowerCase()){
@@ -445,7 +423,7 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 	                	SendMessage sendKeyboard = new SendMessage();                	
 	                	sendKeyboard.setChatId(chatId);
 						if(user != null) {
-							sendKeyboard.setText("Приветствую " + user.getCompanyName() + "!");
+							sendKeyboard.setText("TEST TEST TEST Приветствую " + user.getCompanyName() + "!");
 							sendKeyboard.setReplyMarkup(keyboardMaker.getMainKeyboard()); // клава для юзеров
 						}else {		
 							sendKeyboard.setText(description);
@@ -507,6 +485,55 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 	            			e.printStackTrace();
 	            		}
 	                    break;
+	                case "/setdriver": 
+	                	//тут проверяем, есть ли машина с таким номером и датой заявки
+	                	TGTruck truckDriver = tgTruckService.getTGTruckByChatNumTruck(user.getValidityTruck(), user.getDateOrderTruckOptimization() == null ? Date.valueOf(LocalDate.now().plusDays(1)) : user.getDateOrderTruckOptimization());
+	                	truckDriver.setFio(onlyText);
+	                	user.setCommand("/setinfo");
+	                	tgUserService.saveOrUpdateTGUser(user);
+	                	tgTruckService.saveOrUpdateTGTruck(truckDriver);
+	                	//создаём и записываем авто
+	                	SendMessage messageChat = new SendMessage();
+	                	messageChat.setChatId(chatId);                    
+	                	messageChat.setText("Водитель принят. \nУкажите Информацию о подаче машины и направление");
+	            		try {
+							execute(messageChat);
+						} catch (TelegramApiException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+	                    break;
+	                case "/setinfo": 
+	                	//тут проверяем, есть ли машина с таким номером и датой заявки
+	                	TGTruck truckInfo = tgTruckService.getTGTruckByChatNumTruck(user.getValidityTruck(), user.getDateOrderTruckOptimization() == null ? Date.valueOf(LocalDate.now().plusDays(1)) : user.getDateOrderTruckOptimization());
+	                	truckInfo.setOtherInfo(onlyText);
+	                	user.setCommand("/proofTruck");
+	                	user.setValidityTruck(null); // сюза временно записываем номер авто которое обрабатывается но записывем null т.к. типо закончили
+	                	tgUserService.saveOrUpdateTGUser(user);
+	                	tgTruckService.saveOrUpdateTGTruck(truckInfo);
+	                	//создаём и записываем авто
+	                	String textEnd;
+						String dateNext = LocalDate.now().plusDays(1).format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+						if(user.getDateOrderTruckOptimization() != null) {
+							textEnd = "Заявляем машину на ("+user.getDateOrderTruckOptimization().toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))+")\n Авто: "+truckInfo.getTruckForBot();
+							truckInfo.setDateRequisition(user.getDateOrderTruckOptimization());
+						}else {
+							textEnd = "Заявляем машину на завтра ("+dateNext+")\n Авто: "+truckInfo.getTruckForBot();
+							truckInfo.setDateRequisition(LocalDate.now().plusDays(1));
+						}
+						
+						SendMessage messageProof = SendMessage.builder()
+								.chatId(chatId)
+								.text(textEnd)
+								.replyMarkup(keyboardMaker.getYesNoKeyboard(truckInfo.getNumTruck()))
+								.build();   
+		        		try {
+							execute(messageProof);
+						} catch (TelegramApiException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+	                    break;
 	                case "/numtruck": 
 	                	String numTruck = messageText.split("~")[1];
 	                	//тут проверяем, есть ли машина с таким номером и датой заявки
@@ -545,32 +572,10 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 							e.printStackTrace();
 						}
 	                    break;
-//	                case "/setweigth": 
-//	                	User userForTruck3 = users.get(chatId);
-//	                	Truck truck = userForTruck3.getTrucksForBot(userForTruck3.getValidityPass());
-//	                	truck.setCargoCapacity(messageText.split("~")[1]);
-//	                	userForTruck3.setStatus("/settype");
-//	                	userForTruck3.putTrucksForBot(userForTruck3.getValidityPass(), truck);
-//	                	users.put(chatId, userForTruck3);
-//	                	
-//	                	//создаём и записываем авто
-//	                	SendMessage messageBeforeWeigth = new SendMessage();
-//	                	messageBeforeWeigth.setChatId(chatId);                    
-//	                	messageBeforeWeigth.setText("Вес принял. \nУкажите тип авто");
-//	                	messageBeforeWeigth.setReplyMarkup(keyboardMaker.getTypeTruckKeyboard(truck.getNumTruck()));
-//	            		try {
-//							execute(messageBeforeWeigth);
-//						} catch (TelegramApiException e) {
-//							// TODO Auto-generated catch block
-//							e.printStackTrace();
-//						}
-//	                    break;
 	                    
 	                case "список ближайших заявленных машин":                	
-	                	Map<String, TGTruck> filteredMap = user.getTrucksForBot().entrySet().stream()
-	                    .filter(e -> e.getValue().getDateRequisitionLocalDate().equals(LocalDate.now().plusDays(1)) ||  e.getValue().getDateRequisitionLocalDate().equals(LocalDate.now()))
-	                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-	                	if(filteredMap.isEmpty()) {
+	                	Map<String, TGTruck> filteredMap = user.getTrucksForBot();
+	                	if(filteredMap == null ||filteredMap.isEmpty()) {
 	                		SendMessage messageTruckList = new SendMessage();
 	                    	messageTruckList.setChatId(chatId);
 	                    	messageTruckList.setParseMode("HTML");  // Устанавливаем режим HTML
@@ -582,7 +587,9 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 	    						e.printStackTrace();
 	    					}
 	                	}else {
-	                		filteredMap.entrySet().forEach(entry->{
+	                		filteredMap.entrySet().stream()
+		                    .filter(e -> e.getValue().getDateRequisitionLocalDate().equals(LocalDate.now().plusDays(1)) ||  e.getValue().getDateRequisitionLocalDate().equals(LocalDate.now()))
+		                    .forEach(entry->{
 	                			SendMessage messageTruckList = new SendMessage();
 	                        	messageTruckList.setChatId(chatId);
 	                        	messageTruckList.setParseMode("HTML");  // Устанавливаем режим HTML
@@ -598,13 +605,12 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 	                	} 
 	                    break;
 	                case "список всех заявленных машин":  
-	                	List<TGTruck> filteredMapAll = tgTruckService.getTGTruckByChatIdUserList(user.getChatId()).stream()
-	                    .collect(Collectors.toList());
+	                	List<TGTruck> filteredMapAll = tgTruckService.getTGTruckByChatIdUserList(user.getChatId());
 	                	if(filteredMapAll == null || filteredMapAll.isEmpty()) {
 	                		SendMessage messageTruckList = new SendMessage();
 	                    	messageTruckList.setChatId(chatId);
 	                    	messageTruckList.setParseMode("HTML");  // Устанавливаем режим HTML
-	                    	messageTruckList.setText("Машины заявленные на сегодня или завтра (<b>" + LocalDate.now().plusDays(1).format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))+"</b>) отсутствуют.");
+	                    	messageTruckList.setText("Заявленные машины отсутствуют.");
 	                		try {
 	    						execute(messageTruckList);
 	    					} catch (TelegramApiException e) {
@@ -749,8 +755,6 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
-		
 	}
 
 	@Override

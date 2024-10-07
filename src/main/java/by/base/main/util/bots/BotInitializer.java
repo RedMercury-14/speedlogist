@@ -16,12 +16,16 @@ public class BotInitializer {
 //	@Autowired
 	private TelegramBot bot;
 	private TelegramBotRouting botRouting;
+	private TelegramBotRoutingTEST botRoutingTEST;
 	
 	public BotInitializer(TelegramBot bot) {
 		this.bot = bot;
 	}
 	public BotInitializer(TelegramBotRouting botRouting) {
 		this.botRouting = botRouting;
+	}
+	public BotInitializer(TelegramBotRoutingTEST botRoutingTEST) {
+		this.botRoutingTEST = botRoutingTEST;
 	}
 
 	@EventListener({ ContextRefreshedEvent.class })
@@ -46,6 +50,17 @@ public class BotInitializer {
 			TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);			
 			telegramBotsApi.registerBot((LongPollingBot) botRouting);
 			System.out.println("TelegramBotRouting запущен");			
+		} catch (TelegramApiException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	@EventListener({ ContextRefreshedEvent.class })
+	public void initRoutingBotTEST() {		
+		try {			
+			TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);			
+			telegramBotsApi.registerBot((LongPollingBot) botRoutingTEST);
+			System.out.println("TelegramBotRoutingTEST запущен");			
 		} catch (TelegramApiException e) {
 			e.printStackTrace();
 		}

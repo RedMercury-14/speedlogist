@@ -35,7 +35,7 @@ import io.github.dostonhamrakulov.InlineCalendarCommandUtil;
 import io.github.dostonhamrakulov.LanguageEnum;
 
 @Component
-public class TelegramBotRouting extends TelegramLongPollingBot{
+public class TelegramBotRoutingTEST extends TelegramLongPollingBot{
 	
 	public boolean isRunning = false;
 	
@@ -62,7 +62,7 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 	private static final InlineCalendarBuilder inlineCalendarBuilder = new InlineCalendarBuilder(LanguageEnum.RU);
 	private Map<Long, Integer> chatAndMessageIdMap = new HashMap<>();
 	
-	private String description = "Приветстсвую!\r\n"
+	private String description = "TEST TEST TEST\r\n Приветстсвую!\r\n"
 			+ "РазвозДоброномBot 🚚\r\n"
 			+ "\r\n"
 			+ "📋 *Описание*:\r\n"
@@ -755,16 +755,18 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		
+		
 	}
 
 	@Override
 	public String getBotUsername() {
-		return "DobronomRouting";
+		return "RoutingBotTest";
 	}
 	
 	@Override
 	public String getBotToken() {
-		return "6742392768:AAGof2DXKQEmYDw5hdb6MxMAq1fgTufmR-Q";
+		return "7906852645:AAGZ2eXYBlyzhwXeLrXz4zGXbMcvEA8k22I";
 	}
 	
 	@Override

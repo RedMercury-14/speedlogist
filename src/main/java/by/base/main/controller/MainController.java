@@ -102,6 +102,7 @@ import by.base.main.util.GraphHopper.RoutingMachine;
 import by.base.main.util.bots.BotInitializer;
 import by.base.main.util.bots.TelegramBot;
 import by.base.main.util.bots.TelegramBotRouting;
+import by.base.main.util.bots.TelegramBotRoutingTEST;
 import by.base.main.util.hcolossus.service.MatrixMachine;
 
 /**
@@ -194,6 +195,9 @@ public class MainController {
 	@Autowired
 	private TelegramBotRouting telegramBotRouting;
 	
+	@Autowired
+	private TelegramBotRoutingTEST telegramBotRoutingTEST;
+	
 	
 	public static final Map<String,String> distances = new HashMap<String, String>();
 	public static String path = null;
@@ -282,9 +286,10 @@ public class MainController {
 //			new BotInitializer(telegramBot).init();
 //			new BotInitializer(telegramBotRouting).initRoutingBot();
 //		}
-		System.err.println("ТЕЛЕГРАММ БОТ ОТКЛЮЧЕН!");	
-//		
 		
+		
+		System.err.println("ТЕЛЕГРАММ БОТ ОТКЛЮЧЕН!");	
+//		new BotInitializer(telegramBotRoutingTEST).initRoutingBotTEST();
 		
 		try {
 			currencyService.loadCurrencyMap(request);

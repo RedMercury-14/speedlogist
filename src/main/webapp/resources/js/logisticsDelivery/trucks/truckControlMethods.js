@@ -31,6 +31,14 @@ export function updateTruck(truck, freeTrucksGridOptions, selectedTrucksGridOpti
 	// выясняем, что сделать с машиной
 	const updateAction = getUpdateAction(truck)
 
+	// создаем новый список, если его нет в сторе
+	if (updateAction === 'toSelected') {
+		const nameList = truck.nameList
+		const date = truck.dateRequisition
+		const isExist = store.getListByNameAndDate(nameList, date)
+		if (!isExist) store.addList(nameList)
+	}
+
 	// обновляем таблицу свободных машин, если
 	// дата машины совпадает с отображаемой датой
 	if (truck.dateRequisition === store.getCurrentDate()) {
@@ -60,6 +68,14 @@ export function updateTrucks(trucks, freeTrucksGridOptions, selectedTrucksGridOp
 	store.updateTrucks(trucks)
 	// выясняем, что сделать с машинами
 	const updateAction = getUpdateAction(truck)
+
+	// создаем новый список, если его нет в сторе
+	if (updateAction === 'toSelected') {
+		const nameList = truck.nameList
+		const date = truck.dateRequisition
+		const isExist = store.getListByNameAndDate(nameList, date)
+		if (!isExist) store.addList(nameList)
+	}
 
 	// обновляем таблицу свободных машин, если
 	// дата машины совпадает с отображаемой датой

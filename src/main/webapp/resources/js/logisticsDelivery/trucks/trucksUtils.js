@@ -40,6 +40,8 @@ export function truckAdapterFromWS(truck) {
 		idTGTruck: toNumberFromWS(truck.idTGTruck),
 		numTruck: toStringFromWS(truck.numTruck),
 		modelTruck: toStringFromWS(truck.modelTruck),
+		fio: toStringFromWS(truck.fio),
+		otherInfo: toStringFromWS(truck.otherInfo),
 		pall: toNumberFromWS(truck.pall),
 		typeTrailer: toStringFromWS(truck.typeTrailer),
 		dateRequisition: toStringFromWS(truck.dateRequisition),
@@ -114,4 +116,17 @@ export function prevDate(dateInput) {
 
 	dateInput.value = prevDate
 	dateInput.dispatchEvent(new Event("change"))
+}
+
+// изменение отступа контейнера с контентом в зависимости от высоты хэдэра
+export function changeContentMarginTop(freeTrucksGridDiv, selectedTrucksGridDiv) {
+	const navbar = document.querySelector('.navbar')
+	const height = navbar.offsetHeight
+
+	if (height < 65) {
+		const myContainer = document.querySelector('.my-container')
+		myContainer.classList.add('smallHeader')
+		freeTrucksGridDiv.classList.add('smallHeader')
+		selectedTrucksGridDiv.classList.add('smallHeader')
+	}
 }

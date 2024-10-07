@@ -59,6 +59,12 @@ public class TGTruck implements Serializable{
 	@Column(name = "company_name")
 	private String companyName;
 	
+	@Column(name = "fio")
+	private String fio;
+	
+	@Column(name = "other_info")
+	private String otherInfo;
+	
 	/**
 	 * @return the companyName
 	 */
@@ -208,6 +214,34 @@ public class TGTruck implements Serializable{
 
 
 	/**
+	 * @return the fio
+	 */
+	public String getFio() {
+		return fio;
+	}
+
+	/**
+	 * @param fio the fio to set
+	 */
+	public void setFio(String fio) {
+		this.fio = fio;
+	}
+
+	/**
+	 * @return the otherInfo
+	 */
+	public String getOtherInfo() {
+		return otherInfo;
+	}
+
+	/**
+	 * @param otherInfo the otherInfo to set
+	 */
+	public void setOtherInfo(String otherInfo) {
+		this.otherInfo = otherInfo;
+	}
+
+	/**
 	 * @return the chatIdUserTruck
 	 */
 	public Long getChatIdUserTruck() {
@@ -265,15 +299,17 @@ public class TGTruck implements Serializable{
 				&& Objects.equals(typeTrailer, other.typeTrailer);
 	}
 
-	
+
 	public String toJSON() {
 		return "{\"idTGTruck\":\"" + idTGTruck + "\", \"numTruck\":\"" + numTruck + "\", \"modelTruck\":\"" + modelTruck
 				+ "\", \"pall\":\"" + pall + "\", \"typeTrailer\":\"" + typeTrailer + "\", \"dateRequisition\":\""
 				+ dateRequisition + "\", \"cargoCapacity\":\"" + cargoCapacity + "\", \"chatIdUserTruck\":\""
 				+ chatIdUserTruck + "\", \"nameList\":\"" + nameList + "\", \"idList\":\"" + idList
-				+ "\", \"status\":\"" + status + "\", \"companyName\":\"" + companyName + "\"}";
+				+ "\", \"status\":\"" + status + "\", \"companyName\":\"" + companyName + "\", \"fio\":\"" + fio
+				+ "\", \"otherInfo\":\"" + otherInfo + "\"}";
 	}
-
+	
+	
 	@Override
 	public String toString() {
 		return "TGTruck [idTGTruck=" + idTGTruck + ", numTruck=" + numTruck + ", modelTruck=" + modelTruck + ", pall="

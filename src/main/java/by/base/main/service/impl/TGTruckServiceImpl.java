@@ -88,8 +88,8 @@ public class TGTruckServiceImpl implements TGTruckService{
 	}
 
 	@Override
-	public TGTruck getTGTruckByChatNumTruck(String numTruck, Date date) {
-		return tgTruckDAO.getTGTruckByChatNumTruck(numTruck, date);
+	public TGTruck getTGTruckByChatNumTruckStrict(String numTruck, Date date, TGUser tgUser) {
+		return tgTruckDAO.getTGTruckByChatNumTruckStrict(numTruck, date, tgUser);
 	}
 
 	

@@ -85,7 +85,7 @@
 
 				<div id="selectedTrucksGrid" class="ag-theme-alpine"></div>
 
-				<!-- Модальное окно для отображения текста -->
+				<!-- Модальное окно создания нового -->
 				<div class="modal fade" id="addNewListModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="addNewListModalLabel" aria-hidden="true">
 					<div class="modal-dialog">
 						<div class="modal-content">
@@ -108,22 +108,38 @@
 					</div>
 				</div>
 
-				<!-- Модальное окно для отображения текста -->
+				<!-- Модальное окно удаления списка -->
 				<div class="modal fade" id="removeCurrentListModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="removeCurrentListModalLabel" aria-hidden="true">
 					<div class="modal-dialog">
 						<div class="modal-content">
 							<div class="modal-header justify-content-center">
-								<h5 class="modal-title" id="removeCurrentListModalLabel">Удалить текущий список?</h5>
+								<h3 class="modal-title" id="removeCurrentListModalLabel">Удалить текущий список?</h3>
 							</div>
 							<form action="" id="removeCurrentListForm">
 								<div class="modal-body">
-									<span>Все машины из данного списка переместятся в таблицу Список свободных авто, а список будет удален.</span>
+									<h5>Все машины из данного списка переместятся в таблицу Список свободных авто, а список будет удален.</h5>
 								</div>
 								<div class="modal-footer">
 									<button type="submit" class="btn btn-danger">Да, удалить</button>
 									<button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
 								</div>
 							</form>
+						</div>
+					</div>
+				</div>
+
+				<!-- Модальное окно обновления страницы -->
+				<div class="modal fade" id="reloadWindowModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="reloadWindowModalLabel" aria-hidden="true">
+					<div class="modal-dialog modal-dialog-centered">
+						<div class="modal-content">
+							<div class="modal-header justify-content-center bg-white">
+								<h2 class="modal-title text-center" id="reloadWindowModalLabel">Связь с сервером потеряна. Пожалуйста, обновите страницу!</h2>
+							</div>
+							<div class="modal-body">
+								<div class="modal-buttons d-flex justify-content-center">
+									<button id="reloadWindowButton" class="btn btn-primary btn-lg" type="button">Обновить страницу</button>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>

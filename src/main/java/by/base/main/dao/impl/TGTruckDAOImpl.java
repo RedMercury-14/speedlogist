@@ -78,7 +78,7 @@ public class TGTruckDAOImpl  implements TGTruckDAO {
 		}
 	}
 
-	private static final String queryGetTGTruckByChatNumTruck = "from TGTruck tr where tr.numTruck=:numTruck AND tr.dateRequisition=:date";
+	private static final String queryGetTGTruckByChatNumTruck = "from TGTruck tr where tr.numTruck=:numTruck AND tr.dateRequisition=:date AND tr.chatIdUserTruck=:chatIdUserTruck";
 	@Transactional
 	@Override
 	public TGTruck getTGTruckByChatNumTruck(String numTruck, TGUser tgUser) {
@@ -92,6 +92,7 @@ public class TGTruckDAOImpl  implements TGTruckDAO {
 		Query<TGTruck> theObject = currentSession.createQuery(queryGetTGTruckByChatNumTruck, TGTruck.class);
 		theObject.setParameter("numTruck", numTruck);	
 		theObject.setParameter("date", date);	
+		theObject.setParameter("chatIdUserTruck", tgUser.getChatId());	
 		List<TGTruck> tgTrucks = theObject.getResultList();
 		if(tgTrucks.isEmpty()) {
 			return null;
@@ -102,7 +103,7 @@ public class TGTruckDAOImpl  implements TGTruckDAO {
 		
 	}
 
-	private static final String queryDeleteByNumTruck = "delete from TGTruck where numTruck=:numTruck AND dateRequisition=:date";
+	private static final String queryDeleteByNumTruck = "delete from TGTruck where numTruck=:numTruck AND dateRequisition=:date ";
 	@Override
 	@Transactional
 	public void deleteTGTruckByNumTruck(String numTruck, TGUser tgUser) {
@@ -165,13 +166,15 @@ public class TGTruckDAOImpl  implements TGTruckDAO {
 		
 	}
 
+	private static final String queryGetTGTruckByChatNumTruckStrict = "from TGTruck tr where tr.numTruck=:numTruck AND tr.dateRequisition=:date AND tr.chatIdUserTruck=:chatIdUserTruck";
 	@Override
 	@Transactional
-	public TGTruck getTGTruckByChatNumTruck(String numTruck, Date date) {
+	public TGTruck getTGTruckByChatNumTruckStrict(String numTruck, Date date, TGUser tgUser) {
 		Session currentSession = sessionFactory.getCurrentSession();		
-		Query<TGTruck> theObject = currentSession.createQuery(queryGetTGTruckByChatNumTruck, TGTruck.class);
+		Query<TGTruck> theObject = currentSession.createQuery(queryGetTGTruckByChatNumTruckStrict, TGTruck.class);
 		theObject.setParameter("numTruck", numTruck);	
 		theObject.setParameter("date", date);	
+		theObject.setParameter("chatIdUserTruck", tgUser.getChatId());	
 		List<TGTruck> tgTrucks = theObject.getResultList();
 		if(tgTrucks.isEmpty()) {
 			return null;

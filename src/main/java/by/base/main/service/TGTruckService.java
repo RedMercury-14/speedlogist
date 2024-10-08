@@ -49,10 +49,11 @@ public interface TGTruckService {
 	/**
 	 * Отдаёт TGTruck по номеру авто и Date
 	 * (Date = date_order_truck_optimization)
+	 * <b>Это строгий метод, который специально обращается к дате которая приходит!</b>
 	 * @param numTruck
 	 * @return
 	 */
-	TGTruck getTGTruckByChatNumTruck(String numTruck, Date date);
+	TGTruck getTGTruckByChatNumTruckStrict(String numTruck, Date date, TGUser tgUser);
 	
 	TGTruck getTGTruckByChatId(Integer id);
 	

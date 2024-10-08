@@ -256,7 +256,6 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 					truck.setNumTruck(numTruck);
 					truck.setPall(Integer.parseInt(pall));
 					truck.setChatIdUserTruck(user.getChatId());
-					truck.setStatus(10);
 					user.putTrucksForBot(numTruck, truck);	
 					tgTruckService.saveOrUpdateTGTruck(truck);
 					user.setValidityTruck(numTruck); // сюза временно записываем номер авто которое обрабатывается
@@ -334,11 +333,15 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 					String numTruckProof = data.split("_")[0];
 					String answer = data.split("_")[1];
 					
+					TGTruck proofTruck = tgTruckService.getTGTruckByChatNumTruck(numTruckProof, user);
+					proofTruck.setStatus(10);
+					
+					tgTruckService.saveOrUpdateTGTruck(proofTruck);					
 					SendMessage sendKeyboard = new SendMessage();                	
 	            	sendKeyboard.setChatId(chatId);
 	            	
 					if(answer.equals("yes")) {					
-						Message messageObject = new Message("TGBotRouting", "tgBot", null, "200", tgTruckService.getTGTruckByChatNumTruck(numTruckProof, user).toJSON(), null, "add");
+						Message messageObject = new Message("TGBotRouting", "tgBot", null, "200", proofTruck.toJSON(), null, "add");
 						slotWebSocket.sendMessage(messageObject);
 						
 						user.setCommand(null);
@@ -423,7 +426,7 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 	                	SendMessage sendKeyboard = new SendMessage();                	
 	                	sendKeyboard.setChatId(chatId);
 						if(user != null) {
-							sendKeyboard.setText("TEST TEST TEST Приветствую " + user.getCompanyName() + "!");
+							sendKeyboard.setText("Приветствую " + user.getCompanyName() + "!");
 							sendKeyboard.setReplyMarkup(keyboardMaker.getMainKeyboard()); // клава для юзеров
 						}else {		
 							sendKeyboard.setText(description);
@@ -439,6 +442,7 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 	                    break;
 	                case "/login": 
 	                	String companyName = messageText.contains("~") ? messageText.split("~")[1] : messageText;
+	                	companyName = companyName.replaceAll("\"", "");
 	                	user.setCompanyName(companyName);
 	                	user.setCommand(null);
 	                	tgUserService.saveOrUpdateTGUser(user);
@@ -488,6 +492,7 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 	                case "/setdriver": 
 	                	//тут проверяем, есть ли машина с таким номером и датой заявки
 	                	TGTruck truckDriver = tgTruckService.getTGTruckByChatNumTruck(user.getValidityTruck(), user.getDateOrderTruckOptimization() == null ? Date.valueOf(LocalDate.now().plusDays(1)) : user.getDateOrderTruckOptimization());
+	                	onlyText = onlyText.replaceAll("\"", "");
 	                	truckDriver.setFio(onlyText);
 	                	user.setCommand("/setinfo");
 	                	tgUserService.saveOrUpdateTGUser(user);
@@ -506,6 +511,7 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 	                case "/setinfo": 
 	                	//тут проверяем, есть ли машина с таким номером и датой заявки
 	                	TGTruck truckInfo = tgTruckService.getTGTruckByChatNumTruck(user.getValidityTruck(), user.getDateOrderTruckOptimization() == null ? Date.valueOf(LocalDate.now().plusDays(1)) : user.getDateOrderTruckOptimization());
+	                	onlyText = onlyText.replaceAll("\"", "");
 	                	truckInfo.setOtherInfo(onlyText);
 	                	user.setCommand("/proofTruck");
 	                	user.setValidityTruck(null); // сюза временно записываем номер авто которое обрабатывается но записывем null т.к. типо закончили

@@ -337,26 +337,7 @@ public class MainRestController {
 //		System.out.println(t2.getTime()-t1.getTime() + " ms - preloadTEST" );
 //		return responseMap;		
 //	}
-	
-	@GetMapping("/logistics/deliveryShops/test1000Truck")
-	public Map<String, Object> getTest1000Truck(
-	        HttpServletRequest request) {	    
-	    Map<String, Object> response = new HashMap<>();
-	    TGTruck tgTruck = tgTruckService.getTGTruckByChatId(4);
-	    
-	    List<TGTruck> tgTrucks = new ArrayList<TGTruck>();
-	    
-	    for (int i = 0; i < 1000; i++) {
-	    	tgTrucks.add(tgTruck.cloneWithNewId(i));
-		}	    
-    
-	    Message message = new Message("TGBotRouting", "test", null, "200",  gson.toJson(tgTrucks), null, "update");
-		slotWebSocket.sendMessage(message);	
-	    
-	    response.put("status", "200");
-	    response.put("WS-message", message);	    	    
-	    return response;
-	}
+
 	
 	@PostMapping("/logistics/deliveryShops/updateList")
 	public Map<String, Object> postdeliveryShopsAddList(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
@@ -459,7 +440,7 @@ public class MainRestController {
 	public Map<String, Object> getTGTruckList(
 	        HttpServletRequest request) {	    
 	    Map<String, Object> response = new HashMap<>();
-	    List<TGTruck> tgTrucks = tgTruckService.getActualTGTruckList();	        
+	    List<TGTruck> tgTrucks = tgTruckService.getActualTGTruckList().stream().filter(t-> t.getStatus() != null).collect(Collectors.toList());	        
 	    response.put("status", "200");
 	    response.put("body", tgTrucks);	    	    
 	    return response;

@@ -439,6 +439,7 @@ public class TelegramBotRoutingTEST extends TelegramLongPollingBot{
 	                    break;
 	                case "/login": 
 	                	String companyName = messageText.contains("~") ? messageText.split("~")[1] : messageText;
+	                	companyName = companyName.replaceAll("\"", "");
 	                	user.setCompanyName(companyName);
 	                	user.setCommand(null);
 	                	tgUserService.saveOrUpdateTGUser(user);

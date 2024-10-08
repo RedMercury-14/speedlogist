@@ -46,6 +46,7 @@ export function wsSlotOnMessageHandler(e, freeTrucksGridOptions, selectedTrucksG
 
 export function wsSlotOnCloseHandler(e) {
 	console.log('Соединение закрыто')
+	$('#reloadWindowModal').modal('show')
 }
 
 export function wsSlotOnErrorHandler(e) {

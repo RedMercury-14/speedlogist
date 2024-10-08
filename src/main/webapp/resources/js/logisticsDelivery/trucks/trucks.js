@@ -86,6 +86,8 @@ window.onload = async function() {
 	const addNewListForm = document.querySelector('#addNewListForm')
 	// форма удаления текущего списка
 	const removeCurrentListForm = document.querySelector('#removeCurrentListForm')
+	// кнопка перезагрузки страницы в модльном окне
+	const reloadWindowButton = document.querySelector('#reloadWindowButton')
 	// div таблицы свободных машин
 	const freeTrucksGridDiv = document.querySelector('#freeTrucksGrid')
 	// div таблицы выбранных машин
@@ -103,6 +105,7 @@ window.onload = async function() {
 	truckListsSelect.addEventListener('change', truckListsSelectChangeHandler)
 	addNewListForm.addEventListener('submit', addNewListSubmitFormHandler)
 	removeCurrentListForm.addEventListener('submit', removeCurrentListSubmitFormHandler)
+	reloadWindowButton.addEventListener('click', (e) => window.location.reload())
 
 	// обработчик закрытия модального окна сохранения нового списка
 	$('#addNewListModal').on('hide.bs.modal', (e) => addNewListForm.reset())
@@ -122,7 +125,7 @@ window.onload = async function() {
 
 // установка получение и установка стартовых данных
 async function init() {
-	// тест вебсокета
+	// подключение вебсокета
 	const wsSlot = new WebSocket(wsSlotUrl)
 	wsSlot.onopen = wsSlotOnOpenHandler
 	wsSlot.onclose = wsSlotOnCloseHandler

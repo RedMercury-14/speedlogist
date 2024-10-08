@@ -288,8 +288,8 @@ public class MainController {
 //		}
 		
 		
-//		System.err.println("ТЕЛЕГРАММ БОТ ОТКЛЮЧЕН!");	
-//		new BotInitializer(telegramBotRoutingTEST).initRoutingBotTEST();
+		System.err.println("ТЕЛЕГРАММ БОТ ОТКЛЮЧЕН!");	
+		new BotInitializer(telegramBotRoutingTEST).initRoutingBotTEST();
 		
 		try {
 			currencyService.loadCurrencyMap(request);

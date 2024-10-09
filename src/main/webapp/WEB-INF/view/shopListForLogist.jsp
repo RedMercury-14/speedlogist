@@ -52,6 +52,7 @@
 										<option value="" hidden disabled selected>Выберите один из пунктов</option>
 										<option value="Магазин">Магазин</option>
 										<option value="Склад">Склад</option>
+										<option value="Кросс-докинг">Кросс-докинг площадка</option>
 									</select>
 								</div>
 								<div class="form-group number-container" >
@@ -131,6 +132,7 @@
 										<option value="" hidden disabled selected>Выберите один из пунктов</option>
 										<option value="Магазин">Магазин</option>
 										<option value="Склад">Склад</option>
+										<option value="Кросс-докинг">Кросс-докинг площадка</option>
 									</select>
 								</div>
 								<!-- <div class="form-group number-container">

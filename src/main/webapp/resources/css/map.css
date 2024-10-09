@@ -332,7 +332,7 @@ input[type=number] {
 	grid-template-rows: 46px repeat(25, 30px);
 	grid-row-gap: 2px;
 }
-#routeAreaForm .routeArea-form .number-container {
+#routeAreaForm .number-container {
 	grid-template-rows: 46px repeat(25, 40px);
 }
 .routeArea-form .cleaningInputs-container {
@@ -488,6 +488,10 @@ svg:not(:root) {
 .sidebar-menu li:first-child {
 	margin-top: 0;
 }
+.sidebar-menu li:hover svg {
+	animation: scale 500ms ease-in;
+	transform-origin: center;
+}
 .sidebar-menu li:hover svg.bi-gear {
 	animation: rotation 500ms ease-in;
 	transform-origin: center;
@@ -499,6 +503,18 @@ svg:not(:root) {
 	to {
 		transform: rotate(180deg);
 	}
+}
+@keyframes scale {
+	0% {
+		transform: scale(1);
+	}
+	50% {
+		transform: scale(1.2);
+	}
+	100% {
+		transform: scale(1);
+	}
+
 }
 .active-item {
 	background: #0052b1;
@@ -622,8 +638,13 @@ svg:not(:root) {
 	padding: 5px;
 	border-bottom: 2px solid #0e377b;
 }
+.toggler-container label {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+}
 .toggler-container span, .toggler {
-   cursor: pointer;
+	cursor: pointer;
 }
 .toggler {
 	appearance: none;

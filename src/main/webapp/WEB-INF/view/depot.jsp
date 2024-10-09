@@ -44,17 +44,17 @@
 			<!-- меню с кнопками вкладок -->
 			<ul class="sidebar-menu">
 				<!-- кнопка вкладки построения маршрута -->
-				<li class="menu-item active-item" data-item="route">
+				<!-- <li class="menu-item active-item" data-item="route">
 					<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
 						<path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
 					</svg>
-				</li>
+				</li> -->
 
 				<c:choose>
 					<c:when test="${roles == '[ROLE_ADMIN]' || roles == '[ROLE_MANAGER]' || roles == '[ROLE_TOPMANAGER]'}">
 
 						<!-- кнопка вкладки построения маршрута с textarea -->
-						<li class="menu-item" data-item="routeArea">
+						<li class="menu-item active-item" data-item="routeArea">
 							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-ruled" viewBox="0 0 16 16">
 								<path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2zm2-1a1 1 0 0 0-1 1v4h10V2a1 1 0 0 0-1-1H4zm9 6H6v2h7V7zm0 3H6v2h7v-2zm0 3H6v2h6a1 1 0 0 0 1-1v-1zm-8 2v-2H3v1a1 1 0 0 0 1 1h1zm-2-3h2v-2H3v2zm0-3h2V7H3v2z"/>
 							</svg>
@@ -70,31 +70,10 @@
 						<c:choose>
 							<c:when test="${login == 'catalina!%ricoh' || login =='pedagog%!sport' || login == 'yakubove%%'}">
 
-								<!-- кнопка вкладки поиска по адресу -->
-								<li class="menu-item" data-item="addressSearch">
-									<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-geo-alt-fill" viewBox="0 0 16 16">
-										<path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10zm0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/>
-									</svg>
-								</li>
-
 								<!-- кнопка вкладки тестового оптимизатора -->
 								<li class="menu-item" data-item="optimizeRoute">
 									<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-star-fill" viewBox="0 0 16 16">
 										<path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>
-									</svg>
-								</li>
-
-								<!-- кнопка вкладки загрузки магазинов -->
-								<li class="menu-item" data-item="shopLoads">
-									<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-shop" viewBox="0 0 16 16">
-										<path d="M2.97 1.35A1 1 0 0 1 3.73 1h8.54a1 1 0 0 1 .76.35l2.609 3.044A1.5 1.5 0 0 1 16 5.37v.255a2.375 2.375 0 0 1-4.25 1.458A2.371 2.371 0 0 1 9.875 8 2.37 2.37 0 0 1 8 7.083 2.37 2.37 0 0 1 6.125 8a2.37 2.37 0 0 1-1.875-.917A2.375 2.375 0 0 1 0 5.625V5.37a1.5 1.5 0 0 1 .361-.976l2.61-3.045zm1.78 4.275a1.375 1.375 0 0 0 2.75 0 .5.5 0 0 1 1 0 1.375 1.375 0 0 0 2.75 0 .5.5 0 0 1 1 0 1.375 1.375 0 1 0 2.75 0V5.37a.5.5 0 0 0-.12-.325L12.27 2H3.73L1.12 5.045A.5.5 0 0 0 1 5.37v.255a1.375 1.375 0 0 0 2.75 0 .5.5 0 0 1 1 0zM1.5 8.5A.5.5 0 0 1 2 9v6h1v-5a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v5h6V9a.5.5 0 0 1 1 0v6h.5a.5.5 0 0 1 0 1H.5a.5.5 0 0 1 0-1H1V9a.5.5 0 0 1 .5-.5zM4 15h3v-5H4v5zm5-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-3zm3 0h-2v3h2v-3z"/>
-									</svg>
-								</li>
-
-								<!-- кнопка вкладки с тестовыми кнопками -->
-								<li class="menu-item" data-item="testing">
-									<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-hammer" viewBox="0 0 16 16">
-										<path d="M9.972 2.508a.5.5 0 0 0-.16-.556l-.178-.129a5.009 5.009 0 0 0-2.076-.783C6.215.862 4.504 1.229 2.84 3.133H1.786a.5.5 0 0 0-.354.147L.146 4.567a.5.5 0 0 0 0 .706l2.571 2.579a.5.5 0 0 0 .708 0l1.286-1.29a.5.5 0 0 0 .146-.353V5.57l8.387 8.873A.5.5 0 0 0 14 14.5l1.5-1.5a.5.5 0 0 0 .017-.689l-9.129-8.63c.747-.456 1.772-.839 3.112-.839a.5.5 0 0 0 .472-.334z"/>
 									</svg>
 								</li>
 							</c:when>
@@ -121,15 +100,9 @@
 			<div class="sidebar-content">
 
 				<!-- вкладка построения маршрута -->
-				<div class="item-content active-content" id="route">
+				<!-- <div class="item-content active-content" id="route">
 					<h2>Маршруты</h2>
 					<div class="content">
-						<div class="toggler-container">
-							<label>
-								<input class="toggler" id="allShopsToggler" type="checkbox"/>
-								<span class="text-muted font-weight-bold">Показать все магазины</span>
-							</label>
-						</div>
 						<form id="routeForm" action="">
 							<div id="routeInputsContainer" class="route-container mb-2"></div>
 							<div class="distance-container mb-3">
@@ -142,13 +115,13 @@
 							</div>
 						</form>
 					</div>
-				</div>
+				</div> -->
 
 				<c:choose>
 					<c:when test="${roles == '[ROLE_ADMIN]' || roles == '[ROLE_MANAGER]' || roles == '[ROLE_TOPMANAGER]'}">
 
 					<!-- вкладка построения маршрута с textarea -->
-						<div class="item-content" id="routeArea">
+						<div class="item-content active-content" id="routeArea">
 							<h2>Маршруты</h2>
 							<div class="content">
 								<form id="routeAreaForm" class="routeArea-form" action="">
@@ -228,17 +201,6 @@
 						<c:choose>
 							<c:when test="${login == 'catalina!%ricoh' || login =='pedagog%!sport' || login == 'yakubove%%'}">
 
-								<!-- вкладка поиска по адресу -->
-								<div class="item-content" id="addressSearch">
-									<h2>Поиск по адресу</h2>
-									<div class="content">
-										<form id="addressSearchForm" action="">
-											<input class="form-control" type="text" name="testingInput" id="testingInput" placeholder="Адрес на беларуском языке">
-											<button class="btn btn-primary" type="submit">Поиск</button>
-										</form>
-									</div>
-								</div>
-
 								<!-- вкладка тестового оптимизатора -->
 								<div class="item-content" id="optimizeRoute">
 									<h2>Тестовый оптимизатор</h2>
@@ -316,48 +278,6 @@
 												</button>
 											</div>
 										</div>
-									</div>
-								</div>
-
-								<!-- вкладка загрузки магазинов -->
-								<div class="item-content" id="shopLoads">
-									<h2>Загрузка магазинов</h2>
-									<div class="content">
-										<form id="shopLoadsForm" class="routeArea-form" action="">
-											<div class="route-container routeAreaForm-container mb-2">
-												<div id="shopLoadsNumberContainer" class="number-container"></div>
-												<div class="input-container">
-													<span class="text-muted font-weight-bold">Номер магазина</span>
-													<textarea class="route-textarea" id="shopLoadsShopNum" name="shopTextarea" cols="7" rows="500" required></textarea>
-												</div>
-												<div class="input-container">
-													<span class="text-muted font-weight-bold">Паллеты</span>
-													<textarea class="route-textarea" id="shopLoadsPall" name="pallTextarea" cols="7" rows="500" required></textarea>
-												</div>
-												<div class="input-container">
-													<span class="text-muted font-weight-bold">Тоннаж</span>
-													<textarea class="route-textarea" id="shopLoadsTonnage" name="tonnageTextarea" cols="15" rows="500" required></textarea>
-												</div>
-											</div>
-											<div class="formButton-container">
-												<button class="btn btn-primary" type="submit">Отправить</button>
-												<button class="btn btn-secondary" type="reset">Очистить форму</button>
-											</div>
-										</form>
-									</div>
-								</div>
-
-								<!-- вкладка тестовых кнопок -->
-								<div class="item-content" id="testing">
-									<h2>Тестовые кнопки</h2>
-									<div class="content">
-										<div style="display: flex; flex-direction: column; gap: 20px;">
-											<button id="testBtn1" class="btn btn-primary" type="button">Тестовая кнопка 1</button>
-											<button id="testBtn2" class="btn btn-warning" type="button">Тестовая кнопка 2</button>
-											<button id="testBtn3" class="btn btn-info" type="button">Тестовая кнопка 3</button>
-											<button id="testBtn4" class="btn btn-success" type="button">Тестовая кнопка 4</button>
-										</div>
-										<br>
 									</div>
 								</div>
 							</c:when>
@@ -497,7 +417,7 @@
 						<span aria-hidden="true">&times;</span>
 					</button>
 				</div>
-				<form id="poligonControlForm" action="" class="needs-validation" novalidate>
+				<form id="poligonControlForm" action="">
 					<div class="modal-body">
 						<div class="error-message" id="messagePalygonName"></div>
 						<div class="form-group">
@@ -509,6 +429,12 @@
 								<option value="trafficRestrictions">Ограничить движение</option>
 								<option value="trafficBan">Запретить движение</option>
 								<option value="trafficSpecialBan">Запретить движение для загруженных машин</option>
+								<option value="crossDocking">Указать зону для кросс-докинга</option>
+							</select>
+						</div>
+						<div class="form-group none">
+							<select id="crossDockingPoint" name="crossDockingPoint" class="form-control">
+								<option value="" hidden disabled selected>Выберите место кросс-докинга</option>
 							</select>
 						</div>
 					</div>

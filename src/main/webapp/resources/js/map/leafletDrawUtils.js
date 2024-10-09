@@ -2,8 +2,6 @@
 // ---------- Утилиты и настройки для библиотеки рисования leafletDraw -----------//
 // -------------------------------------------------------------------------------//
 
-import { ajaxUtils } from "../ajaxUtils.js"
-import { snackbar } from "../snackbar/snackbar.js"
 import { getDecodedString, getEncodedString, isAdmin, isTopManager } from "../utils.js"
 
 const POLYGON_ACTIONS_DICTIONARY = {
@@ -18,6 +16,10 @@ const POLYGON_ACTIONS_DICTIONARY = {
 	trafficSpecialBan: {
 		text: "Запретить движение для загруженных машин",
 		color: "purple",
+	},
+	crossDocking: {
+		text: "Зона кросс-докинга",
+		color: "#8a06ae",
 	},
 }
 
@@ -35,6 +37,7 @@ export const drawControl = new L.Control.Draw({
 
 	// настройки фигур для рисования
 	draw: {
+		circle: false,
 		polyline: false,
 		rectangle: false,
 		marker: false,
@@ -98,9 +101,11 @@ export const leafletDrawLayerEventHandlers = {
 }
 
 // создание полигона
-export function getNewPolygonLayer(name, encodedName, action, deletePolygonBaseUrl) {
+export function getNewPolygonLayer(name, action, crossDockingPoint, onDeleteCallback) {
 	// получаем событие карты из глобальной переменной событий
 	const event = currentDrawEvent
+	// получаем закодированное имя
+	const encodedName = getEncodedString(name)
 
 	let layer = event.layer
 	let feature = (layer.feature = layer.feature || {})
@@ -113,20 +118,21 @@ export function getNewPolygonLayer(name, encodedName, action, deletePolygonBaseU
 	props.type = type
 	props.name = encodedName
 	props.action = action
+	props.crossDockingPoint = crossDockingPoint
 
 	if (type === "circle") {
 		props.radius = layer.getRadius()
 	}
 
 	// добавляем попап к полигону
-	const popUp = getPopUpByPolygon(name, encodedName, action, deletePolygonBaseUrl)
+	const popUp = getPopUpByPolygon(name, encodedName, action, onDeleteCallback)
 	layer.bindPopup(popUp)
 
 	return layer
 }
 
 // создание поп-апа для полигона
-function getPopUpByPolygon(name, encodedName, action, deletePolygonBaseUrl) {
+function getPopUpByPolygon(name, encodedName, action, onDeleteCallback) {
 	const actionToView = POLYGON_ACTIONS_DICTIONARY[action]?.text
 	const popup = document.createElement('div')
 	let poputHTML = `
@@ -143,18 +149,18 @@ function getPopUpByPolygon(name, encodedName, action, deletePolygonBaseUrl) {
 
 	popup.innerHTML = poputHTML
 	const deletePolygonBtn = popup.querySelector('.deletePolygonBtn')
-	deletePolygonBtn && deletePolygonBtn.addEventListener('click', () => deletePolygon(name, encodedName, deletePolygonBaseUrl))
+	deletePolygonBtn && deletePolygonBtn.addEventListener('click', () => onDeleteCallback(name, encodedName))
 	
 	return popup
 }
 
 // функции контроля видимости кнопок управления полигонами
 export function showPoligonControl() {
-	document.querySelector('.leaflet-action-button').classList.remove('none')
+	// document.querySelector('.leaflet-action-button').classList.remove('none')
 	document.querySelector('.leaflet-draw').classList.remove('none')
 }
 export function hidePoligonControl() {
-	document.querySelector('.leaflet-action-button').classList.add('none')
+	// document.querySelector('.leaflet-action-button').classList.add('none')
 	document.querySelector('.leaflet-draw').classList.add('none')
 }
 
@@ -167,7 +173,7 @@ export function closePoligonControlModal() {
 }
 
 // получение модифицированного объекта полигона для добавления на карту
-export function getModifiedGeojson(geojson, deletePolygonBaseUrl) {
+export function getModifiedGeojson(geojson, onDeleteCallback) {
 	const feature = L.geoJSON(geojson, {
 		style: function (feature) {
 			const action = feature.properties.action
@@ -196,7 +202,7 @@ export function getModifiedGeojson(geojson, deletePolygonBaseUrl) {
 			drawnItems.addLayer(layer)
 			const encodedName = feature.properties.name
 			const name = getDecodedString(encodedName)
-			const popup = getPopUpByPolygon(name, encodedName, feature.properties.action, deletePolygonBaseUrl)
+			const popup = getPopUpByPolygon(name, encodedName, feature.properties.action, onDeleteCallback)
 			layer.bindPopup(popup)
 		},
 	})
@@ -204,46 +210,8 @@ export function getModifiedGeojson(geojson, deletePolygonBaseUrl) {
 	return feature
 }
 
-// удаление полигона с сервера
-function deletePolygon(name, encodedName, baseUrl) {
-	const isConfirmDelete = confirm(`Вы действительно хотите удалить полигон ${name}?`)
-
-	if (!isConfirmDelete) return
-
-	ajaxUtils.get({
-		url : baseUrl + encodedName,
-		successCallback: () => {
-			snackbar.show(`Полигон с именем ${name} удалён`)
-			const layer = getLayerByEncodedName(encodedName)
-			layer && drawnItems.removeLayer(layer)
-		}
-	})
-}
-
-// проверка наличия имени полигона на сервере
-export function polygonNameInputHandler(e, baseUrl) {
-	const input = e.target
-	const encodedName = getEncodedString(input.value)
-
-	if (!encodedName) return
-	
-	console.dir(input.validity.valid)
-	ajaxUtils.get({
-		url : baseUrl + encodedName,
-		successCallback: (hasName) => {
-			if (hasName) {
-				$('#messagePalygonName').text('Полигон с таким именем уже существует')
-				input.classList.add('is-invalid')
-			} else {
-				$('#messagePalygonName').text('')
-				input.classList.remove('is-invalid')
-			}
-		},
-	})
-}
-
 // получение полигона по закодированному имени
-function getLayerByEncodedName(encodedName) {
+export function getLayerByEncodedName(encodedName) {
 	const layers = drawnItems.getLayers()
 	return layers.find(layer => layer.feature.properties.name === encodedName)
 }

@@ -2,8 +2,6 @@
 // ------- функции отображения на карте и удаления с карты всех магазинов --------//
 // -------------------------------------------------------------------------------//
 
-import { getData } from "../utils.js"
-
 const allShopsToView = []
 const shopsToView = []
 
@@ -19,19 +17,18 @@ export function showShops(shops, map) {
 }
 
 // функция переключения видимости всех магазинов на карте
-export function toogleAllShops(e, map) {
+export function toogleAllShops(e, map, allShops) {
 	const showPoligonControlElements = e.target.checked
 
 	showPoligonControlElements
-		? showAllShops(map)
+		? showAllShops(map, allShops)
 		: hideAllShops(map)
 }
 
-async function showAllShops(map) {
+function showAllShops(map, allShops) {
 	if (allShopsToView.length === 0) {
-		const shops = await getData('../api/manager/getAllShops')
-		if (!shops || shops.length === 0) return
-		shops.map(shop => allShopsToView.push(getCanvasShopMarker(shop)))
+		if (!allShops || allShops.length === 0) return
+		allShops.map(shop => allShopsToView.push(getCanvasShopMarker(shop)))
 	}
 	allShopsToView.forEach(marker => map.addLayer(marker))
 }
@@ -138,6 +135,10 @@ function getShopPopupHtml(shop) {
 function getImageSrc(shop) {
 	const isStorage = shop.address.toLowerCase().includes('склад') || shop.type === 'Склад'
 	const hasRestriction = shop.length || shop.width || shop.height || shop.maxPall
+	const isCrossDocking = shop.type === 'Кросс-докинг'
+
+	if (isCrossDocking) return "../../speedlogist/resources/img/cross-docking_80x80_2.png"
+
 	const imgSrc = isStorage
 		? "../../speedlogist/resources/img/warehouse_32x32.png"
 		: hasRestriction

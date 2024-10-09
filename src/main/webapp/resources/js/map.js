@@ -1,5 +1,13 @@
 import { snackbar } from "./snackbar/snackbar.js"
-import { debounce, getData, getEncodedString, hideLoadingSpinner, isAdmin, isManager, isTopManager, randomColor, showLoadingSpinner } from './utils.js'
+import { debounce,
+	getData,
+	getEncodedString,
+	hideLoadingSpinner,
+	isAdmin, isManager,
+	isTopManager,
+	randomColor,
+	showLoadingSpinner
+} from './utils.js'
 import { ajaxUtils } from "./ajaxUtils.js"
 import { drawLocales } from "./map/leafletDrawLocales.js"
 import { CanvasMarker } from "./map/canvasMarker.js"
@@ -12,11 +20,11 @@ import {
 	currentDrawEvent,
 	drawControl,
 	drawnItems,
+	getLayerByEncodedName,
 	getModifiedGeojson,
 	getNewPolygonLayer,
 	hidePoligonControl,
 	leafletDrawLayerEventHandlers,
-	polygonNameInputHandler,
 	showPoligonControl,
 } from "./map/leafletDrawUtils.js"
 import { showShops, toogleAllShops } from "./map/shopMarkersUtils.js"
@@ -30,6 +38,7 @@ import {
 import { mapStore } from "./map/mapStore.js"
 import { uiIcons } from "./uiIcons.js"
 import {
+	AllShopsToggler,
 	createCarInputs,
 	createCleaningInputsColumn,
 	createNumbersColumn,
@@ -58,7 +67,22 @@ import {
 	selectParams,
 	setOptimizeRouteParamsFormData,
 	сheckboxParams,
-} from "./map/optimizeRouteParamsUtils.js";
+} from "./map/optimizeRouteParamsUtils.js"
+import {
+	adaptPolygonToStore,
+	addAddressInfo,
+	addCrossDocking,
+	addCrossDockingPointOptions,
+	addDistanceInfo,
+	addRouteInfo,
+	addSmallHeaderClass,
+	clearRouteTable,
+	crossDockingPointVisibleToggler,
+	displayEmptyTruck,
+	getMarkerToShop,
+	setOptimizeRouteFormData
+} from "./map/mapUtils.js"
+import { calcPallets } from "./map/calcPallets.js"
 
 const currentUrl = window.location.href
 const isLogisticsDelivery = currentUrl.includes('logistics-delivery')
@@ -83,30 +107,6 @@ const token = $("meta[name='_csrf']").attr("content")
 
 const OPTIMIZE_ROUTE_DATA_KEY = "NEW_optimizeRouteData"
 const OPTIMIZE_ROUTE_PARAMS_KEY = "NEW_optimizeRouteParams"
-
-// обработчик отправки формы загрузки магазинов
-function shopLoadsFormHandler(e) {
-	e.preventDefault()
-
-	const data = getShopLoadsFormData(e.target)
-	console.log("🚀 ~ file: map.js:42 ~ shopLoadsFormHandler ~ data:", data)
-	// место для отправки формы
-	
-}
-
-function testBtn1ClickHandler(event) {
-	console.log('testBtn1 cliicked!')
-}
-function testBtn2ClickHandler(event) {
-	console.log('testBtn2 cliicked!')
-}
-function testBtn3ClickHandler(event) {
-	console.log('testBtn3 cliicked!')
-}
-function testBtn4ClickHandler(event) {
-	console.log('testBtn4 cliicked!')
-}
-
 
 
 // -----------------------------------------------------------------------------------//
@@ -392,6 +392,8 @@ map.on('click', (e) => {
 	})
 })
 
+// добавлениепереключателя отображения всех точек
+map.addControl(new AllShopsToggler())
 // добавление кнопок масштабирования в правый верхник край
 L.control.zoom({ position: 'topright' }).addTo(map)
 
@@ -403,7 +405,7 @@ let drawEvent = currentDrawEvent
 L.drawLocal = drawLocales('ru')
 
 // добавление кнопок кнопок контроля для рисования
-map.addControl(new customControl())
+// map.addControl(new customControl())
 map.addControl(drawControl)
 hidePoligonControl()
 
@@ -420,6 +422,11 @@ map.on(L.Draw.Event.DELETED, leafletDrawLayerEventHandlers.onDeletedLayersHandle
 // -------------------------------------------------------------------------------//
 
 window.onload = async () => {
+	// получение стартовых данных
+	await init()
+	// все магазины/склады/точки
+	const allShops = mapStore.getShops()
+	// изменение размера контейнера для контента
 	addSmallHeaderClass()
 
 	// кнопки боковой панели
@@ -429,20 +436,10 @@ window.onload = async () => {
 	buttonClose.addEventListener("click", () => closeSidebar())
 	document.addEventListener("keydown", (e) => (e.key === "Escape") && closeSidebar())
 
-	// тестовые кнопки
-	const testBtn1 = document.querySelector('#testBtn1')
-	const testBtn2 = document.querySelector('#testBtn2')
-	const testBtn3 = document.querySelector('#testBtn3')
-	const testBtn4 = document.querySelector('#testBtn4')
-	testBtn1 && testBtn1.addEventListener('click', testBtn1ClickHandler)
-	testBtn2 && testBtn2.addEventListener('click', testBtn2ClickHandler)
-	testBtn3 && testBtn3.addEventListener('click', testBtn3ClickHandler)
-	testBtn4 && testBtn4.addEventListener('click', testBtn4ClickHandler)
-
 	// контейнеры для таблиц с информацией о точках маршрута
-	const routeInputsContainer = document.querySelector('#routeInputsContainer')
+	// const routeInputsContainer = document.querySelector('#routeInputsContainer')
 	const routeAreaContainer = document.querySelector('#routeAreaContainer')
-	routeInputsContainer && createRouteInputsTable(25, routeInputsContainer)
+	// routeInputsContainer && createRouteInputsTable(25, routeInputsContainer)
 	routeAreaContainer && createRouteTextareaTable(25, routeAreaContainer)
 
 	// контейнеры с нумерацией
@@ -464,22 +461,18 @@ window.onload = async () => {
 	clearMapBtn && clearMapBtn.addEventListener('click', (e) => removeLayersfromMap())
 
 	// формы
-	const routeForm = document.querySelector("#routeForm")
+	// const routeForm = document.querySelector("#routeForm")
 	const routeAreaForm = document.querySelector("#routeAreaForm")
 	const distanceControlForm = document.querySelector("#distanceControlForm")
-	const addressSearchForm = document.querySelector("#addressSearchForm")
 	const optimizeRouteForm = document.querySelector("#optimizeRouteForm")
-	const shopLoadsForm = document.querySelector("#shopLoadsForm")
 	const routingParamsForm = document.querySelector("#routingParamsForm")
 	const poligonControlForm = document.querySelector("#poligonControlForm")
 	const optimizeRouteParamsForm = document.querySelector('#optimizeRouteParamsForm')
-	routeForm && routeForm.addEventListener("submit", routeFormHandler)
+	// routeForm && routeForm.addEventListener("submit", routeFormHandler)
 	routeAreaForm && routeAreaForm.addEventListener("submit", routeAreaFormHandler)
 	distanceControlForm && distanceControlForm.addEventListener("submit", (e) => distanceControlFormHandler(e, distanceControlGridDiv))
-	addressSearchForm && addressSearchForm.addEventListener("submit", addressSearchFormHandler)
 	optimizeRouteForm && optimizeRouteForm.addEventListener("submit", (e) => optimizeRouteFormHandler(e, optimizeRouteGridDiv))
-	shopLoadsForm && shopLoadsForm.addEventListener("submit", shopLoadsFormHandler)
-	routingParamsForm && routingParamsForm.addEventListener("submit", (e) => routingParamsFormHandler(e, routeForm))
+	routingParamsForm && routingParamsForm.addEventListener("submit", (e) => routingParamsFormHandler(e, routeAreaForm))
 	poligonControlForm && poligonControlForm.addEventListener('submit', poligonControlFormSubmitHandler)
 	optimizeRouteParamsForm && optimizeRouteParamsForm.addEventListener('submit', optimizeRouteParamsFormHandler)
 
@@ -491,17 +484,25 @@ window.onload = async () => {
 
 	// переключатель отображения на карте всех магазинов
 	const allShopsToggler = document.querySelector("#allShopsToggler")
-	allShopsToggler && allShopsToggler.addEventListener('click', (e) => toogleAllShops(e, map))
+	allShopsToggler && allShopsToggler.addEventListener('click', (e) => toogleAllShops(e, map, allShops))
 
 	// проверка имени полигона
 	const polygonNameInput = document.querySelector("#polygonName")
 	polygonNameInput && polygonNameInput.addEventListener('change', (e) => polygonNameInputHandler(e, checkNamePolygonBaseUrl))
 
+	// селект выбора действия для полигона
+	const polygonActionSelect = document.querySelector("#polygonAction")
+	polygonActionSelect && polygonActionSelect.addEventListener('change', crossDockingPointVisibleToggler)
+
+	// селект выбора точки для кросс-докинга
+	const crossDockingPointSelect = document.querySelector("#crossDockingPoint")
+	addCrossDockingPointOptions(allShops, crossDockingPointSelect)
+
 	// кастомные кнопки контроля для рисования
-	const logJSON = document.querySelector(".log")
-	const clearJSON = document.querySelector(".clear")
-	logJSON && logJSON.addEventListener("click", (e) => logJSONonClickCallback(drawnItems))
-	clearJSON && clearJSON.addEventListener("click", (e) => clearJSONOnClickCallback(drawnItems, map))
+	// const logJSON = document.querySelector(".log")
+	// const clearJSON = document.querySelector(".clear")
+	// logJSON && logJSON.addEventListener("click", (e) => logJSONonClickCallback(drawnItems))
+	// clearJSON && clearJSON.addEventListener("click", (e) => clearJSONOnClickCallback(drawnItems, map))
 
 	// добавление инпутов с машинами в форме тестового оптимизатора
 	const carInputsTable = document.querySelector('#carInputsTable')
@@ -544,75 +545,29 @@ window.onload = async () => {
 	// автозаполнение формы настрорек оптимизатора
 	setOptimizeRouteParamsFormData(optimizeRouteParamsForm, OPTIMIZE_ROUTE_PARAMS_KEY)
 
+	// расчёт количества паллет и паллетовместимости для формы оптимизатора
+	calcPallets()
+}
 
-	// -------------------------------------------------------------------------------//
-	// ---------------- расчёт количества паллет и паллетовместимости ----------------//
-	// -------------------------------------------------------------------------------//
+// получение стартовых данных
+async function init() {
+	const shops = await getData(getAllShopsUrl)
+	const allPolygons = await getData(getAllPolygonsUrl)
 
-	const optimizeRoutePallTextarea = document.querySelector("#optimizeRoutePall")
-	const countInputs = document.querySelectorAll('#optimizeRouteForm .carCount')
-	const tonnageInputs = document.querySelectorAll('#optimizeRouteForm .maxPall')
-	const palletsNeededElem = document.querySelector('#palletsNeeded')
-	const totalPalletsElem = document.querySelector('#totalPallets')
-	
-	// debounced-функции расчёта сумм паллет
-	const debouncedCalcTotalPallets = debounce(calcTotalPallets, 500)
-	const debouncedCalcPalletsNeeded = debounce(calcPalletsNeeded, 500)
-	
-	// добавление листнера для расчёта необходимости магазинов в паллетах
-	optimizeRoutePallTextarea && optimizeRoutePallTextarea.addEventListener('input', debouncedCalcPalletsNeeded)
+	mapStore.setShops(shops)
+	mapStore.setPolygons(allPolygons)
+}
 
-	// добавление листнеров для расчёта общей паллетовместимости указанных машин
-	countInputs.forEach((input) => input.addEventListener('input', debouncedCalcTotalPallets))
-	tonnageInputs.forEach((input) => input.addEventListener('input', debouncedCalcTotalPallets))
-
-	// функция для расчёта и отображения общей паллетовместимости указанных машин в форме оптимизатора
-	function calcTotalPallets() {
-		const palletsNeeded = Number(palletsNeededElem.innerText)
-		const totalPallets = getTotalPallets()
-		totalPalletsElem.innerText = totalPallets
-		updateTotalPalletsElemClassName(palletsNeeded, totalPallets)
-	}
-	
-	function getTotalPallets() {
-		let totalPallets = 0
-
-		countInputs.forEach((input, i) => {
-			const pallets = Number(input.value)
-			const cars = Number(tonnageInputs[i].value)
-
-			if(Number.isFinite(pallets) && Number.isFinite(cars)) {
-				totalPallets += pallets * cars
-			}
-		})
-
-		return totalPallets
-	}
-
-	// функция для расчёта и отображения необходимости магазинов в паллетах в форме оптимизатора
-	function calcPalletsNeeded(e) {
-		const pallInArray = getTextareaData(e.target)
-		const palletsNeeded = pallInArray.reduce((sum, pall) => sum + Number(pall), 0)
-		const totalPallets = Number(totalPalletsElem.innerText)
-
-		if (!Number.isFinite(palletsNeeded) || !Number.isFinite(totalPallets)) return
-		
-		palletsNeededElem.innerText = palletsNeeded
-		updateTotalPalletsElemClassName(palletsNeeded, totalPallets)
-	}
-
-	// обновление цвета текста элемента с общей паллетовместимостью
-	function updateTotalPalletsElemClassName(palletsNeeded, totalPallets) {
-		const className = palletsNeeded <= totalPallets ? 'text-success' : 'text-danger'
-		totalPalletsElem.className = `font-weight-bold ${className}`
-	}
+//добавление маркеров на карту
+function addMarkersToMap(markers) {
+	markers.forEach(marker => map.addLayer(marker))
 }
 
 // -------------------------------------------------------------------------------//
 // -------- отображение магазинов на карте при вводе в форме оптимизатора --------//
 // -------------------------------------------------------------------------------//
 async function displayShops() {
-	const shops = await getData(getAllShopsUrl)
+	const shops = mapStore.getShops()
 	if (!shops || shops.length === 0) return
 	const optimizeRouteShopNum = document.querySelector("#optimizeRouteShopNum")
 	if (!optimizeRouteShopNum) return
@@ -630,7 +585,7 @@ function optimizeRouteShopNumChangeCallback(e, shops) {
 // ------------ функция отображения полигонов и элементов рисования --------------//
 // -------------------------------------------------------------------------------//
 async function displayPolygons() {
-	const allPolygons = await getData(getAllPolygonsUrl)
+	const allPolygons = mapStore.getPolygons()
 
 	if (!allPolygons || allPolygons.length === 0 ) return
 
@@ -651,75 +606,22 @@ async function displayPolygons() {
 		features: modifyPolygons
 	}
 
-	const modifiedGeoJSON = getModifiedGeojson(testGeoJSON, deletePolygonBaseUrl)
+	const modifiedGeoJSON = getModifiedGeojson(testGeoJSON, deletePolygon)
 	modifiedGeoJSON.addTo(map)
 }
-
-// -------------------------------------------------------------------------------//
-// ------------- функция автозаполнения формы оптимизации маршрутов --------------//
-// -------------------------------------------------------------------------------//
-function setOptimizeRouteFormData(form, storageKey) {
-	const optimizeRouteItem = localStorage.getItem(storageKey)
-	if (!optimizeRouteItem) return
-
-	const data = JSON.parse(optimizeRouteItem)
-
-	form.stock.value = data.stock
-	form.iteration.value = data.iteration
-
-	form.routeTextarea.value = data.shops.join('\n')
-	form.pallTextarea.value = data.palls.join('\n')
-	form.tonnageTextarea.value = data.tonnage.join('\n')
-
-	data.cleanings.forEach((value, i) => {
-		form.cleaning[i].checked = value
-	})
-
-	data.cars && data.cars.forEach((car, i) => {
-		form.carName && (form.carName[i].value = car.carName)
-		form.carCount && (form.carCount[i].value = car.carCount)
-		form.maxPall && (form.maxPall[i].value = car.maxPall)
-		form.maxTonnage && (form.maxTonnage[i].value = car.maxTonnage)
-	})
-}
-
-// -------------------------------------------------------------------------------//
-//------ функция отображения пустых машин в таблице маршрутов оптимизатора -------//
-// -------------------------------------------------------------------------------//
-function displayEmptyTruck(emptyTrucks) {
-	const emptyTruckContainer = document.querySelector('#emptyTruckContainer')
-
-	if (emptyTrucks.length === 0) {
-		emptyTruckContainer.innerHTML = `<span>Свободных машин: 0</span>`
-		return
-	}
-
-	const emptyTruckToView = emptyTrucks.reduce((acc, truck) => {
-		const type = truck.type
-		acc.hasOwnProperty(type) ? acc[type] += 1 : acc[type] = 1
-		return acc
-	}, {})
-
-	const emptyTruckToViewStr = Object.entries(emptyTruckToView)
-		.map(([type, count]) => `<span>${type}: ${count}</span>`)
-		.join('')
-
-	emptyTruckContainer.innerHTML = `<span>Свободные машины</span>` + emptyTruckToViewStr
-}
-
 
 // -------------------------------------------------------------------------------//
 // --------------------------- обработчики форм ----------------------------------//
 // -------------------------------------------------------------------------------//
 
 // функции обработки формы создания маршрута
-function routeFormHandler(e) {
-	e.preventDefault()
+// function routeFormHandler(e) {
+// 	e.preventDefault()
 
-	removeLayersfromMap()
-	const pointsData = getPointsData(e.target)
-	buildRoute(pointsData)
-}
+// 	removeLayersfromMap()
+// 	const pointsData = getPointsData(e.target)
+// 	buildRoute(pointsData)
+// }
 
 // функции обработки формы создания маршрута по общему полю
 function routeAreaFormHandler(e) {
@@ -736,7 +638,7 @@ function routingParamsFormHandler(e, routeForm) {
 
 	removeLayersfromMap()
 	const routeParams = getRouterParams(e.target)
-	const pointsData = getPointsData(routeForm, routeParams)
+	const pointsData = getPointsDataFromTextarea(routeForm, routeParams)
 	buildRoute(pointsData)
 }
 
@@ -780,75 +682,17 @@ function distanceControlFormHandler(e, gridDiv) {
 	})
 }
 
-// обработчик формы поиска точки по адресу
-async function addressSearchFormHandler(e) {
-	e.preventDefault()
-
-	removeLayersfromMap()
-
-	const string = e.target.testingInput.value
-	const query = new URLSearchParams({
-		q: string,
-		limit: '10',
-		reverse: 'false',
-		key: '90c3a2ff-3918-441c-9bcf-49790be9efca'
-	}).toString()
-
-	const data = await getData(`https://graphhopper.com/api/1/geocode?${query}`)
-
-	if (!data) {
-		snackbar.show('Ответ отсутствует')
-		return
-	}
-
-	if (data.hits.length) {
-		const points = data.hits
-		const index = points.findIndex(point => point.country === 'Беларусь')
-
-		if (index) {
-			const element = points.splice(index, 1)[0]
-			points.unshift(element)
-		}
-	
-		const point = points[0]
-		const coord = point.point
-		const marker = new L.marker(coord)
-
-		let bounds
-		
-		if (point.extent && point.extent.length === 4) {
-			const corner1 = L.latLng(point.extent[1], point.extent[0])
-			const corner2 = L.latLng(point.extent[3], point.extent[2])
-			bounds = L.latLngBounds(corner1, corner2)
-		} else {
-			bounds = L.latLngBounds([coord])
-		}
-
-		map.addLayer(marker)
-		map.fitBounds(bounds)
-	} else {
-		snackbar.show('Адрес не найден')
-	}
-}
-
 // обработчик отправки формы при создании полигона
 function poligonControlFormSubmitHandler(e) {
 	e.preventDefault()
 
 	const form = e.target
-	const nameInput = form.querySelector('#polygonName')
-
-	if (nameInput.classList.contains('is-invalid') || form.reportValidity() === false) {
-		// form.classList.add('was-validated')
-		return
-	}
-
 	const formData = new FormData(form)
-	const geojsonInfo = Object.fromEntries(formData)
-	const name = geojsonInfo.polygonName
-	const encodedName = getEncodedString(name)
-	const action = geojsonInfo.polygonAction
-	const layer = getNewPolygonLayer(name, encodedName, action, deletePolygonBaseUrl)
+	const polygonData = Object.fromEntries(formData)
+	const name = polygonData.polygonName
+	const action = polygonData.polygonAction
+	const crossDockingPoint = polygonData.crossDockingPoint ? Number(polygonData.crossDockingPoint) : null
+	const layer = getNewPolygonLayer(name, action, crossDockingPoint, deletePolygon)
 	const polygon = layer.toGeoJSON()
 
 	if (polygon.properties.type === 'circle') {
@@ -865,11 +709,51 @@ function poligonControlFormSubmitHandler(e) {
 		token: token,
 		data: polygon,
 		successCallback: (res) => {
+			const adaptedPolygon = adaptPolygonToStore(polygon)
+			mapStore.addPolygon(adaptedPolygon)
 			drawnItems.addLayer(layer)
 			drawEvent = null
 			form.reset()
 			closePoligonControlModal()
 		}
+	})
+}
+
+// удаление полигона с сервера
+function deletePolygon(name, encodedName) {
+	const isConfirmDelete = confirm(`Вы действительно хотите удалить полигон ${name}?`)
+
+	if (!isConfirmDelete) return
+
+	ajaxUtils.get({
+		url : deletePolygonBaseUrl + encodedName,
+		successCallback: () => {
+			snackbar.show(`Полигон с именем ${name} удалён`)
+			const layer = getLayerByEncodedName(encodedName)
+			layer && drawnItems.removeLayer(layer)
+			mapStore.removePolygon(encodedName)
+		}
+	})
+}
+
+// проверка наличия имени полигона на сервере
+export function polygonNameInputHandler(e, baseUrl) {
+	const input = e.target
+	const encodedName = getEncodedString(input.value)
+
+	if (!encodedName) return
+
+	ajaxUtils.get({
+		url : baseUrl + encodedName,
+		successCallback: (hasName) => {
+			if (hasName) {
+				$('#messagePalygonName').text('Полигон с таким именем уже существует')
+				input.classList.add('is-invalid')
+			} else {
+				$('#messagePalygonName').text('')
+				input.classList.remove('is-invalid')
+			}
+		},
 	})
 }
 
@@ -882,13 +766,17 @@ function optimizeRouteFormHandler(e, gridDiv) {
 	const optimizeRouteParams = JSON.parse(localStorage.getItem(OPTIMIZE_ROUTE_PARAMS_KEY))
 	const data = getOptimizeRouteFormData(e.target, optimizeRouteParams)
 
+	const alllShops = mapStore.getShops()
+	const polygons = mapStore.getPolygons()
+	const updatedData = addCrossDocking(data, alllShops, polygons)
+
 	localStorage.setItem(OPTIMIZE_ROUTE_DATA_KEY, JSON.stringify(data))
 	showLoadingSpinner(submitButton)
 	
 	ajaxUtils.postJSONdata({
 		url: testOptimizationUrl,
 		token: token,
-		data: data,
+		data: updatedData,
 		successCallback: (res) => {
 			hideLoadingSpinner(submitButton, submitButtonText)
 			snackbar.show(res.message)
@@ -954,23 +842,6 @@ function displayRoute(routeList) {
 	addDistanceInfo(fullDistanceToView)
 }
 
-// функция очистки таблиц с информацией по точкам
-function clearRouteTable() {
-	const addressInfoElements = document.querySelectorAll(`.addressInfo`)
-	const pointInfoElements = document.querySelectorAll(`.pointInfo`)
-	const distanceInfoElements = document.querySelectorAll('#distanceInfo')
-
-	addressInfoElements.forEach(elem => {
-		elem.innerHTML = ''
-	})
-	pointInfoElements.forEach(elem => {
-		elem.innerHTML = ''
-	})
-	distanceInfoElements.forEach(elem => {
-		elem.innerHTML = ''
-	})
-}
-
 // функции создания точек маршрута
 function createLocationPoints(route, index, pointCount, hasStartPoint) {
 	if (!hasStartPoint) {
@@ -1002,46 +873,6 @@ function createLocationPoints(route, index, pointCount, hasStartPoint) {
 		mapStore.addMarker(marker)
 	}
 }
-function getMarkerToShop(icon, shop, generalRouteId = null) {
-	const coord = { lat: shop.lat, lng: shop.lng }	
-	const popupHtml = `
-		<div class="font-weight-bold">№ ${shop.numshop}</div>
-		<div>
-			<span class="font-weight-bold">Адрес: </span>
-			<span>${shop.address}</span>
-		</div>
-		<div>
-			<span class="font-weight-bold">Потребность, паллет: </span>
-			<span>${shop.needPall}</span>
-		</div>
-		<div class="font-weight-bold">Ограничения:</div>
-		<div class="d-flex">
-			<div class="mr-3">
-				<span class="">Длина, м: </span>
-				<span>${shop.length}</span>
-			</div>
-			<div>
-				<span class="">Ширина, м: </span>
-				<span>${shop.width}</span>
-			</div>
-		</div>
-		<div class="d-flex">
-			<div class="mr-3">
-				<span class="">Высота, м: </span>
-				<span>${shop.height}</span>
-			</div>
-			<div>
-				<span class="">Паллеты: </span>
-				<span>${shop.maxPall}</span>
-			</div>
-		</div>
-	`
-	return new L.marker(coord, {
-				icon: icon,
-				routeId: generalRouteId
-			})
-			.bindPopup(popupHtml, { offset: [0, -15] })
-}
 
 // функции добавления маршрута и маркеров на карту
 function addRouteToMap(points, i, popopInfo = {}, routeColor = '#ff0000b3' ) {
@@ -1070,6 +901,7 @@ function addRouteToMap(points, i, popopInfo = {}, routeColor = '#ff0000b3' ) {
 	i === 0 && map.fitBounds(polyline.getBounds())
 	mapStore.addPolyline(polyline)
 }
+// обработчики для линии маршрута
 function polilineMouseOverHandler(e) {
 	const targetColor = e.target.options.color
 
@@ -1111,9 +943,6 @@ function polilineClickHandler(e) {
 	
 	})
 }
-function addMarkersToMap(markers) {
-	markers.forEach(marker => map.addLayer(marker))
-}
 
 // функция удаления маркеров и маршрута с карты, а также информации о маршруте
 function removeLayersfromMap() {
@@ -1138,59 +967,4 @@ function removeLayersfromMap() {
 		})
 	}
 	mapStore.clearPolylines()
-}
-
-// функции добавления информации о маршруте
-function addRouteInfo(data, i) {
-	const index = i + 2
-	const distanceToView = Math.round(data.distance *10 / 1000) / 10
-
-	const firstElements = document.querySelectorAll(`#pointInfo1`)
-	const restElements = document.querySelectorAll(`#pointInfo${index}`)
-
-	if (i === 0) {
-		firstElements.forEach(elem => {
-			elem.innerHTML = `0 км`
-		})
-	}
-
-	restElements.forEach(elem => {
-		elem.innerHTML = `${distanceToView} км`
-	})
-}
-function addAddressInfo(data, i) {
-	const index = i + 2
-	const firstElements = document.querySelectorAll(`#addressInfo1`)
-	const restElements = document.querySelectorAll(`#addressInfo${index}`)
-
-	if (i === 0) {
-		firstElements.forEach(elem => {
-			elem.innerHTML = data.startShop.address
-		})
-	}
-
-	restElements.forEach(elem => {
-		elem.innerHTML = data.endShop.address
-	})
-}
-function addDistanceInfo(fullDistance) {
-	const distanceInfoElements = document.querySelectorAll('#distanceInfo')
-	const distanceInfoInSettings = document.querySelector('#distanceInfoInSettings')
-
-	distanceInfoElements.forEach(elem => {
-		elem.innerHTML = `${fullDistance} км`
-	})
-	if (distanceInfoInSettings) distanceInfoInSettings.innerHTML = `${fullDistance} км`
-}
-
-
-// изменение положения сонтейнера с контентом
-function addSmallHeaderClass() {
-	const navbar = document.querySelector('.navbar')
-	const height = navbar.offsetHeight
-	
-	if (height < 65) {
-		const container = document.querySelector('.my-container')
-		container.classList.add('smallHeader')
-	}
 }

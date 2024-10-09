@@ -18,6 +18,7 @@ public class CustomJsonFeature extends JsonFeature implements Serializable{
 	private String action;
     private String id;
     private String type = "Feature";
+    private String crossDockingPoint;
     private Envelope bbox;
     private Geometry geometry;
     private Map<String, Object> properties;
@@ -42,7 +43,7 @@ public class CustomJsonFeature extends JsonFeature implements Serializable{
 	 * @param properties
 	 */
 	public CustomJsonFeature(String action, String id, String type, Envelope bbox, Geometry geometry,
-			Map<String, Object> properties) {
+			Map<String, Object> properties, String crossDockingPoint) {
 		super();
 		this.action = action;
 		this.id = id;
@@ -50,6 +51,7 @@ public class CustomJsonFeature extends JsonFeature implements Serializable{
 		this.bbox = bbox;
 		this.geometry = geometry;
 		this.properties = properties;
+		this.crossDockingPoint = crossDockingPoint;
 	}
 	@Override
 	public String toString() {
@@ -59,6 +61,22 @@ public class CustomJsonFeature extends JsonFeature implements Serializable{
 
 
 	
+	/**
+	 * @return the crossDockingPoint
+	 */
+	public String getCrossDockingPoint() {
+		return crossDockingPoint;
+	}
+
+
+	/**
+	 * @param crossDockingPoint the crossDockingPoint to set
+	 */
+	public void setCrossDockingPoint(String crossDockingPoint) {
+		this.crossDockingPoint = crossDockingPoint;
+	}
+
+
 	public String getAction() {
 		return action;
 	}

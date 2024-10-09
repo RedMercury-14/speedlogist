@@ -371,6 +371,7 @@ public class MainRestController {
 		MarketRequestDto requestDto = new MarketRequestDto("", marketPacketDto);
 		
 		String marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto));
+		System.out.println(gson.toJson(requestDto));
 		
 //		System.out.println(marketOrder2);
 		
@@ -447,7 +448,6 @@ public class MainRestController {
 		response.put("status", "200");
 		response.put("payload", marketOrder2);
 		response.put("json", requestDto);
-		System.out.println(requestDto.toString());
 		return response;
 				
 	}
@@ -2851,8 +2851,8 @@ public class MainRestController {
 		Double dobleParameter5 = null;
 		
 		
-//		Double maxKoef = 2.0;
-		Double maxKoef = 1.3;
+		Double maxKoef = 2.0;
+//		Double maxKoef = 1.3;
 		JSONParser parser = new JSONParser();
 		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
 		JSONObject jsonParameters = jsonMainObject.get("params") != null ? (JSONObject) parser.parse(jsonMainObject.get("params").toString()) : null;
@@ -2914,7 +2914,7 @@ public class MainRestController {
 		
 	
 		//реализация перебора первого порядка
-		for (double i = 1.3; i <= maxKoef; i = i + 0.02) {
+		for (double i = 1.0; i <= maxKoef; i = i + 0.02) {
 			Double koeff = i;
 //			System.out.println("Коэфф = " + koeff);
 			Solution solution = colossusProcessorRad.run(jsonMainObject, numShops, pallHasShops, tonnageHasShops, stock, koeff, "fullLoad", shopsWithCrossDockingMap);

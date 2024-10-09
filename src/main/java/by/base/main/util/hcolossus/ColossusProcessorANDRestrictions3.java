@@ -241,7 +241,11 @@ public class ColossusProcessorANDRestrictions3 {
 			int maxCountRadiusMap = radiusMap.entrySet().size()-1;
 			boolean isRestrictions = false;
 			for (Map.Entry<Double, Shop> entry : radiusMap.entrySet()) {
-				Shop shop2 = entry.getValue();	
+				Shop shop2 = entry.getValue();
+				if(firstShop.getKrossPolugonName()!=null && shop2.getKrossPolugonName() == null) { // если первый магаз входит в крос а второй нет - пропускаем!
+					continue;
+				}
+				
 				isRestrictions = shop2.getMaxPall() != null ? true : false; // тут определяем есть ли ограничения в текущем задании
 				// тут добавляем мазаз в точку point
 				points.add(shop2);
@@ -393,6 +397,9 @@ public class ColossusProcessorANDRestrictions3 {
 					 */
 					for (Map.Entry<Double, Shop> entry : radiusMapSpecial.entrySet()) {
 						Shop shop2 = entry.getValue();	
+						if(firstShop.getKrossPolugonName()!=null && shop2.getKrossPolugonName() == null) { // если первый магаз входит в крос а второй нет - пропускаем!
+							continue;
+						}
 						Integer specialPallNew = shop2.getMaxPall() != null ? shop2.getMaxPall() : null; // тут определяем есть ли ограничения в текущем задании
 						
 						// тут добавляем мазаз в точку point

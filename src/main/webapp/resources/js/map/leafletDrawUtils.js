@@ -125,22 +125,26 @@ export function getNewPolygonLayer(name, action, crossDockingPoint, onDeleteCall
 	}
 
 	// добавляем попап к полигону
-	const popUp = getPopUpByPolygon(name, encodedName, action, onDeleteCallback)
+	const popUp = getPopUpByPolygon(name, encodedName, action, crossDockingPoint, onDeleteCallback)
 	layer.bindPopup(popUp)
 
 	return layer
 }
 
 // создание поп-апа для полигона
-function getPopUpByPolygon(name, encodedName, action, onDeleteCallback) {
+function getPopUpByPolygon(name, encodedName, action, crossDockingPoint, onDeleteCallback) {
 	const actionToView = POLYGON_ACTIONS_DICTIONARY[action]?.text
 	const popup = document.createElement('div')
 	let poputHTML = `
 		<span class="font-weight-bold">Название:</span>
 		<br>${name}<br>
 		<span class="font-weight-bold">Действие:</span>
-		<br>${actionToView}
+		<br>${actionToView}<br>
 	`
+
+	if (action === 'crossDocking' && crossDockingPoint) {
+		poputHTML += `<span class="font-weight-bold">Место кросс-докинга:</span><br>№${crossDockingPoint}<br>`
+	}
 
 	const role = document.querySelector('#role').value
 	if (isAdmin(role) || isTopManager(role)) {
@@ -201,8 +205,9 @@ export function getModifiedGeojson(geojson, onDeleteCallback) {
 		onEachFeature: function (feature, layer) {
 			drawnItems.addLayer(layer)
 			const encodedName = feature.properties.name
+			const crossDockingPoint = feature.properties.crossDockingPoint
 			const name = getDecodedString(encodedName)
-			const popup = getPopUpByPolygon(name, encodedName, feature.properties.action, onDeleteCallback)
+			const popup = getPopUpByPolygon(name, encodedName, feature.properties.action, crossDockingPoint, onDeleteCallback)
 			layer.bindPopup(popup)
 		},
 	})

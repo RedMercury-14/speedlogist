@@ -50,15 +50,15 @@
 					</svg>
 				</li> -->
 
+				<!-- кнопка вкладки построения маршрута с textarea -->
+				<li class="menu-item active-item" data-item="routeArea">
+					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-ruled" viewBox="0 0 16 16">
+						<path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2zm2-1a1 1 0 0 0-1 1v4h10V2a1 1 0 0 0-1-1H4zm9 6H6v2h7V7zm0 3H6v2h7v-2zm0 3H6v2h6a1 1 0 0 0 1-1v-1zm-8 2v-2H3v1a1 1 0 0 0 1 1h1zm-2-3h2v-2H3v2zm0-3h2V7H3v2z"/>
+					</svg>
+				</li>
+
 				<c:choose>
 					<c:when test="${roles == '[ROLE_ADMIN]' || roles == '[ROLE_MANAGER]' || roles == '[ROLE_TOPMANAGER]'}">
-
-						<!-- кнопка вкладки построения маршрута с textarea -->
-						<li class="menu-item active-item" data-item="routeArea">
-							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-ruled" viewBox="0 0 16 16">
-								<path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2zm2-1a1 1 0 0 0-1 1v4h10V2a1 1 0 0 0-1-1H4zm9 6H6v2h7V7zm0 3H6v2h7v-2zm0 3H6v2h6a1 1 0 0 0 1-1v-1zm-8 2v-2H3v1a1 1 0 0 0 1 1h1zm-2-3h2v-2H3v2zm0-3h2V7H3v2z"/>
-							</svg>
-						</li>
 
 						<!-- кнопка вкладки контроля расстояний -->
 						<li class="menu-item" data-item="distanceControl">
@@ -117,63 +117,63 @@
 					</div>
 				</div> -->
 
+				<!-- вкладка построения маршрута с textarea -->
+				<div class="item-content active-content" id="routeArea">
+					<h2>Маршруты</h2>
+					<div class="content">
+						<form id="routeAreaForm" class="routeArea-form" action="">
+							<div class="route-container routeAreaForm-container mb-2">
+								<div class="number-container">
+									<span class="text-muted font-weight-bold">№</span>
+									<span class="text-muted font-weight-bold">1</span>
+									<span class="text-muted font-weight-bold">2</span>
+									<span class="text-muted font-weight-bold">3</span>
+									<span class="text-muted font-weight-bold">4</span>
+									<span class="text-muted font-weight-bold">5</span>
+									<span class="text-muted font-weight-bold">6</span>
+									<span class="text-muted font-weight-bold">7</span>
+									<span class="text-muted font-weight-bold">8</span>
+									<span class="text-muted font-weight-bold">9</span>
+									<span class="text-muted font-weight-bold">10</span>
+									<span class="text-muted font-weight-bold">11</span>
+									<span class="text-muted font-weight-bold">12</span>
+									<span class="text-muted font-weight-bold">13</span>
+									<span class="text-muted font-weight-bold">14</span>
+									<span class="text-muted font-weight-bold">15</span>
+									<span class="text-muted font-weight-bold">16</span>
+									<span class="text-muted font-weight-bold">17</span>
+									<span class="text-muted font-weight-bold">18</span>
+									<span class="text-muted font-weight-bold">19</span>
+									<span class="text-muted font-weight-bold">20</span>
+									<span class="text-muted font-weight-bold">21</span>
+									<span class="text-muted font-weight-bold">22</span>
+									<span class="text-muted font-weight-bold">23</span>
+									<span class="text-muted font-weight-bold">24</span>
+									<span class="text-muted font-weight-bold">25</span>
+								</div>
+								<div class="input-container">
+									<span class="text-muted font-weight-bold">Номер магазина</span>
+									<textarea class="route-textarea" id="routeTextarea" name="routeTextarea" cols="7" rows="25"></textarea>
+								</div>
+								<div id="routeAreaContainer" class="info-container">
+									<span class="text-muted font-weight-bold">Адрес</span>
+									<span class="text-muted font-weight-bold">Расст-е</span>
+								</div>
+							</div>
+							<div class="distance-container mb-3">
+								<span class="text-muted font-weight-bold">Общее расстояние:</span>
+								<span id="distanceInfo" class="text-muted font-weight-bold"></span>
+							</div>
+							<div class="formButton-container">
+								<button class="btn btn-primary" type="submit">Построить</button>
+								<button class="btn btn-secondary" type="reset">Очистить форму</button>
+							</div>
+						</form>
+					</div>
+				</div>
+
 				<c:choose>
 					<c:when test="${roles == '[ROLE_ADMIN]' || roles == '[ROLE_MANAGER]' || roles == '[ROLE_TOPMANAGER]'}">
-
-					<!-- вкладка построения маршрута с textarea -->
-						<div class="item-content active-content" id="routeArea">
-							<h2>Маршруты</h2>
-							<div class="content">
-								<form id="routeAreaForm" class="routeArea-form" action="">
-									<div class="route-container routeAreaForm-container mb-2">
-										<div class="number-container">
-											<span class="text-muted font-weight-bold">№</span>
-											<span class="text-muted font-weight-bold">1</span>
-											<span class="text-muted font-weight-bold">2</span>
-											<span class="text-muted font-weight-bold">3</span>
-											<span class="text-muted font-weight-bold">4</span>
-											<span class="text-muted font-weight-bold">5</span>
-											<span class="text-muted font-weight-bold">6</span>
-											<span class="text-muted font-weight-bold">7</span>
-											<span class="text-muted font-weight-bold">8</span>
-											<span class="text-muted font-weight-bold">9</span>
-											<span class="text-muted font-weight-bold">10</span>
-											<span class="text-muted font-weight-bold">11</span>
-											<span class="text-muted font-weight-bold">12</span>
-											<span class="text-muted font-weight-bold">13</span>
-											<span class="text-muted font-weight-bold">14</span>
-											<span class="text-muted font-weight-bold">15</span>
-											<span class="text-muted font-weight-bold">16</span>
-											<span class="text-muted font-weight-bold">17</span>
-											<span class="text-muted font-weight-bold">18</span>
-											<span class="text-muted font-weight-bold">19</span>
-											<span class="text-muted font-weight-bold">20</span>
-											<span class="text-muted font-weight-bold">21</span>
-											<span class="text-muted font-weight-bold">22</span>
-											<span class="text-muted font-weight-bold">23</span>
-											<span class="text-muted font-weight-bold">24</span>
-											<span class="text-muted font-weight-bold">25</span>
-										</div>
-										<div class="input-container">
-											<span class="text-muted font-weight-bold">Номер магазина</span>
-											<textarea class="route-textarea" id="routeTextarea" name="routeTextarea" cols="7" rows="25"></textarea>
-										</div>
-										<div id="routeAreaContainer" class="info-container">
-											<span class="text-muted font-weight-bold">Адрес</span>
-											<span class="text-muted font-weight-bold">Расст-е</span>
-										</div>
-									</div>
-									<div class="distance-container mb-3">
-										<span class="text-muted font-weight-bold">Общее расстояние:</span>
-										<span id="distanceInfo" class="text-muted font-weight-bold"></span>
-									</div>
-									<div class="formButton-container">
-										<button class="btn btn-primary" type="submit">Построить</button>
-										<button class="btn btn-secondary" type="reset">Очистить форму</button>
-									</div>
-								</form>
-							</div>
-						</div>
 
 						<!-- вкладка для рассчёта расстояний при загрузке развоза-->
 						<div class="item-content" id="distanceControl">

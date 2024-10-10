@@ -554,10 +554,16 @@ public class MainRestController {
 	public Map<String, Object> getTGTruckList(
 	        HttpServletRequest request) {	    
 	    Map<String, Object> response = new HashMap<>();
-	    List<TGTruck> tgTrucks = tgTruckService.getActualTGTruckList().stream().filter(t-> t.getStatus() != null).collect(Collectors.toList());	        
-	    response.put("status", "200");
-	    response.put("body", tgTrucks);	    	    
-	    return response;
+	    List<TGTruck> tgTrucks = tgTruckService.getActualTGTruckList();
+	    if(tgTrucks != null) {	    	
+	    	response.put("status", "200");
+	    	response.put("body", tgTrucks.stream().filter(t-> t.getStatus() != null).collect(Collectors.toList()));	    	    
+	    	return response;	    	
+	    }else {
+	    	response.put("status", "200");
+	    	response.put("body", tgTrucks);	    	    
+	    	return response;
+	    }
 	}
 	
 	/**

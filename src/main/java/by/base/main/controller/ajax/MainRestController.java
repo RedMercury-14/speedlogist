@@ -2818,7 +2818,7 @@ public class MainRestController {
 	private static boolean isRuningOptimization = false;
 	
 	@GetMapping("/map/myoptimization3/reset")
-	public String getReset(HttpServletRequest request, @PathVariable String number) {
+	public String getReset(HttpServletRequest request) {
 		if(isRuningOptimization) {
 			isRuningOptimization = !isRuningOptimization;
 		}

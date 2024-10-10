@@ -64,7 +64,7 @@ public class ShopMachine {
 	 * @throws JsonProcessingException 
 	 * @throws JsonMappingException 
 	 */
-	public List<Shop> prepareShopList3Parameters(List<Integer> shopList, List<Integer> pallHasShops, List<Integer> tonnageHasShops,  Integer stock) throws JsonMappingException, JsonProcessingException {
+	public List<Shop> prepareShopList3Parameters(List<Integer> shopList, List<Integer> pallHasShops, List<Integer> tonnageHasShops,  Integer stock,  Map<Integer, String> shopsWithCrossDockingMap) throws JsonMappingException, JsonProcessingException {
 		ObjectMapper objectMapper = new ObjectMapper();
 		Map<Integer, Shop> allShop =  shopService.getShopMap();
 		ComparatorShops comparatorShops = new ComparatorShops();
@@ -78,6 +78,9 @@ public class ShopMachine {
 			}
 			shop.setNeedPall(pallHasShops.get(i));
 			shop.setWeight(tonnageHasShops.get(i));
+			if(shopsWithCrossDockingMap.get(integer) != null) {
+				shop.setKrossPolugonName(shopsWithCrossDockingMap.get(integer));
+			}
 //			shop.createIdShop();
 			result.add(shop);
 		}

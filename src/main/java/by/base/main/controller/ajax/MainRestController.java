@@ -93,6 +93,7 @@ import com.graphhopper.util.PointList;
 import com.graphhopper.util.Translation;
 import com.graphhopper.util.shapes.GHPoint;
 import by.base.main.controller.MainController;
+import by.base.main.dto.MarketDataFor398Request;
 import by.base.main.dto.MarketDataForClear;
 import by.base.main.dto.MarketDataForLoginDto;
 import by.base.main.dto.MarketDataForRequestDto;
@@ -337,6 +338,119 @@ public class MainRestController {
 //		System.out.println(t2.getTime()-t1.getTime() + " ms - preloadTEST" );
 //		return responseMap;		
 //	}
+	
+//	@PostMapping("/398")
+	@GetMapping("/398")
+	public Map<String, Object> get398(HttpServletRequest request) throws ParseException {
+		String str = "{\"CRC\": \"\", \"Packet\": {\"MethodName\": \"SpeedLogist.GetReport398\", \"Data\": {\"DateFrom\": \"2024-09-03\", \"DateTo\": \"2024-09-05\", \"WarehouseId\": [\"700\"], \"WhatBase\": [\"11\",\"0\"]}}}";
+		Map<String, Object> response = new HashMap<>();
+		try {			
+			checkJWT(marketUrl);			
+		} catch (Exception e) {
+			System.err.println("Ошибка получения jwt токена");
+		}
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		String marketPacketDtoStr = jsonMainObject.get("Packet") != null ? jsonMainObject.get("Packet").toString() : null;
+		JSONObject jsonMainObject2 = (JSONObject) parser.parse(marketPacketDtoStr);
+		String marketDataFor398RequestStr = jsonMainObject2.get("Data") != null ? jsonMainObject2.get("Data").toString() : null;
+		JSONObject jsonMainObjectTarget = (JSONObject) parser.parse(marketDataFor398RequestStr);
+		
+		JSONArray warehouseIdArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("WarehouseId").toString());
+		JSONArray whatBaseArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("WhatBase").toString());
+		
+		String dateForm = jsonMainObjectTarget.get("DateFrom") == null ? null : jsonMainObjectTarget.get("DateFrom").toString();
+		String dateTo = jsonMainObjectTarget.get("DateTo") == null ? null : jsonMainObjectTarget.get("DateTo").toString();
+		Object[] warehouseId = warehouseIdArray.toArray();
+		Object[] whatBase = whatBaseArray.toArray();
+//		String warehouseId = jsonMainObjectTarget.get("WarehouseId") == null ? null : jsonMainObjectTarget.get("WarehouseId").toString();
+//		String whatBase = jsonMainObjectTarget.get("WhatBase") == null ? null : jsonMainObjectTarget.get("WhatBase").toString();
+		
+		MarketDataFor398Request for398Request = new MarketDataFor398Request(dateForm, dateTo, warehouseId, whatBase);		
+		MarketPacketDto marketPacketDto = new MarketPacketDto(marketJWT, "SpeedLogist.GetReport398", serviceNumber, for398Request);		
+		MarketRequestDto requestDto = new MarketRequestDto("", marketPacketDto);
+		
+		String marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto));
+		System.out.println(gson.toJson(requestDto));
+		
+//		System.out.println(marketOrder2);
+		
+//		if(marketOrder2.equals("503")) { // означает что связь с маркетом потеряна
+//			//в этом случае проверяем бд
+//			System.err.println("Связь с маркетом потеряна");
+//			Order order = orderService.getOrderByMarketNumber(idMarket);
+//			marketJWT = null; // сразу говорим что jwt устарел
+//			if(order != null) {
+//				response.put("status", "200");
+//				response.put("message", "Заказ загружен из локальной базы данных SL. Связь с маркетом отсутствует");
+//				response.put("info", "Заказ загружен из локальной базы данных SL. Связь с маркетом отсутствует");
+//				response.put("order", order);
+//				return response;
+//			}else {
+//				response.put("status", "100");
+//				response.put("message", "Заказ с номером " + idMarket + " в базе данных SL не найден. Связь с Маркетом отсутствует. Обратитесь в отдел ОСиУЗ");
+//				response.put("info", "Заказ с номером " + idMarket + " в базе данных SL не найден. Связь с Маркетом отсутствует. Обратитесь в отдел ОСиУЗ");
+//				return response;
+//			}
+//			
+//		}else{//если есть связь с маркетом
+//			//проверяем на наличие сообщений об ошибке со стороны маркета
+//			if(marketOrder2.contains("Error")) {
+//				MarketErrorDto errorMarket = gson.fromJson(marketOrder2, MarketErrorDto.class);
+////				System.out.println(errorMarket);
+//				if(errorMarket.getError().equals("99")) {//обработка случая, когда в маркете номера нет, а в бд есть.
+//					Order orderFromDB = orderService.getOrderByMarketNumber(idMarket);
+//					if(orderFromDB !=null) {
+//						response.put("status", "100");
+//						response.put("message", "Заказ " + idMarket + " не найден в маркете. Данные из SL устаревшие. Обновите данные в Маркете");
+//						response.put("info", "Заказ " + idMarket + " не найден в маркете. Данные из SL устаревшие. Обновите данные в Маркете");
+//						return response;
+//					}else {
+//						response.put("status", "100");
+//						response.put("message", errorMarket.getErrorDescription());
+//						response.put("info", errorMarket.getErrorDescription());
+//						return response;
+//					}
+//				}
+//				response.put("status", "100");
+//				response.put("message", errorMarket.getErrorDescription());
+//				response.put("info", errorMarket.getErrorDescription());
+//				return response;
+//			}
+//			
+//			//тут избавляемся от мусора в json
+//			String str2 = marketOrder2.split("\\[", 2)[1];
+//			String str3 = str2.substring(0, str2.length()-2);
+//			
+//			//создаём свой парсер и парсим json в объекты, с которыми будем работать.
+//			CustomJSONParser customJSONParser = new CustomJSONParser();
+//			
+//			//создаём OrderBuyGroup
+//			OrderBuyGroupDTO orderBuyGroupDTO = customJSONParser.parseOrderBuyGroupFromJSON(str3);
+//						
+//			//создаём Order, записываем в бд и возвращаем или сам ордер или ошибку (тот же ордер, только с отрицательным id)
+//			Order order = orderCreater.create(orderBuyGroupDTO);		
+//			
+//			if(order.getIdOrder() < 0) {
+//				response.put("status", "100");
+//				response.put("message", order.getMessage());
+//				response.put("info", order.getMessage());
+//				return response;
+//			}else {
+//				response.put("status", "200");
+//				response.put("message", order.getMessage());
+//				response.put("info", order.getMessage());
+//				response.put("order", order);
+//				System.out.println(checkOrderNeeds.check(order)); // тестовая проверка 
+//				return response;
+//			}
+//		}	
+		response.put("status", "200");
+		response.put("payload", marketOrder2);
+		response.put("json", requestDto);
+		return response;
+				
+	}
 
 	
 	@PostMapping("/logistics/deliveryShops/updateList")
@@ -440,10 +554,16 @@ public class MainRestController {
 	public Map<String, Object> getTGTruckList(
 	        HttpServletRequest request) {	    
 	    Map<String, Object> response = new HashMap<>();
-	    List<TGTruck> tgTrucks = tgTruckService.getActualTGTruckList().stream().filter(t-> t.getStatus() != null).collect(Collectors.toList());	        
-	    response.put("status", "200");
-	    response.put("body", tgTrucks);	    	    
-	    return response;
+	    List<TGTruck> tgTrucks = tgTruckService.getActualTGTruckList();
+	    if(tgTrucks != null) {	    	
+	    	response.put("status", "200");
+	    	response.put("body", tgTrucks.stream().filter(t-> t.getStatus() != null).collect(Collectors.toList()));	    	    
+	    	return response;	    	
+	    }else {
+	    	response.put("status", "200");
+	    	response.put("body", tgTrucks);	    	    
+	    	return response;
+	    }
 	}
 	
 	/**
@@ -2393,7 +2513,9 @@ public class MainRestController {
 		order.setIdRamp(idRamp);
 		order.setLoginManager(user.getLogin());
 		order.setStatus(jsonMainObject.get("status") == null ? 7 : Integer.parseInt(jsonMainObject.get("status").toString()));
-		order.setDateOrderOrl(jsonMainObject.get("dateOrderOrl") == null ? null : Date.valueOf(jsonMainObject.get("dateOrderOrl").toString()));
+		if(order.getDateOrderOrl() == null){
+			order.setDateOrderOrl(jsonMainObject.get("dateOrderOrl") == null ? null : Date.valueOf(jsonMainObject.get("dateOrderOrl").toString()));			
+		}
 		//главные проверки
 		//проверка на лимит приемки паллет	
 		if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) { // проверяем всё кроме вн перемещений
@@ -2720,6 +2842,8 @@ public class MainRestController {
 		}
 		
 		
+		
+		
 		Boolean mainParameter = null;
 		String algorithm = null;
 		Boolean boolParameter1 = null;
@@ -2736,14 +2860,29 @@ public class MainRestController {
 		
 		
 		Double maxKoef = 2.0;
+//		Double maxKoef = 1.3;
 		JSONParser parser = new JSONParser();
 		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
 		JSONObject jsonParameters = jsonMainObject.get("params") != null ? (JSONObject) parser.parse(jsonMainObject.get("params").toString()) : null;
 		JSONArray numShopsJSON = (JSONArray) jsonMainObject.get("shops");
 		JSONArray pallHasShopsJSON = (JSONArray) jsonMainObject.get("palls");
 		JSONArray tonnageHasShopsJSON = (JSONArray) jsonMainObject.get("tonnage");
+		JSONArray shopsWithCrossDocking = (JSONArray) jsonMainObject.get("shopsWithCrossDocking");
 		
-		
+		// Список для хранения отфильтрованных магазинов ходящих в полигон (магазы которые входят в кроссовые площадки)
+        List<Shop> krossShops = new ArrayList<>();
+
+        // Перебор всех магазинов и фильтрация по polygonName != null
+        for (Object shopObject : shopsWithCrossDocking) {
+            JSONObject shop = (JSONObject) shopObject;
+            if (shop.get("polygonName") != null) {
+            	Shop shopObjectHasKross = shopService.getShopByNum(Integer.parseInt(shop.get("numshop").toString()));
+            	shopObjectHasKross.setKrossPolugonName(shop.get("polygonName").toString());
+                krossShops.add(shopObjectHasKross);
+            }
+        }
+        krossShops.sort((o1,o2) -> o1.getKrossPolugonName().hashCode() - o2.getKrossPolugonName().hashCode()); //сортируемся для удобства
+        	
 		
 		mainParameter = jsonParameters != null && jsonParameters.get("optimizeRouteMainCheckbox") != null ? jsonParameters.get("optimizeRouteMainCheckbox").toString().contains("true") : null; 
 		
@@ -2764,20 +2903,29 @@ public class MainRestController {
 		List<Integer> numShops = new ArrayList<Integer>();
 		List<Integer> pallHasShops = new ArrayList<Integer>();
 		List<Integer> tonnageHasShops = new ArrayList<Integer>();
-
+		Map<Integer, String> shopsWithCrossDockingMap = new HashMap<Integer, String>(); // мапа где хранятся номера магазинов и название полигонов к ним
+		
 		Integer stock = Integer.parseInt(jsonMainObject.get("stock").toString());
 
 		numShopsJSON.forEach(s -> numShops.add(Integer.parseInt(s.toString())));
 		pallHasShopsJSON.forEach(p -> pallHasShops.add(Integer.parseInt(p.toString())));
 		tonnageHasShopsJSON.forEach(t-> tonnageHasShops.add(Integer.parseInt(t.toString())));
+		// Перебор всех магазинов и фильтрация по polygonName != null
+        for (Object shopObject : shopsWithCrossDocking) {
+            JSONObject shop = (JSONObject) shopObject;
+            if (shop.get("polygonName") != null) {
+            	shopsWithCrossDockingMap.put(Integer.parseInt(shop.get("numshop").toString()), shop.get("polygonName").toString());
+            }
+        }
 		
 		List<Solution> solutions = new ArrayList<Solution>();
 		
+	
 		//реализация перебора первого порядка
 		for (double i = 1.0; i <= maxKoef; i = i + 0.02) {
 			Double koeff = i;
 //			System.out.println("Коэфф = " + koeff);
-			Solution solution = colossusProcessorRad.run(jsonMainObject, numShops, pallHasShops, tonnageHasShops, stock, koeff, "fullLoad");
+			Solution solution = colossusProcessorRad.run(jsonMainObject, numShops, pallHasShops, tonnageHasShops, stock, koeff, "fullLoad", shopsWithCrossDockingMap);
 
 			// строим маршруты для отправки клиенту
 
@@ -2835,64 +2983,7 @@ public class MainRestController {
 //				solution2.setStackTrace(solution2.getStackTrace() + "\n" + "Выбран маршрут с данными: суммарный пробег: " + solution2.getTotalRunKM() + "м, " + solution2.getEmptyShop().size() + " - кол-во неназначенных магазинов; " + solution2.getEmptyTrucks().size() + " - кол-во свободных авто; Итерация = " + solution2.getKoef() + "; Паллеты: " + summpall);
 			}
 		}
-		Map<String, List<MapResponse>> wayHasMap = new HashMap<String, List<MapResponse>>();
-//		finalSolution.getWhiteWay().forEach(way -> {
-//			List<GHRequest> ghRequests = null;
-//			try {
-//				ghRequests = routingMachine.createrListGHRequest(way.getWay());
-//			} catch (ParseException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-//			List<Shop[]> shopPoints = null;
-//			try {
-//				shopPoints = routingMachine.getShopAsWay(way.getWay());
-//			} catch (ParseException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-//			GraphHopper hopper = routingMachine.getGraphHopper();
-////			ghRequests.forEach(r->System.out.println(r.getCustomModel()));
-//			List<MapResponse> listResult = new ArrayList<MapResponse>();
-//			for (GHRequest req : ghRequests) {
-//				int index = ghRequests.indexOf(req);
-//
-//				GHResponse rsp = hopper.route(req);
-//				if (rsp.getAll().isEmpty()) {
-//					rsp.getErrors().forEach(e -> System.out.println(e));
-//					rsp.getErrors().forEach(e -> e.printStackTrace());
-//					listResult.add(new MapResponse(null, null, null, 500.0, 500));
-//				}
-////				System.err.println(rsp.getAll().size());
-//				if (rsp.getAll().size() > 1) {
-//					rsp.getAll().forEach(p -> System.out.println(p.getDistance() + "    " + p.getTime()));
-//				}
-//				ResponsePath path = rsp.getBest();
-//				List<ResponsePath> listPath = rsp.getAll();
-//				for (ResponsePath pathI : listPath) {
-//					if (pathI.getDistance() < path.getDistance()) {
-//						path = pathI;
-//					}
-//				}
-////				System.out.println(roundВouble(path.getDistance()/1000, 2) + "km, " + path.getTime() + " time");
-//				PointList pointList = path.getPoints();
-//				path.getPathDetails();
-//				List<Double[]> result = new ArrayList<Double[]>(); // возможна утечка помяти
-//				pointList.forEach(p -> result.add(p.toGeoJson()));
-//				List<Double[]> resultPoints = new ArrayList<Double[]>();
-//				double cash = 0.0;
-//				for (Double[] point : result) {
-//					cash = point[0];
-//					point[0] = point[1];
-//					point[1] = cash;
-//					resultPoints.add(point);
-//				}
-//				listResult.add(new MapResponse(resultPoints, path.getDistance(), path.getTime(),
-//						shopPoints.get(index)[0], shopPoints.get(index)[1]));
-//			}
-//			wayHasMap.put(way.getId(), listResult);
-//		});
-		
+		Map<String, List<MapResponse>> wayHasMap = new HashMap<String, List<MapResponse>>();		
 		Double totalKM = 0.0;
 		
 		for (VehicleWay way : finalSolution.getWhiteWay()) {
@@ -3648,254 +3739,6 @@ public class MainRestController {
 	@Autowired
 	private LogicAnalyzer logicAnalyzer;
 	
-	@PostMapping("/map/myoptimization2")
-	public Solution myOptimization2(@RequestBody String str) throws Exception {
-		Double maxKoef = 2.0;
-		Map<String, String> response = new HashMap<String, String>();
-		JSONParser parser = new JSONParser();
-		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
-		JSONArray numShopsJSON = (JSONArray) jsonMainObject.get("shops");
-		JSONArray pallHasShopsJSON = (JSONArray) jsonMainObject.get("palls");
-
-		List<Integer> numShops = new ArrayList<Integer>();
-		List<Integer> pallHasShops = new ArrayList<Integer>();
-
-		Integer stock = Integer.parseInt(jsonMainObject.get("stock").toString());
-
-		numShopsJSON.forEach(s -> numShops.add(Integer.parseInt(s.toString())));
-		pallHasShopsJSON.forEach(p -> pallHasShops.add(Integer.parseInt(p.toString())));
-		List<Solution> solutions = new ArrayList<Solution>();
-		
-		//реализация перебора первого порядка
-		for (double i = 1.00; i <= maxKoef; i = i + 0.02) {
-			Double koeff = i;
-//			System.out.println("Коэфф = " + koeff);
-			Solution solution = colossusProcessorRad.run(jsonMainObject, numShops, pallHasShops, null, stock, koeff, "fullLoad");
-
-			// строим маршруты для отправки клиенту
-
-			// в этой мате ключ это id самого маршрута, т.е. WhiteWay, а значение это сам
-			// маршрут
-
-			solution.getWhiteWay().forEach(w -> {
-				List<Shop> newPoints = logicAnalyzer.correctRouteMaker(w.getWay());				
-				VehicleWay way = w;
-				way.setWay(newPoints);
-			});
-			solution.setKoef(koeff);
-			solutions.add(solution);
-		}
-		//второй порядок
-//		for (double i = 1.01; i <= maxKoef; i = i + 0.02) {
-//			Double koeff = i;
-////			System.out.println("Коэфф = " + koeff);
-//			Solution solution = colossusProcessorRad.run(jsonMainObject, numShops, pallHasShops, stock, koeff, "noFullLoad");
-//
-//			// строим маршруты для отправки клиенту
-//
-//			// в этой мате ключ это id самого маршрута, т.е. WhiteWay, а значение это сам
-//			// маршрут
-//
-//			solution.getWhiteWay().forEach(w -> {
-//				List<Shop> newPoints = logicAnalyzer.correctRouteMaker(w.getWay());
-//				VehicleWay way = w;
-//				way.setWay(newPoints);
-//			});
-//			solutions.add(solution);
-//		}
-		
-//		System.err.println(solutions.size());
-//		solutions.forEach(s-> System.out.println(s.getTotalRunSolution()));
-		Double minOwerrun = 999999999999999999.0;
-		int emptyShop = 9999;
-		Solution finalSolution = null;
-		for (Solution solution2 : solutions) {
-			
-			//определяем и записываем суммарный пробег маршрута
-			//!!!!!!записываем внутри процессора!
-//			Double totalRunHasMatrix = 0.0;
-//			for (VehicleWay way : solution2.getWhiteWay()) {
-//				//заменяем просчёт расстояний из GH на матричный метод			
-//				for (int j = 0; j < way.getWay().size()-1; j++) {
-//					String key = way.getWay().get(j).getNumshop()+"-"+way.getWay().get(j+1).getNumshop();
-//					totalRunHasMatrix = totalRunHasMatrix + matrixMachine.matrix.get(key);
-//				}
-//			}
-//			solution2.setTotalRunKM(totalRunHasMatrix);
-			int summpall = 0;
-			for (VehicleWay way : solution2.getWhiteWay()) {
-				Shop stock123 = way.getWay().get(0);
-				summpall = summpall + calcPallHashHsop(way.getWay(), stock123);
-				way.setSummPall(summpall);
-			}
-			System.err.println("Выбран маршрут с данными: суммарный пробег: " + solution2.getTotalRunKM() + "м, " + solution2.getEmptyShop().size() + " - кол-во неназначенных магазинов; " + solution2.getEmptyTrucks().size() + " - кол-во свободных авто; Итерация = " + solution2.getKoef() + "; Паллеты: " + summpall);
-			if(solution2.getEmptyShop().size() <= emptyShop) {
-				if(solution2.getEmptyShop().size() < emptyShop && minOwerrun < solution2.getTotalRunKM()) {
-					System.out.println("Выбран маршрут с данными: суммарный пробег: " + solution2.getTotalRunKM() + "м, " + solution2.getEmptyShop().size() + " - кол-во неназначенных магазинов; " + solution2.getEmptyTrucks().size() + " - кол-во свободных авто; Итерация = " + solution2.getKoef()+ "; Паллеты: " + summpall);
-					minOwerrun = solution2.getTotalRunKM();
-					emptyShop = solution2.getEmptyShop().size();
-					finalSolution = solution2;
-				}
-				
-				if(solution2.getTotalRunKM() < minOwerrun) {
-					System.out.println("Выбран маршрут с данными: суммарный пробег: " + solution2.getTotalRunKM() + "м, " + solution2.getEmptyShop().size() + " - кол-во неназначенных магазинов; " + solution2.getEmptyTrucks().size() + " - кол-во свободных авто; Итерация = " + solution2.getKoef()+ "; Паллеты: " + summpall);
-					minOwerrun = solution2.getTotalRunKM();
-					emptyShop = solution2.getEmptyShop().size();
-					finalSolution = solution2;
-				}
-			}
-		}
-		Map<String, List<MapResponse>> wayHasMap = new HashMap<String, List<MapResponse>>();
-		finalSolution.getWhiteWay().forEach(way -> {
-			List<GHRequest> ghRequests = null;
-			try {
-				ghRequests = routingMachine.createrListGHRequest(way.getWay());
-			} catch (ParseException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			List<Shop[]> shopPoints = null;
-			try {
-				shopPoints = routingMachine.getShopAsWay(way.getWay());
-			} catch (ParseException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			GraphHopper hopper = routingMachine.getGraphHopper();
-//			ghRequests.forEach(r->System.out.println(r.getCustomModel()));
-			List<MapResponse> listResult = new ArrayList<MapResponse>();
-			for (GHRequest req : ghRequests) {
-				int index = ghRequests.indexOf(req);
-
-				GHResponse rsp = hopper.route(req);
-				if (rsp.getAll().isEmpty()) {
-					rsp.getErrors().forEach(e -> System.out.println(e));
-					rsp.getErrors().forEach(e -> e.printStackTrace());
-					listResult.add(new MapResponse(null, null, null, 500.0, 500));
-				}
-//				System.err.println(rsp.getAll().size());
-				if (rsp.getAll().size() > 1) {
-					rsp.getAll().forEach(p -> System.out.println(p.getDistance() + "    " + p.getTime()));
-				}
-				ResponsePath path = rsp.getBest();
-				List<ResponsePath> listPath = rsp.getAll();
-				for (ResponsePath pathI : listPath) {
-					if (pathI.getDistance() < path.getDistance()) {
-						path = pathI;
-					}
-				}
-//				System.out.println(roundВouble(path.getDistance()/1000, 2) + "km, " + path.getTime() + " time");
-				PointList pointList = path.getPoints();
-				path.getPathDetails();
-				List<Double[]> result = new ArrayList<Double[]>(); // возможна утечка помяти
-				pointList.forEach(p -> result.add(p.toGeoJson()));
-				List<Double[]> resultPoints = new ArrayList<Double[]>();
-				double cash = 0.0;
-				for (Double[] point : result) {
-					cash = point[0];
-					point[0] = point[1];
-					point[1] = cash;
-					resultPoints.add(point);
-				}
-				listResult.add(new MapResponse(resultPoints, path.getDistance(), path.getTime(),
-						shopPoints.get(index)[0], shopPoints.get(index)[1]));
-			}
-			wayHasMap.put(way.getId(), listResult);
-		});
-		finalSolution.setMapResponses(wayHasMap);
-		
-		return finalSolution;
-	}
-
-	@PostMapping("/map/myoptimization")
-	public Solution myOptimization(@RequestBody String str) throws Exception {
-		Map<String, String> response = new HashMap<String, String>();
-		JSONParser parser = new JSONParser();
-		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
-		JSONArray numShopsJSON = (JSONArray) jsonMainObject.get("shops");
-		JSONArray pallHasShopsJSON = (JSONArray) jsonMainObject.get("palls");
-
-		List<Integer> numShops = new ArrayList<Integer>();
-		List<Integer> pallHasShops = new ArrayList<Integer>();
-
-		Integer stock = Integer.parseInt(jsonMainObject.get("stock").toString());
-
-		numShopsJSON.forEach(s -> numShops.add(Integer.parseInt(s.toString())));
-		pallHasShopsJSON.forEach(p -> pallHasShops.add(Integer.parseInt(p.toString())));
-
-		Solution solution = colossusProcessorRad.run(jsonMainObject, numShops, pallHasShops, null, stock, 1.2, "fullLoad");
-
-//		response.put("status", "200");
-//		response.put("message", solution.toString());
-//		System.out.println("MainRestController.myOptimization: Оптимизация закончена.");
-
-		// строим маршруты для отправки клиенту
-
-		// в этой мате ключ это id самого маршрута, т.е. WhiteWay, а значение это сам
-		// маршрут
-		Map<String, List<MapResponse>> wayHasMap = new HashMap<String, List<MapResponse>>();
-
-		solution.getWhiteWay().forEach(way -> {
-			List<GHRequest> ghRequests = null;
-			try {
-				ghRequests = routingMachine.createrListGHRequest(way.getWay());
-			} catch (ParseException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			List<Shop[]> shopPoints = null;
-			try {
-				shopPoints = routingMachine.getShopAsWay(way.getWay());
-			} catch (ParseException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			GraphHopper hopper = routingMachine.getGraphHopper();
-//			ghRequests.forEach(r->System.out.println(r.getCustomModel()));
-			List<MapResponse> listResult = new ArrayList<MapResponse>();
-			for (GHRequest req : ghRequests) {
-				int index = ghRequests.indexOf(req);
-
-				GHResponse rsp = hopper.route(req);
-				if (rsp.getAll().isEmpty()) {
-					rsp.getErrors().forEach(e -> System.out.println(e));
-					rsp.getErrors().forEach(e -> e.printStackTrace());
-					listResult.add(new MapResponse(null, null, null, 500.0, 500));
-				}
-//				System.err.println(rsp.getAll().size());
-				if (rsp.getAll().size() > 1) {
-					rsp.getAll().forEach(p -> System.out.println(p.getDistance() + "    " + p.getTime()));
-				}
-				ResponsePath path = rsp.getBest();
-				List<ResponsePath> listPath = rsp.getAll();
-				for (ResponsePath pathI : listPath) {
-					if (pathI.getDistance() < path.getDistance()) {
-						path = pathI;
-					}
-				}
-//				System.out.println(roundВouble(path.getDistance()/1000, 2) + "km, " + path.getTime() + " time");
-				PointList pointList = path.getPoints();
-				path.getPathDetails();
-				List<Double[]> result = new ArrayList<Double[]>(); // возможна утечка помяти
-				pointList.forEach(p -> result.add(p.toGeoJson()));
-				List<Double[]> resultPoints = new ArrayList<Double[]>();
-				double cash = 0.0;
-				for (Double[] point : result) {
-					cash = point[0];
-					point[0] = point[1];
-					point[1] = cash;
-					resultPoints.add(point);
-				}
-				listResult.add(new MapResponse(resultPoints, path.getDistance(), path.getTime(),
-						shopPoints.get(index)[0], shopPoints.get(index)[1]));
-			}
-			wayHasMap.put(way.getId(), listResult);
-		});
-
-		solution.setMapResponses(wayHasMap);
-		return solution;
-
-	}
 
 	@PostMapping("/map/optimization")
 	public Map<String, String> optimization(@RequestBody String str) throws ParseException {
@@ -4013,6 +3856,7 @@ public class MainRestController {
 		JSONArray coordinatesArrayJson = (JSONArray) parser.parse(geometryJSON.get("coordinates").toString());
 		String nameFirst = propertiesJSON.get("name").toString();
 		String action = propertiesJSON.get("action").toString();
+		String crossDockingPoint = propertiesJSON.get("crossDockingPoint") == null ? null :propertiesJSON.get("crossDockingPoint").toString();
 		String textMass1 = coordinatesArrayJson.get(0).toString();
 		textMass1 = textMass1.substring(1, textMass1.length() - 1);
 		String[] textMass2 = textMass1.split(",");
@@ -4031,7 +3875,7 @@ public class MainRestController {
 //		}
 
 		CustomJsonFeature feature = new CustomJsonFeature(action, nameFirst, "Feature", null,
-				new GeometryFactory().createPolygon(area), new HashMap<>());
+				new GeometryFactory().createPolygon(area), new HashMap<>(), crossDockingPoint);
 		Map<String, String> result = new HashMap<String, String>();
 		if (routingMachine.polygons.containsKey(feature.getId())) {
 			result.put("status", "100");

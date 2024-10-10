@@ -171,6 +171,7 @@ public class OrderServiceImpl implements OrderService {
 				oldOrder.setMarketContractorId(order.getMarketContractorId());
 				oldOrder.setMarketContractType(order.getMarketContractType());
 				oldOrder.setNumProduct(order.getNumProduct());
+				oldOrder.setDateOrderOrl(null);
 				orderDAO.updateOrder(oldOrder);
 				return "Обновлён заказ " +  order.getMarketNumber()+ "<"+oldOrder.getIdOrder();
 			case 10:

@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
@@ -108,7 +109,7 @@ public class ColossusProcessorANDRestrictions3 {
 	 * @throws Exception 
 	 */
 	public Solution run(JSONObject jsonMainObject, List<Integer> shopList, List<Integer> pallHasShops, List<Integer> tonnageHasShops, Integer stock,
-			Double koeff, String algoritm) throws Exception {
+			Double koeff, String algoritm, Map<Integer, String> shopsWithCrossDockingMap) throws Exception {
 		if(tonnageHasShops == null) {
 			System.err.println("Используется старый метод! Нужно использовать /map/myoptimization3");
 			return null;
@@ -133,14 +134,24 @@ public class ColossusProcessorANDRestrictions3 {
 		/**
 		 * магазины для распределения выстроены в порядке убывания потребностей
 		 */
-		shopsForOptimization = shopMachine.prepareShopList3Parameters(shopList, pallHasShops,tonnageHasShops, stock); // магазины для распределения выстроены в порядке убывания потребностей TEST
+		shopsForOptimization = shopMachine.prepareShopList3Parameters(shopList, pallHasShops,tonnageHasShops, stock, shopsWithCrossDockingMap); // магазины для распределения выстроены в порядке убывания потребностей TEST
+		
+//		//потом проверяем, есть ли магаз из кросов. Если нет, то приметяем стандартный фильтр
+//		if(shopsForOptimization.get(0).getKrossPolugonName() == null) {
+//			
+//		}
 		
 		shopsForOptimization.sort(comparatorShopsWhithRestrict);
+		sortedShopsHasKrossing(); // Делает так, чтобы магазины, которые входят в кроссы были сверху списка
+		
+
+		
 //		System.out.println("Начальное распределение магазинов слеюущее: ");
 		stackTrace = "Начальное распределение магазинов слеюущее: \n";
 		for (Shop s : shopsForOptimization) {
 //			System.out.println("->" + s.getNumshop() + " - " + s.getDistanceFromStock() + " km - " + s.getNeedPall() + " pall");
-			stackTrace = stackTrace + "магазин : " + s.getNumshop() + " - " + s.getDistanceFromStock() + " км - "
+			String answer = s.getKrossPolugonName() == null ? "НЕТ" : "ДА";
+			stackTrace = stackTrace + "магазин : " + s.getNumshop() + "- входит в кросс "+ answer +" - " + s.getDistanceFromStock() + " км - "
 					+ s.getNeedPall() + " паллет\n";
 		}
 		
@@ -163,6 +174,11 @@ public class ColossusProcessorANDRestrictions3 {
 		
 		trucks.sort(vehicleComparatorFromMax); // сортируем от больших паллет к маньшим
 		
+		/*
+		 * тут получаем лист с магазами в кроссах и делаем мапу где ключ - название полигона - значение - лист магазов
+		 */
+		
+		
 		while (!trucks.isEmpty()) {
 			if (i == iMax) {
 				stackTrace = stackTrace + "Задействован лимит итераций \n";
@@ -179,6 +195,7 @@ public class ColossusProcessorANDRestrictions3 {
 
 			
 			shopsForOptimization.sort(shopComparatorDistanceMain);
+			sortedShopsHasKrossing(); // Делает так, чтобы магазины, которые входят в кроссы были сверху списка
 			
 			Integer pallRestriction = null;
 			
@@ -224,7 +241,11 @@ public class ColossusProcessorANDRestrictions3 {
 			int maxCountRadiusMap = radiusMap.entrySet().size()-1;
 			boolean isRestrictions = false;
 			for (Map.Entry<Double, Shop> entry : radiusMap.entrySet()) {
-				Shop shop2 = entry.getValue();	
+				Shop shop2 = entry.getValue();
+				if(firstShop.getKrossPolugonName()!=null && shop2.getKrossPolugonName() == null) { // если первый магаз входит в крос а второй нет - пропускаем!
+					continue;
+				}
+				
 				isRestrictions = shop2.getMaxPall() != null ? true : false; // тут определяем есть ли ограничения в текущем задании
 				// тут добавляем мазаз в точку point
 				points.add(shop2);
@@ -376,6 +397,9 @@ public class ColossusProcessorANDRestrictions3 {
 					 */
 					for (Map.Entry<Double, Shop> entry : radiusMapSpecial.entrySet()) {
 						Shop shop2 = entry.getValue();	
+						if(firstShop.getKrossPolugonName()!=null && shop2.getKrossPolugonName() == null) { // если первый магаз входит в крос а второй нет - пропускаем!
+							continue;
+						}
 						Integer specialPallNew = shop2.getMaxPall() != null ? shop2.getMaxPall() : null; // тут определяем есть ли ограничения в текущем задании
 						
 						// тут добавляем мазаз в точку point
@@ -518,6 +542,7 @@ public class ColossusProcessorANDRestrictions3 {
 		return solution;
 
 	}
+
 	
 	/**
 	 * Оптимизирует точки по простому алгоритму: от крайней точке к самой ближайшей и так далее.
@@ -1321,6 +1346,29 @@ public class ColossusProcessorANDRestrictions3 {
 		}
 		shopsForOptimization.addAll(shopsForAddNewNeedPall);
 	}
+	
+	
+	/**
+	 * Делает так, чтобы магазины, которые взодят в кроссы были сверху списка
+	 */
+	public void sortedShopsHasKrossing() {
+		// тут берем и сначала поднимае вверх магазы которые учавствуют в кроссах
+		// Сортируем объекты с ненулевыми значениями
+        List<Shop> sortedShops = shopsForOptimization.stream()
+            .filter(s -> s.getKrossPolugonName() != null)
+            .sorted(Comparator.comparing(Shop::getKrossPolugonName))
+            .collect(Collectors.toList());
+
+        // Добавляем к ним объекты с null в исходном порядке
+        sortedShops.addAll(shopsForOptimization.stream()
+            .filter(s -> s.getKrossPolugonName() == null)
+            .collect(Collectors.toList()));
+
+        // Перезаписываем исходный список
+        shopsForOptimization.clear();
+        shopsForOptimization.addAll(sortedShops);
+	}
+	
 	/**
 	 * Метод раздеяет число на слогаемые в разных вариациях
 	 * 

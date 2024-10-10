@@ -36,10 +36,10 @@
 
 #myGrid {
     width: 100%;
-    height: calc(100vh - 199px);
+    height: calc(100vh - 149px);
 }
 #myGrid.smallHeader {
-	height: calc(100vh - 178px);
+	height: calc(100vh - 128px);
 }
 @media (max-width: 768px) {
 	#myGrid {

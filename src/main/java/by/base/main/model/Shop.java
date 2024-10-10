@@ -159,6 +159,9 @@ public class Shop implements Serializable{
 	@Transient
 	private Double distanceFromStock; // расстояние от заданного склада
 	
+	@Transient
+	private String krossPolugonName; // название кроссовой площадки
+	
 	@OneToMany(fetch=FetchType.EAGER,
 			   mappedBy="shop",
 			   cascade= {CascadeType.PERSIST, CascadeType.MERGE,
@@ -183,6 +186,18 @@ public class Shop implements Serializable{
 		return numshop;
 	}
 
+	/**
+	 * @return the krossPolugonName
+	 */
+	public String getKrossPolugonName() {
+		return krossPolugonName;
+	}
+	/**
+	 * @param krossPolugonName the krossPolugonName to set
+	 */
+	public void setKrossPolugonName(String krossPolugonName) {
+		this.krossPolugonName = krossPolugonName;
+	}
 	public void setNumshop(int numshop) {
 		this.numshop = numshop;
 	}
@@ -364,7 +379,11 @@ public class Shop implements Serializable{
 	 * @return
 	 */
 	public Integer getMaxPall() {
-		return maxPall;
+		if(krossPolugonName!=null) {
+			return null;			
+		}else {
+			return maxPall;
+		}
 	}
 	/**
 	 * Задаёт ограничение по паллетам на данном магазине

@@ -1,6 +1,7 @@
 import { AG_GRID_LOCALE_RU } from '../js/AG-Grid/ag-grid-locale-RU.js'
 import { gridColumnLocalState, gridFilterSessionState } from './AG-Grid/ag-grid-utils.js'
 import { ajaxUtils } from './ajaxUtils.js'
+import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 import { snackbar } from './snackbar/snackbar.js'
 import { changeGridTableMarginTop, debounce, getData } from './utils.js'
 
@@ -179,6 +180,8 @@ window.onload = async function() {
 	unconfirmedUsersBtn.onclick = () => showUnConfirmedUsers()
 	blockedUsersBtn.onclick = () => showBlockedUsers()
 	unblockedUsersBtn.onclick = () => showUnBlockedUsers()
+
+	bootstrap5overlay.hideOverlay()
 }
 
 // функция для блокироваки/разблокировки перевозчика

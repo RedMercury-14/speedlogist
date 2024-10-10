@@ -66,7 +66,7 @@
 									</a>
 									<div class="dropdown-menu">
 										<a class="dropdown-item" href="<spring:url value="/main/logistics-delivery/truck" />">Создание списка машин</a>
-										<!-- <a class="dropdown-item" href="<spring:url value="/main/logistics-delivery/router" />">Маршрутизатор</a> -->
+										<a class="dropdown-item" href="<spring:url value="/main/logistics-delivery/router" />">Маршрутизатор</a>
 									</div>
 								</li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/depot" />">Маршрутизатор</a></li>

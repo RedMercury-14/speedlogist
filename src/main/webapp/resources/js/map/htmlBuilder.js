@@ -101,3 +101,20 @@ export function createCarInputs(count, container) {
 		container.append(nameInput, countInput, pallInput, tonnageInput)
 	}
 }
+
+// переключатель Показать все точки
+export const AllShopsToggler = L.Control.extend({
+	position: 'topright',
+	onAdd: function(map) {
+		const togglerContainer = L.DomUtil.create("div")
+		togglerContainer.classList.add("leaflet-control", "leaflet-bar", "toggler-container", "bg-white")
+		togglerContainer.innerHTML = `
+			<label>
+				<span class=" font-weight-bold">Показать все точки</span>
+				<input class="toggler" id="allShopsToggler" type="checkbox"/>
+			</label>
+		`
+		return togglerContainer
+	},
+	onRemove: function(map) {}
+})

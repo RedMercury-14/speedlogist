@@ -754,6 +754,10 @@ export function isCarrier(role) {
 	return role === '[ROLE_CARRIER]'
 }
 
+export function isLogisticsDeliveryPage() {
+	return window.location.href.includes('logistics-delivery')
+}
+
 export function disableButton(button) {
 	button.setAttribute('disabled', true)
 }

@@ -44,14 +44,14 @@
 			<!-- меню с кнопками вкладок -->
 			<ul class="sidebar-menu">
 				<!-- кнопка вкладки построения маршрута -->
-				<!-- <li class="menu-item active-item" data-item="route">
+				<li class="menu-item active-item" data-item="route">
 					<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
 						<path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
 					</svg>
-				</li> -->
+				</li>
 
 				<!-- кнопка вкладки построения маршрута с textarea -->
-				<li class="menu-item active-item" data-item="routeArea">
+				<li class="menu-item" data-item="routeArea">
 					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-ruled" viewBox="0 0 16 16">
 						<path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2zm2-1a1 1 0 0 0-1 1v4h10V2a1 1 0 0 0-1-1H4zm9 6H6v2h7V7zm0 3H6v2h7v-2zm0 3H6v2h6a1 1 0 0 0 1-1v-1zm-8 2v-2H3v1a1 1 0 0 0 1 1h1zm-2-3h2v-2H3v2zm0-3h2V7H3v2z"/>
 					</svg>
@@ -100,7 +100,7 @@
 			<div class="sidebar-content">
 
 				<!-- вкладка построения маршрута -->
-				<!-- <div class="item-content active-content" id="route">
+				<div class="item-content active-content" id="route">
 					<h2>Маршруты</h2>
 					<div class="content">
 						<form id="routeForm" action="">
@@ -110,15 +110,15 @@
 								<span id="distanceInfo" class="text-muted font-weight-bold"></span>
 							</div>
 							<div class="formButton-container">
-								<button class="btn btn-primary" type="submit">Построить</button>
+								<button class="btn btn-primary" type="submit">Построить маршрут</button>
 								<button id="clearForm" class="btn btn-secondary" type="reset">Очистить форму</button>
 							</div>
 						</form>
 					</div>
-				</div> -->
+				</div>
 
 				<!-- вкладка построения маршрута с textarea -->
-				<div class="item-content active-content" id="routeArea">
+				<div class="item-content" id="routeArea">
 					<h2>Маршруты</h2>
 					<div class="content">
 						<form id="routeAreaForm" class="routeArea-form" action="">
@@ -165,7 +165,7 @@
 								<span id="distanceInfo" class="text-muted font-weight-bold"></span>
 							</div>
 							<div class="formButton-container">
-								<button class="btn btn-primary" type="submit">Построить</button>
+								<button class="btn btn-primary" type="submit">Построить маршрут</button>
 								<button class="btn btn-secondary" type="reset">Очистить форму</button>
 							</div>
 						</form>
@@ -224,15 +224,15 @@
 														<div id="optimizeRouteNumberContainer" class="number-container"></div>
 														<div class="input-container">
 															<span class="text-muted font-weight-bold">Номер магазина</span>
-															<textarea class="route-textarea" id="optimizeRouteShopNum" name="routeTextarea" cols="7" rows="500" required></textarea>
+															<textarea class="route-textarea" id="optimizeRouteShopNum" name="routeTextarea" cols="7" rows="1000" required></textarea>
 														</div>
 														<div class="input-container">
 															<span class="text-muted font-weight-bold">Паллеты</span>
-															<textarea class="route-textarea" id="optimizeRoutePall" name="pallTextarea" cols="7" rows="500" required></textarea>
+															<textarea class="route-textarea" id="optimizeRoutePall" name="pallTextarea" cols="7" rows="1000" required></textarea>
 														</div>
 														<div class="input-container">
 															<span class="text-muted font-weight-bold">Вес груза,кг</span>
-															<textarea class="route-textarea" id="optimizeRouteTonnage" name="tonnageTextarea" cols="7" rows="500" required></textarea>
+															<textarea class="route-textarea" id="optimizeRouteTonnage" name="tonnageTextarea" cols="7" rows="1000" required></textarea>
 														</div>
 														<div id="optimizeRouteCleaningInputsContainer" class="cleaningInputs-container"></div>
 													</div>
@@ -256,8 +256,8 @@
 														<span class="text-muted font-weight-bold" id="totalPallets">0</span>
 													</div>
 													<div class="formButton-container">
-														<button class="btn btn-primary" type="submit">Отправить</button>
-														<button class="btn btn-secondary" type="reset">Очистить форму</button>
+														<button class="btn btn-sm btn-primary" type="submit">Построить маршруты</button>
+														<button class="btn btn-sm btn-secondary" type="reset">Очистить форму</button>
 													</div>
 												</form>
 											</div>

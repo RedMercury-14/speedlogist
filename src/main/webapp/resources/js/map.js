@@ -3,7 +3,7 @@ import { debounce,
 	getData,
 	getEncodedString,
 	hideLoadingSpinner,
-	isAdmin, isManager,
+	isAdmin, isLogisticsDeliveryPage, isManager,
 	isTopManager,
 	randomColor,
 	showLoadingSpinner
@@ -84,9 +84,7 @@ import {
 } from "./map/mapUtils.js"
 import { calcPallets } from "./map/calcPallets.js"
 
-const currentUrl = window.location.href
-const isLogisticsDelivery = currentUrl.includes('logistics-delivery')
-const apiUrl = isLogisticsDelivery ? '../../api/' : '../api/'
+const apiUrl = isLogisticsDeliveryPage() ? '../../api/' : '../api/'
 
 const testOptimizationUrl = `${apiUrl}map/myoptimization3`
 const saveOptimizeRouteParamsUrl = `${apiUrl}map/set`
@@ -377,7 +375,9 @@ L.canvasMarker = (...options) => new CanvasMarker(...options)
 
 // создание карты
 const map = L.map("map", config).setView([lat, lng], zoom)
-L.tileLayer("http://{s}.tile.osm.org/{z}/{x}/{y}.png").addTo(map)
+L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+	attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+}).addTo(map)
 
 // обработчик клика по карте
 map.on('click', (e) => {
@@ -437,20 +437,18 @@ window.onload = async () => {
 	document.addEventListener("keydown", (e) => (e.key === "Escape") && closeSidebar())
 
 	// контейнеры для таблиц с информацией о точках маршрута
-	// const routeInputsContainer = document.querySelector('#routeInputsContainer')
+	const routeInputsContainer = document.querySelector('#routeInputsContainer')
 	const routeAreaContainer = document.querySelector('#routeAreaContainer')
-	// routeInputsContainer && createRouteInputsTable(25, routeInputsContainer)
+	routeInputsContainer && createRouteInputsTable(25, routeInputsContainer)
 	routeAreaContainer && createRouteTextareaTable(25, routeAreaContainer)
 
 	// контейнеры с нумерацией
 	const optimizeRouteNumberContainer = document.querySelector('#optimizeRouteNumberContainer')
-	const shopLoadsNumberContainer = document.querySelector('#shopLoadsNumberContainer')
-	optimizeRouteNumberContainer && createNumbersColumn(500, optimizeRouteNumberContainer)
-	shopLoadsNumberContainer && createNumbersColumn(500, shopLoadsNumberContainer)
+	optimizeRouteNumberContainer && createNumbersColumn(1000, optimizeRouteNumberContainer)
 	
 	// контейнер с инпутами для оказания чисток в форме оптимизатора
 	const optimizeRouteCleaningInputsContainer = document.querySelector('#optimizeRouteCleaningInputsContainer')
-	optimizeRouteCleaningInputsContainer && createCleaningInputsColumn(500, optimizeRouteCleaningInputsContainer)
+	optimizeRouteCleaningInputsContainer && createCleaningInputsColumn(1000, optimizeRouteCleaningInputsContainer)
 
 	// AG-Grid-контейнер, инпут поиска по магазинам, кнопка очистки карты
 	const distanceControlGridDiv = document.querySelector('#distanceControlGrid')
@@ -461,18 +459,18 @@ window.onload = async () => {
 	clearMapBtn && clearMapBtn.addEventListener('click', (e) => removeLayersfromMap())
 
 	// формы
-	// const routeForm = document.querySelector("#routeForm")
+	const routeForm = document.querySelector("#routeForm")
 	const routeAreaForm = document.querySelector("#routeAreaForm")
 	const distanceControlForm = document.querySelector("#distanceControlForm")
 	const optimizeRouteForm = document.querySelector("#optimizeRouteForm")
 	const routingParamsForm = document.querySelector("#routingParamsForm")
 	const poligonControlForm = document.querySelector("#poligonControlForm")
 	const optimizeRouteParamsForm = document.querySelector('#optimizeRouteParamsForm')
-	// routeForm && routeForm.addEventListener("submit", routeFormHandler)
+	routeForm && routeForm.addEventListener("submit", routeFormHandler)
 	routeAreaForm && routeAreaForm.addEventListener("submit", routeAreaFormHandler)
 	distanceControlForm && distanceControlForm.addEventListener("submit", (e) => distanceControlFormHandler(e, distanceControlGridDiv))
 	optimizeRouteForm && optimizeRouteForm.addEventListener("submit", (e) => optimizeRouteFormHandler(e, optimizeRouteGridDiv))
-	routingParamsForm && routingParamsForm.addEventListener("submit", (e) => routingParamsFormHandler(e, routeAreaForm))
+	routingParamsForm && routingParamsForm.addEventListener("submit", (e) => routingParamsFormHandler(e, routeForm))
 	poligonControlForm && poligonControlForm.addEventListener('submit', poligonControlFormSubmitHandler)
 	optimizeRouteParamsForm && optimizeRouteParamsForm.addEventListener('submit', optimizeRouteParamsFormHandler)
 
@@ -615,13 +613,13 @@ async function displayPolygons() {
 // -------------------------------------------------------------------------------//
 
 // функции обработки формы создания маршрута
-// function routeFormHandler(e) {
-// 	e.preventDefault()
+function routeFormHandler(e) {
+	e.preventDefault()
 
-// 	removeLayersfromMap()
-// 	const pointsData = getPointsData(e.target)
-// 	buildRoute(pointsData)
-// }
+	removeLayersfromMap()
+	const pointsData = getPointsData(e.target)
+	buildRoute(pointsData)
+}
 
 // функции обработки формы создания маршрута по общему полю
 function routeAreaFormHandler(e) {
@@ -638,7 +636,7 @@ function routingParamsFormHandler(e, routeForm) {
 
 	removeLayersfromMap()
 	const routeParams = getRouterParams(e.target)
-	const pointsData = getPointsDataFromTextarea(routeForm, routeParams)
+	const pointsData = getPointsData(routeForm, routeParams)
 	buildRoute(pointsData)
 }
 

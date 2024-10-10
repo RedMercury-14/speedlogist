@@ -245,7 +245,7 @@ input[type=number] {
 }
 
 .addressInfo {
-	font-size: 14px;
+	font-size: 12px;
 }
 
 .routeAreaForm-container {
@@ -286,7 +286,7 @@ input[type=number] {
 	justify-content: flex-end;
 	border-bottom: 2px solid gray;
 	padding: 5px 0 10px 0;
-	margin-bottom: 0.5rem !important;
+	/* margin-bottom: 0.5rem !important; */
 }
 
 .route-textarea {
@@ -364,9 +364,9 @@ input[type=number] {
 	grid-template-rows: 44px repeat(25, 40px);
 	grid-column-gap: 5px;
 }
-.routeArea-form .addressInfo {
+/* .routeArea-form .addressInfo {
 	font-size: 12px;
-}
+} */
 .routeArea-form .pointInfo {
 	font-size: 14px;
 }
@@ -735,7 +735,7 @@ svg:not(:root) {
 	grid-template-rows: 1fr;
 }
 .car-inputs-container__body {
-	height: 160px;
+	height: 152px;
 	overflow-y: scroll;
 }
 #addCarInputsBtn {

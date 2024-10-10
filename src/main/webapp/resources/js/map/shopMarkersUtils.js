@@ -2,6 +2,8 @@
 // ------- функции отображения на карте и удаления с карты всех магазинов --------//
 // -------------------------------------------------------------------------------//
 
+import { isLogisticsDeliveryPage } from "../utils.js"
+
 const allShopsToView = []
 const shopsToView = []
 
@@ -137,9 +139,7 @@ function getImageSrc(shop) {
 	const hasRestriction = shop.length || shop.width || shop.height || shop.maxPall
 	const isCrossDocking = shop.type === 'Кросс-докинг'
 
-	const currentUrl = window.location.href
-	const isLogisticsDelivery = currentUrl.includes('logistics-delivery')
-	const baseUrl = isLogisticsDelivery ? '../../../speedlogist/' : '../../speedlogist/'
+	const baseUrl =  isLogisticsDeliveryPage() ? '../../../speedlogist/' : '../../speedlogist/'
 	
 	if (isCrossDocking) return `${baseUrl}resources/img/cross-docking_80x80_2.png`
 

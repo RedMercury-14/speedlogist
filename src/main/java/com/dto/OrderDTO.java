@@ -305,6 +305,16 @@ public class OrderDTO {
 
 
 
+	public Date getDateOrderOrl() {
+		return dateOrderOrl;
+	}
+
+
+	public void setDateOrderOrl(Date dateOrderOrl) {
+		this.dateOrderOrl = dateOrderOrl;
+	}
+
+
 	/**
 	 * @param idOrder
 	 * @param status

@@ -18,9 +18,17 @@
 	<script src="${pageContext.request.contextPath}/resources/js/leaflet/leaflet.js"></script>
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/js/leaflet/leaflet.draw.css"/>
 	<script src="${pageContext.request.contextPath}/resources/js/leaflet/leaflet.draw.js"></script>
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/bootstrap5overlay.css">
 </head>
 <body class="active-sidebar">
 	<jsp:include page="headerNEW.jsp" />
+
+	<div id="overlay" class="">
+		<div class="spinner-border text-primary" role="status">
+			<span class="sr-only">Загрузка...</span>
+		</div>
+	</div>
+
 	<sec:authorize access="isAuthenticated()">  
 		<strong><sec:authentication property="principal.authorities" var="roles"/></strong>
 		<sec:authentication property="name" var="login"/>
@@ -207,7 +215,7 @@
 									<div class="content">
 										<div class="accordion" id="accordion">
 											<div class="d-flex justify-content-between align-items-center" id="headingOne">
-												<span class="h5 font-weight-bold text-muted">Форма оптимизатора</span>
+												<span class="h6 font-weight-bold text-muted">Форма оптимизатора</span>
 												<span class="accordion-btn" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
 													Показать/скрыть
 												</span>
@@ -216,9 +224,9 @@
 												<form id="optimizeRouteForm" class="routeArea-form" action="">
 													<div class="form-group row-container stock-container">
 														<label class="col-form-label text-muted font-weight-bold">СКЛАД</label>
-														<input class="form-control" type="number" name="stock" required>
+														<input class="form-control form-control-sm" type="number" name="stock" required>
 														<label class="col-form-label text-muted font-weight-bold">Число итераций</label>
-														<input class="form-control" type="number" name="iteration" required>
+														<input class="form-control form-control-sm" type="number" name="iteration" value="1" required>
 													</div>
 													<div class="route-container routeAreaForm-container mb-2">
 														<div id="optimizeRouteNumberContainer" class="number-container"></div>
@@ -237,6 +245,13 @@
 														<div id="optimizeRouteCleaningInputsContainer" class="cleaningInputs-container"></div>
 													</div>
 													<div class="car-inputs-container">
+														<div class="truckListinputs">
+															<input type="date" class="" name="currentDate" id="currentDate">
+															<select class="" type="number" id="truckListsSelect" name="truckListsSelect">
+																<option selected disabled value="">Выберите список автомобилей</option>
+															</select>
+															<button type="button" name="clearCarInputs" id="clearCarInputs">Очистить поля</button>
+														</div>
 														<div class="car-inputs-container__header p-1 pr-2">
 															<div class="input-table">
 																<span class="text-muted font-weight-bold">Машина</span>
@@ -265,7 +280,7 @@
 											<div class="border-top pb-2"></div>
 
 											<div class="d-flex justify-content-between align-items-center" id="headingTwo">
-												<span class="h5 font-weight-bold text-muted">Маршруты</span>
+												<span class="h6 font-weight-bold text-muted">Маршруты</span>
 												<span class="accordion-btn" type="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
 													Показать/скрыть
 												</span>
@@ -459,7 +474,7 @@
 				</div>
 				<div class="modal-body">
 					<div class="form-group">
-						<textarea name="displayDataInput" id="displayDataInput" cols="147" rows="25"></textarea>
+						<textarea class="w-100" name="displayDataInput" id="displayDataInput" cols="147" rows="25"></textarea>
 					</div>
 				</div>
 				<div class="modal-footer">

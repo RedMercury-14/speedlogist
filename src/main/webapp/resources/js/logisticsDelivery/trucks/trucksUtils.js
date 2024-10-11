@@ -130,3 +130,29 @@ export function changeContentMarginTop(freeTrucksGridDiv, selectedTrucksGridDiv)
 		selectedTrucksGridDiv.classList.add('smallHeader')
 	}
 }
+
+// функция получения списков машин
+export function getTruckLists(trucks) {
+	return trucks
+		.reduce((acc, truck) => {
+			const nameList = truck.nameList
+			const date = truck.dateRequisition
+			if (nameList) {
+				// добавляем список машин, если его нет в списке
+				const isExist = !!acc.find(list => list.nameList === nameList && list.date === date)
+				if (!isExist) acc.push({ nameList: nameList, date: truck.dateRequisition })
+			}
+			return acc
+		}, [])
+}
+
+// функция группировки машин по дате
+export function groupTrucksByDate(trucks) {
+	return trucks
+		.reduce((acc, truck) => {
+			const date = truck.dateRequisition
+			if (!acc[date]) acc[date] = []
+			acc[date].push(truck)
+			return acc
+		}, {})
+}

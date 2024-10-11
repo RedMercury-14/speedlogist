@@ -160,6 +160,9 @@ input[type=number] {
 .row-container label {
 	text-wrap: nowrap;
 }
+#optimizeRouteForm {
+	font-size: 80%;
+}
 #route .form-control,
 #routeAreaForm .form-control,
 #optimizeRoute .form-control,
@@ -761,4 +764,23 @@ svg:not(:root) {
 
 #settings .optimizeRouteSelect {
 	max-width: 300px;
+}
+
+.truckListinputs {
+	display: flex;
+	gap: 5px;
+	align-items: center;
+	justify-content: center;
+}
+.truckListinputs>* {
+	cursor: pointer;
+	border: 2px solid gray;
+	border-radius: 3px;
+}
+.truckListinputs>*:hover {
+	border-color: #0052b1;
+}
+.truckListinputs>*:focus,
+.truckListinputs>*:focus-visible {
+	outline: none;
 }

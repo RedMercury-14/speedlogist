@@ -11,10 +11,12 @@ const excelHeader = [
 	cell('Номер', 'header'),
 	cell('Адрес', 'header'),
 	cell('Паллеты', 'header'),
-	 cell('Вес', 'header'),
+	cell('Вес', 'header'),
 	cell('Расстояние, км', 'header'),
+	cell('Машина', 'header'),
 ]
 const getExcelRows = (params) => {
+	const truckName = params.node.data.vehicle ? params.node.data.vehicle.name : ''
 	const rows = params.node.data.points.map((point, i) => {
 		return ({
 				cells: [
@@ -24,9 +26,11 @@ const getExcelRows = (params) => {
 					cell((point.needPall ? point.needPall : 0), 'body'),
 					cell((point.endShop.weight ? point.endShop.weight : 0), 'body'),
 					cell(point.distanceToView, 'body'),
+					cell((i === 0 ? truckName : ''), 'body'),
 				]
 			})
 	})
+	
 	return rows
 }
 const defaultExcelExportParams = {
@@ -58,29 +62,27 @@ const defaultExcelStyles = [
 const optimizeRouteColumnDefs = [
 	{ 
 		headerName: 'ID', field: 'id',
-		cellClass: 'group-cell',
-		width: 30,
-		flex: 1,
+		cellClass: 'group-cell', flex: 3,
 		cellRenderer: 'agGroupCellRenderer',
 	},
 	{
-		headerName: 'Машина', field: 'vehicle', cellClass: 'text-center', width: 70,
+		headerName: 'Машина', field: 'vehicle', flex: 4,
 		valueGetter: params => params.data.vehicle ? params.data.vehicle.name : null,
 	},
 	{
-		headerName: 'Загружено', field: 'vehicle', cellClass: 'text-center',
+		headerName: 'Загружено', field: 'vehicle',
 		valueGetter: params => params.data.vehicle ? params.data.vehicle.targetPall : null,
 		cellClassRules: { 'green-cell': params => params.data.vehicle && params.data.vehicle.targetPall === params.data.vehicle.pall }
 	},
 	{
-		headerName: 'Всего палл.', field: 'vehicle', cellClass: 'text-center',
+		headerName: 'Всего палл.', field: 'vehicle',
 		valueGetter: params => params.data.vehicle ? params.data.vehicle.pall : null,
 		cellClassRules: { 'green-cell': params => params.data.vehicle && params.data.vehicle.targetPall === params.data.vehicle.pall }
 	},
-	{ headerName: 'Расст.', field: 'fullDistance', cellClass: 'text-center', },
-	{ headerName: 'Вес', field: 'targetWeigth', cellClass: 'text-center', },
+	{ headerName: 'Расст.', field: 'fullDistance', },
+	{ headerName: 'Вес', field: 'targetWeigth', },
 	{
-		headerName: 'Цвет', field: 'color', cellClass: 'p-0 text-center', width: 40,
+		headerName: 'Цвет', field: 'color', cellClass: 'p-0 text-center',
 		cellRenderer: inputColorRenderer,
 	},
 ]
@@ -93,8 +95,8 @@ const optimizeRouteConfig = {
 	columnDefs: optimizeRouteColumnDefs,
 	defaultColDef: {
 		headerClass: 'px-1',
-		cellClass: 'px-2',
-		width: 60,
+		cellClass: 'px-1 text-center',
+		flex: 2,
 		resizable: true,
 		suppressMenu: true,
 		filter: false,

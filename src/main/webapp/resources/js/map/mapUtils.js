@@ -1,4 +1,4 @@
-import { getDecodedString } from "../utils.js"
+import { dateHelper, getDecodedString } from "../utils.js"
 import { checkPointInPolygon } from "./checkPointInPolygon.js"
 
 // функция для обновления данных формы оптимизатора
@@ -121,6 +121,12 @@ export function setOptimizeRouteFormData(form, storageKey) {
 		form.cleaning[i].checked = value
 	})
 
+	setLocalCarsData(data, form)
+}
+
+export function setLocalCarsData(data, form) {
+	if (!data.cars) return
+	data.cars.length >= 100 && (data.cars.length = 100)
 	data.cars && data.cars.forEach((car, i) => {
 		form.carName && (form.carName[i].value = car.carName)
 		form.carCount && (form.carCount[i].value = car.carCount)
@@ -138,17 +144,20 @@ export function displayEmptyTruck(emptyTrucks) {
 		return
 	}
 
-	const emptyTruckToView = emptyTrucks.reduce((acc, truck) => {
-		const type = truck.type
-		acc.hasOwnProperty(type) ? acc[type] += 1 : acc[type] = 1
-		return acc
-	}, {})
+	const emptyTruckCount = emptyTrucks.length
+	emptyTruckContainer.innerHTML = `<span>Свободных машин: ${emptyTruckCount}</span>`
 
-	const emptyTruckToViewStr = Object.entries(emptyTruckToView)
-		.map(([type, count]) => `<span>${type}: ${count}</span>`)
-		.join('')
+	// const emptyTruckToView = emptyTrucks.reduce((acc, truck) => {
+	// 	const type = truck.type
+	// 	acc.hasOwnProperty(type) ? acc[type] += 1 : acc[type] = 1
+	// 	return acc
+	// }, {})
 
-	emptyTruckContainer.innerHTML = `<span>Свободные машины</span>` + emptyTruckToViewStr
+	// const emptyTruckToViewStr = Object.entries(emptyTruckToView)
+	// 	.map(([type, count]) => `<span>${type}: ${count}</span>`)
+	// 	.join('')
+
+	// emptyTruckContainer.innerHTML = `<span>Свободные машины</span>` + emptyTruckToViewStr
 }
 
 // функция очистки таблиц с информацией по точкам
@@ -263,4 +272,43 @@ export function addSmallHeaderClass() {
 		const container = document.querySelector('.my-container')
 		container.classList.add('smallHeader')
 	}
+}
+
+// адептер для машин с сервера
+export function truckAdapter(truck) {
+	return {
+		...truck,
+		dateRequisition: dateHelper.getDateForInput(truck.dateRequisition),
+		cargoCapacity: truck.cargoCapacity ? Number(truck.cargoCapacity) * 1000 : null,
+	}
+}
+
+// обновление опций списков машин
+export function updateTruckListsOptions(truckLists) {
+	const truckListsSelect = document.querySelector("#truckListsSelect")
+
+	// стартовый элемент
+	// СВОБОДНЫЕ МАШИНЫ ДЛЯ ТЕСТИРОВАНИЯ
+	truckListsSelect.innerHTML = `
+		<option selected disabled value=''>Выберите список автомобилей</option>
+		<option value='freeCars'>Свободные машины</option>
+	`
+
+	// опции названий списков машин
+	truckLists.forEach((list) => {
+		const option = document.createElement("option")
+		const nameList = list.nameList
+		option.value = nameList
+		option.text = nameList
+		truckListsSelect.appendChild(option)
+	})
+
+	// опция для ручного редактирования
+	const option = document.createElement('option')
+	option.value = 'manual'
+	option.text = 'Ручной ввод'
+	truckListsSelect.appendChild(option)
+
+	// инициируем обновление полей машни
+	truckListsSelect.dispatchEvent(new Event("change"))
 }

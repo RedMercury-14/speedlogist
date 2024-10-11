@@ -1,5 +1,5 @@
 import { snackbar } from "./snackbar/snackbar.js"
-import { debounce,
+import { dateHelper, debounce,
 	getData,
 	getEncodedString,
 	hideLoadingSpinner,
@@ -76,13 +76,17 @@ import {
 	addDistanceInfo,
 	addRouteInfo,
 	addSmallHeaderClass,
+	updateTruckListsOptions,
 	clearRouteTable,
 	crossDockingPointVisibleToggler,
 	displayEmptyTruck,
 	getMarkerToShop,
-	setOptimizeRouteFormData
+	setLocalCarsData,
+	setOptimizeRouteFormData,
+	truckAdapter
 } from "./map/mapUtils.js"
-import { calcPallets } from "./map/calcPallets.js"
+import { getTruckLists, groupTrucksByDate } from "./logisticsDelivery/trucks/trucksUtils.js"
+import { bootstrap5overlay } from "./bootstrap5overlay/bootstrap5overlay.js"
 
 const apiUrl = isLogisticsDeliveryPage() ? '../../api/' : '../api/'
 
@@ -100,6 +104,8 @@ const getRoutingListUrl = `${apiUrl}map/way/4`
 const getServerMessageUrl = `${apiUrl}map/getStackTrace`
 const sendExcelFileUrl = `${apiUrl}map/5`
 const sendExcelFileWithReportUrl = `${apiUrl}map/6`
+
+const getTrucksBaseUrl = `${apiUrl}logistics/deliveryShops/getTGTrucks`
 
 const token = $("meta[name='_csrf']").attr("content")
 
@@ -504,7 +510,24 @@ window.onload = async () => {
 
 	// добавление инпутов с машинами в форме тестового оптимизатора
 	const carInputsTable = document.querySelector('#carInputsTable')
-	carInputsTable && createCarInputs(50, carInputsTable)
+	carInputsTable && createCarInputs(100, carInputsTable)
+
+	// дата для списков в форме оптимизатора
+	const currentDateInput = document.querySelector('#currentDate')
+	// установака данных даты 
+	currentDateInput.value = mapStore.getCurrentDate()
+	currentDateInput.min = mapStore.getCurrentDate()
+	currentDateInput.max = mapStore.getMaxTrucksDate()
+	currentDateInput && currentDateInput.addEventListener('change', (e) => changeCurrentDateHandler(e, carInputsTable))
+
+	// выпадающий список со списками машин для оптимизатора
+	const truckListsSelect = document.querySelector('#truckListsSelect')
+	truckListsSelect && updateTruckListsOptions(mapStore.getListsByCurrentDate())
+	truckListsSelect && truckListsSelect.addEventListener('change', (e) => truckListsSelectHandler(e, optimizeRouteForm))
+
+	// кнопка для очищения списка с инпутами машин
+	const clearCarInputsBtn = document.querySelector('#clearCarInputs')
+	clearCarInputsBtn && clearCarInputsBtn.addEventListener('click', (e) => clearCarInputs(e, carInputsTable, truckListsSelect))
 
 	// загрузка параметров маршрутизатора
 	routingParamsForm && setRouterParams(routingParamsForm, getRouterParamsUrl)
@@ -543,8 +566,7 @@ window.onload = async () => {
 	// автозаполнение формы настрорек оптимизатора
 	setOptimizeRouteParamsFormData(optimizeRouteParamsForm, OPTIMIZE_ROUTE_PARAMS_KEY)
 
-	// расчёт количества паллет и паллетовместимости для формы оптимизатора
-	calcPallets()
+	bootstrap5overlay.hideOverlay()
 }
 
 // получение стартовых данных
@@ -552,6 +574,20 @@ async function init() {
 	const shops = await getData(getAllShopsUrl)
 	const allPolygons = await getData(getAllPolygonsUrl)
 
+	// получение машин для оптимизатора
+	const response = await getData(getTrucksBaseUrl)
+	const trucksData = response.status === '200'
+		? response.body ? response.body : []
+		: []
+
+	const mappedTruckData = trucksData.map(truckAdapter)
+	// машины по датам
+	const groupedTrucks = groupTrucksByDate(mappedTruckData)
+	// списки машин
+	const lists = getTruckLists(mappedTruckData)
+
+	mapStore.setTrucks(groupedTrucks)
+	mapStore.setLists(lists)
 	mapStore.setShops(shops)
 	mapStore.setPolygons(allPolygons)
 }
@@ -797,6 +833,61 @@ function optimizeRouteParamsFormHandler(e) {
 	console.log("🚀 Настройки оптимизатора: ", data)
 	localStorage.setItem(OPTIMIZE_ROUTE_PARAMS_KEY, JSON.stringify(data))
 	snackbar.show('Настройки оптимизатора сохранены')
+}
+
+// обработчик изменения даты в форме оптимизатора
+function changeCurrentDateHandler(e, carInputsTable) {
+	const date = e.target.value
+	// сохраняем текущую дату
+	mapStore.setCurrentDate(date)
+	const truckLists = mapStore.getListsByCurrentDate()
+	// очищаем список с инпутами машин
+	createCarInputs(100, carInputsTable)
+	// обновляем селект выбора списка авто
+	updateTruckListsOptions(truckLists)
+}
+
+// обработчик выбора списка машин в оптимизаторе
+function truckListsSelectHandler(e, optimizeRouteForm) {
+	const nameList = e.target.value
+
+	if (!nameList) return
+
+	// ручное заполнение
+	if (nameList === 'manual') {
+		// данные из localStorage
+		const optimizeRouteItem = localStorage.getItem(OPTIMIZE_ROUTE_DATA_KEY)
+		const data = optimizeRouteItem ? JSON.parse(optimizeRouteItem) : []
+		createCarInputs(100, carInputsTable)
+		setLocalCarsData(data, optimizeRouteForm)
+		return
+	}
+
+	const trucks = nameList === 'freeCars'
+		? mapStore.getFreeTrucksByCurrentDate()
+		: mapStore.getTrucksByNameList(nameList)
+
+	if (!trucks || trucks.length === 0) {
+		// обнуляем поля машин
+		createCarInputs(100, carInputsTable)
+		return
+	}
+
+	// создаем и заполняем поля машинами из выбранного списка
+	createCarInputs(trucks.length, carInputsTable)
+	trucks.forEach((truck, i) => {
+		optimizeRouteForm.carName && (optimizeRouteForm.carName[i].value = truck.numTruck)
+		optimizeRouteForm.carCount && (optimizeRouteForm.carCount[i].value = 1)
+		optimizeRouteForm.maxPall && (optimizeRouteForm.maxPall[i].value = truck.pall)
+		optimizeRouteForm.maxTonnage && (optimizeRouteForm.maxTonnage[i].value = truck.cargoCapacity)
+	})
+}
+
+// очистка полей машин в форме оптимизатора
+function clearCarInputs(e) {
+	createCarInputs(100, carInputsTable)
+	truckListsSelect.value = ''
+	truckListsSelect.dispatchEvent(new Event('change'))
 }
 
 

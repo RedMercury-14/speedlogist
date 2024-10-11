@@ -11,6 +11,8 @@ import { snackbar } from '../../snackbar/snackbar.js'
 import {
 	changeContentMarginTop,
 	getTruckDateForAjax,
+	getTruckLists,
+	groupTrucksByDate,
 	nextDate,
 	prevDate,
 	truckAdapter,
@@ -141,25 +143,9 @@ async function init() {
 	const mappedTruckData = trucksData.map(truckAdapter)
 
 	// машины по датам
-	const trucks = mappedTruckData
-		.reduce((acc, truck) => {
-			const date = truck.dateRequisition
-			if (!acc[date]) acc[date] = []
-			acc[date].push(truck)
-			return acc
-		}, {})
-
+	const trucks = groupTrucksByDate(mappedTruckData)
 	// списки машин
-	const lists = mappedTruckData.reduce((acc, truck) => {
-		const nameList = truck.nameList
-		const date = truck.dateRequisition
-		if (nameList) {
-			// добавляем список машин, если его нет в списке
-			const isExist = !!acc.find(list => list.nameList === nameList && list.date === date)
-			if (!isExist) acc.push({ nameList: nameList, date: truck.dateRequisition })
-		}
-		return acc
-	}, [])
+	const lists = getTruckLists(mappedTruckData)
 
 	store.setTrucks(trucks)
 	store.setLists(lists)

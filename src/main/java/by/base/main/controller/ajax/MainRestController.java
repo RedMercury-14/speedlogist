@@ -342,7 +342,8 @@ public class MainRestController {
 //	@PostMapping("/398")
 	@GetMapping("/398")
 	public Map<String, Object> get398(HttpServletRequest request) throws ParseException {
-		String str = "{\"CRC\": \"\", \"Packet\": {\"MethodName\": \"SpeedLogist.GetReport398\", \"Data\": {\"DateFrom\": \"2024-09-03\", \"DateTo\": \"2024-09-05\", \"WarehouseId\": [\"700\"], \"WhatBase\": [\"11\",\"0\"]}}}";
+//		String str = "{\"CRC\": \"\", \"Packet\": {\"MethodName\": \"SpeedLogist.GetReport398\", \"Data\": {\"DateFrom\": \"2024-09-03\", \"DateTo\": \"2024-09-05\", \"WarehouseId\": [\"700\"], \"WhatBase\": [\"11\",\"0\"]}}}";
+		String str = "{\"CRC\": \"\", \"Packet\": {\"MethodName\": \"SpeedLogist.GetReport398\", \"Data\": {\"DateFrom\": \"2024-08-07\", \"DateTo\": \"2024-10-08\", \"WarehouseId\": [434,522,523,452,649,761,762,772,784,884,821,445,455,835,843,850,856,869,870,871,882,883,890,905,906,907,909,873,429,432,428,482,485,463,401,410,608,612,615,404,405,458,617,620,621,631,632,633,640,641,646,648,653,656,660,665,669,706,443,886,717,720,721,448], \"WhatBase\": [11,12]}}}";
 		Map<String, Object> response = new HashMap<>();
 		try {			
 			checkJWT(marketUrl);			

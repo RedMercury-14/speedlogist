@@ -109,6 +109,7 @@ public class ColossusProcessorANDRestrictions3 {
 			System.err.println("Используется старый метод! Нужно использовать /map/myoptimization3");
 			return null;
 		}
+		List<Shop> problemShops = new ArrayList<Shop>(); // проблемные магазины
 		stackTrace = "";
 		Map<Integer, Shop> allShop = shopService.getShopMap();
 		Shop targetStock = allShop.get(stock);
@@ -363,6 +364,9 @@ public class ColossusProcessorANDRestrictions3 {
 					trucks.stream().filter(t-> t.getPall()<=specialPall).forEach(t->specialTrucks.add(t));
 					if(specialTrucks.isEmpty()) {
 						System.err.println("Отсутствуют машины с паллетовместимостью " + specialPall + " и ниже!");
+						points.remove(points.size()-1);
+						problemShops.add(specialShop);
+//						shopsForOptimization.add(specialShop);
 						break;
 					}
 					Map<Double, Shop> radiusMapSpecial = new TreeMap<Double, Shop>();
@@ -482,10 +486,12 @@ public class ColossusProcessorANDRestrictions3 {
 			}
 			
 			
+//			if(points.size() >= 3) {//тут делаем проверку на то что не ломаный ли маршрут (типо 1700-1700)
+				
+//			}
 			trucks.remove(virtualTruck);
 			virtualTruck.setTargetWeigth(calcWeightHashHsop(points, targetStock));
 			virtualTruck.setTargetPall(calcPallHashHsop(points, targetStock));	
-						
 			
 			// создаём финальный, виртуальный маршрут
 			points.add(targetStock);
@@ -504,6 +510,7 @@ public class ColossusProcessorANDRestrictions3 {
 			optimizePointsAndLastPoint(vehicleWayVirtual);//метод оптимизации точек маршрута
 
 			whiteWay.add(vehicleWayVirtual);
+			
 			i++;			
 		}
 
@@ -529,6 +536,9 @@ public class ColossusProcessorANDRestrictions3 {
 		trucks.forEach(t -> System.out.println(t));
 		System.out.println("+++++++++ Оставшиеся магазины +++++++++++");
 //		shopsForOptimization.forEach(s -> System.out.println(s.toAllString()));
+		
+		//добавляем проблемные магазины
+		shopsForOptimization.addAll(problemShops);
 
 		Solution solution = new Solution();
 
@@ -559,6 +569,9 @@ public class ColossusProcessorANDRestrictions3 {
 	 * @param vehicleWayVirtual
 	 */
 	private void optimizePointsAndLastPoint(VehicleWay vehicleWayVirtual) {
+		if(vehicleWayVirtual.getWay() == null || vehicleWayVirtual.getWay().size()<3) {
+			return;
+		}
 		List<Shop> points = new ArrayList<Shop>(vehicleWayVirtual.getWay());
 		Double totalRunHasMatrix = 0.0;
 		List<Shop> points2 = new ArrayList<Shop>(vehicleWayVirtual.getWay());

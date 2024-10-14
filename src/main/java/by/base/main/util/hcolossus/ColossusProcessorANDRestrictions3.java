@@ -365,7 +365,8 @@ public class ColossusProcessorANDRestrictions3 {
 					if(specialTrucks.isEmpty()) {
 						System.err.println("Отсутствуют машины с паллетовместимостью " + specialPall + " и ниже!");
 						points.remove(points.size()-1);
-						problemShops.add(specialShop);
+						specialShop.setPackageShop("Отсутствуют машины с паллетовместимостью " + specialPall + " и ниже!");
+						problemShops.add(specialShop);						
 //						shopsForOptimization.add(specialShop);
 						break;
 					}
@@ -517,6 +518,8 @@ public class ColossusProcessorANDRestrictions3 {
 
 		stackTrace = stackTrace + "-->Остановлен  на итерации " + i + ". Максимальное значение итераций в данном задании: "+iMax+".<-- \n";
 		
+		//добавляем проблемные магазины
+		shopsForOptimization.addAll(problemShops);
 		
 		stackTrace = stackTrace + "Результат после третьего этапа: \n";
 		for (VehicleWay v : whiteWay) {
@@ -528,8 +531,9 @@ public class ColossusProcessorANDRestrictions3 {
 		}
 		stackTrace = stackTrace + "+++++++++ Оставшиеся магазины +++++++++++\n";
 		for (Shop v : shopsForOptimization) {
-			stackTrace = stackTrace + v.getNumshop() + " (" + v.getNeedPall() + ") " + "\n";
+			stackTrace = stackTrace + v.getNumshop() + " (" + v.getNeedPall() + ") info = "+v.getPackageShop() + "\n";
 		}
+		
 
 		whiteWay.forEach(w -> System.out.println(w));
 		System.out.println("========= Свободные авто ==========");
@@ -537,8 +541,6 @@ public class ColossusProcessorANDRestrictions3 {
 		System.out.println("+++++++++ Оставшиеся магазины +++++++++++");
 //		shopsForOptimization.forEach(s -> System.out.println(s.toAllString()));
 		
-		//добавляем проблемные магазины
-		shopsForOptimization.addAll(problemShops);
 
 		Solution solution = new Solution();
 

@@ -487,30 +487,30 @@ public class ColossusProcessorANDRestrictions3 {
 			}
 			
 			
-//			if(points.size() >= 3) {//тут делаем проверку на то что не ломаный ли маршрут (типо 1700-1700)
+			if(points.size() >= 3) {//тут делаем проверку на то что не ломаный ли маршрут (типо 1700-1700)
 				
-//			}
-			trucks.remove(virtualTruck);
-			virtualTruck.setTargetWeigth(calcWeightHashHsop(points, targetStock));
-			virtualTruck.setTargetPall(calcPallHashHsop(points, targetStock));	
-			
-			// создаём финальный, виртуальный маршрут
-			points.add(targetStock);
-
-			VehicleWay vehicleWayVirtual = new VehicleWay(i+ "", points, 0.0, 30, virtualTruck);
-			vehicleWayVirtual.setDistanceFromStock(firstShop.getDistanceFromStock());	
-			
-			//методы постобработки маршрутов
-						
+				trucks.remove(virtualTruck);
+				virtualTruck.setTargetWeigth(calcWeightHashHsop(points, targetStock));
+				virtualTruck.setTargetPall(calcPallHashHsop(points, targetStock));	
+				
+				// создаём финальный, виртуальный маршрут
+				points.add(targetStock);
+				
+				VehicleWay vehicleWayVirtual = new VehicleWay(i+ "", points, 0.0, 30, virtualTruck);
+				vehicleWayVirtual.setDistanceFromStock(firstShop.getDistanceFromStock());	
+				
+				//методы постобработки маршрутов
+				
 //			superProcessingWay(vehicleWayVirtual, targetStock); // метод попутноо подбора авто
-			
-			changeTruckHasSmall(vehicleWayVirtual, targetStock); // метод замены авто на меньшее
-			
+				
+				changeTruckHasSmall(vehicleWayVirtual, targetStock); // метод замены авто на меньшее
+				
 //			optimizePoints(vehicleWayVirtual);//метод оптимизации точек маршрута
-
-			optimizePointsAndLastPoint(vehicleWayVirtual);//метод оптимизации точек маршрута
-
-			whiteWay.add(vehicleWayVirtual);
+				
+				optimizePointsAndLastPoint(vehicleWayVirtual);//метод оптимизации точек маршрута
+				
+				whiteWay.add(vehicleWayVirtual);
+			}
 			
 			i++;			
 		}

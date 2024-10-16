@@ -43,7 +43,7 @@
 								</c:when>
 								<c:otherwise>
 									<h5 class="route-subtitle">Предложение</h5>
-									<input type="number" name="cost" size="3" required="true" class="raz form-control" min="0">
+									<input type="number" name="cost" size="3" required="true" class="raz form-control" step="1" min="0">
 									<select class="form-control" id="currency">
 										<option>BYN</option>
 										<option>USD</option>

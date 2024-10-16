@@ -738,6 +738,9 @@ export function isTopManager(role) {
 export function isManager(role) {
 	return role === '[ROLE_MANAGER]'
 }
+export function isLogistDelivery(role) {
+	return role === '[ROLE_LOGISTDELIVERY]'
+}
 export function isProcurement(role) {
 	return role === '[ROLE_PROCUREMENT]'
 }

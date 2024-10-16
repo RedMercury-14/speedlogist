@@ -421,6 +421,48 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 	            	command = messageText.split("~")[0];
 	            }
 	            
+	            if(messageText.split("/").length>4) {//тут отдельный обработчик формы заявки
+	            	if(messageText.trim().endsWith(";")) {
+	            		try {
+//		            		TGTruck tgTruck = parseFromString(messageText, user);
+		            		Integer truckSum = parseFromStringMethod2(messageText, user);
+		            		SendMessage sendOK = new SendMessage();
+		            		sendOK.setText("Заявка принята. Всего заявлено " + truckSum + " машин.");
+		            		sendOK.setChatId(chatId);
+		            		sendOK.setReplyMarkup(keyboardMaker.getMainKeyboard()); // клава для юзеров               	
+		            		try {
+								execute(sendOK);
+							} catch (TelegramApiException ee) {
+								// TODO Auto-generated catch block
+								ee.printStackTrace();
+							}
+						} catch (Exception e) {
+							SendMessage sendException = new SendMessage();
+							sendException.setText(e.getMessage());
+							sendException.setChatId(chatId);
+							sendException.setReplyMarkup(keyboardMaker.getMainKeyboard()); // клава для юзеров               	
+		            		try {
+								execute(sendException);
+							} catch (TelegramApiException ee) {
+								// TODO Auto-generated catch block
+								ee.printStackTrace();
+							}
+						}
+	            	}else {
+	            		SendMessage sendException = new SendMessage();
+						sendException.setText("Ожидается в конце обязательный символ  ;");
+						sendException.setChatId(chatId);
+						sendException.setReplyMarkup(keyboardMaker.getMainKeyboard()); // клава для юзеров               	
+	            		try {
+							execute(sendException);
+						} catch (TelegramApiException ee) {
+							// TODO Auto-generated catch block
+							ee.printStackTrace();
+						}
+	            	}
+	            	return;
+	            }
+	            
 	            
 	            System.err.println(command);
 	            switch (command.toLowerCase()){
@@ -619,6 +661,7 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 	                    break;
 	                case "список всех заявленных машин":  
 	                	List<TGTruck> filteredMapAll = tgTruckService.getTGTruckByChatIdUserList(user.getChatId());
+	                	List<TGTruck> finalList = new ArrayList<TGTruck>();
 	                	if(filteredMapAll == null || filteredMapAll.isEmpty()) {
 	                		SendMessage messageTruckList = new SendMessage();
 	                    	messageTruckList.setChatId(chatId);
@@ -632,9 +675,21 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 	    					}
 	                	}else {
 //	                		tgTruckService.getTGTruckByChatIdUserList(user.getChatId()).stream().forEach(entry->{                		
-	                		filteredMapAll.stream()
-	                		.filter(t-> t.getDateRequisition().toLocalDate().isAfter(LocalDate.now().minusDays(1)))
-	                		.forEach(entry->{                		
+	                		finalList = filteredMapAll.stream()
+	                		.filter(t-> t.getDateRequisition().toLocalDate().isAfter(LocalDate.now().minusDays(1))).collect(Collectors.toList());
+	                		if(finalList.isEmpty()) {
+	                			SendMessage messageTruckList = new SendMessage();
+		                    	messageTruckList.setChatId(chatId);
+		                    	messageTruckList.setParseMode("HTML");  // Устанавливаем режим HTML
+		                    	messageTruckList.setText("Заявленные машины отсутствуют.");
+		                		try {
+		    						execute(messageTruckList);
+		    					} catch (TelegramApiException e) {
+		    						// TODO Auto-generated catch block
+		    						e.printStackTrace();
+		    					}
+	                		}
+	                		finalList.forEach(entry->{                		
 		                    	SendMessage messageTruckList = new SendMessage();
 		                    	messageTruckList.setChatId(chatId);   
 		                    	messageTruckList.setParseMode("HTML");  // Устанавливаем режим HTML
@@ -799,6 +854,145 @@ public class TelegramBotRouting extends TelegramLongPollingBot{
 		}else {
 			System.err.println("Бот уже запущен");
 		}
+	}
+	
+	/**
+	 * паттерн : кол-во/typeTrailer/pall/cargoCapacity/otherInfo/dateRequisition
+	 * @param input
+	 * @param tgUser
+	 * @return
+	 * @throws IllegalArgumentException
+	 */
+	public Integer parseFromStringMethod2(String input, TGUser tgUser) throws IllegalArgumentException {
+	    if (input == null || input.isEmpty()) {
+	        throw new IllegalArgumentException("Входная строка не может быть пустой или null.");
+	    }
+
+	    // Проверка на SQL-инъекции
+	    if (containsSQLInjectionRisk(input)) {
+	        throw new IllegalArgumentException("Входная строка содержит потенциально опасные символы.");
+	    }
+	    Integer mainInt = 0;
+	    String[] str = input.split(";");
+	    
+	    for (String string : str) {//проверка на ;
+	    	String[] parts = string.split("/");
+	 	    if (parts.length != 6) {
+	 	        throw new IllegalArgumentException("Неверный формат строки. Ожидается 6 частей, разделенных символом '/'.\n"
+	 	                + "количество машин/тип/паллеты/грузоподъемность/другая информация/дата заявки");
+	 	    }
+	 	   try {
+	 	        Integer quantity = Integer.parseInt(parts[0].trim());
+	 	        if (quantity <= 0) {
+	 	            throw new IllegalArgumentException("Количество должно быть положительным числом.");
+	 	        }
+	 	    } catch (NumberFormatException e) {
+	 	        throw new IllegalArgumentException("Неверный формат для поля количества.");
+	 	    }
+	 	  String typeTrailer = parts[1];
+	 	    if(typeTrailer.equals("реф") || typeTrailer.equals("Реф")) {
+	 	    	typeTrailer = "Рефрижератор";
+	 	    }
+	 	    if (typeTrailer.equalsIgnoreCase("Тент") || typeTrailer.equalsIgnoreCase("Рефрижератор") || typeTrailer.equalsIgnoreCase("Изотерма")) {
+	 	    	
+	 	    } else {
+	 	        throw new IllegalArgumentException("Неверный формат типа авто. Ожидается: Тент, Рефрижератор, Изотерма.");
+	 	    }
+	 	   try {
+	 	        Integer pall = Integer.parseInt(parts[2]);
+	 	        if (pall < 0) {
+	 	            throw new IllegalArgumentException("Количество паллет должно быть положительным числом.");
+	 	        }
+	 	        if (pall > 38) {
+	 	            throw new IllegalArgumentException("Количество паллет не должно быть больше 38.");
+	 	        }
+	 	    } catch (NumberFormatException e) {
+	 	        throw new IllegalArgumentException("Неверный формат числа для поля паллет.");
+	 	    }
+	 	  try {
+	 	        double cargoCapacity = Double.parseDouble(parts[3].replace(',', '.'));
+	 	        if (cargoCapacity <= 0) {
+	 	            throw new IllegalArgumentException("Грузоподъемность должна быть положительным числом.");
+	 	        }
+	 	        if (cargoCapacity > 30.0) {
+	 	            throw new IllegalArgumentException("Неверный формат для поля веса. Ожидается значение в тоннах (например, 13.2 или 10).");
+	 	        }
+	 	    } catch (NumberFormatException e) {
+	 	        throw new IllegalArgumentException("Неверный формат для поля веса. Ожидается значение в тоннах (например, 13.2 или 10).");
+	 	    }
+	 	 String otherInfo = parts[4];
+	 	    if (otherInfo == null || otherInfo.trim().isEmpty()) {
+	 	        throw new IllegalArgumentException("Поле другая информация не может быть пустым.");
+	 	    }
+	 	   try {
+	 	        Date dateRequisition = Date.valueOf(parts[5]); // Ожидается формат yyyy-mm-dd
+	 	    } catch (IllegalArgumentException e) {
+	 	        throw new IllegalArgumentException("Неверный формат даты. Ожидаемый формат: yyyy-mm-dd.");
+	 	    }
+	    }
+	    
+	    for (String string : str) {
+	    	String[] parts = string.split("/");
+
+	 	    TGTruck truck = new TGTruck();
+
+	 	    int i = 0;
+	 	    truck.setChatIdUserTruck(tgUser.getChatId());
+	 	    truck.setCompanyName(tgUser.getCompanyName());
+	 	    truck.setStatus(10);
+	 	    
+	 	    // quantity (количество)
+	 	    Integer quantity = Integer.parseInt(parts[0].trim());
+	 	    i = quantity;
+
+	 	    // typeTrailer
+	 	    String typeTrailer = parts[1];
+	 	    if(typeTrailer.equals("реф") || typeTrailer.equals("Реф")) {
+	 	    	typeTrailer = "Рефрижератор";
+	 	    }
+	 	    if (typeTrailer.equalsIgnoreCase("Тент") || typeTrailer.equalsIgnoreCase("Рефрижератор") || typeTrailer.equalsIgnoreCase("Изотерма")) {
+	 	        truck.setTypeTrailer(typeTrailer);
+	 	    }
+
+	 	    // pall
+	 	    Integer pall = Integer.parseInt(parts[2]);
+	 	    truck.setPall(pall);
+
+	 	    // cargoCapacity (валидируем ввод в тоннах)
+	 	    double cargoCapacity = Double.parseDouble(parts[3].replace(',', '.'));
+	 	    truck.setCargoCapacity(String.format("%.1f", cargoCapacity).replace(',', '.')); // Сохраняем с одним знаком после запятой
+
+	 	    // otherInfo
+	 	    String otherInfo = parts[4];
+	 	    if (otherInfo == null || otherInfo.trim().isEmpty()) {
+	 	        throw new IllegalArgumentException("Поле другая информация не может быть пустым.");
+	 	    }
+	 	    truck.setOtherInfo(otherInfo);
+
+	 	    // dateRequisition
+	 	    Date dateRequisition = Date.valueOf(parts[5]); // Ожидается формат yyyy-mm-dd
+	 	    truck.setDateRequisition(dateRequisition);
+	 	    
+	 	    for (int j = 1; j <= i; j++) {
+	 	    	truck.setNumTruck(tgUser.getCompanyName() + " - "+ j + " "+truck.getPall()+"/"+truck.getCargoCapacity());
+	 	    	truck.setIdTGTruck(null);
+	 			tgTruckService.saveOrUpdateTGTruck(truck);
+	 			mainInt++;
+	 		}
+		}
+
+	    return mainInt;
+	}
+	
+	// Проверка строки на потенциально опасные символы
+	private static boolean containsSQLInjectionRisk(String input) {
+	    String[] dangerousCharacters = {"'", "\"", "--", "/*", "*/"};
+	    for (String dangerous : dangerousCharacters) {
+	        if (input.contains(dangerous)) {
+	            return true;
+	        }
+	    }
+	    return false;
 	}
 	
 	public void sendMessage(long chatId, String textToSend, ReplyKeyboardMarkup replyKeyboardMarkup) {

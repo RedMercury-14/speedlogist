@@ -3,7 +3,7 @@ import { dateHelper, debounce,
 	getData,
 	getEncodedString,
 	hideLoadingSpinner,
-	isAdmin, isLogisticsDeliveryPage, isManager,
+	isAdmin, isLogistDelivery, isLogisticsDeliveryPage, isManager,
 	isTopManager,
 	randomColor,
 	showLoadingSpinner
@@ -27,7 +27,7 @@ import {
 	leafletDrawLayerEventHandlers,
 	showPoligonControl,
 } from "./map/leafletDrawUtils.js"
-import { showShops, toogleAllShops } from "./map/shopMarkersUtils.js"
+import { hideShops, optimizerShopToggler, showShops, toogleAllShops } from "./map/shopMarkersUtils.js"
 import {
 	getFormatDataForDistanceControlTable,
 	getFormatDataToOptimizeRouteTable,
@@ -83,7 +83,8 @@ import {
 	getMarkerToShop,
 	setLocalCarsData,
 	setOptimizeRouteFormData,
-	truckAdapter
+	truckAdapter,
+	clearPoligonControlForm
 } from "./map/mapUtils.js"
 import { getTruckLists, groupTrucksByDate } from "./logisticsDelivery/trucks/trucksUtils.js"
 import { bootstrap5overlay } from "./bootstrap5overlay/bootstrap5overlay.js"
@@ -438,9 +439,9 @@ window.onload = async () => {
 	// кнопки боковой панели
 	const menuItems = document.querySelectorAll(".menu-item")
 	const buttonClose = document.querySelector(".close-button")
-	menuItems.forEach((item) => addOnClickToMenuItemListner(item))
-	buttonClose.addEventListener("click", () => closeSidebar())
-	document.addEventListener("keydown", (e) => (e.key === "Escape") && closeSidebar())
+	menuItems.forEach((item) => addOnClickToMenuItemListner(item, crossDockingPolygonsVisibleToggler))
+	buttonClose.addEventListener("click", () => closeSidebar(crossDockingPolygonsVisibleToggler))
+	document.addEventListener("keydown", (e) => (e.key === "Escape") && closeSidebar(crossDockingPolygonsVisibleToggler))
 
 	// контейнеры для таблиц с информацией о точках маршрута
 	const routeInputsContainer = document.querySelector('#routeInputsContainer')
@@ -489,6 +490,10 @@ window.onload = async () => {
 	// переключатель отображения на карте всех магазинов
 	const allShopsToggler = document.querySelector("#allShopsToggler")
 	allShopsToggler && allShopsToggler.addEventListener('click', (e) => toogleAllShops(e, map, allShops))
+	
+	// переключатель отображения на карте магазинов из поля оптимизатора
+	const showOptimizerShopsBtn = document.querySelector("#showOptimizerShops")
+	showOptimizerShopsBtn && showOptimizerShopsBtn.addEventListener('click', (e) => optimizerShopToggler(e, map))
 
 	// проверка имени полигона
 	const polygonNameInput = document.querySelector("#polygonName")
@@ -496,7 +501,10 @@ window.onload = async () => {
 
 	// селект выбора действия для полигона
 	const polygonActionSelect = document.querySelector("#polygonAction")
-	polygonActionSelect && polygonActionSelect.addEventListener('change', crossDockingPointVisibleToggler)
+	polygonActionSelect && polygonActionSelect.addEventListener('change', (e) => crossDockingPointVisibleToggler(e.target.value))
+
+	// обработка закрытия модального окна создания полигона
+	$('#poligonControlModal').on('hidden.bs.modal', (e) => clearPoligonControlForm(poligonControlForm))
 
 	// селект выбора точки для кросс-докинга
 	const crossDockingPointSelect = document.querySelector("#crossDockingPoint")
@@ -515,9 +523,9 @@ window.onload = async () => {
 	// дата для списков в форме оптимизатора
 	const currentDateInput = document.querySelector('#currentDate')
 	// установака данных даты 
-	currentDateInput.value = mapStore.getCurrentDate()
-	currentDateInput.min = mapStore.getCurrentDate()
-	currentDateInput.max = mapStore.getMaxTrucksDate()
+	currentDateInput && (currentDateInput.value = mapStore.getCurrentDate())
+	currentDateInput && (currentDateInput.min = mapStore.getCurrentDate())
+	currentDateInput && (currentDateInput.max = mapStore.getMaxTrucksDate())
 	currentDateInput && currentDateInput.addEventListener('change', (e) => changeCurrentDateHandler(e, carInputsTable))
 
 	// выпадающий список со списками машин для оптимизатора
@@ -537,37 +545,32 @@ window.onload = async () => {
 
 	// отображение полигонов и элементов рисования
 	const role = document.querySelector("#role").value
-	if ( isAdmin(role)) {
-		displayPolygons()
+	// получаем полигоны без кроссдокинга
+	const filtredPolygons = mapStore
+		.getPolygons()
+		.filter(polygon => polygon.properties.action !== 'crossDocking')
+
+	if (isAdmin(role) || isLogistDelivery(role)) {
+		displayPolygons(filtredPolygons)
 		showPoligonControl()
 		displayShops()
 	}
 	if (isTopManager(role)) {
-		displayPolygons()
+		displayPolygons(filtredPolygons)
 		showPoligonControl()
 		displayShops()
 	}
 	if (isManager(role)) {
-		displayPolygons()
+		displayPolygons(filtredPolygons)
 		displayShops()
 	}
 
-
-	// создание элементов формы настроек оптимизатора
-	const optimizeRouteParamsMainCheckbox = document.querySelector('#optimizeRouteParamsMainCheckbox')
-	const optimizeRouteParamsCheckboxes = document.querySelector('#optimizeRouteParamsCheckboxes')
-	const optimizeRouteParamsSelect = document.querySelector('#optimizeRouteParamsSelect')
-	const optimizeRouteParamsInputs = document.querySelector('#optimizeRouteParamsInputs')
-	createFormInputs(mainCheckboxParams, mainCheckboxHTML, optimizeRouteParamsMainCheckbox)
-	createFormInputs(сheckboxParams, checkboxHTML, optimizeRouteParamsCheckboxes)
-	createFormInputs(inputParams, numericInputHTML, optimizeRouteParamsInputs)
-	createSelect(selectParams, selectOptions, optimizeRouteParamsSelect)
-
-	// автозаполнение формы настрорек оптимизатора
-	setOptimizeRouteParamsFormData(optimizeRouteParamsForm, OPTIMIZE_ROUTE_PARAMS_KEY)
+	// создание формы настроек оптимизатора
+	createOptimizeRouteParamsForm(optimizeRouteParamsForm)
 
 	bootstrap5overlay.hideOverlay()
 }
+
 
 // получение стартовых данных
 async function init() {
@@ -598,6 +601,23 @@ function addMarkersToMap(markers) {
 }
 
 // -------------------------------------------------------------------------------//
+// --------------- создание элементов формы настроек оптимизатора ----------------//
+// -------------------------------------------------------------------------------//
+function createOptimizeRouteParamsForm(optimizeRouteParamsForm) {
+	const optimizeRouteParamsMainCheckbox = document.querySelector('#optimizeRouteParamsMainCheckbox')
+	const optimizeRouteParamsCheckboxes = document.querySelector('#optimizeRouteParamsCheckboxes')
+	const optimizeRouteParamsSelect = document.querySelector('#optimizeRouteParamsSelect')
+	const optimizeRouteParamsInputs = document.querySelector('#optimizeRouteParamsInputs')
+	optimizeRouteParamsMainCheckbox && createFormInputs(mainCheckboxParams, mainCheckboxHTML, optimizeRouteParamsMainCheckbox)
+	optimizeRouteParamsCheckboxes && createFormInputs(сheckboxParams, checkboxHTML, optimizeRouteParamsCheckboxes)
+	optimizeRouteParamsInputs && createFormInputs(inputParams, numericInputHTML, optimizeRouteParamsInputs)
+	optimizeRouteParamsSelect && createSelect(selectParams, selectOptions, optimizeRouteParamsSelect)
+
+	// автозаполнение формы настрорек оптимизатора
+	optimizeRouteParamsForm && setOptimizeRouteParamsFormData(optimizeRouteParamsForm, OPTIMIZE_ROUTE_PARAMS_KEY)
+}
+
+// -------------------------------------------------------------------------------//
 // -------- отображение магазинов на карте при вводе в форме оптимизатора --------//
 // -------------------------------------------------------------------------------//
 async function displayShops() {
@@ -616,14 +636,12 @@ function optimizeRouteShopNumChangeCallback(e, shops) {
 }
 
 // -------------------------------------------------------------------------------//
-// ------------ функция отображения полигонов и элементов рисования --------------//
+// ----------------------- функция отображения полигонов -------------------------//
 // -------------------------------------------------------------------------------//
-async function displayPolygons() {
-	const allPolygons = mapStore.getPolygons()
+async function displayPolygons(polygons) {
+	if (!polygons || polygons.length === 0 ) return
 
-	if (!allPolygons || allPolygons.length === 0 ) return
-
-	const modifyPolygons = allPolygons.map(polygon => {
+	const modifyPolygons = polygons.map(polygon => {
 		return {
 			...polygon,
 			geometry: {
@@ -642,6 +660,34 @@ async function displayPolygons() {
 
 	const modifiedGeoJSON = getModifiedGeojson(testGeoJSON, deletePolygon)
 	modifiedGeoJSON.addTo(map)
+}
+
+// показать выбраные полигоны
+function showPolygons(polygons) {
+	let displayedPolygonNames = []
+	drawnItems.eachLayer(layer => displayedPolygonNames.push(layer.feature.properties.name))
+	const polygonsToDisplay = polygons.filter(polygon => !displayedPolygonNames.includes(polygon.properties.name))
+	displayPolygons(polygonsToDisplay)
+}
+
+// скрыть выбранные полигоны
+function hidePolygons(polygons) {
+	const polygonNames = polygons.map(polygon => polygon.properties.name)
+	drawnItems.eachLayer(layer => {
+		if (polygonNames.includes(layer.feature.properties.name)) {
+			drawnItems.removeLayer(layer)
+		}
+	})
+}
+
+// переключение отображения полигонов кросс-докинга
+function crossDockingPolygonsVisibleToggler(sidebarMenuItem) {
+	const crossDockingPolygons = mapStore.getCrossDockingPolygons()
+
+	sidebarMenuItem.dataset.item === 'optimizeRoute'
+	&& sidebarMenuItem.classList.contains("active-item")
+		? showPolygons(crossDockingPolygons)
+		: hidePolygons(crossDockingPolygons)
 }
 
 // -------------------------------------------------------------------------------//

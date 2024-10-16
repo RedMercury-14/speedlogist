@@ -74,12 +74,18 @@ public class XSSFilter implements Filter{
 						for (int i=0; i < rawVals.length; i++) {
 							snzVals[i] = stripXSS(rawVals[i]);
 							System.out.println("Sanitized: " + rawVals[i] + " to " + snzVals[i]);
-						}
+						}						
 						res.put(stripXSS(key), snzVals);
 					}
 				}
 				sanitizedQueryString = res;
+//				res.entrySet().forEach(e->{
+//					for (int i = 0; i < e.getValue().length-1; i++) {
+//						System.err.println("TEST: " + e.getKey() + " --> " + e.getValue()[i]);						
+//					}
+//				});
 			}
+			
 			return sanitizedQueryString;
 		}
 

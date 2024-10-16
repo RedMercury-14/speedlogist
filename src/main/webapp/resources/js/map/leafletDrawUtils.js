@@ -3,6 +3,8 @@
 // -------------------------------------------------------------------------------//
 
 import { getDecodedString, getEncodedString, isAdmin, isTopManager } from "../utils.js"
+import { mapStore } from "./mapStore.js"
+import { getSelectedShopsPallSum } from "./mapUtils.js"
 
 const POLYGON_ACTIONS_DICTIONARY = {
 	trafficRestrictions: {
@@ -63,6 +65,16 @@ export let currentDrawEvent = null
 export const leafletDrawLayerEventHandlers = {
 	// обработчик ивента при создании полигона
 	onDrawLayerHandler(event) {
+		const mode = mapStore.getMode()
+
+		if (mode === 'sumPall') {
+			// получаем координаты полигона
+			const shopsToView = mapStore.getShopsToView()
+			const pallSum = getSelectedShopsPallSum(event, shopsToView)
+			if (pallSum) alert(`Общее количество паллет: ${pallSum}`)
+			return
+		}
+
 		currentDrawEvent = event
 		openPoligonControlModal()
 	},

@@ -272,6 +272,11 @@ input[type=number] {
 	padding: 5px 0;
 	margin-bottom: 0.25rem !important;
 }
+#optimizeRoute .stock-container .form-control {
+	max-width: 50px;
+	padding: 0.4rem 0.2rem;
+	height: calc(1em + 0.8rem + 1px);
+}
 .input-table {
 	display: grid;
 	align-items: center;
@@ -637,7 +642,7 @@ svg:not(:root) {
 }
 
 .toggler-container {
-	margin: 0 0 0.5rem 0.25rem;
+	/* margin: 0 0 0.5rem 0.25rem; */
 	padding: 5px;
 	border-bottom: 2px solid #0e377b;
 }

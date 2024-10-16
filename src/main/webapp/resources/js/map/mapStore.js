@@ -2,6 +2,9 @@ import { dateHelper } from "../utils.js"
 
 class MapStore {
 	constructor() {
+		this.mode = 'default'
+		this.allShopsToView = []
+		this.shopsToView = []
 		this.markers = []
 		this.polylines = []
 		this.polygons = []
@@ -11,6 +14,27 @@ class MapStore {
 		this.currentNameList = null // текущий список машин
 		this.trucks = null // машины сгруппированы по датам
 		this.lists = [] // Array<{ nameList: string, date: string }>
+	}
+
+	getMode() {
+		return this.mode
+	}
+	setMode(mode) {
+		this.mode = mode
+	}
+
+	getAllShopsToView() {
+		return this.allShopsToView
+	}
+	setAllShopsToView(shops) {
+		this.allShopsToView = shops
+	}
+
+	getShopsToView() {
+		return this.shopsToView
+	}
+	setShopsToView(shops) {
+		this.shopsToView = shops
 	}
 
 	getMarkers() {
@@ -63,6 +87,9 @@ class MapStore {
 	}
 	removePolygon(encodedName) {
 		this.polygons = this.polygons.filter((polygon) => polygon.properties.name !== encodedName)
+	}
+	getCrossDockingPolygons() {
+		return this.polygons.filter(polygon => polygon.properties.action === 'crossDocking')
 	}
 
 	/**

@@ -115,14 +115,14 @@ const optimizeRouteConfig = {
 		detailGridOptions: {
 			columnDefs: [
 				{ headerName: '№', field: 'numshop', },
-				{ headerName: 'Адрес', field: 'address', width: 220, },
+				{ headerName: 'Адрес', field: 'address', flex: 8, },
 				{ headerName: 'Палл.', field: 'needPall', cellClass: 'px-2 text-center', },
 				{ headerName: 'Расст.', field: 'distanceToView', cellClass: 'px-2 text-center', },
 			],
 			defaultColDef: {
 				headerClass: 'px-1',
 				cellClass: 'px-2',
-				width: 60,
+				flex: 2,
 				resizable: true,
 				suppressMenu: true,
 				filter: false,

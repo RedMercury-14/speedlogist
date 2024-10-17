@@ -160,6 +160,9 @@ input[type=number] {
 .row-container label {
 	text-wrap: nowrap;
 }
+#optimizeRouteForm {
+	font-size: 80%;
+}
 #route .form-control,
 #routeAreaForm .form-control,
 #optimizeRoute .form-control,
@@ -245,7 +248,7 @@ input[type=number] {
 }
 
 .addressInfo {
-	font-size: 14px;
+	font-size: 12px;
 }
 
 .routeAreaForm-container {
@@ -269,6 +272,11 @@ input[type=number] {
 	padding: 5px 0;
 	margin-bottom: 0.25rem !important;
 }
+#optimizeRoute .stock-container .form-control {
+	max-width: 50px;
+	padding: 0.4rem 0.2rem;
+	height: calc(1em + 0.8rem + 1px);
+}
 .input-table {
 	display: grid;
 	align-items: center;
@@ -286,7 +294,7 @@ input[type=number] {
 	justify-content: flex-end;
 	border-bottom: 2px solid gray;
 	padding: 5px 0 10px 0;
-	margin-bottom: 0.5rem !important;
+	/* margin-bottom: 0.5rem !important; */
 }
 
 .route-textarea {
@@ -364,9 +372,9 @@ input[type=number] {
 	grid-template-rows: 44px repeat(25, 40px);
 	grid-column-gap: 5px;
 }
-.routeArea-form .addressInfo {
+/* .routeArea-form .addressInfo {
 	font-size: 12px;
-}
+} */
 .routeArea-form .pointInfo {
 	font-size: 14px;
 }
@@ -634,7 +642,7 @@ svg:not(:root) {
 }
 
 .toggler-container {
-	margin: 0 0 0.5rem 0.25rem;
+	/* margin: 0 0 0.5rem 0.25rem; */
 	padding: 5px;
 	border-bottom: 2px solid #0e377b;
 }
@@ -735,7 +743,7 @@ svg:not(:root) {
 	grid-template-rows: 1fr;
 }
 .car-inputs-container__body {
-	height: 160px;
+	height: 152px;
 	overflow-y: scroll;
 }
 #addCarInputsBtn {
@@ -761,4 +769,23 @@ svg:not(:root) {
 
 #settings .optimizeRouteSelect {
 	max-width: 300px;
+}
+
+.truckListinputs {
+	display: flex;
+	gap: 5px;
+	align-items: center;
+	justify-content: center;
+}
+.truckListinputs>* {
+	cursor: pointer;
+	border: 2px solid gray;
+	border-radius: 3px;
+}
+.truckListinputs>*:hover {
+	border-color: #0052b1;
+}
+.truckListinputs>*:focus,
+.truckListinputs>*:focus-visible {
+	outline: none;
 }

@@ -301,7 +301,7 @@
 					<div id="pointList" class="point-container"></div>
 					<div class="button-container my-3">
 						<button id="addLoadPoint"  type="submit" class="btn btn-outline-secondary">+ точка загрузки</button>
-						<button id="addUnloadPoint" type="submit" class="btn btn-outline-secondary">+ точка выгрузки</button>
+						<button id="addUnloadPoint" type="submit" class="btn btn-outline-secondary none">+ точка выгрузки</button>
 						<button id="deleteLastPoint" type="button" class="btn btn-outline-danger">Удалить последнюю точку</button>
 						<div class="text-red font-italic py-2">Важно: добавляйте точки в порядке их прохождения машиной (начните с точки загрузки)</div>
 					</div>

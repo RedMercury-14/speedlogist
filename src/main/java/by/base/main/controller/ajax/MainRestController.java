@@ -342,7 +342,8 @@ public class MainRestController {
 //	@PostMapping("/398")
 	@GetMapping("/398")
 	public Map<String, Object> get398(HttpServletRequest request) throws ParseException {
-		String str = "{\"CRC\": \"\", \"Packet\": {\"MethodName\": \"SpeedLogist.GetReport398\", \"Data\": {\"DateFrom\": \"2024-09-03\", \"DateTo\": \"2024-09-05\", \"WarehouseId\": [\"700\"], \"WhatBase\": [\"11\",\"0\"]}}}";
+//		String str = "{\"CRC\": \"\", \"Packet\": {\"MethodName\": \"SpeedLogist.GetReport398\", \"Data\": {\"DateFrom\": \"2024-09-03\", \"DateTo\": \"2024-09-05\", \"WarehouseId\": [\"700\"], \"WhatBase\": [\"11\",\"0\"]}}}";
+		String str = "{\"CRC\": \"\", \"Packet\": {\"MethodName\": \"SpeedLogist.GetReport398\", \"Data\": {\"DateFrom\": \"2024-08-07\", \"DateTo\": \"2024-10-08\", \"WarehouseId\": [434,522,523,452,649,761,762,772,784,884,821,445,455,835,843,850,856,869,870,871,882,883,890,905,906,907,909,873,429,432,428,482,485,463,401,410,608,612,615,404,405,458,617,620,621,631,632,633,640,641,646,648,653,656,660,665,669,706,443,886,717,720,721,448], \"WhatBase\": [11,12]}}}";
 		Map<String, Object> response = new HashMap<>();
 		try {			
 			checkJWT(marketUrl);			
@@ -1149,7 +1150,6 @@ public class MainRestController {
 		
 		Map<Integer, OrderProduct> mapOrderProduct = new HashMap<Integer, OrderProduct>();
 		try {
-			System.out.println(dateStr);
 			mapOrderProduct = poiExcel.loadNeedExcel(file1, dateStr);
 		} catch (InvalidFormatException | IOException | java.text.ParseException | ServiceException e) {
 			// TODO Auto-generated catch block
@@ -2818,7 +2818,7 @@ public class MainRestController {
 	private static boolean isRuningOptimization = false;
 	
 	@GetMapping("/map/myoptimization3/reset")
-	public String getReset(HttpServletRequest request, @PathVariable String number) {
+	public String getReset(HttpServletRequest request) {
 		if(isRuningOptimization) {
 			isRuningOptimization = !isRuningOptimization;
 		}
@@ -2827,6 +2827,8 @@ public class MainRestController {
 	
 	@PostMapping("/map/myoptimization3")
 	public Solution myOptimization3(@RequestBody String str) throws Exception {
+		
+//		System.out.println(str);
 		if(isRuningOptimization) {
 			Solution messageSolution = new Solution();
 			messageSolution.setMapResponses(new HashMap<String, List<MapResponse>>());
@@ -3111,6 +3113,7 @@ public class MainRestController {
 			isRuningOptimization = !isRuningOptimization;
 		}
 		return finalSolution;
+//		return null;
 	}
 	
 	/**
@@ -4947,7 +4950,7 @@ public class MainRestController {
 		String points = jsonMainObject.get("points").toString();
 		String way = (String) jsonMainObject.get("way");
 		Order order = orderService.getOrderById(Integer.parseInt(jsonMainObject.get("idOrder").toString()));
-		if (order.getStatus() == 20 || order.getStatus() == 17 || order.getStatus() == 15 || order.getStatus() == 6) { // общее редактирование, пока маршрут не создан
+		if (order.getStatus() == 20 || order.getStatus() == 17 || order.getStatus() == 15 || order.getStatus() == 6 || order.getStatus() == 7) { // общее редактирование, пока маршрут не создан
 			order.setCounterparty((String) jsonMainObject.get("contertparty"));
 			order.setContact((String) jsonMainObject.get("contact"));
 			order.setCargo((String) jsonMainObject.get("cargo"));

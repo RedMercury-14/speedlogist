@@ -738,6 +738,9 @@ export function isTopManager(role) {
 export function isManager(role) {
 	return role === '[ROLE_MANAGER]'
 }
+export function isLogistDelivery(role) {
+	return role === '[ROLE_LOGISTDELIVERY]'
+}
 export function isProcurement(role) {
 	return role === '[ROLE_PROCUREMENT]'
 }
@@ -752,6 +755,10 @@ export function isOderSupport(role) {
 }
 export function isCarrier(role) {
 	return role === '[ROLE_CARRIER]'
+}
+
+export function isLogisticsDeliveryPage() {
+	return window.location.href.includes('logistics-delivery')
 }
 
 export function disableButton(button) {

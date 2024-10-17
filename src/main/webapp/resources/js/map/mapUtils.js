@@ -1,5 +1,6 @@
-import { getDecodedString } from "../utils.js"
+import { dateHelper, getDecodedString } from "../utils.js"
 import { checkPointInPolygon } from "./checkPointInPolygon.js"
+import { getTextareaData } from "./formDataUtils.js"
 
 // функция для обновления данных формы оптимизатора
 export function addCrossDocking(optimizeRouteFormData, alllShops, polygons) {
@@ -89,17 +90,15 @@ export function addCrossDockingPointOptions(allShops, crossDockingPointSelect) {
 }
 
 // переключение видимости поля точки кросс-докиг зоны в форме создания полигона
-export function crossDockingPointVisibleToggler(e) {
-	const action = e.target.value
+export function crossDockingPointVisibleToggler(action) {
+	const crossDockingPoint = document.querySelector(`#crossDockingPoint`)
+	if (!crossDockingPoint) return
 	if (action === 'crossDocking') {
-		const crossDockingPoint = document.querySelector(`#crossDockingPoint`)
-		if (crossDockingPoint) {
-			crossDockingPoint.required = true
-			crossDockingPoint.parentElement.classList.remove('none')
-		} else {
-			crossDockingPoint.required = false
-			crossDockingPoint.parentElement.classList.add('none')
-		}
+		crossDockingPoint.required = true
+		crossDockingPoint.parentElement.classList.remove('none')
+	} else {
+		crossDockingPoint.required = false
+		crossDockingPoint.parentElement.classList.add('none')
 	}
 }
 
@@ -121,6 +120,12 @@ export function setOptimizeRouteFormData(form, storageKey) {
 		form.cleaning[i].checked = value
 	})
 
+	setLocalCarsData(data, form)
+}
+
+export function setLocalCarsData(data, form) {
+	if (!data.cars) return
+	data.cars.length >= 100 && (data.cars.length = 100)
 	data.cars && data.cars.forEach((car, i) => {
 		form.carName && (form.carName[i].value = car.carName)
 		form.carCount && (form.carCount[i].value = car.carCount)
@@ -138,17 +143,20 @@ export function displayEmptyTruck(emptyTrucks) {
 		return
 	}
 
-	const emptyTruckToView = emptyTrucks.reduce((acc, truck) => {
-		const type = truck.type
-		acc.hasOwnProperty(type) ? acc[type] += 1 : acc[type] = 1
-		return acc
-	}, {})
+	const emptyTruckCount = emptyTrucks.length
+	emptyTruckContainer.innerHTML = `<span>Свободных машин: ${emptyTruckCount}</span>`
 
-	const emptyTruckToViewStr = Object.entries(emptyTruckToView)
-		.map(([type, count]) => `<span>${type}: ${count}</span>`)
-		.join('')
+	// const emptyTruckToView = emptyTrucks.reduce((acc, truck) => {
+	// 	const type = truck.type
+	// 	acc.hasOwnProperty(type) ? acc[type] += 1 : acc[type] = 1
+	// 	return acc
+	// }, {})
 
-	emptyTruckContainer.innerHTML = `<span>Свободные машины</span>` + emptyTruckToViewStr
+	// const emptyTruckToViewStr = Object.entries(emptyTruckToView)
+	// 	.map(([type, count]) => `<span>${type}: ${count}</span>`)
+	// 	.join('')
+
+	// emptyTruckContainer.innerHTML = `<span>Свободные машины</span>` + emptyTruckToViewStr
 }
 
 // функция очистки таблиц с информацией по точкам
@@ -263,4 +271,82 @@ export function addSmallHeaderClass() {
 		const container = document.querySelector('.my-container')
 		container.classList.add('smallHeader')
 	}
+}
+
+// адептер для машин с сервера
+export function truckAdapter(truck) {
+	return {
+		...truck,
+		dateRequisition: dateHelper.getDateForInput(truck.dateRequisition),
+		cargoCapacity: truck.cargoCapacity ? Number(truck.cargoCapacity) * 1000 : null,
+	}
+}
+
+// обновление опций списков машин
+export function updateTruckListsOptions(truckLists) {
+	const truckListsSelect = document.querySelector("#truckListsSelect")
+
+	// стартовый элемент
+	// СВОБОДНЫЕ МАШИНЫ ДЛЯ ТЕСТИРОВАНИЯ
+	truckListsSelect.innerHTML = `
+		<option selected disabled value=''>Выберите список автомобилей</option>
+		<option value='freeCars'>Свободные машины</option>
+	`
+
+	// опции названий списков машин
+	truckLists.forEach((list) => {
+		const option = document.createElement("option")
+		const nameList = list.nameList
+		option.value = nameList
+		option.text = nameList
+		truckListsSelect.appendChild(option)
+	})
+
+	// опция для ручного редактирования
+	const option = document.createElement('option')
+	option.value = 'manual'
+	option.text = 'Ручной ввод'
+	truckListsSelect.appendChild(option)
+
+	// инициируем обновление полей машни
+	truckListsSelect.dispatchEvent(new Event("change"))
+}
+
+// функция очистки формы создания полигона
+export function clearPoligonControlForm(form) {
+	crossDockingPointVisibleToggler('')
+	form.reset()
+}
+
+// функция получения суммы паллет выделенных магазинов из формы оптимизатора
+export function getSelectedShopsPallSum(event, shopsToView) {
+	if (shopsToView.length === 0) return null
+
+	const polygon = event.layer.toGeoJSON()
+	const coordinates = polygon.geometry.coordinates[0]
+	const adaptCoordinates = coordinates.map(coord => [coord[1], coord[0]])
+
+	// получаем объекты магазинов
+	const shops = shopsToView.map(marker => {
+		const coord = marker.getLatLng()
+		return {
+			numshop: marker.options.numshop,
+			lat: coord.lat,
+			lng: coord.lng,
+		}
+	})
+
+	// получаем магазины внутри полигона
+	const selectedShops = shops.filter(shop => checkPointInPolygon([shop.lat, shop.lng], adaptCoordinates))
+	if (selectedShops.length === 0) return null
+
+	// получаем номера магазинов и паллеты из формы оптимизатора
+	const optimizeRouteShopNum = document.querySelector("#optimizeRouteShopNum")
+	const optimizeRoutePall = document.querySelector("#optimizeRoutePall")
+	const shopNums = getTextareaData(optimizeRouteShopNum)
+	const palls = getTextareaData(optimizeRoutePall)
+
+	// определяем индексы найденых магазинов в поле формы оптимизатора
+	const selectedShopIndexes = selectedShops.map(shop => shopNums.findIndex(shopNum => shopNum === `${shop.numshop}`))
+	return selectedShopIndexes.reduce((acc, index) => acc + Number(palls[index]), 0)
 }

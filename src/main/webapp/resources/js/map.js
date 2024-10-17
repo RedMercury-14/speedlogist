@@ -1,9 +1,9 @@
 import { snackbar } from "./snackbar/snackbar.js"
-import { debounce,
+import { dateHelper, debounce,
 	getData,
 	getEncodedString,
 	hideLoadingSpinner,
-	isAdmin, isManager,
+	isAdmin, isLogistDelivery, isLogisticsDeliveryPage, isManager,
 	isTopManager,
 	randomColor,
 	showLoadingSpinner
@@ -27,7 +27,7 @@ import {
 	leafletDrawLayerEventHandlers,
 	showPoligonControl,
 } from "./map/leafletDrawUtils.js"
-import { showShops, toogleAllShops } from "./map/shopMarkersUtils.js"
+import { hideShops, optimizerShopToggler, showShops, toogleAllShops } from "./map/shopMarkersUtils.js"
 import {
 	getFormatDataForDistanceControlTable,
 	getFormatDataToOptimizeRouteTable,
@@ -76,17 +76,20 @@ import {
 	addDistanceInfo,
 	addRouteInfo,
 	addSmallHeaderClass,
+	updateTruckListsOptions,
 	clearRouteTable,
 	crossDockingPointVisibleToggler,
 	displayEmptyTruck,
 	getMarkerToShop,
-	setOptimizeRouteFormData
+	setLocalCarsData,
+	setOptimizeRouteFormData,
+	truckAdapter,
+	clearPoligonControlForm
 } from "./map/mapUtils.js"
-import { calcPallets } from "./map/calcPallets.js"
+import { getTruckLists, groupTrucksByDate } from "./logisticsDelivery/trucks/trucksUtils.js"
+import { bootstrap5overlay } from "./bootstrap5overlay/bootstrap5overlay.js"
 
-const currentUrl = window.location.href
-const isLogisticsDelivery = currentUrl.includes('logistics-delivery')
-const apiUrl = isLogisticsDelivery ? '../../api/' : '../api/'
+const apiUrl = isLogisticsDeliveryPage() ? '../../api/' : '../api/'
 
 const testOptimizationUrl = `${apiUrl}map/myoptimization3`
 const saveOptimizeRouteParamsUrl = `${apiUrl}map/set`
@@ -102,6 +105,8 @@ const getRoutingListUrl = `${apiUrl}map/way/4`
 const getServerMessageUrl = `${apiUrl}map/getStackTrace`
 const sendExcelFileUrl = `${apiUrl}map/5`
 const sendExcelFileWithReportUrl = `${apiUrl}map/6`
+
+const getTrucksBaseUrl = `${apiUrl}logistics/deliveryShops/getTGTrucks`
 
 const token = $("meta[name='_csrf']").attr("content")
 
@@ -377,7 +382,9 @@ L.canvasMarker = (...options) => new CanvasMarker(...options)
 
 // создание карты
 const map = L.map("map", config).setView([lat, lng], zoom)
-L.tileLayer("http://{s}.tile.osm.org/{z}/{x}/{y}.png").addTo(map)
+L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+	attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+}).addTo(map)
 
 // обработчик клика по карте
 map.on('click', (e) => {
@@ -432,25 +439,23 @@ window.onload = async () => {
 	// кнопки боковой панели
 	const menuItems = document.querySelectorAll(".menu-item")
 	const buttonClose = document.querySelector(".close-button")
-	menuItems.forEach((item) => addOnClickToMenuItemListner(item))
-	buttonClose.addEventListener("click", () => closeSidebar())
-	document.addEventListener("keydown", (e) => (e.key === "Escape") && closeSidebar())
+	menuItems.forEach((item) => addOnClickToMenuItemListner(item, crossDockingPolygonsVisibleToggler))
+	buttonClose.addEventListener("click", () => closeSidebar(crossDockingPolygonsVisibleToggler))
+	document.addEventListener("keydown", (e) => (e.key === "Escape") && closeSidebar(crossDockingPolygonsVisibleToggler))
 
 	// контейнеры для таблиц с информацией о точках маршрута
-	// const routeInputsContainer = document.querySelector('#routeInputsContainer')
+	const routeInputsContainer = document.querySelector('#routeInputsContainer')
 	const routeAreaContainer = document.querySelector('#routeAreaContainer')
-	// routeInputsContainer && createRouteInputsTable(25, routeInputsContainer)
+	routeInputsContainer && createRouteInputsTable(25, routeInputsContainer)
 	routeAreaContainer && createRouteTextareaTable(25, routeAreaContainer)
 
 	// контейнеры с нумерацией
 	const optimizeRouteNumberContainer = document.querySelector('#optimizeRouteNumberContainer')
-	const shopLoadsNumberContainer = document.querySelector('#shopLoadsNumberContainer')
-	optimizeRouteNumberContainer && createNumbersColumn(500, optimizeRouteNumberContainer)
-	shopLoadsNumberContainer && createNumbersColumn(500, shopLoadsNumberContainer)
+	optimizeRouteNumberContainer && createNumbersColumn(1000, optimizeRouteNumberContainer)
 	
 	// контейнер с инпутами для оказания чисток в форме оптимизатора
 	const optimizeRouteCleaningInputsContainer = document.querySelector('#optimizeRouteCleaningInputsContainer')
-	optimizeRouteCleaningInputsContainer && createCleaningInputsColumn(500, optimizeRouteCleaningInputsContainer)
+	optimizeRouteCleaningInputsContainer && createCleaningInputsColumn(1000, optimizeRouteCleaningInputsContainer)
 
 	// AG-Grid-контейнер, инпут поиска по магазинам, кнопка очистки карты
 	const distanceControlGridDiv = document.querySelector('#distanceControlGrid')
@@ -461,18 +466,18 @@ window.onload = async () => {
 	clearMapBtn && clearMapBtn.addEventListener('click', (e) => removeLayersfromMap())
 
 	// формы
-	// const routeForm = document.querySelector("#routeForm")
+	const routeForm = document.querySelector("#routeForm")
 	const routeAreaForm = document.querySelector("#routeAreaForm")
 	const distanceControlForm = document.querySelector("#distanceControlForm")
 	const optimizeRouteForm = document.querySelector("#optimizeRouteForm")
 	const routingParamsForm = document.querySelector("#routingParamsForm")
 	const poligonControlForm = document.querySelector("#poligonControlForm")
 	const optimizeRouteParamsForm = document.querySelector('#optimizeRouteParamsForm')
-	// routeForm && routeForm.addEventListener("submit", routeFormHandler)
+	routeForm && routeForm.addEventListener("submit", routeFormHandler)
 	routeAreaForm && routeAreaForm.addEventListener("submit", routeAreaFormHandler)
 	distanceControlForm && distanceControlForm.addEventListener("submit", (e) => distanceControlFormHandler(e, distanceControlGridDiv))
 	optimizeRouteForm && optimizeRouteForm.addEventListener("submit", (e) => optimizeRouteFormHandler(e, optimizeRouteGridDiv))
-	routingParamsForm && routingParamsForm.addEventListener("submit", (e) => routingParamsFormHandler(e, routeAreaForm))
+	routingParamsForm && routingParamsForm.addEventListener("submit", (e) => routingParamsFormHandler(e, routeForm))
 	poligonControlForm && poligonControlForm.addEventListener('submit', poligonControlFormSubmitHandler)
 	optimizeRouteParamsForm && optimizeRouteParamsForm.addEventListener('submit', optimizeRouteParamsFormHandler)
 
@@ -485,6 +490,10 @@ window.onload = async () => {
 	// переключатель отображения на карте всех магазинов
 	const allShopsToggler = document.querySelector("#allShopsToggler")
 	allShopsToggler && allShopsToggler.addEventListener('click', (e) => toogleAllShops(e, map, allShops))
+	
+	// переключатель отображения на карте магазинов из поля оптимизатора
+	const showOptimizerShopsBtn = document.querySelector("#showOptimizerShops")
+	showOptimizerShopsBtn && showOptimizerShopsBtn.addEventListener('click', (e) => optimizerShopToggler(e, map))
 
 	// проверка имени полигона
 	const polygonNameInput = document.querySelector("#polygonName")
@@ -492,7 +501,10 @@ window.onload = async () => {
 
 	// селект выбора действия для полигона
 	const polygonActionSelect = document.querySelector("#polygonAction")
-	polygonActionSelect && polygonActionSelect.addEventListener('change', crossDockingPointVisibleToggler)
+	polygonActionSelect && polygonActionSelect.addEventListener('change', (e) => crossDockingPointVisibleToggler(e.target.value))
+
+	// обработка закрытия модального окна создания полигона
+	$('#poligonControlModal').on('hidden.bs.modal', (e) => clearPoligonControlForm(poligonControlForm))
 
 	// селект выбора точки для кросс-докинга
 	const crossDockingPointSelect = document.querySelector("#crossDockingPoint")
@@ -506,7 +518,24 @@ window.onload = async () => {
 
 	// добавление инпутов с машинами в форме тестового оптимизатора
 	const carInputsTable = document.querySelector('#carInputsTable')
-	carInputsTable && createCarInputs(50, carInputsTable)
+	carInputsTable && createCarInputs(100, carInputsTable)
+
+	// дата для списков в форме оптимизатора
+	const currentDateInput = document.querySelector('#currentDate')
+	// установака данных даты 
+	currentDateInput && (currentDateInput.value = mapStore.getCurrentDate())
+	currentDateInput && (currentDateInput.min = mapStore.getCurrentDate())
+	currentDateInput && (currentDateInput.max = mapStore.getMaxTrucksDate())
+	currentDateInput && currentDateInput.addEventListener('change', (e) => changeCurrentDateHandler(e, carInputsTable))
+
+	// выпадающий список со списками машин для оптимизатора
+	const truckListsSelect = document.querySelector('#truckListsSelect')
+	truckListsSelect && updateTruckListsOptions(mapStore.getListsByCurrentDate())
+	truckListsSelect && truckListsSelect.addEventListener('change', (e) => truckListsSelectHandler(e, optimizeRouteForm))
+
+	// кнопка для очищения списка с инпутами машин
+	const clearCarInputsBtn = document.querySelector('#clearCarInputs')
+	clearCarInputsBtn && clearCarInputsBtn.addEventListener('click', (e) => clearCarInputs(e, carInputsTable, truckListsSelect))
 
 	// загрузка параметров маршрутизатора
 	routingParamsForm && setRouterParams(routingParamsForm, getRouterParamsUrl)
@@ -516,44 +545,52 @@ window.onload = async () => {
 
 	// отображение полигонов и элементов рисования
 	const role = document.querySelector("#role").value
-	if ( isAdmin(role)) {
-		displayPolygons()
+	// получаем полигоны без кроссдокинга
+	const filtredPolygons = mapStore
+		.getPolygons()
+		.filter(polygon => polygon.properties.action !== 'crossDocking')
+
+	if (isAdmin(role) || isLogistDelivery(role)) {
+		displayPolygons(filtredPolygons)
 		showPoligonControl()
 		displayShops()
 	}
 	if (isTopManager(role)) {
-		displayPolygons()
+		displayPolygons(filtredPolygons)
 		showPoligonControl()
 		displayShops()
 	}
 	if (isManager(role)) {
-		displayPolygons()
+		displayPolygons(filtredPolygons)
 		displayShops()
 	}
 
+	// создание формы настроек оптимизатора
+	createOptimizeRouteParamsForm(optimizeRouteParamsForm)
 
-	// создание элементов формы настроек оптимизатора
-	const optimizeRouteParamsMainCheckbox = document.querySelector('#optimizeRouteParamsMainCheckbox')
-	const optimizeRouteParamsCheckboxes = document.querySelector('#optimizeRouteParamsCheckboxes')
-	const optimizeRouteParamsSelect = document.querySelector('#optimizeRouteParamsSelect')
-	const optimizeRouteParamsInputs = document.querySelector('#optimizeRouteParamsInputs')
-	createFormInputs(mainCheckboxParams, mainCheckboxHTML, optimizeRouteParamsMainCheckbox)
-	createFormInputs(сheckboxParams, checkboxHTML, optimizeRouteParamsCheckboxes)
-	createFormInputs(inputParams, numericInputHTML, optimizeRouteParamsInputs)
-	createSelect(selectParams, selectOptions, optimizeRouteParamsSelect)
-
-	// автозаполнение формы настрорек оптимизатора
-	setOptimizeRouteParamsFormData(optimizeRouteParamsForm, OPTIMIZE_ROUTE_PARAMS_KEY)
-
-	// расчёт количества паллет и паллетовместимости для формы оптимизатора
-	calcPallets()
+	bootstrap5overlay.hideOverlay()
 }
+
 
 // получение стартовых данных
 async function init() {
 	const shops = await getData(getAllShopsUrl)
 	const allPolygons = await getData(getAllPolygonsUrl)
 
+	// получение машин для оптимизатора
+	const response = await getData(getTrucksBaseUrl)
+	const trucksData = response.status === '200'
+		? response.body ? response.body : []
+		: []
+
+	const mappedTruckData = trucksData.map(truckAdapter)
+	// машины по датам
+	const groupedTrucks = groupTrucksByDate(mappedTruckData)
+	// списки машин
+	const lists = getTruckLists(mappedTruckData)
+
+	mapStore.setTrucks(groupedTrucks)
+	mapStore.setLists(lists)
 	mapStore.setShops(shops)
 	mapStore.setPolygons(allPolygons)
 }
@@ -561,6 +598,23 @@ async function init() {
 //добавление маркеров на карту
 function addMarkersToMap(markers) {
 	markers.forEach(marker => map.addLayer(marker))
+}
+
+// -------------------------------------------------------------------------------//
+// --------------- создание элементов формы настроек оптимизатора ----------------//
+// -------------------------------------------------------------------------------//
+function createOptimizeRouteParamsForm(optimizeRouteParamsForm) {
+	const optimizeRouteParamsMainCheckbox = document.querySelector('#optimizeRouteParamsMainCheckbox')
+	const optimizeRouteParamsCheckboxes = document.querySelector('#optimizeRouteParamsCheckboxes')
+	const optimizeRouteParamsSelect = document.querySelector('#optimizeRouteParamsSelect')
+	const optimizeRouteParamsInputs = document.querySelector('#optimizeRouteParamsInputs')
+	optimizeRouteParamsMainCheckbox && createFormInputs(mainCheckboxParams, mainCheckboxHTML, optimizeRouteParamsMainCheckbox)
+	optimizeRouteParamsCheckboxes && createFormInputs(сheckboxParams, checkboxHTML, optimizeRouteParamsCheckboxes)
+	optimizeRouteParamsInputs && createFormInputs(inputParams, numericInputHTML, optimizeRouteParamsInputs)
+	optimizeRouteParamsSelect && createSelect(selectParams, selectOptions, optimizeRouteParamsSelect)
+
+	// автозаполнение формы настрорек оптимизатора
+	optimizeRouteParamsForm && setOptimizeRouteParamsFormData(optimizeRouteParamsForm, OPTIMIZE_ROUTE_PARAMS_KEY)
 }
 
 // -------------------------------------------------------------------------------//
@@ -582,14 +636,12 @@ function optimizeRouteShopNumChangeCallback(e, shops) {
 }
 
 // -------------------------------------------------------------------------------//
-// ------------ функция отображения полигонов и элементов рисования --------------//
+// ----------------------- функция отображения полигонов -------------------------//
 // -------------------------------------------------------------------------------//
-async function displayPolygons() {
-	const allPolygons = mapStore.getPolygons()
+async function displayPolygons(polygons) {
+	if (!polygons || polygons.length === 0 ) return
 
-	if (!allPolygons || allPolygons.length === 0 ) return
-
-	const modifyPolygons = allPolygons.map(polygon => {
+	const modifyPolygons = polygons.map(polygon => {
 		return {
 			...polygon,
 			geometry: {
@@ -610,18 +662,46 @@ async function displayPolygons() {
 	modifiedGeoJSON.addTo(map)
 }
 
+// показать выбраные полигоны
+function showPolygons(polygons) {
+	let displayedPolygonNames = []
+	drawnItems.eachLayer(layer => displayedPolygonNames.push(layer.feature.properties.name))
+	const polygonsToDisplay = polygons.filter(polygon => !displayedPolygonNames.includes(polygon.properties.name))
+	displayPolygons(polygonsToDisplay)
+}
+
+// скрыть выбранные полигоны
+function hidePolygons(polygons) {
+	const polygonNames = polygons.map(polygon => polygon.properties.name)
+	drawnItems.eachLayer(layer => {
+		if (polygonNames.includes(layer.feature.properties.name)) {
+			drawnItems.removeLayer(layer)
+		}
+	})
+}
+
+// переключение отображения полигонов кросс-докинга
+function crossDockingPolygonsVisibleToggler(sidebarMenuItem) {
+	const crossDockingPolygons = mapStore.getCrossDockingPolygons()
+
+	sidebarMenuItem.dataset.item === 'optimizeRoute'
+	&& sidebarMenuItem.classList.contains("active-item")
+		? showPolygons(crossDockingPolygons)
+		: hidePolygons(crossDockingPolygons)
+}
+
 // -------------------------------------------------------------------------------//
 // --------------------------- обработчики форм ----------------------------------//
 // -------------------------------------------------------------------------------//
 
 // функции обработки формы создания маршрута
-// function routeFormHandler(e) {
-// 	e.preventDefault()
+function routeFormHandler(e) {
+	e.preventDefault()
 
-// 	removeLayersfromMap()
-// 	const pointsData = getPointsData(e.target)
-// 	buildRoute(pointsData)
-// }
+	removeLayersfromMap()
+	const pointsData = getPointsData(e.target)
+	buildRoute(pointsData)
+}
 
 // функции обработки формы создания маршрута по общему полю
 function routeAreaFormHandler(e) {
@@ -638,7 +718,7 @@ function routingParamsFormHandler(e, routeForm) {
 
 	removeLayersfromMap()
 	const routeParams = getRouterParams(e.target)
-	const pointsData = getPointsDataFromTextarea(routeForm, routeParams)
+	const pointsData = getPointsData(routeForm, routeParams)
 	buildRoute(pointsData)
 }
 
@@ -799,6 +879,61 @@ function optimizeRouteParamsFormHandler(e) {
 	console.log("🚀 Настройки оптимизатора: ", data)
 	localStorage.setItem(OPTIMIZE_ROUTE_PARAMS_KEY, JSON.stringify(data))
 	snackbar.show('Настройки оптимизатора сохранены')
+}
+
+// обработчик изменения даты в форме оптимизатора
+function changeCurrentDateHandler(e, carInputsTable) {
+	const date = e.target.value
+	// сохраняем текущую дату
+	mapStore.setCurrentDate(date)
+	const truckLists = mapStore.getListsByCurrentDate()
+	// очищаем список с инпутами машин
+	createCarInputs(100, carInputsTable)
+	// обновляем селект выбора списка авто
+	updateTruckListsOptions(truckLists)
+}
+
+// обработчик выбора списка машин в оптимизаторе
+function truckListsSelectHandler(e, optimizeRouteForm) {
+	const nameList = e.target.value
+
+	if (!nameList) return
+
+	// ручное заполнение
+	if (nameList === 'manual') {
+		// данные из localStorage
+		const optimizeRouteItem = localStorage.getItem(OPTIMIZE_ROUTE_DATA_KEY)
+		const data = optimizeRouteItem ? JSON.parse(optimizeRouteItem) : []
+		createCarInputs(100, carInputsTable)
+		setLocalCarsData(data, optimizeRouteForm)
+		return
+	}
+
+	const trucks = nameList === 'freeCars'
+		? mapStore.getFreeTrucksByCurrentDate()
+		: mapStore.getTrucksByNameList(nameList)
+
+	if (!trucks || trucks.length === 0) {
+		// обнуляем поля машин
+		createCarInputs(100, carInputsTable)
+		return
+	}
+
+	// создаем и заполняем поля машинами из выбранного списка
+	createCarInputs(trucks.length, carInputsTable)
+	trucks.forEach((truck, i) => {
+		optimizeRouteForm.carName && (optimizeRouteForm.carName[i].value = truck.numTruck)
+		optimizeRouteForm.carCount && (optimizeRouteForm.carCount[i].value = 1)
+		optimizeRouteForm.maxPall && (optimizeRouteForm.maxPall[i].value = truck.pall)
+		optimizeRouteForm.maxTonnage && (optimizeRouteForm.maxTonnage[i].value = truck.cargoCapacity)
+	})
+}
+
+// очистка полей машин в форме оптимизатора
+function clearCarInputs(e) {
+	createCarInputs(100, carInputsTable)
+	truckListsSelect.value = ''
+	truckListsSelect.dispatchEvent(new Event('change'))
 }
 
 

@@ -2,6 +2,8 @@
 // -------------------- функции создания HTML-элементов --------------------------//
 // -------------------------------------------------------------------------------//
 
+import { calcPallets } from "./calcPallets.js"
+
 // функция создания таблицы с полями для номеров магазинов
 export function createRouteInputsTable(count, routeInputsContainer) {
 	const header = `
@@ -74,24 +76,26 @@ function getRows(header, row, rowCount) {
 
 // функция создания строки инпутов машины
 export function createCarInputs(count, container) {
+	container.innerHTML = ''
+
 	for (let i = 0; i < count; i++) {
 		const nameInput = document.createElement('input')
 		nameInput.type = 'text'
 		nameInput.name = `carName`
 		nameInput.className = 'form-control form-control-sm carName'
-	
+
 		const countInput = document.createElement('input')
 		countInput.type = 'number'
 		countInput.name = `carCount`
 		countInput.className = 'form-control form-control-sm carCount'
 		countInput.min = 0
-	
+
 		const pallInput = document.createElement('input')
 		pallInput.type = 'number'
 		pallInput.name = `maxPall`
 		pallInput.className = 'form-control form-control-sm maxPall'
 		pallInput.min = 0
-		
+
 		const tonnageInput = document.createElement('input')
 		tonnageInput.type = 'number'
 		tonnageInput.name = `maxTonnage`
@@ -100,6 +104,9 @@ export function createCarInputs(count, container) {
 
 		container.append(nameInput, countInput, pallInput, tonnageInput)
 	}
+
+	// расчёт количества паллет и паллетовместимости для формы оптимизатора
+	calcPallets()
 }
 
 // переключатель Показать все точки

@@ -65,6 +65,18 @@ public class TGTruck implements Serializable{
 	@Column(name = "other_info")
 	private String otherInfo;
 	
+	@Column(name = "is_second_round")
+	private Boolean isSecondRound;
+	
+	
+	public Boolean isSecondRound() {
+		return isSecondRound;
+	}
+
+	public void setSecondRound(Boolean isSecondRound) {
+		this.isSecondRound = isSecondRound;
+	}
+
 	/**
 	 * @return the companyName
 	 */

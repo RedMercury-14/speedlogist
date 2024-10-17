@@ -2,19 +2,51 @@
 // ------- функции отображения на карте и удаления с карты всех магазинов --------//
 // -------------------------------------------------------------------------------//
 
-const allShopsToView = []
-const shopsToView = []
+import { isLogisticsDeliveryPage } from "../utils.js"
+import { getTextareaData } from "./formDataUtils.js"
+import { mapStore } from "./mapStore.js"
 
-// функция отображения магазинов на карте при вводу в textarea
+// функция переключения видимости магазинов из оптимизатора на карте
+export function optimizerShopToggler(e, map) {
+	const showOptimizerShops = e.target.checked
+	const oldMode = mapStore.getMode()
+
+	if (showOptimizerShops) {
+		const optimizeRouteShopNum = document.querySelector("#optimizeRouteShopNum")
+		const shops = mapStore.getShops()
+		const shopNums = getTextareaData(optimizeRouteShopNum)
+		const shopsToView = shops.filter(shop => shopNums.includes(`${shop.numshop}`))
+		showShops(shopsToView, map)
+		mapStore.setMode('sumPall')
+	} else {
+		hideShops(map)
+		mapStore.setMode(oldMode)
+	}
+}
+
+// функция отображения магазинов на карте
 export function showShops(shops, map) {
 	// очитска карты от маркеров
-	shopsToView.forEach(marker => map.removeLayer(marker))
-	shopsToView.length = 0
+	mapStore.getShopsToView().forEach(marker => map.removeLayer(marker))
 
 	// добавление нужных маркеров
+	const shopsToView = []
 	shops.forEach(shop => shopsToView.push(getCanvasShopMarker(shop)))
 	shopsToView.forEach(marker => map.addLayer(marker))
+	mapStore.setShopsToView(shopsToView)
 }
+
+// функция удаления магазинов с карты
+export function hideShops(map) {
+	const shopsToView = mapStore.getShopsToView()
+	if (shopsToView.length) {
+		shopsToView.forEach(marker => {
+			map.removeLayer(marker)
+		})
+	}
+}
+
+
 
 // функция переключения видимости всех магазинов на карте
 export function toogleAllShops(e, map, allShops) {
@@ -26,13 +58,16 @@ export function toogleAllShops(e, map, allShops) {
 }
 
 function showAllShops(map, allShops) {
+	const allShopsToView = mapStore.getAllShopsToView()
 	if (allShopsToView.length === 0) {
 		if (!allShops || allShops.length === 0) return
 		allShops.map(shop => allShopsToView.push(getCanvasShopMarker(shop)))
+		mapStore.setAllShopsToView(allShopsToView)
 	}
 	allShopsToView.forEach(marker => map.addLayer(marker))
 }
 function hideAllShops(map) {
+	const allShopsToView = mapStore.getAllShopsToView()
 	if (allShopsToView.length) {
 		allShopsToView.forEach(marker => {
 			map.removeLayer(marker)
@@ -55,7 +90,10 @@ function getCanvasShopMarker(shop) {
 
 	return L.canvasMarker(
 			{ lat: shop.lat, lng: shop.lng },
-			{ img: { url: imgSrc, size: [24, 24], } }
+			{
+				img: { url: imgSrc, size: [24, 24], },
+				numshop: shop.numshop,
+			}
 		)
 		.bindPopup(container, { offset: [0, -15] })
 }
@@ -137,9 +175,7 @@ function getImageSrc(shop) {
 	const hasRestriction = shop.length || shop.width || shop.height || shop.maxPall
 	const isCrossDocking = shop.type === 'Кросс-докинг'
 
-	const currentUrl = window.location.href
-	const isLogisticsDelivery = currentUrl.includes('logistics-delivery')
-	const baseUrl = isLogisticsDelivery ? '../../../speedlogist/' : '../../speedlogist/'
+	const baseUrl =  isLogisticsDeliveryPage() ? '../../../speedlogist/' : '../../speedlogist/'
 	
 	if (isCrossDocking) return `${baseUrl}resources/img/cross-docking_80x80_2.png`
 

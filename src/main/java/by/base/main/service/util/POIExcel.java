@@ -1183,7 +1183,7 @@ public class POIExcel {
             if (row != null) {
                 Integer code = (int) row.getCell(0).getNumericCellValue();
                 String nameProduct = row.getCell(1).getStringCellValue();
-                int quantity = (int) row.getCell(2).getNumericCellValue();
+                int quantity = (int) roundВouble(row.getCell(2).getNumericCellValue(), 0);
 
                 OrderProduct orderProduct = new OrderProduct();
                 orderProduct.setQuantity(quantity);

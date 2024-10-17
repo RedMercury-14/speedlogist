@@ -433,6 +433,7 @@ function createPoint(e, pointList, pointType) {
 	$('.selectpicker').selectpicker()
 	e.submitter && e.submitter.blur()
 	pointsCounter++
+	showAddUnloadPointBtn()
 }
 
 // валидация формы заявки
@@ -631,4 +632,9 @@ function showSetMarketNumberModal() {
 function hideSetMarketNumberModal() {
 	$('.modal-backdrop').removeClass("whiteOverlay")
 	$('#setMarketNumberModal').modal('hide')
+}
+
+function showAddUnloadPointBtn() {
+	const addUnloadPointBtn = document.querySelector('#addUnloadPoint')
+	addUnloadPointBtn.classList.remove('none')
 }

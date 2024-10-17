@@ -3,8 +3,6 @@ package by.base.main.util.hcolossus;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -15,9 +13,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import com.itextpdf.text.log.SysoCounter;
-import com.mysql.cj.x.protobuf.MysqlxCrud.Collection;
 
 import by.base.main.model.Shop;
 import by.base.main.service.ShopService;
@@ -114,6 +109,7 @@ public class ColossusProcessorANDRestrictions3 {
 			System.err.println("Используется старый метод! Нужно использовать /map/myoptimization3");
 			return null;
 		}
+		List<Shop> problemShops = new ArrayList<Shop>(); // проблемные магазины
 		stackTrace = "";
 		Map<Integer, Shop> allShop = shopService.getShopMap();
 		Shop targetStock = allShop.get(stock);
@@ -178,6 +174,7 @@ public class ColossusProcessorANDRestrictions3 {
 		 * тут получаем лист с магазами в кроссах и делаем мапу где ключ - название полигона - значение - лист магазов
 		 */
 		
+		String nameKrosPolygon = null; // имя полигона для определения сл. полигона
 		
 		while (!trucks.isEmpty()) {
 			if (i == iMax) {
@@ -197,19 +194,30 @@ public class ColossusProcessorANDRestrictions3 {
 			shopsForOptimization.sort(shopComparatorDistanceMain);
 			sortedShopsHasKrossing(); // Делает так, чтобы магазины, которые входят в кроссы были сверху списка
 			
-			Integer pallRestriction = null;
-			
 			//берем самый дальний магазин
 			Shop firstShop = shopsForOptimization.remove(0);
-			pallRestriction = firstShop.getMaxPall() != null ? firstShop.getMaxPall() : null;
 			boolean isRestrictionsFirst = false;
 			
-			//Проверяем, загрузится ли этот магазин в самую большую машину (проверка на идеальные маршруты)
+			nameKrosPolygon = firstShop.getKrossPolugonName();
 			
+			//Проверяем, загрузится ли этот магазин в самую большую машину (проверка на идеальные маршруты)
+			Integer pallRestrictionIdeal = firstShop.getMaxPall() != null ? firstShop.getMaxPall() : null;
 			Integer shopPall = firstShop.getNeedPall();
 			Integer maxPallTruck = trucks.get(0).getPall();
+			Integer maxPallTruckRestriction = null;
+			if(pallRestrictionIdeal != null) {
+				for (Vehicle truck : trucks) {
+					if (truck.getPall() <= pallRestrictionIdeal) {
+						maxPallTruckRestriction = truck.getPall();
+						break;
+					}
+				}	
+			}
+			
+			
+			
 			// проверяем, есть ли ограничения и записываем
-			Integer pallRestrictionIdeal = firstShop.getMaxPall() != null ? firstShop.getMaxPall() : null;
+			
 			if (shopPall >= maxPallTruck && pallRestrictionIdeal == null) {
 			// логика создания идеального маршрута если нет ограничений
 				createIdealWay(i+"", firstShop, targetStock);
@@ -218,7 +226,7 @@ public class ColossusProcessorANDRestrictions3 {
 			}
 	
 			// логика создания идеального маршрута если ЕСТЬ ограниченя
-			if (shopPall >= maxPallTruck && pallRestrictionIdeal != null) {
+			if (pallRestrictionIdeal != null && maxPallTruckRestriction != null  && shopPall >= maxPallTruckRestriction) {
 				createIdealWayAndPallRestriction(i+"", firstShop, targetStock);
 				i++;
 				continue;
@@ -242,7 +250,8 @@ public class ColossusProcessorANDRestrictions3 {
 			boolean isRestrictions = false;
 			for (Map.Entry<Double, Shop> entry : radiusMap.entrySet()) {
 				Shop shop2 = entry.getValue();
-				if(firstShop.getKrossPolugonName()!=null && shop2.getKrossPolugonName() == null) { // если первый магаз входит в крос а второй нет - пропускаем!
+				
+				if(firstShop.getKrossPolugonName()!=null && shop2.getKrossPolugonName() == null || nameKrosPolygon != null && !shop2.getKrossPolugonName().equals(nameKrosPolygon)) { // если первый магаз входит в крос а второй нет - пропускаем!
 					continue;
 				}
 				
@@ -355,6 +364,10 @@ public class ColossusProcessorANDRestrictions3 {
 					trucks.stream().filter(t-> t.getPall()<=specialPall).forEach(t->specialTrucks.add(t));
 					if(specialTrucks.isEmpty()) {
 						System.err.println("Отсутствуют машины с паллетовместимостью " + specialPall + " и ниже!");
+						points.remove(points.size()-1);
+						specialShop.setPackageShop("Отсутствуют машины с паллетовместимостью " + specialPall + " и ниже!");
+						problemShops.add(specialShop);						
+//						shopsForOptimization.add(specialShop);
 						break;
 					}
 					Map<Double, Shop> radiusMapSpecial = new TreeMap<Double, Shop>();
@@ -397,7 +410,7 @@ public class ColossusProcessorANDRestrictions3 {
 					 */
 					for (Map.Entry<Double, Shop> entry : radiusMapSpecial.entrySet()) {
 						Shop shop2 = entry.getValue();	
-						if(firstShop.getKrossPolugonName()!=null && shop2.getKrossPolugonName() == null) { // если первый магаз входит в крос а второй нет - пропускаем!
+						if(firstShop.getKrossPolugonName()!=null && shop2.getKrossPolugonName() == null || nameKrosPolygon != null && !shop2.getKrossPolugonName().equals(nameKrosPolygon)) { // если первый магаз входит в крос а второй нет - пропускаем!
 							continue;
 						}
 						Integer specialPallNew = shop2.getMaxPall() != null ? shop2.getMaxPall() : null; // тут определяем есть ли ограничения в текущем задании
@@ -474,34 +487,39 @@ public class ColossusProcessorANDRestrictions3 {
 			}
 			
 			
-			trucks.remove(virtualTruck);
-			virtualTruck.setTargetWeigth(calcWeightHashHsop(points, targetStock));
-			virtualTruck.setTargetPall(calcPallHashHsop(points, targetStock));	
-						
-			
-			// создаём финальный, виртуальный маршрут
-			points.add(targetStock);
-
-			VehicleWay vehicleWayVirtual = new VehicleWay(i+ "", points, 0.0, 30, virtualTruck);
-			vehicleWayVirtual.setDistanceFromStock(firstShop.getDistanceFromStock());	
-			
-			//методы постобработки маршрутов
-						
+			if(points.size() >= 3) {//тут делаем проверку на то что не ломаный ли маршрут (типо 1700-1700)
+				
+				trucks.remove(virtualTruck);
+				virtualTruck.setTargetWeigth(calcWeightHashHsop(points, targetStock));
+				virtualTruck.setTargetPall(calcPallHashHsop(points, targetStock));	
+				
+				// создаём финальный, виртуальный маршрут
+				points.add(targetStock);
+				
+				VehicleWay vehicleWayVirtual = new VehicleWay(i+ "", points, 0.0, 30, virtualTruck);
+				vehicleWayVirtual.setDistanceFromStock(firstShop.getDistanceFromStock());	
+				
+				//методы постобработки маршрутов
+				
 //			superProcessingWay(vehicleWayVirtual, targetStock); // метод попутноо подбора авто
-			
-			changeTruckHasSmall(vehicleWayVirtual, targetStock); // метод замены авто на меньшее
-			
+				
+				changeTruckHasSmall(vehicleWayVirtual, targetStock); // метод замены авто на меньшее
+				
 //			optimizePoints(vehicleWayVirtual);//метод оптимизации точек маршрута
-
-			optimizePointsAndLastPoint(vehicleWayVirtual);//метод оптимизации точек маршрута
-
-			whiteWay.add(vehicleWayVirtual);
+				
+				optimizePointsAndLastPoint(vehicleWayVirtual);//метод оптимизации точек маршрута
+				
+				whiteWay.add(vehicleWayVirtual);
+			}
+			
 			i++;			
 		}
 
 
 		stackTrace = stackTrace + "-->Остановлен  на итерации " + i + ". Максимальное значение итераций в данном задании: "+iMax+".<-- \n";
 		
+		//добавляем проблемные магазины
+		shopsForOptimization.addAll(problemShops);
 		
 		stackTrace = stackTrace + "Результат после третьего этапа: \n";
 		for (VehicleWay v : whiteWay) {
@@ -513,14 +531,16 @@ public class ColossusProcessorANDRestrictions3 {
 		}
 		stackTrace = stackTrace + "+++++++++ Оставшиеся магазины +++++++++++\n";
 		for (Shop v : shopsForOptimization) {
-			stackTrace = stackTrace + v.getNumshop() + " (" + v.getNeedPall() + ") " + "\n";
+			stackTrace = stackTrace + v.getNumshop() + " (" + v.getNeedPall() + ") info = "+v.getPackageShop() + "\n";
 		}
+		
 
 		whiteWay.forEach(w -> System.out.println(w));
 		System.out.println("========= Свободные авто ==========");
 		trucks.forEach(t -> System.out.println(t));
 		System.out.println("+++++++++ Оставшиеся магазины +++++++++++");
 //		shopsForOptimization.forEach(s -> System.out.println(s.toAllString()));
+		
 
 		Solution solution = new Solution();
 
@@ -551,6 +571,9 @@ public class ColossusProcessorANDRestrictions3 {
 	 * @param vehicleWayVirtual
 	 */
 	private void optimizePointsAndLastPoint(VehicleWay vehicleWayVirtual) {
+		if(vehicleWayVirtual.getWay() == null || vehicleWayVirtual.getWay().size()<3) {
+			return;
+		}
 		List<Shop> points = new ArrayList<Shop>(vehicleWayVirtual.getWay());
 		Double totalRunHasMatrix = 0.0;
 		List<Shop> points2 = new ArrayList<Shop>(vehicleWayVirtual.getWay());
@@ -842,7 +865,7 @@ public class ColossusProcessorANDRestrictions3 {
 	 * @throws Exception 
 	 */
 	private void changeTruckHasSmall(VehicleWay vehicleWayVirtual, Shop targetStock) throws Exception {		
-		System.out.println("-->>> changeTruckHasSmall START : " + vehicleWayVirtual);
+//		System.out.println("-->>> changeTruckHasSmall START : " + vehicleWayVirtual);
 		if(vehicleWayVirtual.getVehicle().getTargetWeigth() == null) {
 			throw new Exception();
 		}
@@ -875,13 +898,13 @@ public class ColossusProcessorANDRestrictions3 {
 						vehicleForDelete.remove(oldTruck);
 						vehicleWayVirtual.setVehicle(truck);
 						stackTrace = stackTrace + "Меняем тачку с " + oldTruck.getPall() + " на "
-								+ truck.getPall() + "\n";
+								+ truck.getPall() + " на маршруте с id = "+vehicleWayVirtual.getId()+"\n";
 						break;
 					}
 				}
 				
 			}
-			System.out.println("-->>> changeTruckHasSmall FINISH : " + vehicleWayVirtual);
+//			System.out.println("-->>> changeTruckHasSmall FINISH : " + vehicleWayVirtual);
 			trucks.sort(vehicleComparatorFromMax);
 		}
 	}
@@ -1115,7 +1138,9 @@ public class ColossusProcessorANDRestrictions3 {
 			newShopHasPall.setDistanceFromStock(distanceFromStock);
 			List<Shop> points = new ArrayList<Shop>();
 			shopsForDelite.add(shop);
-			shopsForAddNewNeedPall.add(newShopHasPall);
+			if(newShopHasPall.getNeedPall()>0) {
+				shopsForAddNewNeedPall.add(newShopHasPall);
+			}
 			shop.setNeedPall(targetTruck.getTargetPall()); // указываем текущую потребность магазина для этой фуры
 			points.add(targetStock);
 			points.add(shop);
@@ -1154,7 +1179,9 @@ public class ColossusProcessorANDRestrictions3 {
 				newShopHasPall.setDistanceFromStock(distanceFromStock);				
 				List<Shop> points = new ArrayList<Shop>();
 				shopsForDelite.add(shop);
-				shopsForAddNewNeedPall.add(newShopHasPall);
+				if(newShopHasPall.getNeedPall()>0) {
+					shopsForAddNewNeedPall.add(newShopHasPall);
+				}
 				shop.setNeedPall(targetTruck.getTargetPall()); // указываем текущую потребность магазина для этой фуры
 				shop.setWeight(targetTruck.getTargetPall() * oneWidthPall);
 				points.add(targetStock);
@@ -1183,7 +1210,9 @@ public class ColossusProcessorANDRestrictions3 {
 				newShopHasPall.setDistanceFromStock(distanceFromStock);
 				List<Shop> points = new ArrayList<Shop>();				
 				shopsForDelite.add(shop);
-				shopsForAddNewNeedPall.add(newShopHasPall);
+				if(newShopHasPall.getNeedPall()>0) {
+					shopsForAddNewNeedPall.add(newShopHasPall);
+				}
 				shop.setNeedPall(targetTruck.getTargetPall()); // указываем текущую потребность магазина для этой фуры
 				shop.setWeight(targetTruck.getTargetPall() * oneWidthPall);
 				points.add(targetStock);
@@ -1228,6 +1257,8 @@ public class ColossusProcessorANDRestrictions3 {
 		Integer maxPallTruck = trucks.get(0).getPall();
 		Integer maxWeighTruck = trucks.get(0).getWeigth();
 		Double distanceFromStock = shop.getDistanceFromStock();
+		
+		System.out.println("пришел магаз: " + shop);
 
 		// проверяем, есть ли ограничения и записываем
 		Integer pallRestrictionIdeal = shop.getMaxPall() != null ? shop.getMaxPall() : null;
@@ -1266,7 +1297,9 @@ public class ColossusProcessorANDRestrictions3 {
 			newShopHasPall.setDistanceFromStock(distanceFromStock);
 			List<Shop> points = new ArrayList<Shop>();
 			shopsForDelite.add(shop);
-			shopsForAddNewNeedPall.add(newShopHasPall);
+			if(newShopHasPall.getNeedPall()>0) {
+				shopsForAddNewNeedPall.add(newShopHasPall);
+			}
 			shop.setNeedPall(targetTruck.getTargetPall()); // указываем текущую потребность магазина для этой фуры
 			points.add(targetStock);
 			points.add(shop);
@@ -1275,7 +1308,7 @@ public class ColossusProcessorANDRestrictions3 {
 			changeTruckHasSmall(vehicleWay, targetStock);
 			whiteWay.add(vehicleWay);
 		}
-		if (shopPall >= pallRestrictionIdeal) {
+		if (pallRestrictionIdeal != null && shopPall >= pallRestrictionIdeal || pallRestrictionIdeal != null && pallRestrictionIdeal < maxPallTruck) {
 			Vehicle targetTruck = null;
 			for (Vehicle truck : trucks) {
 				if (truck.getPall() <= pallRestrictionIdeal) {
@@ -1285,7 +1318,7 @@ public class ColossusProcessorANDRestrictions3 {
 			}
 			if(targetTruck == null) {
 				stackTrace = stackTrace + "Ограничения на магазин следующие: не более " + shop.getMaxPall() + "паллет! Машин равных или меньше данному значению не найдено!\n";
-				System.err.println("ColossusProcessorANDRestrictions2.run: Ограничения на магазин следующие: не более" + shop.getMaxPall() + "паллет! Машин равных или меньше данному значению не найдено!");
+				System.err.println("ColossusProcessorANDRestrictions3.run: Ограничения на магазин следующие: не более " + shop.getMaxPall() + " паллет! Машин равных или меньше данному значению не найдено!");
 				//Нужно придумать специальную обработку
 //				Solution solution = new Solution();
 //				solution.setStackTrace(stackTrace);
@@ -1310,7 +1343,9 @@ public class ColossusProcessorANDRestrictions3 {
 				newShopHasPall.setDistanceFromStock(distanceFromStock);
 				List<Shop> points = new ArrayList<Shop>();
 				shopsForDelite.add(shop);
-				shopsForAddNewNeedPall.add(newShopHasPall);
+				if(newShopHasPall.getNeedPall()>0) {
+					shopsForAddNewNeedPall.add(newShopHasPall);
+				}
 				shop.setNeedPall(targetTruck.getTargetPall()); // указываем текущую потребность магазина для этой фуры
 				points.add(targetStock);
 				points.add(shop);
@@ -1319,12 +1354,11 @@ public class ColossusProcessorANDRestrictions3 {
 				changeTruckHasSmall(vehicleWay, targetStock);
 				whiteWay.add(vehicleWay);
 			}else {
-				System.err.println("Блок распределения идеальных маршрутов: Распределяем магазин БЕЗ ограничениями по весу!");
-				trucks.remove(targetTruck);
-				int newNeedPall = targetTruck.getWeigth()/(int) oneWidthPall; // определяем сколько паллет (по ср. весу) поместится в эту машину
+				System.err.println("Блок распределения идеальных маршрутов: Распределяем магазин БЕЗ ограничениями по весу!");				
+				trucks.remove(targetTruck);				
 				targetTruck.setTargetPall(targetTruck.getPall()); // загружаем машину полностью
 				Integer newNeedPallForShop = shopPall - targetTruck.getPall();
-				Integer finalWidthFOrTruck = (int) ((int) newNeedPall*oneWidthPall);
+				Integer finalWidthFOrTruck = (int) ((int) targetTruck.getPall()*oneWidthPall);
 				targetTruck.setTargetWeigth(finalWidthFOrTruck);
 				Integer newNeedWeigthForShop = shopWeight - finalWidthFOrTruck;
 				Shop newShopHasPall = new Shop(shop.getNumshop(), shop.getAddress(), shop.getLat(),
@@ -1334,7 +1368,9 @@ public class ColossusProcessorANDRestrictions3 {
 				newShopHasPall.setDistanceFromStock(distanceFromStock);
 				List<Shop> points = new ArrayList<Shop>();
 				shopsForDelite.add(shop);
-				shopsForAddNewNeedPall.add(newShopHasPall);
+				if(newShopHasPall.getNeedPall()>0) {
+					shopsForAddNewNeedPall.add(newShopHasPall);
+				}				
 				shop.setNeedPall(targetTruck.getPall()); // указываем текущую потребность магазина для этой фуры
 				points.add(targetStock);
 				points.add(shop);

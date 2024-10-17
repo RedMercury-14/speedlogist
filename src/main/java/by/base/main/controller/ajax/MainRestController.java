@@ -1150,7 +1150,6 @@ public class MainRestController {
 		
 		Map<Integer, OrderProduct> mapOrderProduct = new HashMap<Integer, OrderProduct>();
 		try {
-			System.out.println(dateStr);
 			mapOrderProduct = poiExcel.loadNeedExcel(file1, dateStr);
 		} catch (InvalidFormatException | IOException | java.text.ParseException | ServiceException e) {
 			// TODO Auto-generated catch block
@@ -2828,6 +2827,8 @@ public class MainRestController {
 	
 	@PostMapping("/map/myoptimization3")
 	public Solution myOptimization3(@RequestBody String str) throws Exception {
+		
+//		System.out.println(str);
 		if(isRuningOptimization) {
 			Solution messageSolution = new Solution();
 			messageSolution.setMapResponses(new HashMap<String, List<MapResponse>>());
@@ -3112,6 +3113,7 @@ public class MainRestController {
 			isRuningOptimization = !isRuningOptimization;
 		}
 		return finalSolution;
+//		return null;
 	}
 	
 	/**
@@ -4948,7 +4950,7 @@ public class MainRestController {
 		String points = jsonMainObject.get("points").toString();
 		String way = (String) jsonMainObject.get("way");
 		Order order = orderService.getOrderById(Integer.parseInt(jsonMainObject.get("idOrder").toString()));
-		if (order.getStatus() == 20 || order.getStatus() == 17 || order.getStatus() == 15 || order.getStatus() == 6) { // общее редактирование, пока маршрут не создан
+		if (order.getStatus() == 20 || order.getStatus() == 17 || order.getStatus() == 15 || order.getStatus() == 6 || order.getStatus() == 7) { // общее редактирование, пока маршрут не создан
 			order.setCounterparty((String) jsonMainObject.get("contertparty"));
 			order.setContact((String) jsonMainObject.get("contact"));
 			order.setCargo((String) jsonMainObject.get("cargo"));

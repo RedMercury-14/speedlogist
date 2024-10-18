@@ -302,6 +302,8 @@ window.onload = async function() {
 	restoreColumnState()
 	// скрываем оверлей загрузки
 	bootstrap5overlay.hideOverlay()
+	// сообщаем о готовности приложения к работе
+	store.setReady(true)
 }
 
 // контекстное меню таблицы заказов

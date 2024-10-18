@@ -114,6 +114,6 @@
 			})
 		})
 	</script>
-	<script src='${pageContext.request.contextPath}/resources/mainPage/js/nav-fixed-top.js'></script>
+	<script src='${pageContext.request.contextPath}/resources/js/mainPage/nav-fixed-top.js'></script>
 </body>
 </html>

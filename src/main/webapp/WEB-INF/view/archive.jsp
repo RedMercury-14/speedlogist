@@ -30,7 +30,7 @@ C <input type="date" name="dateStart" id="dateStart" value="<c:out value="${date
 <!-- контейнер для отображения полученных сообщений -->
 <div id="toasts" class="position-fixed bottom-0 right-0 p-3" style="z-index: 100; right: 0; bottom: 0;"></div>
 
-<script src='${pageContext.request.contextPath}/resources/mainPage/js/nav-fixed-top.js'></script>
+<script src='${pageContext.request.contextPath}/resources/js/mainPage/nav-fixed-top.js'></script>
 <script	src="${pageContext.request.contextPath}/resources/js/archive.js" type="module"></script>
 <script src="${pageContext.request.contextPath}/resources/js/myMessage.js" type="module"></script>
 </body>

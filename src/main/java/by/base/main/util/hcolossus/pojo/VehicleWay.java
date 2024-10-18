@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import by.base.main.model.MapResponse;
 import by.base.main.model.Shop;
+import by.base.main.util.hcolossus.service.MatrixMachine;
 
 /**
  * реализация общего маршрута машины
@@ -279,6 +280,22 @@ public class VehicleWay {
 	 */
 	public Double getTotalRun() {
 		return totalRun;
+	}
+	
+	/**
+	 * Считает пробег по матричномуц методу
+	 * @param matrixMachine
+	 * @return
+	 */
+	public Double calcTotalRun(MatrixMachine matrixMachine) {
+		Double totalRunHasMatrix = 0.0;
+			//заменяем просчёт расстояний из GH на матричный метод			
+		for (int j = 0; j < way.size()-1; j++) {
+			String key = way.get(j).getNumshop()+"-"+way.get(j+1).getNumshop();
+			totalRunHasMatrix = totalRunHasMatrix + matrixMachine.matrix.get(key);
+		}
+		return totalRunHasMatrix;
+		
 	}
 
 	/**

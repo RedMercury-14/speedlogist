@@ -51,6 +51,7 @@ export function truckAdapterFromWS(truck) {
 		idList: toNumberFromWS(truck.idList),
 		status: toNumberFromWS(truck.status),
 		companyName: toStringFromWS(truck.companyName),
+		secondRound: toBoleanFromWS(truck.secondRound),
 	}
 }
 function toNumberFromWS(value) {
@@ -58,6 +59,13 @@ function toNumberFromWS(value) {
 }
 function toStringFromWS(value) {
 	return value === 'null' ? null : value
+}
+function toBoleanFromWS(value) {
+	return value === 'null'
+		? false
+		: value === 'true' || value === true
+			? true
+			: false
 }
 
 // функция получения действия для обновления машины

@@ -343,7 +343,7 @@
 		<option value="23:30">23:30</option>
 	</datalist>
 
-	<script src="${pageContext.request.contextPath}/resources/mainPage/js/nav-fixed-top.js"></script>
+	<script src="${pageContext.request.contextPath}/resources/js/mainPage/nav-fixed-top.js"></script>
 	<script	src="${pageContext.request.contextPath}/resources/js/maintenanceList.js" type="module"></script>
 </body>
 </html>

@@ -246,6 +246,41 @@ public class TelegramBotRoutingTEST extends TelegramLongPollingBot{
 				
 				
 				switch (user.getCommand()) {
+//				case "/setpall":
+//					String numTruck = data.split("_")[0];
+//					String pall = data.split("_")[1];
+////					TGTruck truck = tgTruckService.getTGTruckByChatNumTruck(numTruck, user);
+//					TGTruck truck = new TGTruck();
+//					if(user.getDateOrderTruckOptimization() != null) {
+//						truck.setDateRequisition(user.getDateOrderTruckOptimization());
+//					}else {
+//						truck.setDateRequisition(Date.valueOf(LocalDate.now().plusDays(1)));
+//					}
+//					truck.setNumTruck(numTruck);
+//					truck.setPall(Integer.parseInt(pall));
+//					truck.setChatIdUserTruck(user.getChatId());
+//					user.putTrucksForBot(numTruck, truck);	
+//					tgTruckService.saveOrUpdateTGTruck(truck);
+//					user.setValidityTruck(numTruck); // сюза временно записываем номер авто которое обрабатывается
+//					//создали машину, присвоили номер и записали сколько паллет.
+//					
+//					user.setCommand("/setweigth");
+//					tgUserService.saveOrUpdateTGUser(user);
+//					//тут достаём старое сообщение и меняем его
+////					long messageId = update.getCallbackQuery().getMessage().getMessageId();
+//					String answer1 = "Выберите грузоподъемность авто";
+//			        EditMessageText newMessage = EditMessageText.builder()
+//			            .chatId(chatId)
+//			            .messageId(Math.toIntExact(messageId))
+//			            .text(answer1)
+//			            .replyMarkup(keyboardMaker.getWeigthKeyboard(pall.trim())) // сюда указываем колличество паллет, дальше делает клава
+//			            .build();
+//			        try {
+//			            execute(newMessage);
+//			        } catch (TelegramApiException e) {
+//			            e.printStackTrace();
+//			        }
+//			        return;
 				case "/setpall":
 					String numTruck = data.split("_")[0];
 					String pall = data.split("_")[1];
@@ -264,16 +299,16 @@ public class TelegramBotRoutingTEST extends TelegramLongPollingBot{
 					user.setValidityTruck(numTruck); // сюза временно записываем номер авто которое обрабатывается
 					//создали машину, присвоили номер и записали сколько паллет.
 					
-					user.setCommand("/setweigth");
+					user.setCommand("/setround");
 					tgUserService.saveOrUpdateTGUser(user);
 					//тут достаём старое сообщение и меняем его
 //					long messageId = update.getCallbackQuery().getMessage().getMessageId();
-					String answer1 = "Выберите грузоподъемность авто";
+					String answer1 = "Машина может совершить 2 рейса в день?";
 			        EditMessageText newMessage = EditMessageText.builder()
 			            .chatId(chatId)
 			            .messageId(Math.toIntExact(messageId))
 			            .text(answer1)
-			            .replyMarkup(keyboardMaker.getWeigthKeyboard(pall.trim())) // сюда указываем колличество паллет, дальше делает клава
+			            .replyMarkup(keyboardMaker.getYesNoKeyboard(numTruck)) 
 			            .build();
 			        try {
 			            execute(newMessage);
@@ -281,6 +316,32 @@ public class TelegramBotRoutingTEST extends TelegramLongPollingBot{
 			            e.printStackTrace();
 			        }
 			        return;
+				case "/setround":
+					String numTruckForRound = data.split("_")[0];
+					String ansver = data.split("_")[1];
+					TGTruck truckForRound = tgTruckService.getTGTruckByChatNumTruck(numTruckForRound, user);
+					if(ansver.equals("yes")) {
+						truckForRound.setSecondRound(true);
+					}else {
+						truckForRound.setSecondRound(false);
+					}
+					tgTruckService.saveOrUpdateTGTruck(truckForRound);
+					user.setCommand("/setweigth");
+					tgUserService.saveOrUpdateTGUser(user);
+					String answer2 = "Выберите грузоподъемность авто";
+			        EditMessageText newMessage2 = EditMessageText.builder()
+			            .chatId(chatId)
+			            .messageId(Math.toIntExact(messageId))
+			            .text(answer2)
+			            .replyMarkup(keyboardMaker.getWeigthKeyboard(truckForRound.getPall()+"")) // сюда указываем колличество паллет, дальше делает клава
+			            .build();
+			        try {
+			            execute(newMessage2);
+			        } catch (TelegramApiException e) {
+			            e.printStackTrace();
+			        }
+			        return;
+			        
 				case "/settype":
 					String numTruckForType = data.split("_")[0];
 					String type = data.split("_")[1];
@@ -400,11 +461,7 @@ public class TelegramBotRoutingTEST extends TelegramLongPollingBot{
 			}
 			long chatId = update.getMessage().getChatId();
 	        if(update.hasMessage() && update.getMessage().hasText()){
-	            String messageText = update.getMessage().getText();     
-	            
-	            
-	            
-	            
+	            String messageText = update.getMessage().getText();            
 	            String onlyText = new String(update.getMessage().getText());     
 	            TGUser user = tgUserService.getTGUserByChatId(chatId);
 	            
@@ -467,6 +524,7 @@ public class TelegramBotRoutingTEST extends TelegramLongPollingBot{
 	            	}
 	            	return;
 	            }
+	            
 	            
 	            System.err.println(command);
 	            switch (command.toLowerCase()){

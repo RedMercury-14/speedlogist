@@ -1,7 +1,7 @@
 body {
     width: 100vw;
     /* height: 100vh; */
-    background-image: url('../../resources/mainPage/img/images/bg.webp') !important;
+    background-image: url('../../resources/img/mainPage/images/bg.webp') !important;
     background-repeat: no-repeat;
     background-size: cover;
     background-position: center;

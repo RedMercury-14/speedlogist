@@ -84,10 +84,20 @@ public class VehicleMachine {
 			int numOfCars = Integer.parseInt(jsonCarObject.get("carCount").toString());
 			int pallOfCars = Integer.parseInt(jsonCarObject.get("maxPall").toString()); //это паллеты
 			int weightOfCars = Integer.parseInt(jsonCarObject.get("maxTonnage").toString()); //это вес
+			boolean isTwiceRound = Boolean.parseBoolean(jsonCarObject.get("secondRound").toString());
 			for (int i = 0; i < numOfCars; i++) {
 				Vehicle vehicle = new Vehicle(id, nameCar, nameCar, pallOfCars, weightOfCars);
+				vehicle.setTwiceRound(isTwiceRound);
 				result.add(vehicle);
 				id++;
+				if(vehicle.isTwiceRound()) {
+					Vehicle cloneTruck = vehicle.cloneForSecondRound();
+					cloneTruck.setClone(true);
+					cloneTruck.setTwiceRound(false);
+					cloneTruck.setId(cloneTruck.getId()*(-1));
+					result.add(cloneTruck);	
+				}
+				
 			}
 		}
 		return result;

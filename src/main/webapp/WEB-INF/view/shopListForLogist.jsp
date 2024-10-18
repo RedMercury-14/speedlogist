@@ -220,5 +220,5 @@
 
 </body>
 <script src="${pageContext.request.contextPath}/resources/js/shopListForLogist.js" type="module"></script>
-<script src='${pageContext.request.contextPath}/resources/mainPage/js/nav-fixed-top.js'></script>
+<script src='${pageContext.request.contextPath}/resources/js/mainPage/nav-fixed-top.js'></script>
 </html>

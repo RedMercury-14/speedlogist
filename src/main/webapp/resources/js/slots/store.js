@@ -10,6 +10,7 @@ const role = document.querySelector("#role").value
 
 export const store = {
 	_state: {
+		isReady: false,
 		token,
 		login,
 		role,
@@ -25,6 +26,13 @@ export const store = {
 	},
 	_callSubscriber(state) {
 		console.log('subscriber is not defind')
+	},
+
+	getReady() {
+		return this._state.isReady
+	},
+	setReady(isReady) {
+		this._state.isReady = isReady
 	},
 
 	getState() {

@@ -9,7 +9,6 @@ import { mapStore } from "./mapStore.js"
 // функция переключения видимости магазинов из оптимизатора на карте
 export function optimizerShopToggler(e, map) {
 	const showOptimizerShops = e.target.checked
-	const oldMode = mapStore.getMode()
 
 	if (showOptimizerShops) {
 		const optimizeRouteShopNum = document.querySelector("#optimizeRouteShopNum")
@@ -17,10 +16,8 @@ export function optimizerShopToggler(e, map) {
 		const shopNums = getTextareaData(optimizeRouteShopNum)
 		const shopsToView = shops.filter(shop => shopNums.includes(`${shop.numshop}`))
 		showShops(shopsToView, map)
-		mapStore.setMode('sumPall')
 	} else {
 		hideShops(map)
-		mapStore.setMode(oldMode)
 	}
 }
 
@@ -45,8 +42,6 @@ export function hideShops(map) {
 		})
 	}
 }
-
-
 
 // функция переключения видимости всех магазинов на карте
 export function toogleAllShops(e, map, allShops) {

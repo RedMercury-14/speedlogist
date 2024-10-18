@@ -20,10 +20,10 @@
 		<title>SpeedLogist</title>
         <link rel="icon" href="${pageContext.request.contextPath}/resources/img/favicon.ico">
         <!-- MAIN CSS STYLE SHEET -->
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/mainPage/css/custom.css">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/mainPage/css/slick.min.css"> 
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/mainPage/css/owl.carousel.min.css">
-        <link rel='stylesheet' href="${pageContext.request.contextPath}/resources/mainPage/css/flickity.min.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/mainPage/custom.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/mainPage/slick.min.css"> 
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/mainPage/owl.carousel.min.css">
+        <link rel='stylesheet' href="${pageContext.request.contextPath}/resources/css/mainPage/flickity.min.css">
 	</head>
 <body>
     <sec:authorize access="authenticated" var="authenticated" />
@@ -50,7 +50,7 @@
     <div class="home-slider dot-hide">
         <!-- partial:index.partial.html -->
         <div class="hero-slider" data-carousel>
-          <div class="carousel-cell" style="background-image:url(${pageContext.request.contextPath}/resources/mainPage/img/images/home-slider-7.jpg);">
+          <div class="carousel-cell" style="background-image:url(${pageContext.request.contextPath}/resources/img/mainPage/images/home-slider-7.jpg);">
             <div class="overlay"></div>
             <div class="container slider-caption">
               <h5 class="subtitle">Доставка точно в сроки</h5>
@@ -62,7 +62,7 @@
               </c:choose>
             </div>
           </div>
-        <div class="carousel-cell" style="background-image:url(${pageContext.request.contextPath}/resources/mainPage/img/images/home-slider-8.jpg);">
+        <div class="carousel-cell" style="background-image:url(${pageContext.request.contextPath}/resources/img/mainPage/images/home-slider-8.jpg);">
             <div class="overlay"></div>
             <div class="container slider-caption">
               <h5 class="subtitle">Доставка по Республике Беларусь</h5>
@@ -74,7 +74,7 @@
               </c:choose>
             </div>
           </div>
-        <div class="carousel-cell" style="background-image:url(${pageContext.request.contextPath}/resources/mainPage/img/images/home-slider-9.jpg);">
+        <div class="carousel-cell" style="background-image:url(${pageContext.request.contextPath}/resources/img/mainPage/images/home-slider-9.jpg);">
             <div class="overlay"></div>
             <div class="container slider-caption">
               <h5 class="subtitle">Срочные грузы</h5>
@@ -91,36 +91,36 @@
         <div class="container services-carousel slider">
             <div class="slide">
                 <div class="cargoy-sb">
-                    <figure class="sb-thumb green"><a href="#"><img src="${pageContext.request.contextPath}/resources/mainPage/img/images/tabor.jpg" alt=""></a></figure>
+                    <figure class="sb-thumb green"><a href="#"><img src="${pageContext.request.contextPath}/resources/img/mainPage/images/tabor.jpg" alt=""></a></figure>
                     <div class="sb-caption">
-                        <figure class="icon-caption"><img src="${pageContext.request.contextPath}/resources/mainPage/img/master/box.svg" alt=""></figure>
+                        <figure class="icon-caption"><img src="${pageContext.request.contextPath}/resources/img/mainPage/master/box.svg" alt=""></figure>
                         <h4>Таборы</h4>
                     </div>
                 </div>
             </div>
             <div class="slide">
                <div class="cargoy-sb">
-                    <figure class="sb-thumb green"><a href="#"><img src="${pageContext.request.contextPath}/resources/mainPage/img/images/priles.jpg" alt=""></a></figure>
+                    <figure class="sb-thumb green"><a href="#"><img src="${pageContext.request.contextPath}/resources/img/mainPage/images/priles.jpg" alt=""></a></figure>
                     <div class="sb-caption">
-                        <figure class="icon-caption"><img src="${pageContext.request.contextPath}/resources/mainPage/img/master/box.svg" alt=""></figure>
+                        <figure class="icon-caption"><img src="${pageContext.request.contextPath}/resources/img/mainPage/master/box.svg" alt=""></figure>
                         <h4>Прилесье</h4>
                     </div>
                 </div>
             </div>
             <div class="slide">
                <div class="cargoy-sb">
-                    <figure class="sb-thumb green"><a href="#"><img src="${pageContext.request.contextPath}/resources/mainPage/img/images/kylik.jpg" alt=""></a></figure>
+                    <figure class="sb-thumb green"><a href="#"><img src="${pageContext.request.contextPath}/resources/img/mainPage/images/kylik.jpg" alt=""></a></figure>
                     <div class="sb-caption">
-                        <figure class="icon-caption"><img src="${pageContext.request.contextPath}/resources/mainPage/img/master/box.svg" alt=""></figure>
+                        <figure class="icon-caption"><img src="${pageContext.request.contextPath}/resources/img/mainPage/master/box.svg" alt=""></figure>
                         <h4>Кулики</h4>
                     </div>
                 </div>
             </div>
             <div class="slide">
                <div class="cargoy-sb">
-                    <figure class="sb-thumb green"><a href="#"><img src="${pageContext.request.contextPath}/resources/mainPage/img/images/sovremenny_sklad.jpg" alt=""></a></figure>
+                    <figure class="sb-thumb green"><a href="#"><img src="${pageContext.request.contextPath}/resources/img/mainPage/images/sovremenny_sklad.jpg" alt=""></a></figure>
                     <div class="sb-caption">
-                        <figure class="icon-caption"><img src="${pageContext.request.contextPath}/resources/mainPage/img/master/box.svg" alt=""></figure>
+                        <figure class="icon-caption"><img src="${pageContext.request.contextPath}/resources/img/mainPage/master/box.svg" alt=""></figure>
                         <h4>Наши склады</h4>
                     </div>
                 </div>
@@ -177,11 +177,11 @@
     <!--SCROLL TOP START-->
 
     <!-- JAVASCRIPTS -->
-    <script src='${pageContext.request.contextPath}/resources/mainPage/js/plugins.js'></script>
-    <script src='${pageContext.request.contextPath}/resources/mainPage/js/main.js'></script>
-    <script src='${pageContext.request.contextPath}/resources/mainPage/js/flickity.pkgd.min.js'></script>
-    <script src="${pageContext.request.contextPath}/resources/mainPage/js/slider.js"></script>
-    <script src='${pageContext.request.contextPath}/resources/mainPage/js/nav-fixed-top.js'></script>
+    <script src='${pageContext.request.contextPath}/resources/js/mainPage/plugins.js'></script>
+    <script src='${pageContext.request.contextPath}/resources/js/mainPage/main.js'></script>
+    <script src='${pageContext.request.contextPath}/resources/js/mainPage/flickity.pkgd.min.js'></script>
+    <script src="${pageContext.request.contextPath}/resources/js/mainPage/slider.js"></script>
+    <script src='${pageContext.request.contextPath}/resources/js/mainPage/nav-fixed-top.js'></script>
     <script src="${pageContext.request.contextPath}/resources/js/myMessage.js" type="module"></script>
     <!-- JAVASCRIPTS END -->
     

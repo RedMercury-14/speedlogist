@@ -58,7 +58,7 @@
 		</div>
 	</div>
 
-	<script src='${pageContext.request.contextPath}/resources/mainPage/js/nav-fixed-top.js'></script>
+	<script src='${pageContext.request.contextPath}/resources/js/mainPage/nav-fixed-top.js'></script>
 	<script type="module" src="${pageContext.request.contextPath}/resources/js/adminCarrier.js"></script>
 </body>
 </html>

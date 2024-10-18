@@ -24,7 +24,7 @@
 
 			<div class="services-thumb">
 				<figure class="st-feature">
-					<img src="${pageContext.request.contextPath}/resources/mainPage/img/images/computer_chart.jpg" alt="">
+					<img src="${pageContext.request.contextPath}/resources/img/mainPage/images/computer_chart.jpg" alt="">
 				</figure>
 				<a href="<spring:url value="/main/carrier/tender"/>">
 					<div class="st-caption">
@@ -35,7 +35,7 @@
 
 			<div class="services-thumb">
 				<figure class="st-feature">
-					<img src="${pageContext.request.contextPath}/resources/mainPage/img/images/truck.jpg" alt="">
+					<img src="${pageContext.request.contextPath}/resources/img/mainPage/images/truck.jpg" alt="">
 				</figure>
 				<a href="<spring:url value="/main/carrier/transportation"/>">
 					<div class="st-caption">
@@ -46,7 +46,7 @@
 
 			<div class="services-thumb">
 				<figure class="st-feature">
-					<img src="${pageContext.request.contextPath}/resources/mainPage/img/images/trucks.jpg" alt="">
+					<img src="${pageContext.request.contextPath}/resources/img/mainPage/images/trucks.jpg" alt="">
 				</figure>
 				<a href="<spring:url value="/main/carrier/controlpark/trucklist"/>">
 					<div class="st-caption">
@@ -57,7 +57,7 @@
 
 			<div class="services-thumb">
 				<figure class="st-feature">
-					<img src="${pageContext.request.contextPath}/resources/mainPage/img/images/driver.jpg" alt="">
+					<img src="${pageContext.request.contextPath}/resources/img/mainPage/images/driver.jpg" alt="">
 				</figure>
 				<a href="<spring:url value="/main/carrier/controlpark/driverlist"/>">
 					<div class="st-caption">
@@ -68,7 +68,7 @@
 
 			<div class="services-thumb">
 				<figure class="st-feature">
-					<img src="${pageContext.request.contextPath}/resources/mainPage/img/images/folder.jpg" alt="">
+					<img src="${pageContext.request.contextPath}/resources/img/mainPage/images/folder.jpg" alt="">
 				</figure>
 				<a href="<spring:url value="/main/carrier/transportation/routecontrole"/>">
 					<div class="st-caption">
@@ -79,7 +79,7 @@
 
 			<div class="services-thumb">
 				<figure class="st-feature">
-					<img src="${pageContext.request.contextPath}/resources/mainPage/img/images/archive.jpg" alt="">
+					<img src="${pageContext.request.contextPath}/resources/img/mainPage/images/archive.jpg" alt="">
 				</figure>
 				<a href="<spring:url value="/main/carrier/transportation/archive"/>">
 					<div class="st-caption">
@@ -95,7 +95,7 @@
 
 	<jsp:include page="footer.jsp" />
 
-	<script src='${pageContext.request.contextPath}/resources/mainPage/js/nav-fixed-top.js'></script>
+	<script src='${pageContext.request.contextPath}/resources/js/mainPage/nav-fixed-top.js'></script>
 	<script src="${pageContext.request.contextPath}/resources/js/myMessage.js" type="module"></script>
 </body>
 

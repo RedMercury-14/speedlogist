@@ -11,6 +11,9 @@ export function wsSlotOnMessageHandler(e, gridOptions) {
 	if (data.status === '120') {
 
 	} else if (data.status === '200') {
+		// игнорируем сообщения, если приложение ещё не готово к работе
+		if (!store.getReady()) return
+
 		// ЗАГЛУШКА , ЕСЛИ НЕТ ПАРАМЕТРА payload
 		if (!data.payload) return
 		const orderData = JSON.parse(data.payload)

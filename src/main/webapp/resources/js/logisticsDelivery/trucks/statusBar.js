@@ -130,3 +130,33 @@ export class CountStatusBarComponent {
 		this.eCount.innerText = this.params.api.getModel().getRowCount() + ""
 	}
 }
+
+// компонент отображения количества строк
+export class RowLegengStatusBarComponent {
+	init(params) {
+		this.params = params
+
+		this.eGui = document.createElement("div")
+		this.eGui.className = "ag-status-name-value d-flex"
+		
+		var label = document.createElement("span")
+		label.className = 'font-weight-bold'
+		label.innerText = "Машины на 2 рейса -"
+		this.eGui.appendChild(label)
+		
+		this.coloredBlock = document.createElement("span")
+		this.coloredBlock.className = "light-orange-row"
+		this.coloredBlock.style.display = "inline-block"
+		this.coloredBlock.style.height = "20px"
+		this.coloredBlock.style.width = "40px"
+		this.coloredBlock.style.marginLeft = "5px"
+
+		this.eGui.appendChild(this.coloredBlock)
+	}
+
+	getGui() {
+		return this.eGui
+	}
+
+	destroy() {}
+}

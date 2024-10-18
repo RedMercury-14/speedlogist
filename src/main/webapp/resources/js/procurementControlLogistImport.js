@@ -663,6 +663,18 @@ function routeFormSubmitHandler(e) {
 	// проверяем, заполнена ли предыдущая точка
 	if (isInvalidPointForms(e.target)) return
 
+	// проверка наличия хотя бы одной точки загрузки
+	if (!data.points.find(point => point.type === 'Загрузка')) {
+		snackbar.show('Необходимо добавить точку загрузки!')
+		return
+	}
+
+	// проверка наличия хотя бы одной точки выгрузки
+	if (!data.points.find(point => point.type === 'Выгрузка')) {
+		snackbar.show('Необходимо добавить точку выгрузки!')
+		return
+	}
+
 	disableButton(e.submitter)
 
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)

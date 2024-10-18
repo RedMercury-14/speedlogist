@@ -453,7 +453,7 @@
 	<jsp:include page="footer.jsp" />
 
 	<script src='${pageContext.request.contextPath}/resources/js/transportation.js' type="module"></script>
-	<script src='${pageContext.request.contextPath}/resources/mainPage/js/nav-fixed-top.js'></script>
+	<script src='${pageContext.request.contextPath}/resources/js/mainPage/nav-fixed-top.js'></script>
 	<script src="${pageContext.request.contextPath}/resources/js/myMessage.js" type="module"></script>
 	<script type="text/javascript">
 		function directionSearch() {

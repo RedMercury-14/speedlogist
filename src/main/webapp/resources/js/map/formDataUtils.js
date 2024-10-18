@@ -128,6 +128,7 @@ function getCarsData(form) {
 	const cars = []
 
 	const carNameInputs = form.querySelectorAll('.carName')
+	const secondRoundInputs = form.querySelectorAll('.secondRound')
 	const carCountInputs = form.querySelectorAll('.carCount')
 	const maxPallInputs = form.querySelectorAll('.maxPall')
 	const maxTonnageInputs = form.querySelectorAll('.maxTonnage')
@@ -135,12 +136,14 @@ function getCarsData(form) {
 	carNameInputs.forEach((input, index) => {
 		const carName = input.value
 		if (!carName) return
+		const secondRound = secondRoundInputs[index].checked
 		const carCount = carCountInputs[index].value
 		const maxPall = maxPallInputs[index].value
 		const maxTonnage = maxTonnageInputs[index].value
 
 		cars.push({
 			carName,
+			secondRound: secondRound,
 			carCount,
 			maxPall,
 			maxTonnage

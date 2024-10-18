@@ -83,21 +83,6 @@
 <script
 	src="${pageContext.request.contextPath}/resources/js/bootstrap3/bootstrap.min.js"></script>
 
-<script src="${pageContext.request.contextPath}/resources/tablesort/src/tablesort.js"></script>
-<script src="${pageContext.request.contextPath}/resources/tablesort/test/tape.js"></script>
-<script	src="${pageContext.request.contextPath}/resources/tablesort/src/sorts/tablesort.dotsep.js"></script>
-<script	src="${pageContext.request.contextPath}/resources/tablesort/src/sorts/tablesort.date.js"></script>
-<script	src="${pageContext.request.contextPath}/resources/tablesort/src/sorts/tablesort.number.js"></script>
-<script	src="${pageContext.request.contextPath}/resources/tablesort/src/sorts/tablesort.monthname.js"></script>
-<script	src="${pageContext.request.contextPath}/resources/tablesort/src/sorts/tablesort.filesize.js"></script>
-
-<script>
-table = document.getElementById('sort');
-console.log(table);
-new Tablesort(table);
-</script>
-		
-
 
 </body>
 </html>

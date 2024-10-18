@@ -1,15 +1,15 @@
 import { AG_GRID_LOCALE_RU } from '../../AG-Grid/ag-grid-locale-RU.js'
-import { CargoCapacitySumStatusBarComponent, CountStatusBarComponent, PallSumStatusBarComponent } from './statusBar.js'
+import { CargoCapacitySumStatusBarComponent, CountStatusBarComponent, PallSumStatusBarComponent, RowLegengStatusBarComponent } from './statusBar.js'
 
 export const trucksColumnDefs = [
-	{ headerName: 'id', field: 'idTGTruck', minWidth: 60, flex: 1, sort: 'desc', },
-	{ headerName: 'Номер', field: 'numTruck', },
+	{ headerName: 'id', field: 'idTGTruck', minWidth: 60, flex: 1, sort: 'desc', hide: true, },
+	{ headerName: 'Номер', field: 'numTruck', flex: 2, },
 	{ headerName: 'Контакты водителя', field: 'fio', flex: 4, wrapText: true, autoHeight: true, },
 	// { headerName: 'Модель', field: 'modelTruck', width: 150, },
-	{ headerName: 'Перевозчик', field: 'companyName', flex: 6, wrapText: true, autoHeight: true, },
-	{ headerName: 'Тип', field: 'typeTrailer', },
-	{ headerName: 'Паллеты', field: 'pall', flex: 2, },
-	{ headerName: 'Тоннаж', field: 'cargoCapacity', flex: 2, },
+	{ headerName: 'Перевозчик', field: 'companyName', flex: 4, wrapText: true, autoHeight: true, },
+	{ headerName: 'Тип', field: 'typeTrailer', flex: 2, },
+	{ headerName: 'Паллеты', field: 'pall', flex: 1, },
+	{ headerName: 'Тоннаж', field: 'cargoCapacity', flex: 1, },
 	{ headerName: 'Доп. инф-я', field: 'otherInfo', flex: 4, wrapText: true, autoHeight: true,},
 ]
 
@@ -28,6 +28,7 @@ export const trucksGridOptions = {
 	},
 	rowClassRules: {
 		'light-green-row': params => params.node.data.status === 50,
+		'light-orange-row': params => params.node.data.secondRound,
 	},
 	getRowId: (params) => params.data.idTGTruck,
 	animateRows: true,
@@ -37,6 +38,7 @@ export const trucksGridOptions = {
 	localeText: AG_GRID_LOCALE_RU,
 	statusBar: {
 		statusPanels: [
+			{ statusPanel: RowLegengStatusBarComponent, align: 'left', },
 			{ statusPanel: CountStatusBarComponent, },
 			{ statusPanel: PallSumStatusBarComponent, },
 			{ statusPanel: CargoCapacitySumStatusBarComponent, },

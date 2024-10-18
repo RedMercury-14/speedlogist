@@ -308,6 +308,10 @@ public class ReaderSchedulePlan {
 		 
 		 //определяем дату старта расчёта и лог плечо для всего заказа
 		 Schedule schedule = scheduleService.getScheduleByNumContract(Long.parseLong(numContract));
+		 if(schedule == null) {
+			 return new PlanResponce(0, "Действие заблокировано!\nНе найден график поставок с кодом контракта: " + numContract);
+		 }
+		 
 		 if(products.isEmpty()) {
 			 if(lines.size() == 0) {
 				 return new PlanResponce(0, "Действие заблокировано!\nНе найдены товары в заказе.");

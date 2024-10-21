@@ -134,27 +134,6 @@ public class OrderCreater {
 //				if(order.getMarketNumber().equals("19480247") || order.getMarketNumber().equals("19480250") || order.getMarketNumber().equals("19480251")) {
 //					order.setMarketContractType("453228");
 //				}
-//				if(order.getMarketNumber().equals("19480255")) {
-//					order.setMarketContractType("1212");
-//				}
-//				if(order.getMarketNumber().equals("19480257")) {
-//					order.setMarketContractType("5454461");
-//				}
-//				if(order.getMarketNumber().equals("19480259")) {
-//					order.setMarketContractType("459");
-//				}
-//				if(order.getMarketNumber().equals("19480260")) {
-//					order.setMarketContractType("453228");
-//				}
-//				if(order.getMarketNumber().equals("19480262")) {
-//					order.setMarketContractType("11113");
-//				}
-//				if(order.getMarketNumber().equals("19480263")) {
-//					order.setMarketContractType("11113");
-//				}
-//				if(order.getMarketNumber().equals("19480264")) {
-//					order.setMarketContractType("11113");
-//				}
 				
 				
 				//TEST!!!!!!! УДАЛИТЬ ПОТОМ ТУТ
@@ -181,6 +160,7 @@ public class OrderCreater {
 		        if(Integer.parseInt(message.split("<")[1].trim()) < 0) {//тут приходит сообщение об ошибке
 		        	Order errorMessage = new Order();
 		        	errorMessage.setMessage(message.split("<")[0].trim());
+		        	errorMessage.setPall(order.getPall());
 		        	errorMessage.setIdOrder(-1);
 		        	return errorMessage;
 		        }else {

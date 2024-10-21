@@ -1872,7 +1872,7 @@ public class MainRestController {
 					}
 				}else {
 					Order orderInBase = orderService.getOrderByMarketNumber(idMarket);
-					response.put("status", "200");
+					response.put("status", "105");
 					response.put("info", "Заказ в Маркете в статусе: " + orderBuyGroupDTO.getCheckx() + ". Сообщение системы: " + order.getMessage()+"\n"
 							+"Паллеты в SL = " + orderInBase.getPall() + "  -  паллеты из маркета = " + order.getPall());
 					return response;

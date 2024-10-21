@@ -19,7 +19,7 @@ import {
 	orderWeightInputOnChangeHandler,
 	typeTruckOnChangeHandler,
 } from "./procurementFormUtils.js"
-import { excelStyles, getPointToView, getRouteInfo, getRoutePrice, getWayToView, pointSorting, procurementExcelExportParams } from './procurementControlUtils.js'
+import { excelStyles, mapCallbackForProcurementControl, procurementExcelExportParams } from './procurementControlUtils.js'
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 import { getAddressHTML, getAddressInfoHTML, getCargoInfoHTML, getCustomsAddressHTML, getDateHTML, getTimeHTML, getTnvdHTML } from './procurementFormHtmlUtils.js'
 import { getComment, getPointsData } from './procurementFormDataUtils.js'
@@ -71,8 +71,8 @@ const columnDefs = [
 	{ headerName: 'Номер из Маркета', field: 'marketNumber', },
 	{ headerName: 'Погрузочный номер', field: 'loadNumber', },
 	{ headerName: 'Условия поставки', field: 'incoterms', wrapText: true, autoHeight: true, },
-	{ headerName: 'Точки загрузки', field: 'loadPoints', wrapText: true, autoHeight: true, },
-	{ headerName: 'Точки выгрузки', field: 'unloadPoints', wrapText: true, autoHeight: true, },
+	{ headerName: 'Точки загрузки', field: 'loadPointsToView', wrapText: true, autoHeight: true, },
+	{ headerName: 'Точки выгрузки', field: 'unloadPointsToView', wrapText: true, autoHeight: true, },
 	{ headerName: 'Тип кузова', field: 'typeTruck', },
 	{ headerName: 'Паллеты', field: 'summPall', width: 100, },
 	{
@@ -125,6 +125,7 @@ const gridOptions = {
 		wrapHeaderText: true,
 		autoHeaderHeight: true,
 	},
+	getRowId: (params) => params.data.idOrder,
 	onSortChanged: debouncedSaveColumnState,
 	onColumnResized: debouncedSaveColumnState,
 	onColumnMoved: debouncedSaveColumnState,
@@ -333,112 +334,7 @@ async function updateTable() {
 }
 
 function getMappingData(data) {
-	return data.map(order => {
-		const dateCreateToView = dateHelper.getFormatDate(order.dateCreate)
-		const dateDeliveryToView = dateHelper.getFormatDate(order.dateDelivery)
-		const controlToView = order.control ? 'Да' : 'Нет'
-		const telephoneManagerToView = order.telephoneManager ? `; тел. ${order.telephoneManager}` : ''
-		const managerToView = `${order.manager}${telephoneManagerToView}`
-		const statusToView = getStatus(order.status)
-		const stackingToView = order.stacking ? 'Да' : 'Нет'
-		const logistToView = order.logist && order.logistTelephone
-			? `${order.logist}, тел. ${order.logistTelephone}`
-			: order.logist
-				? order.logist
-				: order.logistTelephone
-					? order.logistTelephone : ''
-
-		const unloadWindowToView = order.onloadWindowDate && order.onloadWindowTime
-			? `${dateHelper.getFormatDate(order.onloadWindowDate)} ${order.onloadWindowTime.slice(0, 5)}`
-			: ''
-
-		const timeDeliveryToView = order.timeDelivery ? convertToDayMonthTime(order.timeDelivery) : ''
-
-		const filtredAdresses = order.addresses.filter(address => address.isCorrect)
-		const addressesToView = filtredAdresses
-			.sort(pointSorting)
-			.map(getPointToView)
-
-		const loadPoints = filtredAdresses
-			.filter(address => address.type === "Загрузка")
-			.sort((a, b) => a.idAddress - b.idAddress)
-			.map((address, i) => `${i + 1}) ${address.bodyAddress}`)
-			.join(' ')
-
-		const unloadPoints = filtredAdresses
-			.filter(address => address.type === "Выгрузка")
-			.sort((a, b) => a.idAddress - b.idAddress)
-			.map((address, i) => `${i + 1}) ${address.bodyAddress}`)
-			.join(' ')
-
-		const loadDateToView = addressesToView.length ? addressesToView[0].dateToView : ''
-
-		const unloadPointsArr = addressesToView.length
-			? addressesToView
-				.filter(point => point.type === 'Выгрузка')
-				.sort((a, b) => b.date - a.date)
-			: []
-
-		const unloadDateToView = unloadPointsArr.length ? unloadPointsArr[0].dateToView : ''
-
-		const summPall = filtredAdresses
-			.filter(address => address.type === "Загрузка")
-			.reduce((acc, address) => {
-				if (address.pall) {
-					const pall = Number(address.pall)
-					acc += pall
-					return acc
-				}
-			}, 0)
-
-		const summVolume = filtredAdresses
-			.filter(address => address.type === "Загрузка")
-			.reduce((acc, address) => {
-				if (address.volume) {
-					const volume = Number(address.volume)
-					acc += volume
-					return acc
-				}
-			}, 0)
-
-		const summWeight = filtredAdresses
-			.filter(address => address.type === "Загрузка")
-			.reduce((acc, address) => {
-				if (address.weight) {
-					const weight = Number(address.weight)
-					acc += weight
-					return acc
-				}
-			}, 0)
-
-		const routeInfo = getRouteInfo(order)
-		const routePrice = getRoutePrice(order)
-		const wayToView = getWayToView(order)
-
-		return {
-			...order,
-			dateCreateToView,
-			dateDeliveryToView,
-			controlToView,
-			addressesToView,
-			loadDateToView,
-			unloadDateToView,
-			managerToView,
-			statusToView,
-			stackingToView,
-			logistToView,
-			unloadWindowToView,
-			loadPoints,
-			unloadPoints,
-			summPall: summPall ? summPall : null,
-			summVolume: summVolume ? summVolume : null,
-			summWeight: summWeight ? summWeight : null,
-			routeInfo,
-			routePrice,
-			wayToView,
-			timeDeliveryToView,
-		}
-	})
+	return data.map(mapCallbackForProcurementControl)
 }
 
 function getContextMenuItems(params) {

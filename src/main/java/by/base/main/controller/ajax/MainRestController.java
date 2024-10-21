@@ -1852,23 +1852,31 @@ public class MainRestController {
 //			System.out.println(order);
 			
 			if(order.getIdOrder() < 0) {
-				switch (order.getMarketInfo()) {
-				case "0":
-					response.put("status", "105");
-					response.put("info", "Реальынй статус из маркета - ЧЕРНОВИК");
-					return response;
-					
-				case "-1":
+				if(order.getMarketInfo() != null) {
+					switch (order.getMarketInfo()) {
+					case "0":
+						response.put("status", "105");
+						response.put("info", "Реальынй статус из маркета - ЧЕРНОВИК");
+						return response;
+						
+					case "-1":
+						response.put("status", "105");
+						response.put("info", "Статус маркет = null");
+						response.put("orderDTO", orderBuyGroupDTO);
+						return response;
+
+					default:
+						response.put("status", "200");
+						response.put("info", "Заказ не в 50 статусе но и не в 0 статусе");
+						return response;
+					}
+				}else {
 					response.put("status", "105");
 					response.put("info", "Статус маркет = null");
 					response.put("orderDTO", orderBuyGroupDTO);
 					return response;
-
-				default:
-					response.put("status", "200");
-					response.put("info", "Заказ не в 50 статусе но и не в 0 статусе");
-					return response;
 				}
+				
 				
 			}else {
 				response.put("status", "200");
@@ -2861,8 +2869,8 @@ public class MainRestController {
 		Double dobleParameter5 = null;
 		
 		
-//		Double maxKoef = 2.0;
-		Double maxKoef = 1.66;
+		Double maxKoef = 2.0;
+//		Double maxKoef = 1.66;
 		JSONParser parser = new JSONParser();
 		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
 		JSONObject jsonParameters = jsonMainObject.get("params") != null ? (JSONObject) parser.parse(jsonMainObject.get("params").toString()) : null;
@@ -2924,7 +2932,7 @@ public class MainRestController {
 		
 	
 		//реализация перебора первого порядка
-		for (double i = 1.66; i <= maxKoef; i = i + 0.02) {
+		for (double i = 1.0; i <= maxKoef; i = i + 0.02) {
 			Double koeff = i;
 //			System.out.println("Коэфф = " + koeff);
 			Solution solution = colossusProcessorRad.run(jsonMainObject, numShops, pallHasShops, tonnageHasShops, stock, koeff, "fullLoad", shopsWithCrossDockingMap);

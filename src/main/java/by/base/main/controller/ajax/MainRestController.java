@@ -1874,6 +1874,7 @@ public class MainRestController {
 					response.put("status", "105");
 					response.put("info", "Статус маркет = null");
 					response.put("orderDTO", orderBuyGroupDTO);
+					response.put("order.getMarketInfo()", order.getMarketInfo());
 					return response;
 				}
 				
@@ -2869,8 +2870,8 @@ public class MainRestController {
 		Double dobleParameter5 = null;
 		
 		
-		Double maxKoef = 2.0;
-//		Double maxKoef = 1.66;
+//		Double maxKoef = 2.0;
+		Double maxKoef = 1.00;
 		JSONParser parser = new JSONParser();
 		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
 		JSONObject jsonParameters = jsonMainObject.get("params") != null ? (JSONObject) parser.parse(jsonMainObject.get("params").toString()) : null;

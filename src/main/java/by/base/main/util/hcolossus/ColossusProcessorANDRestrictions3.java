@@ -215,7 +215,7 @@ public class ColossusProcessorANDRestrictions3 {
 		
 		String nameKrosPolygon = null; // имя полигона для определения сл. полигона
 		
-		stackTrace = "Начальное распределение машин слеюущее: \n";
+		stackTrace = stackTrace +  "Начальное распределение машин слеюущее: \n";
 		for (Vehicle v : trucks) {
 			String answer = !v.isTwiceRound() ? "НЕТ" : "ДА";
 			String answer2 = !v.isClone() ? "НЕТ" : "ДА";
@@ -235,7 +235,6 @@ public class ColossusProcessorANDRestrictions3 {
 
 			shopsForDelite = new ArrayList<Shop>();
 			shopsForAddNewNeedPall = new ArrayList<Shop>();
-
 			
 			shopsForOptimization.sort(shopComparatorDistanceMain);
 			sortedShopsHasKrossing(); // Делает так, чтобы магазины, которые входят в кроссы были сверху списка
@@ -532,6 +531,10 @@ public class ColossusProcessorANDRestrictions3 {
 
 			}
 			
+			//тут проверка, если есть только склад и магазин - добавляет последний склад
+			if(points.size() == 2 && points.get(0).equals(targetStock) && points.get(1).getNumshop() != points.get(0).getNumshop()) {
+				points.add(targetStock);
+			}
 			
 			if(points.size() >= 3) {//тут делаем проверку на то что не ломаный ли маршрут (типо 1700-1700)
 				
@@ -573,6 +576,8 @@ public class ColossusProcessorANDRestrictions3 {
 				
 				whiteWay.add(vehicleWayVirtual);
 				i++;			
+			}else {
+				System.err.println("СРАБОТАЛ МЕТОД ОТСЕЧКИ ЛОМАННЫХ МАРШРУТОВ!");
 			}
 			
 		}

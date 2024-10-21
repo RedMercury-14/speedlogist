@@ -1871,10 +1871,10 @@ public class MainRestController {
 						return response;
 					}
 				}else {
-					response.put("status", "105");
-					response.put("info", "Статус маркет = null");
-					response.put("orderDTO", orderBuyGroupDTO);
-					response.put("order.getMarketInfo()", order.getMarketInfo());
+					Order orderInBase = orderService.getOrderByMarketNumber(idMarket);
+					response.put("status", "200");
+					response.put("info", "Заказ в Маркете в статусе: " + orderBuyGroupDTO.getCheckx() + ". Сообщение системы: " + order.getMessage()+"\n"
+							+"Паллеты в SL = " + orderInBase.getPall() + "  -  паллеты из маркета = " + order.getPall());
 					return response;
 				}
 				
@@ -2870,8 +2870,8 @@ public class MainRestController {
 		Double dobleParameter5 = null;
 		
 		
-//		Double maxKoef = 2.0;
-		Double maxKoef = 1.00;
+		Double maxKoef = 2.0;
+//		Double maxKoef = 1.00;
 		JSONParser parser = new JSONParser();
 		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
 		JSONObject jsonParameters = jsonMainObject.get("params") != null ? (JSONObject) parser.parse(jsonMainObject.get("params").toString()) : null;

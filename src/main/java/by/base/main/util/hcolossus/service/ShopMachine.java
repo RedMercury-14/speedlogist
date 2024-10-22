@@ -30,14 +30,16 @@ public class ShopMachine {
 	@Autowired
 	private MatrixMachine matrixMachine;
 	
-	private Comparator<Shop> shopComparator = (o1, o2) -> (o2.getNeedPall() - o1.getNeedPall()); //сортирует от большей потребности к меньшей
+//	private Comparator<Shop> shopComparator = (o1, o2) -> (o2.getNeedPall() - o1.getNeedPall()); //сортирует от большей потребности к меньшей
+	private Comparator<Shop> shopComparator = (o1, o2) -> Double.compare(o2.getNeedPall(), o1.getNeedPall()); // сортирует от большей потребности к меньшей. Переделал с прошлого (выше)
+
 	
 	/**
 	 * Метод подготавливает лист магазинов уже с потребностями
 	 * <br>Метод сортирует потребность магазов от большего к меньшему
 	 * @return
 	 */
-	public List<Shop> prepareShopList(List<Integer> shopList, List<Integer> pallHasShops) {
+	public List<Shop> prepareShopList(List<Integer> shopList, List<Double> pallHasShops) {
 		Map<Integer, Shop> allShop =  shopService.getShopMap();
 		List<Shop> result = new ArrayList<Shop>();
 		for (Integer integer : shopList) {
@@ -64,7 +66,7 @@ public class ShopMachine {
 	 * @throws JsonProcessingException 
 	 * @throws JsonMappingException 
 	 */
-	public List<Shop> prepareShopList3Parameters(List<Integer> shopList, List<Integer> pallHasShops, List<Integer> tonnageHasShops,  Integer stock,  Map<Integer, String> shopsWithCrossDockingMap) throws JsonMappingException, JsonProcessingException {
+	public List<Shop> prepareShopList3Parameters(List<Integer> shopList, List<Double> pallHasShops, List<Integer> tonnageHasShops,  Integer stock,  Map<Integer, String> shopsWithCrossDockingMap) throws JsonMappingException, JsonProcessingException {
 		ObjectMapper objectMapper = new ObjectMapper();
 		Map<Integer, Shop> allShop =  shopService.getShopMap();
 		ComparatorShops comparatorShops = new ComparatorShops();
@@ -120,7 +122,7 @@ public class ShopMachine {
 	 * <br> т.е. самый дальний и самый требовательный магаз
 	 * @return
 	 */
-	public List<Shop> prepareShopList2Parameters(List<Integer> shopList, List<Integer> pallHasShops, Integer stock) {
+	public List<Shop> prepareShopList2Parameters(List<Integer> shopList, List<Double> pallHasShops, Integer stock) {
 		Map<Integer, Shop> allShop =  shopService.getShopMap();
 		ComparatorShops comparatorShops = new ComparatorShops();
 		List<Shop> result = new ArrayList<Shop>();
@@ -158,7 +160,7 @@ public class ShopMachine {
 	 * 
 	 * @return
 	 */
-	public List<Shop> prepareShopList2ParametersDistanceMain(List<Integer> shopList, List<Integer> pallHasShops, Integer stock) {
+	public List<Shop> prepareShopList2ParametersDistanceMain(List<Integer> shopList, List<Double> pallHasShops, Integer stock) {
 		Map<Integer, Shop> allShop =  shopService.getShopMap();
 		ComparatorShopsDistanceMain comparatorShops = new ComparatorShopsDistanceMain();
 		List<Shop> result = new ArrayList<Shop>();
@@ -190,7 +192,7 @@ public class ShopMachine {
 		
 	}
 	
-	public List<Shop> prepareShopList2ParametersTEST(List<Integer> shopList, List<Integer> pallHasShops, Integer stock) {
+	public List<Shop> prepareShopList2ParametersTEST(List<Integer> shopList, List<Double> pallHasShops, Integer stock) {
 		Map<Integer, Shop> allShop =  shopService.getShopMap();
 		ComparatorShopsTEST comparatorShops = new ComparatorShopsTEST();
 		List<Shop> result = new ArrayList<Shop>();

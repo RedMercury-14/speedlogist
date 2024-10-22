@@ -15,7 +15,7 @@ public class Vehicle{
 	private int id;
 	private String name;
 	private String type;
-	private Integer pall;	//ко-во паллет
+	private Double pall;	//ко-во паллет
 	private Integer weigth;	//вес в кг
 	private double volume;	//объём метрах куб
 	private double height;	//высота метрах
@@ -26,7 +26,7 @@ public class Vehicle{
 	private boolean isClone;	//является ли эта машина клоном для второго круга. По умолчанию false
 	
 	//реализации специальных полей
-	private Integer targetPall;	//ко-во паллет загруженных на текущий момент времени
+	private Double targetPall;	//ко-во паллет загруженных на текущий момент времени
 	private Integer targetWeigth;	//вес загруженный на текущий момент времени
 	
 	/**
@@ -35,7 +35,7 @@ public class Vehicle{
 	 * @param type
 	 * @param pall
 	 */
-	public Vehicle(int id, String name, String type, Integer pall) {
+	public Vehicle(int id, String name, String type, Double pall) {
 		super();
 		this.id = id;
 		this.name = name;
@@ -44,7 +44,7 @@ public class Vehicle{
 		this.isFull = false;
 		this.isTwiceRound = false;
 		this.isClone = false;
-		this.targetPall = 0;
+		this.targetPall = 0.0;
 	}
 	
 	/**
@@ -55,7 +55,7 @@ public class Vehicle{
 	 * @param pall
 	 * @param weigth
 	 */
-	public Vehicle(int id, String name, String type, Integer pall, Integer weigth) {
+	public Vehicle(int id, String name, String type, Double pall, Integer weigth) {
 		super();
 		this.id = id;
 		this.name = name;
@@ -65,7 +65,7 @@ public class Vehicle{
 		this.isFull = false;
 		this.isTwiceRound = false;
 		this.isClone = false;
-		this.targetPall = 0;
+		this.targetPall = 0.0;
 	}
 
 	public Vehicle() {
@@ -73,7 +73,7 @@ public class Vehicle{
 		this.isFull = false;
 		this.isTwiceRound = false;
 		this.isClone = false;
-		this.targetPall = 0;
+		this.targetPall = 0.0;
 	}
 	
 	
@@ -130,7 +130,7 @@ public class Vehicle{
 	 * возвращает паллетовместимость машины
 	 * @return
 	 */
-	public Integer getPall() {
+	public Double getPall() {
 		return pall;
 	}
 
@@ -138,7 +138,7 @@ public class Vehicle{
 	 * паллетовместимость машины
 	 * @param pall
 	 */
-	public void setPall(Integer pall) {
+	public void setPall(Double pall) {
 		this.pall = pall;
 	}
 
@@ -212,7 +212,7 @@ public class Vehicle{
 	 * возвращет кол-во загруженных паллет в машине
 	 * @return
 	 */
-	public Integer getTargetPall() {
+	public Double getTargetPall() {
 		return targetPall;
 	}
 
@@ -220,7 +220,7 @@ public class Vehicle{
 	 * ко-во паллет загруженных на текущий момент времени
 	 * @param targetPall
 	 */
-	public void setTargetPall(Integer targetPall) {
+	public void setTargetPall(Double targetPall) {
 		this.targetPall = targetPall;
 	}
 	
@@ -228,8 +228,8 @@ public class Vehicle{
 	 * Возвращает свободное место
 	 * @return
 	 */
-	public Integer getFreePall() {
-		return (int) (pall - targetPall) < 0 ? -1 : (pall - targetPall) ;
+	public Double getFreePall() {
+		return (pall - targetPall) < 0 ? -1 : (pall - targetPall) ;
 	}
 	
 	/**

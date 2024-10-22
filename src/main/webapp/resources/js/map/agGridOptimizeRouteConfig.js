@@ -14,9 +14,12 @@ const excelHeader = [
 	cell('Вес, кг', 'header'),
 	cell('Расстояние, км', 'header'),
 	cell('Машина', 'header'),
+	cell('Паллеты/Вес', 'header'),
 ]
 const getExcelRows = (params) => {
-	const truckName = params.node.data.vehicle ? params.node.data.vehicle.name : ''
+	const vehicle = params.node.data.vehicle
+	const truckName = vehicle ? vehicle.name : ''
+	const pallWeight = vehicle ? `${vehicle.pall}/${vehicle.weigth}` : ''
 	const isEmptyShops = params.node.data.id === "Незавершенные"
 	const rows = params.node.data.points.map((point, i) => {
 		const weight = isEmptyShops
@@ -32,6 +35,7 @@ const getExcelRows = (params) => {
 					cell((weight), 'body'),
 					cell(point.distanceToView ? point.distanceToView : '', 'body'),
 					cell((i === 0 ? truckName : ''), 'body'),
+					cell((i === 0 ? pallWeight : ''), 'body'),
 				]
 			})
 	})

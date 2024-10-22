@@ -112,6 +112,7 @@ public class ColossusProcessorANDRestrictions3 {
 	private List<VehicleWay> whiteWay;
 	
 	private Double maxDistanceInRoute = 100000.0;
+	private Integer maxShopInWay = 22; //максимальное кол-во магазинов в одной машине
 	
 	private List<Shop> shopsForAddNewNeedPall;
 	/**
@@ -303,6 +304,12 @@ public class ColossusProcessorANDRestrictions3 {
 					continue;
 				}
 				
+				//тут проверяем если магазинов в маршруте больше 22 - останавливаемся!
+				if(points.size()>= maxShopInWay+1) {
+					points.add(targetStock);
+					break;
+				}
+				
 				isRestrictions = shop2.getMaxPall() != null ? true : false; // тут определяем есть ли ограничения в текущем задании
 				// тут добавляем мазаз в точку point
 				points.add(shop2);
@@ -462,6 +469,12 @@ public class ColossusProcessorANDRestrictions3 {
 							continue;
 						}
 						Integer specialPallNew = shop2.getMaxPall() != null ? shop2.getMaxPall() : null; // тут определяем есть ли ограничения в текущем задании
+						
+						//тут проверяем если магазинов в маршруте больше 22 - останавливаемся!
+						if(points.size()>=maxShopInWay+1) {
+							points.add(targetStock);
+							break;
+						}
 						
 						// тут добавляем мазаз в точку point
 						points.add(shop2);

@@ -223,7 +223,7 @@
 												<label class="col-form-label text-muted font-weight-bold">СКЛАД</label>
 												<input class="form-control form-control-sm" type="number" name="stock" required>
 												<label class="col-form-label text-muted font-weight-bold">Число итераций</label>
-												<input class="form-control form-control-sm" type="number" name="iteration" value="1" required>
+												<input class="form-control form-control-sm" type="text" name="iteration">
 												<label class="d-flex justify-content-end align-items-center">
 													<span class="text-muted font-weight-bold mr-1">Показать магазины</span>
 													<input class="toggler" id="showOptimizerShops" type="checkbox">

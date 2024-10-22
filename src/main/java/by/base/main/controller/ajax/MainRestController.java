@@ -2870,8 +2870,9 @@ public class MainRestController {
 		Double dobleParameter5 = null;
 		
 		
+		
 		Double maxKoef = 2.0;
-//		Double maxKoef = 1.00;
+		
 		JSONParser parser = new JSONParser();
 		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
 		JSONObject jsonParameters = jsonMainObject.get("params") != null ? (JSONObject) parser.parse(jsonMainObject.get("params").toString()) : null;
@@ -2879,6 +2880,11 @@ public class MainRestController {
 		JSONArray pallHasShopsJSON = (JSONArray) jsonMainObject.get("palls");
 		JSONArray tonnageHasShopsJSON = (JSONArray) jsonMainObject.get("tonnage");
 		JSONArray shopsWithCrossDocking = (JSONArray) jsonMainObject.get("shopsWithCrossDocking");
+		
+		Double iterationStr = jsonMainObject.get("iteration") != null ? Double.parseDouble(jsonMainObject.get("iteration").toString().replaceAll(",", ".")) : null;
+		if(iterationStr != null && iterationStr != 0.0) {
+			maxKoef = iterationStr;
+		}
 		
 		// Список для хранения отфильтрованных магазинов ходящих в полигон (магазы которые входят в кроссовые площадки)
         List<Shop> krossShops = new ArrayList<>();

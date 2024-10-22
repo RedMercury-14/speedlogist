@@ -280,7 +280,7 @@
 							</c:when>
 							<c:when test="${roles == '[ROLE_LOGISTDELIVERY]'}">
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/logistics-delivery/truck" />">Создание списков автомобилей</a></li>
-								<!-- <li><a class="nav-item nav-link" href="<spring:url value="/main/logistics-delivery/router" />">Маршрутизатор</a></li> -->
+								<li><a class="nav-item nav-link" href="<spring:url value="/main/logistics-delivery/router" />">Маршрутизатор</a></li>
 							</c:when>
 							<c:otherwise>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/registration" />">Регистрация</a></li>

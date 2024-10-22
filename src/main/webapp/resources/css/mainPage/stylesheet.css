@@ -886,7 +886,7 @@ ul.footer-nav li {
 }
 
 .ws-right-layer {
-    background-image: url("../img/images/world-map.png");
+    background-image: url("../../img/mainPage/images/world-map.png");
     height: 700px;
     margin-top: 60px;
     background-position: center;
@@ -1038,7 +1038,7 @@ ul.footer-nav li {
     9. WIDE SECTION COUNTER. 
   ====================================================*/
 .counter-wrapper {
-    background-image: url("../img/images/logis-51.jpg");
+    background-image: url("../../img/mainPage/images/logis-51.jpg");
     height: auto;
     background-position: center;
     background-repeat: no-repeat;
@@ -1079,7 +1079,7 @@ ul.footer-nav li {
 }
 
 .cly-parallax {
-    background-image: url("../img/images/logis-8.jpg");
+    background-image: url("../../img/mainPage/images/logis-51.jpg");
     height: 600px;
     background-position: center;
     background-repeat: no-repeat;
@@ -1824,7 +1824,7 @@ hr.divider {
 }
 
 .wrapper-about-box {
-    background-image: url("../img/images/world-map.png");
+    background-image: url("../../img/mainPage/images/world-map.png");
     height: 400px;
     background-position: center;
     background-repeat: no-repeat;
@@ -4107,7 +4107,7 @@ h3.comment-tittle {
 }
 
 .map-wrapper {
-    background-image: url("../img/images/world-map.png");
+    background-image: url("../../img/mainPage/images/world-map.png");
     height: 350px;
     background-position: center;
     background-repeat: no-repeat;

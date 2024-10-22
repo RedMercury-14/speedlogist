@@ -11,7 +11,7 @@
 	<meta name="${_csrf.parameterName}" content="${_csrf.token}" />
 	<title>Страница перевозчика</title>
 	<link rel="icon" href="${pageContext.request.contextPath}/resources/img/favicon.ico">
-	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/mainPage/css/custom.css">
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/mainPage/custom.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/exchange.css"> 
 </head>
 
@@ -61,14 +61,14 @@
 					</div>
 				</div>
 				<div class="col-lg-6 mt-view">
-					<figure class="careers-pic"><img src="${pageContext.request.contextPath}/resources/mainPage/img/images/trucks.png" alt=""></figure>
+					<figure class="careers-pic"><img src="${pageContext.request.contextPath}/resources/img/mainPage/images/trucks.png" alt=""></figure>
 				</div>
 			</div>
 		</div>
 		<div class="container even-container mt-5 mb-5">
 			<div class="row">
 				<div class="col-lg-6 mt-view">
-					<figure class="careers-pic"><img src="${pageContext.request.contextPath}/resources/mainPage/img/images/tenders.png" alt=""></figure>
+					<figure class="careers-pic"><img src="${pageContext.request.contextPath}/resources/img/mainPage/images/tenders.png" alt=""></figure>
 				</div>
 				<div class="col-lg-6">
 					<div class="careers-info">
@@ -97,14 +97,14 @@
 					</div>
 				</div>
 				<div class="col-lg-6 mt-view">
-					<figure class="careers-pic"><img src="${pageContext.request.contextPath}/resources/mainPage/img/images/routes.png" alt=""></figure>
+					<figure class="careers-pic"><img src="${pageContext.request.contextPath}/resources/img/mainPage/images/routes.png" alt=""></figure>
 				</div>
 			</div>
 		</div>
 		<div class="container even-container mt-5 mb-5">
 			<div class="row">
 				<div class="col-lg-6 mt-view">
-					<figure class="careers-pic"><img src="${pageContext.request.contextPath}/resources/mainPage/img/images/drivers.png" alt=""></figure>
+					<figure class="careers-pic"><img src="${pageContext.request.contextPath}/resources/img/mainPage/images/drivers.png" alt=""></figure>
 				</div>
 				<div class="col-lg-6">
 					<div class="careers-info">
@@ -133,7 +133,7 @@
 					</div>
 				</div>
 				<div class="col-lg-6 mt-view">
-					<figure class="careers-pic"><img src="${pageContext.request.contextPath}/resources/mainPage/img/images/acts.png" alt=""></figure>
+					<figure class="careers-pic"><img src="${pageContext.request.contextPath}/resources/img/mainPage/images/acts.png" alt=""></figure>
 				</div>
 			</div>
 		</div>
@@ -148,8 +148,8 @@
 	<a href="#0" class="cd-top">Top</a>
 	<!--SCROLL TOP START-->
 
-	<script src='${pageContext.request.contextPath}/resources/mainPage/js/main.js'></script>
-	<script src='${pageContext.request.contextPath}/resources/mainPage/js/nav-fixed-top.js'></script>
+	<script src='${pageContext.request.contextPath}/resources/js/mainPage/main.js'></script>
+	<script src='${pageContext.request.contextPath}/resources/js/mainPage/nav-fixed-top.js'></script>
 	<script src="${pageContext.request.contextPath}/resources/js/myMessage.js" type="module"></script>
 </body>
 

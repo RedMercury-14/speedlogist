@@ -21,7 +21,7 @@
 			<security:intercept-url pattern="/main/who"	access="!isAnonymous()" />
 			<security:intercept-url pattern="/main/admin/**" access="hasAnyRole('ROLE_ADMIN', 'ROLE_TOPMANAGER')" />
 			<security:intercept-url	pattern="/main/logistics/**" access="hasAnyRole('ROLE_MANAGER','ROLE_TOPMANAGER', 'ROLE_ADMIN')" />
-			<security:intercept-url	pattern="/main/logistics-delivery/**" access="hasAnyRole('ROLE_LOGISTDELIVERY', 'ROLE_ADMIN')" />
+			<security:intercept-url	pattern="/main/logistics-delivery/**" access="hasAnyRole('ROLE_LOGISTDELIVERY', 'ROLE_ADMIN', 'ROLE_TOPMANAGER')" />
 			<security:intercept-url pattern="/main/shop/**" access="hasAnyRole('ROLE_ADMIN', 'ROLE_SHOP')"/>
 			<security:intercept-url pattern="/main/analytics/changing-matrix" access="hasAnyRole('ROLE_ADMIN', 'ROLE_ANALYTICS', 'ROLE_PROCUREMENT', 'ROLE_ORDERSUPPORT')"/>
 			<security:intercept-url pattern="/main/analytics/**" access="hasAnyRole('ROLE_ADMIN', 'ROLE_ANALYTICS', 'ROLE_TOPMANAGER', 'ROLE_ORDERSUPPORT')"/>

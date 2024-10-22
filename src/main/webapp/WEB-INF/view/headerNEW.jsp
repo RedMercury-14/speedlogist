@@ -13,16 +13,16 @@
 	<title>SpeedLogist</title>
 
     <!-- BOOTSTRAP FRAMEWORK STYLES -->
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/mainPage/css/bootstrap.min.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/mainPage/bootstrap.min.css">
     <!-- MAIN CSS STYLE SHEET -->
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/mainPage/css/reset.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/mainPage/css/stylesheet.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/mainPage/css/navbar.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/mainPage/css/responsive.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/mainPage/reset.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/mainPage/stylesheet.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/mainPage/navbar.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/mainPage/responsive.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/toast.css">
 
-    <script src='${pageContext.request.contextPath}/resources/mainPage/js/jquery-3.4.1.min.js'></script>
-    <script src='${pageContext.request.contextPath}/resources/mainPage/js/bootstrap.min.js'></script>
+    <script src='${pageContext.request.contextPath}/resources/js/mainPage/jquery-3.4.1.min.js'></script>
+    <script src='${pageContext.request.contextPath}/resources/js/mainPage/bootstrap.min.js'></script>
 
 </head>
 <body>
@@ -30,7 +30,7 @@
 		<input type="hidden" value="${sessionCheck}" id="sessionCheck">
 		<nav class="navbar navbar-expand-lg navbar-dark">
 			<div class="container p-0">
-				<a class="navbar-brand" href="<spring:url value="/main"/>" ><img src="${pageContext.request.contextPath}/resources/mainPage/img/master/logo.png" alt="speedlogist_logo"></a>
+				<a class="navbar-brand" href="<spring:url value="/main"/>" ><img src="${pageContext.request.contextPath}/resources/img/mainPage/master/logo.png" alt="speedlogist_logo"></a>
 				<sec:authorize access="isAuthenticated()">  
 					<strong><sec:authentication property="principal.authorities" var="roles"/></strong>
 					<sec:authentication property="name" var="login"/>
@@ -135,6 +135,14 @@
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/shopControl" />">Список магазинов</a>
 										<a class="dropdown-item" href="<spring:url value="/main/analytics/logistics" />">Аналитика Биржи</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/maintenance " />">Менеджер маршрутов АХО/СГИ</a>
+									</div>
+								</li>
+								<li class="dropdown">
+									<a href="#" class="nav-item nav-link" data-toggle="dropdown">
+										Развоз
+									</a>
+									<div class="dropdown-menu">
+										<a class="dropdown-item" href="<spring:url value="/main/logistics-delivery/truck" />">Создание списка машин</a>
 									</div>
 								</li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/depot" />">Маршрутизатор</a></li>
@@ -272,7 +280,7 @@
 							</c:when>
 							<c:when test="${roles == '[ROLE_LOGISTDELIVERY]'}">
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/logistics-delivery/truck" />">Создание списков автомобилей</a></li>
-								<!-- <li><a class="nav-item nav-link" href="<spring:url value="/main/logistics-delivery/router" />">Маршрутизатор</a></li> -->
+								<li><a class="nav-item nav-link" href="<spring:url value="/main/logistics-delivery/router" />">Маршрутизатор</a></li>
 							</c:when>
 							<c:otherwise>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/registration" />">Регистрация</a></li>

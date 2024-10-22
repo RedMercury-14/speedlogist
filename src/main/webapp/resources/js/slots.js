@@ -302,6 +302,8 @@ window.onload = async function() {
 	restoreColumnState()
 	// скрываем оверлей загрузки
 	bootstrap5overlay.hideOverlay()
+	// сообщаем о готовности приложения к работе
+	store.setReady(true)
 }
 
 // контекстное меню таблицы заказов
@@ -566,6 +568,7 @@ function eventContentHandler(info) {
 
 	// кнопка проверки слота для админа
 	if (isAdmin(role)) nodes.push(checkSlotBtn, checkBookingBtn, deleteSlotBtn)
+	else if (login === 'romashkok%!dobronom.by') nodes.push(checkBookingBtn, deleteSlotBtn)
 
 	return {
 		domNodes: nodes
@@ -746,7 +749,9 @@ function eventClickHandler(info) {
 
 	// обработчик клика на кнопку проверки на бронь
 	if (jsEvent.target.dataset.action === 'deleteSlot') {
-		deleteOrder(info, true)
+		if (confirm(`Вы уверены, что хотите удалить слот?`)) {
+			deleteOrder(info, true)
+		}
 		return
 	}
 }

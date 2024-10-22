@@ -214,7 +214,7 @@
 	<jsp:include page="footer.jsp" />
 	<script charset="utf-8" src="${pageContext.request.contextPath}/resources/js/routeControlList.js" type="module"></script>
 	<script src="${pageContext.request.contextPath}/resources/js/myMessage.js" type="module"></script>
-	<script src='${pageContext.request.contextPath}/resources/mainPage/js/nav-fixed-top.js'></script>
+	<script src='${pageContext.request.contextPath}/resources/js/mainPage/nav-fixed-top.js'></script>
 	<script type="text/javascript">
 		console.log('trst')
 		function directionSearch1() {

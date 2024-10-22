@@ -1,9 +1,9 @@
 import { AG_GRID_LOCALE_RU } from '../js/AG-Grid/ag-grid-locale-RU.js'
 import { ResetStateToolPanel, dateComparator, gridColumnLocalState, gridFilterLocalState } from './AG-Grid/ag-grid-utils.js'
-import { debounce, getData, dateHelper, getStatus, changeGridTableMarginTop, rowClassRules, isAdminByLogin, isAdmin, isStockProcurement, isSlotsObserver } from './utils.js'
+import { debounce, getData, dateHelper, getStatus, changeGridTableMarginTop, rowClassRules, isAdmin, isStockProcurement, isSlotsObserver } from './utils.js'
 import { snackbar } from './snackbar/snackbar.js'
 import { uiIcons } from './uiIcons.js'
-import { excelStyles, getPointToView, getRouteInfo, getWayToView, pointSorting, procurementExcelExportParams } from "./procurementControlUtils.js"
+import { excelStyles, mapCallbackForProcurementControl, procurementExcelExportParams } from "./procurementControlUtils.js"
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 
 const PAGE_NAME = 'ProcurementControl'
@@ -87,6 +87,7 @@ const gridOptions = {
 		wrapHeaderText: true,
 		autoHeaderHeight: true,
 	},
+	getRowId: (params) => params.data.idOrder,
 	onSortChanged: debouncedSaveColumnState,
 	onColumnResized: debouncedSaveColumnState,
 	onColumnMoved: debouncedSaveColumnState,
@@ -164,8 +165,8 @@ const gridOptions = {
 			enableBrowserTooltips: true,
 			localeText: AG_GRID_LOCALE_RU,
 		},
-		getDetailRowData: (params) => {
-			params.successCallback(params.data.addressesForTable);
+		getDetailRowData: async (params) => {
+			params.successCallback(params.data.addressesToView)
 		},
 	},
 	defaultExcelExportParams: procurementExcelExportParams,
@@ -247,64 +248,7 @@ function updateTable(gridOptions, data) {
 }
 
 function getMappingData(data) {
-	return data.map(order => {
-		const dateCreateToView = dateHelper.getFormatDate(order.dateCreate)
-		const dateDeliveryToView = dateHelper.getFormatDate(order.dateDelivery)
-		const controlToView = order.control ? 'Да' : 'Нет'
-		const telephoneManagerToView = order.telephoneManager ? `; тел. ${order.telephoneManager}` : ''
-		const managerToView = `${order.manager}${telephoneManagerToView}`
-		const statusToView = getStatus(order.status)
-		const stackingToView = order.stacking ? 'Да' : 'Нет'
-		const logistToView = order.logist && order.logistTelephone
-			? `${order.logist}, тел. ${order.logistTelephone}`
-			: order.logist
-				? order.logist
-				: order.logistTelephone
-					? order.logistTelephone : ''
-
-		const unloadWindowToView = order.onloadWindowDate && order.onloadWindowTime
-			? `${dateHelper.getFormatDate(order.onloadWindowDate)} ${order.onloadWindowTime.slice(0, 5)}`
-			: ''
-		
-		const addressesForTable = order.addressesToView
-			? order.addressesToView
-				.sort(pointSorting)
-				.map(getPointToView)
-			: order.addresses
-				.sort(pointSorting)
-				.map(getPointToView)
-
-		const loadDateToView = addressesForTable.length ? addressesForTable[0].dateToView : ''
-
-		const unloadPointsArr = addressesForTable.length
-			? addressesForTable
-				.filter(point => point.type === 'Выгрузка')
-				.sort((a, b) => b.date - a.date)
-			: []
-
-		const unloadDateToView = unloadPointsArr.length ? unloadPointsArr[0].dateToView : ''
-		const routeInfo = getRouteInfo(order)
-		const timeDeliveryToView = order.timeDelivery ? convertToDayMonthTime(order.timeDelivery) : ''
-		const wayToView = getWayToView(order)
-
-		return {
-			...order,
-			dateCreateToView,
-			dateDeliveryToView,
-			controlToView,
-			addressesForTable,
-			loadDateToView,
-			unloadDateToView,
-			managerToView,
-			unloadWindowToView,
-			statusToView,
-			stackingToView,
-			logistToView,
-			routeInfo,
-			timeDeliveryToView,
-			wayToView,
-		}
-	})
+	return data.map(mapCallbackForProcurementControl)
 }
 
 function getContextMenuItems(params) {
@@ -418,15 +362,4 @@ function saveFilterState() {
 }
 function restoreFilterState() {
 	gridFilterLocalState.restoreState(gridOptions, LOCAL_STORAGE_KEY)
-}
-
-function convertToDayMonthTime(eventDateStr) {
-	const date = new Date(eventDateStr)
-	const formatter = new Intl.DateTimeFormat('ru', {
-		day: '2-digit',
-		month: 'long', 
-		hour: '2-digit',
-		minute: '2-digit'
-	})
-	return formatter.format(date)
 }

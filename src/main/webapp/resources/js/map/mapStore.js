@@ -91,6 +91,12 @@ class MapStore {
 	getCrossDockingPolygons() {
 		return this.polygons.filter(polygon => polygon.properties.action === 'crossDocking')
 	}
+	getPolygonsForOptymizer() {
+		return this.polygons.filter(
+			polygon => polygon.properties.action === 'crossDocking'
+			|| polygon.properties.action === 'calcPallSum'
+		)
+	}
 
 	/**
 	 * @param {string} date

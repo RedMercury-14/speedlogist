@@ -1,55 +1,107 @@
 import { cell } from "./AG-Grid/ag-grid-utils.js"
-import { dateHelper } from "./utils.js"
+import { dateHelper, getStatus } from "./utils.js"
 
+export function mapCallbackForProcurementControl(order) {
+	const dateCreateToView = dateHelper.getFormatDate(order.dateCreate)
+	const dateDeliveryToView = dateHelper.getFormatDate(order.dateDelivery)
+	const controlToView = order.control ? 'Да' : 'Нет'
+	const telephoneManagerToView = order.telephoneManager ? `; тел. ${order.telephoneManager}` : ''
+	const managerToView = `${order.manager}${telephoneManagerToView}`
+	const statusToView = getStatus(order.status)
+	const stackingToView = order.stacking ? 'Да' : 'Нет'
+	const logistToView = order.logist && order.logistTelephone
+		? `${order.logist}, тел. ${order.logistTelephone}`
+		: order.logist
+			? order.logist
+			: order.logistTelephone
+				? order.logistTelephone : ''
+
+	const unloadWindowToView = order.onloadWindowDate && order.onloadWindowTime
+		? `${dateHelper.getFormatDate(order.onloadWindowDate)} ${order.onloadWindowTime.slice(0, 5)}`
+		: ''
+
+	const timeDeliveryToView = order.timeDelivery ? dateHelper.convertToDayMonthTime(order.timeDelivery) : ''
+
+	const filtredAdresses =  order.addresses ? order.addresses.filter(address => address.isCorrect) : []
+	const loadPoints = filtredAdresses.filter(address => address.type === "Загрузка")
+
+	const addressesToView = filtredAdresses
+		.sort(pointSorting)
+		.map(getPointToView)
+
+	const loadPointsToView = addressesToView
+		.filter(address => address.type === "Загрузка")
+		.map((address, i) => `${i + 1}) ${address.bodyAddress}`)
+		.join(' ')
+
+	const unloadPointsToView = addressesToView
+		.filter(address => address.type === "Выгрузка")
+		.map((address, i) => `${i + 1}) ${address.bodyAddress}`)
+		.join(' ')
+
+	const loadDateToView = getFirstLoadDateToView(addressesToView)
+	const unloadDateToView = getLastUnloadDateToView(addressesToView)
+
+	const summPall = loadPoints.reduce((acc, address) => {
+		if (address.pall) {
+			const pall = Number(address.pall)
+			acc += pall
+			return acc
+		}
+	}, 0)
+
+	const summVolume = loadPoints.reduce((acc, address) => {
+		if (address.volume) {
+			const volume = Number(address.volume)
+			acc += volume
+			return acc
+		}
+	}, 0)
+
+	const summWeight = loadPoints.reduce((acc, address) => {
+		if (address.weight) {
+			const weight = Number(address.weight)
+			acc += weight
+			return acc
+		}
+	}, 0)
+
+	const routeInfo = getRouteInfo(order)
+	const routePrice = getRoutePrice(order)
+	const wayToView = getWayToView(order)
+
+	return {
+		...order,
+		dateCreateToView,
+		dateDeliveryToView,
+		controlToView,
+		addressesToView,
+		loadDateToView,
+		unloadDateToView,
+		managerToView,
+		statusToView,
+		stackingToView,
+		logistToView,
+		unloadWindowToView,
+		loadPointsToView,
+		unloadPointsToView,
+		summPall: summPall ? summPall : null,
+		summVolume: summVolume ? summVolume : null,
+		summWeight: summWeight ? summWeight : null,
+		routeInfo,
+		routePrice,
+		wayToView,
+		timeDeliveryToView,
+	}
+}
+
+
+// шаблон для экспорта таблицы заявок
 export const procurementExcelExportParams = {
 	getCustomContentBelowRow: (params) => getRows(params),
 	columnWidth: 120,
 	fileName: "orders.xlsx",
 }
-
-export const excelStyles = [
-	{
-		id: "header",
-		interior: {
-			color: "#aaaaaa",
-			pattern: "Solid",
-		},
-	},
-	{
-		id: "body",
-		interior: {
-			color: "#dddddd",
-			pattern: "Solid",
-		},
-	},
-]
-
-export function pointSorting(a, b) {
-	if (!a.pointNumber) return 0
-	if (!b.pointNumber) return 0
-	if (a.pointNumber > b.pointNumber) return 1
-	if (a.pointNumber < b.pointNumber) return -1
-	return 0
-}
-
-export function getPointToView(address, i, addresses) {
-	const dateToView = dateHelper.getFormatDate(address.date)
-	const cargo = address.cargo ? `Груз: ${address.cargo}; ` : ''
-	const pall = address.pall ? `Паллеты: ${address.pall} шт; ` : ''
-	const weight = address.weight ? `Масса: ${address.weight} кг; ` : ''
-	const volume = address.volume ? `Объем: ${address.volume} м.куб. ` : ''
-	const info = cargo + pall + weight + volume
-
-	const pointNumber = i + 1
-
-	return {
-		...address,
-		dateToView,
-		info,
-		pointNumber,
-	}
-}
-
 
 function getRows(params) {
 	const rows = [
@@ -98,7 +150,68 @@ function getRows(params) {
 	return rows
 }
 
-export function getRouteInfo(order) {
+// стили для экспортируемой таблицы заявок
+export const excelStyles = [
+	{
+		id: "header",
+		interior: {
+			color: "#aaaaaa",
+			pattern: "Solid",
+		},
+	},
+	{
+		id: "body",
+		interior: {
+			color: "#dddddd",
+			pattern: "Solid",
+		},
+	},
+]
+
+
+export function pointSorting(a, b) {
+	if (!a.pointNumber) return 0
+	if (!b.pointNumber) return 0
+	if (a.pointNumber > b.pointNumber) return 1
+	if (a.pointNumber < b.pointNumber) return -1
+	return 0
+}
+
+export function getPointToView(address, i, addresses) {
+	const dateToView = dateHelper.getFormatDate(address.date)
+	const cargo = address.cargo ? `Груз: ${address.cargo}; ` : ''
+	const pall = address.pall ? `Паллеты: ${address.pall} шт; ` : ''
+	const weight = address.weight ? `Масса: ${address.weight} кг; ` : ''
+	const volume = address.volume ? `Объем: ${address.volume} м.куб. ` : ''
+	const info = cargo + pall + weight + volume
+
+	const pointNumber = i + 1
+
+	return {
+		...address,
+		dateToView,
+		info,
+		pointNumber,
+	}
+}
+
+function getFirstLoadDateToView(addressesToView) {
+	if (!addressesToView) return ''
+	const loadPoints = addressesToView.filter(address => address.type === "Загрузка")
+	if (!loadPoints.length || loadPoints.length === 0) return ''
+	return loadPoints[0].dateToView
+}
+
+function getLastUnloadDateToView(addressesToView) {
+	if (!addressesToView) return ''
+	const unloadPoints = addressesToView
+		.filter(address => address.type === "Выгрузка")
+		.sort((a, b) => b.date - a.date)
+	if (!unloadPoints.length || unloadPoints.length === 0) return ''
+	return unloadPoints[0].dateToView
+}
+
+function getRouteInfo(order) {
 	const routes = order.routes
 	
 	if (!routes || !routes.length) {
@@ -111,7 +224,7 @@ export function getRouteInfo(order) {
 		.join(' ************** ')
 }
 
-export function getRoutePrice(order) {
+function getRoutePrice(order) {
 	const routes = order.routes
 	if (!routes || !routes.length) return ''
 
@@ -124,7 +237,7 @@ export function getRoutePrice(order) {
 	return successRoutes[0].finishPrice + ' ' + successRoutes[0].startCurrency
 }
 
-export function getWayToView(order) {
+function getWayToView(order) {
 	const way = order.way ? order.way : ''
 	const isInternalMovement = order.isInternalMovement === 'true'
 	return isInternalMovement ? 'Внутреннее перемещение' : way

@@ -1,6 +1,7 @@
 package by.base.main.util.hcolossus;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -52,7 +53,31 @@ public class ColossusProcessorANDRestrictions3 {
 
 	private Comparator<Shop> shopComparatorPallOnly = (o1, o2) -> (o2.getNeedPall() - o1.getNeedPall()); // сортирует от большей потребности к меньшей
 
-	private Comparator<Vehicle> vehicleComparatorFromMax = (o1, o2) -> (o2.getPall() - o1.getPall()); // сортирует от большей потребности к меньшей без учёта веса
+//	private Comparator<Vehicle> vehicleComparatorFromMax = (o1, o2) -> (o2.getPall() - o1.getPall()); // сортирует от большей потребности к меньшей без учёта веса
+	
+//	private Comparator<Vehicle> vehicleComparatorFromMax = (o1, o2) -> { // этот метод сортирует от большей потребности к меньшей без учёта веса b отправляет вним списка машины помоченные на вторйо круг
+//	    // Сначала проверяем isTwiceRound() и перемещаем такие элементы вниз всего списка
+//	    if (o1.isTwiceRound() && !o2.isTwiceRound()) {
+//	        return 1;  // o1 опускаем вниз
+//	    } else if (!o1.isTwiceRound() && o2.isTwiceRound()) {
+//	        return -1; // o2 опускаем вниз
+//	    }
+//
+//	    // Если оба элемента имеют одинаковый статус isTwiceRound, сортируем по pall
+//	    return Integer.compare(o2.getPall(), o1.getPall());
+//	};
+	
+	private Comparator<Vehicle> vehicleComparatorFromMax = (o1, o2) -> { // этот метод сортирует от большей потребности к меньшей без учёта веса и отправляет вниз списка машины помоченные как КЛОНЫ!
+    // Сначала проверяем isTwiceRound() и перемещаем такие элементы вниз всего списка
+    if (o1.isClone() && !o2.isClone()) {
+        return 1;  // o1 опускаем вниз
+    } else if (!o1.isClone() && o2.isClone()) {
+        return -1; // o2 опускаем вниз
+    }
+
+    // Если оба элемента имеют одинаковый статус isTwiceRound, сортируем по pall
+    return Integer.compare(o2.getPall(), o1.getPall());
+};
 	
 	private Comparator<Vehicle> vehicleComparatorFromMin = (o1, o2) -> (o1.getPall() - o2.getPall()); // сортирует от меньшей потребности к большей без учёта веса
 	
@@ -126,6 +151,20 @@ public class ColossusProcessorANDRestrictions3 {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		
+//		//заглушка для машин со сторыми рейсами
+//		List<String> namesToFilter = Arrays.asList("8990", "7823", "4763", "8869", 
+//                "9715", "9807", "1053", "3353", 
+//                "8234", "АХ6826-7");
+//		trucks = trucks.stream()
+//		        .map(vehicle -> {
+//		            if (namesToFilter.contains(vehicle.getName())) {
+//		                vehicle.setTwiceRound(true);
+//		            }
+//		            return vehicle;
+//		        })
+//		        .collect(Collectors.toList());
 
 		/**
 		 * магазины для распределения выстроены в порядке убывания потребностей
@@ -176,6 +215,13 @@ public class ColossusProcessorANDRestrictions3 {
 		
 		String nameKrosPolygon = null; // имя полигона для определения сл. полигона
 		
+		stackTrace = stackTrace +  "Начальное распределение машин слеюущее: \n";
+		for (Vehicle v : trucks) {
+			String answer = !v.isTwiceRound() ? "НЕТ" : "ДА";
+			String answer2 = !v.isClone() ? "НЕТ" : "ДА";
+			stackTrace = stackTrace + "Машина : " + v.getId()+"/"+v.getName() + ", паллеты : "+ v.getPall() +", второй круг : " + answer + ", клон : " + answer2 +"!\n";
+		}
+		
 		while (!trucks.isEmpty()) {
 			if (i == iMax) {
 				stackTrace = stackTrace + "Задействован лимит итераций \n";
@@ -189,7 +235,6 @@ public class ColossusProcessorANDRestrictions3 {
 
 			shopsForDelite = new ArrayList<Shop>();
 			shopsForAddNewNeedPall = new ArrayList<Shop>();
-
 			
 			shopsForOptimization.sort(shopComparatorDistanceMain);
 			sortedShopsHasKrossing(); // Делает так, чтобы магазины, которые входят в кроссы были сверху списка
@@ -486,18 +531,29 @@ public class ColossusProcessorANDRestrictions3 {
 
 			}
 			
+			//тут проверка, если есть только склад и магазин - добавляет последний склад
+			if(points.size() == 2 && points.get(0).equals(targetStock) && points.get(1).getNumshop() != points.get(0).getNumshop()) {
+				points.add(targetStock);
+			}
 			
 			if(points.size() >= 3) {//тут делаем проверку на то что не ломаный ли маршрут (типо 1700-1700)
 				
 				trucks.remove(virtualTruck);
+				trucks.remove(virtualTruck);
+				//если тачка помечена готовой для второго круга - создаём её клон
+				
+				
 				virtualTruck.setTargetWeigth(calcWeightHashHsop(points, targetStock));
 				virtualTruck.setTargetPall(calcPallHashHsop(points, targetStock));	
 				
 				// создаём финальный, виртуальный маршрут
 				points.add(targetStock);
 				
-				VehicleWay vehicleWayVirtual = new VehicleWay(i+ "", points, 0.0, 30, virtualTruck);
+				String idStr = virtualTruck.isClone() ? i+ "/2 круг" : i+ "";
+				
+				VehicleWay vehicleWayVirtual = new VehicleWay(idStr, points, 0.0, 30, virtualTruck);
 				vehicleWayVirtual.setDistanceFromStock(firstShop.getDistanceFromStock());	
+				
 				
 				//методы постобработки маршрутов
 				
@@ -509,10 +565,21 @@ public class ColossusProcessorANDRestrictions3 {
 				
 				optimizePointsAndLastPoint(vehicleWayVirtual);//метод оптимизации точек маршрута
 				
+				
+				if(vehicleWayVirtual.getVehicle().isTwiceRound() && !vehicleWayVirtual.getVehicle().isClone() && vehicleWayVirtual.calcTotalRun(matrixMachine) > 250000.0 ) {//если тачка помечена готовой для второго круга - создаём её клон
+					Vehicle cloneTruck = vehicleWayVirtual.getVehicle().cloneForSecondRound();
+					cloneTruck.setClone(true);
+					cloneTruck.setTwiceRound(false);
+					cloneTruck.setId(cloneTruck.getId()*(-1));
+					trucks.remove(cloneTruck);					
+				}
+				
 				whiteWay.add(vehicleWayVirtual);
+				i++;			
+			}else {
+				System.err.println("СРАБОТАЛ МЕТОД ОТСЕЧКИ ЛОМАННЫХ МАРШРУТОВ!");
 			}
 			
-			i++;			
 		}
 
 

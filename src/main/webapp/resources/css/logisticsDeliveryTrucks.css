@@ -229,3 +229,11 @@ footer.to-bottom {
 #selectedTrucksGrid .light-green-row {
 	background-color: rgba(144, 238, 144, 0.3);
 }
+#freeTrucksGrid .light-orange-row,
+#selectedTrucksGrid .light-orange-row {
+	background-color: rgba(255, 122, 0, 0.3);
+}
+#freeTrucksGrid .bordered-row,
+#selectedTrucksGrid .bordered-row {
+	background-color: rgba(255, 122, 0, 0.3);
+}

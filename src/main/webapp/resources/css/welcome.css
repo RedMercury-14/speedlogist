@@ -12,7 +12,7 @@ body {
     height: min(635px, 70vh);
     position: relative;
     z-index: 1;
-    background-image: url('../../resources/mainPage/img/images/home-slider-7.jpg');
+    background-image: url('../../resources/img/mainPage/images/home-slider-7.jpg');
     background-repeat: no-repeat;
     background-size: cover;
     background-position: center;

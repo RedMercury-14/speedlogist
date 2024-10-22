@@ -22,6 +22,8 @@ public class Vehicle{
 	private double width;	//ширина метрах 
 	private double length;	//длинна в метрах
 	private boolean isFull;	//загрпужена ли полностью машина
+	private boolean isTwiceRound;	//можно ли отправлять на второй круг. По умолчанию false
+	private boolean isClone;	//является ли эта машина клоном для второго круга. По умолчанию false
 	
 	//реализации специальных полей
 	private Integer targetPall;	//ко-во паллет загруженных на текущий момент времени
@@ -40,6 +42,8 @@ public class Vehicle{
 		this.type = type;
 		this.pall = pall;
 		this.isFull = false;
+		this.isTwiceRound = false;
+		this.isClone = false;
 		this.targetPall = 0;
 	}
 	
@@ -59,16 +63,29 @@ public class Vehicle{
 		this.pall = pall;
 		this.weigth = weigth;
 		this.isFull = false;
+		this.isTwiceRound = false;
+		this.isClone = false;
 		this.targetPall = 0;
 	}
 
 	public Vehicle() {
 		super();
 		this.isFull = false;
+		this.isTwiceRound = false;
+		this.isClone = false;
 		this.targetPall = 0;
 	}
 	
 	
+	
+	public boolean isClone() {
+		return isClone;
+	}
+
+	public void setClone(boolean isClone) {
+		this.isClone = isClone;
+	}
+
 	/**
 	 * Возвращает вес в кг загруженный в машину
 	 * @return
@@ -183,6 +200,14 @@ public class Vehicle{
 	}
 
 
+	public boolean isTwiceRound() {
+		return isTwiceRound;
+	}
+
+	public void setTwiceRound(boolean isTwiceRound) {
+		this.isTwiceRound = isTwiceRound;
+	}
+
 	/**
 	 * возвращет кол-во загруженных паллет в машине
 	 * @return
@@ -220,23 +245,25 @@ public class Vehicle{
 		
 	}
 
-	@Override
-	public int hashCode() {
-		return Objects.hash(id, pall, weigth);
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		Vehicle other = (Vehicle) obj;
-		return id == other.id && Double.doubleToLongBits(pall) == Double.doubleToLongBits(other.pall)
-				&& Double.doubleToLongBits(weigth) == Double.doubleToLongBits(other.weigth);
-	}
+//	@Override
+//	public int hashCode() {
+//		return Objects.hash(id, pall, weigth);
+//	}
+//
+//	@Override
+//	public boolean equals(Object obj) {
+//		if (this == obj)
+//			return true;
+//		if (obj == null)
+//			return false;
+//		if (getClass() != obj.getClass())
+//			return false;
+//		Vehicle other = (Vehicle) obj;
+//		return id == other.id && Double.doubleToLongBits(pall) == Double.doubleToLongBits(other.pall)
+//				&& Double.doubleToLongBits(weigth) == Double.doubleToLongBits(other.weigth);
+//	}
+	
+	
 	
 	/**
 	 * Аналогичен методу clone только возвращает Vehicle с id отрицательным значением
@@ -254,12 +281,58 @@ public class Vehicle{
 		vehicle.setHeight(this.height);
 		vehicle.setWidth(this.width);
 		vehicle.setLength(this.length);
-		vehicle.setTargetPall(this.targetPall);		
+		vehicle.setTargetPall(this.targetPall);	
+		vehicle.setTwiceRound(this.isTwiceRound);
+		vehicle.setClone(this.isClone);
 		return vehicle;
 		
 	}
+	
+	/**
+	 * Метод клонирует машину 
+	 * @return
+	 */
+	@JsonIgnore
+	public Vehicle cloneForSecondRound() {
+	    Vehicle clonedVehicle = new Vehicle();
+	    
+	    clonedVehicle.setId(this.getId());
+	    clonedVehicle.setName(this.getName());
+	    clonedVehicle.setType(this.getType());
+	    clonedVehicle.setPall(this.getPall());
+	    clonedVehicle.setWeigth(this.getWeigth());
+	    clonedVehicle.setVolume(this.getVolume());
+	    clonedVehicle.setHeight(this.getHeight());
+	    clonedVehicle.setWidth(this.getWidth());
+	    clonedVehicle.setLength(this.getLength());
+	    clonedVehicle.setTwiceRound(this.isTwiceRound());
+	    
+	    // Устанавливаем, что это клон
+	    clonedVehicle.setClone(true);
+
+	    return clonedVehicle;
+	}
+
 
 	
+	@Override
+	public int hashCode() {
+		return Objects.hash(id, isClone, pall, weigth);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Vehicle other = (Vehicle) obj;
+		return id == other.id && isClone == other.isClone && Objects.equals(pall, other.pall)
+				&& Objects.equals(weigth, other.weigth);
+	}
+
 	public String toString() {
 		if(this.pall == this.targetPall || this.pall.equals(this.targetPall)) {
 			this.isFull = true;
@@ -268,7 +341,7 @@ public class Vehicle{
 		}
 		return "Vehicle [id=" + id + ", name=" + name + ", type=" + type + ", pall=" + pall + ", weigth=" + weigth
 				+ ", volume=" + volume + ", height=" + height + ", width=" + width + ", length=" + length + ", isFull="
-				+ isFull + ", targetPall=" + targetPall + ", targetWeigth(загружено кг)="+targetWeigth+"]";
+				+ isFull + ", targetPall=" + targetPall + ", targetWeigth(загружено кг)="+targetWeigth + ", isClone=" + isClone + ", isTwiceRound=" + isTwiceRound +"]";
 	}
 	
 }

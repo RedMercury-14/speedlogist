@@ -140,8 +140,8 @@ export function methodAccessRules(method, order, currentLogin, currentRole) {
 		case 'update': return updateMethodAccessRules(order, currentLogin, currentRole)
 		case 'delete': return deleteMethodAccessRules(order, currentLogin, currentRole)
 		case 'confirm': return confirmMethodAccessRules(order, currentLogin, currentRole)
-		case 'checkSlot': return isAdmin(currentRole)
-		case 'checkBooking': return isAdmin(currentRole)
+		case 'checkSlot': return (isAdmin(currentRole) || currentLogin === 'romashkok%!dobronom.by')
+		case 'checkBooking': return (isAdmin(currentRole) || currentLogin === 'romashkok%!dobronom.by')
 		default: return true
 	}
 }

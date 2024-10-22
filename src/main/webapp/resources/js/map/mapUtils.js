@@ -1,4 +1,4 @@
-import { dateHelper, getDecodedString } from "../utils.js"
+import { dateHelper } from "../utils.js"
 import { checkPointInPolygon } from "./checkPointInPolygon.js"
 import { getTextareaData } from "./formDataUtils.js"
 
@@ -128,9 +128,20 @@ export function setLocalCarsData(data, form) {
 	data.cars.length >= 100 && (data.cars.length = 100)
 	data.cars && data.cars.forEach((car, i) => {
 		form.carName && (form.carName[i].value = car.carName)
+		form.secondRound && (form.secondRound[i].checked = car.secondRound)
 		form.carCount && (form.carCount[i].value = car.carCount)
 		form.maxPall && (form.maxPall[i].value = car.maxPall)
 		form.maxTonnage && (form.maxTonnage[i].value = car.maxTonnage)
+	})
+}
+
+export function setTrucksData(data, form) {
+	data.forEach((truck, i) => {
+		form.carName && (form.carName[i].value = truck.numTruck)
+		form.secondRound && (form.secondRound[i].checked = truck.secondRound)
+		form.carCount && (form.carCount[i].value = 1)
+		form.maxPall && (form.maxPall[i].value = truck.pall)
+		form.maxTonnage && (form.maxTonnage[i].value = truck.cargoCapacity)
 	})
 }
 
@@ -319,10 +330,10 @@ export function clearPoligonControlForm(form) {
 }
 
 // функция получения суммы паллет выделенных магазинов из формы оптимизатора
-export function getSelectedShopsPallSum(event, shopsToView) {
+export function getSelectedShopsPallSum(layer, shopsToView) {
 	if (shopsToView.length === 0) return null
 
-	const polygon = event.layer.toGeoJSON()
+	const polygon = layer.toGeoJSON()
 	const coordinates = polygon.geometry.coordinates[0]
 	const adaptCoordinates = coordinates.map(coord => [coord[1], coord[0]])
 

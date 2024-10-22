@@ -10,7 +10,7 @@ function sendCost() {
 	if (document.querySelector('input[name=cost]').value != '' && document.querySelector('input[name=cost]').value % 1 == 0) {
 		sendMessage({
 			fromUser: document.querySelector('input[id=login]').value,
-			text: document.querySelector('input[name=cost]').value,
+			text: document.querySelector('input[name=cost]').value.split(/[,.]/)[0],
 			idRoute: idRoute,
 			currency: document.querySelector('select[id=currency]').value,
 			//nds: document.querySelector('select[id=nds]').value,

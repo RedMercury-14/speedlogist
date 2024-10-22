@@ -378,7 +378,7 @@ input[type=number] {
 .routeArea-form .pointInfo {
 	font-size: 14px;
 }
-.routeArea-form .form-control[name="cleaning"]:focus {
+.routeArea-form .form-control[type="checkbox"]:focus {
 	box-shadow: none;
 }
 
@@ -739,7 +739,7 @@ svg:not(:root) {
 	padding: 10px 0;
 }
 .car-inputs-container__header .input-table {
-	grid-template-columns: 3fr 1fr 1fr 1fr;
+	grid-template-columns: 6fr 1fr 2fr 2fr 2fr;
 	grid-template-rows: 1fr;
 }
 .car-inputs-container__body {
@@ -758,7 +758,7 @@ svg:not(:root) {
 	box-shadow: none;
 }
 #carInputsTable {
-	grid-template-columns: 3fr 1fr 1fr 1fr;
+	grid-template-columns: 6fr 1fr 2fr 2fr 2fr;
 	grid-column-gap: 5px;
 	grid-row-gap: 2px;
 }

@@ -1852,23 +1852,32 @@ public class MainRestController {
 //			System.out.println(order);
 			
 			if(order.getIdOrder() < 0) {
-				switch (order.getMarketInfo()) {
-				case "0":
-					response.put("status", "105");
-					response.put("info", "Реальынй статус из маркета - ЧЕРНОВИК");
-					return response;
-					
-				case "-1":
-					response.put("status", "105");
-					response.put("info", "Статус маркет = null");
-					response.put("orderDTO", orderBuyGroupDTO);
-					return response;
+				if(order.getMarketInfo() != null) {
+					switch (order.getMarketInfo()) {
+					case "0":
+						response.put("status", "105");
+						response.put("info", "Реальынй статус из маркета - ЧЕРНОВИК");
+						return response;
+						
+					case "-1":
+						response.put("status", "105");
+						response.put("info", "Статус маркет = null");
+						response.put("orderDTO", orderBuyGroupDTO);
+						return response;
 
-				default:
-					response.put("status", "200");
-					response.put("info", "Заказ не в 50 статусе но и не в 0 статусе");
+					default:
+						response.put("status", "200");
+						response.put("info", "Заказ не в 50 статусе но и не в 0 статусе");
+						return response;
+					}
+				}else {
+					Order orderInBase = orderService.getOrderByMarketNumber(idMarket);
+					response.put("status", "105");
+					response.put("info", "Заказ в Маркете в статусе: " + orderBuyGroupDTO.getCheckx() + ". Сообщение системы: " + order.getMessage()+"\n"
+							+"Паллеты в SL = " + orderInBase.getPall() + "  -  паллеты из маркета = " + order.getPall());
 					return response;
 				}
+				
 				
 			}else {
 				response.put("status", "200");
@@ -2862,7 +2871,7 @@ public class MainRestController {
 		
 		
 		Double maxKoef = 2.0;
-//		Double maxKoef = 1.3;
+//		Double maxKoef = 1.00;
 		JSONParser parser = new JSONParser();
 		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
 		JSONObject jsonParameters = jsonMainObject.get("params") != null ? (JSONObject) parser.parse(jsonMainObject.get("params").toString()) : null;

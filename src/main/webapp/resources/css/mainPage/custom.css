@@ -48,7 +48,7 @@ section {
 }
 
 .pages-hero {
-  background-image: url('../../../resources/mainPage/img/images/home-slider-7.jpg');
+  background-image: url('../../img/mainPage/images/home-slider-7.jpg');
   height: 400px;
   background-position: center;
   background-repeat: no-repeat;
@@ -413,7 +413,7 @@ li.circle-icon .fab {
   overflow: hidden;
   text-indent: 100%;
   white-space: nowrap;
-  background: rgba(180, 230, 2) url(../img/master/cd-top-arrow.svg) no-repeat center 50%;
+  background: rgba(180, 230, 2) url(../../img/mainPage/master/cd-top-arrow.svg) no-repeat center 50%;
   visibility: hidden;
   border-radius: 5px;
   z-index: 4;
@@ -1333,7 +1333,7 @@ screen and (max-height: 300px) {
   width: 100%;
   height: 100%;
   z-index: 10;
-  background: transparent url(../img/master/play-button.png) center center no-repeat;
+  background: transparent url(../../img/mainPage/master/play-button.png) center center no-repeat;
 }
 
 .popup-youtube .video-image img a:link {
@@ -1400,7 +1400,7 @@ screen and (max-height: 300px) {
   -moz-animation: pulse 1.25s infinite cubic-bezier(0.66, 0, 0, 1);
   -ms-animation: pulse 1.25s infinite cubic-bezier(0.66, 0, 0, 1);
   animation: pulse 1.25s infinite cubic-bezier(0.66, 0, 0, 1);
-  background: transparent url(../img/master/play-arrow.png) center center no-repeat;
+  background: transparent url(../../img/mainPage/master/play-arrow.png) center center no-repeat;
   background-color: #FFA600;
   position: absolute;
   margin: auto;

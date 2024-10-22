@@ -210,6 +210,21 @@ export const dateHelper = {
 		return new Date(currentDate + ` ${timeStr}`)
 	},
 
+	/**
+	 * Метод `convertToDayMonthTime` принимает на вход строку даты или милисекунды
+	 * и возвращает отформатированную строку даты в формате "DD MMMM".
+	 * @param date - это строка или число милисекунд.
+	 * @returns {string} возвращает отформатированную строку даты в формате "DD MMMM".
+	 */
+	convertToDayMonthTime(date) {
+		const formatter = new Intl.DateTimeFormat('ru', {
+			day: '2-digit',
+			month: 'long', 
+			hour: '2-digit',
+			minute: '2-digit'
+		})
+		return formatter.format(new Date(date))
+	},
 
 	/**
 	 * Метод `getMinValidDate` возвращает минимальную допустимую дату точки

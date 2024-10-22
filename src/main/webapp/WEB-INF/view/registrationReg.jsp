@@ -159,8 +159,8 @@
 												<div id="spinner" class="spinner-border text-secondary" role="status">
 													<span class="visually-hidden"></span>
 												</div>
-												<img id="successImage" class="none" src="${pageContext.request.contextPath}/resources/mainPage/img/master/ok--v2.png" class="fit-image">
-												<img id="errorImage" class="none" src="${pageContext.request.contextPath}/resources/mainPage/img/master/error.png" class="fit-image">
+												<img id="successImage" class="none" src="${pageContext.request.contextPath}/resources/img/mainPage/master/ok--v2.png" class="fit-image">
+												<img id="errorImage" class="none" src="${pageContext.request.contextPath}/resources/img/mainPage/master/error.png" class="fit-image">
 											</div>
 										</div>
 										<br><br>
@@ -190,7 +190,7 @@
 		</div>
 	</div>
 
-	<script src='${pageContext.request.contextPath}/resources/mainPage/js/nav-fixed-top.js'></script>
+	<script src='${pageContext.request.contextPath}/resources/js/mainPage/nav-fixed-top.js'></script>
 	<script charset="utf-8" src="${pageContext.request.contextPath}/resources/js/registrationReg.js" type="module"></script>
 </body>
 </html>

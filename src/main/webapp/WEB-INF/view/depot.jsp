@@ -256,6 +256,7 @@
 												<div class="car-inputs-container__header p-1 pr-2">
 													<div class="input-table">
 														<span class="text-muted font-weight-bold">Машина</span>
+														<span class="text-muted font-weight-bold text-nowrap">2 рейса</span>
 														<span class="text-muted font-weight-bold">Кол-во</span>
 														<span class="text-muted font-weight-bold">Палл.</span>
 														<span class="text-muted font-weight-bold">Тоннаж</span>
@@ -489,5 +490,5 @@
 	</div>
 </body>
 <script src="${pageContext.request.contextPath}/resources/js/map.js" type="module"></script>
-<script src='${pageContext.request.contextPath}/resources/mainPage/js/nav-fixed-top.js'></script>
+<script src='${pageContext.request.contextPath}/resources/js/mainPage/nav-fixed-top.js'></script>
 </html>

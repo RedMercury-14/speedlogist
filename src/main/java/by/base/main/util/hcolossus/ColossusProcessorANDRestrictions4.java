@@ -193,7 +193,7 @@ public class ColossusProcessorANDRestrictions4 {
 		 */
 		
 		String nameKrosPolygon = null; // имя полигона для определения сл. полигона
-		Double pallReturnInWay = null; // имя полигона для определения сл. полигона
+		Double pallReturnInWay = null; //
 		
 		stackTrace = stackTrace +  "Начальное распределение машин слеюущее: \n";
 		for (Vehicle v : trucks) {
@@ -278,17 +278,22 @@ public class ColossusProcessorANDRestrictions4 {
 			virtualTruck = trucks.get(0);
 			if(pallReturnInWay!= null && virtualTruck.getPall() < pallReturnInWay) {
 				System.err.println("Ошибка. Нет машины способной забрать " + pallReturnInWay + " паллет из магазина " + firstShop.getNumshop());
+				//остановился тут
+			}
+			
+			if(pallReturnInWay!= null && firstShop.getMaxPall() != null && pallReturnInWay > firstShop.getMaxPall()) {
+				System.err.println("FATAL ERROR!. Ограничение на подъезд к магазину " + firstShop.getNumshop() + " составляет " + firstShop.getMaxPall() + ". А потребность в машине составляет: "  + pallReturnInWay + " паллет минимум");
 			}
 			
 			//тут формируем новый список машин, которые в теории могут забрать посылку из магаза
-			trucksForShopReturn = new ArrayList<Vehicle>();
-			if(pallReturnInWay!= null) {
-				for (Vehicle truck : trucks) {
-					if(truck.getPall() >= pallReturnInWay) {
-						trucksForShopReturn.add(truck);				
-					}
-				}			
-			}
+//			trucksForShopReturn = new ArrayList<Vehicle>();
+//			if(pallReturnInWay!= null) {
+//				for (Vehicle truck : trucks) {
+//					if(truck.getPall() >= pallReturnInWay) {
+//						trucksForShopReturn.add(truck);				
+//					}
+//				}			
+//			}
 			
 			int countRadiusMap = 0;
 			int maxCountRadiusMap = radiusMap.entrySet().size()-1;
@@ -305,8 +310,13 @@ public class ColossusProcessorANDRestrictions4 {
 					points.add(targetStock);
 					break;
 				}
+				//тут проверяем, если магаз с ограничением меньше чем паллеты которые нужно забрать в первом магазине - не добавляем магаз
+				if(pallReturnInWay != null && shop2.getMaxPall()!= null && shop2.getMaxPall() < pallReturnInWay) {
+					continue;
+				}
 				
 				isRestrictions = shop2.getMaxPall() != null ? true : false; // тут определяем есть ли ограничения в текущем задании
+				
 				// тут добавляем мазаз в точку point
 				points.add(shop2);
 				points.add(targetStock);
@@ -470,6 +480,10 @@ public class ColossusProcessorANDRestrictions4 {
 						if(points.size()>=maxShopInWay+1) {
 							points.add(targetStock);
 							break;
+						}
+						//тут проверяем, если магаз с ограничением меньше чем паллеты которые нужно забрать в первом магазине - не добавляем магаз
+						if(pallReturnInWay != null && shop2.getMaxPall()!= null && shop2.getMaxPall() < pallReturnInWay) {
+							continue;
 						}
 						
 						// тут добавляем мазаз в точку point

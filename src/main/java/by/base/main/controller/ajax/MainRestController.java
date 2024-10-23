@@ -2870,8 +2870,10 @@ public class MainRestController {
 		Double dobleParameter5 = null;
 		
 		
+		
 		Double maxKoef = 2.0;
-//		Double maxKoef = 1.00;
+		Integer maxShopInWay = 22;
+		
 		JSONParser parser = new JSONParser();
 		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
 		JSONObject jsonParameters = jsonMainObject.get("params") != null ? (JSONObject) parser.parse(jsonMainObject.get("params").toString()) : null;
@@ -2879,6 +2881,16 @@ public class MainRestController {
 		JSONArray pallHasShopsJSON = (JSONArray) jsonMainObject.get("palls");
 		JSONArray tonnageHasShopsJSON = (JSONArray) jsonMainObject.get("tonnage");
 		JSONArray shopsWithCrossDocking = (JSONArray) jsonMainObject.get("shopsWithCrossDocking");
+		
+		Double iterationStr = jsonMainObject.get("iteration") != null ? Double.parseDouble(jsonMainObject.get("iteration").toString().replaceAll(",", ".")) : null;
+		if(iterationStr != null && iterationStr != 0.0) {
+			maxKoef = iterationStr;
+		}
+		Integer maxShopInWayTarget = jsonMainObject.get("maxShopsInRoute") != null ? Integer.parseInt(jsonMainObject.get("maxShopsInRoute").toString()) : null;
+		if(maxShopInWayTarget != null && maxShopInWayTarget != 0) {
+			maxShopInWay = maxShopInWayTarget;
+		}
+		
 		
 		// Список для хранения отфильтрованных магазинов ходящих в полигон (магазы которые входят в кроссовые площадки)
         List<Shop> krossShops = new ArrayList<>();
@@ -2912,14 +2924,14 @@ public class MainRestController {
 		}
 
 		List<Integer> numShops = new ArrayList<Integer>();
-		List<Integer> pallHasShops = new ArrayList<Integer>();
+		List<Double> pallHasShops = new ArrayList<Double>();
 		List<Integer> tonnageHasShops = new ArrayList<Integer>();
 		Map<Integer, String> shopsWithCrossDockingMap = new HashMap<Integer, String>(); // мапа где хранятся номера магазинов и название полигонов к ним
 		
 		Integer stock = Integer.parseInt(jsonMainObject.get("stock").toString());
 
 		numShopsJSON.forEach(s -> numShops.add(Integer.parseInt(s.toString())));
-		pallHasShopsJSON.forEach(p -> pallHasShops.add(Integer.parseInt(p.toString())));
+		pallHasShopsJSON.forEach(p -> pallHasShops.add(Double.parseDouble(p.toString().replaceAll(",", "."))));
 		tonnageHasShopsJSON.forEach(t-> tonnageHasShops.add(Integer.parseInt(t.toString())));
 		// Перебор всех магазинов и фильтрация по polygonName != null
         for (Object shopObject : shopsWithCrossDocking) {
@@ -2936,7 +2948,7 @@ public class MainRestController {
 		for (double i = 1.0; i <= maxKoef; i = i + 0.02) {
 			Double koeff = i;
 //			System.out.println("Коэфф = " + koeff);
-			Solution solution = colossusProcessorRad.run(jsonMainObject, numShops, pallHasShops, tonnageHasShops, stock, koeff, "fullLoad", shopsWithCrossDockingMap);
+			Solution solution = colossusProcessorRad.run(jsonMainObject, numShops, pallHasShops, tonnageHasShops, stock, koeff, "fullLoad", shopsWithCrossDockingMap, maxShopInWay);
 
 			// строим маршруты для отправки клиенту
 
@@ -2970,11 +2982,11 @@ public class MainRestController {
 //				}
 //			}
 //			solution2.setTotalRunKM(totalRunHasMatrix);
-			int summpall = 0;
+			double summpall = 0;
 			for (VehicleWay way : solution2.getWhiteWay()) {
 				Shop stock123 = way.getWay().get(0);
 				summpall = summpall + calcPallHashHsop(way.getWay(), stock123);
-				way.setSummPall(summpall);
+				way.setSummPall(roundВouble(summpall, 2));
 			}
 			System.err.println("Выбран маршрут с данными: суммарный пробег: " + solution2.getTotalRunKM() + "м, " + solution2.getEmptyShop().size() + " - кол-во неназначенных магазинов; " + solution2.getEmptyTrucks().size() + " - кол-во свободных авто; Итерация = " + solution2.getKoef() + "; Паллеты: " + summpall);
 			if(solution2.getEmptyShop().size() <= emptyShop) {
@@ -7298,8 +7310,8 @@ public class MainRestController {
 	 * @param targetStock
 	 * @return
 	 */
-	public Integer calcPallHashHsop(List<Shop> shops, Shop targetStock) {
-		Integer summ = 0;
+	public Double calcPallHashHsop(List<Shop> shops, Shop targetStock) {
+		Double summ = 0.0;
 		for (Shop shop : shops) {
 			if(targetStock.getNumshop() !=shop.getNumshop()) {
 				summ = summ + shop.getNeedPall();

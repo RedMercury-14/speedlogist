@@ -1,5 +1,6 @@
 import { autocomplete } from './autocomplete/autocomplete.js'
 import { countries } from './global.js'
+import { RULES_FOR_MIN_UNLOAD_TIME } from './globalRules/minUnloadTimeRules.js'
 import { dateHelper, inputBan, setInputValue } from './utils.js'
 
 const INCOTERMS_INSURANCE_LIST = [
@@ -26,9 +27,11 @@ export function setUnloadTimeMinValue(loadDateInput, loadTimeSelect, unloadDateI
 	const unloadDate = unloadDateInput.value
 	const unloadTimeOptions = unloadTimeSelect.options
 
+	const delayFactor = RULES_FOR_MIN_UNLOAD_TIME[orderWay] || RULES_FOR_MIN_UNLOAD_TIME.default
+	const delay = dateHelper.MILLISECONDS_IN_HOUR * delayFactor
+
 	// для заявок по РБ и Экспорт задержка от загрузки 4 часа
 	if (orderWay === 'РБ' || orderWay === 'Экспорт' || orderWay === 'АХО') {
-		const delay = dateHelper.MILLISECONDS_IN_HOUR * 4
 		if (loadDate === unloadDate) {
 			// если даты совпадают, то проверяем список и блокируем время, меньше времени загрузки
 			const loadDateInMs = dateHelper.getDateObj(loadDate, loadTime).getTime()
@@ -47,7 +50,6 @@ export function setUnloadTimeMinValue(loadDateInput, loadTimeSelect, unloadDateI
 		}
 	} else {
 		// для заявок Импорт задержка от загрузки 24 часов
-		const delay = dateHelper.DAYS_TO_MILLISECONDS
 		const loadDayMs = new Date(loadDate).setHours(0,0,0,0)
 		const unloadDayMs = new Date(unloadDate).setHours(0, 0, 0, 0)
 		if (loadDate === unloadDate) {

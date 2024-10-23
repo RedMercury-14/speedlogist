@@ -18,8 +18,10 @@ import by.base.main.util.hcolossus.pojo.Vehicle;
 @Service
 public class VehicleMachine {
 
-	private Comparator<Vehicle> vehicleComparator = (o1, o2) -> (o2.getPall() - o1.getPall()); // сортирует от большей
+//	private Comparator<Vehicle> vehicleComparator = (o1, o2) -> (o2.getPall() - o1.getPall()); // сортирует от большей
 																								// потребности к меньшей
+	private Comparator<Vehicle> vehicleComparator = (o1, o2) -> Double.compare(o2.getPall(), o1.getPall());
+
 
 	/**
 	 * первая версия подготовки машин и сортировки
@@ -35,7 +37,7 @@ public class VehicleMachine {
 		// фуры
 		JSONObject big = (JSONObject) parser.parse(jsonMainObject.get("big").toString());
 		int nuOfBig = Integer.parseInt(big.get("count").toString());
-		int capacityBig = Integer.parseInt(big.get("tonnage").toString()); //это паллеты
+		double capacityBig = Integer.parseInt(big.get("tonnage").toString()); //это паллеты
 		double maxDurationBig = Double.parseDouble(big.get("maxMileage").toString()); // это тоннаж
 		int id = 1;
 		for (int i = 0; i < nuOfBig; i++) {
@@ -46,7 +48,7 @@ public class VehicleMachine {
 		// средние
 		JSONObject middle = (JSONObject) parser.parse(jsonMainObject.get("middle").toString());
 		int nuOfVehiclesMiddle = Integer.parseInt(middle.get("count").toString());
-		int capacityMiddle = Integer.parseInt(middle.get("tonnage").toString());
+		double capacityMiddle = Integer.parseInt(middle.get("tonnage").toString());
 		double maxDurationMiddle = Double.parseDouble(middle.get("maxMileage").toString());
 		for (int i = 0; i < nuOfVehiclesMiddle; i++) {
 			Vehicle vehicle = new Vehicle(id, "средняя", "средняя", capacityMiddle);
@@ -56,7 +58,7 @@ public class VehicleMachine {
 		// маленькие
 		JSONObject little = (JSONObject) parser.parse(jsonMainObject.get("little").toString());
 		int nuOfVehiclesLittle = Integer.parseInt(little.get("count").toString());
-		int capacityLittle = Integer.parseInt(little.get("tonnage").toString());
+		double capacityLittle = Integer.parseInt(little.get("tonnage").toString());
 		double maxDurationLittle = Double.parseDouble(little.get("maxMileage").toString());
 		for (int i = 0; i < nuOfVehiclesLittle; i++) {
 			Vehicle vehicle = new Vehicle(id, "маленькая", "маленькая", capacityLittle);
@@ -82,7 +84,7 @@ public class VehicleMachine {
 			JSONObject jsonCarObject = (JSONObject) parser.parse(object.toString());
 			String nameCar = jsonCarObject.get("carName").toString();
 			int numOfCars = Integer.parseInt(jsonCarObject.get("carCount").toString());
-			int pallOfCars = Integer.parseInt(jsonCarObject.get("maxPall").toString()); //это паллеты
+			double pallOfCars = Integer.parseInt(jsonCarObject.get("maxPall").toString()); //это паллеты
 			int weightOfCars = Integer.parseInt(jsonCarObject.get("maxTonnage").toString()); //это вес
 			boolean isTwiceRound = Boolean.parseBoolean(jsonCarObject.get("secondRound").toString());
 			for (int i = 0; i < numOfCars; i++) {

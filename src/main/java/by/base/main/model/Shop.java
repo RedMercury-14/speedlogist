@@ -154,7 +154,7 @@ public class Shop implements Serializable{
 	private Boolean IsFit;
 	
 	@Transient
-	private Integer needPall; // потребность магазина в паллетах
+	private Double needPall; // потребность магазина в паллетах
 
 	@Transient
 	private Double distanceFromStock; // расстояние от заданного склада
@@ -327,10 +327,10 @@ public class Shop implements Serializable{
 		this.type = type;
 	}
 	
-	public Integer getNeedPall() {
+	public Double getNeedPall() {
 		return needPall;
 	}
-	public void setNeedPall(Integer needPall) {
+	public void setNeedPall(Double needPall) {
 		this.needPall = needPall;
 	}
 	

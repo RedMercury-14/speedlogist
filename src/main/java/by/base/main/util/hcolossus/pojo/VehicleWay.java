@@ -47,7 +47,7 @@ public class VehicleWay {
 	
 	private Vehicle vehicle;
 
-	private Integer freePallInVehicle = null;
+	private Double freePallInVehicle = null;
 	
 	private Integer freeWeigthInVehicle = null;
 	
@@ -55,7 +55,7 @@ public class VehicleWay {
 	
 	private Double distanceFromStock;
 	
-	private Integer summPall;
+	private Double summPall;
 	
 	/**
 	 * Есть ли ограничения на маршруте
@@ -222,11 +222,11 @@ public class VehicleWay {
 		return vehicle;
 	}
 	
-	public Integer getSummPall() {
+	public Double getSummPall() {
 		return summPall;
 	}
 
-	public void setSummPall(Integer summPall) {
+	public void setSummPall(Double summPall) {
 		this.summPall = summPall;
 	}
 
@@ -238,7 +238,7 @@ public class VehicleWay {
 	 * ВОзвращает свободное место в машине на этом маршруте
 	 * @return
 	 */
-	public Integer getFreePallInVehicle() {
+	public Double getFreePallInVehicle() {
 		if(freePallInVehicle == null) {
 			return vehicle.getFreePall();
 		}else {			
@@ -271,7 +271,7 @@ public class VehicleWay {
 	 * Задаёт свободное место в машине на этом маршруте
 	 * @param freePallInVehicle
 	 */
-	public void setFreePallInVehicle(Integer freePallInVehicle) {
+	public void setFreePallInVehicle(Double freePallInVehicle) {
 		this.freePallInVehicle = freePallInVehicle;
 	}
 	

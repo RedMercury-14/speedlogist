@@ -1,3 +1,5 @@
+import { RULES_FOR_MIN_UNLOAD_DATE } from "./globalRules/minUnloadDateRules.js"
+
 /**
  * Функция `getData` является асинхронной функцией, которая извлекает данные из указанного URL-адреса
  * и возвращает данные, если ответ успешен, в противном случае она возвращает значение `null`.
@@ -232,123 +234,26 @@ export const dateHelper = {
 	 * @returns {string} строку даты в формате "YYYY-MM-DD".
 	 */
 	getMinValidDate(order) {
-		const isInternalMovement = order && order.isInternalMovement
-		const RBway = order && order.way === 'РБ'
-		const ahoWay = order && order.way === 'АХО'
 		const now = new Date()
-		const day = now.getDay()
-		const noonToday = this.getNoon(now)
-		const TimeOfToday = this.getTimesOfDay(now, '11:00:00')
+		const nowMs = now.getTime()
+		const isInternalMovement = order && order.isInternalMovement === 'true'
 
-		// правила для внутренних перемещений
-		// if (isInternalMovement === 'true') {
-		// 	// до 12 - на завтра, после 12 - на послезавтра
-		// 	const tomorrow = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 1)
-		// 	const dayAfterTomorrow = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 2)
-		// 	return now < noonToday
-		// 		? this.getDateForInput(tomorrow)
-		// 		: this.getDateForInput(dayAfterTomorrow)
-		// }
+		const wayRules = {
+			'АХО': RULES_FOR_MIN_UNLOAD_DATE.aho,
+			'РБ': RULES_FOR_MIN_UNLOAD_DATE.wayRB,
+			'Импорт': RULES_FOR_MIN_UNLOAD_DATE.wayImport,
+			'Экспорт': RULES_FOR_MIN_UNLOAD_DATE.wayExport
+		};
 
-		// правила для перевозок АХО
-		if (ahoWay) {
-			// если четверг, после 12:00, то на понедельник
-			if (day === 4 && now > noonToday) {
-				const monday = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 4)
-				return this.getDateForInput(monday)
-			}
+		const minUnloadDateRules = order
+			? isInternalMovement 
+				? RULES_FOR_MIN_UNLOAD_DATE.internalMovement
+				: wayRules[order.way] || RULES_FOR_MIN_UNLOAD_DATE.default
+			: RULES_FOR_MIN_UNLOAD_DATE.default
 
-			// если пятница, до 12:00, то на понедельник
-			if (day === 5 && now <= noonToday) {
-				const monday = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 3)
-				return this.getDateForInput(monday)
-			}
-
-			// если пятница, после 12:00, то на вторник
-			if (day === 5 && now > noonToday) {
-				const tuesday = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 4)
-				return this.getDateForInput(tuesday)
-			}
-
-			// если суббота, то на вторник
-			if (day === 6) {
-				const tuesday = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 3)
-				return this.getDateForInput(tuesday)
-			}
-
-			// если воскресенье, то на вторник
-			if (day === 0) {
-				const tuesday = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 2)
-				return this.getDateForInput(tuesday)
-			}
-
-			// для иных случаев: до 12 - завтра, после 12 - на послезавтра
-			const tomorrow = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 1)
-			const dayAfterTomorrow = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 2)
-			return now < noonToday
-				? this.getDateForInput(tomorrow)
-				: this.getDateForInput(dayAfterTomorrow)
-		}
-
-		// правила для перевозок по РБ и Внутренних перемещений
-		if (RBway) {
-			// если пятница, после 11:00, то на вторник
-			if (day === 5 && now > TimeOfToday) {
-				const tuesday = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 4)
-				return this.getDateForInput(tuesday)
-			}
-
-			// если суббота, то на вторник
-			if (day === 6) {
-				const tuesday = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 3)
-				return this.getDateForInput(tuesday)
-			}
-
-			// если воскресенье, то на вторник
-			if (day === 0) {
-				const tuesday = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 2)
-				return this.getDateForInput(tuesday)
-			}
-
-			// для иных случаев: до 11 - завтра, после 11 - на послезавтра
-			const tomorrow = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 1)
-			const dayAfterTomorrow = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 2)
-			return now < TimeOfToday
-				? this.getDateForInput(tomorrow)
-				: this.getDateForInput(dayAfterTomorrow)
-		}
-
-		// правила для Импорта и Экспорта
-		// если пятница, после 12:00, то на понедельник
-		if (day === 5 && now <= noonToday) {
-			const monday = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 3)
-			return this.getDateForInput(monday)
-		}
-
-		// если пятница, после 12:00, то на вторник
-		if (day === 5 &&  now > noonToday) {
-			const tuesday = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 4)
-			return this.getDateForInput(tuesday)
-		}
-
-		// если суббота, то на среду
-		if (day === 6) {
-			const wednesday = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 4)
-			return this.getDateForInput(wednesday)
-		}
-
-		// если воскресенье, то на среду
-		if (day === 0) {
-			const wednesday = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 3)
-			return this.getDateForInput(wednesday)
-		}
-
-		// для иных случаев: до 12 - послезавтра, после 12 - на третий день
-		const dayAfterTomorrow = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 2)
-		const thirdDay = new Date(now.getTime() + this.DAYS_TO_MILLISECONDS * 3)
-		return now < noonToday
-			? this.getDateForInput(dayAfterTomorrow)
-			: this.getDateForInput(thirdDay)
+		const daysOffset = getDaysOffset(now, minUnloadDateRules)
+		const unloadDate = new Date(nowMs + this.DAYS_TO_MILLISECONDS * daysOffset)
+		return this.getDateForInput(unloadDate)
 	},
 
 
@@ -496,6 +401,15 @@ export const dateHelper = {
 		const date = new Date(dateStr)
 		const day = date.getDay()
 		return day === 0 || day === 6
+	},
+
+	parseTimeStrToObject(timeStr) {
+		return timeStr
+			.split(':')
+			.reduce((acc, val, i) => {
+				acc[['h', 'm', 's'][i]] = parseInt(val)
+				return acc
+			}, {})
 	}
 }
 
@@ -555,6 +469,36 @@ export const cookieHelper = {
 		})
 	}
 }
+
+// получение количества дней сдвига от сегодняшнего дня
+function getDaysOffset(now, minUnloadDateRules) {
+	const day = now.getDay()
+	const nowMs = now.getTime()
+	const boundaryTimeStr = minUnloadDateRules.boundaryTime
+	const specialCases = minUnloadDateRules.daysOffset.specialCases
+	const { h, m, s } = dateHelper.parseTimeStrToObject(boundaryTimeStr)
+	const boundaryTimeMs = now.setHours(h, m, s)
+	const boundaryStatus = nowMs > boundaryTimeMs ? 'after' : 'before'
+
+	let daysOffset
+
+	daysOffset = nowMs > boundaryTimeMs
+		? minUnloadDateRules.daysOffset.afterBoundaryTime
+		: minUnloadDateRules.daysOffset.beforeBoundaryTime
+
+	if (specialCases && specialCases.length !== 0) {
+		const dayCase = specialCases.find(specialCase => specialCase.day === day &&
+			(specialCase.boundaryStatus === boundaryStatus || specialCase.boundaryStatus === undefined)
+		)
+
+		if (dayCase) {
+			daysOffset = dayCase.offset
+		}
+	}
+
+	return daysOffset
+}
+
 
 // функция получения данных о документе типа серия/номер/кем выдан/дата
 export function getDocumentValues(documentValue) {

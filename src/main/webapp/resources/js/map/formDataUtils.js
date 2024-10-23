@@ -39,6 +39,7 @@ export function getPointsDataFromTextarea(routeTextareaForm, routeParams = {}) {
 export function getOptimizeRouteFormData(optimizeRouteForm, params = {}) {
 	const stock = optimizeRouteForm.stock.value || ''
 	const iteration = optimizeRouteForm.iteration.value || ''
+	const maxShopsInRoute = optimizeRouteForm.maxShopsInRoute.value || ''
 	const shops = getTextareaData(optimizeRouteForm.routeTextarea)
 	const palls = getTextareaData(optimizeRouteForm.pallTextarea)
 	const tonnage = getTextareaData(optimizeRouteForm.tonnageTextarea)
@@ -66,6 +67,7 @@ export function getOptimizeRouteFormData(optimizeRouteForm, params = {}) {
 	return {
 		stock,
 		iteration,
+		maxShopsInRoute,
 		shops,
 		palls,
 		tonnage,

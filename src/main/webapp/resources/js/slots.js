@@ -80,7 +80,6 @@ import {
 	stockIsVisible,
 } from "./slots/dataUtils.js"
 import { gridColumnLocalState } from "./AG-Grid/ag-grid-utils.js"
-import { tempMaxPallRestrictions } from "./slots/maxPallRestrictions.js"
 import { updateChartData, getFormattedPallChartData, pallChartConfig, getMarkerBGColorData, } from "./slots/chartJSUtils.js"
 import {
 	addNewOrderBtnListner,
@@ -95,6 +94,7 @@ import {
 	stockSelectListner,
 } from "./slots/listners.js"
 import { renderOrderCalendar } from "./slots/deliveryCalendar.js"
+import { MAX_PALL_RESTRICTIONS } from "./globalRules/maxPallRestrictions.js"
 
 
 const LOCAL_STORAGE_KEY = 'AG_Grid_column_settings_to_Slots'
@@ -269,7 +269,7 @@ window.onload = async function() {
 	// добавляем ивенты на виртуальные склады
 	store.setStockEvents()
 	// сохраняем ограничения паллет
-	store.setMaxPallRestrictions(tempMaxPallRestrictions)
+	store.setMaxPallRestrictions(MAX_PALL_RESTRICTIONS)
 	const stocks = store.getStocks()
 
 	// добавляем склады в селект и вешаем обработчик

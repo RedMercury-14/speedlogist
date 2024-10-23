@@ -61,6 +61,14 @@ export function createCleaningInputsColumn(count, container) {
 	container.innerHTML = rows.join('')
 }
 
+// функция создания колонки инпутов очистки
+export function createPallReturnInputsColumn(count, container) {
+	const header = `<span class="text-muted font-weight-bold">Возврат паллет</span>`
+	const row = (index) => `<input class="form-control px-2" type="number" name="pallReturn" min="0" step="1" id="pallReturn_${index}">`
+	const rows = getRows(header, row, count)
+	container.innerHTML = rows.join('')
+}
+
 // функция получения массива строк для создания колонки либо таблицы
 function getRows(header, row, rowCount) {
 	const rows = []

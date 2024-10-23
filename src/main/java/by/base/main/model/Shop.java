@@ -111,8 +111,8 @@ public class Shop implements Serializable{
 	@Column(name = "package")
 	private String packageShop;
 	
-	@Column(name = "`return`", nullable = true)
-	private String returnShop;
+	@Column(name = "pall_return")
+	private Double pallReturn;
 	
 	@Column(name = "lat")
 	private String lat;
@@ -277,14 +277,14 @@ public class Shop implements Serializable{
 		this.packageShop = packageShop;
 	}
 
-	public String getReturnShop() {
-		return returnShop;
-	}
 
-	public void setReturnShop(String returnShop) {
-		this.returnShop = returnShop;
-	}
 
+	public Double getPallReturn() {
+		return pallReturn;
+	}
+	public void setPallReturn(Double pallReturn) {
+		this.pallReturn = pallReturn;
+	}
 	public Set<RouteHasShop> getRoteHasShopList() {
 		return roteHasShopList;
 	}
@@ -464,7 +464,7 @@ public class Shop implements Serializable{
 	public String toAllString() {
 		return "Shop [numshop=" + numshop + ", address=" + address + ", telephone=" + telephone + ", workStart="
 				+ workStart + ", workfinish=" + workfinish + ", debt=" + debt + ", commercial=" + commercial
-				+ ", packageShop=" + packageShop + ", returnShop=" + returnShop + ", lat=" + lat + ", lng=" + lng
+				+ ", packageShop=" + packageShop + ", pallReturn=" + pallReturn + ", lat=" + lat + ", lng=" + lng
 				+ ", type=" + type + ", length=" + length + ", width=" + width + ", height=" + height + ", maxPall="
 				+ maxPall + ", needPall=" + needPall + ", weight=" + weight +"]";
 	}

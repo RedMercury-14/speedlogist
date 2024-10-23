@@ -44,6 +44,7 @@ import {
 	createNumbersColumn,
 	createRouteInputsTable,
 	createRouteTextareaTable,
+	createPallReturnInputsColumn,
 } from "./map/htmlBuilder.js"
 import {
 	getOptimizeRouteFormData,
@@ -458,6 +459,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 	// контейнер с инпутами для оказания чисток в форме оптимизатора
 	const optimizeRouteCleaningInputsContainer = document.querySelector('#optimizeRouteCleaningInputsContainer')
 	optimizeRouteCleaningInputsContainer && createCleaningInputsColumn(1000, optimizeRouteCleaningInputsContainer)
+
+	// контейнер с инпутами для оказания чисток в форме оптимизатора
+	const optimizeRoutePallReturnInputsContainer = document.querySelector('#optimizeRoutePallReturnInputsContainer')
+	optimizeRoutePallReturnInputsContainer && createPallReturnInputsColumn(1000, optimizeRoutePallReturnInputsContainer)
 
 	// AG-Grid-контейнер, инпут поиска по магазинам, кнопка очистки карты
 	const distanceControlGridDiv = document.querySelector('#distanceControlGrid')
@@ -882,6 +887,7 @@ function optimizeRouteFormHandler(e, gridDiv) {
 		successCallback: (res) => {
 			hideLoadingSpinner(submitButton, submitButtonText)
 			snackbar.show(res.message)
+			if (Object.keys(res.mapResponses).length === 0) return
 			document.querySelector('#displayDataInput').value = res.stackTrace
 			// $('#displayDataModal').modal('show')
 			$('#collapseTwo').collapse('show')

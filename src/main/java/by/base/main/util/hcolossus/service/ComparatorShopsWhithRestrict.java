@@ -18,9 +18,6 @@ public class ComparatorShopsWhithRestrict implements Comparator<Shop>{
 				.compare(o2.getDistanceFromStock(), o1.getDistanceFromStock())
 				.compare(o2.getNeedPall(), o1.getNeedPall())
 				.result();
-//		return new org.apache.commons.lang3.builder.CompareToBuilder()
-////				.append(o2.getNeedPall(), o1.getNeedPall())
-//				.build();
 	}
 
 }

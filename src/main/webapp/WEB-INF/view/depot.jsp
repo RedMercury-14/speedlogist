@@ -248,8 +248,8 @@
 															<span class="text-muted font-weight-bold mr-1">Показать магазины</span>
 															<input class="toggler" id="showOptimizerShops" type="checkbox">
 														</label>
-														<input class="form-control form-control-sm" type="hidden" name="iteration">
-														<input class="form-control form-control-sm" type="hidden" name="maxShopsInRoute">
+														<input class="form-control form-control-sm" type="hidden" name="iteration" value="2.0">
+														<input class="form-control form-control-sm" type="hidden" name="maxShopsInRoute" value="22">
 													</div>
 												</c:otherwise>
 											</c:choose>
@@ -268,6 +268,7 @@
 													<textarea class="route-textarea" id="optimizeRouteTonnage" name="tonnageTextarea" cols="7" rows="1000" required></textarea>
 												</div>
 												<div id="optimizeRouteCleaningInputsContainer" class="cleaningInputs-container"></div>
+												<div id="optimizeRoutePallReturnInputsContainer" class="pallReturnInputs-container"></div>
 											</div>
 											<div class="car-inputs-container">
 												<div class="truckListinputs">

@@ -2872,6 +2872,7 @@ public class MainRestController {
 		
 		
 		Double maxKoef = 2.0;
+		Integer maxShopInWay = 22;
 		
 		JSONParser parser = new JSONParser();
 		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
@@ -2885,6 +2886,11 @@ public class MainRestController {
 		if(iterationStr != null && iterationStr != 0.0) {
 			maxKoef = iterationStr;
 		}
+		Integer maxShopInWayTarget = jsonMainObject.get("maxShopsInRoute") != null ? Integer.parseInt(jsonMainObject.get("maxShopsInRoute").toString()) : null;
+		if(maxShopInWayTarget != null && maxShopInWayTarget != 0) {
+			maxShopInWay = maxShopInWayTarget;
+		}
+		
 		
 		// Список для хранения отфильтрованных магазинов ходящих в полигон (магазы которые входят в кроссовые площадки)
         List<Shop> krossShops = new ArrayList<>();
@@ -2942,7 +2948,7 @@ public class MainRestController {
 		for (double i = 1.0; i <= maxKoef; i = i + 0.02) {
 			Double koeff = i;
 //			System.out.println("Коэфф = " + koeff);
-			Solution solution = colossusProcessorRad.run(jsonMainObject, numShops, pallHasShops, tonnageHasShops, stock, koeff, "fullLoad", shopsWithCrossDockingMap);
+			Solution solution = colossusProcessorRad.run(jsonMainObject, numShops, pallHasShops, tonnageHasShops, stock, koeff, "fullLoad", shopsWithCrossDockingMap, maxShopInWay);
 
 			// строим маршруты для отправки клиенту
 

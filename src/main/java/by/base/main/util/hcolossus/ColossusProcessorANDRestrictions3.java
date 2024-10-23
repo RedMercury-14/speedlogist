@@ -112,7 +112,6 @@ public class ColossusProcessorANDRestrictions3 {
 	private List<VehicleWay> whiteWay;
 	
 	private Double maxDistanceInRoute = 100000.0;
-	private Integer maxShopInWay = 22; //максимальное кол-во магазинов в одной машине
 	
 	private List<Shop> shopsForAddNewNeedPall;
 	/**
@@ -133,7 +132,7 @@ public class ColossusProcessorANDRestrictions3 {
 	 * @throws Exception 
 	 */
 	public Solution run(JSONObject jsonMainObject, List<Integer> shopList, List<Double> pallHasShops, List<Integer> tonnageHasShops, Integer stock,
-			Double koeff, String algoritm, Map<Integer, String> shopsWithCrossDockingMap) throws Exception {
+			Double koeff, String algoritm, Map<Integer, String> shopsWithCrossDockingMap, Integer maxShopInWay) throws Exception {
 		if(tonnageHasShops == null) {
 			System.err.println("Используется старый метод! Нужно использовать /map/myoptimization3");
 			return null;

@@ -109,8 +109,9 @@ export function setOptimizeRouteFormData(form, storageKey) {
 
 	const data = JSON.parse(optimizeRouteItem)
 
-	form.stock.value = data.stock
-	form.iteration.value = data.iteration
+	form.stock.value = data.stock ? data.stock : ''
+	form.iteration.value = data.iteration ? data.iteration : ''
+	form.maxShopsInRoute.value = data.maxShopsInRoute ? data.maxShopsInRoute : ''
 
 	form.routeTextarea.value = data.shops.join('\n')
 	form.pallTextarea.value = data.palls.join('\n')

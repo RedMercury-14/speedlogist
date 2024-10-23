@@ -219,16 +219,40 @@
 									</div>
 									<div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
 										<form id="optimizeRouteForm" class="routeArea-form" action="">
-											<div class="form-group row-container stock-container">
-												<label class="col-form-label text-muted font-weight-bold">СКЛАД</label>
-												<input class="form-control form-control-sm" type="number" name="stock" required>
-												<label class="col-form-label text-muted font-weight-bold">Число итераций</label>
-												<input class="form-control form-control-sm" type="text" name="iteration">
-												<label class="d-flex justify-content-end align-items-center">
-													<span class="text-muted font-weight-bold mr-1">Показать магазины</span>
-													<input class="toggler" id="showOptimizerShops" type="checkbox">
-												</label>
-											</div>
+											<c:choose>
+												<c:when test="${roles == '[ROLE_ADMIN]'}">
+													<div class="form-group row-container stock-container justify-content-between">
+														<div class="row-container">
+															<label class="col-form-label text-muted font-weight-bold">СКЛАД</label>
+															<input class="form-control form-control-sm" type="number" name="stock" required>
+														</div>
+														<label class="d-flex justify-content-end align-items-center">
+															<span class="text-muted font-weight-bold mr-1">Показать магазины</span>
+															<input class="toggler" id="showOptimizerShops" type="checkbox">
+														</label>
+													</div>
+													<div class="form-group row-container stock-container">
+														<label class="col-form-label text-muted font-weight-bold">Коэф. трубы</label>
+														<input class="form-control form-control-sm" type="number" step="0.01" min="0.01" value="2.0" name="iteration">
+														<label class="col-form-label text-muted font-weight-bold" title="Максимальное количество магазинов в маршруте">Макс. магаз.</label>
+														<input class="form-control form-control-sm" type="number" step="1" min="1" value="22" name="maxShopsInRoute" title="Максимальное количество магазинов в маршруте">
+													</div>
+												</c:when>
+												<c:otherwise>
+													<div class="form-group row-container stock-container justify-content-between">
+														<div class="row-container">
+															<label class="col-form-label text-muted font-weight-bold">СКЛАД</label>
+															<input class="form-control form-control-sm" type="number" name="stock" required>
+														</div>
+														<label class="d-flex justify-content-end align-items-center">
+															<span class="text-muted font-weight-bold mr-1">Показать магазины</span>
+															<input class="toggler" id="showOptimizerShops" type="checkbox">
+														</label>
+														<input class="form-control form-control-sm" type="hidden" name="iteration">
+														<input class="form-control form-control-sm" type="hidden" name="maxShopsInRoute">
+													</div>
+												</c:otherwise>
+											</c:choose>
 											<div class="route-container routeAreaForm-container mb-2">
 												<div id="optimizeRouteNumberContainer" class="number-container"></div>
 												<div class="input-container">

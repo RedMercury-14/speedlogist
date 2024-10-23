@@ -366,7 +366,6 @@ async function updateTable() {
 async function getMappingData(data) {
 	return await Promise.all(data.map( async (route) => {
 		const idRoute = route.idRoute
-
 		const unloadToView = getUnloadToView(route)
 		const finishPriceToView = getFinishPriceToView(route)
 		const economy = getEconomy(route)
@@ -377,10 +376,10 @@ async function getMappingData(data) {
 		const cargoInfo = getCargoInfo(route)
 		const startRouteCostInfo = getStartRouteCostInfo(route)
 		const statusRouteToView = getRouteStatus(route.statusRoute)
-
 		const counterparty = getCounterparty(route)
-
-		const offerCount = await getData(getRouteMessageBaseUrl + idRoute)
+		const offerCount = route.statusRoute === '1'
+			? await getData(getRouteMessageBaseUrl + idRoute)
+			: 0
 
 		const isSavedRow = false
 

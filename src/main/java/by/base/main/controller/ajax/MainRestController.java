@@ -2955,6 +2955,7 @@ public class MainRestController {
 			Double koeff = i;
 //			System.out.println("Коэфф = " + koeff);
 			Solution solution = colossusProcessorRad.run(jsonMainObject, numShops, pallHasShops, tonnageHasShops, stock, koeff, "fullLoad", shopsWithCrossDockingMap, maxShopInWay, pallReturn);
+//			Solution solution = colossusProcessorRad.run(jsonMainObject, numShops, pallHasShops, tonnageHasShops, stock, koeff, "fullLoad", shopsWithCrossDockingMap, maxShopInWay);
 
 			// строим маршруты для отправки клиенту
 

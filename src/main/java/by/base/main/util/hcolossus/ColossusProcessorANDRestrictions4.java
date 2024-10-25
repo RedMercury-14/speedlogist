@@ -116,7 +116,7 @@ public class ColossusProcessorANDRestrictions4 {
 	private String stackTrace;
 	private List<VehicleWay> whiteWay;
 	
-	private Double maxDistanceInRoute = 100000.0;
+	private Double maxDistanceInRoute = 150000.0;
 	
 	private List<Shop> shopsForAddNewNeedPall;
 	/**
@@ -272,6 +272,8 @@ public class ColossusProcessorANDRestrictions4 {
 			// создаём матрицу расстояний от первого магазина
 			firstShop.setDistanceFromStock(matrixMachine.matrix.get(targetStock.getNumshop()+"-"+firstShop.getNumshop()));
 			Map<Double, Shop> radiusMap = new TreeMap<Double, Shop>();
+			
+						
 			radiusMap = getDistanceMatrixHasMin(shopsForOptimization, firstShop);
 			// создаём виртуальную машину
 			Vehicle virtualTruck = new Vehicle();
@@ -300,6 +302,9 @@ public class ColossusProcessorANDRestrictions4 {
 			boolean isRestrictions = false;
 			for (Map.Entry<Double, Shop> entry : radiusMap.entrySet()) {
 				Shop shop2 = entry.getValue();
+				
+				//test
+				
 				
 				if(firstShop.getKrossPolugonName()!=null && shop2.getKrossPolugonName() == null || nameKrosPolygon != null && !shop2.getKrossPolugonName().equals(nameKrosPolygon)) { // если первый магаз входит в крос а второй нет - пропускаем!
 					continue;

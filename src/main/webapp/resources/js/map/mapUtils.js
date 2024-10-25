@@ -365,7 +365,7 @@ export function getSelectedShopsPallSum(layer, shopsToView) {
 	// определяем индексы найденых магазинов в поле формы оптимизатора
 	const selectedShopIndexes = selectedShops.map(shop => shopNums.findIndex(shopNum => shopNum === `${shop.numshop}`))
 	return selectedShopIndexes.reduce((acc, index) => {
-		let pall = palls[index]
+		let pall = palls[index].replace(/,/g, '.')
 		if (pall === '0.3' || pall === '0,3') pall = 0.3333
 		acc += Number(pall)
 		return acc

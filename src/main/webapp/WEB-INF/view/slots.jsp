@@ -10,6 +10,7 @@
 	<meta name="${_csrf.parameterName}" content="${_csrf.token}" />
 	<title>Слоты на выгрузку</title>
 	<link rel="icon" href="${pageContext.request.contextPath}/resources/img/favicon.ico">
+	<script async src="${pageContext.request.contextPath}/resources/js/getInitData.js" type="module"></script>
 	<script src="${pageContext.request.contextPath}/resources/js/daterangepicker/moment.min.js"></script>
 	<script src="${pageContext.request.contextPath}/resources/js/FullCalendar/index.global.min.js"></script>
 	<script src="${pageContext.request.contextPath}/resources/js/AG-Grid/ag-grid-enterprise.min.js"></script>

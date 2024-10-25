@@ -68,8 +68,15 @@ const columnDefs = [
 	{ headerName: 'Информация (из Маркета)', field: 'marketInfo', },
 	{ headerName: 'Начальная сумма заказа без НДС', field: 'marketOrderSumFirst', },
 	{ headerName: 'Конечная сумма заказа с НДС', field: 'marketOrderSumFinal', },
-
 ]
+
+if (isAdmin(role)) {
+	columnDefs.push({
+		headerName: 'Изменения статуса', field: 'changeStatus',
+		wrapText: true, autoHeight: true,
+	})
+}
+
 const gridOptions = {
 	columnDefs: columnDefs,
 	rowClassRules: rowClassRules,
@@ -173,34 +180,34 @@ const gridOptions = {
 	excelStyles: excelStyles,
 }
 
-window.onload = async () => {
-	const orderSearchForm = document.querySelector('#orderSearchForm')
-	const date_fromInput = document.querySelector('#date_from')
-	const date_toInput = document.querySelector('#date_to')
-	const gridDiv = document.querySelector('#myGrid')
-
-	const { dateStart, dateEnd } = dateHelper.getDatesToFetch(DATES_KEY)
-	const orders = await getData(`${getOrderBaseUrl}${dateStart}&${dateEnd}`)
-
-	const role = document.querySelector("#role").value
-	if (isAdmin(role)) {
-		gridOptions.columnDefs.push({
-			headerName: 'Изменения статуса', field: 'changeStatus',
-			wrapText: true, autoHeight: true,
-		})
-	}
-
+document.addEventListener('DOMContentLoaded', async () => {
 	// изменение отступа для таблицы
 	changeGridTableMarginTop()
 
+	const orderSearchForm = document.querySelector('#orderSearchForm')
+	const date_fromInput = document.querySelector('#date_from')
+	const date_toInput = document.querySelector('#date_to')
+
 	// отрисовка таблицы
-	renderTable(gridDiv, gridOptions, orders)
+	const gridDiv = document.querySelector('#myGrid')
+	renderTable(gridDiv, gridOptions)
+
+	// отображение стартовых данных
+	if (window.initData) {
+		initStartDate()
+	} else {
+		// подписка на кастомный ивент загрузки стартовых данных
+		document.addEventListener('initDataLoaded', () => {
+			initStartDate()
+		})
+	}
 
 	// получение настроек таблицы из localstorage
 	restoreColumnState()
 	restoreFilterState()
 
 	// автозаполнение полей дат в форме поиска заявок
+	const { dateStart, dateEnd } = dateHelper.getDatesToFetch(DATES_KEY)
 	date_fromInput.value = dateStart
 	date_toInput.value = dateEnd
 
@@ -208,7 +215,7 @@ window.onload = async () => {
 	orderSearchForm.addEventListener('submit', async (e) => searchFormSubmitHandler(e))
 
 	bootstrap5overlay.hideOverlay()
-}
+})
 
 window.addEventListener("unload", () => {
 	const date_fromInput = document.querySelector('#date_from')
@@ -218,23 +225,18 @@ window.addEventListener("unload", () => {
 	dateHelper.setDatesToFetch(DATES_KEY, date_fromInput.value, date_toInput.value)
 })
 
-function renderTable(gridDiv, gridOptions, data) {
+// установка стартовых данных
+function initStartDate() {
+	updateTable(gridOptions, window.initData)
+	window.initData = null
+}
+
+function renderTable(gridDiv, gridOptions) {
 	new agGrid.Grid(gridDiv, gridOptions)
-
-	if (!data || !data.length) {
-		gridOptions.api.setRowData([])
-		gridOptions.api.showNoRowsOverlay()
-		return
-	}
-
-	const mappingData = getMappingData(data)
-
-	gridOptions.api.setRowData(mappingData.sort((a,b) => b.idOrder - a.idOrder))
-	gridOptions.api.hideOverlay()
+	gridOptions.api.setRowData([])
+	gridOptions.api.showLoadingOverlay()
 }
 function updateTable(gridOptions, data) {
-	console.log('UPDATE TABLE')
-
 	if (!data || !data.length) {
 		gridOptions.api.setRowData([])
 		gridOptions.api.showNoRowsOverlay()

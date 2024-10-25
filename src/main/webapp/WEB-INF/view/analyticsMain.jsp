@@ -19,6 +19,12 @@
 			<a class="my-link" href="<spring:url value="/main/analytics/shortage" />">Нехватка товаров на РЦ</a>
 			<br>
 			<a class="my-link" href="<spring:url value="/main/analytics/logistics" />">Аналитика Биржи</a>
+			<br>
+			<a class="my-link" href="<spring:url value="/main/analytics/zero" />">Аналитика нулей</a>
+			<br>
+			<a class="my-link" href="<spring:url value="/main/analytics/changing-matrix" />">Изменение матрицы</a>
+			<br>
+			<a class="my-link" href="<spring:url value="/main/analytics/needs" />">Аналитика Слотов</a>
 		</h3>
 	</div>
 

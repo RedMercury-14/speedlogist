@@ -37,6 +37,7 @@ const debouncedSaveFilterState = debounce(saveFilterState, 300)
 
 let table
 let ahoRouteData
+let allCarriers
 let error
 
 
@@ -184,9 +185,13 @@ const gridOptions = {
 }
 
 
-window.addEventListener("load", async () => {
+document.addEventListener('DOMContentLoaded', async () => {
 	// изменение отступа для таблицы
 	changeGridTableMarginTop()
+
+	// отрисовка таблицы
+	const gridDiv = document.querySelector('#myGrid')
+	renderTable(gridDiv, gridOptions)
 
 	const routeSearchForm = document.querySelector('#routeSearchForm')
 	const addCarrierForm = document.querySelector('#addCarrierForm')
@@ -195,21 +200,13 @@ window.addEventListener("load", async () => {
 	const date_fromInput = document.querySelector('#date_from')
 	const date_toInput = document.querySelector('#date_to')
 
-	const { dateStart, dateEnd } = dateHelper.getDatesToRoutesFetch(DATES_KEY)
-
 	// автозаполнение полей дат в форме поиска заявок
+	const { dateStart, dateEnd } = dateHelper.getDatesToRoutesFetch(DATES_KEY)
 	date_fromInput.value = dateStart
 	date_toInput.value = dateEnd
 
 	// листнер на отправку формы поиска заявок
 	routeSearchForm.addEventListener('submit', searchFormSubmitHandler)
-
-	const res = await getData(`${getAhoRouteBaseUrl}${dateStart}&${dateEnd}`)
-	ahoRouteData = res.body
-
-	// отрисовка таблицы
-	const gridDiv = document.querySelector('#myGrid')
-	await renderTable(gridDiv, gridOptions, ahoRouteData)
 
 	// получение настроек таблицы из localstorage
 	restoreColumnState()
@@ -230,7 +227,16 @@ window.addEventListener("load", async () => {
 	const carrierSelect = document.querySelector('#carrier')
 	const truckSelect = document.querySelector('#truck')
 	const driverSelect = document.querySelector('#driver')
-	await addCarriersToSelect(carrierSelect, truckSelect, driverSelect)
+
+	// отображение стартовых данных
+	if (window.initData) {
+		await initStartData(carrierSelect, truckSelect, driverSelect)
+	} else {
+		// подписка на кастомный ивент загрузки стартовых данных
+		document.addEventListener('initDataLoaded', async () => {
+			await initStartData(carrierSelect, truckSelect, driverSelect)
+		})
+	}
 })
 
 
@@ -242,9 +248,17 @@ window.addEventListener("unload", () => {
 	dateHelper.setDatesToFetch(DATES_KEY, date_fromInput.value, date_toInput.value)
 })
 
+// установка стартовых данных
+async function initStartData(carrierSelect, truckSelect, driverSelect) {
+	ahoRouteData = window.initData.routes
+	allCarriers = window.initData.carriers
+	updateTable(gridOptions, ahoRouteData)
+	await addCarriersToSelect(allCarriers, carrierSelect, truckSelect, driverSelect)
+	window.initData = null
+}
+
 // добавление перевозчиков в выпадающий список формы назначения перевозчика
-async function addCarriersToSelect(carrierSelect, truckSelect, driverSelect) {
-	const carriers = await getData(getAllCarrierUrl)
+async function addCarriersToSelect(carriers, carrierSelect, truckSelect, driverSelect) {
 	carriers.forEach((carrier) => {
 		const optionElement = document.createElement('option')
 		optionElement.value = carrier.idUser
@@ -340,7 +354,7 @@ function addSearchInSelectOptions(select) {
 // обработчик формы поиска заявок
 async function searchFormSubmitHandler(e) {
 	e.preventDefault()
-	updateTable()
+	updateTable(gridOptions)
 }
 // обработчик формы назначения перевозчика
 async function addCarrierSubmitHandler(e) {
@@ -379,30 +393,23 @@ function resetCarrierForm(e, form) {
 // ----------------------- Функции для таблицы AG-Grid ---------------------------//
 // -------------------------------------------------------------------------------//
 
-async function renderTable(gridDiv, gridOptions, data) {
-	table = new agGrid.Grid(gridDiv, gridOptions)
-
-	if (!data || !data.length) {
-		gridOptions.api.setRowData([])
-		gridOptions.api.showNoRowsOverlay()
-		return
-	}
-
-	const mappingData = await getMappingData(data)
-
-	gridOptions.api.setRowData(mappingData)
-	gridOptions.api.hideOverlay()
+function renderTable(gridDiv, gridOptions) {
+	new agGrid.Grid(gridDiv, gridOptions)
+	gridOptions.api.setRowData([])
+	gridOptions.api.showLoadingOverlay()
 }
 
-async function updateTable() {
+async function updateTable(gridOptions, data) {
 	gridOptions.api.showLoadingOverlay()
 
 	const routeSearchForm = document.querySelector('#routeSearchForm')
-
 	const dateStart = routeSearchForm.date_from.value
 	const dateEnd = routeSearchForm.date_to.value
 
-	const res = await getData(`${getAhoRouteBaseUrl}${dateStart}&${dateEnd}`)
+	const res = data
+		? { body: data }
+		: await getData(`${getAhoRouteBaseUrl}${dateStart}&${dateEnd}`)
+
 	ahoRouteData = res.body
 
 	if (!ahoRouteData || !ahoRouteData.length) {
@@ -411,13 +418,13 @@ async function updateTable() {
 		return
 	}
 
-	const mappingData = await getMappingData(ahoRouteData)
+	const mappingData = getMappingData(ahoRouteData)
 
 	gridOptions.api.setRowData(mappingData)
 	gridOptions.api.hideOverlay()
 }
 
-async function getMappingData(data) {
+function getMappingData(data) {
 	return data.map(route => {
 		const cargoInfo = getCargoInfo(route)
 		const needTruckInfo = getNeedTruckInfo(route)
@@ -692,7 +699,7 @@ async function setCarrier(idRoute, idCarrier) {
 	
 	if (res.status === '200') {
 		snackbar.show('Выполнено!')
-		updateTable()
+		updateTable(gridOptions)
 		hideAddCarrierModal()
 	} else {
 		console.log(res)
@@ -711,7 +718,7 @@ async function removeCarrier(idRoute) {
 	
 	if (res.status === '200') {
 		snackbar.show('Выполнено!')
-		updateTable()
+		updateTable(gridOptions)
 		hideAddCarrierModal()
 	} else {
 		console.log(res)
@@ -729,7 +736,7 @@ async function setMileage(idRoute, mileage) {
 	
 	if (res.status === '200') {
 		snackbar.show('Выполнено!')
-		updateTable()
+		updateTable(gridOptions)
 		hideAddMileageModal()
 	} else {
 		console.log(res)
@@ -748,7 +755,7 @@ async function removeMileage(idRoute) {
 	
 	if (res.status === '200') {
 		snackbar.show('Выполнено!')
-		updateTable()
+		updateTable(gridOptions)
 	} else {
 		console.log(res)
 		const message = res.message ? res.message : 'Неизвестная ошибка'
@@ -766,7 +773,7 @@ async function setFinishPrice(idRoute, finishPrice) {
 	
 	if (res.status === '200') {
 		snackbar.show('Выполнено!')
-		updateTable()
+		updateTable(gridOptions)
 		hideAddFinishPriceModal()
 	} else {
 		console.log(res)
@@ -785,7 +792,7 @@ async function removeFinishPrice(idRoute) {
 	
 	if (res.status === '200') {
 		snackbar.show('Выполнено!')
-		updateTable()
+		updateTable(gridOptions)
 	} else {
 		console.log(res)
 		const message = res.message ? res.message : 'Неизвестная ошибка'
@@ -803,7 +810,7 @@ async function closeRoute(idRoute) {
 	
 	if (res.status === '200') {
 		snackbar.show('Выполнено!')
-		updateTable()
+		updateTable(gridOptions)
 		hideAddCarrierModal()
 	} else {
 		console.log(res)

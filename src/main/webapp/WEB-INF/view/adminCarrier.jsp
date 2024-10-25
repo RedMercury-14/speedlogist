@@ -9,9 +9,9 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="${_csrf.parameterName}" content="${_csrf.token}" />
-	<title>Перевозчики</title>
+	<title>Список перевозчиков</title>
 	<link rel="icon" href="${pageContext.request.contextPath}/resources/img/favicon.ico">
-	<!-- AG-Grid -->
+	<script async src="${pageContext.request.contextPath}/resources/js/getInitData.js" type="module"></script>
 	<script src="${pageContext.request.contextPath}/resources/js/AG-Grid/ag-grid-enterprise.min.js"></script>
 	<script type="module" src="${pageContext.request.contextPath}/resources/js/AG-Grid/ag-grid-locale-RU.js"></script>
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/variables.css">
@@ -30,7 +30,7 @@
 
 	<div class="my-container container-fluid px-1">
 		<div class="title-container">
-			<strong><p>Таблица перевозчиков</p></strong>
+			<strong><p>Список перевозчиков</p></strong>
 		</div>
 		<div class="toolbar">
 			<button id="allUsers" class="btn tools-btn">Все</button>

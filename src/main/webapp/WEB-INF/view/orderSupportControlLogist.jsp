@@ -9,6 +9,7 @@
 	<meta name="${_csrf.parameterName}" content="${_csrf.token}" />
 	<title>Остаток товара на складах</title>
 	<link rel="icon" href="${pageContext.request.contextPath}/resources/img/favicon.ico">
+	<script async src="${pageContext.request.contextPath}/resources/js/getInitData.js" type="module"></script>
 	<script src="${pageContext.request.contextPath}/resources/js/AG-Grid/ag-grid-enterprise.min.js"></script>
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/variables.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/orderSupportControlLogist.css">

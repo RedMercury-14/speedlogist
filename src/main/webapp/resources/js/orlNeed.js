@@ -1,8 +1,7 @@
 import { AG_GRID_LOCALE_RU } from "./AG-Grid/ag-grid-locale-RU.js"
-import { gridColumnLocalState, gridFilterLocalState, ResetStateToolPanel } from "./AG-Grid/ag-grid-utils.js"
 import { ajaxUtils } from "./ajaxUtils.js"
 import { snackbar } from "./snackbar/snackbar.js"
-import { changeGridTableMarginTop, dateHelper, debounce, getData, hideLoadingSpinner, showLoadingSpinner } from "./utils.js"
+import { changeGridTableMarginTop, dateHelper, getData, hideLoadingSpinner, showLoadingSpinner } from "./utils.js"
 
 const getOrlNeedBaseUrl = `../../api/orl/need/getNeed/`
 const excelUrl = `../../api/orl/need/load`
@@ -53,53 +52,61 @@ const gridOptions = {
 	localeText: AG_GRID_LOCALE_RU,
 }
 
-window.addEventListener('load', async () => {
+document.addEventListener('DOMContentLoaded', async () => {
+	// изменение отступа для таблицы
+	changeGridTableMarginTop()
+
+	// создание таблицы
+	const gridDiv = document.querySelector('#myGrid')
+	renderTable(gridDiv, gridOptions, orlNeedData)
+
 	// установка фильтра даты
 	const filterDateInput = document.querySelector('#filterDate')
 	const filterDate = dateHelper.getDateForInput(new Date())
 	setFilterDate(filterDate)
 
-
 	// обработка изменений фильтра даты
 	filterDateInput && filterDateInput.addEventListener('change', (e) => {
 		const filterDate = e.target.value
-		updateTable(filterDate)
+		updateTable(gridOptions, filterDate)
 	})
-
-	// загрузка даннных
-	const res = await getData(getOrlNeedBaseUrl + filterDate)
-	orlNeedData = res.body
-	
-	const gridDiv = document.querySelector('#myGrid')
-	// изменение отступа для таблицы
-	changeGridTableMarginTop()
-	// создание таблицы
-	renderTable(gridDiv, gridOptions, orlNeedData)
 
 	// обработка отправки формы отправки excel файла
 	const sendExcelForm = document.querySelector('#sendExcelForm')
 	sendExcelForm && sendExcelForm.addEventListener('submit', sendExcelFormHandler)
+
+	// отображение стартовых данных
+	if (window.initData) {
+		await initStartData(filterDate)
+	} else {
+		// подписка на кастомный ивент загрузки стартовых данных
+		document.addEventListener('initDataLoaded', async () => {
+			await initStartData(filterDate)
+		})
+	}
 })
 
-function renderTable(gridDiv, gridOptions, data) {
-	table = new agGrid.Grid(gridDiv, gridOptions)
-
-	if (!data || !data.length) {
-		gridOptions.api.setRowData([])
-		gridOptions.api.showNoRowsOverlay()
-		return
-	}
-
-	const mappingData = getMappingData(data)
-
-	gridOptions.api.setRowData(mappingData)
-	gridOptions.api.hideOverlay()
+// установка стартовых данных
+async function initStartData(filterDate) {
+	orlNeedData = window.initData.body
+	await updateTable(gridOptions, filterDate, orlNeedData)
+	window.initData = null
 }
-async function updateTable(filterDate) {
+
+function renderTable(gridDiv, gridOptions) {
+	new agGrid.Grid(gridDiv, gridOptions)
+	gridOptions.api.setRowData([])
+	gridOptions.api.showLoadingOverlay()
+}
+async function updateTable(gridOptions, filterDate, data) {
 	if (!filterDate) {
 		filterDate = dateHelper.getDateForInput(new Date())
 	}
-	const res = await getData(getOrlNeedBaseUrl + filterDate)
+
+	const res = data
+		? { body: data }
+		: await getData(getOrlNeedBaseUrl + filterDate)
+
 	orlNeedData = res.body
 
 	if (!orlNeedData || !orlNeedData.length) {
@@ -144,7 +151,7 @@ function sendExcelFormHandler(e) {
 			if (res.status === '200') {
 				snackbar.show(res.message)
 				setFilterDate(date)
-				updateTable(date)
+				updateTable(gridOptions, date)
 				$(`#sendExcelModal`).modal('hide')
 			}
 

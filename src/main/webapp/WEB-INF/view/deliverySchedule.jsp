@@ -10,6 +10,7 @@
 	<meta name="${_csrf.parameterName}" content="${_csrf.token}" />
 	<title>График поставок контрагентов</title>
 	<link rel="icon" href="${pageContext.request.contextPath}/resources/img/favicon.ico">
+	<script async src="${pageContext.request.contextPath}/resources/js/getInitData.js" type="module"></script>
 	<script src="${pageContext.request.contextPath}/resources/js/AG-Grid/ag-grid-enterprise.min.js"></script>
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/variables.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/snackbar.css">
@@ -29,6 +30,7 @@
 
 		<sec:authorize access="isAuthenticated()">
 			<sec:authentication property="principal.authorities" var="roles" />
+			<sec:authentication property="name" var="login"/>
 		</sec:authorize>
 
 		<div class="title-container">
@@ -45,6 +47,13 @@
 				<c:when test="${roles == '[ROLE_ADMIN]'}">
 					<button type="button" class="btn tools-btn font-weight-bold text-muted" data-toggle="modal" data-target="#sendExcelModal">
 						Загрузить Excel
+					</button>
+				</c:when>
+			</c:choose>
+			<c:choose>
+				<c:when test="${roles == '[ROLE_ADMIN]' || login == 'romashkok%!dobronom.by'}">
+					<button type="button" id="sendScheduleDataToMail" class="btn tools-btn font-weight-bold text-muted ml-auto">
+						Отправить данные
 					</button>
 				</c:when>
 			</c:choose>

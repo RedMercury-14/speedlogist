@@ -97,6 +97,9 @@ public class Schedule{
     @Column(name = "date_last_changing")
     private Date dateLastChanging;
     
+    @Column(name = "is_not_calc")
+    private Boolean isNotCalc;
+    
     @JsonIgnore
     @Transient
     private List<String> days;
@@ -131,6 +134,18 @@ public class Schedule{
 
 	public Integer getStatus() {
 		return status;
+	}
+
+
+
+	public Boolean getIsNotCalc() {
+		return isNotCalc;
+	}
+
+
+
+	public void setIsNotCalc(Boolean isNotCalc) {
+		this.isNotCalc = isNotCalc;
 	}
 
 

@@ -116,7 +116,7 @@ public class ColossusProcessorANDRestrictions4 {
 	private String stackTrace;
 	private List<VehicleWay> whiteWay;
 	
-	private Double maxDistanceInRoute = 150000.0;
+	private Double maxDistanceInRoute = 100000.0;
 	
 	private List<Shop> shopsForAddNewNeedPall;
 	/**

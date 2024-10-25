@@ -1353,8 +1353,10 @@ public class MainRestController {
 		return response;		
 	}
 	
+	
+	
 	/**
-	 * Pедактирование поставок
+	 * Pедактирование графика поставок
 	 * @param request
 	 * @param str
 	 * @return
@@ -1511,6 +1513,33 @@ public class MainRestController {
 		Map<String, Object> response = new HashMap<String, Object>();		
 		response.put("status", "200");
 		response.put("body", scheduleService.getSchedules());
+		return response;		
+	}
+	
+	@GetMapping("/slots/delivery-schedule/changeIsNotCalc/{idSchedule}")
+	public Map<String, Object> getChangeIsNotCalc(HttpServletRequest request, @PathVariable String idSchedule) {
+		Map<String, Object> response = new HashMap<String, Object>();	
+		Schedule schedule = scheduleService.getScheduleById(Integer.parseInt(idSchedule.trim()));
+		
+		if(schedule == null) {
+			response.put("status", "100");
+			response.put("info", "Не найден график поставок с id " + idSchedule);
+			response.put("message", "Не найден график поставок с id " + idSchedule);
+			return response;
+		}
+		User user = getThisUser();
+		schedule.setIsNotCalc(!schedule.getIsNotCalc());
+		String history = user.getSurname() + " " + user.getName() + ";" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")) + ";changeIsNotClalc="+schedule.getIsNotCalc()+"\n"; 
+		
+		schedule.setHistory((schedule.getHistory() != null ? schedule.getHistory() : "") + history);
+		schedule.setDateLastChanging(Date.valueOf(LocalDate.now()));
+		
+		scheduleService.updateSchedule(schedule);
+		
+		response.put("status", "200");
+		response.put("body", schedule);
+		response.put("info", "Статус расчёта графика поставок "+schedule.getName()+" изменен");
+		response.put("message", "Статус расчёта графика поставок "+schedule.getName()+" изменен");
 		return response;		
 	}
 	

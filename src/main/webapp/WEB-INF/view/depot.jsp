@@ -10,6 +10,7 @@
 	<meta name="${_csrf.parameterName}" content="${_csrf.token}" />
 	<title>Маршрутизатор 4000</title>
 	<link rel="icon" href="${pageContext.request.contextPath}/resources/img/favicon.ico">
+	<script async src="${pageContext.request.contextPath}/resources/js/getInitData.js" type="module"></script>
 	<script src="${pageContext.request.contextPath}/resources/js/AG-Grid/ag-grid-enterprise.min.js"></script>
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/variables.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/map.css">
@@ -208,7 +209,7 @@
 				<c:choose>
 					<c:when test="${roles == '[ROLE_ADMIN]' || roles == '[ROLE_LOGISTDELIVERY]'}">
 						<div class="item-content" id="optimizeRoute">
-							<h2>Тестовый оптимизатор</h2>
+							<h2>Тестовый оптимизатор v.3</h2>
 							<div class="content">
 								<div class="accordion" id="accordion">
 									<div class="d-flex justify-content-between align-items-center" id="headingOne">

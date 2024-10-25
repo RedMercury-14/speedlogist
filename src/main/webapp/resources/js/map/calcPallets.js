@@ -47,7 +47,8 @@ function calcPalletsNeeded(e) {
 	const palletsNeeded = pallInArray
 		.reduce((sum, value) => {
 			let pall = value
-			if (value === '0.3' || value === '0,3') pall = 0.3333
+			pall = pall.replace(/,/g, '.')
+			if (value === '0.3') pall = 0.3333
 			sum += Number(pall)
 			return sum
 		}, 0)

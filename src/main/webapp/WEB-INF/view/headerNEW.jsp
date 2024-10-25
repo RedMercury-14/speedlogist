@@ -97,7 +97,7 @@
 										<a class="dropdown-item" href="<spring:url value="/main/analytics/logistics" />">Аналитика Биржи</a>
 										<a class="dropdown-item" href="<spring:url value="/main/analytics/zero" />">Аналитика нулей</a>
 										<a class="dropdown-item" href="<spring:url value="/main/analytics/changing-matrix" />">Изменения матрицы</a>
-										<a class="dropdown-item" href="<spring:url value="/main/analytics/needs" />">Аналитика потребности фактических заказов</a>
+										<a class="dropdown-item" href="<spring:url value="/main/analytics/needs" />">Аналитика Слотов</a>
 									</div>
 								</li>
 								
@@ -162,7 +162,7 @@
 										<a class="dropdown-item" href="<spring:url value="/main/analytics/logistics" />">Аналитика Биржи</a>
 										<a class="dropdown-item" href="<spring:url value="/main/analytics/zero" />">Аналитика нулей</a>
 										<a class="dropdown-item" href="<spring:url value="/main/analytics/changing-matrix" />">Изменения матрицы</a>
-										<a class="dropdown-item" href="<spring:url value="/main/analytics/needs" />">Аналитика потребности фактических заказов</a>
+										<a class="dropdown-item" href="<spring:url value="/main/analytics/needs" />">Аналитика Слотов</a>
 									</div>
 								</li>
 							</c:when>
@@ -235,7 +235,7 @@
 									<div class="dropdown-menu">
 										<a class="dropdown-item" href="<spring:url value="/main/analytics/shortage" />">Нехватка товаров на РЦ</a>
 										<a class="dropdown-item" href="<spring:url value="/main/analytics/changing-matrix" />">Изменения матрицы</a>
-										<a class="dropdown-item" href="<spring:url value="/main/analytics/needs" />">Аналитика потребности фактических заказов</a>
+										<a class="dropdown-item" href="<spring:url value="/main/analytics/needs" />">Аналитика Слотов</a>
 									</div>
 								</li>
 							</c:when>

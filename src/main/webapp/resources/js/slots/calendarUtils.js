@@ -1,6 +1,6 @@
 import { snackbar } from "../snackbar/snackbar.js"
 import { dateHelper } from "../utils.js"
-import { Draggable, eventColors, userMessages } from "./constants.js"
+import { eventColors, userMessages } from "./constants.js"
 import { convertToDDMMYYYY, convertToDayMonthTime, getEventBGColor, getSlotStatus, getSlotStatusYard, stockAndDayIsVisible, stockIsVisible } from "./dataUtils.js"
 import { editableRulesToConfirmBtn, hasOrderInYard, isAnotherUser, isBackgroundEvent, removeDraggableElementRules } from "./rules.js"
 import { store } from "./store.js"
@@ -61,7 +61,7 @@ export function createDraggableElement(container, order, login, currentStock) {
 
 	if (stockId !== '1700') event.constraint = 'businessHours'
 
-	new Draggable(
+	new FullCalendar.Draggable(
 		singleSlotElem,
 		{ eventData: (eventEl) => event }
 	)

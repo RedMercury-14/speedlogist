@@ -10,13 +10,22 @@
 	<meta name="${_csrf.parameterName}" content="${_csrf.token}" />
 	<title>Список магазинов</title>
 	<link rel="icon" href="${pageContext.request.contextPath}/resources/img/favicon.ico">
+	<script async src="${pageContext.request.contextPath}/resources/js/getInitData.js" type="module"></script>
 	<script src="${pageContext.request.contextPath}/resources/js/AG-Grid/ag-grid-enterprise.min.js"></script>
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/variables.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/snackbar.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/shopList.css">
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/bootstrap5overlay.css">
 </head>
 <body>
 	<jsp:include page="headerNEW.jsp" />
+
+	<div id="overlay" class="">
+		<div class="spinner-border text-primary" role="status">
+			<span class="sr-only">Загрузка...</span>
+		</div>
+	</div>
+
 	<div class="container-fluid my-container px-0">
 		<div class="title-container">
 			<strong><h3>Список магазинов</h3></strong>

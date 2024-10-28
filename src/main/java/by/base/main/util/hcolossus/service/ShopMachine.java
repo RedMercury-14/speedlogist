@@ -75,7 +75,7 @@ public class ShopMachine {
 			Integer integer = shopList.get(i);
 			Shop shop = (Shop) SerializationUtils.clone(allShop.get(integer));
 			if(shop == null) {
-				System.err.println("ShopMachine.prepareShopList2Parameters: Магазин " + integer + " не найден в базе данных!");
+				System.err.println("ShopMachine.prepareShopList3Parameters: Магазин " + integer + " не найден в базе данных!");
 				return null;
 			}
 			shop.setNeedPall(pallHasShops.get(i));
@@ -112,6 +112,54 @@ public class ShopMachine {
 			
 		}
 		finalResult.sort(comparatorShops);
+		return finalResult;
+		
+	}
+	
+	/**
+	 * Метод подготавливает лист магазинов уже с потребностями
+	 * <br>Метод сортирует потребность магазов от большего к меньшему и <b>от дальшего к ближнему <b>
+	 * <br> т.е. самый дальний и самый требовательный магаз
+	 * <br> Добавлена потребность магазина в килограммах
+	 * <br> Добавлен парсинг возврещаемых паллет
+	 * <br> <b>ComparatorShopsDistanceMain</b>
+	 * @return
+	 * @throws JsonProcessingException 
+	 * @throws JsonMappingException 
+	 */
+	public List<Shop> prepareShopList4Parameters(List<Integer> shopList, List<Double> pallHasShops, List<Integer> tonnageHasShops,  Integer stock,  Map<Integer, String> shopsWithCrossDockingMap, List<Double> pallReturn) throws JsonMappingException, JsonProcessingException {
+		Map<Integer, Shop> allShop =  shopService.getShopMap();
+		ComparatorShopsDistanceMain shopComparatorDistanceMain = new ComparatorShopsDistanceMain();
+		List<Shop> result = new ArrayList<Shop>();
+		for (int i = 0; i < shopList.size(); i++) {
+			Integer integer = shopList.get(i);
+			Shop shop = (Shop) SerializationUtils.clone(allShop.get(integer));
+			if(shop == null) {
+				System.err.println("ShopMachine.prepareShopList4Parameters: Магазин " + integer + " не найден в базе данных!");
+				return null;
+			}
+			shop.setNeedPall(pallHasShops.get(i));
+			shop.setWeight(tonnageHasShops.get(i));
+			shop.setPallReturn(pallReturn.get(i));
+			if(shopsWithCrossDockingMap.get(integer) != null) {
+				shop.setKrossPolugonName(shopsWithCrossDockingMap.get(integer));
+			}
+			result.add(shop);
+		}
+		//задаём расстояния от склада до магазина, для последующей сортировки
+		List<Shop> finalResult = new ArrayList<Shop>();
+		for (Shop shop : result) {
+			String keyForMatrix = stock+"-"+shop.getNumshop();
+			Double distanceTarget = matrixMachine.matrix.get(keyForMatrix);
+			if(distanceTarget == null) {
+				System.err.println("ShopMachine.prepareShopList2Parameters: Магазин " + shop.getNumshop() + " не найдено расстояние от склада");
+			}else {
+				shop.setDistanceFromStock(distanceTarget);
+				finalResult.add(shop);
+			}
+			
+		}
+		finalResult.sort(shopComparatorDistanceMain);
 		return finalResult;
 		
 	}

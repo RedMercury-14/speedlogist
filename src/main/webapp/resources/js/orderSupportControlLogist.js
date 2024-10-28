@@ -14,7 +14,7 @@ const token = $("meta[name='_csrf']").attr("content")
 const PAGE_NAME = 'skuControl'
 const LOCAL_STORAGE_KEY = `AG_Grid_settings_to_${PAGE_NAME}`
 
-const getStockRemainderUrl ='../../api/order-support/getStockRemainder'
+const getStockRemainderUrl = '../../api/order-support/getStockRemainder'
 const setNewBalanceBaseUrl = '../../api/order-support/setNewBalance/'
 const setMaxDayBaseUrl = '../../api/order-support/setMaxDay/'
 const changeExceptionBaseUrl = '../../api/order-support/changeException/'
@@ -130,41 +130,47 @@ const gridOptions = {
 	},
 }
 
-window.onload = async () => {
-	const gridDiv = document.querySelector('#myGrid')
-
+document.addEventListener('DOMContentLoaded', async () => {
 	// изменение отступа для таблицы
 	changeGridTableMarginTop()
 
 	// отрисовка таблицы
-	await renderProductTable(gridDiv, gridOptions)
+	const gridDiv = document.querySelector('#myGrid')
+	renderTable(gridDiv, gridOptions)
 
 	// получение настроек таблицы из localstorage
 	restoreColumnState()
 	restoreFilterState()
-}
 
-async function renderProductTable(gridDiv, gridOptions) {
-	new agGrid.Grid(gridDiv, gridOptions)
-	gridOptions.api.showLoadingOverlay()
-
-	productData = await getData(getStockRemainderUrl)
-
-	if (!productData || !productData.length) {
-		gridOptions.api.setRowData([])
-		gridOptions.api.showNoRowsOverlay()
-		return
+	// отображение стартовых данных
+	if (window.initData) {
+		await initStartData()
+	} else {
+		// подписка на кастомный ивент загрузки стартовых данных
+		document.addEventListener('initDataLoaded', async () => {
+			await initStartData()
+		})
 	}
+})
 
-	const mappingData = productData.map(getMappingItem)
-
-	gridOptions.api.setRowData(mappingData)
-	gridOptions.api.hideOverlay()
+// установка стартовых данных
+async function initStartData() {
+	productData = window.initData
+	await updateTable(gridOptions, productData)
+	window.initData = null
 }
-async function updateProductTable() {
+
+function renderTable(gridDiv, gridOptions) {
+	new agGrid.Grid(gridDiv, gridOptions)
+	gridOptions.api.setRowData([])
+	gridOptions.api.showLoadingOverlay()
+}
+async function updateTable(gridOptions, data) {
 	gridOptions.api.showLoadingOverlay()
 
-	productData = await getData(getStockRemainderUrl)
+	productData = data
+		? data
+		: await getData(getStockRemainderUrl)
 
 	if (!productData || !productData.length) {
 		gridOptions.api.setRowData([])

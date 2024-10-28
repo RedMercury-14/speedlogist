@@ -182,4 +182,60 @@ export const MAX_PALL_RESTRICTIONS = [
 			internalMovement: 500,
 		},
 	},
+	{
+		stockId: '1700',
+		date: '2024-10-28',
+		maxPall: {
+			externalMovement: 1400,
+			internalMovement: 500,
+		},
+	},
+	{
+		stockId: '1700',
+		date: '2024-10-29',
+		maxPall: {
+			externalMovement: 1400,
+			internalMovement: 500,
+		},
+	},
+	{
+		stockId: '1700',
+		date: '2024-10-30',
+		maxPall: {
+			externalMovement: 1400,
+			internalMovement: 500,
+		},
+	},
+	{
+		stockId: '1700',
+		date: '2024-10-31',
+		maxPall: {
+			externalMovement: 1400,
+			internalMovement: 500,
+		},
+	},
+	{
+		stockId: '1700',
+		date: '2024-11-01',
+		maxPall: {
+			externalMovement: 1400,
+			internalMovement: 500,
+		},
+	},
+	{
+		stockId: '1700',
+		date: '2024-11-02',
+		maxPall: {
+			externalMovement: 1400,
+			internalMovement: 500,
+		},
+	},
+	{
+		stockId: '1700',
+		date: '2024-11-03',
+		maxPall: {
+			externalMovement: 1300,
+			internalMovement: 500,
+		},
+	},
 ]

@@ -154,6 +154,7 @@ import by.base.main.util.GraphHopper.JSpiritMachine;
 import by.base.main.util.GraphHopper.RoutingMachine;
 import by.base.main.util.bots.TelegramBot;
 import by.base.main.util.hcolossus.ColossusProcessorANDRestrictions3;
+import by.base.main.util.hcolossus.ColossusProcessorANDRestrictions4;
 import by.base.main.util.hcolossus.pojo.Solution;
 import by.base.main.util.hcolossus.pojo.Vehicle;
 import by.base.main.util.hcolossus.pojo.VehicleWay;
@@ -234,7 +235,7 @@ public class MainRestController {
 	private JSpiritMachine jSpiritMachine;
 
 	@Autowired
-	private ColossusProcessorANDRestrictions3 colossusProcessorRad;
+	private ColossusProcessorANDRestrictions4 colossusProcessorRad;
 
 	@Autowired
 	private MatrixMachine matrixMachine;
@@ -1352,8 +1353,10 @@ public class MainRestController {
 		return response;		
 	}
 	
+	
+	
 	/**
-	 * Pедактирование поставок
+	 * Pедактирование графика поставок
 	 * @param request
 	 * @param str
 	 * @return
@@ -1510,6 +1513,33 @@ public class MainRestController {
 		Map<String, Object> response = new HashMap<String, Object>();		
 		response.put("status", "200");
 		response.put("body", scheduleService.getSchedules());
+		return response;		
+	}
+	
+	@GetMapping("/slots/delivery-schedule/changeIsNotCalc/{idSchedule}")
+	public Map<String, Object> getChangeIsNotCalc(HttpServletRequest request, @PathVariable String idSchedule) {
+		Map<String, Object> response = new HashMap<String, Object>();	
+		Schedule schedule = scheduleService.getScheduleById(Integer.parseInt(idSchedule.trim()));
+		
+		if(schedule == null) {
+			response.put("status", "100");
+			response.put("info", "Не найден график поставок с id " + idSchedule);
+			response.put("message", "Не найден график поставок с id " + idSchedule);
+			return response;
+		}
+		User user = getThisUser();
+		schedule.setIsNotCalc(!schedule.getIsNotCalc());
+		String history = user.getSurname() + " " + user.getName() + ";" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")) + ";changeIsNotClalc="+schedule.getIsNotCalc()+"\n"; 
+		
+		schedule.setHistory((schedule.getHistory() != null ? schedule.getHistory() : "") + history);
+		schedule.setDateLastChanging(Date.valueOf(LocalDate.now()));
+		
+		scheduleService.updateSchedule(schedule);
+		
+		response.put("status", "200");
+		response.put("body", schedule);
+		response.put("info", "Статус расчёта графика поставок "+schedule.getName()+" изменен");
+		response.put("message", "Статус расчёта графика поставок "+schedule.getName()+" изменен");
 		return response;		
 	}
 	
@@ -2881,6 +2911,7 @@ public class MainRestController {
 		JSONArray pallHasShopsJSON = (JSONArray) jsonMainObject.get("palls");
 		JSONArray tonnageHasShopsJSON = (JSONArray) jsonMainObject.get("tonnage");
 		JSONArray shopsWithCrossDocking = (JSONArray) jsonMainObject.get("shopsWithCrossDocking");
+		JSONArray pallReturnJSON = (JSONArray) jsonMainObject.get("pallReturn");
 		
 		Double iterationStr = jsonMainObject.get("iteration") != null ? Double.parseDouble(jsonMainObject.get("iteration").toString().replaceAll(",", ".")) : null;
 		if(iterationStr != null && iterationStr != 0.0) {
@@ -2926,6 +2957,7 @@ public class MainRestController {
 		List<Integer> numShops = new ArrayList<Integer>();
 		List<Double> pallHasShops = new ArrayList<Double>();
 		List<Integer> tonnageHasShops = new ArrayList<Integer>();
+		List<Double> pallReturn = new ArrayList<Double>();
 		Map<Integer, String> shopsWithCrossDockingMap = new HashMap<Integer, String>(); // мапа где хранятся номера магазинов и название полигонов к ним
 		
 		Integer stock = Integer.parseInt(jsonMainObject.get("stock").toString());
@@ -2933,6 +2965,9 @@ public class MainRestController {
 		numShopsJSON.forEach(s -> numShops.add(Integer.parseInt(s.toString())));
 		pallHasShopsJSON.forEach(p -> pallHasShops.add(Double.parseDouble(p.toString().replaceAll(",", "."))));
 		tonnageHasShopsJSON.forEach(t-> tonnageHasShops.add(Integer.parseInt(t.toString())));
+		pallReturnJSON.forEach(pr-> pallReturn.add(pr != null ? Double.parseDouble(pr.toString().trim()) : null));
+		
+		
 		// Перебор всех магазинов и фильтрация по polygonName != null
         for (Object shopObject : shopsWithCrossDocking) {
             JSONObject shop = (JSONObject) shopObject;
@@ -2948,7 +2983,8 @@ public class MainRestController {
 		for (double i = 1.0; i <= maxKoef; i = i + 0.02) {
 			Double koeff = i;
 //			System.out.println("Коэфф = " + koeff);
-			Solution solution = colossusProcessorRad.run(jsonMainObject, numShops, pallHasShops, tonnageHasShops, stock, koeff, "fullLoad", shopsWithCrossDockingMap, maxShopInWay);
+			Solution solution = colossusProcessorRad.run(jsonMainObject, numShops, pallHasShops, tonnageHasShops, stock, koeff, "fullLoad", shopsWithCrossDockingMap, maxShopInWay, pallReturn);
+//			Solution solution = colossusProcessorRad.run(jsonMainObject, numShops, pallHasShops, tonnageHasShops, stock, koeff, "fullLoad", shopsWithCrossDockingMap, maxShopInWay);
 
 			// строим маршруты для отправки клиенту
 

@@ -232,16 +232,19 @@ const calendarOptions = {
 	eventsSet: debouncedEventsSetHandler,
 }
 
-window.onload = async function() {
+document.addEventListener('DOMContentLoaded', async function() {
 	if(isMobileDevice()) {
 		showMobileTooltop()
 	}
-
-	const gridDiv = document.querySelector('#myGrid')
-	const eventContainer = document.querySelector("#external-events")
-
 	// добавляем класс при хэдере меньшего размера
 	addSmallHeaderClass()
+	// создание таблицы
+	const gridDiv = document.querySelector('#myGrid')
+	renderTable(gridDiv, orderTableGridOption, [])
+	// получаем настройки колонок таблицы
+	restoreColumnState()
+
+	const eventContainer = document.querySelector("#external-events")
 
 	// создание календаря
 	const calendarEl = document.querySelector("#calendar")
@@ -255,25 +258,6 @@ window.onload = async function() {
 	const ctx = document.querySelector('#pallLineChart')
 	pallLineChart = new Chart(ctx, pallChartConfig)
 
-	// получаем данные
-	const { startDateStr, endDateStr } = getDatesToSlotsFetch(
-		slotsSettings.DAY_COUNT_BACK,
-		slotsSettings.DAY_COUNT_FORVARD
-	)
-	const marketData = await getData(`${getOrdersForSlotsBaseUrl}${startDateStr}&${endDateStr}`)
-	// не загружаем заказы в стор со статусов 5 (виртуальные заказы)
-	// const filtredOrders = marketData.filter(order => order.status !== 5) -- ДЛЯ РАБОТЫ БЕЗ ВИРТУАЛЬНЫХ ЗАКАЗОВ
-
-	// сохраняем заказы в стор
-	store.setOrders(marketData)
-	// добавляем ивенты на виртуальные склады
-	store.setStockEvents()
-	// сохраняем ограничения паллет
-	store.setMaxPallRestrictions(MAX_PALL_RESTRICTIONS)
-	const stocks = store.getStocks()
-
-	// добавляем склады в селект и вешаем обработчик
-	stockSelectListner(stocks, calendar, stockSelectOnChangeHandler)
 	// поиск слота в календаре
 	slotSearchFormListner(slotSearchFormSubmitHandler)
 	// добавление нового заказа
@@ -293,17 +277,39 @@ window.onload = async function() {
 	// закрытие модального окна с информацией об ивенте
 	eventInfoModalClosedListner()
 
+	// отображение стартовых данных
+	if (window.initData) {
+		await initStartData()
+	} else {
+		// подписка на кастомный ивент загрузки стартовых данных
+		document.addEventListener('initDataLoaded', async () => {
+			await initStartData()
+		})
+	}
+})
+
+
+// установка стартовых данных
+async function initStartData() {
+	// не загружаем заказы в стор со статусов 5 (виртуальные заказы)
+	// const filtredOrders = window.initData.filter(order => order.status !== 5) -- ДЛЯ РАБОТЫ БЕЗ ВИРТУАЛЬНЫХ ЗАКАЗОВ
+	store.setOrders(window.initData)
+	// добавляем ивенты на виртуальные склады
+	store.setStockEvents()
+	// сохраняем ограничения паллет
+	store.setMaxPallRestrictions(MAX_PALL_RESTRICTIONS)
+	const stocks = store.getStocks()
+	// добавляем склады в селект и вешаем обработчик
+	stockSelectListner(stocks, calendar, stockSelectOnChangeHandler)
 	// обновляем ивенты календаря при изменении стора
 	store.subscribe(() => calendar.refetchEvents())
 	// рендеринг календаря и таблицы
 	calendar.render()
-	renderTable(gridDiv, orderTableGridOption, [])
-	// получаем настройки колонок таблицы
-	restoreColumnState()
 	// скрываем оверлей загрузки
 	bootstrap5overlay.hideOverlay()
 	// сообщаем о готовности приложения к работе
 	store.setReady(true)
+	window.initData = null
 }
 
 // контекстное меню таблицы заказов

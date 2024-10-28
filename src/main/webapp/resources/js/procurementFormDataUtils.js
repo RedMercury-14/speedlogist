@@ -1,4 +1,3 @@
-import { TEST_ORDER_EXPORT, TEST_ORDER_IMPORT, TEST_ORDER_RB } from "./testOrderData.js"
 import { dateHelper, getData, removeSingleQuotes } from "./utils.js"
 
 // форматирование данных формы заявки

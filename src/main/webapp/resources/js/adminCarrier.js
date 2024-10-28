@@ -11,7 +11,6 @@ const PAGE_NAME = 'adminCarrier'
 const LOCAL_STORAGE_KEY = `AG_Grid_setting_to_${PAGE_NAME}`
 const token = $("meta[name='_csrf']").attr("content")
 
-let localData = []
 const fileModal = $('#fileModal')
 
 class BtnCellRenderer {
@@ -152,26 +151,29 @@ const gridOptions = {
 	},
 }
 
-window.onload = async function() {
+document.addEventListener('DOMContentLoaded', async () => {
+	// изменение отступа для таблицы
+	changeGridTableMarginTop()
+
 	const gridDiv = document.querySelector('#myGrid')
+	renderTable(gridDiv, gridOptions)
+
 	const allUsersBtn = document.querySelector("#allUsers")
 	const confirmedUsersBtn = document.querySelector("#confirmedUsers")
 	const unconfirmedUsersBtn = document.querySelector("#unconfirmedUsers")
 	const blockedUsersBtn = document.querySelector("#blockedUsers")
 	const unblockedUsersBtn = document.querySelector("#unblockedUsers")
 
-	const getAllCarrierUrl = `../../api/manager/getAllCarrier`
-	
-	const carrier = await getData(getAllCarrierUrl)
-
-	if (!localData.length) {
-		localData = carrier
+	// отображение стартовых данных
+	if (window.initData) {
+		initStartDate()
+	} else {
+		// подписка на кастомный ивент загрузки стартовых данных
+		document.addEventListener('initDataLoaded', () => {
+			initStartDate()
+		})
 	}
 
-	// изменение отступа для таблицы
-	changeGridTableMarginTop()
-
-	renderTable(gridDiv, gridOptions, carrier)
 	restoreColumnState()
 	restoreFilterState()
 
@@ -182,6 +184,12 @@ window.onload = async function() {
 	unblockedUsersBtn.onclick = () => showUnBlockedUsers()
 
 	bootstrap5overlay.hideOverlay()
+})
+
+// установка стартовых данных
+function initStartDate() {
+	updateTable(gridOptions, window.initData)
+	window.initData = null
 }
 
 // функция для блокироваки/разблокировки перевозчика
@@ -222,9 +230,26 @@ function changeNumContract(data, successCallback) {
 	})
 }
 
-function renderTable(gridDiv, gridOptions, data) {
+function renderTable(gridDiv, gridOptions) {
 	new agGrid.Grid(gridDiv, gridOptions)
-	gridOptions.api.setRowData(data.map(user => {
+	gridOptions.api.setRowData([])
+	gridOptions.api.showLoadingOverlay()
+}
+function updateTable(gridOptions, data) {
+	if (!data || !data.length) {
+		gridOptions.api.setRowData([])
+		gridOptions.api.showNoRowsOverlay()
+		return
+	}
+
+	const mappingData = getMappingData(data)
+
+	gridOptions.api.setRowData(mappingData)
+	gridOptions.api.hideOverlay()
+}
+
+function getMappingData(data) {
+	return data.map(user => {
 		const fio = `${user.surname != null ? user.surname: ''} ${user.name != null ? user.name: ''} ${user.patronymic != null ? user.patronymic : ''}`
 		const tir = user.tir ? 'Да' : 'Нет'
 		const check = user.check
@@ -244,9 +269,7 @@ function renderTable(gridDiv, gridOptions, data) {
 			workingShift: user.workingShift ? user.workingShift.idWorkingShift : '',
 			edit: user.idUser
 		}
-	}))
-	gridOptions.api.hideOverlay()
-	!data.length && gridOptions.api.showNoRowsOverlay()
+	})
 }
 
 function truckListLinkRenderer(params) {

@@ -30,6 +30,7 @@ const debouncedSaveColumnState = debounce(saveColumnState, 300)
 const debouncedSaveFilterState = debounce(saveFilterState, 300)
 
 let table
+let isInitDataLoaded = false
 
 const columnDefs = [
 	// {
@@ -155,29 +156,36 @@ const gridOptions = {
 }
 
 
-window.addEventListener("load", async () => {
+document.addEventListener('DOMContentLoaded', async () => {
+	// изменение отступа для таблицы
+	changeGridTableMarginTop()
+
 	const routeSearchForm = document.querySelector('#routeSearchForm')
 	const date_fromInput = document.querySelector('#date_from')
 	const date_toInput = document.querySelector('#date_to')
+
+	// отрисовка таблицы
 	const gridDiv = document.querySelector('#myGrid')
+	renderTable(gridDiv, gridOptions)
 	gridDiv.addEventListener('click', gridTableClickHandler)
 
-	const { dateStart, dateEnd } = dateHelper.getDatesToRoutesFetch(DATES_KEY)
-
 	// автозаполнение полей дат в форме поиска заявок
+	const { dateStart, dateEnd } = dateHelper.getDatesToRoutesFetch(DATES_KEY)
 	date_fromInput.value = dateStart
 	date_toInput.value = dateEnd
 
 	// листнер на отправку формы поиска заявок
 	routeSearchForm.addEventListener('submit', searchFormSubmitHandler)
 
-	// изменение отступа для таблицы
-	changeGridTableMarginTop()
-
-	const routes = await getData(`${getRouteBaseUrl}${dateStart}&${dateEnd}`)
-
-	// отрисовка таблицы
-	await renderTable(gridDiv, gridOptions, routes)
+	// отображение стартовых данных
+	if (window.initData) {
+		await initStartDate(routeSearchForm)
+	} else {
+		// подписка на кастомный ивент загрузки стартовых данных
+		document.addEventListener('initDataLoaded', async () => {
+			await initStartDate(routeSearchForm)
+		})
+	}
 
 	// получение настроек таблицы из localstorage
 	restoreColumnState()
@@ -198,17 +206,25 @@ window.addEventListener("unload", () => {
 	dateHelper.setDatesToFetch(DATES_KEY, date_fromInput.value, date_toInput.value)
 })
 
+// установка стартовых данных
+async function initStartDate(routeSearchForm) {
+	await updateTable(gridOptions, routeSearchForm, window.initData)
+	isInitDataLoaded = true
+	window.initData = null
+}
 
 // обработчик формы поиска заявок
 async function searchFormSubmitHandler(e) {
 	e.preventDefault()
-	updateTable()
+	await updateTable(gridOptions, e.target)
+	isInitDataLoaded = true
 }
 
 // обработчик сообщений WebSocket
 async function onMessageHandler(e) {
 	const message = JSON.parse(e.data)
 	if (!message) return
+	if (!isInitDataLoaded) return
 
 	// обновляем количество предложений
 	if (message.idRoute !== null) {
@@ -326,30 +342,21 @@ function createRouteInfoHTML(route) {
 // ----------------------- Функции для таблицы AG-Grid ---------------------------//
 // -------------------------------------------------------------------------------//
 
-async function renderTable(gridDiv, gridOptions, data) {
-	table = new agGrid.Grid(gridDiv, gridOptions)
-
-	if (!data || !data.length) {
-		gridOptions.api.setRowData([])
-		gridOptions.api.showNoRowsOverlay()
-		return
-	}
-
-	const mappingData = await getMappingData(data)
-
-	gridOptions.api.setRowData(mappingData)
-	gridOptions.api.hideOverlay()
+function renderTable(gridDiv, gridOptions) {
+	new agGrid.Grid(gridDiv, gridOptions)
+	gridOptions.api.setRowData([])
+	gridOptions.api.showLoadingOverlay()
 }
 
-async function updateTable() {
+async function updateTable(gridOptions, searchForm, data) {
 	gridOptions.api.showLoadingOverlay()
 
-	const routeSearchForm = document.querySelector('#routeSearchForm')
+	const dateStart = searchForm.date_from.value
+	const dateEnd = searchForm.date_to.value
 
-	const dateStart = routeSearchForm.date_from.value
-	const dateEnd = routeSearchForm.date_to.value
-
-	const routes = await getData(`${getRouteBaseUrl}${dateStart}&${dateEnd}`)
+	const routes = data
+		? data
+		: await getData(`${getRouteBaseUrl}${dateStart}&${dateEnd}`)
 
 	if (!routes || !routes.length) {
 		gridOptions.api.setRowData([])

@@ -8,16 +8,14 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="${_csrf.parameterName}" content="${_csrf.token}" />
-	<title>Потребности</title>
+	<title>График поставок контрагентов</title>
 	<link rel="icon" href="${pageContext.request.contextPath}/resources/img/favicon.ico">
-	<script async src="${pageContext.request.contextPath}/resources/js/getInitData.js" type="module"></script>
 	<script src="${pageContext.request.contextPath}/resources/js/AG-Grid/ag-grid-enterprise.min.js"></script>
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/variables.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/snackbar.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/bootstrap5overlay.css">
-	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/orlNeed.css">
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/deliverySchedule.css">
 </head>
-
 <body>
 	<jsp:include page="headerNEW.jsp" />
 
@@ -34,17 +32,18 @@
 		</sec:authorize>
 
 		<div class="title-container">
-			<strong><h3>Потребности</h3></strong>
+			<strong><h3>График поставок контрагентов</h3></strong>
 		</div>
 		<div class="toolbar">
-			<input class="btn tools-btn font-weight-bold" type="date" name="filterDate" id="filterDate">
-			<c:choose>
-				<c:when test="${roles == '[ROLE_ADMIN]' || roles == '[ROLE_ORDERSUPPORT]'}">
-					<button type="button" class="btn tools-btn font-weight-bold text-muted" data-toggle="modal" data-target="#sendExcelModal">
-						Загрузить отчет с инф-й о потребности
-					</button>
-				</c:when>
-			</c:choose>
+			<select class="btn tools-btn font-weight-bold" name="numStockSelect" id="numStockSelect">
+				<option value="">Все склады</option>
+			</select>
+			<button type="button" class="btn tools-btn font-weight-bold text-muted" data-toggle="modal" data-target="#addScheduleItemModal">
+				+ Добавить новый график
+			</button>
+			<button type="button" class="btn tools-btn font-weight-bold text-muted" data-toggle="modal" data-target="#sendExcelModal">
+				Загрузить Excel
+			</button>
 		</div>
 		<div id="myGrid" class="ag-theme-alpine"></div>
 		<div id="snackbar"></div>
@@ -55,7 +54,7 @@
 		<div class="modal-dialog">
 			<div class="modal-content">
 				<div class="modal-header">
-					<h1 class="modal-title fs-5 m-0" id="sendExcelModalLabel">Загрузить потребности</h1>
+					<h1 class="modal-title fs-5 m-0" id="sendExcelModalLabel">Загрузить данные</h1>
 					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 						<span aria-hidden="true">&times;</span>
 					</button>
@@ -64,19 +63,16 @@
 					<div class="modal-body">
 						<div class="inputs-container">
 							<div class="form-group">
-								<label for="date" class="col-form-label text-muted font-weight-bold">Укажите дату отчета*</label>
-								<span></span>
-								<input class="form-control w-50" type="date" name="date" id="date">
-								<small id="date" class="form-text text-muted">
-									* Если дата не указана, то отчет загрузится с датой сегодняшнего дня
-								</small>
+								<label class="col-form-label text-muted font-weight-bold">Укажите номер склада</label>
+								<select id="numStock" name="numStock" class="form-control" required>
+									<option value="" selected hidden disabled></option>
+								</select>
 							</div>
 							<div class="form-group">
 								<label class="col-form-label text-muted font-weight-bold">Загрузите файл Excel</label>
 								<input type="file" class="form-control btn-outline-secondary" name="excel"
-									id="excel"
-									accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-									required>
+									id="excel" required
+									accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel">
 							</div>
 						</div>
 					</div>
@@ -89,7 +85,24 @@
 		</div>
 	</div>
 
-	<script src='${pageContext.request.contextPath}/resources/js/mainPage/nav-fixed-top.js'></script>
-	<script src="${pageContext.request.contextPath}/resources/js/orlNeed.js" type="module"></script>
+	<!-- Модальное окно для отображения текста -->
+	<div class="modal fade" id="displayMessageModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="displayMessageModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header justify-content-center">
+					<h5 class="modal-title" id="displayMessageModalLabel">Сообщение</h5>
+				</div>
+				<div class="modal-body">
+					<div id="messageContainer"></div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Ок, понятно</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
 </body>
+<script src="${pageContext.request.contextPath}/resources/js/excerpt.js" type="module"></script>
+<script src='${pageContext.request.contextPath}/resources/js/mainPage/nav-fixed-top.js'></script>
 </html>

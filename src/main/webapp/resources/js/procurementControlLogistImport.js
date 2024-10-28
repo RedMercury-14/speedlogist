@@ -33,6 +33,8 @@ const getSearchOrderBaseUrl ='../../api/manager/getOrdersHasCounterparty/'
 const createRouteUrl = (way) => way === 'АХО' ? '../../api/manager/maintenance/add' : '../../api/manager/createNewRoute'
 const getDataHasOrderBaseUrl ='../../api/manager/getDataHasOrder2/'
 
+const role = document.querySelector('#role').value
+
 const FORM_TYPE = 'routeForm'
 
 // let hasConfirmRouteDataResponse = true
@@ -108,6 +110,14 @@ const columnDefs = [
 	{ headerName: 'Начальная сумма заказа без НДС', field: 'marketOrderSumFirst', },
 	{ headerName: 'Конечная сумма заказа с НДС', field: 'marketOrderSumFinal', },
 ]
+
+if (isAdmin(role)) {
+	columnDefs.push({
+		headerName: 'Изменения статуса', field: 'changeStatus',
+		wrapText: true, autoHeight: true,
+	})
+}
+
 const gridOptions = {
 	columnDefs: columnDefs,
 	rowClassRules: rowClassRules,
@@ -212,39 +222,39 @@ const gridOptions = {
 	excelStyles: excelStyles,
 }
 
-window.onload = async () => {
+document.addEventListener('DOMContentLoaded', async () => {
+	// изменение отступа для таблицы
+	changeGridTableMarginTop()
+
 	const orderSearchForm = document.querySelector('#orderSearchForm')
 	const routeForm = document.querySelector('#routeForm')
 	const date_fromInput = document.querySelector('#date_from')
 	const date_toInput = document.querySelector('#date_to')
-	const gridDiv = document.querySelector('#myGrid')
 	const methodLoadInput = document.querySelector('#methodLoad')
 	const typeTruckInput = document.querySelector('#typeTruck')
 	const wayInput = document.querySelector('#way')
 	const dangerousInput = document.querySelector('#dangerous')
 
-	const { dateStart, dateEnd } = dateHelper.getDatesToFetch(DATES_KEY)
-	const orders = await getData(`${getOrderBaseUrl}${dateStart}&${dateEnd}`)
+	// отрисовка таблицы
+	const gridDiv = document.querySelector('#myGrid')
+	renderTable(gridDiv, gridOptions)
 
-	const role = document.querySelector("#role").value
-	if (isAdmin(role)) {
-		gridOptions.columnDefs.push({
-			headerName: 'Изменения статуса', field: 'changeStatus',
-			wrapText: true, autoHeight: true,
+	// отображение стартовых данных
+	if (window.initData) {
+		await initStartDate(orderSearchForm)
+	} else {
+		// подписка на кастомный ивент загрузки стартовых данных
+		document.addEventListener('initDataLoaded', async () => {
+			await initStartDate(orderSearchForm)
 		})
 	}
-
-	// изменение отступа для таблицы
-	changeGridTableMarginTop()
-
-	// отрисовка таблицы
-	renderTable(gridDiv, gridOptions, orders)
 
 	// получение настроек таблицы из localstorage
 	restoreColumnState()
 	restoreFilterState()
 
 	// автозаполнение полей дат в форме поиска заявок
+	const { dateStart, dateEnd } = dateHelper.getDatesToFetch(DATES_KEY)
 	date_fromInput.value = dateStart
 	date_toInput.value = dateEnd
 
@@ -283,7 +293,7 @@ window.onload = async () => {
 	})
 
 	bootstrap5overlay.hideOverlay()
-}
+})
 
 window.addEventListener("unload", () => {
 	const date_fromInput = document.querySelector('#date_from')
@@ -293,32 +303,30 @@ window.addEventListener("unload", () => {
 	dateHelper.setDatesToFetch(DATES_KEY, date_fromInput.value, date_toInput.value)
 })
 
-function renderTable(gridDiv, gridOptions, data) {
-	new agGrid.Grid(gridDiv, gridOptions)
-
-	if (!data || !data.length) {
-		gridOptions.api.setRowData([])
-		gridOptions.api.showNoRowsOverlay()
-		return
-	}
-
-	const mappingData = getMappingData(data)
-
-	gridOptions.api.setRowData(mappingData.sort((a,b) => b.idOrder - a.idOrder))
-	gridOptions.api.hideOverlay()
+// установка стартовых данных
+async function initStartDate(orderSearchForm) {
+	await updateTable(gridOptions, orderSearchForm, window.initData)
+	window.initData = null
 }
-async function updateTable() {
+
+function renderTable(gridDiv, gridOptions) {
+	new agGrid.Grid(gridDiv, gridOptions)
+	gridOptions.api.setRowData([])
+	gridOptions.api.showLoadingOverlay()
+}
+async function updateTable(gridOptions, searchForm, data) {
 	gridOptions.api.showLoadingOverlay()
 
-	const orderSearchForm = document.querySelector('#orderSearchForm')
+	const dateStart = searchForm.date_from.value
+	const dateEnd = searchForm.date_to.value
+	const counterparty = searchForm.searchName.value
+	const getOrderUrl = counterparty.length
+		? `${getSearchOrderBaseUrl}${dateStart}&${dateEnd}&${counterparty}`
+		: `${getOrderBaseUrl}${dateStart}&${dateEnd}`
 
-	const dateStart = orderSearchForm.date_from.value
-	const dateEnd = orderSearchForm.date_to.value
-	const counterparty = orderSearchForm.searchName.value
-
-	const orders = counterparty.length
-		? await getData(`${getSearchOrderBaseUrl}${dateStart}&${dateEnd}&${counterparty}`)
-		: await getData(`${getOrderBaseUrl}${dateStart}&${dateEnd}`)
+	const orders = data
+		? data
+		: await getData(getOrderUrl)
 
 	if (!orders || !orders.length) {
 		gridOptions.api.setRowData([])
@@ -546,7 +554,7 @@ function closeRouteModal() {
 // обработчик формы поиска заявок
 async function searchFormSubmitHandler(e) {
 	e.preventDefault()
-	updateTable()
+	updateTable(gridOptions, e.target)
 }
 
 // обработчик формы создания марщрута
@@ -585,7 +593,8 @@ function routeFormSubmitHandler(e) {
 
 			if (res.status === '200') {
 				snackbar.show('Маршрут создан!')
-				updateTable()
+				const orderSearchForm = document.querySelector('#orderSearchForm')
+				updateTable(gridOptions, orderSearchForm)
 				closeRouteModal()
 			} else if (res.status === '100') {
 				snackbar.show(res.message)

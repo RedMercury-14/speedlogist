@@ -45,6 +45,8 @@ export function getOptimizeRouteFormData(optimizeRouteForm, params = {}) {
 	const tonnage = getTextareaData(optimizeRouteForm.tonnageTextarea)
 	const checkboxes = optimizeRouteForm.querySelectorAll('input[name="cleaning"]')
 	const cleanings = getCheckboxesData(checkboxes)
+	const pallReturnInputs = optimizeRouteForm.querySelectorAll('input[name="pallReturn"]')
+	const pallReturn = getInputsData(pallReturnInputs)
 	cleanings.length = shops.length
 	const cars = getCarsData(optimizeRouteForm)
 
@@ -72,6 +74,7 @@ export function getOptimizeRouteFormData(optimizeRouteForm, params = {}) {
 		palls,
 		tonnage,
 		cleanings,
+		pallReturn,
 		cars,
 		big,
 		middle,

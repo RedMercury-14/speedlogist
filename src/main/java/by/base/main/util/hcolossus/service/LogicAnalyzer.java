@@ -110,7 +110,6 @@ public class LogicAnalyzer {
 		}else {
 			return result;	
 		}
-		
 			
 	}
 	

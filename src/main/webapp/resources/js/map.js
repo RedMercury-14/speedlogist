@@ -44,6 +44,7 @@ import {
 	createNumbersColumn,
 	createRouteInputsTable,
 	createRouteTextareaTable,
+	createPallReturnInputsColumn,
 } from "./map/htmlBuilder.js"
 import {
 	getOptimizeRouteFormData,
@@ -431,10 +432,6 @@ map.on(L.Draw.Event.DELETED, leafletDrawLayerEventHandlers.onDeletedLayersHandle
 // -------------------------------------------------------------------------------//
 
 document.addEventListener('DOMContentLoaded', async () => {
-	// получение стартовых данных
-	await init()
-	// все магазины/склады/точки
-	const allShops = mapStore.getShops()
 	// изменение размера контейнера для контента
 	addSmallHeaderClass()
 
@@ -458,6 +455,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 	// контейнер с инпутами для оказания чисток в форме оптимизатора
 	const optimizeRouteCleaningInputsContainer = document.querySelector('#optimizeRouteCleaningInputsContainer')
 	optimizeRouteCleaningInputsContainer && createCleaningInputsColumn(1000, optimizeRouteCleaningInputsContainer)
+
+	// контейнер с инпутами для оказания чисток в форме оптимизатора
+	const optimizeRoutePallReturnInputsContainer = document.querySelector('#optimizeRoutePallReturnInputsContainer')
+	optimizeRoutePallReturnInputsContainer && createPallReturnInputsColumn(1000, optimizeRoutePallReturnInputsContainer)
 
 	// AG-Grid-контейнер, инпут поиска по магазинам, кнопка очистки карты
 	const distanceControlGridDiv = document.querySelector('#distanceControlGrid')
@@ -489,10 +490,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 	saveRoutingParamsBtn && saveRoutingParamsBtn.addEventListener('click', (e) => saveRouterParams(routingParamsForm, setRouterParamsUrl, token))
 	loadRoutingParamsBtn && loadRoutingParamsBtn.addEventListener('click', async (e) => loadRouterParams(routingParamsForm, getRouterParamsUrl))
 
-	// переключатель отображения на карте всех магазинов
-	const allShopsToggler = document.querySelector("#allShopsToggler")
-	allShopsToggler && allShopsToggler.addEventListener('click', (e) => toogleAllShops(e, map, allShops))
-	
 	// переключатель отображения на карте магазинов из поля оптимизатора
 	const showOptimizerShopsBtn = document.querySelector("#showOptimizerShops")
 	showOptimizerShopsBtn && showOptimizerShopsBtn.addEventListener('click', (e) => optimizerShopToggler(e, map))
@@ -507,10 +504,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 	// обработка закрытия модального окна создания полигона
 	$('#poligonControlModal').on('hidden.bs.modal', (e) => clearPoligonControlForm(poligonControlForm))
-
-	// селект выбора точки для кросс-докинга
-	const crossDockingPointSelect = document.querySelector("#crossDockingPoint")
-	addCrossDockingPointOptions(allShops, crossDockingPointSelect)
 
 	// кастомные кнопки контроля для рисования
 	// const logJSON = document.querySelector(".log")
@@ -527,7 +520,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 	// установака данных даты 
 	currentDateInput && (currentDateInput.value = mapStore.getCurrentDate())
 	currentDateInput && (currentDateInput.min = mapStore.getCurrentDate())
-	currentDateInput && (currentDateInput.max = mapStore.getMaxTrucksDate())
+	// currentDateInput && (currentDateInput.max = mapStore.getMaxTrucksDate())
 	currentDateInput && currentDateInput.addEventListener('change', (e) => changeCurrentDateHandler(e, carInputsTable))
 
 	// выпадающий список со списками машин для оптимизатора
@@ -547,6 +540,55 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 	// добавление листнера для расчёта необходимости магазинов в паллетах
 	addListnersToPallTextarea()
+
+	// создание формы настроек оптимизатора
+	createOptimizeRouteParamsForm(optimizeRouteParamsForm)
+
+	// отображение стартовых данных
+	if (window.initData) {
+		await initStartData(currentDateInput)
+	} else {
+		// подписка на кастомный ивент загрузки стартовых данных
+		document.addEventListener('initDataLoaded', async () => {
+			await initStartData(currentDateInput)
+		})
+	}
+
+	bootstrap5overlay.hideOverlay()
+})
+
+
+// получение стартовых данных
+async function initStartData(currentDateInput) {
+	const shops = window.initData
+	// полигоны
+	const allPolygons = await getData(getAllPolygonsUrl)
+	// получение машин для оптимизатора
+	const response = await getData(getTrucksBaseUrl)
+	const trucksData = response.status === '200'
+		? response.body ? response.body : []
+		: []
+	const mappedTruckData = trucksData.map(truckAdapter)
+	// машины по датам
+	const groupedTrucks = groupTrucksByDate(mappedTruckData)
+	// списки машин
+	const lists = getTruckLists(mappedTruckData)
+
+	mapStore.setShops(shops)
+	mapStore.setTrucks(groupedTrucks)
+	mapStore.setLists(lists)
+	mapStore.setPolygons(allPolygons)
+
+	// переключатель отображения на карте всех магазинов
+	const allShopsToggler = document.querySelector("#allShopsToggler")
+	allShopsToggler && allShopsToggler.addEventListener('click', (e) => toogleAllShops(e, map, shops))
+
+	// селект выбора точки для кросс-докинга
+	const crossDockingPointSelect = document.querySelector("#crossDockingPoint")
+	addCrossDockingPointOptions(shops, crossDockingPointSelect)
+
+	// максимальная дата для списков машин
+	currentDateInput && (currentDateInput.max = mapStore.getMaxTrucksDate())
 
 	// отображение полигонов и элементов рисования
 	const role = document.querySelector("#role").value
@@ -570,35 +612,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 		displayPolygons(filtredPolygons)
 		displayShops()
 	}
-
-	// создание формы настроек оптимизатора
-	createOptimizeRouteParamsForm(optimizeRouteParamsForm)
-
-	bootstrap5overlay.hideOverlay()
-})
-
-
-// получение стартовых данных
-async function init() {
-	const shops = await getData(getAllShopsUrl)
-	const allPolygons = await getData(getAllPolygonsUrl)
-
-	// получение машин для оптимизатора
-	const response = await getData(getTrucksBaseUrl)
-	const trucksData = response.status === '200'
-		? response.body ? response.body : []
-		: []
-
-	const mappedTruckData = trucksData.map(truckAdapter)
-	// машины по датам
-	const groupedTrucks = groupTrucksByDate(mappedTruckData)
-	// списки машин
-	const lists = getTruckLists(mappedTruckData)
-
-	mapStore.setTrucks(groupedTrucks)
-	mapStore.setLists(lists)
-	mapStore.setShops(shops)
-	mapStore.setPolygons(allPolygons)
 }
 
 //добавление маркеров на карту
@@ -882,6 +895,7 @@ function optimizeRouteFormHandler(e, gridDiv) {
 		successCallback: (res) => {
 			hideLoadingSpinner(submitButton, submitButtonText)
 			snackbar.show(res.message)
+			if (Object.keys(res.mapResponses).length === 0) return
 			document.querySelector('#displayDataInput').value = res.stackTrace
 			// $('#displayDataModal').modal('show')
 			$('#collapseTwo').collapse('show')

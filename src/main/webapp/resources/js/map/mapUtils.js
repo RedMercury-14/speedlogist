@@ -109,9 +109,9 @@ export function setOptimizeRouteFormData(form, storageKey) {
 
 	const data = JSON.parse(optimizeRouteItem)
 
-	form.stock.value = data.stock ? data.stock : ''
-	form.iteration.value = data.iteration ? data.iteration : ''
-	form.maxShopsInRoute.value = data.maxShopsInRoute ? data.maxShopsInRoute : ''
+	data.stock && (form.stock.value = data.stock)
+	data.iteration && (form.iteration.value = data.iteration)
+	data.maxShopsInRoute && (form.maxShopsInRoute.value = data.maxShopsInRoute)
 
 	form.routeTextarea.value = data.shops.join('\n')
 	form.pallTextarea.value = data.palls.join('\n')
@@ -119,6 +119,10 @@ export function setOptimizeRouteFormData(form, storageKey) {
 
 	data.cleanings.forEach((value, i) => {
 		form.cleaning[i].checked = value
+	})
+
+	data.pallReturn && data.pallReturn.forEach((value, i) => {
+		value && (form.pallReturn[i].value = value)
 	})
 
 	setLocalCarsData(data, form)
@@ -360,5 +364,10 @@ export function getSelectedShopsPallSum(layer, shopsToView) {
 
 	// определяем индексы найденых магазинов в поле формы оптимизатора
 	const selectedShopIndexes = selectedShops.map(shop => shopNums.findIndex(shopNum => shopNum === `${shop.numshop}`))
-	return selectedShopIndexes.reduce((acc, index) => acc + Number(palls[index]), 0)
+	return selectedShopIndexes.reduce((acc, index) => {
+		let pall = palls[index].replace(/,/g, '.')
+		if (pall === '0.3' || pall === '0,3') pall = 0.3333
+		acc += Number(pall)
+		return acc
+	}, 0)
 }

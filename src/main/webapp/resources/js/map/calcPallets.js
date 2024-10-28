@@ -44,12 +44,19 @@ function calcTotalPallets() {
 // функция для расчёта и отображения необходимости магазинов в паллетах в форме оптимизатора
 function calcPalletsNeeded(e) {
 	const pallInArray = getTextareaData(e.target)
-	const palletsNeeded = pallInArray.reduce((sum, pall) => sum + Number(pall), 0)
+	const palletsNeeded = pallInArray
+		.reduce((sum, value) => {
+			let pall = value
+			pall = pall.replace(/,/g, '.')
+			if (value === '0.3') pall = 0.3333
+			sum += Number(pall)
+			return sum
+		}, 0)
 	const totalPallets = Number(totalPalletsElem.innerText)
 
 	if (!Number.isFinite(palletsNeeded) || !Number.isFinite(totalPallets)) return
 	
-	palletsNeededElem.innerText = palletsNeeded
+	palletsNeededElem.innerText = palletsNeeded.toFixed(2)
 	updateTotalPalletsElemClassName(palletsNeeded, totalPallets)
 }
 

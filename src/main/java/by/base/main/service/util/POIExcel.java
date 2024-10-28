@@ -186,6 +186,10 @@ public class POIExcel {
         // Заполняем данные
         int rowNum = 1;
         for (Schedule schedule : schedules) {
+        	if(schedule.getIsNotCalc()) {
+        		continue;
+        	}
+        	
             Row row = sheet.createRow(rowNum++);
 
             row.createCell(0).setCellValue(schedule.getCounterpartyCode());

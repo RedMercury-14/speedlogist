@@ -1,5 +1,6 @@
 import { AG_GRID_LOCALE_RU } from '../js/AG-Grid/ag-grid-locale-RU.js'
 import { ajaxUtils } from './ajaxUtils.js'
+import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 import { snackbar } from "./snackbar/snackbar.js"
 import { uiIcons } from './uiIcons.js'
 import { changeGridTableMarginTop, getData, hideLoadingSpinner, isAdmin, showLoadingSpinner } from './utils.js'
@@ -13,7 +14,6 @@ const deleteShopUrl = '../../api/manager/deleteShop'
 const token = $("meta[name='_csrf']").attr("content")
 const login = document.querySelector("#login").value
 const role = document.querySelector("#role").value
-console.log("🚀 ~ login:", login)
 
 // логины, которым разрешено редактирование
 const editableLogins = [
@@ -101,45 +101,55 @@ const gridOptions = {
 	getContextMenuItems: getContextMenuItems,
 }
 
-window.onload = async () => {
+document.addEventListener('DOMContentLoaded', async () => {
+	// изменение отступа для таблицы
+	changeGridTableMarginTop()
+	// скрытие кнопок редактирования
 	if (!isEditable(login, role)) hideEditableButtons()
+
+	const gridDiv = document.querySelector('#myGrid')
+	renderTable(gridDiv, gridOptions)
+
+	// отображение стартовых данных
+	if (window.initData) {
+		await initStartDate()
+	} else {
+		// подписка на кастомный ивент загрузки стартовых данных
+		document.addEventListener('initDataLoaded', async () => {
+			await initStartDate()
+		})
+	}
 
 	const addShopForm = document.querySelector("#addShopForm")
 	const addShopsInExcelForm = document.querySelector("#addShopsInExcelForm")
 	const editShopForm = document.querySelector("#editShopForm")
-	const gridDiv = document.querySelector('#myGrid')
-
-	const shops = await getData(getAllShopsUrl)
-
-	// изменение отступа для таблицы
-	changeGridTableMarginTop()
-
-	renderTable(gridDiv, gridOptions, shops)
 
 	addShopForm.addEventListener("submit", (e) => addShopFormHandler(e))
 	addShopsInExcelForm.addEventListener("submit", (e) => addShopsInExcelFormHandler(e))
 	editShopForm.addEventListener("submit", (e) => editShopFormHandler(e))
+
 	$('#numshop').change(checkSopNumber)
 	$('#addShopModal').on('hidden.bs.modal', (e) => addShopForm.reset())
 	$('#editShopModal').on('hidden.bs.modal', (e) => editShopForm.reset())
+
+	bootstrap5overlay.hideOverlay()
+})
+
+// установка стартовых данных
+async function initStartDate() {
+	await updateTable(gridOptions, window.initData)
+	window.initData = null
 }
 
-function renderTable(gridDiv, gridOptions, data) {
-	table = new agGrid.Grid(gridDiv, gridOptions)
-
-	if (!data || !data.length) {
-		gridOptions.api.setRowData([])
-		gridOptions.api.showNoRowsOverlay()
-		return
-	}
-
-	const mappingData = getMappingData(data)
-
-	gridOptions.api.setRowData(mappingData)
-	gridOptions.api.hideOverlay()
+function renderTable(gridDiv, gridOptions) {
+	new agGrid.Grid(gridDiv, gridOptions)
+	gridOptions.api.setRowData([])
+	gridOptions.api.showLoadingOverlay()
 }
-async function updateTable() {
-	const shops = await getData(getAllShopsUrl)
+async function updateTable(gridOptions, data) {
+	const shops = data
+		? data
+		: await getData(getAllShopsUrl)
 
 	if (!shops || !shops.length) {
 		gridOptions.api.setRowData([])
@@ -153,7 +163,6 @@ async function updateTable() {
 	gridOptions.api.hideOverlay()
 }
 function getMappingData(data) {
-
 	return data
 }
 function getContextMenuItems(params) {
@@ -204,7 +213,7 @@ function addShopFormHandler(e) {
 		data: data,
 		successCallback: (res) => {
 			snackbar.show(res.message)
-			updateTable()
+			updateTable(gridOptions)
 			$(`#addShopModal`).modal('hide')
 		}
 	})
@@ -227,7 +236,7 @@ function addShopsInExcelFormHandler(e) {
 		data: file,
 		successCallback: (res) => {
 			snackbar.show(res[200])
-			updateTable()
+			updateTable(gridOptions)
 			$(`#addShopsInExcelModal`).modal('hide')
 			hideLoadingSpinner(submitButton, 'Загрузить')
 		},
@@ -255,7 +264,7 @@ function editShopFormHandler(e) {
 		data: data,
 		successCallback: (res) => {
 			snackbar.show(res.message)
-			updateTable()
+			updateTable(gridOptions)
 			$(`#editShopModal`).modal('hide')
 		}
 	})
@@ -316,7 +325,7 @@ function deleteShop(numshop) {
 		data: { numshop: numshop },
 		successCallback: (res) => {
 			snackbar.show(res.message)
-			updateTable()
+			updateTable(gridOptions)
 			$(`#addShopModal`).modal('hide')
 		}
 	})

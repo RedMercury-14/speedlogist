@@ -10,9 +10,11 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="${_csrf.parameterName}" content="${_csrf.token}" />
+	<meta name="role" content="${roles}" />
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="icon" href="${pageContext.request.contextPath}/resources/img/favicon.ico">
 	<title>Менеджер маршрутов АХО/СГИ</title>
+	<script async src="${pageContext.request.contextPath}/resources/js/getInitData.js" type="module"></script>
 	<script src="${pageContext.request.contextPath}/resources/js/AG-Grid/ag-grid-enterprise.min.js"></script>
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/variables.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/maintenanceList.css">

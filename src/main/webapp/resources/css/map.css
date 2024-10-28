@@ -260,7 +260,7 @@ input[type=number] {
 	grid-template-columns: 1fr 2fr 9fr;
 }
 #optimizeRouteForm .routeAreaForm-container {
-	grid-template-columns: 1fr 2fr 2fr 2fr 1fr 1fr;
+	grid-template-columns: 1fr 3fr 1fr 3fr 1fr 3fr 1fr;
 	grid-column-gap: 10px;
 }
 #shopLoadsForm .routeAreaForm-container {
@@ -343,7 +343,8 @@ input[type=number] {
 #routeAreaForm .number-container {
 	grid-template-rows: 46px repeat(25, 40px);
 }
-.routeArea-form .cleaningInputs-container {
+.routeArea-form .cleaningInputs-container,
+.routeArea-form .pallReturnInputs-container {
 	display: grid;
 	align-items: center;
 	justify-items: center;

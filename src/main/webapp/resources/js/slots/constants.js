@@ -1,5 +1,3 @@
-export const Draggable = FullCalendar.Draggable
-
 export const slotsSettings = {
 	DAY_COUNT_BACK: 15,    // выборка дней назад для получения заказов
 	DAY_COUNT_FORVARD: 120,    // выборка дней вперед для получения заказов

@@ -197,7 +197,7 @@ function getPopUpByPolygon(props, layer, onDeleteCallback) {
 
 	if (props.action === 'calcPallSum') {
 		const shopsToView = mapStore.getShopsToView()
-		const pallSum = getSelectedShopsPallSum(layer, shopsToView)
+		const pallSum = getSelectedShopsPallSum(layer, shopsToView).toFixed(2)
 		poputHTML += `
 			<span class="font-weight-bold">Общее количество паллет: ${pallSum ? pallSum : 'Нет магазинов'}</span><br>
 			<button class="calcPallSumBtn mt-1 btn btn-info btn-sm btn-block">Пересчитать сумму паллет</button>
@@ -217,7 +217,7 @@ function getPopUpByPolygon(props, layer, onDeleteCallback) {
 	const calcPallSumBtn = popup.querySelector('.calcPallSumBtn')
 	calcPallSumBtn && calcPallSumBtn.addEventListener('click', () => {
 		const shopsToView = mapStore.getShopsToView()
-		const pallSum = getSelectedShopsPallSum(layer, shopsToView)
+		const pallSum = getSelectedShopsPallSum(layer, shopsToView).toFixed(2)
 		if (pallSum) alert(`Общее количество паллет: ${pallSum}`)
 		else alert('Нет магазинов для расчета либо число паллет неизвестно')
 	})

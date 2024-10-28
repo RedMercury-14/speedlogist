@@ -12,6 +12,7 @@ const addScheduleItemUrl = '../../api/slots/delivery-schedule/create'
 const editScheduleItemUrl = '../../api/slots/delivery-schedule/edit'
 const getScheduleNumContractBaseUrl = '../../api/slots/delivery-schedule/getScheduleNumContract/'
 const changeScheduleStatusBaseUrl = '../../api/slots/delivery-schedule/changeStatus/'
+const changeIsNotCalcBaseUrl = '../../api/slots/delivery-schedule/changeIsNotCalc/'
 
 
 const PAGE_NAME = 'deliverySchedule'
@@ -19,6 +20,7 @@ const LOCAL_STORAGE_KEY = `AG_Grid_settings_to_${PAGE_NAME}`
 
 const token = $("meta[name='_csrf']").attr("content")
 const role = document.querySelector('#role').value
+const login = document.querySelector('#login').value.toLowerCase()
 
 const debouncedSaveColumnState = debounce(saveColumnState, 300)
 const debouncedSaveFilterState = debounce(saveFilterState, 300)
@@ -238,6 +240,13 @@ const columnDefs = [
 		cellClass: 'px-1 py-0 text-center font-weight-bold',
 		width: 75,
 	},
+	{
+		headerName: 'Не учитывать в расчете ОРЛ', field: 'isNotCalc',
+		cellClass: 'px-1 py-0 text-center font-weight-bold grid-checkbox',
+		width: 75,
+		editable: isAdmin(role) || login === 'romashkok%!dobronom.by',
+		onCellValueChanged: onIsNotCalcCahngeHandler,
+	},
 	// {
 	// 	headerName: 'Описание контракта', field: 'description',
 	// 	cellClass: 'px-1 py-0 text-center',
@@ -339,8 +348,13 @@ const gridOptions = {
 	},
 }
 
-window.onload = async () => {
+document.addEventListener('DOMContentLoaded', async () => {
+	// изменение отступа для таблицы
+	changeGridTableMarginTop()
+
+	// создание таблицы
 	const gridDiv = document.querySelector('#myGrid')
+	renderTable(gridDiv, gridOptions)
 
 	// форма загрузки графика из Эксель
 	const sendExcelForm = document.querySelector("#sendExcelForm")
@@ -373,23 +387,12 @@ window.onload = async () => {
 	const editNoteCheckbox = editScheduleItemForm.querySelector('#editNote')
 	editNoteCheckbox && editNoteCheckbox.addEventListener('change', onNoteChangeHandler)
 
-	// получение данных графика
-	const res = await getData(getScheduleUrl)
-	scheduleData = res.body
+	const sendScheduleDataToMailBtn = document.querySelector('#sendScheduleDataToMail')
+	sendScheduleDataToMailBtn && sendScheduleDataToMailBtn.addEventListener('click', sendScheduleDataToMail)
 
-	// проверка, правильно ли заполнены графики
-	checkScheduleDate(scheduleData)
-
-	// изменение отступа для таблицы
-	changeGridTableMarginTop()
-	// создание таблицы
-	renderTable(gridDiv, gridOptions, scheduleData)
 	// получение настроек таблицы из localstorage
 	restoreColumnState()
 	restoreFilterState()
-
-	// заполняем datalist кодов и названий контрагентов
-	createCounterpartyDatalist(scheduleData)
 
 	// проверка номера контракта
 	$('.counterpartyContractCode').change(checkContractNumber)
@@ -398,6 +401,27 @@ window.onload = async () => {
 	// очистка форм при закрытии модалки
 	$('#addScheduleItemModal').on('hidden.bs.modal', (e) => clearForm(e, addScheduleItemForm))
 	$('#editScheduleItemModal').on('hidden.bs.modal', (e) => clearForm(e, editScheduleItemForm))
+
+	// отображение стартовых данных
+	if (window.initData) {
+		await initStartData()
+	} else {
+		// подписка на кастомный ивент загрузки стартовых данных
+		document.addEventListener('initDataLoaded', async () => {
+			await initStartData()
+		})
+	}
+})
+
+// установка стартовых данных
+async function initStartData() {
+	scheduleData = window.initData.body
+	await updateTable(gridOptions, scheduleData)
+	// проверка, правильно ли заполнены графики
+	checkScheduleDate(scheduleData)
+	// заполняем datalist кодов и названий контрагентов
+	createCounterpartyDatalist(scheduleData)
+	window.initData = null
 }
 
 // функция наполнения списков кодов и названий контрагентов
@@ -428,20 +452,16 @@ function createCounterpartyDatalist(scheduleData) {
 	})
 }
 
-function renderTable(gridDiv, gridOptions, data) {
-	table = new agGrid.Grid(gridDiv, gridOptions)
-
-	if (!data || !data.length) {
-		gridOptions.api.setRowData([])
-		gridOptions.api.showNoRowsOverlay()
-		return
-	}
-
-	setScheduleData('')
-	gridOptions.api.hideOverlay()
+function renderTable(gridDiv, gridOptions) {
+	new agGrid.Grid(gridDiv, gridOptions)
+	gridOptions.api.setRowData([])
+	gridOptions.api.showLoadingOverlay()
 }
-async function updateTable() {
-	const res = await getData(getScheduleUrl)
+async function updateTable(gridOptions, data) {
+	const res = data
+		? { body: data }
+		: await getData(getScheduleUrl)
+
 	scheduleData = res.body
 
 	if (!scheduleData || !scheduleData.length) {
@@ -601,6 +621,15 @@ function onNoteChangeHandler(e) {
 	changeScheduleOptions(form, note)
 }
 
+// обработчик изменения значения "Не учитывать в расчете ОРЛ"
+async function onIsNotCalcCahngeHandler(params) {
+	const data = params.data
+	const idSchedule = data.idSchedule
+	const rowNode = params.node
+	await changeIsNotCalc(idSchedule, rowNode)
+}
+
+
 // запрос на изменение статуса графика поставки
 async function changeScheduleStatus(status, counterpartyContractCode, rowNode) {
 	if (!isAdmin(role) && !isOderSupport(role)) return
@@ -617,6 +646,24 @@ async function changeScheduleStatus(status, counterpartyContractCode, rowNode) {
 	} else {
 		console.log(res)
 		const message = res.message ? res.message : 'Неизвестная ошибка'
+		snackbar.show(message)
+	}
+}
+
+// запрос на изменение значения "Не учитывать в расчете ОРЛ"
+async function changeIsNotCalc(idSchedule, rowNode) {
+	if (!isAdmin(role) && login !== 'romashkok%!dobronom.by') return
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
+	const res = await getData(`${changeIsNotCalcBaseUrl}${idSchedule}`)
+	clearTimeout(timeoutId)
+	bootstrap5overlay.hideOverlay()
+
+	if (res && res.status === '200') {
+
+	} else {
+		updateTable()
+		console.log(res)
+		const message = res && res.message ? res.message : 'Неизвестная ошибка'
 		snackbar.show(message)
 	}
 }
@@ -640,6 +687,25 @@ async function checkContractNumber(e) {
 	}
 }
 
+async function sendScheduleDataToMail(e) {
+	const btn = e.target
+	btn.disabled = true
+
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 0)
+	const res = await getData(sendScheduleDataToMailUrl)
+	clearTimeout(timeoutId)
+	bootstrap5overlay.hideOverlay()
+	btn.disabled = false
+
+	if (res.status === '200') {
+		snackbar.show(res.message)
+	} else {
+		console.log(res)
+		const message = res.message ? res.message : 'Неизвестная ошибка'
+		snackbar.show(message)
+	}
+}
+
 // обработчик отправки формы загрузки таблицы эксель
 function sendExcelFormHandler(e) {
 	e.preventDefault()
@@ -657,7 +723,7 @@ function sendExcelFormHandler(e) {
 		data: file,
 		successCallback: (res) => {
 			snackbar.show(res[200])
-			updateTable()
+			updateTable(gridOptions)
 			$(`#sendExcelModal`).modal('hide')
 			hideLoadingSpinner(submitButton, 'Загрузить')
 		},
@@ -707,7 +773,7 @@ function addScheduleItemFormHandler(e) {
 			enableButton(e.submitter)
 			if (res.status === '200') {
 				snackbar.show(res.message)
-				updateTable()
+				updateTable(gridOptions)
 				$(`#addScheduleItemModal`).modal('hide')
 				return
 			}
@@ -768,7 +834,7 @@ function editScheduleItemFormHandler(e) {
 			enableButton(e.submitter)
 			if (res.status === '200') {
 				snackbar.show(res.message)
-				updateTable()
+				updateTable(gridOptions)
 				$(`#editScheduleItemModal`).modal('hide')
 				return
 			}

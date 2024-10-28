@@ -112,11 +112,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 	// отображение стартовых данных
 	if (window.initData) {
-		await initStartDate()
+		await initStartData()
 	} else {
 		// подписка на кастомный ивент загрузки стартовых данных
 		document.addEventListener('initDataLoaded', async () => {
-			await initStartDate()
+			await initStartData()
 		})
 	}
 
@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 })
 
 // установка стартовых данных
-async function initStartDate() {
+async function initStartData() {
 	await updateTable(gridOptions, window.initData)
 	window.initData = null
 }

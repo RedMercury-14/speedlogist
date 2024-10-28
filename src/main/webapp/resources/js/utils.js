@@ -732,6 +732,11 @@ export function removeSingleQuotes(str) {
 	return str.replace(/'/g, '');
 }
 
+export function cutToInteger(value) {
+	const strNum = value.toString()
+	return strNum.split(/[,.]/)[0]
+}
+
 // функция получения матрицы визуализации графика поставки
 export function getDeliveryScheduleMatrix(schedule, note) {
 	const daysDictionary = {

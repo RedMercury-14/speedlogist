@@ -86,7 +86,8 @@ import {
 	setOptimizeRouteFormData,
 	truckAdapter,
 	clearPoligonControlForm,
-	setTrucksData
+	setTrucksData,
+	showMessageModal
 } from "./map/mapUtils.js"
 import { getTruckLists, groupTrucksByDate } from "./logisticsDelivery/trucks/trucksUtils.js"
 import { bootstrap5overlay } from "./bootstrap5overlay/bootstrap5overlay.js"
@@ -94,7 +95,7 @@ import { addListnersToPallTextarea, calcPallets } from "./map/calcPallets.js"
 
 const apiUrl = isLogisticsDeliveryPage() ? '../../api/' : '../api/'
 
-const testOptimizationUrl = `${apiUrl}map/myoptimization3`
+const testOptimizationUrl = `${apiUrl}map/myoptimization5`
 const saveOptimizeRouteParamsUrl = `${apiUrl}map/set`
 
 const getAllShopsUrl = `${apiUrl}manager/getAllShops`
@@ -893,15 +894,34 @@ function optimizeRouteFormHandler(e, gridDiv) {
 		token: token,
 		data: updatedData,
 		successCallback: (res) => {
+			console.log("🚀 ~ optimizeRouteFormHandler ~ res:", res)
 			hideLoadingSpinner(submitButton, submitButtonText)
-			snackbar.show(res.message)
-			if (Object.keys(res.mapResponses).length === 0) return
-			document.querySelector('#displayDataInput').value = res.stackTrace
-			// $('#displayDataModal').modal('show')
-			$('#collapseTwo').collapse('show')
-			const data = getFormatDataToOptimizeRouteTable(res)
-			displayOptimizeRouteTable(gridDiv, data)
-			displayEmptyTruck(res.emptyTrucks)
+
+			if (res.status === '200') {
+				const solution = res.solution
+				if (!solution) return
+				if (Object.keys(solution.mapResponses).length === 0) return
+				document.querySelector('#displayDataInput').value = solution.stackTrace
+				// $('#displayDataModal').modal('show')
+				$('#collapseTwo').collapse('show')
+				const data = getFormatDataToOptimizeRouteTable(solution)
+				displayOptimizeRouteTable(gridDiv, data)
+				displayEmptyTruck(solution.emptyTrucks)
+				return
+			}
+
+			if (res.status === '105') {
+				res.info && showMessageModal(res.info)
+				return
+			}
+
+			if (res.status === '100') {
+				res.info && snackbar.show(res.info)
+				return
+			}
+
+			console.log(res)
+			snackbar.show('Ошибка на сервере')
 		},
 		errorCallback: () => hideLoadingSpinner(submitButton, submitButtonText)
 	})

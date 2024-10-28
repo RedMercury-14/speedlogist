@@ -1,0 +1,85 @@
+package by.base.main.util.hcolossus.exceptions;
+
+import java.util.List;
+
+import by.base.main.model.Shop;
+import by.base.main.util.hcolossus.pojo.Vehicle;
+
+/**
+ * Исключение, возникающее в случае, если требуемая вместимость паллет для магазинов
+ * превышает доступную вместимость паллет в грузовиках <b>на начальном этапе (при первой прогрузке)</b>.
+ *
+ * <p>Класс предоставляет дополнительную информацию о причинах исключения,
+ * включая список магазинов, список грузовиков и коэффициент, используемый
+ * при расчете вместимости. Исключение может быть вызвано при проверке достаточности
+ * вместимости грузовиков для обслуживания всех магазинов.
+ */
+public class FatalInsufficientPalletTruckCapacityException extends RuntimeException {
+	
+	private String message;
+	
+	private List<Shop> shopsForOptimization;
+	
+	private List<Vehicle> trucks;
+	
+	private Double mainKoef;
+
+	/**
+	 * @param message
+	 */
+	public FatalInsufficientPalletTruckCapacityException(String message) {
+		super(message);
+	}
+
+	/**
+	 * @param message
+	 * @param shopsForOptimization
+	 * @param trucks
+	 * @param mainKoef
+	 */
+	public FatalInsufficientPalletTruckCapacityException(String message, List<Shop> shopsForOptimization,
+			List<Vehicle> trucks, Double mainKoef) {
+		super(message);
+		this.message = message;
+		this.shopsForOptimization = shopsForOptimization;
+		this.trucks = trucks;
+		this.mainKoef = mainKoef;
+	}
+
+	public String getMessage() {
+		return message;
+	}
+
+	public void setMessage(String message) {
+		this.message = message;
+	}
+
+	public List<Shop> getShopsForOptimization() {
+		return shopsForOptimization;
+	}
+
+	public void setShopsForOptimization(List<Shop> shopsForOptimization) {
+		this.shopsForOptimization = shopsForOptimization;
+	}
+
+	public List<Vehicle> getTrucks() {
+		return trucks;
+	}
+
+	public void setTrucks(List<Vehicle> trucks) {
+		this.trucks = trucks;
+	}
+
+	public Double getMainKoef() {
+		return mainKoef;
+	}
+
+	public void setMainKoef(Double mainKoef) {
+		this.mainKoef = mainKoef;
+	}
+
+	
+	
+	
+
+}

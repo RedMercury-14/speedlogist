@@ -514,6 +514,24 @@
 			</div>
 		</div>
 	</div>
+
+	<!-- Модальное окно для отображения текста -->
+	<div class="modal fade" id="displayMessageModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="displayMessageModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header justify-content-center bg-color">
+					<h5 class="modal-title h3" id="displayMessageModalLabel">Сообщение</h5>
+				</div>
+				<div class="modal-body">
+					<div id="messageContainer"></div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Ок, понятно</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
 </body>
 <script src="${pageContext.request.contextPath}/resources/js/map.js" type="module"></script>
 <script src='${pageContext.request.contextPath}/resources/js/mainPage/nav-fixed-top.js'></script>

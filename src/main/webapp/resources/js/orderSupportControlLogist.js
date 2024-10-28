@@ -138,10 +138,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 	const gridDiv = document.querySelector('#myGrid')
 	renderTable(gridDiv, gridOptions)
 
-	// получение настроек таблицы из localstorage
-	restoreColumnState()
-	restoreFilterState()
-
 	// отображение стартовых данных
 	if (window.initData) {
 		await initStartData()
@@ -158,6 +154,10 @@ async function initStartData() {
 	productData = window.initData
 	await updateTable(gridOptions, productData)
 	window.initData = null
+
+	// получение настроек таблицы из localstorage
+	restoreColumnState()
+	restoreFilterState()
 }
 
 function renderTable(gridDiv, gridOptions) {

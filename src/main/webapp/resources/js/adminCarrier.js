@@ -166,16 +166,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 	// отображение стартовых данных
 	if (window.initData) {
-		initStartDate()
+		initStartData()
 	} else {
 		// подписка на кастомный ивент загрузки стартовых данных
 		document.addEventListener('initDataLoaded', () => {
-			initStartDate()
+			initStartData()
 		})
 	}
-
-	restoreColumnState()
-	restoreFilterState()
 
 	allUsersBtn.onclick = () => showAllUsers()
 	confirmedUsersBtn.onclick = () => showConfirmedUsers()
@@ -187,9 +184,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 })
 
 // установка стартовых данных
-function initStartDate() {
+function initStartData() {
 	updateTable(gridOptions, window.initData)
 	window.initData = null
+
+	restoreColumnState()
+	restoreFilterState()
 }
 
 // функция для блокироваки/разблокировки перевозчика

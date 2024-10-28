@@ -1,4 +1,4 @@
-import { dateHelper, getData, removeSingleQuotes } from "./utils.js"
+import { cutToInteger, dateHelper, getData, removeSingleQuotes } from "./utils.js"
 
 // форматирование данных формы заявки
 export function getOrderData(formData, orderDataFromMarket, orderStatus) {
@@ -131,7 +131,7 @@ export function getPointsData(way) {
 			time: form.time.value,
 			cargo: form.pointCargo ? removeSingleQuotes(form.pointCargo.value) : '',
 			pall: form.pall.value,
-			weight: form.weight.value,
+			weight: form.weight.value ? cutToInteger(form.weight.value) : '',
 			volume: form.volume.value,
 			tnvd: form.tnvd ? form.tnvd.value : null,
 			bodyAdress: removeSingleQuotes(bodyAdress),

@@ -241,17 +241,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 	// отображение стартовых данных
 	if (window.initData) {
-		await initStartDate(orderSearchForm)
+		await initStartData(orderSearchForm)
 	} else {
 		// подписка на кастомный ивент загрузки стартовых данных
 		document.addEventListener('initDataLoaded', async () => {
-			await initStartDate(orderSearchForm)
+			await initStartData(orderSearchForm)
 		})
 	}
-
-	// получение настроек таблицы из localstorage
-	restoreColumnState()
-	restoreFilterState()
 
 	// автозаполнение полей дат в форме поиска заявок
 	const { dateStart, dateEnd } = dateHelper.getDatesToFetch(DATES_KEY)
@@ -304,9 +300,13 @@ window.addEventListener("unload", () => {
 })
 
 // установка стартовых данных
-async function initStartDate(orderSearchForm) {
+async function initStartData(orderSearchForm) {
 	await updateTable(gridOptions, orderSearchForm, window.initData)
 	window.initData = null
+
+	// получение настроек таблицы из localstorage
+	restoreColumnState()
+	restoreFilterState()
 }
 
 function renderTable(gridDiv, gridOptions) {

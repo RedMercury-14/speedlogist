@@ -20,11 +20,6 @@ function successCallback(response) {
 		return
 	}
 
-	// if (carrentUrl.includes('logistics-delivery/router') || carrentUrl.includes('depot')) {
-	// 	const getAllPolygonsUrl = `${apiUrl}map/getAllPolygons`
-	// 	const getTrucksBaseUrl = `${apiUrl}logistics/deliveryShops/getTGTrucks`
-	// }
-
 	// по умолчанию
 	window.initData = response || []
 	const initEvent = new Event('initDataLoaded')

@@ -703,9 +703,9 @@ function getTruckInfoFromComment(data) {
 		.trim()
 	return {
 		hydrolift: hydrolift ? 'Да' : 'Нет',
-		carBodyLength: carBodyLength ? carBodyLength[1] : '',
-		carBodyWidth: carBodyWidth ? carBodyWidth[1] : '',
-		carBodyHeight: carBodyHeight ? carBodyHeight[1] : '',
+		carBodyLength: carBodyLength ? carBodyLength[1].trim() : '',
+		carBodyWidth: carBodyWidth ? carBodyWidth[1].trim() : '',
+		carBodyHeight: carBodyHeight ? carBodyHeight[1].trim() : '',
 		comment: comment ? comment : ''
 	}
 }

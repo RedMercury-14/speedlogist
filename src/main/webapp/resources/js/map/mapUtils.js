@@ -6,12 +6,15 @@ import { getTextareaData } from "./formDataUtils.js"
 export function addCrossDocking(optimizeRouteFormData, alllShops, polygons) {
 	const shopNums = optimizeRouteFormData.shops
 	const shops = getShopsByShopNum(shopNums, alllShops)
-	const crossDockingPolygons = getCrossDockingPolygons(polygons)
-	const mappedShops = addCrossDockingName(shops, crossDockingPolygons)
+	const crossDockingPolygons = getPolygonsByAction(polygons, 'crossDocking')
+	const weightDistributionPolygons = getPolygonsByAction(polygons, 'weightDistribution')
+	const shopsWithCrossDocking = addPolygonName(shops, crossDockingPolygons)
+	const shopsWithWeightDistribution = getShopsInPolygons(shops, weightDistributionPolygons)
 
 	return {
 		...optimizeRouteFormData,
-		shopsWithCrossDocking: mappedShops
+		shopsWithCrossDocking,
+		shopsWithWeightDistribution,
 	}
 }
 
@@ -27,10 +30,10 @@ function getShopsByShopNum(shopNums, alllShops) {
 		}
 	})
 }
-// получение полигонов кросс-докинга
-function getCrossDockingPolygons(polygons) {
+// получение полигонов кросс-докинга по action
+function getPolygonsByAction(polygons, action) {
 	return polygons
-		.filter(polygon => polygon.properties.action === 'crossDocking')
+		.filter(polygon => polygon.properties.action === action)
 		.map(polygon => ({
 			...polygon,
 			properties: {
@@ -43,24 +46,36 @@ function getCrossDockingPolygons(polygons) {
 			}
 		}))
 }
-// добавление названия полигона, если магазин входит в зону кросс-докинга
-function addCrossDockingName(shops, crossDockingPolygons) {
+// добавление названия полигона, если магазин входит в этот полигон
+function addPolygonName(shops, targetPolygons) {
 	return shops.map(shop => {
-		// проверяем, в какую кросс-докинг зону входит магазин
-		const crossDockingPolygon = crossDockingPolygons.find(polygon => {
+		// проверяем, в какой полигон входит магазин
+		const polygon = targetPolygons.find(polygon => {
 			const coordinates = polygon.geometry.coordinates
 			const shopCoordinates = [shop.lat, shop.lng]
 			const isInside = checkPointInPolygon(shopCoordinates, coordinates)
 			return isInside
 		})
 
-		const polygonName = crossDockingPolygon ? crossDockingPolygon.properties.name : null
+		const polygonName = polygon ? polygon.properties.name : null
 
 		return {
 			...shop,
 			polygonName
 		}
 	})
+}
+function getShopsInPolygons(shops, polygons) {
+	return shops
+		.filter(shop => {
+			return polygons.find(polygon => {
+				const coordinates = polygon.geometry.coordinates
+				const shopCoordinates = [shop.lat, shop.lng]
+				const isInside = checkPointInPolygon(shopCoordinates, coordinates)
+				return isInside
+			})
+		})
+		.map(shop => `${shop.numshop}`)
 }
 
 // адаптирование полигона под хранилище приложения
@@ -89,8 +104,13 @@ export function addCrossDockingPointOptions(allShops, crossDockingPointSelect) {
 	})
 }
 
+// обработчик изменения поля polygonAction в форме создания полигона
+export function polygonActionSelectChangeHandler(action) {
+	crossDockingPointVisibleToggler(action)
+}
+
 // переключение видимости поля точки кросс-докиг зоны в форме создания полигона
-export function crossDockingPointVisibleToggler(action) {
+function crossDockingPointVisibleToggler(action) {
 	const crossDockingPoint = document.querySelector(`#crossDockingPoint`)
 	if (!crossDockingPoint) return
 	if (action === 'crossDocking') {

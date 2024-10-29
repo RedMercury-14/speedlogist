@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -240,6 +241,9 @@ public class MainRestController {
 
 	@Autowired
 	private ColossusProcessorANDRestrictions5 colossusProcessorRad;
+	
+	@Autowired
+	private ColossusProcessorANDRestrictions3 colossusProcessorRadOld;
 
 	@Autowired
 	private MatrixMachine matrixMachine;
@@ -2913,7 +2917,8 @@ public class MainRestController {
 			JSONArray numShopsJSON = (JSONArray) jsonMainObject.get("shops");
 			JSONArray pallHasShopsJSON = (JSONArray) jsonMainObject.get("palls");
 			JSONArray tonnageHasShopsJSON = (JSONArray) jsonMainObject.get("tonnage");
-			JSONArray shopsWithCrossDocking = (JSONArray) jsonMainObject.get("shopsWithCrossDocking");
+			JSONArray shopsWithCrossDocking = (JSONArray) jsonMainObject.get("shopsWithCrossDocking"); // номера машазинов входящих в кросдокинговые площадки
+			JSONArray shopsWeightDistributionJSONArray = (JSONArray) jsonMainObject.get("shopsWithWeightDistribution"); // номера машазинов считающихся альтернативно
 			JSONArray pallReturnJSON = (JSONArray) jsonMainObject.get("pallReturn");
 			
 			Double iterationStr = jsonMainObject.get("iteration") != null ? Double.parseDouble(jsonMainObject.get("iteration").toString().replaceAll(",", ".")) : null;
@@ -2927,23 +2932,24 @@ public class MainRestController {
 			
 			
 			// Список для хранения отфильтрованных магазинов ходящих в полигон (магазы которые входят в кроссовые площадки)
-	        List<Shop> krossShops = new ArrayList<>();
-	
-	        // Перебор всех магазинов и фильтрация по polygonName != null
-	        for (Object shopObject : shopsWithCrossDocking) {
-	            JSONObject shop = (JSONObject) shopObject;
-	            if (shop.get("polygonName") != null) {
-	            	Shop shopObjectHasKross = shopService.getShopByNum(Integer.parseInt(shop.get("numshop").toString()));
-	            	shopObjectHasKross.setKrossPolugonName(shop.get("polygonName").toString());
-	                krossShops.add(shopObjectHasKross);
-	            }
-	        }
-	        krossShops.sort((o1,o2) -> o1.getKrossPolugonName().hashCode() - o2.getKrossPolugonName().hashCode()); //сортируемся для удобства
+//	        List<Shop> krossShops = new ArrayList<>();
+//	
+//	        // Перебор всех магазинов и фильтрация по polygonName != null
+//	        for (Object shopObject : shopsWithCrossDocking) {
+//	            JSONObject shop = (JSONObject) shopObject;
+//	            if (shop.get("polygonName") != null) {
+//	            	Shop shopObjectHasKross = shopService.getShopByNum(Integer.parseInt(shop.get("numshop").toString()));
+//	            	shopObjectHasKross.setKrossPolugonName(shop.get("polygonName").toString());
+//	                krossShops.add(shopObjectHasKross);
+//	            }
+//	        }
+//	        krossShops.sort((o1,o2) -> o1.getKrossPolugonName().hashCode() - o2.getKrossPolugonName().hashCode()); //сортируемся для удобства
 	        	
 	
 			List<Integer> numShops = new ArrayList<Integer>();
 			List<Double> pallHasShops = new ArrayList<Double>();
 			List<Integer> tonnageHasShops = new ArrayList<Integer>();
+			List<Integer> weightDistributionList = new ArrayList<Integer>();
 			List<Double> pallReturn = new ArrayList<Double>();
 			Map<Integer, String> shopsWithCrossDockingMap = new HashMap<Integer, String>(); // мапа где хранятся номера магазинов и название полигонов к ним
 			
@@ -2962,6 +2968,13 @@ public class MainRestController {
 	            	shopsWithCrossDockingMap.put(Integer.parseInt(shop.get("numshop").toString()), shop.get("polygonName").toString());
 	            }
 	        }
+	        
+	        //перебор значений JSONArray для получения и записи номеров магазов считающихся альтернативно
+	        if(shopsWeightDistributionJSONArray != null) {
+	        	for (Object string : shopsWeightDistributionJSONArray) {
+	        		weightDistributionList.add(Integer.parseInt(string.toString().trim()));
+	        	}	        	
+	        }
 			
 			List<Solution> solutions = new ArrayList<Solution>();
 			
@@ -2970,8 +2983,7 @@ public class MainRestController {
 			for (double i = 1.0; i <= maxKoef; i = i + 0.02) {
 				Double koeff = i;
 	//			System.out.println("Коэфф = " + koeff);
-				Solution solution = colossusProcessorRad.run(jsonMainObject, numShops, pallHasShops, tonnageHasShops, stock, koeff, "fullLoad", shopsWithCrossDockingMap, maxShopInWay, pallReturn);
-	//			Solution solution = colossusProcessorRad.run(jsonMainObject, numShops, pallHasShops, tonnageHasShops, stock, koeff, "fullLoad", shopsWithCrossDockingMap, maxShopInWay);
+				Solution solution = colossusProcessorRad.run(jsonMainObject, numShops, pallHasShops, tonnageHasShops, stock, koeff, "fullLoad", shopsWithCrossDockingMap, maxShopInWay, pallReturn, weightDistributionList);
 	
 				// строим маршруты для отправки клиенту
 	
@@ -3156,17 +3168,21 @@ public class MainRestController {
 			
 			responceMap.put("status", "200");
 			responceMap.put("solution", finalSolution);
+			if(isRuningOptimization) {
+				isRuningOptimization = !isRuningOptimization;
+			}
+			
 			return responceMap;
 		} catch (FatalInsufficientPalletTruckCapacityException fe) {
+			if(isRuningOptimization) {
+				isRuningOptimization = !isRuningOptimization;
+			}
+			
 			responceMap.put("status", "105");
 			responceMap.put("solution", null);
 			responceMap.put("message", fe.getMessage());
 			responceMap.put("info", fe.getMessage());
 			return responceMap;
-		} finally {
-			if(isRuningOptimization) {
-				isRuningOptimization = !isRuningOptimization;
-			}
 		}
 	}
 	
@@ -3298,8 +3314,7 @@ public class MainRestController {
 			for (double i = 1.0; i <= maxKoef; i = i + 0.02) {
 				Double koeff = i;
 //				System.out.println("Коэфф = " + koeff);
-				Solution solution = colossusProcessorRad.run(jsonMainObject, numShops, pallHasShops, tonnageHasShops, stock, koeff, "fullLoad", shopsWithCrossDockingMap, maxShopInWay, pallReturn);
-//				Solution solution = colossusProcessorRad.run(jsonMainObject, numShops, pallHasShops, tonnageHasShops, stock, koeff, "fullLoad", shopsWithCrossDockingMap, maxShopInWay);
+				Solution solution = colossusProcessorRadOld.run(jsonMainObject, numShops, pallHasShops, tonnageHasShops, stock, koeff, "fullLoad", shopsWithCrossDockingMap, maxShopInWay);
 
 				// строим маршруты для отправки клиенту
 
@@ -3481,19 +3496,24 @@ public class MainRestController {
 			finalSolution.setTotalRunKM(totalKM);
 			System.out.println("Всего пробег: " + totalKM + " км.");
 			finalSolution.setStackTrace(finalSolution.getStackTrace() + "\n" + "Всего пробег: " + totalKM + " км. Коэфициент поиска: " + finalSolution.getKoef() );
+			
+			if(isRuningOptimization) {
+				isRuningOptimization = !isRuningOptimization;
+			}
+			
 			responceMap.put("status", "200");
 			responceMap.put("solution", finalSolution);
 			return responceMap;
 		} catch (FatalInsufficientPalletTruckCapacityException fe) {
+			if(isRuningOptimization) {
+				isRuningOptimization = !isRuningOptimization;
+			}
+			
 			responceMap.put("status", "105");
 			responceMap.put("solution", null);
 			responceMap.put("message", fe.getMessage());
 			responceMap.put("info", fe.getMessage());
 			return responceMap;
-		} finally {
-			if(isRuningOptimization) {
-				isRuningOptimization = !isRuningOptimization;
-			}
 		}
 
 	}

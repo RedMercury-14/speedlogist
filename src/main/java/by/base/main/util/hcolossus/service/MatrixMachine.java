@@ -103,7 +103,7 @@ public class MatrixMachine {
 			        matrix.put(from.getNumshop()+"-"+to.getNumshop(), sum);
 			        matrixTime.put(from.getNumshop()+"-"+to.getNumshop(), time);
 				}
-		        System.out.println("MatrixMachine: "+integer + " --> " + integerTo + " --> " + sum);
+//		        System.out.println("MatrixMachine: "+integer + " --> " + integerTo + " --> " + sum);
 			}			
 		}
 		return matrix;		

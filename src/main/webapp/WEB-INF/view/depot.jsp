@@ -477,6 +477,7 @@
 								<option value="trafficBan">Запретить движение</option>
 								<option value="trafficSpecialBan">Запретить движение для загруженных машин</option>
 								<option value="crossDocking">Указать зону для кросс-докинга</option>
+								<option value="weightDistribution">Указать зону распределения по весу</option>
 							</select>
 						</div>
 						<div class="form-group none">

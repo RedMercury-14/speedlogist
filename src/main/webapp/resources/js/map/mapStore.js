@@ -95,6 +95,7 @@ class MapStore {
 		return this.polygons.filter(
 			polygon => polygon.properties.action === 'crossDocking'
 			|| polygon.properties.action === 'calcPallSum'
+			|| polygon.properties.action === 'weightDistribution'
 		)
 	}
 

@@ -390,10 +390,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 	const sendScheduleDataToMailBtn = document.querySelector('#sendScheduleDataToMail')
 	sendScheduleDataToMailBtn && sendScheduleDataToMailBtn.addEventListener('click', sendScheduleDataToMail)
 
-	// получение настроек таблицы из localstorage
-	restoreColumnState()
-	restoreFilterState()
-
 	// проверка номера контракта
 	$('.counterpartyContractCode').change(checkContractNumber)
 	// обновление опций графика при открытии модалки создания графика поставки
@@ -422,6 +418,10 @@ async function initStartData() {
 	// заполняем datalist кодов и названий контрагентов
 	createCounterpartyDatalist(scheduleData)
 	window.initData = null
+
+	// получение настроек таблицы из localstorage
+	restoreColumnState()
+	restoreFilterState()
 }
 
 // функция наполнения списков кодов и названий контрагентов

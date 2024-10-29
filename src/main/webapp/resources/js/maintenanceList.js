@@ -208,10 +208,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 	// листнер на отправку формы поиска заявок
 	routeSearchForm.addEventListener('submit', searchFormSubmitHandler)
 
-	// получение настроек таблицы из localstorage
-	restoreColumnState()
-	restoreFilterState()
-
 	// обработчик формы назначения перевозчика на маршрут
 	addCarrierForm.addEventListener('submit', addCarrierSubmitHandler)
 	// обработчик формы установки пробега по маршруту
@@ -255,6 +251,10 @@ async function initStartData(carrierSelect, truckSelect, driverSelect) {
 	updateTable(gridOptions, ahoRouteData)
 	await addCarriersToSelect(allCarriers, carrierSelect, truckSelect, driverSelect)
 	window.initData = null
+
+	// получение настроек таблицы из localstorage
+	restoreColumnState()
+	restoreFilterState()
 }
 
 // добавление перевозчиков в выпадающий список формы назначения перевозчика

@@ -179,17 +179,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 	// отображение стартовых данных
 	if (window.initData) {
-		await initStartDate(routeSearchForm)
+		await initStartData(routeSearchForm)
 	} else {
 		// подписка на кастомный ивент загрузки стартовых данных
 		document.addEventListener('initDataLoaded', async () => {
-			await initStartDate(routeSearchForm)
+			await initStartData(routeSearchForm)
 		})
 	}
-
-	// получение настроек таблицы из localstorage
-	restoreColumnState()
-	restoreFilterState()
 
 	// обработчик получения сообщений о предложениях
 	ws.onmessage = onMessageHandler
@@ -207,10 +203,14 @@ window.addEventListener("unload", () => {
 })
 
 // установка стартовых данных
-async function initStartDate(routeSearchForm) {
+async function initStartData(routeSearchForm) {
 	await updateTable(gridOptions, routeSearchForm, window.initData)
 	isInitDataLoaded = true
 	window.initData = null
+	
+	// получение настроек таблицы из localstorage
+	restoreColumnState()
+	restoreFilterState()
 }
 
 // обработчик формы поиска заявок

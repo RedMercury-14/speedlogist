@@ -121,11 +121,11 @@ export function getCargoInfoHTML({ order, isInternalMovement, way, pointIndex, p
 			</div>
 			<div class='cargoPall'>
 				<label for='pall_${pointIndex}' class='col-form-label text-muted font-weight-bold'>Паллеты, шт</label>
-				<input type='number' class='form-control' name='pall' id='pall_${pointIndex}' placeholder='Паллеты, шт' min='0' max='${ahoMaxPallAttr}' value='${pall}' ${pallRequiredAttr} ${pallReadonlyAttr}>
+				<input type='number' class='form-control' name='pall' id='pall_${pointIndex}' placeholder='Паллеты, шт' min='0' step="1" max='${ahoMaxPallAttr}' value='${pall}' ${pallRequiredAttr} ${pallReadonlyAttr}>
 			</div>
 			<div class='cargoWeight'>
 				<label for='weight_${pointIndex}' class='col-form-label text-muted font-weight-bold'>Масса, кг</label>
-				<input type='number' class='form-control' name='weight' id='weight_${pointIndex}' placeholder='Масса, кг' min='0' value='${weight}' ${ahoReadonlyAttr} ${weightRequiredAttr}>
+				<input type='number' class='form-control' name='weight' id='weight_${pointIndex}' placeholder='Масса, кг' min='0' step="1" value='${weight}' ${ahoReadonlyAttr} ${weightRequiredAttr}>
 			</div>
 			<div class='cargoVolume ${ahoNoneClassName}'>
 				<label for='volume_${pointIndex}' class='col-form-label text-muted font-weight-bold'>Объем, м.куб.</label>

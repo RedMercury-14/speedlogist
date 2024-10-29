@@ -18,6 +18,8 @@ import org.springframework.stereotype.Component;
 
 import by.base.main.model.Shop;
 import by.base.main.service.ShopService;
+import by.base.main.util.hcolossus.exceptions.FatalInsufficientPalletTruckCapacityException;
+import by.base.main.util.hcolossus.exceptions.InsufficientPalletTruckCapacityException;
 import by.base.main.util.hcolossus.pojo.Solution;
 import by.base.main.util.hcolossus.pojo.Vehicle;
 import by.base.main.util.hcolossus.pojo.VehicleWay;
@@ -36,9 +38,15 @@ import by.base.main.util.hcolossus.service.VehicleMachine;
  * подбирает машину с учётом этих паллет.
  * Этот метод полностью не протестирован.
  * Главное - не реализована ситуация, когда несколько потребностей попадает в машину (а должна ли?!)
+ * Прямое продолжение 4 -й версии
+ * Особенность этого метода в том, что он оценивает оставшиеся машины (суммарно паллеты) с 
+ * суммой паллет потребностей магазинов.
+ * Если меньше - останавливает итерацию на текущей трубе и переходит к следующей.
+ * Важно: метод генерит исключения!
+ * Все сообщения будут передаваться через исключения
  */
 @Component
-public class ColossusProcessorANDRestrictions4 {
+public class ColossusProcessorANDRestrictions5 {
 
 	private JSONObject jsonMainObject;
 
@@ -122,6 +130,7 @@ public class ColossusProcessorANDRestrictions4 {
 	private List<VehicleWay> whiteWay;
 	
 	private Double maxDistanceInRoute = 100000.0;
+	private Double minimumPercentageOfCarFilling = 80.0;
 	
 	private List<Shop> shopsForAddNewNeedPall;
 	/**
@@ -186,8 +195,7 @@ public class ColossusProcessorANDRestrictions4 {
 		stackTrace = stackTrace + "===========\n";
 
 		// тут пойдёт логика самого маршрутизатора
-		int i = 0; // для тестов, чтобы ограничивать цикл while
-//		int iMax = shopsForOptimization.size() * shopsForOptimization.size() * 3;
+		int i = 0; // для тестов, чтобы ограничивать цикл while ОН ЖЕ ID маршрута
 		int iMax = shopsForOptimization.size() * shopsForOptimization.size() * 10;
 		int j = 0; // итерация
 		
@@ -207,6 +215,11 @@ public class ColossusProcessorANDRestrictions4 {
 			stackTrace = stackTrace + "Машина : " + v.getId()+"/"+v.getName() + ", паллеты : "+ v.getPall() +", второй круг : " + answer + ", клон : " + answer2 +"!\n";
 		}
 		
+		//тут проверяем - в принципе хватит паллет по машинам или нет
+		if(!checkPallets(shopsForOptimization, trucks)) {
+			throw new FatalInsufficientPalletTruckCapacityException("Недостаточно машин для распределения всех магазинов", shopsForOptimization, trucks, koeff);
+		}
+		
 		while (!trucks.isEmpty()) {
 			if (i == iMax) {
 				stackTrace = stackTrace + "Задействован лимит итераций \n";
@@ -216,6 +229,12 @@ public class ColossusProcessorANDRestrictions4 {
 				System.err.println("Магазины закончились!");
 				i++;
 				break;
+			}
+			
+			//тут проверяем - хватит ли в принципе машин для распределения:
+			if(!checkPallets(shopsForOptimization, trucks)) {
+//				throw new InsufficientPalletTruckCapacityException("Недостаточно машин для распределения всех магазинов", shopsForOptimization, trucks, koeff);
+				stackTrace = stackTrace +  "Не хватает машин для распределения на маршруте с id = " + i + " \n";
 			}
 
 			shopsForDelite = new ArrayList<Shop>();
@@ -342,12 +361,16 @@ public class ColossusProcessorANDRestrictions4 {
 				Double logicResult = logicAnalyzer.logicalСheck(vehicleWayTest, koeff);
 //				System.err.println(logicResult + " логичность маршрута составила");
 				
+				Double summpallTrget = calcPallHashHsop(points, targetStock);
+				Double percentFilling = summpallTrget*100/virtualTruck.getPall();
+				
 				/**
 				 * Тут решаем, в зависимости от логичтности - кладём магазин в точки, или нет.
 				 * Если нет, то идём дальше
 				 */
 				double distanceBetween = matrixMachine.matrix.get(points.get(points.size() - 3).getNumshop()+"-"+shop2.getNumshop());
-				if (logicResult > 0 && distanceBetween <= maxDistanceInRoute) {
+//				if (logicResult > 0 && distanceBetween <= maxDistanceInRoute) {
+				if (logicResult > 0 && distanceBetween <= maxDistanceInRoute || logicResult <0 && distanceBetween <= maxDistanceInRoute && percentFilling >= minimumPercentageOfCarFilling) {
 					shopsForOptimization.remove(shop2);
 					points.remove(points.size() - 1);
 					if(isRestrictions || isRestrictionsFirst) break;
@@ -1645,5 +1668,34 @@ public class ColossusProcessorANDRestrictions4 {
 			double scale = Math.pow(10, places);
 			return Math.round(value * scale) / scale;
 		}
+		
+		/**
+		 * Проверяет, достаточно ли вместимости грузовиков для всех нужд по паллетам магазинов.
+		 *
+		 * <p>Метод принимает два списка: список магазинов и список грузовиков. 
+		 * Сначала он вычисляет сумму требуемых паллет для магазинов из списка `shopsForOptimization`
+		 * с использованием метода {@code getNeedPall}. Затем вычисляет общую вместимость паллет 
+		 * для всех грузовиков из списка `trucks` с использованием метода {@code getPall}.
+		 * Если общая вместимость грузовиков по паллетам больше или равна общему количеству требуемых 
+		 * паллет для магазинов, метод возвращает {@code true}. В противном случае возвращает {@code false}.
+		 *
+		 * @param shopsForOptimization список магазинов, для которых нужно проверить требуемое количество паллет
+		 * @param trucks список грузовиков, имеющих определенную вместимость паллет
+		 * @return {@code true}, если вместимость грузовиков достаточна для всех требуемых паллет магазинов;
+		 *         {@code false}, если вместимости грузовиков недостаточно
+		 */
+		public boolean checkPallets(List<Shop> shopsForOptimization, List<Vehicle> trucks) {
+		    double totalNeedPall = shopsForOptimization.stream()
+		        .mapToDouble(Shop::getNeedPall)
+		        .sum();
+
+		    double totalPall = trucks.stream()
+		        .mapToDouble(Vehicle::getPall)
+		        .sum();
+
+		    return totalPall >= totalNeedPall;
+		}
+
+
 
 }

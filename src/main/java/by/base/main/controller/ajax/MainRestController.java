@@ -4,6 +4,7 @@ import static com.graphhopper.json.Statement.If;
 import static com.graphhopper.json.Statement.Op.LIMIT;
 import static com.graphhopper.json.Statement.Op.MULTIPLY;
 
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataOutputStream;
@@ -155,6 +156,9 @@ import by.base.main.util.GraphHopper.RoutingMachine;
 import by.base.main.util.bots.TelegramBot;
 import by.base.main.util.hcolossus.ColossusProcessorANDRestrictions3;
 import by.base.main.util.hcolossus.ColossusProcessorANDRestrictions4;
+import by.base.main.util.hcolossus.ColossusProcessorANDRestrictions5;
+import by.base.main.util.hcolossus.exceptions.FatalInsufficientPalletTruckCapacityException;
+import by.base.main.util.hcolossus.exceptions.InsufficientPalletTruckCapacityException;
 import by.base.main.util.hcolossus.pojo.Solution;
 import by.base.main.util.hcolossus.pojo.Vehicle;
 import by.base.main.util.hcolossus.pojo.VehicleWay;
@@ -235,7 +239,7 @@ public class MainRestController {
 	private JSpiritMachine jSpiritMachine;
 
 	@Autowired
-	private ColossusProcessorANDRestrictions4 colossusProcessorRad;
+	private ColossusProcessorANDRestrictions5 colossusProcessorRad;
 
 	@Autowired
 	private MatrixMachine matrixMachine;
@@ -323,18 +327,38 @@ public class MainRestController {
 //		return responseMap;		
 //	}
 //	
-//	@GetMapping("/test/{idOrder}")
-//	public Map<String, Object> test(HttpServletRequest request, HttpServletResponse response, @PathVariable String idOrder){
+//	@GetMapping("/test")
+//	public Map<String, Object> test(HttpServletRequest request, HttpServletResponse response){
 //		java.util.Date t1 = new java.util.Date();
 //		Map<String, Object> responseMap = new HashMap<>();
 //		
-//		Order order = orderService.getOrderById(Integer.parseInt(idOrder));
-//		order.setTimeDelivery(Timestamp.valueOf(LocalDateTime.now()));
-//		PlanResponce planResponce = readerSchedulePlan.getPlanResponce(order);
-//		
-//		responseMap.put("status", "200");
-//		responseMap.put("timeDelivery", order.getTimeDelivery());
-//		responseMap.put("planResponce", planResponce);
+//		File pdfFile = new File("C:/Program Files/10-27-38.pdf");
+//
+//        // Настройка Tesseract
+//        ITesseract tesseract = new Tesseract();
+//        tesseract.setDatapath("C:/Program Files/Tesseract-OCR/tessdata"); // Укажите путь к Tesseract
+//        tesseract.setLanguage("rus"); // Задайте язык
+//
+//        try (PDDocument document = PDDocument.load(pdfFile)) {
+//            PDFRenderer pdfRenderer = new PDFRenderer(document);
+//            StringBuilder fullText = new StringBuilder();
+//
+//            // Обрабатываем каждую страницу PDF
+//            for (int page = 0; page < document.getNumberOfPages(); page++) {
+//                BufferedImage image = pdfRenderer.renderImageWithDPI(page, 300); // Извлечение изображения
+//
+//                // Применяем OCR для распознавания текста на изображении
+//                String text = tesseract.doOCR(image);
+//                fullText.append(text).append("\n");
+//            }
+//
+//            System.out.println("Распознанный текст из PDF:");
+//            System.out.println(fullText);
+//
+//        } catch (IOException | TesseractException e) {
+//            e.printStackTrace();
+//        }
+//        
 //		java.util.Date t2 = new java.util.Date();
 //		System.out.println(t2.getTime()-t1.getTime() + " ms - preloadTEST" );
 //		return responseMap;		
@@ -1482,6 +1506,7 @@ public class MainRestController {
 		schedule.setDescription(jsonMainObject.get("description") == null || jsonMainObject.get("description").toString().isEmpty() ? null : jsonMainObject.get("description").toString());
 		schedule.setMultipleOfPallet(jsonMainObject.get("multipleOfPallet") == null || jsonMainObject.get("multipleOfPallet").toString().isEmpty() ? null : jsonMainObject.get("multipleOfPallet").toString().equals("true") ? true : false);
 		schedule.setMultipleOfTruck(jsonMainObject.get("multipleOfTruck") == null || jsonMainObject.get("multipleOfTruck").toString().isEmpty() ? null : jsonMainObject.get("multipleOfTruck").toString().equals("true") ? true : false);
+		schedule.setIsNotCalc(false);
 		schedule.setStatus(10);
 		
 		Integer id = scheduleService.saveSchedule(schedule);		
@@ -2864,313 +2889,613 @@ public class MainRestController {
 		return isRuningOptimization + "";
 	}
 	
-	@PostMapping("/map/myoptimization3")
-	public Solution myOptimization3(@RequestBody String str) throws Exception {
-		
-//		System.out.println(str);
-		if(isRuningOptimization) {
-			Solution messageSolution = new Solution();
-			messageSolution.setMapResponses(new HashMap<String, List<MapResponse>>());
-			messageSolution.setEmptyShop(new ArrayList<Shop>());
-			messageSolution.setEmptyTrucks(new ArrayList<Vehicle>());
-			messageSolution.setKoef(0.0);
-			messageSolution.setTotalRunKM(0.0);
-			messageSolution.setWhiteWay(new ArrayList<VehicleWay>());			
-			messageSolution.setMessage("Отказано! Процесс занят пользователем : " + getThisUser().getSurname() + " " + getThisUser().getName());
-			return messageSolution;
-		}else {
-			isRuningOptimization = !isRuningOptimization;
-		}
-		
-		
-		
-		
-		Boolean mainParameter = null;
-		String algorithm = null;
-		Boolean boolParameter1 = null;
-		Boolean boolParameter2 = null;
-		Boolean boolParameter3 = null;
-		Boolean boolParameter4 = null;
-		Boolean boolParameter5 = null;
-		Boolean boolParameter6 = null;
-		Double dobleParameter1 = null;
-		Double dobleParameter2 = null;
-		Double dobleParameter3 = null;
-		Double dobleParameter4 = null;
-		Double dobleParameter5 = null;
-		
-		
-		
-		Double maxKoef = 2.0;
-		Integer maxShopInWay = 22;
-		
-		JSONParser parser = new JSONParser();
-		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
-		JSONObject jsonParameters = jsonMainObject.get("params") != null ? (JSONObject) parser.parse(jsonMainObject.get("params").toString()) : null;
-		JSONArray numShopsJSON = (JSONArray) jsonMainObject.get("shops");
-		JSONArray pallHasShopsJSON = (JSONArray) jsonMainObject.get("palls");
-		JSONArray tonnageHasShopsJSON = (JSONArray) jsonMainObject.get("tonnage");
-		JSONArray shopsWithCrossDocking = (JSONArray) jsonMainObject.get("shopsWithCrossDocking");
-		JSONArray pallReturnJSON = (JSONArray) jsonMainObject.get("pallReturn");
-		
-		Double iterationStr = jsonMainObject.get("iteration") != null ? Double.parseDouble(jsonMainObject.get("iteration").toString().replaceAll(",", ".")) : null;
-		if(iterationStr != null && iterationStr != 0.0) {
-			maxKoef = iterationStr;
-		}
-		Integer maxShopInWayTarget = jsonMainObject.get("maxShopsInRoute") != null ? Integer.parseInt(jsonMainObject.get("maxShopsInRoute").toString()) : null;
-		if(maxShopInWayTarget != null && maxShopInWayTarget != 0) {
-			maxShopInWay = maxShopInWayTarget;
-		}
-		
-		
-		// Список для хранения отфильтрованных магазинов ходящих в полигон (магазы которые входят в кроссовые площадки)
-        List<Shop> krossShops = new ArrayList<>();
-
-        // Перебор всех магазинов и фильтрация по polygonName != null
-        for (Object shopObject : shopsWithCrossDocking) {
-            JSONObject shop = (JSONObject) shopObject;
-            if (shop.get("polygonName") != null) {
-            	Shop shopObjectHasKross = shopService.getShopByNum(Integer.parseInt(shop.get("numshop").toString()));
-            	shopObjectHasKross.setKrossPolugonName(shop.get("polygonName").toString());
-                krossShops.add(shopObjectHasKross);
-            }
-        }
-        krossShops.sort((o1,o2) -> o1.getKrossPolugonName().hashCode() - o2.getKrossPolugonName().hashCode()); //сортируемся для удобства
-        	
-		
-		mainParameter = jsonParameters != null && jsonParameters.get("optimizeRouteMainCheckbox") != null ? jsonParameters.get("optimizeRouteMainCheckbox").toString().contains("true") : null; 
-		
-		if(mainParameter != null && mainParameter) {
-			algorithm = jsonParameters.get("algorithm") != null ? jsonParameters.get("algorithm").toString() : null;
-			boolParameter1 = jsonParameters.get("optimizeRouteCheckbox1") != null ? jsonParameters.get("optimizeRouteCheckbox1").toString().contains("true") : null; // параметр проверки на развернутый маршрут. Если true - то проверяем
-			boolParameter2 = jsonParameters.get("optimizeRouteCheckbox2") != null ? jsonParameters.get("optimizeRouteCheckbox2").toString().contains("true") : null;
-			boolParameter3 = jsonParameters.get("optimizeRouteCheckbox3") != null ? jsonParameters.get("optimizeRouteCheckbox3").toString().contains("true") : null;
-			boolParameter4 = jsonParameters.get("optimizeRouteCheckbox4") != null ? jsonParameters.get("optimizeRouteCheckbox4").toString().contains("true") : null;
-			boolParameter5 = jsonParameters.get("optimizeRouteCheckbox5") != null ? jsonParameters.get("optimizeRouteCheckbox5").toString().contains("true") : null;
-			boolParameter6 = jsonParameters.get("optimizeRouteCheckbox6") != null ? jsonParameters.get("optimizeRouteCheckbox6").toString().contains("true") : null;
-			
-			System.out.println(algorithm);
-			System.out.println(boolParameter1);
-			
-		}
-
-		List<Integer> numShops = new ArrayList<Integer>();
-		List<Double> pallHasShops = new ArrayList<Double>();
-		List<Integer> tonnageHasShops = new ArrayList<Integer>();
-		List<Double> pallReturn = new ArrayList<Double>();
-		Map<Integer, String> shopsWithCrossDockingMap = new HashMap<Integer, String>(); // мапа где хранятся номера магазинов и название полигонов к ним
-		
-		Integer stock = Integer.parseInt(jsonMainObject.get("stock").toString());
-
-		numShopsJSON.forEach(s -> numShops.add(Integer.parseInt(s.toString())));
-		pallHasShopsJSON.forEach(p -> pallHasShops.add(Double.parseDouble(p.toString().replaceAll(",", "."))));
-		tonnageHasShopsJSON.forEach(t-> tonnageHasShops.add(Integer.parseInt(t.toString())));
-		pallReturnJSON.forEach(pr-> pallReturn.add(pr != null ? Double.parseDouble(pr.toString().trim()) : null));
-		
-		
-		// Перебор всех магазинов и фильтрация по polygonName != null
-        for (Object shopObject : shopsWithCrossDocking) {
-            JSONObject shop = (JSONObject) shopObject;
-            if (shop.get("polygonName") != null) {
-            	shopsWithCrossDockingMap.put(Integer.parseInt(shop.get("numshop").toString()), shop.get("polygonName").toString());
-            }
-        }
-		
-		List<Solution> solutions = new ArrayList<Solution>();
-		
-	
-		//реализация перебора первого порядка
-		for (double i = 1.0; i <= maxKoef; i = i + 0.02) {
-			Double koeff = i;
-//			System.out.println("Коэфф = " + koeff);
-			Solution solution = colossusProcessorRad.run(jsonMainObject, numShops, pallHasShops, tonnageHasShops, stock, koeff, "fullLoad", shopsWithCrossDockingMap, maxShopInWay, pallReturn);
-//			Solution solution = colossusProcessorRad.run(jsonMainObject, numShops, pallHasShops, tonnageHasShops, stock, koeff, "fullLoad", shopsWithCrossDockingMap, maxShopInWay);
-
-			// строим маршруты для отправки клиенту
-
-			// в этой мате ключ это id самого маршрута, т.е. WhiteWay, а значение это сам
-			// маршрут
-	
-//			solution.getWhiteWay().forEach(w -> {
-//				List<Shop> newPoints = logicAnalyzer.correctRouteMaker(w.getWay());				
-//				VehicleWay way = w;
-//				way.setWay(newPoints);
-//			});
-			solution.setKoef(koeff);
-			solutions.add(solution);
-		}
-		
-//		System.err.println(solutions.size());
-//		solutions.forEach(s-> System.out.println(s.getTotalRunSolution()));
-		Double minOwerrun = 999999999999999999.0;
-		int emptyShop = 9999;
-		Solution finalSolution = null;
-		for (Solution solution2 : solutions) {
-			
-			//определяем и записываем суммарный пробег маршрута
-			//!!!!!!записываем внутри процессора!
-//			Double totalRunHasMatrix = 0.0;
-//			for (VehicleWay way : solution2.getWhiteWay()) {
-//				//заменяем просчёт расстояний из GH на матричный метод			
-//				for (int j = 0; j < way.getWay().size()-1; j++) {
-//					String key = way.getWay().get(j).getNumshop()+"-"+way.getWay().get(j+1).getNumshop();
-//					totalRunHasMatrix = totalRunHasMatrix + matrixMachine.matrix.get(key);
-//				}
-//			}
-//			solution2.setTotalRunKM(totalRunHasMatrix);
-			double summpall = 0;
-			for (VehicleWay way : solution2.getWhiteWay()) {
-				Shop stock123 = way.getWay().get(0);
-				summpall = summpall + calcPallHashHsop(way.getWay(), stock123);
-				way.setSummPall(roundВouble(summpall, 2));
-			}
-			System.err.println("Выбран маршрут с данными: суммарный пробег: " + solution2.getTotalRunKM() + "м, " + solution2.getEmptyShop().size() + " - кол-во неназначенных магазинов; " + solution2.getEmptyTrucks().size() + " - кол-во свободных авто; Итерация = " + solution2.getKoef() + "; Паллеты: " + summpall);
-			if(solution2.getEmptyShop().size() <= emptyShop) {
-				if(solution2.getEmptyShop().size() < emptyShop && minOwerrun < solution2.getTotalRunKM()) {
-					System.out.println("Выбран маршрут с данными: суммарный пробег: " + solution2.getTotalRunKM() + "м, " + solution2.getEmptyShop().size() + " - кол-во неназначенных магазинов; " + solution2.getEmptyTrucks().size() + " - кол-во свободных авто; Итерация = " + solution2.getKoef()+ "; Паллеты: " + summpall);
-					minOwerrun = solution2.getTotalRunKM();
-					emptyShop = solution2.getEmptyShop().size();
-					finalSolution = solution2;
-				}
-				
-				if(solution2.getTotalRunKM() < minOwerrun) {
-					System.out.println("Выбран маршрут с данными: суммарный пробег: " + solution2.getTotalRunKM() + "м, " + solution2.getEmptyShop().size() + " - кол-во неназначенных магазинов; " + solution2.getEmptyTrucks().size() + " - кол-во свободных авто; Итерация = " + solution2.getKoef()+ "; Паллеты: " + summpall);
-					minOwerrun = solution2.getTotalRunKM();
-					emptyShop = solution2.getEmptyShop().size();
-					finalSolution = solution2;
-				}
-//				solution2.setStackTrace(solution2.getStackTrace() + "\n" + "Выбран маршрут с данными: суммарный пробег: " + solution2.getTotalRunKM() + "м, " + solution2.getEmptyShop().size() + " - кол-во неназначенных магазинов; " + solution2.getEmptyTrucks().size() + " - кол-во свободных авто; Итерация = " + solution2.getKoef() + "; Паллеты: " + summpall);
-			}
-		}
-		Map<String, List<MapResponse>> wayHasMap = new HashMap<String, List<MapResponse>>();		
-		Double totalKM = 0.0;
-		
-		for (VehicleWay way : finalSolution.getWhiteWay()) {
-			
-			List<GHRequest> ghRequests = null;
-			List<GHRequest> ghRequestsReturn = null;
-			List<Shop> returnPoint = new ArrayList<Shop>(way.getWay());
-			try {
-				ghRequests = routingMachine.createrListGHRequest(way.getWay());
-				
-				Collections.reverse(returnPoint);
-				ghRequestsReturn = routingMachine.createrListGHRequest(returnPoint);
-			} catch (ParseException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			List<Shop[]> shopPoints = null;
-			List<Shop[]> shopPointsReturn = null;
-			try {
-				shopPoints = routingMachine.getShopAsWay(way.getWay());
-				shopPointsReturn = routingMachine.getShopAsWay(returnPoint);
-			} catch (ParseException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			GraphHopper hopper = routingMachine.getGraphHopper();
-//			ghRequests.forEach(r->System.out.println(r.getCustomModel()));
-			List<MapResponse> listResult = new ArrayList<MapResponse>();
-			List<MapResponse> listResultReturn = new ArrayList<MapResponse>();
-			Double distance = 0.0;
-			Double distanceReturn = 0.0;
-			for (GHRequest req : ghRequests) {
-				int index = ghRequests.indexOf(req);
-
-				GHResponse rsp = hopper.route(req);
-				if (rsp.getAll().isEmpty()) {
-					rsp.getErrors().forEach(e -> System.out.println(e));
-					rsp.getErrors().forEach(e -> e.printStackTrace());
-					listResult.add(new MapResponse(null, null, null, 500.0, 500));
-				}
-//				System.err.println(rsp.getAll().size());
-				if (rsp.getAll().size() > 1) {
-					rsp.getAll().forEach(p -> System.out.println(p.getDistance() + "    " + p.getTime()));
-				}
-				ResponsePath path = rsp.getBest();
-				List<ResponsePath> listPath = rsp.getAll();
-				for (ResponsePath pathI : listPath) {
-					if (pathI.getDistance() < path.getDistance()) {
-						path = pathI;
-					}
-				}
-//				System.out.println(roundВouble(path.getDistance()/1000, 2) + "km, " + path.getTime() + " time");
-				PointList pointList = path.getPoints();
-				path.getPathDetails();
-				List<Double[]> result = new ArrayList<Double[]>(); // возможна утечка помяти
-				pointList.forEach(p -> result.add(p.toGeoJson()));
-				List<Double[]> resultPoints = new ArrayList<Double[]>();
-				double cash = 0.0;
-				for (Double[] point : result) {
-					cash = point[0];
-					point[0] = point[1];
-					point[1] = cash;
-					resultPoints.add(point);
-				}
-				distance = distance + path.getDistance();
-				listResult.add(new MapResponse(resultPoints, path.getDistance(), path.getTime(),
-						shopPoints.get(index)[0], shopPoints.get(index)[1]));
-			}
-			for (GHRequest req : ghRequestsReturn) {
-				int index = ghRequestsReturn.indexOf(req);
-
-				GHResponse rsp = hopper.route(req);
-				if (rsp.getAll().isEmpty()) {
-					rsp.getErrors().forEach(e -> System.out.println(e));
-					rsp.getErrors().forEach(e -> e.printStackTrace());
-					listResultReturn.add(new MapResponse(null, null, null, 500.0, 500));
-				}
-//				System.err.println(rsp.getAll().size());
-				if (rsp.getAll().size() > 1) {
-					rsp.getAll().forEach(p -> System.out.println(p.getDistance() + "    " + p.getTime()));
-				}
-				ResponsePath path = rsp.getBest();
-				List<ResponsePath> listPath = rsp.getAll();
-				for (ResponsePath pathI : listPath) {
-					if (pathI.getDistance() < path.getDistance()) {
-						path = pathI;
-					}
-				}
-//				System.out.println(roundВouble(path.getDistance()/1000, 2) + "km, " + path.getTime() + " time");
-				PointList pointList = path.getPoints();
-				path.getPathDetails();
-				List<Double[]> result = new ArrayList<Double[]>(); // возможна утечка помяти
-				pointList.forEach(p -> result.add(p.toGeoJson()));
-				List<Double[]> resultPoints = new ArrayList<Double[]>();
-				double cash = 0.0;
-				for (Double[] point : result) {
-					cash = point[0];
-					point[0] = point[1];
-					point[1] = cash;
-					resultPoints.add(point);
-				}
-				distanceReturn = distanceReturn + path.getDistance();
-				listResultReturn.add(new MapResponse(resultPoints, path.getDistance(), path.getTime(),
-						shopPointsReturn.get(index)[0], shopPointsReturn.get(index)[1]));
-				
-			}
-			
-			if(distance < distanceReturn) {
-				wayHasMap.put(way.getId(), listResult);
-				totalKM = totalKM + distance;
-				System.out.println("Выбираем прямой: id = " + way.getId() + " расстояние прямого: " + distance + " м; а обратного: " + distanceReturn);
+	@PostMapping("/map/myoptimization5")
+	public Map<String, Object> myOptimization5(@RequestBody String str) throws Exception {
+		Map<String, Object> responceMap = new HashMap<String, Object>();
+		try {
+			if(isRuningOptimization) {
+				responceMap.put("status", "105");
+				responceMap.put("solution", null);
+				responceMap.put("message", "Отказано! Процесс занят пользователем : " + getThisUser().getSurname() + " " + getThisUser().getName());
+				responceMap.put("info", "Отказано! Процесс занят пользователем : " + getThisUser().getSurname() + " " + getThisUser().getName());
+				return responceMap;
 			}else {
-				wayHasMap.put(way.getId(), listResultReturn);
-				totalKM = totalKM + distanceReturn;
-				System.out.println("Выбираем обратный: id = " + way.getId() + " расстояние обратного: " + distanceReturn + " м; а прямого: " + distance);
+				isRuningOptimization = !isRuningOptimization;
 			}
 			
+			
+			Double maxKoef = 2.0;
+			Integer maxShopInWay = 22;
+			
+			JSONParser parser = new JSONParser();
+			JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+			JSONObject jsonParameters = jsonMainObject.get("params") != null ? (JSONObject) parser.parse(jsonMainObject.get("params").toString()) : null;
+			JSONArray numShopsJSON = (JSONArray) jsonMainObject.get("shops");
+			JSONArray pallHasShopsJSON = (JSONArray) jsonMainObject.get("palls");
+			JSONArray tonnageHasShopsJSON = (JSONArray) jsonMainObject.get("tonnage");
+			JSONArray shopsWithCrossDocking = (JSONArray) jsonMainObject.get("shopsWithCrossDocking");
+			JSONArray pallReturnJSON = (JSONArray) jsonMainObject.get("pallReturn");
+			
+			Double iterationStr = jsonMainObject.get("iteration") != null ? Double.parseDouble(jsonMainObject.get("iteration").toString().replaceAll(",", ".")) : null;
+			if(iterationStr != null && iterationStr != 0.0) {
+				maxKoef = iterationStr;
+			}
+			Integer maxShopInWayTarget = jsonMainObject.get("maxShopsInRoute") != null ? Integer.parseInt(jsonMainObject.get("maxShopsInRoute").toString()) : null;
+			if(maxShopInWayTarget != null && maxShopInWayTarget != 0) {
+				maxShopInWay = maxShopInWayTarget;
+			}
+			
+			
+			// Список для хранения отфильтрованных магазинов ходящих в полигон (магазы которые входят в кроссовые площадки)
+	        List<Shop> krossShops = new ArrayList<>();
+	
+	        // Перебор всех магазинов и фильтрация по polygonName != null
+	        for (Object shopObject : shopsWithCrossDocking) {
+	            JSONObject shop = (JSONObject) shopObject;
+	            if (shop.get("polygonName") != null) {
+	            	Shop shopObjectHasKross = shopService.getShopByNum(Integer.parseInt(shop.get("numshop").toString()));
+	            	shopObjectHasKross.setKrossPolugonName(shop.get("polygonName").toString());
+	                krossShops.add(shopObjectHasKross);
+	            }
+	        }
+	        krossShops.sort((o1,o2) -> o1.getKrossPolugonName().hashCode() - o2.getKrossPolugonName().hashCode()); //сортируемся для удобства
+	        	
+	
+			List<Integer> numShops = new ArrayList<Integer>();
+			List<Double> pallHasShops = new ArrayList<Double>();
+			List<Integer> tonnageHasShops = new ArrayList<Integer>();
+			List<Double> pallReturn = new ArrayList<Double>();
+			Map<Integer, String> shopsWithCrossDockingMap = new HashMap<Integer, String>(); // мапа где хранятся номера магазинов и название полигонов к ним
+			
+			Integer stock = Integer.parseInt(jsonMainObject.get("stock").toString());
+	
+			numShopsJSON.forEach(s -> numShops.add(Integer.parseInt(s.toString())));
+			pallHasShopsJSON.forEach(p -> pallHasShops.add(Double.parseDouble(p.toString().replaceAll(",", "."))));
+			tonnageHasShopsJSON.forEach(t-> tonnageHasShops.add(Integer.parseInt(t.toString())));
+			pallReturnJSON.forEach(pr-> pallReturn.add(pr != null ? Double.parseDouble(pr.toString().trim()) : null));
+			
+			
+			// Перебор всех магазинов и фильтрация по polygonName != null
+	        for (Object shopObject : shopsWithCrossDocking) {
+	            JSONObject shop = (JSONObject) shopObject;
+	            if (shop.get("polygonName") != null) {
+	            	shopsWithCrossDockingMap.put(Integer.parseInt(shop.get("numshop").toString()), shop.get("polygonName").toString());
+	            }
+	        }
+			
+			List<Solution> solutions = new ArrayList<Solution>();
+			
+		
+			//реализация перебора первого порядка
+			for (double i = 1.0; i <= maxKoef; i = i + 0.02) {
+				Double koeff = i;
+	//			System.out.println("Коэфф = " + koeff);
+				Solution solution = colossusProcessorRad.run(jsonMainObject, numShops, pallHasShops, tonnageHasShops, stock, koeff, "fullLoad", shopsWithCrossDockingMap, maxShopInWay, pallReturn);
+	//			Solution solution = colossusProcessorRad.run(jsonMainObject, numShops, pallHasShops, tonnageHasShops, stock, koeff, "fullLoad", shopsWithCrossDockingMap, maxShopInWay);
+	
+				// строим маршруты для отправки клиенту
+	
+				// в этой мате ключ это id самого маршрута, т.е. WhiteWay, а значение это сам
+				// маршрут
+		
+	//			solution.getWhiteWay().forEach(w -> {
+	//				List<Shop> newPoints = logicAnalyzer.correctRouteMaker(w.getWay());				
+	//				VehicleWay way = w;
+	//				way.setWay(newPoints);
+	//			});
+				solution.setKoef(koeff);
+				solutions.add(solution);
+			}
+			
+	//		System.err.println(solutions.size());
+	//		solutions.forEach(s-> System.out.println(s.getTotalRunSolution()));
+			Double minOwerrun = 999999999999999999.0;
+			int emptyShop = 9999;
+			Solution finalSolution = null;
+			for (Solution solution2 : solutions) {
+				
+				//определяем и записываем суммарный пробег маршрута
+				//!!!!!!записываем внутри процессора!
+	//			Double totalRunHasMatrix = 0.0;
+	//			for (VehicleWay way : solution2.getWhiteWay()) {
+	//				//заменяем просчёт расстояний из GH на матричный метод			
+	//				for (int j = 0; j < way.getWay().size()-1; j++) {
+	//					String key = way.getWay().get(j).getNumshop()+"-"+way.getWay().get(j+1).getNumshop();
+	//					totalRunHasMatrix = totalRunHasMatrix + matrixMachine.matrix.get(key);
+	//				}
+	//			}
+	//			solution2.setTotalRunKM(totalRunHasMatrix);
+				double summpall = 0;
+				for (VehicleWay way : solution2.getWhiteWay()) {
+					Shop stock123 = way.getWay().get(0);
+					summpall = summpall + calcPallHashHsop(way.getWay(), stock123);
+					way.setSummPall(roundВouble(summpall, 2));
+				}
+				System.err.println("Выбран маршрут с данными: суммарный пробег: " + solution2.getTotalRunKM() + "м, " + solution2.getEmptyShop().size() + " - кол-во неназначенных магазинов; " + solution2.getEmptyTrucks().size() + " - кол-во свободных авто; Итерация = " + solution2.getKoef() + "; Паллеты: " + summpall);
+				if(solution2.getEmptyShop().size() <= emptyShop) {
+					if(solution2.getEmptyShop().size() < emptyShop && minOwerrun < solution2.getTotalRunKM()) {
+						System.out.println("Выбран маршрут с данными: суммарный пробег: " + solution2.getTotalRunKM() + "м, " + solution2.getEmptyShop().size() + " - кол-во неназначенных магазинов; " + solution2.getEmptyTrucks().size() + " - кол-во свободных авто; Итерация = " + solution2.getKoef()+ "; Паллеты: " + summpall);
+						minOwerrun = solution2.getTotalRunKM();
+						emptyShop = solution2.getEmptyShop().size();
+						finalSolution = solution2;
+					}
+					
+					if(solution2.getTotalRunKM() < minOwerrun) {
+						System.out.println("Выбран маршрут с данными: суммарный пробег: " + solution2.getTotalRunKM() + "м, " + solution2.getEmptyShop().size() + " - кол-во неназначенных магазинов; " + solution2.getEmptyTrucks().size() + " - кол-во свободных авто; Итерация = " + solution2.getKoef()+ "; Паллеты: " + summpall);
+						minOwerrun = solution2.getTotalRunKM();
+						emptyShop = solution2.getEmptyShop().size();
+						finalSolution = solution2;
+					}
+	//				solution2.setStackTrace(solution2.getStackTrace() + "\n" + "Выбран маршрут с данными: суммарный пробег: " + solution2.getTotalRunKM() + "м, " + solution2.getEmptyShop().size() + " - кол-во неназначенных магазинов; " + solution2.getEmptyTrucks().size() + " - кол-во свободных авто; Итерация = " + solution2.getKoef() + "; Паллеты: " + summpall);
+				}
+			}
+			Map<String, List<MapResponse>> wayHasMap = new HashMap<String, List<MapResponse>>();		
+			Double totalKM = 0.0;
+			
+			for (VehicleWay way : finalSolution.getWhiteWay()) {
+				
+				List<GHRequest> ghRequests = null;
+				List<GHRequest> ghRequestsReturn = null;
+				List<Shop> returnPoint = new ArrayList<Shop>(way.getWay());
+				try {
+					ghRequests = routingMachine.createrListGHRequest(way.getWay());
+					
+					Collections.reverse(returnPoint);
+					ghRequestsReturn = routingMachine.createrListGHRequest(returnPoint);
+				} catch (ParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				List<Shop[]> shopPoints = null;
+				List<Shop[]> shopPointsReturn = null;
+				try {
+					shopPoints = routingMachine.getShopAsWay(way.getWay());
+					shopPointsReturn = routingMachine.getShopAsWay(returnPoint);
+				} catch (ParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				GraphHopper hopper = routingMachine.getGraphHopper();
+	//			ghRequests.forEach(r->System.out.println(r.getCustomModel()));
+				List<MapResponse> listResult = new ArrayList<MapResponse>();
+				List<MapResponse> listResultReturn = new ArrayList<MapResponse>();
+				Double distance = 0.0;
+				Double distanceReturn = 0.0;
+				for (GHRequest req : ghRequests) {
+					int index = ghRequests.indexOf(req);
+	
+					GHResponse rsp = hopper.route(req);
+					if (rsp.getAll().isEmpty()) {
+						rsp.getErrors().forEach(e -> System.out.println(e));
+						rsp.getErrors().forEach(e -> e.printStackTrace());
+						listResult.add(new MapResponse(null, null, null, 500.0, 500));
+					}
+	//				System.err.println(rsp.getAll().size());
+					if (rsp.getAll().size() > 1) {
+						rsp.getAll().forEach(p -> System.out.println(p.getDistance() + "    " + p.getTime()));
+					}
+					ResponsePath path = rsp.getBest();
+					List<ResponsePath> listPath = rsp.getAll();
+					for (ResponsePath pathI : listPath) {
+						if (pathI.getDistance() < path.getDistance()) {
+							path = pathI;
+						}
+					}
+	//				System.out.println(roundВouble(path.getDistance()/1000, 2) + "km, " + path.getTime() + " time");
+					PointList pointList = path.getPoints();
+					path.getPathDetails();
+					List<Double[]> result = new ArrayList<Double[]>(); // возможна утечка помяти
+					pointList.forEach(p -> result.add(p.toGeoJson()));
+					List<Double[]> resultPoints = new ArrayList<Double[]>();
+					double cash = 0.0;
+					for (Double[] point : result) {
+						cash = point[0];
+						point[0] = point[1];
+						point[1] = cash;
+						resultPoints.add(point);
+					}
+					distance = distance + path.getDistance();
+					listResult.add(new MapResponse(resultPoints, path.getDistance(), path.getTime(),
+							shopPoints.get(index)[0], shopPoints.get(index)[1]));
+				}
+				for (GHRequest req : ghRequestsReturn) {
+					int index = ghRequestsReturn.indexOf(req);
+	
+					GHResponse rsp = hopper.route(req);
+					if (rsp.getAll().isEmpty()) {
+						rsp.getErrors().forEach(e -> System.out.println(e));
+						rsp.getErrors().forEach(e -> e.printStackTrace());
+						listResultReturn.add(new MapResponse(null, null, null, 500.0, 500));
+					}
+	//				System.err.println(rsp.getAll().size());
+					if (rsp.getAll().size() > 1) {
+						rsp.getAll().forEach(p -> System.out.println(p.getDistance() + "    " + p.getTime()));
+					}
+					ResponsePath path = rsp.getBest();
+					List<ResponsePath> listPath = rsp.getAll();
+					for (ResponsePath pathI : listPath) {
+						if (pathI.getDistance() < path.getDistance()) {
+							path = pathI;
+						}
+					}
+	//				System.out.println(roundВouble(path.getDistance()/1000, 2) + "km, " + path.getTime() + " time");
+					PointList pointList = path.getPoints();
+					path.getPathDetails();
+					List<Double[]> result = new ArrayList<Double[]>(); // возможна утечка помяти
+					pointList.forEach(p -> result.add(p.toGeoJson()));
+					List<Double[]> resultPoints = new ArrayList<Double[]>();
+					double cash = 0.0;
+					for (Double[] point : result) {
+						cash = point[0];
+						point[0] = point[1];
+						point[1] = cash;
+						resultPoints.add(point);
+					}
+					distanceReturn = distanceReturn + path.getDistance();
+					listResultReturn.add(new MapResponse(resultPoints, path.getDistance(), path.getTime(),
+							shopPointsReturn.get(index)[0], shopPointsReturn.get(index)[1]));
+					
+				}
+				
+				if(distance < distanceReturn) {
+					wayHasMap.put(way.getId(), listResult);
+					totalKM = totalKM + distance;
+					System.out.println("Выбираем прямой: id = " + way.getId() + " расстояние прямого: " + distance + " м; а обратного: " + distanceReturn);
+				}else {
+					wayHasMap.put(way.getId(), listResultReturn);
+					totalKM = totalKM + distanceReturn;
+					System.out.println("Выбираем обратный: id = " + way.getId() + " расстояние обратного: " + distanceReturn + " м; а прямого: " + distance);
+				}
+				
+			}
+			finalSolution.setMapResponses(wayHasMap);
+			finalSolution.setMessage("Готово");
+			finalSolution.setTotalRunKM(totalKM);
+			System.out.println("Всего пробег: " + totalKM + " км.");
+			finalSolution.setStackTrace(finalSolution.getStackTrace() + "\n" + "Всего пробег: " + totalKM + " км. Коэфициент поиска: " + finalSolution.getKoef() );
+			
+			responceMap.put("status", "200");
+			responceMap.put("solution", finalSolution);
+			return responceMap;
+		} catch (FatalInsufficientPalletTruckCapacityException fe) {
+			responceMap.put("status", "105");
+			responceMap.put("solution", null);
+			responceMap.put("message", fe.getMessage());
+			responceMap.put("info", fe.getMessage());
+			return responceMap;
+		} finally {
+			if(isRuningOptimization) {
+				isRuningOptimization = !isRuningOptimization;
+			}
 		}
-		finalSolution.setMapResponses(wayHasMap);
-		finalSolution.setMessage("Готово");
-		finalSolution.setTotalRunKM(totalKM);
-		System.out.println("Всего пробег: " + totalKM + " км.");
-		finalSolution.setStackTrace(finalSolution.getStackTrace() + "\n" + "Всего пробег: " + totalKM + " км. Коэфициент поиска: " + finalSolution.getKoef() );
-		if(isRuningOptimization) {
-			isRuningOptimization = !isRuningOptimization;
+	}
+	
+	@PostMapping("/map/myoptimization3")
+	public Map<String, Object> myOptimization3(@RequestBody String str) throws Exception {
+		Map<String, Object> responceMap = new HashMap<String, Object>();
+		try {
+//			System.out.println(str);
+//			if(isRuningOptimization) {
+//				Solution messageSolution = new Solution();
+//				messageSolution.setMapResponses(new HashMap<String, List<MapResponse>>());
+//				messageSolution.setEmptyShop(new ArrayList<Shop>());
+//				messageSolution.setEmptyTrucks(new ArrayList<Vehicle>());
+//				messageSolution.setKoef(0.0);
+//				messageSolution.setTotalRunKM(0.0);
+//				messageSolution.setWhiteWay(new ArrayList<VehicleWay>());			
+//				messageSolution.setMessage("Отказано! Процесс занят пользователем : " + getThisUser().getSurname() + " " + getThisUser().getName());
+//				return messageSolution;
+//			}else {
+//				isRuningOptimization = !isRuningOptimization;
+//			}
+			if(isRuningOptimization) {
+				responceMap.put("status", "105");
+				responceMap.put("solution", null);
+				responceMap.put("message", "Отказано! Процесс занят пользователем : " + getThisUser().getSurname() + " " + getThisUser().getName());
+				responceMap.put("info", "Отказано! Процесс занят пользователем : " + getThisUser().getSurname() + " " + getThisUser().getName());
+				return responceMap;
+			}else {
+				isRuningOptimization = !isRuningOptimization;
+			}
+			
+			
+			
+			Boolean mainParameter = null;
+			String algorithm = null;
+			Boolean boolParameter1 = null;
+			Boolean boolParameter2 = null;
+			Boolean boolParameter3 = null;
+			Boolean boolParameter4 = null;
+			Boolean boolParameter5 = null;
+			Boolean boolParameter6 = null;
+			Double dobleParameter1 = null;
+			Double dobleParameter2 = null;
+			Double dobleParameter3 = null;
+			Double dobleParameter4 = null;
+			Double dobleParameter5 = null;
+			
+			
+			
+			Double maxKoef = 2.0;
+			Integer maxShopInWay = 22;
+			
+			JSONParser parser = new JSONParser();
+			JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+			JSONObject jsonParameters = jsonMainObject.get("params") != null ? (JSONObject) parser.parse(jsonMainObject.get("params").toString()) : null;
+			JSONArray numShopsJSON = (JSONArray) jsonMainObject.get("shops");
+			JSONArray pallHasShopsJSON = (JSONArray) jsonMainObject.get("palls");
+			JSONArray tonnageHasShopsJSON = (JSONArray) jsonMainObject.get("tonnage");
+			JSONArray shopsWithCrossDocking = (JSONArray) jsonMainObject.get("shopsWithCrossDocking");
+			JSONArray pallReturnJSON = (JSONArray) jsonMainObject.get("pallReturn");
+			
+			Double iterationStr = jsonMainObject.get("iteration") != null ? Double.parseDouble(jsonMainObject.get("iteration").toString().replaceAll(",", ".")) : null;
+			if(iterationStr != null && iterationStr != 0.0) {
+				maxKoef = iterationStr;
+			}
+			Integer maxShopInWayTarget = jsonMainObject.get("maxShopsInRoute") != null ? Integer.parseInt(jsonMainObject.get("maxShopsInRoute").toString()) : null;
+			if(maxShopInWayTarget != null && maxShopInWayTarget != 0) {
+				maxShopInWay = maxShopInWayTarget;
+			}
+			
+			
+			// Список для хранения отфильтрованных магазинов ходящих в полигон (магазы которые входят в кроссовые площадки)
+	        List<Shop> krossShops = new ArrayList<>();
+
+	        // Перебор всех магазинов и фильтрация по polygonName != null
+	        for (Object shopObject : shopsWithCrossDocking) {
+	            JSONObject shop = (JSONObject) shopObject;
+	            if (shop.get("polygonName") != null) {
+	            	Shop shopObjectHasKross = shopService.getShopByNum(Integer.parseInt(shop.get("numshop").toString()));
+	            	shopObjectHasKross.setKrossPolugonName(shop.get("polygonName").toString());
+	                krossShops.add(shopObjectHasKross);
+	            }
+	        }
+	        krossShops.sort((o1,o2) -> o1.getKrossPolugonName().hashCode() - o2.getKrossPolugonName().hashCode()); //сортируемся для удобства
+	        	
+			
+			mainParameter = jsonParameters != null && jsonParameters.get("optimizeRouteMainCheckbox") != null ? jsonParameters.get("optimizeRouteMainCheckbox").toString().contains("true") : null; 
+			
+			if(mainParameter != null && mainParameter) {
+				algorithm = jsonParameters.get("algorithm") != null ? jsonParameters.get("algorithm").toString() : null;
+				boolParameter1 = jsonParameters.get("optimizeRouteCheckbox1") != null ? jsonParameters.get("optimizeRouteCheckbox1").toString().contains("true") : null; // параметр проверки на развернутый маршрут. Если true - то проверяем
+				boolParameter2 = jsonParameters.get("optimizeRouteCheckbox2") != null ? jsonParameters.get("optimizeRouteCheckbox2").toString().contains("true") : null;
+				boolParameter3 = jsonParameters.get("optimizeRouteCheckbox3") != null ? jsonParameters.get("optimizeRouteCheckbox3").toString().contains("true") : null;
+				boolParameter4 = jsonParameters.get("optimizeRouteCheckbox4") != null ? jsonParameters.get("optimizeRouteCheckbox4").toString().contains("true") : null;
+				boolParameter5 = jsonParameters.get("optimizeRouteCheckbox5") != null ? jsonParameters.get("optimizeRouteCheckbox5").toString().contains("true") : null;
+				boolParameter6 = jsonParameters.get("optimizeRouteCheckbox6") != null ? jsonParameters.get("optimizeRouteCheckbox6").toString().contains("true") : null;
+				
+				System.out.println(algorithm);
+				System.out.println(boolParameter1);
+				
+			}
+
+			List<Integer> numShops = new ArrayList<Integer>();
+			List<Double> pallHasShops = new ArrayList<Double>();
+			List<Integer> tonnageHasShops = new ArrayList<Integer>();
+			List<Double> pallReturn = new ArrayList<Double>();
+			Map<Integer, String> shopsWithCrossDockingMap = new HashMap<Integer, String>(); // мапа где хранятся номера магазинов и название полигонов к ним
+			
+			Integer stock = Integer.parseInt(jsonMainObject.get("stock").toString());
+
+			numShopsJSON.forEach(s -> numShops.add(Integer.parseInt(s.toString())));
+			pallHasShopsJSON.forEach(p -> pallHasShops.add(Double.parseDouble(p.toString().replaceAll(",", "."))));
+			tonnageHasShopsJSON.forEach(t-> tonnageHasShops.add(Integer.parseInt(t.toString())));
+			pallReturnJSON.forEach(pr-> pallReturn.add(pr != null ? Double.parseDouble(pr.toString().trim()) : null));
+			
+			
+			// Перебор всех магазинов и фильтрация по polygonName != null
+	        for (Object shopObject : shopsWithCrossDocking) {
+	            JSONObject shop = (JSONObject) shopObject;
+	            if (shop.get("polygonName") != null) {
+	            	shopsWithCrossDockingMap.put(Integer.parseInt(shop.get("numshop").toString()), shop.get("polygonName").toString());
+	            }
+	        }
+			
+			List<Solution> solutions = new ArrayList<Solution>();
+			
+		
+			//реализация перебора первого порядка
+			for (double i = 1.0; i <= maxKoef; i = i + 0.02) {
+				Double koeff = i;
+//				System.out.println("Коэфф = " + koeff);
+				Solution solution = colossusProcessorRad.run(jsonMainObject, numShops, pallHasShops, tonnageHasShops, stock, koeff, "fullLoad", shopsWithCrossDockingMap, maxShopInWay, pallReturn);
+//				Solution solution = colossusProcessorRad.run(jsonMainObject, numShops, pallHasShops, tonnageHasShops, stock, koeff, "fullLoad", shopsWithCrossDockingMap, maxShopInWay);
+
+				// строим маршруты для отправки клиенту
+
+				// в этой мате ключ это id самого маршрута, т.е. WhiteWay, а значение это сам
+				// маршрут
+		
+//				solution.getWhiteWay().forEach(w -> {
+//					List<Shop> newPoints = logicAnalyzer.correctRouteMaker(w.getWay());				
+//					VehicleWay way = w;
+//					way.setWay(newPoints);
+//				});
+				solution.setKoef(koeff);
+				solutions.add(solution);
+			}
+			
+//			System.err.println(solutions.size());
+//			solutions.forEach(s-> System.out.println(s.getTotalRunSolution()));
+			Double minOwerrun = 999999999999999999.0;
+			int emptyShop = 9999;
+			Solution finalSolution = null;
+			for (Solution solution2 : solutions) {
+				
+				//определяем и записываем суммарный пробег маршрута
+				//!!!!!!записываем внутри процессора!
+//				Double totalRunHasMatrix = 0.0;
+//				for (VehicleWay way : solution2.getWhiteWay()) {
+//					//заменяем просчёт расстояний из GH на матричный метод			
+//					for (int j = 0; j < way.getWay().size()-1; j++) {
+//						String key = way.getWay().get(j).getNumshop()+"-"+way.getWay().get(j+1).getNumshop();
+//						totalRunHasMatrix = totalRunHasMatrix + matrixMachine.matrix.get(key);
+//					}
+//				}
+//				solution2.setTotalRunKM(totalRunHasMatrix);
+				double summpall = 0;
+				for (VehicleWay way : solution2.getWhiteWay()) {
+					Shop stock123 = way.getWay().get(0);
+					summpall = summpall + calcPallHashHsop(way.getWay(), stock123);
+					way.setSummPall(roundВouble(summpall, 2));
+				}
+				System.err.println("Выбран маршрут с данными: суммарный пробег: " + solution2.getTotalRunKM() + "м, " + solution2.getEmptyShop().size() + " - кол-во неназначенных магазинов; " + solution2.getEmptyTrucks().size() + " - кол-во свободных авто; Итерация = " + solution2.getKoef() + "; Паллеты: " + summpall);
+				if(solution2.getEmptyShop().size() <= emptyShop) {
+					if(solution2.getEmptyShop().size() < emptyShop && minOwerrun < solution2.getTotalRunKM()) {
+						System.out.println("Выбран маршрут с данными: суммарный пробег: " + solution2.getTotalRunKM() + "м, " + solution2.getEmptyShop().size() + " - кол-во неназначенных магазинов; " + solution2.getEmptyTrucks().size() + " - кол-во свободных авто; Итерация = " + solution2.getKoef()+ "; Паллеты: " + summpall);
+						minOwerrun = solution2.getTotalRunKM();
+						emptyShop = solution2.getEmptyShop().size();
+						finalSolution = solution2;
+					}
+					
+					if(solution2.getTotalRunKM() < minOwerrun) {
+						System.out.println("Выбран маршрут с данными: суммарный пробег: " + solution2.getTotalRunKM() + "м, " + solution2.getEmptyShop().size() + " - кол-во неназначенных магазинов; " + solution2.getEmptyTrucks().size() + " - кол-во свободных авто; Итерация = " + solution2.getKoef()+ "; Паллеты: " + summpall);
+						minOwerrun = solution2.getTotalRunKM();
+						emptyShop = solution2.getEmptyShop().size();
+						finalSolution = solution2;
+					}
+//					solution2.setStackTrace(solution2.getStackTrace() + "\n" + "Выбран маршрут с данными: суммарный пробег: " + solution2.getTotalRunKM() + "м, " + solution2.getEmptyShop().size() + " - кол-во неназначенных магазинов; " + solution2.getEmptyTrucks().size() + " - кол-во свободных авто; Итерация = " + solution2.getKoef() + "; Паллеты: " + summpall);
+				}
+			}
+			Map<String, List<MapResponse>> wayHasMap = new HashMap<String, List<MapResponse>>();		
+			Double totalKM = 0.0;
+			
+			for (VehicleWay way : finalSolution.getWhiteWay()) {
+				
+				List<GHRequest> ghRequests = null;
+				List<GHRequest> ghRequestsReturn = null;
+				List<Shop> returnPoint = new ArrayList<Shop>(way.getWay());
+				try {
+					ghRequests = routingMachine.createrListGHRequest(way.getWay());
+					
+					Collections.reverse(returnPoint);
+					ghRequestsReturn = routingMachine.createrListGHRequest(returnPoint);
+				} catch (ParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				List<Shop[]> shopPoints = null;
+				List<Shop[]> shopPointsReturn = null;
+				try {
+					shopPoints = routingMachine.getShopAsWay(way.getWay());
+					shopPointsReturn = routingMachine.getShopAsWay(returnPoint);
+				} catch (ParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				GraphHopper hopper = routingMachine.getGraphHopper();
+//				ghRequests.forEach(r->System.out.println(r.getCustomModel()));
+				List<MapResponse> listResult = new ArrayList<MapResponse>();
+				List<MapResponse> listResultReturn = new ArrayList<MapResponse>();
+				Double distance = 0.0;
+				Double distanceReturn = 0.0;
+				for (GHRequest req : ghRequests) {
+					int index = ghRequests.indexOf(req);
+
+					GHResponse rsp = hopper.route(req);
+					if (rsp.getAll().isEmpty()) {
+						rsp.getErrors().forEach(e -> System.out.println(e));
+						rsp.getErrors().forEach(e -> e.printStackTrace());
+						listResult.add(new MapResponse(null, null, null, 500.0, 500));
+					}
+//					System.err.println(rsp.getAll().size());
+					if (rsp.getAll().size() > 1) {
+						rsp.getAll().forEach(p -> System.out.println(p.getDistance() + "    " + p.getTime()));
+					}
+					ResponsePath path = rsp.getBest();
+					List<ResponsePath> listPath = rsp.getAll();
+					for (ResponsePath pathI : listPath) {
+						if (pathI.getDistance() < path.getDistance()) {
+							path = pathI;
+						}
+					}
+//					System.out.println(roundВouble(path.getDistance()/1000, 2) + "km, " + path.getTime() + " time");
+					PointList pointList = path.getPoints();
+					path.getPathDetails();
+					List<Double[]> result = new ArrayList<Double[]>(); // возможна утечка помяти
+					pointList.forEach(p -> result.add(p.toGeoJson()));
+					List<Double[]> resultPoints = new ArrayList<Double[]>();
+					double cash = 0.0;
+					for (Double[] point : result) {
+						cash = point[0];
+						point[0] = point[1];
+						point[1] = cash;
+						resultPoints.add(point);
+					}
+					distance = distance + path.getDistance();
+					listResult.add(new MapResponse(resultPoints, path.getDistance(), path.getTime(),
+							shopPoints.get(index)[0], shopPoints.get(index)[1]));
+				}
+				for (GHRequest req : ghRequestsReturn) {
+					int index = ghRequestsReturn.indexOf(req);
+
+					GHResponse rsp = hopper.route(req);
+					if (rsp.getAll().isEmpty()) {
+						rsp.getErrors().forEach(e -> System.out.println(e));
+						rsp.getErrors().forEach(e -> e.printStackTrace());
+						listResultReturn.add(new MapResponse(null, null, null, 500.0, 500));
+					}
+//					System.err.println(rsp.getAll().size());
+					if (rsp.getAll().size() > 1) {
+						rsp.getAll().forEach(p -> System.out.println(p.getDistance() + "    " + p.getTime()));
+					}
+					ResponsePath path = rsp.getBest();
+					List<ResponsePath> listPath = rsp.getAll();
+					for (ResponsePath pathI : listPath) {
+						if (pathI.getDistance() < path.getDistance()) {
+							path = pathI;
+						}
+					}
+//					System.out.println(roundВouble(path.getDistance()/1000, 2) + "km, " + path.getTime() + " time");
+					PointList pointList = path.getPoints();
+					path.getPathDetails();
+					List<Double[]> result = new ArrayList<Double[]>(); // возможна утечка помяти
+					pointList.forEach(p -> result.add(p.toGeoJson()));
+					List<Double[]> resultPoints = new ArrayList<Double[]>();
+					double cash = 0.0;
+					for (Double[] point : result) {
+						cash = point[0];
+						point[0] = point[1];
+						point[1] = cash;
+						resultPoints.add(point);
+					}
+					distanceReturn = distanceReturn + path.getDistance();
+					listResultReturn.add(new MapResponse(resultPoints, path.getDistance(), path.getTime(),
+							shopPointsReturn.get(index)[0], shopPointsReturn.get(index)[1]));
+					
+				}
+				
+				if(distance < distanceReturn) {
+					wayHasMap.put(way.getId(), listResult);
+					totalKM = totalKM + distance;
+					System.out.println("Выбираем прямой: id = " + way.getId() + " расстояние прямого: " + distance + " м; а обратного: " + distanceReturn);
+				}else {
+					wayHasMap.put(way.getId(), listResultReturn);
+					totalKM = totalKM + distanceReturn;
+					System.out.println("Выбираем обратный: id = " + way.getId() + " расстояние обратного: " + distanceReturn + " м; а прямого: " + distance);
+				}
+				
+			}
+			finalSolution.setMapResponses(wayHasMap);
+			finalSolution.setMessage("Готово");
+			finalSolution.setTotalRunKM(totalKM);
+			System.out.println("Всего пробег: " + totalKM + " км.");
+			finalSolution.setStackTrace(finalSolution.getStackTrace() + "\n" + "Всего пробег: " + totalKM + " км. Коэфициент поиска: " + finalSolution.getKoef() );
+			responceMap.put("status", "200");
+			responceMap.put("solution", finalSolution);
+			return responceMap;
+		} catch (FatalInsufficientPalletTruckCapacityException fe) {
+			responceMap.put("status", "105");
+			responceMap.put("solution", null);
+			responceMap.put("message", fe.getMessage());
+			responceMap.put("info", fe.getMessage());
+			return responceMap;
+		} finally {
+			if(isRuningOptimization) {
+				isRuningOptimization = !isRuningOptimization;
+			}
 		}
-		return finalSolution;
-//		return null;
+
 	}
 	
 	/**

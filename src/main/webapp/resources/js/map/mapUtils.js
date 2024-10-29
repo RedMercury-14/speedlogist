@@ -371,3 +371,10 @@ export function getSelectedShopsPallSum(layer, shopsToView) {
 		return acc
 	}, 0)
 }
+
+// отображение модального окна с установленным текстом
+export function showMessageModal(message) {
+	const messageContainer = document.querySelector('#messageContainer')
+	messageContainer.innerHTML = message
+	$('#displayMessageModal').modal('show')
+}

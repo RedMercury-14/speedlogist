@@ -541,11 +541,13 @@ public class ColossusProcessorANDRestrictions5 {
 						VehicleWay vehicleWayTest = new VehicleWay(points, 0.0, 30, null);
 
 						Double logicResult = logicAnalyzer.logicalСheck(vehicleWayTest, koeff);
-						if(specialShop.getSpecialWeightDistribution()) {
-							logicResult = 1.0;
-						}else {
-							logicAnalyzer.logicalСheck(vehicleWayTest, koeff);					
-						}
+						
+//						Double logicResult = null;
+//						if(specialShop.getSpecialWeightDistribution()) {
+//							logicResult = 1.0;
+//						}else {
+//							logicResult = logicAnalyzer.logicalСheck(vehicleWayTest, koeff);					
+//						}
 //						System.err.println(logicResult + " логичность маршрута составила");
 						
 						Double summpallTrget = calcPallHashHsop(points, targetStock);

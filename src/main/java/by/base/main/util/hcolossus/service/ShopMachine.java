@@ -152,7 +152,7 @@ public class ShopMachine {
 			String keyForMatrix = stock+"-"+shop.getNumshop();
 			Double distanceTarget = matrixMachine.matrix.get(keyForMatrix);
 			if(distanceTarget == null) {
-				System.err.println("ShopMachine.prepareShopList2Parameters: Магазин " + shop.getNumshop() + " не найдено расстояние от склада");
+				System.err.println("ShopMachine.prepareShopList4Parameters: Магазин " + shop.getNumshop() + " не найдено расстояние от склада");
 			}else {
 				shop.setDistanceFromStock(distanceTarget);
 				finalResult.add(shop);

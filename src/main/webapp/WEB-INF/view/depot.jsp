@@ -209,7 +209,7 @@
 				<c:choose>
 					<c:when test="${roles == '[ROLE_ADMIN]' || roles == '[ROLE_LOGISTDELIVERY]'}">
 						<div class="item-content" id="optimizeRoute">
-							<h2>Тестовый оптимизатор v.3</h2>
+							<h2>Тестовый оптимизатор</h2>
 							<div class="content">
 								<div class="accordion" id="accordion">
 									<div class="d-flex justify-content-between align-items-center" id="headingOne">
@@ -299,7 +299,8 @@
 												<span class="text-muted font-weight-bold" id="totalPallets">0</span>
 											</div>
 											<div class="formButton-container">
-												<button class="btn btn-sm btn-primary" type="submit">Построить маршруты</button>
+												<button class="btn btn-sm btn-primary" data-version="v3" type="submit">Построить маршруты v.3</button>
+												<button class="btn btn-sm btn-primary" data-version="v5" type="submit">Построить маршруты v.5</button>
 												<button class="btn btn-sm btn-secondary" type="reset">Очистить форму</button>
 											</div>
 										</form>

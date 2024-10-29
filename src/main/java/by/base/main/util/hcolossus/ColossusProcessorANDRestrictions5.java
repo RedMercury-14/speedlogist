@@ -196,7 +196,6 @@ public class ColossusProcessorANDRestrictions5 {
 
 		// тут пойдёт логика самого маршрутизатора
 		int i = 0; // для тестов, чтобы ограничивать цикл while ОН ЖЕ ID маршрута
-//		int iMax = shopsForOptimization.size() * shopsForOptimization.size() * 3;
 		int iMax = shopsForOptimization.size() * shopsForOptimization.size() * 10;
 		int j = 0; // итерация
 		

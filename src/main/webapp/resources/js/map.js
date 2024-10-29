@@ -95,7 +95,11 @@ import { addListnersToPallTextarea, calcPallets } from "./map/calcPallets.js"
 
 const apiUrl = isLogisticsDeliveryPage() ? '../../api/' : '../api/'
 
-const testOptimizationUrl = `${apiUrl}map/myoptimization5`
+const optimizationUrlDict = {
+	v3: `${apiUrl}map/myoptimization3`,
+	v5: `${apiUrl}map/myoptimization5`,
+}
+
 const saveOptimizeRouteParamsUrl = `${apiUrl}map/set`
 
 const getAllShopsUrl = `${apiUrl}manager/getAllShops`
@@ -878,6 +882,7 @@ function optimizeRouteFormHandler(e, gridDiv) {
 	e.preventDefault()
 
 	const submitButton = e.submitter
+	const version = submitButton.dataset.version
 	const submitButtonText = submitButton.innerText
 	const optimizeRouteParams = JSON.parse(localStorage.getItem(OPTIMIZE_ROUTE_PARAMS_KEY))
 	const data = getOptimizeRouteFormData(e.target, optimizeRouteParams)
@@ -890,7 +895,7 @@ function optimizeRouteFormHandler(e, gridDiv) {
 	showLoadingSpinner(submitButton)
 
 	ajaxUtils.postJSONdata({
-		url: testOptimizationUrl,
+		url: optimizationUrlDict[version],
 		token: token,
 		data: updatedData,
 		successCallback: (res) => {
@@ -920,7 +925,6 @@ function optimizeRouteFormHandler(e, gridDiv) {
 				return
 			}
 
-			console.log(res)
 			snackbar.show('Ошибка на сервере')
 		},
 		errorCallback: () => hideLoadingSpinner(submitButton, submitButtonText)

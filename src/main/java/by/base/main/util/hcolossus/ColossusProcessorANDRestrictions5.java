@@ -173,14 +173,20 @@ public class ColossusProcessorANDRestrictions5 {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+		trucks.sort(vehicleComparatorFromMax); // сортируем от больших паллет к маньшим
 		
 		/**
 		 * магазины для распределения выстроены в порядке убывания потребностей
 		 */
 		shopsForOptimization = shopMachine.prepareShopList5Parameters(shopList, pallHasShops,tonnageHasShops, stock, shopsWithCrossDockingMap, pallReturn, weightDistributionList); // магазины для распределения выстроены в порядке убывания потребностей TEST
 
-		sortedShopsHasKrossingAndReturnPall(); // Делает так, чтобы магазины, которые входят в кроссы были сверху списка
+		if(trucks.get(0).getPall()>=33.0) {// Делает так, чтобы магазины, которые входят в кроссы были сверху списка, если есть фуры
+			sortedShopsHasKrossingPall(true);
+			System.err.println("111111111111111111111111111111111111111111111111");
+		}else {
+			sortedShopsHasKrossingPall(false);		
+			System.err.println("2222222222222222222222222222222222222222222222222");
+		}
 
 		stackTrace = "Начальное распределение магазинов слеюущее: \n";
 		for (Shop s : shopsForOptimization) {
@@ -200,7 +206,7 @@ public class ColossusProcessorANDRestrictions5 {
 		int iMax = shopsForOptimization.size() * shopsForOptimization.size() * 10;
 		int j = 0; // итерация
 		
-		trucks.sort(vehicleComparatorFromMax); // сортируем от больших паллет к маньшим
+		
 		
 		/*
 		 * тут получаем лист с магазами в кроссах и делаем мапу где ключ - название полигона - значение - лист магазов
@@ -242,7 +248,11 @@ public class ColossusProcessorANDRestrictions5 {
 			shopsForAddNewNeedPall = new ArrayList<Shop>();
 			
 			shopsForOptimization.sort(shopComparatorDistanceMain);
-			sortedShopsHasKrossingAndReturnPall(); // Делает так, чтобы магазины, которые входят в кроссы были сверху списка а после них шли сразу магазины 
+			if(trucks.get(0).getPall()>=33.0) {// Делает так, чтобы магазины, которые входят в кроссы были сверху списка, если есть фуры
+				sortedShopsHasKrossingPall(true);
+			}else {
+				sortedShopsHasKrossingPall(false);			
+			}
 			
 			//берем самый дальний магазин
 			Shop firstShop = shopsForOptimization.remove(0);
@@ -540,14 +550,14 @@ public class ColossusProcessorANDRestrictions5 {
 						// проверяем является ли маршрут логичным!
 						VehicleWay vehicleWayTest = new VehicleWay(points, 0.0, 30, null);
 
-						Double logicResult = logicAnalyzer.logicalСheck(vehicleWayTest, koeff);
+//						Double logicResult = logicAnalyzer.logicalСheck(vehicleWayTest, koeff);
 						
-//						Double logicResult = null;
-//						if(specialShop.getSpecialWeightDistribution()) {
-//							logicResult = 1.0;
-//						}else {
-//							logicResult = logicAnalyzer.logicalСheck(vehicleWayTest, koeff);					
-//						}
+						Double logicResult = null;
+						if(specialShop.getSpecialWeightDistribution()) {
+							logicResult = 1.0;
+						}else {
+							logicResult = logicAnalyzer.logicalСheck(vehicleWayTest, koeff);					
+						}
 //						System.err.println(logicResult + " логичность маршрута составила");
 						
 						Double summpallTrget = calcPallHashHsop(points, targetStock);
@@ -1632,34 +1642,7 @@ public class ColossusProcessorANDRestrictions5 {
         shopsForOptimization.clear();
         shopsForOptimization.addAll(sortedShops);
 	}
-	
-	/**
-	 * Фильтрует и сортирует магазины по наличию значений сначала `getKrossPolugonName` потом `getPallReturn`,
-	 * а также по расстоянию `getDistanceFromStock` для магазинов с возвратом паллет. Обновляет исходный 
-	 * список магазинов, добавляя в конец элементы, не прошедшие фильтрацию.
-	 */
-//	public void sortedShopsHasKrossingAndReturnPall() {
-//	    // Фильтруем магазины по условиям:
-//	    // 1. Сначала магазины с ненулевым getKrossPolugonName
-//	    // 2. Затем магазины с ненулевым getPallReturn
-//	    // 3. Магазины с getPallReturn сортируются по getDistanceFromStock
-//	    List<Shop> filteredShops = shopsForOptimization.stream()
-//	        .filter(s -> s.getKrossPolugonName() != null || s.getPallReturn() != null)
-//	        .sorted(Comparator.comparing((Shop s) -> s.getKrossPolugonName() != null ? 0 : 1)
-//	            .thenComparing((Shop s) -> s.getPallReturn() != null ? 0 : 1)
-//	            .thenComparing(Shop::getDistanceFromStock, Comparator.nullsLast(Comparator.naturalOrder())))
-//	        .collect(Collectors.toList());
-//
-//	    // Удаляем отфильтрованные элементы из исходного списка
-//	    shopsForOptimization.removeAll(filteredShops);
-//
-//	    // Добавляем оставшиеся элементы в конец отфильтрованных
-//	    filteredShops.addAll(shopsForOptimization);
-//
-//	    // Обновляем исходный список магазинов
-//	    shopsForOptimization.clear();
-//	    shopsForOptimization.addAll(filteredShops);
-//	}
+
 	
 	/**
 	 * Сортирует список магазинов с учетом нескольких условий:
@@ -1671,7 +1654,10 @@ public class ColossusProcessorANDRestrictions5 {
 	 *         по убыванию значения <code>getNeedPall</code> (большее значение размещается выше).</li>
 	 * </ol>
 	 * В результате исходный список <code>shopsForOptimization</code> обновляется с учетом вышеуказанных условий сортировки.
+	 * 
+	 * УСТАРЕЛ, Т.К. ПОМЕНЯЛИ ЛОГИКУ!
 	 */
+	@Deprecated
 	public void sortedShopsHasKrossingAndReturnPall() {
 	    // Фильтруем магазины по условиям:
 	    // 1. Сначала магазины с ненулевым getKrossPolugonName
@@ -1701,6 +1687,45 @@ public class ColossusProcessorANDRestrictions5 {
 	    shopsForOptimization.clear();
 	    shopsForOptimization.addAll(filteredShops);
 	}
+	
+	/**
+	 * Сортирует список магазинов в соответствии с заданными условиями:
+	 * 1. Если includeKrossPolugonNameSorting = true, магазины с ненулевым `getKrossPolugonName`
+	 *    поднимаются вверх списка.
+	 * 2. Магазины с `getSpecialWeightDistribution() == true` помещаются в конец списка,
+	 *    отсортированные по убыванию значений `getNeedPall`.
+	 *
+	 * @param includeKrossPolugonNameSorting если true, магазины с `getKrossPolugonName != null` поднимаются вверх списка.
+	 */
+	public void sortedShopsHasKrossingPall(boolean includeKrossPolugonNameSorting) {
+	    // Основная сортировка
+	    Comparator<Shop> mainComparator = Comparator.comparing(
+	            (Shop s) -> includeKrossPolugonNameSorting && s.getKrossPolugonName() != null ? 0 : 1
+	        )
+	        .thenComparing(Comparator.comparing(Shop::getSpecialWeightDistribution).reversed());
+
+	    // Сортируем магазины с `getSpecialWeightDistribution() == true` отдельно по `getNeedPall`
+	    List<Shop> sortedShops = shopsForOptimization.stream()
+	        .sorted(mainComparator
+	            .thenComparing(
+	                s -> s.getSpecialWeightDistribution() ? s.getNeedPall() : null,
+	                Comparator.nullsLast(Comparator.reverseOrder())
+	            )
+	        )
+	        .collect(Collectors.toList());
+
+	    // Обновляем исходный список магазинов
+	    shopsForOptimization.clear();
+	    shopsForOptimization.addAll(sortedShops);
+	}
+
+
+
+
+
+
+
+
 
 	
 	

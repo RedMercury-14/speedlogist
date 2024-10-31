@@ -6,8 +6,8 @@ import { snackbar } from "./snackbar/snackbar.js"
 import { uiIcons } from './uiIcons.js'
 import { changeGridTableMarginTop, dateHelper, debounce, disableButton, enableButton, getData, getDeliveryScheduleMatrix, getScheduleStatus, hideLoadingSpinner, isAdmin, isOderSupport, showLoadingSpinner } from './utils.js'
 
-const loadExcelUrl = '../../api/slots/delivery-schedule/load'
-const getScheduleUrl = '../../api/slots/delivery-schedule/getList'
+const loadExcelUrl = '../../api/slots/delivery-schedule/loadTO'
+const getScheduleUrl = '../../api/slots/delivery-schedule/getListRC'
 const addScheduleItemUrl = '../../api/slots/delivery-schedule/create'
 const editScheduleItemUrl = '../../api/slots/delivery-schedule/edit'
 const getScheduleNumContractBaseUrl = '../../api/slots/delivery-schedule/getScheduleNumContract/'

@@ -81,7 +81,7 @@ function getInitDataUrl(url) {
 
 	// График поставок
 	if (url.includes('delivery-schedule')) {
-		return '../../api/slots/delivery-schedule/getList'
+		return '../../api/slots/delivery-schedule/getListRC'
 	}
 
 	// Остаток товара на складах

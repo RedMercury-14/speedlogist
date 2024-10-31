@@ -9,7 +9,9 @@ public interface ScheduleService {
 
 	Schedule getScheduleById(Integer id);
 	
-	List<Schedule> getSchedules();
+	List<Schedule> getSchedulesListRC();
+	
+	List<Schedule> getSchedulesListTO();
 	
 	/**
 	 * Возвращает лист Schedule по складу

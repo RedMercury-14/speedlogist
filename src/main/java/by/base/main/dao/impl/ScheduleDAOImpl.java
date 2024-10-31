@@ -39,12 +39,22 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	}
 
 	
-	private static final String queryGetList = "from Schedule order by idSchedule";
+	private static final String queryGetListRC = "from Schedule where type='РЦ'";
 	@Transactional
 	@Override
-	public List<Schedule> getSchedules() {
+	public List<Schedule> getSchedulesListRC() {
 		Session currentSession = sessionFactory.getCurrentSession();
-		Query<Schedule> theRole = currentSession.createQuery(queryGetList, Schedule.class);
+		Query<Schedule> theRole = currentSession.createQuery(queryGetListRC, Schedule.class);
+		List <Schedule> roles = theRole.getResultList();
+		return roles;
+	}
+	
+	private static final String queryGetListTO = "from Schedule where type='ТО'";
+	@Transactional
+	@Override
+	public List<Schedule> getSchedulesListTO() {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Schedule> theRole = currentSession.createQuery(queryGetListTO, Schedule.class);
 		List <Schedule> roles = theRole.getResultList();
 		return roles;
 	}

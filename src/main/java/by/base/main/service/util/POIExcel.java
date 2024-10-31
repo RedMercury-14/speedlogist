@@ -1102,7 +1102,7 @@ public class POIExcel {
     }
 	
 	/**
-	 * Метод считывает excel файл и отдаёт лист со строками графика поставок, для последующей записи в бд
+	 * Метод считывает excel файл и отдаёт лист со строками графика поставок, для последующей записи в бд ДЛЯ РЦ
 	 * @param file
 	 * @param request
 	 * @return
@@ -1111,7 +1111,7 @@ public class POIExcel {
 	 * @throws IOException
 	 * @throws ParseException
 	 */
-	public List<Schedule> loadDeliverySchedule(File file, Integer stock) throws ServiceException, InvalidFormatException, IOException, ParseException {
+	public List<Schedule> loadDeliveryScheduleRC(File file, Integer stock) throws ServiceException, InvalidFormatException, IOException, ParseException {
 		List<Schedule> schedules = new ArrayList<>();
         XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
         XSSFSheet sheet = wb.getSheetAt(0);
@@ -1158,6 +1158,86 @@ public class POIExcel {
             schedule.setMultipleOfTruck(row.getCell(17) == null || row.getCell(17).getStringCellValue().equals("") ? false : true);
             schedule.setStatus(20);
             schedule.setNumStock(stock);
+//            schedule.setNumStock((int) row.getCell(17).getNumericCellValue());
+//            schedule.setDescription(row.getCell(18).getStringCellValue());
+
+//            String dateString = row.getCell(19).getStringCellValue();
+//            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+//            Date date = (Date) dateFormat.parse(dateString);
+//            schedule.setDateLastCalculation(date);
+
+            schedules.add(schedule);
+        }
+
+        wb.close();
+        return schedules;
+    }
+	
+	/**
+	 * Метод считывает excel файл и отдаёт лист со строками графика поставок, для последующей записи в бд ДЛЯ TO
+	 * @param file
+	 * @param request
+	 * @return
+	 * @throws ServiceException
+	 * @throws InvalidFormatException
+	 * @throws IOException
+	 * @throws ParseException
+	 */
+	public List<Schedule> loadDeliveryScheduleTO(File file, String toType) throws ServiceException, InvalidFormatException, IOException, ParseException {
+		List<Schedule> schedules = new ArrayList<>();
+        XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
+        XSSFSheet sheet = wb.getSheetAt(0);
+        Iterator<Row> rowIterator = sheet.iterator();
+
+        // Assuming the first row is the header
+        rowIterator.next();
+
+        while (rowIterator.hasNext()) {
+            Row row = rowIterator.next();
+            Schedule schedule = new Schedule();
+           
+            if(row.getCell(0) == null) {
+            	continue;
+            }
+            if(row.getCell(0).getCellType().equals(CellType.STRING) || row.getCell(0).toString().equals("")) {
+            	continue;
+            }
+            
+            BigDecimal bigDecimalValueCode = new BigDecimal(row.getCell(0).getNumericCellValue()); // это отвечает за преобразование больших чисел
+            String counterpartyCode = bigDecimalValueCode.toString();
+            
+            BigDecimal bigDecimalValueContractCode = new BigDecimal(row.getCell(3).getNumericCellValue()); // это отвечает за преобразование больших чисел
+            String counterpartyContractCode = bigDecimalValueContractCode.toString();
+            
+            BigDecimal bigDecimalValueShop = new BigDecimal(row.getCell(4).getNumericCellValue()); // это отвечает за преобразование больших чисел
+            Integer shop = Integer.parseInt(bigDecimalValueShop.toString());
+            
+            
+            schedule.setCounterpartyCode(Long.parseLong(counterpartyCode));
+            schedule.setName(row.getCell(1).getStringCellValue().trim());
+            schedule.setNameStock(row.getCell(2).getStringCellValue().trim());
+            schedule.setCounterpartyContractCode(Long.parseLong(counterpartyContractCode));
+            schedule.setNumStock(shop);
+            schedule.setSupplies((int) row.getCell(5).getNumericCellValue());            
+            schedule.setMonday(row.getCell(6).getStringCellValue().equals("") ? null : row.getCell(6).getStringCellValue());
+            schedule.setTuesday(row.getCell(7).getStringCellValue().equals("") ? null : row.getCell(7).getStringCellValue());
+            schedule.setWednesday(row.getCell(8).getStringCellValue().equals("") ? null : row.getCell(8).getStringCellValue());
+            schedule.setThursday(row.getCell(9).getStringCellValue().equals("") ? null : row.getCell(9).getStringCellValue());
+            schedule.setFriday(row.getCell(10).getStringCellValue().equals("") ? null : row.getCell(10).getStringCellValue());
+            schedule.setSaturday(row.getCell(11).getStringCellValue().equals("") ? null : row.getCell(11).getStringCellValue());
+            schedule.setSunday(row.getCell(12).getStringCellValue().equals("") ? null : row.getCell(12).getStringCellValue());
+            schedule.setNote(row.getCell(13).getStringCellValue());
+            schedule.setStatus(20);
+            schedule.setType("ТО");
+            schedule.setIsDayToDay(false);
+            schedule.setToType(toType);
+            
+//            schedule.setTz(row.getCell(12) == null || row.getCell(12).getStringCellValue().equals("") ? null : row.getCell(12).getStringCellValue());
+//            schedule.setTp(row.getCell(13) == null || row.getCell(13).getStringCellValue().equals("") ? null : row.getCell(13).getStringCellValue());
+//            schedule.setRunoffCalculation(row.getCell(14) == null ? null : (int) row.getCell(14).getNumericCellValue());
+//            schedule.setComment(row.getCell(15) == null || row.getCell(15).getStringCellValue().equals("") ? null : row.getCell(15).getStringCellValue());
+//            schedule.setMultipleOfPallet(row.getCell(16) == null || row.getCell(16).getStringCellValue().equals("") ? false : true);
+//            schedule.setMultipleOfTruck(row.getCell(17) == null || row.getCell(17).getStringCellValue().equals("") ? false : true);
 //            schedule.setNumStock((int) row.getCell(17).getNumericCellValue());
 //            schedule.setDescription(row.getCell(18).getStringCellValue());
 

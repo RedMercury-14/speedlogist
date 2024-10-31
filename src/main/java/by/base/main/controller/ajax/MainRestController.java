@@ -1356,7 +1356,8 @@ public class MainRestController {
 			response.put("info", "Параметры не заданы");
 			return response;
 		}
-		Schedule schedule = scheduleService.getScheduleByNumContract(Long.parseLong(num));
+//		Schedule schedule = scheduleService.getScheduleByNumContract(Long.parseLong(num));
+		Schedule schedule = scheduleService.getScheduleById(Integer.parseInt(num));
 		schedule.setStatus(Integer.parseInt(status));
 		
 		String statusStr = null;
@@ -1392,7 +1393,7 @@ public class MainRestController {
 	 * @throws IOException
 	 * @throws CloneNotSupportedException 
 	 */
-	@PostMapping("/slots/delivery-schedule/edit")
+	@PostMapping("/slots/delivery-schedule/editRC")
 	public Map<String, String> postEditDeliverySchedule(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException, CloneNotSupportedException {
 		Map<String, String> response = new HashMap<String, String>();
 		
@@ -1455,15 +1456,15 @@ public class MainRestController {
 	}
 	
 	/**
-	 * Создание графика поставок
+	 * Создание графика поставок а РЦ
 	 * @param request
 	 * @param str
 	 * @return
 	 * @throws ParseException
 	 * @throws IOException
 	 */
-	@PostMapping("/slots/delivery-schedule/create")
-	public Map<String, Object> postCreateDeliverySchedule(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+	@PostMapping("/slots/delivery-schedule/createRC")
+	public Map<String, Object> postCreateDeliveryScheduleRC(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
 		Map<String, Object> response = new HashMap<String, Object>();
 		if(str == null) {
 			response.put("status", "100");
@@ -1513,6 +1514,27 @@ public class MainRestController {
 		schedule.setIsNotCalc(false);
 		schedule.setStatus(10);
 		
+		schedule.setIsDayToDay(false);
+		
+		String type = jsonMainObject.get("type") == null || jsonMainObject.get("type").toString().isEmpty() ? null : jsonMainObject.get("type").toString();
+		if(type !=null) {
+			if(!type.equals("РЦ") && !type.equals("ТО")) {
+				response.put("status", "100");
+				response.put("message", "Ошибка в поле type: ожидается ТО или РЦ");
+				response.put("info", "Ошибка в поле type: ожидается ТО или РЦ");
+				return response;
+			}
+		}
+		schedule.setType(type);
+		schedule.setOrderFormationSchedule(jsonMainObject.get("orderFormationSchedule") == null || jsonMainObject.get("orderFormationSchedule").toString().isEmpty() ? null : jsonMainObject.get("orderFormationSchedule").toString());
+		schedule.setOrderShipmentSchedule(jsonMainObject.get("orderShipmentSchedule") == null || jsonMainObject.get("orderShipmentSchedule").toString().isEmpty() ? null : jsonMainObject.get("orderShipmentSchedule").toString());
+		schedule.setToType(jsonMainObject.get("toType") == null || jsonMainObject.get("toType").toString().isEmpty() ? null : jsonMainObject.get("toType").toString());
+		
+		User user = getThisUser();
+		String history = user.getSurname() + " " + user.getName() + ";" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")) + ";create\n"; 
+		
+		schedule.setHistory((schedule.getHistory() != null ? schedule.getHistory() : "") + history);
+		
 		Integer id = scheduleService.saveSchedule(schedule);		
 		
 		//тут отправляем на почту сообщение
@@ -1520,7 +1542,6 @@ public class MainRestController {
 		FileInputStream fileInputStream = new FileInputStream(appPath + "resources/properties/email.properties");
 		properties = new Properties();
 		properties.load(fileInputStream);
-		User user = getThisUser();
 		String text = "Создан новый график поставок сотрудником: " + user.getSurname() + " " + user.getName() + " \nПоставщик: " + schedule.getName();
 		mailService.sendSimpleEmailTwiceUsers(request, "Новый график поставок", text, properties.getProperty("email.orderSupport.1"), properties.getProperty("email.orderSupport.2"));
 		
@@ -1531,17 +1552,151 @@ public class MainRestController {
 	}
 	
 	/**
-	 * метод, который отдаёт все графики поставок
+	 * Создание графика поставок TO
+	 * @param request
+	 * @param str
+	 * @return
+	 * @throws ParseException
+	 * @throws IOException
+	 */
+	@PostMapping("/slots/delivery-schedule/createTO")
+	public Map<String, Object> postCreateDeliveryScheduleTO(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+		Map<String, Object> response = new HashMap<String, Object>();
+		if(str == null) {
+			response.put("status", "100");
+			response.put("message", "Тело запроса = null");
+			return response;
+		}
+		
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		
+		if(jsonMainObject.get("counterpartyContractCode") == null) {
+			response.put("status", "100");
+			response.put("message", "Отсутствует номер контаркта");
+			return response;
+		}
+		
+		Schedule scheduleOld = scheduleService.getScheduleByNumContract(Long.parseLong(jsonMainObject.get("counterpartyContractCode").toString()));
+		
+		if(scheduleOld != null) {
+			response.put("status", "100");
+			response.put("message", "Данный контракт уже имеется в базе данных");
+			response.put("body", scheduleOld);
+			return response;
+		}
+		
+		JSONArray shopsArray = (JSONArray) parser.parse(jsonMainObject.get("numStock").toString());	
+		
+		Map<Integer, Shop> shopMap =  shopService.getShopMap();
+		Map<Integer, Shop> targetShopMap = new HashMap<Integer, Shop>();
+		for (Object object : shopsArray) {
+			Integer numShop = Integer.parseInt(object.toString());
+			Shop shop =  shopMap.get(numShop);
+			if(shop!=null) {
+				targetShopMap.put(numShop, shop);
+			}else {
+				response.put("status", "100");
+				response.put("message", "В базе данных остуствует магазин " + numShop + ". Обратитесь в отдел транспортной лгистики");
+				return response;
+			}
+		}
+		
+		Schedule schedule = new Schedule();		
+		schedule.setCounterpartyCode(jsonMainObject.get("counterpartyCode") == null || jsonMainObject.get("counterpartyCode").toString().isEmpty() ? null : Long.parseLong(jsonMainObject.get("counterpartyCode").toString()));
+		schedule.setCounterpartyContractCode(jsonMainObject.get("counterpartyContractCode") == null || jsonMainObject.get("counterpartyContractCode").toString().isEmpty() ? null : Long.parseLong(jsonMainObject.get("counterpartyContractCode").toString()));
+		schedule.setSupplies(jsonMainObject.get("supplies") == null || jsonMainObject.get("supplies").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("supplies").toString()));
+//		schedule.setNumStock(jsonMainObject.get("numStock") == null || jsonMainObject.get("numStock").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("numStock").toString()));
+		schedule.setRunoffCalculation(jsonMainObject.get("runoffCalculation") == null || jsonMainObject.get("runoffCalculation").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("runoffCalculation").toString()));
+		schedule.setName(jsonMainObject.get("name") == null || jsonMainObject.get("name").toString().isEmpty() ? null : jsonMainObject.get("name").toString());
+		schedule.setNote(jsonMainObject.get("note") == null || jsonMainObject.get("note").toString().isEmpty() ? null : jsonMainObject.get("note").toString());
+		schedule.setMonday(jsonMainObject.get("monday") == null || jsonMainObject.get("monday").toString().isEmpty() ? null : jsonMainObject.get("monday").toString());
+		schedule.setTuesday(jsonMainObject.get("tuesday") == null || jsonMainObject.get("tuesday").toString().isEmpty() ? null : jsonMainObject.get("tuesday").toString());
+		schedule.setWednesday(jsonMainObject.get("wednesday") == null || jsonMainObject.get("wednesday").toString().isEmpty() ? null : jsonMainObject.get("wednesday").toString());
+		schedule.setThursday(jsonMainObject.get("thursday") == null || jsonMainObject.get("thursday").toString().isEmpty() ? null : jsonMainObject.get("thursday").toString());
+		schedule.setFriday(jsonMainObject.get("friday") == null || jsonMainObject.get("friday").toString().isEmpty() ? null : jsonMainObject.get("friday").toString());
+		schedule.setSaturday(jsonMainObject.get("saturday") == null || jsonMainObject.get("saturday").toString().isEmpty() ? null : jsonMainObject.get("saturday").toString());
+		schedule.setSunday(jsonMainObject.get("sunday") == null || jsonMainObject.get("sunday").toString().isEmpty() ? null : jsonMainObject.get("sunday").toString());
+		schedule.setTz(jsonMainObject.get("tz") == null || jsonMainObject.get("tz").toString().isEmpty() ? null : jsonMainObject.get("tz").toString());
+		schedule.setTp(jsonMainObject.get("tp") == null || jsonMainObject.get("tp").toString().isEmpty() ? null : jsonMainObject.get("tp").toString());
+		schedule.setComment(jsonMainObject.get("comment") == null || jsonMainObject.get("comment").toString().isEmpty() ? null : jsonMainObject.get("comment").toString());
+		schedule.setDescription(jsonMainObject.get("description") == null || jsonMainObject.get("description").toString().isEmpty() ? null : jsonMainObject.get("description").toString());
+		schedule.setMultipleOfPallet(jsonMainObject.get("multipleOfPallet") == null || jsonMainObject.get("multipleOfPallet").toString().isEmpty() ? null : jsonMainObject.get("multipleOfPallet").toString().equals("true") ? true : false);
+		schedule.setMultipleOfTruck(jsonMainObject.get("multipleOfTruck") == null || jsonMainObject.get("multipleOfTruck").toString().isEmpty() ? null : jsonMainObject.get("multipleOfTruck").toString().equals("true") ? true : false);
+		schedule.setIsNotCalc(false);
+		schedule.setStatus(10);
+		
+		schedule.setIsDayToDay(false);
+		
+		String type = jsonMainObject.get("type") == null || jsonMainObject.get("type").toString().isEmpty() ? null : jsonMainObject.get("type").toString();
+		if(type !=null) {
+			if(!type.equals("РЦ") && !type.equals("ТО")) {
+				response.put("status", "100");
+				response.put("message", "Ошибка в поле type: ожидается ТО или РЦ");
+				response.put("info", "Ошибка в поле type: ожидается ТО или РЦ");
+				return response;
+			}
+		}
+		schedule.setType(type);
+		schedule.setOrderFormationSchedule(jsonMainObject.get("orderFormationSchedule") == null || jsonMainObject.get("orderFormationSchedule").toString().isEmpty() ? null : jsonMainObject.get("orderFormationSchedule").toString());
+		schedule.setOrderShipmentSchedule(jsonMainObject.get("orderShipmentSchedule") == null || jsonMainObject.get("orderShipmentSchedule").toString().isEmpty() ? null : jsonMainObject.get("orderShipmentSchedule").toString());
+		
+		User user = getThisUser();
+		String history = user.getSurname() + " " + user.getName() + ";" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")) + ";create\n"; 
+		
+		schedule.setHistory((schedule.getHistory() != null ? schedule.getHistory() : "") + history);
+		
+		for (Map.Entry<Integer, Shop> object : targetShopMap.entrySet()) {
+			Shop shop = object.getValue();
+			schedule.setIdSchedule(null);
+			schedule.setNameStock(shop.getAddress());
+			schedule.setNumStock(shop.getNumshop());
+			scheduleService.saveSchedule(schedule);
+		}
+		
+//		Integer id = scheduleService.saveSchedule(schedule);		
+		
+		//тут отправляем на почту сообщение
+//		String appPath = request.getServletContext().getRealPath("");
+//		FileInputStream fileInputStream = new FileInputStream(appPath + "resources/properties/email.properties");
+//		properties = new Properties();
+//		properties.load(fileInputStream);
+//		String text = "Создан новый график поставок сотрудником: " + user.getSurname() + " " + user.getName() + " \nПоставщик: " + schedule.getName();
+//		mailService.sendSimpleEmailTwiceUsers(request, "Новый график поставок", text, properties.getProperty("email.orderSupport.1"), properties.getProperty("email.orderSupport.2"));
+		
+		response.put("status", "200");
+		response.put("message", "Графики поставок созданы");
+//		response.put("idSchedule", id.toString());
+		return response;		
+	}
+	
+	/**
+	 * метод, который отдаёт все графики поставок на РЦ
 	 * @param request
 	 * @param code
 	 * @param stock
 	 * @return
 	 */
-	@GetMapping("/slots/delivery-schedule/getList")
-	public Map<String, Object> getListDeliverySchedule(HttpServletRequest request) {
+	@GetMapping("/slots/delivery-schedule/getListRC")
+	public Map<String, Object> getListDeliveryScheduleRC(HttpServletRequest request) {
 		Map<String, Object> response = new HashMap<String, Object>();		
 		response.put("status", "200");
-		response.put("body", scheduleService.getSchedules());
+		response.put("body", scheduleService.getSchedulesListRC());
+		return response;		
+	}
+	
+	/**
+	 * метод, который отдаёт все графики поставок на ТО
+	 * @param request
+	 * @param code
+	 * @param stock
+	 * @return
+	 */
+	@GetMapping("/slots/delivery-schedule/getListTO")
+	public Map<String, Object> getListDeliveryScheduleTO(HttpServletRequest request) {
+		Map<String, Object> response = new HashMap<String, Object>();		
+		response.put("status", "200");
+		response.put("body", scheduleService.getSchedulesListTO());
 		return response;		
 	}
 	
@@ -2822,7 +2977,7 @@ public class MainRestController {
 	}
 	
 	/**
-	 * прогрузка графика поставок из excel
+	 * прогрузка графика поставок из excel на РЦ
 	 * @param model
 	 * @param request
 	 * @param session
@@ -2832,9 +2987,9 @@ public class MainRestController {
 	 * @throws IOException
 	 * @throws ServiceException
 	 */
-	@RequestMapping(value = "/slots/delivery-schedule/load", method = RequestMethod.POST, consumes = {
+	@RequestMapping(value = "/slots/delivery-schedule/loadRC", method = RequestMethod.POST, consumes = {
 			MediaType.MULTIPART_FORM_DATA_VALUE })
-	public Map<String, String> postLoadExcelPlan (Model model, HttpServletRequest request, HttpSession session,
+	public Map<String, String> postLoadExcelPlanRC (Model model, HttpServletRequest request, HttpSession session,
 			@RequestParam(value = "excel", required = false) MultipartFile excel,
 			@RequestParam(value = "numStock", required = false) String num)
 			throws InvalidFormatException, IOException, ServiceException {
@@ -2843,7 +2998,43 @@ public class MainRestController {
 		
 		List<Schedule> schedules = new ArrayList<Schedule>();
 		try {
-			schedules = poiExcel.loadDeliverySchedule(file1, Integer.parseInt(num));
+			schedules = poiExcel.loadDeliveryScheduleRC(file1, Integer.parseInt(num));
+		} catch (InvalidFormatException | IOException | java.text.ParseException | ServiceException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		schedules.forEach(s-> {
+			scheduleService.saveSchedule(s);
+		});
+		
+		response.put("200", "Загружено");
+//		response.put("body", schedules.toString());
+		return response;
+	}
+	
+	/**
+	 * прогрузка графика поставок из excel на РЦ
+	 * @param model
+	 * @param request
+	 * @param session
+	 * @param excel
+	 * @return
+	 * @throws InvalidFormatException
+	 * @throws IOException
+	 * @throws ServiceException
+	 */
+	@RequestMapping(value = "/slots/delivery-schedule/loadTO", method = RequestMethod.POST, consumes = {
+			MediaType.MULTIPART_FORM_DATA_VALUE })
+	public Map<String, String> postLoadExcelPlanTO (Model model, HttpServletRequest request, HttpSession session,
+			@RequestParam(value = "excel", required = false) MultipartFile excel,
+			@RequestParam(value = "toType", required = false) String toType)	
+			throws InvalidFormatException, IOException, ServiceException {
+		Map<String, String> response = new HashMap<String, String>();	
+		File file1 = poiExcel.getFileByMultipartTarget(excel, request, "delivery-schedule.xlsx");
+		
+		List<Schedule> schedules = new ArrayList<Schedule>();
+		try {
+			schedules = poiExcel.loadDeliveryScheduleTO(file1, toType);
 		} catch (InvalidFormatException | IOException | java.text.ParseException | ServiceException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

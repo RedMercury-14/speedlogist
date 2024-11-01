@@ -65,4 +65,14 @@ public class ScheduleServiceImpl implements ScheduleService{
 		return scheduleDAO.getSchedulesListTO();
 	}
 
+	@Override
+	public List<Schedule> getSchedulesListTOContract(String contractCode) {
+		return scheduleDAO.getSchedulesListTOContract(contractCode);
+	}
+
+	@Override
+	public List<Schedule> getSchedulesListTOСounterparty(String counterpartyName) {
+		return scheduleDAO.getSchedulesListTOСounterparty(counterpartyName);
+	}
+
 }

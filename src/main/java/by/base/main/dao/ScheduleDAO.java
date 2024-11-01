@@ -14,6 +14,20 @@ public interface ScheduleDAO {
 	List<Schedule> getSchedulesListTO();
 	
 	/**
+	 * Возвращает графики поставок на ТО по коду контрактов
+	 * @param contractCode
+	 * @return
+	 */
+	List<Schedule> getSchedulesListTOContract(String contractCode);
+	
+	/**
+	 * Возвращает графики поставо на ТО по <b>наиминованию контрагента (через LIKE)</b>
+	 * @param counterpartyName
+	 * @return
+	 */
+	List<Schedule> getSchedulesListTOСounterparty(String counterpartyName);
+	
+	/**
 	 * Возвращает лист Schedule по складу
 	 * @param numStock
 	 * @return

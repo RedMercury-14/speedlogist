@@ -1638,6 +1638,17 @@ public class MainRestController {
 			}
 		}
 		schedule.setType(type);
+		
+		String toType = jsonMainObject.get("toType") == null || jsonMainObject.get("toType").toString().isEmpty() ? null : jsonMainObject.get("toType").toString();
+		if(toType !=null) {
+			if(!toType.equals("холодный") && !toType.equals("сухой")) {
+				response.put("status", "100");
+				response.put("message", "Ошибка в поле toType: ожидается холодный или сухой");
+				response.put("info", "Ошибка в поле toType: ожидается холодный или сухой");
+				return response;
+			}
+		}
+		schedule.setToType(toType);
 		schedule.setOrderFormationSchedule(jsonMainObject.get("orderFormationSchedule") == null || jsonMainObject.get("orderFormationSchedule").toString().isEmpty() ? null : jsonMainObject.get("orderFormationSchedule").toString());
 		schedule.setOrderShipmentSchedule(jsonMainObject.get("orderShipmentSchedule") == null || jsonMainObject.get("orderShipmentSchedule").toString().isEmpty() ? null : jsonMainObject.get("orderShipmentSchedule").toString());
 		
@@ -1700,6 +1711,38 @@ public class MainRestController {
 		return response;		
 	}
 	
+	/**
+	 * метод, который отдаёт все графики поставок на ТО по коду контракта
+	 * @param request
+	 * @param code
+	 * @param stock
+	 * @return
+	 */
+	@GetMapping("/slots/delivery-schedule/getListTOContract/{contract}")
+	public Map<String, Object> getListDeliveryScheduleTOContract(HttpServletRequest request, @PathVariable String contract) {
+		Map<String, Object> response = new HashMap<String, Object>();		
+		response.put("status", "200");
+		response.put("body", scheduleService.getSchedulesListTOContract(contract));
+		return response;		
+	}
+	
+	/**
+	 * метод, который отдаёт все графики поставок на ТО по названию контрагента
+	 * @param request
+	 * @param code
+	 * @param stock
+	 * @return
+	 */
+	@GetMapping("/slots/delivery-schedule/getListTOСounterparty/{name}")
+	public Map<String, Object> getListDeliveryScheduleTOСounterparty(HttpServletRequest request, @PathVariable String name) {
+		Map<String, Object> response = new HashMap<String, Object>();		
+		response.put("status", "200");
+		response.put("body", scheduleService.getSchedulesListTOСounterparty(name));
+		return response;		
+	}
+	
+	
+	
 	@GetMapping("/slots/delivery-schedule/changeIsNotCalc/{idSchedule}")
 	public Map<String, Object> getChangeIsNotCalc(HttpServletRequest request, @PathVariable String idSchedule) {
 		Map<String, Object> response = new HashMap<String, Object>();	
@@ -1724,6 +1767,34 @@ public class MainRestController {
 		response.put("body", schedule);
 		response.put("info", "Статус расчёта графика поставок "+schedule.getName()+" изменен");
 		response.put("message", "Статус расчёта графика поставок "+schedule.getName()+" изменен");
+		return response;		
+	}
+	
+	
+	@GetMapping("/slots/delivery-schedule/changeDayToDay/{idSchedule}")
+	public Map<String, Object> getChangeDayToDay(HttpServletRequest request, @PathVariable String idSchedule) {
+		Map<String, Object> response = new HashMap<String, Object>();	
+		Schedule schedule = scheduleService.getScheduleById(Integer.parseInt(idSchedule.trim()));
+		
+		if(schedule == null) {
+			response.put("status", "100");
+			response.put("info", "Не найден график поставок с id " + idSchedule);
+			response.put("message", "Не найден график поставок с id " + idSchedule);
+			return response;
+		}
+		User user = getThisUser();
+		schedule.setIsDayToDay(!schedule.getIsDayToDay());
+		String history = user.getSurname() + " " + user.getName() + ";" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")) + ";changeDayToDay="+schedule.getIsNotCalc()+"\n"; 
+		
+		schedule.setHistory((schedule.getHistory() != null ? schedule.getHistory() : "") + history);
+		schedule.setDateLastChanging(Date.valueOf(LocalDate.now()));
+		
+		scheduleService.updateSchedule(schedule);
+		
+		response.put("status", "200");
+		response.put("body", schedule);
+		response.put("info", "Расчёт день в день "+schedule.getName()+" изменен");
+		response.put("message", "Расчёт день в день "+schedule.getName()+" изменен");
 		return response;		
 	}
 	

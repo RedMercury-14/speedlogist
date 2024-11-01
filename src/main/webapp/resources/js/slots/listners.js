@@ -77,3 +77,8 @@ export function slotSearchFormListner(handler) {
 	const slotSearchForm = document.querySelector('#slotSearchForm')
 	slotSearchForm.addEventListener('submit', (e) => handler(e))
 }
+
+export function adminActionListner(handler) {
+	const adminActionSelect = document.querySelector('#adminAction')
+	adminActionSelect && adminActionSelect.addEventListener('change', (e) => handler(e))
+}

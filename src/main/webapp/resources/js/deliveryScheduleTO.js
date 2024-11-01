@@ -7,7 +7,7 @@ import {
 	createOptions, dateFormatter, deleteScheduleItem, deliveryScheduleColumnDefs,
 	deliveryScheduleRowClassRules, deliveryScheduleSideBar,
 	editScheduleItem,
-	getErrorMessage, getSupplies, showMessageModal, showScheduleItem,
+	getErrorMessage, getSupplies, getTextareaData, showMessageModal, showScheduleItem,
 	unconfirmScheduleItem
 } from './deliveryScheduleUtils.js'
 import { snackbar } from "./snackbar/snackbar.js"
@@ -18,16 +18,14 @@ import {
 	isOderSupport, showLoadingSpinner
 } from './utils.js'
 
-const loadExcelUrl = '../../api/slots/delivery-schedule/loadRC'
-const getScheduleUrl = '../../api/slots/delivery-schedule/getListRC'
-const addScheduleItemUrl = '../../api/slots/delivery-schedule/createRC'
-const editScheduleItemUrl = '../../api/slots/delivery-schedule/editRC'
-const getScheduleNumContractBaseUrl = '../../api/slots/delivery-schedule/getScheduleNumContract/'
-
-const changeIsNotCalcBaseUrl = '../../api/slots/delivery-schedule/changeIsNotCalc/'
+const loadExcelUrl = '../../api/slots/delivery-schedule/loadTO'
+const getScheduleUrl = '../../api/slots/delivery-schedule/getListTO'
+const addScheduleItemUrl = '../../api/slots/delivery-schedule/createTO'
+const editScheduleItemUrl = '../../api/slots/delivery-schedule/editTO'
+const changeIsDayToDayBaseUrl = '../../api/slots/delivery-schedule/changeDayToDay/'
 const sendScheduleDataToMailUrl = '../../api/orl/sendEmail'
 
-const PAGE_NAME = 'deliverySchedule'
+const PAGE_NAME = 'deliveryScheduleTO'
 const LOCAL_STORAGE_KEY = `AG_Grid_settings_to_${PAGE_NAME}`
 
 const token = $("meta[name='_csrf']").attr("content")
@@ -37,45 +35,48 @@ const login = document.querySelector('#login').value.toLowerCase()
 const debouncedSaveColumnState = debounce(saveColumnState, 300)
 const debouncedSaveFilterState = debounce(saveFilterState, 300)
 
-
 let error = false
 let table
 let scheduleData
-const stocks = ['1700', '1250', '1200']
 
 const columnDefs = [
 	...deliveryScheduleColumnDefs,
-	{
-		headerName: 'Расчет стока до Y-й поставки', field: 'runoffCalculation',
-		cellClass: 'px-1 py-0 text-center',
-		width: 100,
-	},
 	{
 		headerName: 'Примечание', field: 'comment',
 		cellClass: 'px-1 py-0 text-center',
 		width: 300,
 	},
 	{
-		headerName: 'Кратно поддону', field: 'multipleOfPalletToView',
-		cellClass: 'px-1 py-0 text-center grid-checkbox',
-		width: 75,
-	},
-	{
-		headerName: 'Кратно машине', field: 'multipleOfTruckToView',
-		cellClass: 'px-1 py-0 text-center grid-checkbox',
-		width: 75,
-	},
-	{
-		headerName: 'Номер склада', field: 'numStock',
+		headerName: 'Номер TO', field: 'numStock',
 		cellClass: 'px-1 py-0 text-center font-weight-bold',
 		width: 75,
 	},
 	{
-		headerName: 'Не учитывать в расчете ОРЛ', field: 'isNotCalc',
+		headerName: 'Название и адрес ТО', field: 'nameStock',
+		cellClass: 'px-1 py-0 text-center',
+		width: 275,
+	},
+	{
+		headerName: 'Сегодня на сегодня', field: 'isDayToDay',
 		cellClass: 'px-1 py-0 text-center font-weight-bold grid-checkbox',
+		width: 75,
+		editable: isAdmin(role),
+		onCellValueChanged: onIsDayToDayCahngeHandler,
+	},
+	{
+		headerName: 'График формирования заказа', field: 'orderFormationSchedule',
+		cellClass: 'px-1 py-0 text-center font-weight-bold',
+		width: 75,
+	},
+	{
+		headerName: 'График отгрузки заказа', field: 'orderShipmentSchedule',
+		cellClass: 'px-1 py-0 text-center font-weight-bold',
+		width: 75,
+	},
+	{
+		headerName: 'Холодный или Сухой', field: 'toType',
+		cellClass: 'px-1 py-0 text-center font-weight-bold',
 		width: 100,
-		editable: isAdmin(role) || login === 'romashkok%!dobronom.by',
-		onCellValueChanged: onIsNotCalcCahngeHandler,
 	},
 ]
 
@@ -147,20 +148,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 	const editScheduleItemForm = document.querySelector('#editScheduleItemForm')
 	editScheduleItemForm && editScheduleItemForm.addEventListener('submit', editScheduleItemFormHandler)
 
-	// выпадающий список выбора отображаемого склада
-	const numStockSelect = document.querySelector("#numStockSelect")
-	createNumStockOptions(numStockSelect)
-	numStockSelect && numStockSelect.addEventListener('change', onNumStockSelectChangeHandler)
-
-	const excelNumStock = document.querySelector('#sendExcelModal #numStock')
-	const addNumStock = addScheduleItemForm.querySelector('#numStock')
-	const editNumStock = editScheduleItemForm.querySelector('#numStock')
-
-	// создаем опции складов
-	createOptions(stocks, excelNumStock)
-	createOptions(stocks, addNumStock)
-	createOptions(stocks, editNumStock)
-
 	// чекбоксы пометки "Неделя"
 	const addNoteCheckbox = addScheduleItemForm.querySelector('#addNote')
 	addNoteCheckbox && addNoteCheckbox.addEventListener('change', onNoteChangeHandler)
@@ -170,8 +157,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 	const sendScheduleDataToMailBtn = document.querySelector('#sendScheduleDataToMail')
 	sendScheduleDataToMailBtn && sendScheduleDataToMailBtn.addEventListener('click', sendScheduleDataToMail)
 
-	// проверка номера контракта
-	$('.counterpartyContractCode').change(checkContractNumber)
 	// обновление опций графика при открытии модалки создания графика поставки
 	$('#addScheduleItemModal').on('shown.bs.modal', (e) => changeScheduleOptions(addScheduleItemForm, ''))
 	// очистка форм при закрытии модалки
@@ -193,9 +178,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 // установка стартовых данных
 async function initStartData() {
 	scheduleData = window.initData.body
+	console.log("🚀 ~ initStartData ~ scheduleData:", scheduleData)
 	await updateTable(gridOptions, scheduleData)
 	// проверка, правильно ли заполнены графики
-	checkScheduleDate(scheduleData)
+	// checkScheduleDate(scheduleData)
 	// заполняем datalist кодов и названий контрагентов
 	createCounterpartyDatalist(scheduleData)
 	window.initData = null
@@ -224,18 +210,9 @@ async function updateTable(gridOptions, data) {
 		return
 	}
 
-	const numStockSelect = document.querySelector("#numStockSelect")
-	const numStock = Number(numStockSelect.value)
-	setScheduleData(numStock)
-	gridOptions.api.hideOverlay()
-}
-// установка данных в таблицу
-function setScheduleData(numStock) {
-	const numStockData = numStock
-		? scheduleData.filter((item) => item.numStock === numStock)
-		: scheduleData
-	const mappingData = getMappingData(numStockData)
+	const mappingData = getMappingData(scheduleData)
 	gridOptions.api.setRowData(mappingData)
+	gridOptions.api.hideOverlay()
 }
 function getMappingData(data) {
 	return data.map(getMappingScheduleItem)
@@ -245,8 +222,6 @@ function getMappingScheduleItem(scheduleItem) {
 		...scheduleItem,
 		name: scheduleItem.name.trim(),
 		statusToView: getScheduleStatus(scheduleItem.status),
-		multipleOfPalletToView: scheduleItem.multipleOfPallet ? '+' : '',
-		multipleOfTruckToView: scheduleItem.multipleOfTruck ? '+' : '',
 	}
 }
 function getContextMenuItems(params) {
@@ -307,14 +282,6 @@ function getContextMenuItems(params) {
 	return result
 }
 
-
-
-// обработчик смены склада
-function onNumStockSelectChangeHandler(e) {
-	const numStock = Number(e.target.value)
-	setScheduleData(numStock)
-}
-
 // обработчик смены пометки Сроки/Неделя
 function onNoteChangeHandler(e) {
 	const note = e.target.checked ? 'неделя' : ''
@@ -323,18 +290,19 @@ function onNoteChangeHandler(e) {
 }
 
 // обработчик изменения значения "Не учитывать в расчете ОРЛ"
-async function onIsNotCalcCahngeHandler(params) {
+async function onIsDayToDayCahngeHandler(params) {
 	const data = params.data
 	const idSchedule = data.idSchedule
 	const rowNode = params.node
-	await changeIsNotCalc(idSchedule, rowNode)
+	await changeIsDayToDay(idSchedule, rowNode)
 }
 
+
 // запрос на изменение значения "Не учитывать в расчете ОРЛ"
-async function changeIsNotCalc(idSchedule, rowNode) {
+async function changeIsDayToDay(idSchedule, rowNode) {
 	if (!isAdmin(role) && login !== 'romashkok%!dobronom.by') return
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
-	const res = await getData(`${changeIsNotCalcBaseUrl}${idSchedule}`)
+	const res = await getData(`${changeIsDayToDayBaseUrl}${idSchedule}`)
 	clearTimeout(timeoutId)
 	bootstrap5overlay.hideOverlay()
 
@@ -345,25 +313,6 @@ async function changeIsNotCalc(idSchedule, rowNode) {
 		console.log(res)
 		const message = res && res.message ? res.message : 'Неизвестная ошибка'
 		snackbar.show(message)
-	}
-}
-
-// проверка наличия номера контракта в базе
-async function checkContractNumber(e) {
-	const input = e.target
-	const formId = input.form.id
-	const res = await getData(`${getScheduleNumContractBaseUrl}${input.value}`)
-	const scheduleItem = res.body
-
-	if (scheduleItem) {
-		$(`#${formId} #messageNumshop`).text('Такой номер контракта уже существует')
-		input.classList.add('is-invalid')
-		error = true
-	}
-	else {
-		$(`#${formId} #messageNumshop`).text('')
-		input.classList.remove('is-invalid')
-		error = false
 	}
 }
 
@@ -424,8 +373,8 @@ function addScheduleItemFormHandler(e) {
 		snackbar.show(errorMessage)
 		return
 	}
+
 	console.log("🚀 ~ addScheduleItemFormHandler ~ data:", data)
-	
 	disableButton(e.submitter)
 
 	ajaxUtils.postJSONdata({
@@ -500,21 +449,16 @@ function scheduleItemDataFormatter(formData) {
 	const data = Object.fromEntries(formData)
 	const note = data.note ? 'неделя' : ''
 	const supplies = getSupplies(data)
-	const multipleOfPallet = !!data.multipleOfPallet
-	const multipleOfTruck = !!data.multipleOfTruck
 	const counterpartyCode = Number(data.counterpartyCode)
 	const counterpartyContractCode = Number(data.counterpartyContractCode)
-	const runoffCalculation = Number(data.runoffCalculation)
-	const numStock = Number(data.numStock)
+	const numStock = getTextareaData(data.numStock)
+
 	let res = {
 		...data,
 		note,
 		supplies,
-		multipleOfPallet,
-		multipleOfTruck,
 		counterpartyCode,
 		counterpartyContractCode,
-		runoffCalculation,
 		numStock,
 	}
 	if (data.idSchedule) {
@@ -536,17 +480,18 @@ function setDataToForm(scheduleItem) {
 	// заполняем скрытые поля
 	editScheduleItemForm.idSchedule.value = scheduleItem.idSchedule ? scheduleItem.idSchedule : ''
 	editScheduleItemForm.supplies.value = scheduleItem.supplies ? scheduleItem.supplies : ''
+	editScheduleItemForm.type.value = scheduleItem.type ? scheduleItem.type : ''
 
 	// заполняем видимые поля
+	editScheduleItemForm.toType.value = scheduleItem.toType ? scheduleItem.toType : ''
 	editScheduleItemForm.counterpartyCode.value = scheduleItem.counterpartyCode ? scheduleItem.counterpartyCode : ''
 	editScheduleItemForm.name.value = scheduleItem.name ? scheduleItem.name : ''
 	editScheduleItemForm.counterpartyContractCode.value = scheduleItem.counterpartyContractCode ? scheduleItem.counterpartyContractCode : ''
 	editScheduleItemForm.numStock.value = scheduleItem.numStock ? scheduleItem.numStock : ''
 	editScheduleItemForm.comment.value = scheduleItem.comment ? scheduleItem.comment : ''
-	editScheduleItemForm.runoffCalculation.value = scheduleItem.runoffCalculation ? scheduleItem.runoffCalculation : ''
 	editScheduleItemForm.note.checked = scheduleItem.note === 'неделя'
-	editScheduleItemForm.multipleOfPallet.checked = !!scheduleItem.multipleOfPallet
-	editScheduleItemForm.multipleOfTruck.checked = !!scheduleItem.multipleOfTruck
+	editScheduleItemForm.orderFormationSchedule.value = scheduleItem.orderFormationSchedule ? scheduleItem.orderFormationSchedule : ''
+	editScheduleItemForm.orderShipmentSchedule.value = scheduleItem.orderShipmentSchedule ? scheduleItem.orderShipmentSchedule : ''
 
 	// заполняем график
 	editScheduleItemForm.monday.value = scheduleItem.monday ? scheduleItem.monday : ''
@@ -556,17 +501,6 @@ function setDataToForm(scheduleItem) {
 	editScheduleItemForm.friday.value = scheduleItem.friday ? scheduleItem.friday : ''
 	editScheduleItemForm.saturday.value = scheduleItem.saturday ? scheduleItem.saturday : ''
 	editScheduleItemForm.sunday.value = scheduleItem.sunday ? scheduleItem.sunday : ''
-}
-
-// создание опций складов
-function createNumStockOptions(numStockSelect) {
-	if (!numStockSelect) return
-	stocks.forEach((stock) => {
-		const option = document.createElement("option")
-		option.value = stock
-		option.text = `Склад ${stock}`
-		numStockSelect.append(option)
-	})
 }
 
 // очистка формы

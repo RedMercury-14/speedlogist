@@ -15,20 +15,27 @@ export const pallChartConfig = {
 	},
 }
 
-export function updateChartData(chart, data, bgData) {
+// обновление данных графика паллетовместимости
+export function updatePallChart(pallLineChart, pallChartData) {
+	const chartData = getFormattedPallChartData(pallChartData)
+	const bgData = getMarkerBGColorData(pallChartData)
+	updateChartData(pallLineChart, chartData, bgData)
+}
+
+function updateChartData(chart, data, bgData) {
 	chart.data.datasets[0].data = data
 	chart.data.datasets[0].backgroundColor = bgData
 	chart.update()
 }
 
-export function getFormattedPallChartData(pallChartData) {
+function getFormattedPallChartData(pallChartData) {
 	return pallChartData.map(item => ({
 		x: dateHelper.changeFormatToView(item.date).slice(0,5),
 		y: item.maxPall.externalMovement
 	}))
 }
 
-export function getMarkerBGColorData(pallChartData) {
+function getMarkerBGColorData(pallChartData) {
 	return pallChartData.map(item => {
 		return dateHelper.isWeekend(item.date)
 			? '#ff7f0e'

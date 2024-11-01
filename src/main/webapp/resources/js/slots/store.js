@@ -2,7 +2,7 @@ import { dateHelper } from "../utils.js"
 import { eventColors } from "./constants.js"
 import { getEndTime, getEventBGColor, getEventBorderColor, groupeByNumStockDelyvery } from "./dataUtils.js"
 import { editableRules, colorRules } from "./rules.js"
-import { stocks } from "./virtualStocks.js"
+import { stocks } from "../globalRules/virtualStocksForSlots.js"
 
 const token = $("meta[name='_csrf']").attr("content")
 const login = document.querySelector("#login").value
@@ -398,6 +398,12 @@ export const store = {
 	},
 	getCalendarEvents() {
 		return this._state.stocks.flatMap(stock => stock.events)
+	},
+	getTodayEvents() {
+		const currentDate = this.getCurrentDate()
+		const currentStock = this.getCurrentStock()
+		if (!currentStock) return null
+		return currentStock.events.filter(event => event.start && moment(event.start).isSame(currentDate, 'day'))
 	},
 
 	subscribe (observer) {

@@ -145,6 +145,36 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 		List <Schedule> roles = theRole.getResultList();
 		return roles;
 	}
+
+	private static final String queryGetSchedulesByTOType = "from Schedule where toType=:toType";
+	@Transactional
+	@Override
+	public List<Schedule> getSchedulesByTOType(String toType) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Schedule> theObject = currentSession.createQuery(queryGetSchedulesByTOType, Schedule.class);
+		theObject.setParameter("toType", toType.trim());
+		List<Schedule> trucks = theObject.getResultList();
+		if(trucks.isEmpty()) {
+			return null;
+		}
+		return trucks;
+	}
+
+	private static final String queryGetObjByNumContractAndStock = "from Schedule where counterpartyContractCode=:counterpartyContractCode AND numStock=:numStock";
+	@Transactional
+	@Override
+	public Schedule getScheduleByNumContractAndNUmStock(Long num, Integer numStock) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Schedule> theObject = currentSession.createQuery(queryGetObjByNumContractAndStock, Schedule.class);
+		theObject.setParameter("counterpartyContractCode", num);
+		theObject.setParameter("numStock", numStock);
+		List<Schedule> trucks = theObject.getResultList();
+		if(trucks.isEmpty()) {
+			return null;
+		}
+		Schedule object = trucks.stream().findFirst().get();
+		return object;
+	}
 	
 	
 

@@ -42,6 +42,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -304,32 +305,48 @@ public class MainRestController {
 	 */
 	public static final Comparator<Address> comparatorAddressForLastLoad = (Address e1, Address e2) -> (e2.getPointNumber() - e1.getPointNumber());
 	
-	/*
-	 * 1. + Сначала разрабатываем метод который по дате определяет какие контракты должны быть заказаны в этот день (список Schedule) + 
-	 * 2. + Разрабатываем метод, который принимает список кодов контрактов и по ним отдаёт заказы, в указаный период от текущей даты на 7 недель вперед
-	 * 3. + Суммируем заказы по каждому коду контракта
-	 * 4. + формируем отчёт в excel и отправляем на почту 
-	 */
-//	@GetMapping("/test")
-//	public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException{
-//		java.util.Date t1 = new java.util.Date();
-//		Map<String, Object> responseMap = new HashMap<>();
-//		Date dateStart = Date.valueOf(LocalDate.now().minusDays(1));
-//		Date dateFinish7Week = Date.valueOf(LocalDate.now().plusMonths(2));
-//		List<Schedule> schedules = scheduleService.getSchedulesByDateOrder(dateStart, 1700); // реализация 1 пункта
-//		List<Order> ordersHas7Week = orderService.getOrderByPeriodDeliveryAndListCodeContract(dateStart, dateFinish7Week, schedules); // реализация 2 пункта
-//		String appPath = request.getServletContext().getRealPath("");
-//		File file = serviceLevel.checkingOrdersForORLNeeds(ordersHas7Week, dateStart, appPath);
-//		
-//		responseMap.put("status", 200);
-//		responseMap.put("ordersHas7Week", ordersHas7Week);
-//		responseMap.put("sizeOrdersHas7Week", ordersHas7Week.size());
-//		responseMap.put("body", file);
-//		responseMap.put("extension", ".xlsx");
-//		java.util.Date t2 = new java.util.Date();
-//		System.out.println(t2.getTime()-t1.getTime() + " ms - testNewMethod" );
-//		return responseMap;		
-//	}
+	
+	
+	@Autowired
+    private ServletContext servletContext;
+	
+	@GetMapping("/test")
+	public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException{
+		java.util.Date t1 = new java.util.Date();
+		Map<String, Object> responseMap = new HashMap<>();
+		// Получаем текущую дату для имени файла
+        LocalDate currentTime = LocalDate.now();
+        String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+        
+		List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+//		List<String> emailsSupport = propertiesUtils.getValuesByPartialKey(servletContext, "email.orderSupport");
+//		emails.addAll(emailsSupport);
+		String appPath = servletContext.getRealPath("/");
+		
+		String fileName1200 = "1200 (----Холодный----).xlsx";
+		String fileName1100 = "1100 График прямой сухой.xlsx";
+		
+		try {
+			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+					appPath + "resources/others/" + fileName1200);
+			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("сухой").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+					appPath + "resources/others/" + fileName1100);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.err.println("Ошибка формирование EXCEL");
+		}
+		
+//		response.setHeader("content-disposition", "attachment;filename="+fileName+".xlsx");
+		List<File> files = new ArrayList<File>();
+		files.add(new File(appPath + "resources/others/" + fileName1200));
+		files.add(new File(appPath + "resources/others/" + fileName1100));
+		
+		
+		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от " + currentTimeString, "Автоматическая отправка TEST", files, emails);
+		java.util.Date t2 = new java.util.Date();
+		System.out.println(t2.getTime()-t1.getTime() + " ms - testNewMethod" );
+		return responseMap;		
+	}
 //	
 //	@GetMapping("/test")
 //	public Map<String, Object> test(HttpServletRequest request, HttpServletResponse response){
@@ -1089,11 +1106,11 @@ public class MainRestController {
 		String fileName1700 = "1700.xlsx";
 		
 		try {
-			poiExcel.exportToExcelScheduleList(scheduleService.getSchedulesByStock(1200).stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+			poiExcel.exportToExcelScheduleListRC(scheduleService.getSchedulesByStock(1200).stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
 					appPath + "resources/others/" + fileName1200);
-			poiExcel.exportToExcelScheduleList(scheduleService.getSchedulesByStock(1250).stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+			poiExcel.exportToExcelScheduleListRC(scheduleService.getSchedulesByStock(1250).stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
 					appPath + "resources/others/" + fileName1250);
-			poiExcel.exportToExcelScheduleList(scheduleService.getSchedulesByStock(1700).stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+			poiExcel.exportToExcelScheduleListRC(scheduleService.getSchedulesByStock(1700).stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
 					appPath + "resources/others/" + fileName1700);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -1577,15 +1594,6 @@ public class MainRestController {
 			return response;
 		}
 		
-		Schedule scheduleOld = scheduleService.getScheduleByNumContract(Long.parseLong(jsonMainObject.get("counterpartyContractCode").toString()));
-		
-		if(scheduleOld != null) {
-			response.put("status", "100");
-			response.put("message", "Данный контракт уже имеется в базе данных");
-			response.put("body", scheduleOld);
-			return response;
-		}
-		
 		JSONArray shopsArray = (JSONArray) parser.parse(jsonMainObject.get("numStock").toString());	
 		
 		Map<Integer, Shop> shopMap =  shopService.getShopMap();
@@ -1595,6 +1603,7 @@ public class MainRestController {
 			Shop shop =  shopMap.get(numShop);
 			if(shop!=null) {
 				targetShopMap.put(numShop, shop);
+				
 			}else {
 				response.put("status", "100");
 				response.put("message", "В базе данных остуствует магазин " + numShop + ". Обратитесь в отдел транспортной лгистики");
@@ -1659,6 +1668,13 @@ public class MainRestController {
 		
 		for (Map.Entry<Integer, Shop> object : targetShopMap.entrySet()) {
 			Shop shop = object.getValue();
+			Schedule scheduleOld = scheduleService.getScheduleByNumContractAndNUmStock(Long.parseLong(jsonMainObject.get("counterpartyContractCode").toString()), shop.getNumshop());
+			if(scheduleOld != null) {
+				response.put("status", "100");
+				response.put("message", "Данный контракт уже имеется в базе данных");
+				response.put("body", scheduleOld);
+				return response;
+			}
 			schedule.setIdSchedule(null);
 			schedule.setNameStock(shop.getAddress());
 			schedule.setNumStock(shop.getNumshop());

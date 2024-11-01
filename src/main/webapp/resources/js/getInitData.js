@@ -79,7 +79,12 @@ function getInitDataUrl(url) {
 		return `${getAhoRouteBaseUrl}${dateStart}&${dateEnd}`
 	}
 
-	// График поставок
+	// График поставок на ТО
+	if (url.includes('delivery-schedule-to')) {
+		return '../../api/slots/delivery-schedule/getListTO'
+	}
+
+	// График поставок на РЦ
 	if (url.includes('delivery-schedule')) {
 		return '../../api/slots/delivery-schedule/getListRC'
 	}

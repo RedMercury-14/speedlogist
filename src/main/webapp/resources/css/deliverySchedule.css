@@ -93,6 +93,16 @@ footer.to-bottom {
 	font-weight: bold;
 }
 
+.search-form-container {
+	position: absolute;
+	margin: 0 auto;
+	right: calc(50% - 240px);
+	height: inherit;
+}
+.search-form-container input{
+	width: 360px;
+}
+
 .inputs-container {
 	padding: 0 20px;
 }

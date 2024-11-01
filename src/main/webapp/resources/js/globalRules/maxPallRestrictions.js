@@ -238,4 +238,25 @@ export const MAX_PALL_RESTRICTIONS = [
 			internalMovement: 500,
 		},
 	},
+
+
+	// ------------------------------------
+	// ------------ 1100 склад ------------
+	// ------------------------------------
+	{
+		stockId: '1100',
+		date: '2024-10-30',
+		maxPall: {
+			externalMovement: 160,
+			internalMovement: 500,
+		},
+	},
+	{
+		stockId: '1100',
+		date: '2024-10-31',
+		maxPall: {
+			externalMovement: 140,
+			internalMovement: 500,
+		},
+	},
 ]

@@ -33,8 +33,23 @@ public interface ScheduleService {
 	 * @return
 	 */
 	List<Schedule> getSchedulesByStock(Integer numStock);
+	
+	/**
+	 * Возвращает лист Schedule по toType (сухой, холодный)
+	 * @param numStock
+	 * @return
+	 */
+	List<Schedule> getSchedulesByTOType(String toType);
 		
 	Schedule getScheduleByNumContract(Long num);
+	
+	/**
+	 * Отдаёт график поставок по номеру контракта и номеру магазина / склада
+	 * @param num
+	 * @param numStock
+	 * @return
+	 */
+	Schedule getScheduleByNumContractAndNUmStock(Long num, Integer numStock);
 		
 	Integer saveSchedule (Schedule schedule);
 	

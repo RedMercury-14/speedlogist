@@ -8,7 +8,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="${_csrf.parameterName}" content="${_csrf.token}" />
-	<title>Графики поставок на РЦ</title>
+	<title>Графики поставок на ТО</title>
 	<link rel="icon" href="${pageContext.request.contextPath}/resources/img/favicon.ico">
 	<script async src="${pageContext.request.contextPath}/resources/js/getInitData.js" type="module"></script>
 	<script src="${pageContext.request.contextPath}/resources/js/AG-Grid/ag-grid-enterprise.min.js"></script>
@@ -34,12 +34,20 @@
 		</sec:authorize>
 
 		<div class="title-container">
-			<strong><h3>Графики поставок на РЦ</h3></strong>
+			<strong><h3>Графики поставок на ТО</h3></strong>
+			<div class="search-form-container">
+				<form action="" id="orderSearchForm">
+					<div class="input-row-container">
+						<input class="form-control form-control-sm" type="text" name="searchName" id="searchName" placeholder="Наименование контрагента или номер контракта...">
+						<button class="btn btn-outline-secondary text-nowrap btn-sm" type="submit">Загрузить данные</button>
+					</div>
+				</form>
+			</div>
 		</div>
 		<div class="toolbar">
-			<select class="btn tools-btn font-weight-bold" name="numStockSelect" id="numStockSelect">
+			<!-- <select class="btn tools-btn font-weight-bold" name="numStockSelect" id="numStockSelect">
 				<option value="">Все склады</option>
-			</select>
+			</select> -->
 			<button type="button" class="btn tools-btn font-weight-bold text-muted" data-toggle="modal" data-target="#addScheduleItemModal">
 				+ Добавить новый график
 			</button>
@@ -67,7 +75,7 @@
 		<div class="modal-dialog modal-lg">
 			<div class="modal-content">
 				<div class="modal-header">
-					<h1 class="modal-title fs-5 mt-0" id="addScheduleItemModalLabel">Создание графика поставки</h1>
+					<h1 class="modal-title fs-5 mt-0" id="addScheduleItemModalLabel">Создание графика поставки на ТО</h1>
 					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 						<span aria-hidden="true">&times;</span>
 					</button>
@@ -77,7 +85,21 @@
 						<div class="inputs-container">
 
 							<input type="hidden" name="supplies" id="supplies">
-							<input type="hidden" name="type" id="type" value="РЦ">
+							<input type="hidden" name="type" id="type" value="ТО">
+
+							<div class="mb-3">
+								<label class="sr-only" for="toType">Холодный или Сухой</label>
+								<div class="input-group">
+									<div class="input-group-prepend">
+										<div class="input-group-text">Холодный или Сухой</div>
+									</div>
+									<select id="toType" name="toType" class="form-control" required>
+										<option value="" selected hidden disabled>Выберите вариант</option>
+										<option value="сухой">Сухой</option>
+										<option value="холодный">Холодный</option>
+									</select>
+								</div>
+							</div>
 
 							<div class="mb-3">
 								<label class="sr-only" for="counterpartyCode">Код контрагента</label>
@@ -89,8 +111,9 @@
 								</div>
 								<datalist id="counterpartyCodeList"></datalist>
 							</div>
+
 							<div class="mb-3">
-								<label class="sr-only" for="name">Наименование контрагента</label>
+								<label class="sr-only" for="name">Наименование</label>
 								<div class="input-group">
 									<div class="input-group-prepend">
 										<div class="input-group-text">Наименование</div>
@@ -99,6 +122,7 @@
 								</div>
 								<datalist id="counterpartyNameList"></datalist>
 							</div>
+
 							<div class="mb-3">
 								<label class="sr-only" for="counterpartyContractCode">Номер контракта</label>
 								<div class="input-group">
@@ -109,17 +133,19 @@
 								</div>
 								<div class="error-message" id="messageNumshop"></div>
 							</div>
+
 							<div class="mb-3">
-								<label class="sr-only" for="numStock">Номер склада</label>
+								<label class="sr-only" for="numStock">Номера ТО</label>
 								<div class="input-group">
 									<div class="input-group-prepend">
-										<div class="input-group-text">Номер склада</div>
+										<div class="input-group-text">Номера ТО</div>
 									</div>
-									<select id="numStock" name="numStock" class="form-control" required>
-										<option value="" selected hidden disabled></option>
-									</select>
+									<textarea
+										class="form-control numStock" name="numStock" id="numStock" rows="3"
+										placeholder="Просто скопируйте сюда строку или столбец с номерами магазинов" required></textarea>
 								</div>
 							</div>
+
 							<div class="mb-3">
 								<label class="sr-only" for="comment">Примечание</label>
 								<div class="input-group">
@@ -129,29 +155,32 @@
 									<input type="text" class="form-control" name="comment" id="comment" placeholder="Примечание">
 								</div>
 							</div>
+
 							<div class="mb-3">
-								<label class="sr-only" for="comment">Расчет стока до Y-й поставки</label>
+								<label class="sr-only" for="orderFormationSchedule">График формирования заказа</label>
 								<div class="input-group">
 									<div class="input-group-prepend">
-										<div class="input-group-text">Расчет стока до Y-й поставки</div>
+										<div class="input-group-text">График формирования заказа</div>
 									</div>
-									<select id="runoffCalculation" name="runoffCalculation" class="form-control" required>
-										<option value="" selected hidden disabled></option>
-										<option value="1">1</option>
-										<option value="2">2</option>
-										<option value="3">3</option>
-										<option value="4">4</option>
+									<select id="orderFormationSchedule" name="orderFormationSchedule" class="form-control" required>
+										<option value="" selected hidden disabled>Выберите вариант</option>
+										<option value="ч">Четный</option>
+										<option value="н">Нечетный</option>
 									</select>
 								</div>
 							</div>
-							<div class="input-row-container flex-wrap">
-								<div class="form-check form-group">
-									<input type="checkbox" class="form-check-input" name="multipleOfPallet" id="AddMultipleOfPallet">
-									<label for="AddMultipleOfPallet" class="form-check-label text-muted font-weight-bold">Кратно поддону</label>
-								</div>
-								<div class="form-check form-group">
-									<input type="checkbox" class="form-check-input" name="multipleOfTruck" id="AddMultipleOfTruck">
-									<label for="AddMultipleOfTruck" class="form-check-label text-muted font-weight-bold">Кратно машине</label>
+
+							<div class="mb-3">
+								<label class="sr-only" for="orderShipmentSchedule">График отгрузки заказа</label>
+								<div class="input-group">
+									<div class="input-group-prepend">
+										<div class="input-group-text">График отгрузки заказа</div>
+									</div>
+									<select id="orderShipmentSchedule" name="orderShipmentSchedule" class="form-control" required>
+										<option class="text-muted" value="" selected hidden disabled>Выберите вариант</option>
+										<option value="ч">Четный</option>
+										<option value="н">Нечетный</option>
+									</select>
 								</div>
 							</div>
 
@@ -253,7 +282,21 @@
 
 							<input type="hidden" name="idSchedule" id="idSchedule">
 							<input type="hidden" name="supplies" id="supplies">
-							<input type="hidden" name="type" id="type" value="РЦ">
+							<input type="hidden" name="type" id="type" value="ТО">
+
+							<div class="mb-3">
+								<label class="sr-only" for="toType">Холодный или Сухой</label>
+								<div class="input-group">
+									<div class="input-group-prepend">
+										<div class="input-group-text">Холодный или Сухой</div>
+									</div>
+									<select id="toType" name="toType" class="form-control" required>
+										<option value="" selected hidden disabled>Выберите вариант</option>
+										<option value="сухой">Сухой</option>
+										<option value="холодный">Холодный</option>
+									</select>
+								</div>
+							</div>
 
 							<div class="mb-3">
 								<label class="sr-only" for="counterpartyCode">Код контрагента</label>
@@ -261,18 +304,22 @@
 									<div class="input-group-prepend">
 										<div class="input-group-text">Код контрагента</div>
 									</div>
-									<input type="number" class="form-control" name="counterpartyCode" id="counterpartyCode" min="0" placeholder="Код контрагента" required>
+									<input type="number" class="form-control" name="counterpartyCode" id="counterpartyCode" list="counterpartyCodeList" min="0" placeholder="Код контрагента" required>
 								</div>
+								<datalist id="counterpartyCodeList"></datalist>
 							</div>
+
 							<div class="mb-3">
-								<label class="sr-only" for="name">Наименование контрагента</label>
+								<label class="sr-only" for="name">Наименование</label>
 								<div class="input-group">
 									<div class="input-group-prepend">
 										<div class="input-group-text">Наименование</div>
 									</div>
-									<input type="text" class="form-control" name="name" id="name" placeholder="Наименование контрагента" required>
+									<input type="text" class="form-control" name="name" id="name" list="counterpartyNameList" placeholder="Наименование контрагента" required>
 								</div>
+								<datalist id="counterpartyNameList"></datalist>
 							</div>
+
 							<div class="mb-3">
 								<label class="sr-only" for="counterpartyContractCode">Номер контракта</label>
 								<div class="input-group">
@@ -283,17 +330,17 @@
 								</div>
 								<div class="error-message" id="messageNumshop"></div>
 							</div>
+
 							<div class="mb-3">
-								<label class="sr-only" for="numStock">Номер склада</label>
+								<label class="sr-only" for="numStock">Номер ТО</label>
 								<div class="input-group">
 									<div class="input-group-prepend">
-										<div class="input-group-text">Номер склада</div>
+										<div class="input-group-text">Номер ТО</div>
 									</div>
-									<select id="numStock" name="numStock" class="form-control" required>
-										<option value="" selected hidden disabled></option>
-									</select>
+									<input type="number" class="form-control numStock" name="numStock" id="numStock" min="0" placeholder="Номер ТО" required>
 								</div>
 							</div>
+
 							<div class="mb-3">
 								<label class="sr-only" for="comment">Примечание</label>
 								<div class="input-group">
@@ -303,29 +350,32 @@
 									<input type="text" class="form-control" name="comment" id="comment" placeholder="Примечание">
 								</div>
 							</div>
+
 							<div class="mb-3">
-								<label class="sr-only" for="comment">Расчет стока до Y-й поставки</label>
+								<label class="sr-only" for="orderFormationSchedule">График формирования заказа</label>
 								<div class="input-group">
 									<div class="input-group-prepend">
-										<div class="input-group-text">Расчет стока до Y-й поставки</div>
+										<div class="input-group-text">График формирования заказа</div>
 									</div>
-									<select id="runoffCalculation" name="runoffCalculation" class="form-control" required>
-										<option value="" selected hidden disabled></option>
-										<option value="1">1</option>
-										<option value="2">2</option>
-										<option value="3">3</option>
-										<option value="4">4</option>
+									<select id="orderFormationSchedule" name="orderFormationSchedule" class="form-control" required>
+										<option value="" selected hidden disabled>Выберите вариант</option>
+										<option value="ч">Четный</option>
+										<option value="н">Нечетный</option>
 									</select>
 								</div>
 							</div>
-							<div class="input-row-container flex-wrap">
-								<div class="form-check form-group">
-									<input type="checkbox" class="form-check-input" name="multipleOfPallet" id="editMultipleOfPallet">
-									<label for="editMultipleOfPallet" class="form-check-label text-muted font-weight-bold">Кратно поддону</label>
-								</div>
-								<div class="form-check form-group">
-									<input type="checkbox" class="form-check-input" name="multipleOfTruck" id="editMultipleOfTruck">
-									<label for="editMultipleOfTruck" class="form-check-label text-muted font-weight-bold">Кратно машине</label>
+
+							<div class="mb-3">
+								<label class="sr-only" for="orderShipmentSchedule">График отгрузки заказа</label>
+								<div class="input-group">
+									<div class="input-group-prepend">
+										<div class="input-group-text">График отгрузки заказа</div>
+									</div>
+									<select id="orderShipmentSchedule" name="orderShipmentSchedule" class="form-control" required>
+										<option class="text-muted" value="" selected hidden disabled>Выберите вариант</option>
+										<option value="ч">Четный</option>
+										<option value="н">Нечетный</option>
+									</select>
 								</div>
 							</div>
 
@@ -424,9 +474,11 @@
 					<div class="modal-body">
 						<div class="inputs-container">
 							<div class="form-group">
-								<label class="col-form-label text-muted font-weight-bold">Укажите номер склада</label>
-								<select id="numStock" name="numStock" class="form-control" required>
-									<option value="" selected hidden disabled></option>
+								<label class="col-form-label text-muted font-weight-bold">Укажите, какой это график</label>
+								<select id="toType" name="toType" class="form-control" required>
+									<option value="" selected hidden disabled>Выберите вариант</option>
+									<option value="сухой">сухой</option>
+									<option value="холодный">холодный</option>
 								</select>
 							</div>
 							<div class="form-group">
@@ -500,6 +552,6 @@
 		</div>
 	</div>
 </body>
-<script src="${pageContext.request.contextPath}/resources/js/deliverySchedule.js" type="module"></script>
+<script src="${pageContext.request.contextPath}/resources/js/deliveryScheduleTO.js" type="module"></script>
 <script src='${pageContext.request.contextPath}/resources/js/mainPage/nav-fixed-top.js'></script>
 </html>

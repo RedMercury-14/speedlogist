@@ -68,11 +68,11 @@ public class ScheduledTask {
 		String fileName1700 = "1700.xlsx";
 		
 		try {
-			poiExcel.exportToExcelScheduleList(scheduleService.getSchedulesByStock(1200).stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+			poiExcel.exportToExcelScheduleListRC(scheduleService.getSchedulesByStock(1200).stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
 					appPath + "resources/others/" + fileName1200);
-			poiExcel.exportToExcelScheduleList(scheduleService.getSchedulesByStock(1250).stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+			poiExcel.exportToExcelScheduleListRC(scheduleService.getSchedulesByStock(1250).stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
 					appPath + "resources/others/" + fileName1250);
-			poiExcel.exportToExcelScheduleList(scheduleService.getSchedulesByStock(1700).stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+			poiExcel.exportToExcelScheduleListRC(scheduleService.getSchedulesByStock(1700).stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
 					appPath + "resources/others/" + fileName1700);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -86,7 +86,7 @@ public class ScheduledTask {
 		files.add(new File(appPath + "resources/others/" + fileName1700));
 		
 		
-		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на " + currentTimeString, "Автоматическая отправка", files, emails);
+		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на РЦ от " + currentTimeString, "Автоматическая отправка", files, emails);
 		System.out.println("Finish --- sendSchedulesHasORL");
     }
     
@@ -95,6 +95,12 @@ public class ScheduledTask {
     	mainChat.messegeList.clear();
     }
     
+    /*
+	 * 1. + Сначала разрабатываем метод который по дате определяет какие контракты должны быть заказаны в этот день (список Schedule) + 
+	 * 2. + Разрабатываем метод, который принимает список кодов контрактов и по ним отдаёт заказы, в указаный период от текущей даты на 7 недель вперед
+	 * 3. + Суммируем заказы по каждому коду контракта
+	 * 4. + формируем отчёт в excel и отправляем на почту 
+	 */
     /**
      * Метод, отвечающий за формирование отчётов serviceLevel
      * @throws IOException 

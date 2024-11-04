@@ -353,7 +353,13 @@ public class ReaderSchedulePlan {
 				Double quantityOrderAll = map.get(orderLine.getGoodsId()).num;
 				Product product = productService.getProductByCode(orderLine.getGoodsId().intValue());
 				if(product!=null) {
-					List<OrderProduct> quantity = product.getOrderProductsListHasDateTarget(dateNow);
+					List<OrderProduct> quantity = null;
+					if(order.getDateOrderOrl() != null) {
+						quantity = product.getOrderProductsListHasDateTarget(order.getDateOrderOrl());
+					}else {
+						quantity = product.getOrderProductsListHasDateTarget(dateNow);
+					}
+
 					if(quantity != null) {
 						//тут происходит построчная оценка заказанного товара и принятие решения
 						int zaq = quantityOrderAll.intValue(); // СУММА заказов по периоду 

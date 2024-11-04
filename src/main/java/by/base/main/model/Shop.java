@@ -17,6 +17,7 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.itextpdf.text.pdf.PdfStructTreeController.returnType;
 
 @Entity
 @Table(name = "shop")
@@ -235,7 +236,11 @@ public class Shop implements Serializable{
 	}
 
 	public Boolean getSpecialWeightDistribution() {
-		return specialWeightDistribution;
+		if(specialWeightDistribution!=null) {
+			return specialWeightDistribution;			
+		}else {
+			return false;
+		}
 	}
 	public void setSpecialWeightDistribution(Boolean specialWeightDistribution) {
 		this.specialWeightDistribution = specialWeightDistribution;

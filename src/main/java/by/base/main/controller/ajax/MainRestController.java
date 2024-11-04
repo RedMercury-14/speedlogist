@@ -3172,7 +3172,7 @@ public class MainRestController {
 	}
 	
 	@PostMapping("/map/myoptimization5")
-	public Map<String, Object> myOptimization5(@RequestBody String str) throws Exception {
+	public Map<String, Object> myOptimization5(@RequestBody String str, HttpServletRequest request) throws Exception {
 		Map<String, Object> responceMap = new HashMap<String, Object>();
 		try {
 			if(isRuningOptimization) {
@@ -3446,6 +3446,8 @@ public class MainRestController {
 			
 			responceMap.put("status", "200");
 			responceMap.put("solution", finalSolution);
+			String appPath = request.getServletContext().getRealPath("");
+			System.out.println(appPath + "resources/distance/");
 			if(isRuningOptimization) {
 				isRuningOptimization = !isRuningOptimization;
 			}

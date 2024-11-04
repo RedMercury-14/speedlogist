@@ -265,15 +265,7 @@ export function createCounterpartyDatalist(scheduleData) {
 // отображение графика поставки
 export function showScheduleItem(rowNode) {
 	const scheduleItem = rowNode.data
-	const scheduleData = [
-		scheduleItem.monday,
-		scheduleItem.tuesday,
-		scheduleItem.wednesday,
-		scheduleItem.thursday,
-		scheduleItem.friday,
-		scheduleItem.saturday,
-		scheduleItem.sunday,
-	]
+	const scheduleData = getScheduleArrayFromScheduleObj(scheduleItem)
 	const schedule = scheduleData.map((item) => item ? item : '')
 	const note = scheduleItem.note ? scheduleItem.note : ''
 	const matrix = getDeliveryScheduleMatrix(schedule, note)
@@ -282,35 +274,36 @@ export function showScheduleItem(rowNode) {
 	$(`#showScheduleModal`).modal('show')
 }
 
+function getScheduleArrayFromScheduleObj(schedule) {
+	return [
+		schedule.monday ? schedule.monday.toLowerCase() : null,
+		schedule.tuesday ? schedule.tuesday.toLowerCase() : null,
+		schedule.wednesday ? schedule.wednesday.toLowerCase() : null,
+		schedule.thursday ? schedule.thursday.toLowerCase() : null,
+		schedule.friday ? schedule.friday.toLowerCase() : null,
+		schedule.saturday ? schedule.saturday.toLowerCase() : null,
+		schedule.sunday ? schedule.sunday.toLowerCase() : null,
+	]
+}
 
 // получение количества поставок по данным графика поставок
 export function getSupplies(data) {
-	const schedule = [
-		data.monday,
-		data.tuesday,
-		data.wednesday,
-		data.thursday,
-		data.friday,
-		data.saturday,
-		data.sunday,
-	]
+	const schedule = getScheduleArrayFromScheduleObj(data)
 	return schedule.filter(el => SUPPLY_REG.test(el)).length
 }
 
 // получение количества заказов по данным графика поставок
 export function getOrders(data) {
-	const schedule = [
-		data.monday,
-		data.tuesday,
-		data.wednesday,
-		data.thursday,
-		data.friday,
-		data.saturday,
-		data.sunday,
-	]
+	const schedule = getScheduleArrayFromScheduleObj(data)
 	return schedule.filter(el => ORDER_REG.test(el)).length
 }
 
+// обработчик смены пометки Сроки/Неделя
+export function onNoteChangeHandler(e) {
+	const note = e.target.checked ? 'неделя' : ''
+	const form = e.target.form
+	changeScheduleOptions(form, note)
+}
 
 // изменение набора опций для графика
 export function changeScheduleOptions(form, note) {
@@ -403,15 +396,7 @@ function getCount(value) {
 
 // проверка соответствия количества поставок и заказов
 export function isSuppliesEqualToOrders(data) {
-	const schedule = [
-		data.monday,
-		data.tuesday,
-		data.wednesday,
-		data.thursday,
-		data.friday,
-		data.saturday,
-		data.sunday,
-	]
+	const schedule = getScheduleArrayFromScheduleObj(data)
 	const supplies = schedule.filter(el => SUPPLY_REG.test(el)).length
 	const orders = schedule.filter(el => ORDER_REG.test(el)).length
 	return supplies === orders
@@ -419,15 +404,7 @@ export function isSuppliesEqualToOrders(data) {
 
 // проверка наличия хотя бы одного заказа и одной поставк
 export function isOrdersAndSupplies(data) {
-	const schedule = [
-		data.monday,
-		data.tuesday,
-		data.wednesday,
-		data.thursday,
-		data.friday,
-		data.saturday,
-		data.sunday,
-	]
+	const schedule = getScheduleArrayFromScheduleObj(data)
 	const supplies = schedule.filter(el => SUPPLY_REG.test(el)).length
 	const orders = schedule.filter(el => ORDER_REG.test(el)).length
 	return supplies > 0 && orders > 0
@@ -443,6 +420,14 @@ export function isValidSchedule(data) {
 
 	let isValid = true
 	const errorMessageData = []
+
+	// ИСКЛЮЧЕНИЕ ДЛЯ ГРАФИКОВ МИНСКХЛЕБПРОМ
+	if (data.counterpartyCode === 9732 && data.type === 'ТО') {
+		return {
+			isValid: true,
+			message: ''
+		}
+	}
 
 	if (!compareOrdersAndSupplies(data)) {
 		isValid = false
@@ -487,13 +472,13 @@ export function getErrorMessage(data, error) {
 // проверка, что дни поставок и заказов совпадают
 export function compareOrdersAndSupplies(data) {
 	const schedule = {
-		"понедельник": data.monday,
-		"вторник": data.tuesday,
-		"среда": data.wednesday,
-		"четверг": data.thursday,
-		"пятница": data.friday,
-		"суббота": data.saturday,
-		"воскресенье": data.sunday,
+		"понедельник": data.monday ? data.monday.toLowerCase() : null,
+		"вторник": data.tuesday ? data.tuesday.toLowerCase() : null,
+		"среда": data.wednesday ? data.wednesday.toLowerCase() : null,
+		"четверг": data.thursday ? data.thursday.toLowerCase() : null,
+		"пятница": data.friday ? data.friday.toLowerCase() : null,
+		"суббота": data.saturday ? data.saturday.toLowerCase() : null,
+		"воскресенье": data.sunday ? data.sunday.toLowerCase() : null,
 	}
 
 	// получаем список дней заказов
@@ -522,15 +507,7 @@ export function checkSupplyWeekIndexes(data) {
 	if (data.note !== 'неделя') return true
 	if (data.supplies < 2) return true
 
-	const schedule = [
-		data.monday,
-		data.tuesday,
-		data.wednesday,
-		data.thursday,
-		data.friday,
-		data.saturday,
-		data.sunday,
-	]
+	const schedule = getScheduleArrayFromScheduleObj(data)
 	const supplies = schedule.filter(el => SUPPLY_REG.test(el))
 	return checkWeekIndexes(supplies)
 }
@@ -560,7 +537,9 @@ function checkWeekIndexes(arr) {
 		const elDayNumber = dayNumberDictionary[elDay]
 
 		if (firstDayNumber > elDayNumber) {
-			const elIndex = el.match(WEEK_INDEX_REG)[0]
+			const weekMatch = el.match(WEEK_INDEX_REG)
+			if (!weekMatch) return false
+			const elIndex = weekMatch[0]
 			return firstIndex > elIndex
 		}
 		return true
@@ -569,15 +548,7 @@ function checkWeekIndexes(arr) {
 
 // проверка фактического количества поставок и указанного
 export function checkSuppliesNumber(data) {
-	const schedule = [
-		data.monday,
-		data.tuesday,
-		data.wednesday,
-		data.thursday,
-		data.friday,
-		data.saturday,
-		data.sunday,
-	]
+	const schedule = getScheduleArrayFromScheduleObj(data)
 	const supplies = schedule.filter(el => SUPPLY_REG.test(el)).length
 	return supplies === Number(data.supplies)
 }

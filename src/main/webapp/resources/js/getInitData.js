@@ -80,9 +80,9 @@ function getInitDataUrl(url) {
 	}
 
 	// График поставок на ТО
-	if (url.includes('delivery-schedule-to')) {
-		return '../../api/slots/delivery-schedule/getListTO'
-	}
+	// if (url.includes('delivery-schedule-to')) {
+	// 	return '../../api/slots/delivery-schedule/getListTO'
+	// }
 
 	// График поставок на РЦ
 	if (url.includes('delivery-schedule')) {

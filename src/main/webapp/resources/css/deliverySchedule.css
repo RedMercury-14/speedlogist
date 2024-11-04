@@ -96,11 +96,11 @@ footer.to-bottom {
 .search-form-container {
 	position: absolute;
 	margin: 0 auto;
-	right: calc(50% - 240px);
+	right: calc(50% - 330px);
 	height: inherit;
 }
 .search-form-container input{
-	width: 360px;
+	width: 350px;
 }
 
 .inputs-container {

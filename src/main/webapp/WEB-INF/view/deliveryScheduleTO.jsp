@@ -36,10 +36,11 @@
 		<div class="title-container">
 			<strong><h3>Графики поставок на ТО</h3></strong>
 			<div class="search-form-container">
-				<form action="" id="orderSearchForm">
+				<form action="" id="searchData">
 					<div class="input-row-container">
-						<input class="form-control form-control-sm" type="text" name="searchName" id="searchName" placeholder="Наименование контрагента или номер контракта...">
+						<input class="form-control form-control-sm" type="text" name="searchValue" id="searchValue" placeholder="Наименование контрагента или номер контракта..." required>
 						<button class="btn btn-outline-secondary text-nowrap btn-sm" type="submit">Загрузить данные</button>
+						<button class="btn btn-outline-secondary text-nowrap btn-sm" type="button" id="loadAllData">Загрузить все данные</button>
 					</div>
 				</form>
 			</div>
@@ -60,9 +61,9 @@
 			</c:choose>
 			<c:choose>
 				<c:when test="${roles == '[ROLE_ADMIN]' || login == 'romashkok%!dobronom.by'}">
-					<button type="button" id="sendScheduleDataToMail" class="btn tools-btn font-weight-bold text-muted ml-auto">
+					<!-- <button type="button" id="sendScheduleDataToMail" class="btn tools-btn font-weight-bold text-muted ml-auto">
 						Отправить данные
-					</button>
+					</button> -->
 				</c:when>
 			</c:choose>
 		</div>
@@ -162,7 +163,7 @@
 									<div class="input-group-prepend">
 										<div class="input-group-text">График формирования заказа</div>
 									</div>
-									<select id="orderFormationSchedule" name="orderFormationSchedule" class="form-control" required>
+									<select id="orderFormationSchedule" name="orderFormationSchedule" class="form-control">
 										<option value="" selected hidden disabled>Выберите вариант</option>
 										<option value="ч">Четный</option>
 										<option value="н">Нечетный</option>
@@ -176,7 +177,7 @@
 									<div class="input-group-prepend">
 										<div class="input-group-text">График отгрузки заказа</div>
 									</div>
-									<select id="orderShipmentSchedule" name="orderShipmentSchedule" class="form-control" required>
+									<select id="orderShipmentSchedule" name="orderShipmentSchedule" class="form-control">
 										<option class="text-muted" value="" selected hidden disabled>Выберите вариант</option>
 										<option value="ч">Четный</option>
 										<option value="н">Нечетный</option>
@@ -357,7 +358,7 @@
 									<div class="input-group-prepend">
 										<div class="input-group-text">График формирования заказа</div>
 									</div>
-									<select id="orderFormationSchedule" name="orderFormationSchedule" class="form-control" required>
+									<select id="orderFormationSchedule" name="orderFormationSchedule" class="form-control">
 										<option value="" selected hidden disabled>Выберите вариант</option>
 										<option value="ч">Четный</option>
 										<option value="н">Нечетный</option>
@@ -371,7 +372,7 @@
 									<div class="input-group-prepend">
 										<div class="input-group-text">График отгрузки заказа</div>
 									</div>
-									<select id="orderShipmentSchedule" name="orderShipmentSchedule" class="form-control" required>
+									<select id="orderShipmentSchedule" name="orderShipmentSchedule" class="form-control">
 										<option class="text-muted" value="" selected hidden disabled>Выберите вариант</option>
 										<option value="ч">Четный</option>
 										<option value="н">Нечетный</option>

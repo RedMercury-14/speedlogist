@@ -7,7 +7,7 @@ import {
 	createOptions, dateFormatter, deleteScheduleItem, deliveryScheduleColumnDefs,
 	deliveryScheduleRowClassRules, deliveryScheduleSideBar,
 	editScheduleItem,
-	getErrorMessage, getSupplies, showMessageModal, showScheduleItem,
+	getErrorMessage, getSupplies, onNoteChangeHandler, showMessageModal, showScheduleItem,
 	unconfirmScheduleItem
 } from './deliveryScheduleUtils.js'
 import { snackbar } from "./snackbar/snackbar.js"
@@ -315,13 +315,6 @@ function onNumStockSelectChangeHandler(e) {
 	setScheduleData(numStock)
 }
 
-// обработчик смены пометки Сроки/Неделя
-function onNoteChangeHandler(e) {
-	const note = e.target.checked ? 'неделя' : ''
-	const form = e.target.form
-	changeScheduleOptions(form, note)
-}
-
 // обработчик изменения значения "Не учитывать в расчете ОРЛ"
 async function onIsNotCalcCahngeHandler(params) {
 	const data = params.data
@@ -441,6 +434,11 @@ function addScheduleItemFormHandler(e) {
 				return
 			}
 
+			if (res.status === '100') {
+				const message = res.message ? res.message : 'Неизвестная ошибка'
+				snackbar.show(message)
+				return
+			}
 			if (res.status === '105') {
 				$(`#addScheduleItemModal`).modal('hide')
 				showMessageModal(res.message)
@@ -483,6 +481,11 @@ function editScheduleItemFormHandler(e) {
 				return
 			}
 
+			if (res.status === '100') {
+				const message = res.message ? res.message : 'Неизвестная ошибка'
+				snackbar.show(message)
+				return
+			}
 			if (res.status === '105') {
 				$(`#editScheduleItemModal`).modal('hide')
 				showMessageModal(res.message)

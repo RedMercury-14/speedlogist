@@ -7,7 +7,7 @@ import {
 	createOptions, dateFormatter, deleteScheduleItem, deliveryScheduleColumnDefs,
 	deliveryScheduleRowClassRules, deliveryScheduleSideBar,
 	editScheduleItem,
-	getErrorMessage, getSupplies, getTextareaData, showMessageModal, showScheduleItem,
+	getErrorMessage, getSupplies, getTextareaData, onNoteChangeHandler, showMessageModal, showScheduleItem,
 	unconfirmScheduleItem
 } from './deliveryScheduleUtils.js'
 import { snackbar } from "./snackbar/snackbar.js"
@@ -19,7 +19,11 @@ import {
 } from './utils.js'
 
 const loadExcelUrl = '../../api/slots/delivery-schedule/loadTO'
-const getScheduleUrl = '../../api/slots/delivery-schedule/getListTO'
+
+const getAllScheduleUrl = '../../api/slots/delivery-schedule/getListTO'
+const getScheduleByContractBaseUrl = '../../api/slots/delivery-schedule/getListTOContract/'
+const getScheduleByCounterpartyBaseUrl = '../../api/slots/delivery-schedule/getListTOСounterparty/'
+
 const addScheduleItemUrl = '../../api/slots/delivery-schedule/createTO'
 const editScheduleItemUrl = '../../api/slots/delivery-schedule/editTO'
 const changeIsDayToDayBaseUrl = '../../api/slots/delivery-schedule/changeDayToDay/'
@@ -38,6 +42,7 @@ const debouncedSaveFilterState = debounce(saveFilterState, 300)
 let error = false
 let table
 let scheduleData
+let getScheduleUrl
 
 const columnDefs = [
 	...deliveryScheduleColumnDefs,
@@ -141,6 +146,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 	const sendExcelForm = document.querySelector("#sendExcelForm")
 	sendExcelForm && sendExcelForm.addEventListener("submit", sendExcelFormHandler)
 
+	// форма поиска и загрузки данных графиков
+	const searchDataForm = document.querySelector('#searchData')
+	searchDataForm && searchDataForm.addEventListener('submit', searchDataFormHandler)
+
+	// кнопка загрузки всех данных графиков
+	const loadAllDataBtn = document.querySelector('#loadAllData')
+	loadAllDataBtn && loadAllDataBtn.addEventListener('click', loadAllDataBtnClickHandler)
+
 	// форма создания графика поставки
 	const addScheduleItemForm = document.querySelector('#addScheduleItemForm')
 	addScheduleItemForm && addScheduleItemForm.addEventListener('submit', addScheduleItemFormHandler)
@@ -154,8 +167,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 	const editNoteCheckbox = editScheduleItemForm.querySelector('#editNote')
 	editNoteCheckbox && editNoteCheckbox.addEventListener('change', onNoteChangeHandler)
 
-	const sendScheduleDataToMailBtn = document.querySelector('#sendScheduleDataToMail')
-	sendScheduleDataToMailBtn && sendScheduleDataToMailBtn.addEventListener('click', sendScheduleDataToMail)
+	// const sendScheduleDataToMailBtn = document.querySelector('#sendScheduleDataToMail')
+	// sendScheduleDataToMailBtn && sendScheduleDataToMailBtn.addEventListener('click', sendScheduleDataToMail)
 
 	// обновление опций графика при открытии модалки создания графика поставки
 	$('#addScheduleItemModal').on('shown.bs.modal', (e) => changeScheduleOptions(addScheduleItemForm, ''))
@@ -163,54 +176,36 @@ document.addEventListener('DOMContentLoaded', async () => {
 	$('#addScheduleItemModal').on('hidden.bs.modal', (e) => clearForm(e, addScheduleItemForm))
 	$('#editScheduleItemModal').on('hidden.bs.modal', (e) => clearForm(e, editScheduleItemForm))
 	$('#sendExcelModal').on('hidden.bs.modal', (e) => clearForm(e, sendExcelForm))
-
-	// отображение стартовых данных
-	if (window.initData) {
-		await initStartData()
-	} else {
-		// подписка на кастомный ивент загрузки стартовых данных
-		document.addEventListener('initDataLoaded', async () => {
-			await initStartData()
-		})
-	}
 })
 
-// установка стартовых данных
-async function initStartData() {
-	scheduleData = window.initData.body
-	console.log("🚀 ~ initStartData ~ scheduleData:", scheduleData)
-	await updateTable(gridOptions, scheduleData)
-	// проверка, правильно ли заполнены графики
-	// checkScheduleDate(scheduleData)
-	// заполняем datalist кодов и названий контрагентов
-	createCounterpartyDatalist(scheduleData)
-	window.initData = null
+// загрузка и установка данных графиков
+async function loadScheduleData(url) {
+	await getScheduleData(url)
+	updateTable(gridOptions, scheduleData)
 
 	// получение настроек таблицы из localstorage
-	restoreColumnState()
-	restoreFilterState()
-}
+	if (url === getAllScheduleUrl) {
+		restoreColumnState()
+		restoreFilterState()
+	}
 
+	// проверка, правильно ли заполнены графики
+	checkScheduleDate(scheduleData)
+}
 
 function renderTable(gridDiv, gridOptions) {
 	new agGrid.Grid(gridDiv, gridOptions)
 	gridOptions.api.setRowData([])
-	gridOptions.api.showLoadingOverlay()
+	gridOptions.api.showNoRowsOverlay()
 }
-async function updateTable(gridOptions, data) {
-	const res = data
-		? { body: data }
-		: await getData(getScheduleUrl)
-
-	scheduleData = res.body
-
-	if (!scheduleData || !scheduleData.length) {
+function updateTable(gridOptions, data) {
+	if (!data || !data.length) {
 		gridOptions.api.setRowData([])
 		gridOptions.api.showNoRowsOverlay()
 		return
 	}
 
-	const mappingData = getMappingData(scheduleData)
+	const mappingData = getMappingData(data)
 	gridOptions.api.setRowData(mappingData)
 	gridOptions.api.hideOverlay()
 }
@@ -233,7 +228,7 @@ function getContextMenuItems(params) {
 	const confirmUnconfirmItem = status === 10 || status === 0
 		? {
 			name: `Подтвердить график поставки`,
-			disabled: (!isAdmin(role) && !isOderSupport(role)) || (status !== 10 && status !== 0),
+			disabled: !isAdmin(role) || (status !== 10 && status !== 0),
 			action: () => {
 				confirmScheduleItem(role, rowNode)
 			},
@@ -241,7 +236,7 @@ function getContextMenuItems(params) {
 		}
 		: {
 			name: `Снять подтверждение с графика`,
-			disabled: (!isAdmin(role) && !isOderSupport(role)) || status === 0,
+			disabled: !isAdmin(role) || status === 0,
 			action: () => {
 				unconfirmScheduleItem(role, rowNode)
 			},
@@ -260,7 +255,8 @@ function getContextMenuItems(params) {
 		confirmUnconfirmItem,
 		{
 			name: `Редактировать график поставки`,
-			disabled: (!isAdmin(role) && !isOderSupport(role)),
+			// disabled: !isAdmin(role),
+			disabled: true,
 			action: () => {
 				editScheduleItem(rowNode, setDataToForm)
 			},
@@ -268,7 +264,7 @@ function getContextMenuItems(params) {
 		},
 		{
 			name: `Удалить график поставки`,
-			disabled: (!isAdmin(role) && !isOderSupport(role)) || status === 0,
+			disabled: !isAdmin(role) || status === 0,
 			action: () => {
 				deleteScheduleItem(role, rowNode)
 			},
@@ -282,11 +278,36 @@ function getContextMenuItems(params) {
 	return result
 }
 
-// обработчик смены пометки Сроки/Неделя
-function onNoteChangeHandler(e) {
-	const note = e.target.checked ? 'неделя' : ''
-	const form = e.target.form
-	changeScheduleOptions(form, note)
+// обработчик формы загрузки данных графиков
+async function searchDataFormHandler(e) {
+	e.preventDefault()
+	const form = e.target
+	const searchValue = form.searchValue.value
+	const submitButton = e.submitter
+	const btnText = submitButton.textContent.trim()
+	showLoadingSpinner(submitButton)
+	disableButton(submitButton)
+	// определяем тип данных формы поиска - номер или наименование
+	 getScheduleUrl = !isNaN(searchValue)
+		? `${getScheduleByContractBaseUrl}${searchValue}`
+		: `${getScheduleByCounterpartyBaseUrl}${searchValue}`
+
+	await loadScheduleData(getScheduleUrl)
+	hideLoadingSpinner(submitButton, btnText)
+	enableButton(submitButton)
+}
+
+// обработчик нажатия на кнопку "Загрузить все данные"
+async function loadAllDataBtnClickHandler(e) {
+	e.preventDefault()
+	const btn = e.target
+	const btnText = btn.textContent.trim()
+	showLoadingSpinner(btn)
+	disableButton(btn)
+	getScheduleUrl = getAllScheduleUrl
+	await loadScheduleData(getScheduleUrl)
+	hideLoadingSpinner(btn, btnText)
+	enableButton(btn)
 }
 
 // обработчик изменения значения "Не учитывать в расчете ОРЛ"
@@ -297,7 +318,143 @@ async function onIsDayToDayCahngeHandler(params) {
 	await changeIsDayToDay(idSchedule, rowNode)
 }
 
+// получение данных графиков поставок
+async function getScheduleData(url) {
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 0)
+	const res = await getData(url)
+	clearTimeout(timeoutId)
+	bootstrap5overlay.hideOverlay()
+	if (!res.body) {
+		snackbar.show('Не удалось получить данные графика поставки')
+		return []
+	}
+	scheduleData = res.body
+	return res.body
+}
+// обработчик отправки формы загрузки таблицы эксель
+function sendExcelFormHandler(e) {
+	e.preventDefault()
 
+	if (!isAdmin(role)) return
+
+	const submitButton = e.submitter
+	const file = new FormData(e.target)
+
+	showLoadingSpinner(submitButton)
+
+	ajaxUtils.postMultipartFformData({
+		url: loadExcelUrl,
+		token: token,
+		data: file,
+		successCallback: async (res) => {
+			snackbar.show(res[200])
+			// получаем обновленные данные и обновляем таблицу
+			getScheduleUrl = getAllScheduleUrl
+			await getScheduleData(getScheduleUrl)
+			updateTable(gridOptions, scheduleData)
+			$(`#sendExcelModal`).modal('hide')
+			hideLoadingSpinner(submitButton, 'Загрузить')
+		},
+		errorCallback: () => hideLoadingSpinner(submitButton, 'Загрузить')
+	})
+}
+// обработчик отправки формы создания графика поставки
+function addScheduleItemFormHandler(e) {
+	e.preventDefault()
+
+	const formData = new FormData(e.target)
+	const data = scheduleItemDataFormatter(formData)
+	const errorMessage = getErrorMessage(data, error)
+	
+	if (errorMessage) {
+		snackbar.show(errorMessage)
+		return
+	}
+
+	disableButton(e.submitter)
+
+	ajaxUtils.postJSONdata({
+		url: addScheduleItemUrl,
+		token: token,
+		data: data,
+		successCallback: async (res) => {
+			enableButton(e.submitter)
+			if (res.status === '200') {
+				snackbar.show(res.message)
+				// получаем обновленные данные и обновляем таблицу
+				getScheduleUrl = getScheduleUrl
+					? getScheduleUrl
+					: `${getScheduleByContractBaseUrl}${data.counterpartyContractCode}`
+				await getScheduleData(getScheduleUrl)
+				updateTable(gridOptions, scheduleData)
+				$(`#addScheduleItemModal`).modal('hide')
+				return
+			}
+
+			if (res.status === '100') {
+				const message = res.message ? res.message : 'Неизвестная ошибка'
+				snackbar.show(message)
+				return
+			}
+			if (res.status === '105') {
+				$(`#addScheduleItemModal`).modal('hide')
+				showMessageModal(res.message)
+				return
+			}
+		},
+		errorCallback: () => {
+			enableButton(e.submitter)
+		}
+	})
+}
+// обработчик отправки формы редактирования графика поставки
+function editScheduleItemFormHandler(e) {
+	e.preventDefault()
+
+	if (!isAdmin(role)) return
+
+	const formData = new FormData(e.target)
+	const data = scheduleItemDataFormatter(formData)
+	const errorMessage = getErrorMessage(data, error)
+
+	if (errorMessage) {
+		snackbar.show(errorMessage)
+		return
+	}
+
+	disableButton(e.submitter)
+
+	ajaxUtils.postJSONdata({
+		url: editScheduleItemUrl,
+		token: token,
+		data: data,
+		successCallback: async (res) => {
+			enableButton(e.submitter)
+			if (res.status === '200') {
+				snackbar.show(res.message)
+				// получаем обновленные данные и обновляем таблицу
+				await getScheduleData(getScheduleUrl)
+				updateTable(gridOptions, scheduleData)
+				$(`#editScheduleItemModal`).modal('hide')
+				return
+			}
+
+			if (res.status === '100') {
+				const message = res.message ? res.message : 'Неизвестная ошибка'
+				snackbar.show(message)
+				return
+			}
+			if (res.status === '105') {
+				$(`#editScheduleItemModal`).modal('hide')
+				showMessageModal(res.message)
+				return
+			}
+		},
+		errorCallback: () => {
+			enableButton(e.submitter)
+		}
+	})
+}
 // запрос на изменение значения "Не учитывать в расчете ОРЛ"
 async function changeIsDayToDay(idSchedule, rowNode) {
 	if (!isAdmin(role) && login !== 'romashkok%!dobronom.by') return
@@ -309,13 +466,13 @@ async function changeIsDayToDay(idSchedule, rowNode) {
 	if (res && res.status === '200') {
 
 	} else {
-		updateTable()
+		// возвращаем предыдущие данные
+		updateTable(gridOptions, scheduleData)
 		console.log(res)
 		const message = res && res.message ? res.message : 'Неизвестная ошибка'
 		snackbar.show(message)
 	}
 }
-
 // отправка данных на почту
 async function sendScheduleDataToMail(e) {
 	const btn = e.target
@@ -336,113 +493,6 @@ async function sendScheduleDataToMail(e) {
 	}
 }
 
-// обработчик отправки формы загрузки таблицы эксель
-function sendExcelFormHandler(e) {
-	e.preventDefault()
-
-	if (!isAdmin(role)) return
-
-	const submitButton = e.submitter
-	const file = new FormData(e.target)
-
-	showLoadingSpinner(submitButton)
-
-	ajaxUtils.postMultipartFformData({
-		url: loadExcelUrl,
-		token: token,
-		data: file,
-		successCallback: (res) => {
-			snackbar.show(res[200])
-			updateTable(gridOptions)
-			$(`#sendExcelModal`).modal('hide')
-			hideLoadingSpinner(submitButton, 'Загрузить')
-		},
-		errorCallback: () => hideLoadingSpinner(submitButton, 'Загрузить')
-	})
-}
-
-// обработчик отправки формы создания графика поставки
-function addScheduleItemFormHandler(e) {
-	e.preventDefault()
-
-	const formData = new FormData(e.target)
-	const data = scheduleItemDataFormatter(formData)
-	const errorMessage = getErrorMessage(data, error)
-	
-	if (errorMessage) {
-		snackbar.show(errorMessage)
-		return
-	}
-
-	console.log("🚀 ~ addScheduleItemFormHandler ~ data:", data)
-	disableButton(e.submitter)
-
-	ajaxUtils.postJSONdata({
-		url: addScheduleItemUrl,
-		token: token,
-		data: data,
-		successCallback: (res) => {
-			enableButton(e.submitter)
-			if (res.status === '200') {
-				snackbar.show(res.message)
-				updateTable(gridOptions)
-				$(`#addScheduleItemModal`).modal('hide')
-				return
-			}
-
-			if (res.status === '105') {
-				$(`#addScheduleItemModal`).modal('hide')
-				showMessageModal(res.message)
-				return
-			}
-		},
-		errorCallback: () => {
-			enableButton(e.submitter)
-		}
-	})
-}
-
-// обработчик отправки формы редактирования графика поставки
-function editScheduleItemFormHandler(e) {
-	e.preventDefault()
-
-	if (!isAdmin(role) && !isOderSupport(role)) return
-
-	const formData = new FormData(e.target)
-	const data = scheduleItemDataFormatter(formData)
-	const errorMessage = getErrorMessage(data, error)
-
-	if (errorMessage) {
-		snackbar.show(errorMessage)
-		return
-	}
-
-	disableButton(e.submitter)
-
-	ajaxUtils.postJSONdata({
-		url: editScheduleItemUrl,
-		token: token,
-		data: data,
-		successCallback: (res) => {
-			enableButton(e.submitter)
-			if (res.status === '200') {
-				snackbar.show(res.message)
-				updateTable(gridOptions)
-				$(`#editScheduleItemModal`).modal('hide')
-				return
-			}
-
-			if (res.status === '105') {
-				$(`#editScheduleItemModal`).modal('hide')
-				showMessageModal(res.message)
-				return
-			}
-		},
-		errorCallback: () => {
-			enableButton(e.submitter)
-		}
-	})
-}
 
 // форматирование данных графика поставки для отправки на сервер
 function scheduleItemDataFormatter(formData) {

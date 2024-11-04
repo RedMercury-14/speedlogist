@@ -17,6 +17,7 @@ import com.google.gson.Gson;
 
 import by.base.main.model.Shop;
 import by.base.main.service.ShopService;
+import by.base.main.util.hcolossus.exceptions.FatalInsufficientPalletTruckCapacityException;
 
 /**
  * Класс подготовки и обработки магазинов
@@ -143,10 +144,15 @@ public class ShopMachine {
 			shop.setNeedPall(pallHasShops.get(i));
 			shop.setWeight(tonnageHasShops.get(i));
 			shop.setPallReturn(pallReturn.get(i));
+			//тут проверяем, если паллеты которые нужно забрать больше ограничений - то выдаём ошибку!
+			if(shop.getPallReturn()!= null && shop.getMaxPall() != null && shop.getPallReturn() > shop.getMaxPall()) {
+				throw new FatalInsufficientPalletTruckCapacityException("Ограничение по магазину " + shop.getNumshop() + ": " + shop.getMaxPall() + " паллет. "
+						+ " Нужно забрать: " + shop.getPallReturn() + " паллет. Невозможно забрать одной машиной");
+			}
 			if(shopsWithCrossDockingMap.get(integer) != null) {
 				shop.setKrossPolugonName(shopsWithCrossDockingMap.get(integer));
 			}
-			if(weightDistributionList.contains(shop.getNumshop())) {
+			if(weightDistributionList.contains(shop.getNumshop())) {//добавляем запись о том что магазин входит в полигон со спец. расчётами
 				shop.setSpecialWeightDistribution(true);
 			}else {
 				shop.setSpecialWeightDistribution(false);

@@ -10,6 +10,7 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections4.map.HashedMap;
 import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
@@ -182,10 +183,8 @@ public class ColossusProcessorANDRestrictions5 {
 
 		if(trucks.get(0).getPall()>=33.0) {// Делает так, чтобы магазины, которые входят в кроссы были сверху списка, если есть фуры
 			sortedShopsHasKrossingPall(true);
-			System.err.println("111111111111111111111111111111111111111111111111");
 		}else {
 			sortedShopsHasKrossingPall(false);		
-			System.err.println("2222222222222222222222222222222222222222222222222");
 		}
 
 		stackTrace = "Начальное распределение магазинов слеюущее: \n";
@@ -225,6 +224,24 @@ public class ColossusProcessorANDRestrictions5 {
 		//тут проверяем - в принципе хватит паллет по машинам или нет
 		if(!checkPallets(shopsForOptimization, trucks)) {
 			throw new FatalInsufficientPalletTruckCapacityException("Недостаточно машин для распределения всех магазинов", shopsForOptimization, trucks, koeff);
+		}
+		
+		/*
+		 * 1 Определяем магазины с потребностями на вывоз
+		 * 2 броним под них машины по принципу = или боольше.
+		 * 3 когда доходим до магазина: проверяем если машина больше потребности, то бронь возвращаем, если меньше - меняем тачку
+		 */
+		Map<Integer, Vehicle> reservationTruck = new HashedMap<Integer, Vehicle>(); // ключ - это магазин, значение - заброненая тачка
+		for (Shop shop : shopsForOptimization) {
+			if(shop.getPallReturn() != null) {
+				for (Vehicle truck : trucks) {
+					if(truck.getPall()>=shop.getPallReturn()) {
+						reservationTruck.put(shop.getNumshop(), truck);
+					}
+					trucks.remove(truck);
+					break;					
+				}
+			}
 		}
 		
 		while (!trucks.isEmpty()) {
@@ -318,7 +335,16 @@ public class ColossusProcessorANDRestrictions5 {
 			
 			// создаём виртуальную машину
 			Vehicle virtualTruck = new Vehicle();
-			virtualTruck = trucks.get(0);
+			//тут проверяем, есть ли в этом магазе паллеты для возврата. Если есть и машина подходит, то ок.
+			if(firstShop.getPallReturn() == null || firstShop.getPallReturn()!= null && firstShop.getPallReturn() <= trucks.get(0).getPall()) {
+				virtualTruck = trucks.get(0);
+				if(reservationTruck.get(firstShop.getNumshop()) != null) {
+					trucks.add(reservationTruck.remove(firstShop.getNumshop())); // возвращаем зарезервированну  машину					
+				}
+			}else {
+				virtualTruck = reservationTruck.remove(firstShop.getNumshop());
+			}
+			
 			if(pallReturnInWay!= null && virtualTruck.getPall() < pallReturnInWay) {
 				System.err.println("Ошибка. Нет машины способной забрать " + pallReturnInWay + " паллет из магазина " + firstShop.getNumshop());
 				//остановился тут
@@ -328,24 +354,16 @@ public class ColossusProcessorANDRestrictions5 {
 				System.err.println("FATAL ERROR!. Ограничение на подъезд к магазину " + firstShop.getNumshop() + " составляет " + firstShop.getMaxPall() + ". А потребность в машине составляет: "  + pallReturnInWay + " паллет минимум");
 			}
 			
-			//тут формируем новый список машин, которые в теории могут забрать посылку из магаза
-//			trucksForShopReturn = new ArrayList<Vehicle>();
-//			if(pallReturnInWay!= null) {
-//				for (Vehicle truck : trucks) {
-//					if(truck.getPall() >= pallReturnInWay) {
-//						trucksForShopReturn.add(truck);				
-//					}
-//				}			
-//			}
 			
 			int countRadiusMap = 0;
 			int maxCountRadiusMap = radiusMap.size()-1;
 			boolean isRestrictions = false;
 			for (Shop shop2 : radiusMap) {
-//				Shop shop2 = entry.getValue();
 				
-				//test
-				
+				//если попался магазин с возвратом и он не подходит для этой виртуальной машины - пропускаем этот магаз
+				if(shop2.getPallReturn()!= null && shop2.getPallReturn() > virtualTruck.getPall()) {
+					continue;
+				}
 				
 				if(firstShop.getKrossPolugonName()!=null && shop2.getKrossPolugonName() == null || nameKrosPolygon != null && !shop2.getKrossPolugonName().equals(nameKrosPolygon)) { // если первый магаз входит в крос а второй нет - пропускаем!
 					continue;
@@ -389,6 +407,13 @@ public class ColossusProcessorANDRestrictions5 {
 //				if (logicResult > 0 && distanceBetween <= maxDistanceInRoute) {
 				if (logicResult > 0 && distanceBetween <= maxDistanceInRoute || logicResult <0 && distanceBetween <= maxDistanceInRoute && percentFilling >= minimumPercentageOfCarFilling) {
 					shopsForOptimization.remove(shop2);
+					if(shop2.getPallReturn() !=null && shop2.getPallReturn()<=virtualTruck.getPall()) {
+						if(reservationTruck.get(shop2.getNumshop()) != null) {
+							trucks.add(reservationTruck.get(shop2.getNumshop()));
+							reservationTruck.remove(shop2.getNumshop());
+						}
+						
+					}
 					points.remove(points.size() - 1);
 					if(isRestrictions || isRestrictionsFirst) break;
 				} else {
@@ -488,7 +513,19 @@ public class ColossusProcessorANDRestrictions5 {
 						radiusMapSpecial = getDistanceMatrixHasMin2(shopsForOptimization, specialShop);						
 					}
 					
-					virtualTruck = specialTrucks.remove(0);
+					
+					//тут проверяем, есть ли в этом магазе паллеты для возврата. Если есть и машина подходит, то ок.
+					if(specialShop.getPallReturn() == null || specialShop.getPallReturn()!= null && specialShop.getPallReturn() <= specialTrucks.get(0).getPall()) {
+						virtualTruck = specialTrucks.remove(0);
+						if(reservationTruck.get(specialShop.getNumshop()) != null) {
+							trucks.add(reservationTruck.remove(specialShop.getNumshop())); // возвращаем зарезервированную машину в общай список
+						}
+					}else if(specialShop.getPallReturn()!= null && specialPall >= reservationTruck.get(specialShop.getNumshop()).getPall()){
+						virtualTruck = reservationTruck.remove(specialShop.getNumshop());
+					}else {
+						virtualTruck = specialTrucks.remove(0);
+					}
+//					virtualTruck = specialTrucks.remove(0);
 					/**
 					 * Сначала проверяем поместится ли уже текущие точки в данную машину
 					 * если входит, то продолжаем искать по СТАРОМУ списку.
@@ -525,6 +562,12 @@ public class ColossusProcessorANDRestrictions5 {
 					 * продолжаем догружать машину дальше
 					 */
 					for (Shop shop2 : radiusMapSpecial) {
+						
+						//если попался магазин с возвратом и он не подходит для этой виртуальной машины - пропускаем этот магаз
+						if(shop2.getPallReturn()!= null && shop2.getPallReturn() > virtualTruck.getPall()) {
+							continue;
+						}
+						
 //						Shop shop2 = entry.getValue();	
 						if(firstShop.getKrossPolugonName()!=null && shop2.getKrossPolugonName() == null || nameKrosPolygon != null && !shop2.getKrossPolugonName().equals(nameKrosPolygon)) { // если первый магаз входит в крос а второй нет - пропускаем!
 							continue;
@@ -571,6 +614,12 @@ public class ColossusProcessorANDRestrictions5 {
 //						if (logicResult > 0 && distanceBetween <= maxDistanceInRoute) {
 						if (logicResult > 0 && distanceBetween <= maxDistanceInRoute || logicResult <0 && distanceBetween <= maxDistanceInRoute && percentFilling >= minimumPercentageOfCarFilling) {
 							shopsForOptimization.remove(shop2);
+							if(shop2.getPallReturn() !=null && shop2.getPallReturn()<=virtualTruck.getPall()) {
+								if(reservationTruck.get(shop2.getNumshop()) != null) {
+									trucks.add(reservationTruck.get(shop2.getNumshop()));
+									reservationTruck.remove(shop2.getNumshop());
+								}
+							}
 							points.remove(points.size() - 1);
 							if(specialPallNew != null && specialPallNew < specialPall) {
 								System.err.println("ИСКЛЮЧЕНИЕ ЕСЛИ СЛЕДУЮЩИЙ МАГАЗИН НАКЛАДЫВАЕТ БОЛЕЕ ЖЕСТКОЕ ОГРАНИЧЕНИЕ ЧЕМ ПРОШЛЫЙ");
@@ -578,6 +627,7 @@ public class ColossusProcessorANDRestrictions5 {
 								flag = true;
 								break;
 							}
+							
 						} else {
 //							System.out.println("не кладём, т.к. не логично " + shop2);
 							points.remove(points.size() - 1);
@@ -1057,6 +1107,7 @@ public class ColossusProcessorANDRestrictions5 {
 			
 			Vehicle oldTruck = vehicleWayVirtual.getVehicle();
 			Double pallHasOldTruck = vehicleWayVirtual.getVehicle().getPall();
+			trucks.forEach(t-> System.out.println(t));
 			trucks.sort(vehicleComparatorFromMin);
 			for (Vehicle truck : trucks) {
 //				System.err.println(truck + " <----> " + oldTruck);

@@ -131,7 +131,7 @@ public class ColossusProcessorANDRestrictions5 {
 	private List<VehicleWay> whiteWay;
 	
 	private Double maxDistanceInRoute = 100000.0;
-	private Double minimumPercentageOfCarFilling = 80.0;
+	private Double minimumPercentageOfCarFilling = 95.0;
 	
 	private List<Shop> shopsForAddNewNeedPall;
 	/**

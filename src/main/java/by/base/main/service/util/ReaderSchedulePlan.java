@@ -294,6 +294,9 @@ public class ReaderSchedulePlan {
 		}
 		
 		i = i+j;
+		if(start.isBefore(finish)) {
+			finish = finish.minusDays(7);
+		}
 		return new DateRange(Date.valueOf(finish),Date.valueOf(start), i, targetKey, null);
 	}
 	

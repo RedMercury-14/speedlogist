@@ -133,6 +133,18 @@ public class Schedule{
     @Column(name = "name_stock")
     private String nameStock;
     
+    /**
+     * кратность машины
+     */
+    @Column(name = "machine_multiplicity")
+    private Integer machineMultiplicity;
+    
+    /**
+     * связь поставки в одной машины
+     */
+    @Column(name = "connection_supply")
+    private Integer connectionSupply;
+    
     
     
     @JsonIgnore
@@ -285,6 +297,39 @@ public class Schedule{
 
 	public void setHistory(String history) {
 		this.history = history;
+	}
+
+	/**
+	 * кратность машины
+	 * @return
+	 */
+	public Integer getMachineMultiplicity() {
+		return machineMultiplicity;
+	}
+
+
+	/**
+	 * кратность машины
+	 * @param machineMultiplicity
+	 */
+	public void setMachineMultiplicity(Integer machineMultiplicity) {
+		this.machineMultiplicity = machineMultiplicity;
+	}
+
+	/**
+	 * связь поставки в одной машины
+	 * @return
+	 */
+	public Integer getConnectionSupply() {
+		return connectionSupply;
+	}
+
+	/**
+	 * связь поставки в одной машины
+	 * @param connectionSupply
+	 */
+	public void setConnectionSupply(Integer connectionSupply) {
+		this.connectionSupply = connectionSupply;
 	}
 
 

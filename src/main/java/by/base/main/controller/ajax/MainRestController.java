@@ -564,6 +564,27 @@ public class MainRestController {
 		return response;
 	}
 	
+	/**
+	 * Метод записывает кратность машины на график поставок
+	 * @param request
+	 * @param id
+	 * @param num
+	 * @return
+	 */
+	@GetMapping("/procurement/schedule/multiplicity/{id}&{num}")
+	public Map<String, Object> getSetMultiplicity(
+	        HttpServletRequest request,
+	        @PathVariable String id,
+	        @PathVariable String num) {	    
+		Schedule schedule = scheduleService.getScheduleById(Integer.parseInt(id));		
+	    Map<String, Object> response = new HashMap<>();
+	    schedule.setMachineMultiplicity(Integer.parseInt(num));
+	    scheduleService.updateSchedule(schedule);
+	    response.put("status", "200");
+	    response.put("schedule", schedule);	    	    
+	    return response;
+	}
+	
 	@GetMapping("/logistics/deliveryShops/CheckListName/{name}&{date}")
 	public Map<String, Object> getCheckListName(
 	        HttpServletRequest request,
@@ -1458,6 +1479,8 @@ public class MainRestController {
 		schedule.setDescription(jsonMainObject.get("description") == null || jsonMainObject.get("description").toString().isEmpty() ? null : jsonMainObject.get("description").toString());
 		schedule.setMultipleOfPallet(jsonMainObject.get("multipleOfPallet") == null || jsonMainObject.get("multipleOfPallet").toString().isEmpty() ? null : jsonMainObject.get("multipleOfPallet").toString().equals("true") ? true : false);
 		schedule.setMultipleOfTruck(jsonMainObject.get("multipleOfTruck") == null || jsonMainObject.get("multipleOfTruck").toString().isEmpty() ? null : jsonMainObject.get("multipleOfTruck").toString().equals("true") ? true : false);
+		schedule.setMachineMultiplicity(jsonMainObject.get("machineMultiplicity") == null || jsonMainObject.get("machineMultiplicity").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("machineMultiplicity").toString()));
+		schedule.setConnectionSupply(jsonMainObject.get("connectionSupply") == null || jsonMainObject.get("connectionSupply").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("connectionSupply").toString()));
 
 		String history = user.getSurname() + " " + user.getName() + ";" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")) + ";update\n"; 
 		
@@ -1528,6 +1551,8 @@ public class MainRestController {
 		schedule.setDescription(jsonMainObject.get("description") == null || jsonMainObject.get("description").toString().isEmpty() ? null : jsonMainObject.get("description").toString());
 		schedule.setMultipleOfPallet(jsonMainObject.get("multipleOfPallet") == null || jsonMainObject.get("multipleOfPallet").toString().isEmpty() ? null : jsonMainObject.get("multipleOfPallet").toString().equals("true") ? true : false);
 		schedule.setMultipleOfTruck(jsonMainObject.get("multipleOfTruck") == null || jsonMainObject.get("multipleOfTruck").toString().isEmpty() ? null : jsonMainObject.get("multipleOfTruck").toString().equals("true") ? true : false);
+		schedule.setMachineMultiplicity(jsonMainObject.get("machineMultiplicity") == null || jsonMainObject.get("machineMultiplicity").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("machineMultiplicity").toString()));
+		schedule.setConnectionSupply(jsonMainObject.get("connectionSupply") == null || jsonMainObject.get("connectionSupply").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("connectionSupply").toString()));
 		schedule.setIsNotCalc(false);
 		schedule.setStatus(10);
 		
@@ -1632,6 +1657,8 @@ public class MainRestController {
 		schedule.setDescription(jsonMainObject.get("description") == null || jsonMainObject.get("description").toString().isEmpty() ? null : jsonMainObject.get("description").toString());
 		schedule.setMultipleOfPallet(jsonMainObject.get("multipleOfPallet") == null || jsonMainObject.get("multipleOfPallet").toString().isEmpty() ? null : jsonMainObject.get("multipleOfPallet").toString().equals("true") ? true : false);
 		schedule.setMultipleOfTruck(jsonMainObject.get("multipleOfTruck") == null || jsonMainObject.get("multipleOfTruck").toString().isEmpty() ? null : jsonMainObject.get("multipleOfTruck").toString().equals("true") ? true : false);
+		schedule.setMachineMultiplicity(jsonMainObject.get("machineMultiplicity") == null || jsonMainObject.get("machineMultiplicity").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("machineMultiplicity").toString()));
+		schedule.setConnectionSupply(jsonMainObject.get("connectionSupply") == null || jsonMainObject.get("connectionSupply").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("connectionSupply").toString()));
 		schedule.setIsNotCalc(false);
 		schedule.setStatus(10);
 		
@@ -2779,7 +2806,7 @@ public class MainRestController {
 	 * @throws IOException 
 	 */
 	@PostMapping("/slot/load")
-	public Map<String, String> postSlotLoad(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+	public Map<String, Object> postSlotLoad(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
 		java.util.Date t1 = new java.util.Date();
 		
 		String appPath = request.getServletContext().getRealPath("");
@@ -2788,7 +2815,7 @@ public class MainRestController {
 		propertiesStock.load(fileInputStream);
 		
 		User user = getThisUser();	
-		Map<String, String> response = new HashMap<String, String>();
+		Map<String, Object> response = new HashMap<String, Object>();
 		String role = user.getRoles().stream().findFirst().get().getAuthority();
 		if(role.equals("ROLE_TOPMANAGER") || role.equals("ROLE_MANAGER")) {
 			response.put("status", "100");
@@ -2817,6 +2844,14 @@ public class MainRestController {
 			response.put("info", "Вы пытаетесь установить слот от поставщика как слот на самовывоз.");
 			return response;
 		}
+//		Schedule schedule = scheduleService.getScheduleByNumContract(Long.parseLong(order.getMarketContractType()));
+//		//временная фунция. Проверяет на то, стоит ли кратность машины.
+//		if(schedule.getMachineMultiplicity() == null) {
+//			Integer mult = jsonMainObject.get("multiplicity") != null ? Integer.parseInt(jsonMainObject.get("multiplicity").toString()) : null;
+//			schedule.setMachineMultiplicity(mult);
+//			if(mult!= null) scheduleService.updateSchedule(schedule);
+//		}
+		
 		Timestamp timestamp = Timestamp.valueOf(jsonMainObject.get("timeDelivery").toString());
 		Integer idRamp = Integer.parseInt(jsonMainObject.get("idRamp").toString());
 		order.setTimeDelivery(timestamp);
@@ -2939,6 +2974,15 @@ public class MainRestController {
 			response.put("info", "Ошибка доступа. Заказ не зафиксирован. Данный заказ уже поставлен другим пользователем");
 			return response;
 		}
+//		Schedule schedule = scheduleService.getScheduleByNumContract(Long.parseLong(order.getMarketContractType()));
+//		//временная фунция. Проверяет на то, стоит ли кратность машины.
+//		if(schedule.getMachineMultiplicity() == null && schedule.getMultipleOfTruck()) {
+//			response.put("status", "200");
+//			response.put("message", "По текущему графику поставок необходимо установить количетсво паллет перевозимых в одной машине (кратность машины)");
+//			response.put("info", "По текущему графику поставок необходимо установить количетсво паллет перевозимых в одной машине (кратность машины)");
+//			response.put("schedule", schedule);
+//			return response;
+//		}
 //		if(order.getStatus() == 6 && Integer.parseInt(jsonMainObject.get("status").toString()) == 8) {
 //			//означает что манагер заранее создал маршрут с 8 статусом а потом создал заявку на него
 //			response.put("status", "100");

@@ -123,8 +123,7 @@ public class ReaderSchedulePlan {
 			System.err.println("Расчёта заказов по продуктам: невозможен, т.к. потребности нет в базе данных");
 			//мы всё равно считаем график поставок, для определения лог плеча (days)
 			DateRange extractDateRange = getDateRangeNoProducts(daysStep2, order);
-			extractDateRange.numContruct = order.getMarketContractType();
-			
+			extractDateRange.numContruct = order.getMarketContractType();			
 //			return new DateRange(null, null, 0L, null, null);
 			return extractDateRange;
 		}

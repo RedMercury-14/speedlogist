@@ -16,6 +16,7 @@
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/snackbar.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/bootstrap5overlay.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/deliverySchedule.css">
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/tooltip.css">
 </head>
 <body>
 	<jsp:include page="headerNEW.jsp" />
@@ -76,7 +77,7 @@
 		<div class="modal-dialog modal-lg">
 			<div class="modal-content">
 				<div class="modal-header">
-					<h1 class="modal-title fs-5 mt-0" id="addScheduleItemModalLabel">Создание графика поставки на ТО</h1>
+					<h1 class="modal-title fs-5 mt-0" id="addScheduleItemModalLabel">Создание графика поставок на ТО</h1>
 					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 						<span aria-hidden="true">&times;</span>
 					</button>
@@ -130,20 +131,27 @@
 									<div class="input-group-prepend">
 										<div class="input-group-text">Номер контракта</div>
 									</div>
-									<input type="number" class="form-control counterpartyContractCode" name="counterpartyContractCode" id="counterpartyContractCode" min="0" placeholder="Номер контракта" required>
+									<input type="number" class="form-control counterpartyContractCode" name="counterpartyContractCode" id="counterpartyContractCode" list="contractCodeList" min="0" placeholder="Номер контракта" required>
 								</div>
 								<div class="error-message" id="messageNumshop"></div>
+								<datalist id="contractCodeList"></datalist>
 							</div>
 
 							<div class="mb-3">
 								<label class="sr-only" for="numStock">Номера ТО</label>
 								<div class="input-group">
 									<div class="input-group-prepend">
-										<div class="input-group-text">Номера ТО</div>
+										<div class="input-group-text custom-tooltip">
+											Номера ТО
+											<sup class="px-1 font-weight-bold text-danger">?</sup>
+											<span class="tooltiptext">Укажите номера ТО, для которых нужно создать график</span>
+										</div>
 									</div>
 									<textarea
 										class="form-control numStock" name="numStock" id="numStock" rows="3"
-										placeholder="Просто скопируйте сюда строку или столбец с номерами магазинов" required></textarea>
+										placeholder="Просто скопируйте сюда строку или столбец с номерами магазинов или укажите номера магазинов через ПРОБЕЛ"
+										required
+									></textarea>
 								</div>
 							</div>
 
@@ -161,7 +169,11 @@
 								<label class="sr-only" for="orderFormationSchedule">График формирования заказа</label>
 								<div class="input-group">
 									<div class="input-group-prepend">
-										<div class="input-group-text">График формирования заказа</div>
+										<div class="input-group-text custom-tooltip">
+											График формирования заказа
+											<sup class="px-1 font-weight-bold text-danger">?</sup>
+											<span class="tooltiptext">Поле заполняется только в случае оформления заказа 1 раз в две недели. Указывается четность недели. В случае, если заказ производится каждую неделю, поле заполнять НЕ НУЖНО</span>
+										</div>
 									</div>
 									<select id="orderFormationSchedule" name="orderFormationSchedule" class="form-control">
 										<option value="" selected hidden disabled>Выберите вариант</option>
@@ -175,7 +187,11 @@
 								<label class="sr-only" for="orderShipmentSchedule">График отгрузки заказа</label>
 								<div class="input-group">
 									<div class="input-group-prepend">
-										<div class="input-group-text">График отгрузки заказа</div>
+										<div class="input-group-text custom-tooltip">
+											График отгрузки заказа
+											<sup class="px-1 font-weight-bold text-danger">?</sup>
+											<span class="tooltiptext">Поле заполняется только в случае оформления заказа 1 раз в две недели. Указывается четность недели. В случае, если заказ производится каждую неделю, поле заполнять НЕ НУЖНО</span>
+										</div>
 									</div>
 									<select id="orderShipmentSchedule" name="orderShipmentSchedule" class="form-control">
 										<option class="text-muted" value="" selected hidden disabled>Выберите вариант</option>
@@ -272,7 +288,7 @@
 		<div class="modal-dialog modal-lg">
 			<div class="modal-content">
 				<div class="modal-header">
-					<h1 class="modal-title fs-5 mt-0" id="editScheduleItemModalLabel">Редактирование графика поставки</h1>
+					<h1 class="modal-title fs-5 mt-0" id="editScheduleItemModalLabel">Редактирование графика поставок</h1>
 					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 						<span aria-hidden="true">&times;</span>
 					</button>
@@ -281,7 +297,7 @@
 					<div class="modal-body">
 						<div class="inputs-container">
 
-							<input type="hidden" name="idSchedule" id="idSchedule">
+							<!-- <input type="hidden" name="idSchedule" id="idSchedule"> -->
 							<input type="hidden" name="supplies" id="supplies">
 							<input type="hidden" name="type" id="type" value="ТО">
 
@@ -333,12 +349,20 @@
 							</div>
 
 							<div class="mb-3">
-								<label class="sr-only" for="numStock">Номер ТО</label>
+								<label class="sr-only" for="numStock">Номера ТО</label>
 								<div class="input-group">
 									<div class="input-group-prepend">
-										<div class="input-group-text">Номер ТО</div>
+										<div class="input-group-text custom-tooltip">
+											Номера ТО
+											<sup class="px-1 font-weight-bold text-danger">?</sup>
+											<span class="tooltiptext">Укажите номера ТО, которые будут ОТРЕДАКТИРОВАНЫ</span>
+										</div>
 									</div>
-									<input type="number" class="form-control numStock" name="numStock" id="numStock" min="0" placeholder="Номер ТО" required>
+									<textarea
+										class="form-control numStock" name="numStock" id="numStock" rows="3"
+										placeholder="Просто скопируйте сюда строку или столбец с номерами магазинов или укажите номера магазинов через ПРОБЕЛ"
+										required
+									></textarea>
 								</div>
 							</div>
 
@@ -356,7 +380,11 @@
 								<label class="sr-only" for="orderFormationSchedule">График формирования заказа</label>
 								<div class="input-group">
 									<div class="input-group-prepend">
-										<div class="input-group-text">График формирования заказа</div>
+										<div class="input-group-text custom-tooltip">
+											График формирования заказа
+											<sup class="px-1 font-weight-bold text-danger">?</sup>
+											<span class="tooltiptext">Поле заполняется только в случае оформления заказа 1 раз в две недели. Указывается четность недели. В случае, если заказ производится каждую неделю, поле заполнять НЕ НУЖНО</span>
+										</div>
 									</div>
 									<select id="orderFormationSchedule" name="orderFormationSchedule" class="form-control">
 										<option value="" selected hidden disabled>Выберите вариант</option>
@@ -370,7 +398,11 @@
 								<label class="sr-only" for="orderShipmentSchedule">График отгрузки заказа</label>
 								<div class="input-group">
 									<div class="input-group-prepend">
-										<div class="input-group-text">График отгрузки заказа</div>
+										<div class="input-group-text custom-tooltip">
+											График отгрузки заказа
+											<sup class="px-1 font-weight-bold text-danger">?</sup>
+											<span class="tooltiptext">Поле заполняется только в случае оформления заказа 1 раз в две недели. Указывается четность недели. В случае, если заказ производится каждую неделю, поле заполнять НЕ НУЖНО</span>
+										</div>
 									</div>
 									<select id="orderShipmentSchedule" name="orderShipmentSchedule" class="form-control">
 										<option class="text-muted" value="" selected hidden disabled>Выберите вариант</option>

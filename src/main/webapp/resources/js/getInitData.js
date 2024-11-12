@@ -85,7 +85,7 @@ function getInitDataUrl(url) {
 	// }
 
 	// График поставок на РЦ
-	if (url.includes('delivery-schedule')) {
+	if (url.includes('delivery-schedule') && !url.includes('delivery-schedule-to')) {
 		return '../../api/slots/delivery-schedule/getListRC'
 	}
 

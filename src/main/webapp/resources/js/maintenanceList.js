@@ -696,14 +696,14 @@ async function setCarrier(idRoute, idCarrier) {
 	
 	clearTimeout(timeoutId)
 	bootstrap5overlay.hideOverlay()
-	
-	if (res.status === '200') {
+
+	if (res && res.status === '200') {
 		snackbar.show('Выполнено!')
 		updateTable(gridOptions)
 		hideAddCarrierModal()
 	} else {
 		console.log(res)
-		const message = res.message ? res.message : 'Неизвестная ошибка'
+		const message = res && res.message ? res.message : 'Неизвестная ошибка'
 		snackbar.show(message)
 	}
 }
@@ -712,17 +712,17 @@ async function removeCarrier(idRoute) {
 	const url = `${clearCarrierBaseUrl}${idRoute}`
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
 	const res = await getData(url)
-	
+
 	clearTimeout(timeoutId)
 	bootstrap5overlay.hideOverlay()
-	
-	if (res.status === '200') {
+
+	if (res && res.status === '200') {
 		snackbar.show('Выполнено!')
 		updateTable(gridOptions)
 		hideAddCarrierModal()
 	} else {
 		console.log(res)
-		const message = res.message ? res.message : 'Неизвестная ошибка'
+		const message = res && res.message ? res.message : 'Неизвестная ошибка'
 		snackbar.show(message)
 	}
 }
@@ -730,17 +730,17 @@ async function setMileage(idRoute, mileage) {
 	const url = `${setMileageBaseUrl}${idRoute}&${mileage}`
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
 	const res = await getData(url)
-	
+
 	clearTimeout(timeoutId)
 	bootstrap5overlay.hideOverlay()
-	
-	if (res.status === '200') {
+
+	if (res && res.status === '200') {
 		snackbar.show('Выполнено!')
 		updateTable(gridOptions)
 		hideAddMileageModal()
 	} else {
 		console.log(res)
-		const message = res.message ? res.message : 'Неизвестная ошибка'
+		const message = res && res.message ? res.message : 'Неизвестная ошибка'
 		snackbar.show(message)
 	}
 }
@@ -749,16 +749,16 @@ async function removeMileage(idRoute) {
 	const url = `${clearMileageBaseUrl}${idRoute}`
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
 	const res = await getData(url)
-	
+
 	clearTimeout(timeoutId)
 	bootstrap5overlay.hideOverlay()
-	
-	if (res.status === '200') {
+
+	if (res && res.status === '200') {
 		snackbar.show('Выполнено!')
 		updateTable(gridOptions)
 	} else {
 		console.log(res)
-		const message = res.message ? res.message : 'Неизвестная ошибка'
+		const message = res && res.message ? res.message : 'Неизвестная ошибка'
 		snackbar.show(message)
 	}
 }
@@ -767,17 +767,17 @@ async function setFinishPrice(idRoute, finishPrice) {
 	const url = `${setFinishPriceBaseUrl}${idRoute}&${finishPrice}&BYN`
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
 	const res = await getData(url)
-	
+
 	clearTimeout(timeoutId)
 	bootstrap5overlay.hideOverlay()
-	
-	if (res.status === '200') {
+
+	if (res && res.status === '200') {
 		snackbar.show('Выполнено!')
 		updateTable(gridOptions)
 		hideAddFinishPriceModal()
 	} else {
 		console.log(res)
-		const message = res.message ? res.message : 'Неизвестная ошибка'
+		const message = res && res.message ? res.message : 'Неизвестная ошибка'
 		snackbar.show(message)
 	}
 }
@@ -786,16 +786,16 @@ async function removeFinishPrice(idRoute) {
 	const url = `${clearFinishPriceBaseUrl}${idRoute}`
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
 	const res = await getData(url)
-	
+
 	clearTimeout(timeoutId)
 	bootstrap5overlay.hideOverlay()
-	
-	if (res.status === '200') {
+
+	if (res && res.status === '200') {
 		snackbar.show('Выполнено!')
 		updateTable(gridOptions)
 	} else {
 		console.log(res)
-		const message = res.message ? res.message : 'Неизвестная ошибка'
+		const message = res && res.message ? res.message : 'Неизвестная ошибка'
 		snackbar.show(message)
 	}
 }
@@ -804,17 +804,17 @@ async function closeRoute(idRoute) {
 	const url = `${closeRouteBaseUrl}${idRoute}`
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
 	const res = await getData(url)
-	
+
 	clearTimeout(timeoutId)
 	bootstrap5overlay.hideOverlay()
-	
-	if (res.status === '200') {
+
+	if (res && res.status === '200') {
 		snackbar.show('Выполнено!')
 		updateTable(gridOptions)
 		hideAddCarrierModal()
 	} else {
 		console.log(res)
-		const message = res.message ? res.message : 'Неизвестная ошибка'
+		const message = res && res.message ? res.message : 'Неизвестная ошибка'
 		snackbar.show(message)
 	}
 }

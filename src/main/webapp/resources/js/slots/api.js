@@ -243,18 +243,18 @@ export function deleteOrder(info, orderTableGridOption, deleteByAdmin) {
 			}
 
 			if (data.status === '105') {
-				errorHandler_105status(info, data)
+				errorHandler_105status(null, data)
 				return
 			}
 
 			if (data.status === '100') {
-				errorHandler_100status(info, data)
+				errorHandler_100status(null, data)
 			} else {
 				snackbar.show(userMessages.actionNotCompleted)
 			}
 		},
 		errorCallback: () => {
-			info.revert()
+			// info.revert()
 			clearTimeout(timeoutId)
 			bootstrap5overlay.hideOverlay()
 		}

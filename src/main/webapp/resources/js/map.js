@@ -92,6 +92,7 @@ import {
 import { getTruckLists, groupTrucksByDate } from "./logisticsDelivery/trucks/trucksUtils.js"
 import { bootstrap5overlay } from "./bootstrap5overlay/bootstrap5overlay.js"
 import { addListnersToPallTextarea, calcPallets } from "./map/calcPallets.js"
+import { createGrid } from "./map/createGrid.js"
 
 const apiUrl = isLogisticsDeliveryPage() ? '../../api/' : '../api/'
 
@@ -376,21 +377,18 @@ function createColoredPoint(route, index, color, generalRouteId) {
 const canvasRenderer = L.canvas({ padding: 0.5 })
 const config = {
 	renderer: canvasRenderer,
+	center: [53.875, 27.415],
+	zoom: 11,
 	minZoom: 6,
 	maxZoom: 18,
-	zoomControl: false
+	zoomControl: false,
 }
-
-// начальные координаты и масштаб карты
-const zoom = 11
-const lat = 53.875
-const lng = 27.415
 
 // маркер для встраивания в канвас
 L.canvasMarker = (...options) => new CanvasMarker(...options)
 
 // создание карты
-const map = L.map("map", config).setView([lat, lng], zoom)
+const map = L.map("map", config)
 L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
 	attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 }).addTo(map)

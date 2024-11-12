@@ -2,20 +2,21 @@ import { AG_GRID_LOCALE_RU } from './AG-Grid/ag-grid-locale-RU.js'
 import { gridColumnLocalState, gridFilterLocalState } from './AG-Grid/ag-grid-utils.js'
 import { ajaxUtils } from './ajaxUtils.js'
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
+import { showScheduleItem } from './deliverySchedule/showScheduleItem.js'
 import {
-	changeScheduleOptions, checkScheduleDate, confirmScheduleItem, createCounterpartyDatalist,
+	changeScheduleOptions, confirmScheduleItem, createCounterpartyDatalist,
 	createOptions, dateFormatter, deleteScheduleItem, deliveryScheduleColumnDefs,
 	deliveryScheduleRowClassRules, deliveryScheduleSideBar,
-	editScheduleItem,
-	getErrorMessage, getSupplies, onNoteChangeHandler, showMessageModal, showScheduleItem,
+	editScheduleItem,getSupplies, onNoteChangeHandler, showMessageModal,
 	unconfirmScheduleItem
-} from './deliveryScheduleUtils.js'
+} from './deliverySchedule/utils.js'
+import { checkScheduleData, getFormErrorMessage } from './deliverySchedule/validation.js'
 import { snackbar } from "./snackbar/snackbar.js"
 import { uiIcons } from './uiIcons.js'
 import {
 	changeGridTableMarginTop, debounce, disableButton, enableButton,
 	getData, getScheduleStatus, hideLoadingSpinner, isAdmin,
-	isOderSupport, showLoadingSpinner
+	isOrderSupport, showLoadingSpinner
 } from './utils.js'
 
 const loadExcelUrl = '../../api/slots/delivery-schedule/loadRC'
@@ -195,7 +196,7 @@ async function initStartData() {
 	scheduleData = window.initData.body
 	await updateTable(gridOptions, scheduleData)
 	// проверка, правильно ли заполнены графики
-	checkScheduleDate(scheduleData)
+	checkScheduleData(scheduleData)
 	// заполняем datalist кодов и названий контрагентов
 	createCounterpartyDatalist(scheduleData)
 	window.initData = null
@@ -257,8 +258,8 @@ function getContextMenuItems(params) {
 
 	const confirmUnconfirmItem = status === 10 || status === 0
 		? {
-			name: `Подтвердить график поставки`,
-			disabled: (!isAdmin(role) && !isOderSupport(role)) || (status !== 10 && status !== 0),
+			name: `Подтвердить график`,
+			disabled: (!isAdmin(role) && !isOrderSupport(role)) || (status !== 10 && status !== 0),
 			action: () => {
 				confirmScheduleItem(role, rowNode)
 			},
@@ -266,7 +267,7 @@ function getContextMenuItems(params) {
 		}
 		: {
 			name: `Снять подтверждение с графика`,
-			disabled: (!isAdmin(role) && !isOderSupport(role)) || status === 0,
+			disabled: (!isAdmin(role) && !isOrderSupport(role)) || status === 0,
 			action: () => {
 				unconfirmScheduleItem(role, rowNode)
 			},
@@ -275,7 +276,7 @@ function getContextMenuItems(params) {
 
 	const result = [
 		{
-			name: `Показать график поставки`,
+			name: `Показать график`,
 			action: () => {
 				showScheduleItem(rowNode)
 			},
@@ -284,16 +285,16 @@ function getContextMenuItems(params) {
 		"separator",
 		confirmUnconfirmItem,
 		{
-			name: `Редактировать график поставки`,
-			disabled: (!isAdmin(role) && !isOderSupport(role)),
+			name: `Редактировать график`,
+			disabled: (!isAdmin(role) && !isOrderSupport(role)),
 			action: () => {
 				editScheduleItem(rowNode, setDataToForm)
 			},
 			icon: uiIcons.pencil,
 		},
 		{
-			name: `Удалить график поставки`,
-			disabled: (!isAdmin(role) && !isOderSupport(role)) || status === 0,
+			name: `Удалить график`,
+			disabled: (!isAdmin(role) && !isOrderSupport(role)) || status === 0,
 			action: () => {
 				deleteScheduleItem(role, rowNode)
 			},
@@ -371,11 +372,11 @@ async function sendScheduleDataToMail(e) {
 	bootstrap5overlay.hideOverlay()
 	btn.disabled = false
 
-	if (res.status === '200') {
+	if (res && res.status === '200') {
 		snackbar.show(res.message)
 	} else {
 		console.log(res)
-		const message = res.message ? res.message : 'Неизвестная ошибка'
+		const message = res && res.message ? res.message : 'Неизвестная ошибка'
 		snackbar.show(message)
 	}
 }
@@ -411,14 +412,13 @@ function addScheduleItemFormHandler(e) {
 
 	const formData = new FormData(e.target)
 	const data = scheduleItemDataFormatter(formData)
-	const errorMessage = getErrorMessage(data, error)
+	const errorMessage = getFormErrorMessage(data, error)
 	
 	if (errorMessage) {
 		snackbar.show(errorMessage)
 		return
 	}
-	console.log("🚀 ~ addScheduleItemFormHandler ~ data:", data)
-	
+
 	disableButton(e.submitter)
 
 	ajaxUtils.postJSONdata({
@@ -455,11 +455,11 @@ function addScheduleItemFormHandler(e) {
 function editScheduleItemFormHandler(e) {
 	e.preventDefault()
 
-	if (!isAdmin(role) && !isOderSupport(role)) return
+	if (!isAdmin(role) && !isOrderSupport(role)) return
 
 	const formData = new FormData(e.target)
 	const data = scheduleItemDataFormatter(formData)
-	const errorMessage = getErrorMessage(data, error)
+	const errorMessage = getFormErrorMessage(data, error)
 
 	if (errorMessage) {
 		snackbar.show(errorMessage)

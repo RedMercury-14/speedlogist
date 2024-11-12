@@ -19,6 +19,7 @@
 	<script src="${pageContext.request.contextPath}/resources/js/leaflet/leaflet.js"></script>
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/js/leaflet/leaflet.draw.css"/>
 	<script src="${pageContext.request.contextPath}/resources/js/leaflet/leaflet.draw.js"></script>
+	<script src="${pageContext.request.contextPath}/resources/js/leaflet/leaflet.geometryutil.js"></script>
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/bootstrap5overlay.css">
 </head>
 <body class="active-sidebar">

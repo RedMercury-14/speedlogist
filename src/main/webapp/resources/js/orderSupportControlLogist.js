@@ -6,7 +6,7 @@ import {
 	gridFilterLocalState,
 	highlightRow,
 } from "./AG-Grid/ag-grid-utils.js"
-import { debounce, getData, dateHelper, changeGridTableMarginTop, isAdmin, isOderSupport, } from './utils.js'
+import { debounce, getData, dateHelper, changeGridTableMarginTop, isAdmin, isOrderSupport, } from './utils.js'
 import { ajaxUtils } from './ajaxUtils.js'
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 
@@ -49,19 +49,19 @@ const columnDefs = [
 		headerName: "Остаток (дней)", field: "balanceStockAndReserves",
 		cellClass: 'px-2 text-center normalDayCount',
 		cellClassRules: cellClassRules,
-		editable: isAdmin(role) || isOderSupport(role),
+		editable: isAdmin(role) || isOrderSupport(role),
 		onCellValueChanged: editBalanceStockAndReserves,
 	},
 	{
 		headerName: "Мин. кол-во дней", field: "dayMax",
 		cellClass: "px-1 text-center font-weight-bold",
-		editable: isAdmin(role) || isOderSupport(role),
+		editable: isAdmin(role) || isOrderSupport(role),
 		onCellValueChanged: editDayMax,
 	},
 	{
 		headerName: "Исключение", field: "isException",
 		cellClass: 'py-0 flex-center', minWidth: 30,
-		editable: isAdmin(role) || isOderSupport(role),
+		editable: isAdmin(role) || isOrderSupport(role),
 		onCellValueChanged: editIsExeption,
 	},
 	{ headerName: "Акция", field: "promotionsInfo", },

@@ -100,6 +100,41 @@ public class Schedule{
     @Column(name = "is_not_calc")
     private Boolean isNotCalc;
     
+    /*
+     * Столбец сегодня на сегодня
+     */
+    @Column(name = "day_to_day")
+    private Boolean isDayToDay;
+    
+    /*
+     * тип графика: на РЦ или на ТО
+     */
+    @Column(name = "type")
+    private String type;
+    
+    /*
+     * График формирования заказа  четная неделя ставим метка  --ч-- , нечетная --- н ---
+     */
+    @Column(name = "order_formation_schedule")
+    private String orderFormationSchedule;
+    
+    /*
+     * График отгрузки заказа  четная неделя ставим метка  --ч-- , нечетная --- н ---
+     */
+    @Column(name = "order_shipment_schedule")
+    private String orderShipmentSchedule;
+    
+    /*
+     * тип для графиков поставок на ТО : холодный или хухой
+     */
+    @Column(name = "to_type")
+    private String toType;
+    
+    @Column(name = "name_stock")
+    private String nameStock;
+    
+    
+    
     @JsonIgnore
     @Transient
     private List<String> days;
@@ -126,8 +161,94 @@ public class Schedule{
 
 
 
+	public String getToType() {
+		return toType;
+	}
+
+
+
+	public void setToType(String toType) {
+		this.toType = toType;
+	}
+
+
+
+	public String getNameStock() {
+		return nameStock;
+	}
+
+
+
+	public void setNameStock(String nameStock) {
+		this.nameStock = nameStock;
+	}
+
+
+
 	public void setDateLastChanging(Date dateLastChanging) {
 		this.dateLastChanging = dateLastChanging;
+	}
+
+
+
+	public Boolean getIsDayToDay() {
+		return isDayToDay;
+	}
+
+
+
+	public void setIsDayToDay(Boolean isDayToDay) {
+		this.isDayToDay = isDayToDay;
+	}
+
+
+	/**
+	 * тип графика: на РЦ или на ТО
+	 * @return
+	 */
+	public String getType() {
+		return type;
+	}
+
+
+	/**
+	 * тип графика: на РЦ или на ТО
+	 * @param type
+	 */
+	public void setType(String type) {
+		this.type = type;
+	}
+
+
+	/**
+     * График формирования заказа  четная неделя ставим метка  --ч-- , нечетная --- н ---
+     */
+	public String getOrderFormationSchedule() {
+		return orderFormationSchedule;
+	}
+
+
+	/**
+     * График формирования заказа  четная неделя ставим метка  --ч-- , нечетная --- н ---
+     */
+	public void setOrderFormationSchedule(String orderFormationSchedule) {
+		this.orderFormationSchedule = orderFormationSchedule;
+	}
+
+
+	/**
+     * График отгрузки заказа  четная неделя ставим метка  --ч-- , нечетная --- н ---
+     */
+	public String getOrderShipmentSchedule() {
+		return orderShipmentSchedule;
+	}
+
+
+	/**
+     * График отгрузки заказа  четная неделя ставим метка  --ч-- , нечетная --- н ---
+     */
+	public void setOrderShipmentSchedule(String orderShipmentSchedule) {
+		this.orderShipmentSchedule = orderShipmentSchedule;
 	}
 
 

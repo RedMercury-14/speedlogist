@@ -79,7 +79,6 @@ import {
 	addSmallHeaderClass,
 	updateTruckListsOptions,
 	clearRouteTable,
-	crossDockingPointVisibleToggler,
 	displayEmptyTruck,
 	getMarkerToShop,
 	setLocalCarsData,
@@ -87,11 +86,13 @@ import {
 	truckAdapter,
 	clearPoligonControlForm,
 	setTrucksData,
-	showMessageModal
+	showMessageModal,
+	polygonActionSelectChangeHandler
 } from "./map/mapUtils.js"
 import { getTruckLists, groupTrucksByDate } from "./logisticsDelivery/trucks/trucksUtils.js"
 import { bootstrap5overlay } from "./bootstrap5overlay/bootstrap5overlay.js"
 import { addListnersToPallTextarea, calcPallets } from "./map/calcPallets.js"
+import { createGrid } from "./map/createGrid.js"
 
 const apiUrl = isLogisticsDeliveryPage() ? '../../api/' : '../api/'
 
@@ -121,6 +122,7 @@ const token = $("meta[name='_csrf']").attr("content")
 const OPTIMIZE_ROUTE_DATA_KEY = "NEW_optimizeRouteData"
 const OPTIMIZE_ROUTE_PARAMS_KEY = "NEW_optimizeRouteParams"
 
+const role = document.querySelector("#role").value
 
 // -----------------------------------------------------------------------------------//
 // -----------------------------AG-Grid settings--------------------------------------//
@@ -375,21 +377,18 @@ function createColoredPoint(route, index, color, generalRouteId) {
 const canvasRenderer = L.canvas({ padding: 0.5 })
 const config = {
 	renderer: canvasRenderer,
+	center: [53.875, 27.415],
+	zoom: 11,
 	minZoom: 6,
 	maxZoom: 18,
-	zoomControl: false
+	zoomControl: false,
 }
-
-// начальные координаты и масштаб карты
-const zoom = 11
-const lat = 53.875
-const lng = 27.415
 
 // маркер для встраивания в канвас
 L.canvasMarker = (...options) => new CanvasMarker(...options)
 
 // создание карты
-const map = L.map("map", config).setView([lat, lng], zoom)
+const map = L.map("map", config)
 L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
 	attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 }).addTo(map)
@@ -443,9 +442,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 	// кнопки боковой панели
 	const menuItems = document.querySelectorAll(".menu-item")
 	const buttonClose = document.querySelector(".close-button")
-	menuItems.forEach((item) => addOnClickToMenuItemListner(item, crossDockingPolygonsVisibleToggler))
-	buttonClose.addEventListener("click", () => closeSidebar(crossDockingPolygonsVisibleToggler))
-	document.addEventListener("keydown", (e) => (e.key === "Escape") && closeSidebar(crossDockingPolygonsVisibleToggler))
+	menuItems.forEach((item) => addOnClickToMenuItemListner(item, optimizerPolygonsVisibleToggler))
+	buttonClose.addEventListener("click", () => closeSidebar(optimizerPolygonsVisibleToggler))
+	document.addEventListener("keydown", (e) => (e.key === "Escape") && closeSidebar(optimizerPolygonsVisibleToggler))
 
 	// контейнеры для таблиц с информацией о точках маршрута
 	const routeInputsContainer = document.querySelector('#routeInputsContainer')
@@ -505,7 +504,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 	// селект выбора действия для полигона
 	const polygonActionSelect = document.querySelector("#polygonAction")
-	polygonActionSelect && polygonActionSelect.addEventListener('change', (e) => crossDockingPointVisibleToggler(e.target.value))
+	polygonActionSelect && polygonActionSelect.addEventListener('change', (e) => polygonActionSelectChangeHandler(e.target.value))
 
 	// обработка закрытия модального окна создания полигона
 	$('#poligonControlModal').on('hidden.bs.modal', (e) => clearPoligonControlForm(poligonControlForm))
@@ -522,10 +521,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 	// дата для списков в форме оптимизатора
 	const currentDateInput = document.querySelector('#currentDate')
-	// установака данных даты 
-	currentDateInput && (currentDateInput.value = mapStore.getCurrentDate())
-	currentDateInput && (currentDateInput.min = mapStore.getCurrentDate())
-	// currentDateInput && (currentDateInput.max = mapStore.getMaxTrucksDate())
 	currentDateInput && currentDateInput.addEventListener('change', (e) => changeCurrentDateHandler(e, carInputsTable))
 
 	// выпадающий список со списками машин для оптимизатора
@@ -592,15 +587,22 @@ async function initStartData(currentDateInput) {
 	const crossDockingPointSelect = document.querySelector("#crossDockingPoint")
 	addCrossDockingPointOptions(shops, crossDockingPointSelect)
 
-	// максимальная дата для списков машин
+	// установака данных даты для списков машин
+	currentDateInput && (currentDateInput.value = mapStore.getCurrentDate())
+	currentDateInput && (currentDateInput.min = mapStore.getCurrentDate())
 	currentDateInput && (currentDateInput.max = mapStore.getMaxTrucksDate())
 
-	// отображение полигонов и элементов рисования
-	const role = document.querySelector("#role").value
-	// получаем полигоны без кроссдокинга
+	showContentByRole(role)
+}
+
+// отображение контента по ролям
+function showContentByRole(role) {
+	// получаем все полигоны, кроме полигонов оптимизатора
 	const filtredPolygons = mapStore
 		.getPolygons()
-		.filter(polygon => polygon.properties.action !== 'crossDocking')
+		.filter(polygon => polygon.properties.action !== 'crossDocking'
+						&& polygon.properties.action !== 'weightDistribution'
+		)
 
 	if (isAdmin(role) || isLogistDelivery(role)) {
 		displayPolygons(filtredPolygons)
@@ -705,8 +707,8 @@ function hidePolygons(polygons) {
 	})
 }
 
-// переключение отображения полигонов кросс-докинга
-function crossDockingPolygonsVisibleToggler(sidebarMenuItem) {
+// переключение отображения полигонов оптимизатора
+function optimizerPolygonsVisibleToggler(sidebarMenuItem) {
 	const polygonsForOptymizer = mapStore.getPolygonsForOptymizer()
 
 	sidebarMenuItem.dataset.item === 'optimizeRoute'

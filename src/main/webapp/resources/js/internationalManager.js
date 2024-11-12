@@ -81,7 +81,9 @@ function onNumberMessage() {
 		} else if (status === 'Контрольцены') {
 			routeItemI.classList.add("oncePersonRoute");
 		}
-		getNumMessege(routeItemI.querySelector('#idRoute').innerHTML, coll, routeItemI)
+		if (status === 'Маршрутнабирже') {
+			getNumMessege(routeItemI.querySelector('#idRoute').innerHTML, coll, routeItemI)
+		}
 	}
 }
 

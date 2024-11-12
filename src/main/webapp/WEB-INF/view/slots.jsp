@@ -23,6 +23,10 @@
 <body class="no-scroll">
 	<jsp:include page="headerNEW.jsp" />
 
+	<sec:authorize access="isAuthenticated()">
+		<sec:authentication property="principal.authorities" var="roles" />
+	</sec:authorize>
+
 	<div id="overlay" class="">
 		<div class="spinner-border text-primary" role="status">
 			<span class="sr-only">Загрузка...</span>
@@ -69,6 +73,17 @@
 				</div>
 			</div>
 		</div>
+
+		<c:choose>
+			<c:when test="${roles == '[ROLE_ADMIN]'}">
+				<div class="adminAction-container">
+					<select name="adminAction" id="adminAction" class="px-1 form-control font-weight-bold">
+						<option selected disabled value="">Для админа</option>
+						<option value="checkBookingForCurrentDate">Брони на текущую дату</option>
+					</select>
+				</div>
+			</c:when>
+		</c:choose>
 
 		<div class="pallInfo-container">
 			<div id="externalPallInfo" class="pallInfo">

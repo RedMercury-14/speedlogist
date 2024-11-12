@@ -8,7 +8,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAdjusters;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -90,7 +94,7 @@ public class ReaderSchedulePlan {
      * @param product
      * @return
      */
-	public DateRange getDateRange (Schedule schedule, List<Product> products) {
+	public DateRange getDateRange (Schedule schedule, List<Product> products, Order order) {
 		if(schedule == null) {
 			return null;
 		}
@@ -117,7 +121,12 @@ public class ReaderSchedulePlan {
 		
 		if(orderProductsHasMin.isEmpty()) {
 			System.err.println("Расчёта заказов по продуктам: невозможен, т.к. потребности нет в базе данных");
-			return new DateRange(null, null, 0L, null, null);
+			//мы всё равно считаем график поставок, для определения лог плеча (days)
+			DateRange extractDateRange = getDateRangeNoProducts(daysStep2, order);
+			extractDateRange.numContruct = order.getMarketContractType();
+			
+//			return new DateRange(null, null, 0L, null, null);
+			return extractDateRange;
 		}
 		
 		
@@ -184,6 +193,137 @@ public class ReaderSchedulePlan {
 		return new DateRange(Date.valueOf(orderProductTarget.getDateCreate().toLocalDateTime().toLocalDate().plusDays(1)),
 				Date.valueOf(orderProductTarget.getDateCreate().toLocalDateTime().toLocalDate().plusDays(i+1)), i, dayOfPlanOrder, schedule.getCounterpartyContractCode().toString());
 	}
+	
+	/**
+	 * Метод отвечает за предоставления DateRange когда нету заказов со стороны ОРЛ 
+	 * <br>или вообще не предусматривается проверка по заказам ОРЛ
+	 * @param daysStep2
+	 * @param order
+	 * @return
+	 */
+	public DateRange getDateRangeNoProducts (Map<String, String> daysStep2, Order order) {
+		LocalDate dateDeliveryHasSlot = order.getTimeDelivery().toLocalDateTime().toLocalDate();
+		DayOfWeek dayOfWeek = dateDeliveryHasSlot.getDayOfWeek();
+		String targetValue = null;
+		String targetKey = null;
+		
+		LocalDate start = null;
+		LocalDate finish = null;
+		
+		if(daysStep2.get(dayOfWeek.toString()) != null) {
+			String dayOfDeliveryString = dayOfWeek.toString();
+			String mass[] = daysStep2.get(dayOfWeek.toString()).split("/");
+			targetValue = daysStep2.get(dayOfWeek.toString());
+			targetKey = dayOfWeek.toString().trim();
+			DayOfWeek dayOfOrderDayOfWeek = RUSSIAN_DAYS.get(mass[mass.length-1]);
+			String week = Arrays.asList(mass).stream().filter(s -> s.matches("н\\d+")).findFirst().orElse(null);
+			start = dateDeliveryHasSlot;
+			//тут определяем дату финиша.
+			//берем сначала день из текущей недели а потом применяем поправочный коэф (week) если он есть
+	        // Получаем начало недели (понедельник)
+	        LocalDate startOfWeek = start.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+
+	        // Получаем дату по названию дня (например, WEDNESDAY)
+	        DayOfWeek targetDay = dayOfOrderDayOfWeek; // Укажи нужный день недели
+	        LocalDate targetDate = startOfWeek.with(TemporalAdjusters.nextOrSame(targetDay));
+	       
+	        if(week != null) {
+	        	int dayD = 7;
+	        	int dayX = Integer.parseInt(week.replace("н", "").trim());
+	        	finish = targetDate.minusDays(dayD*dayX);
+	        }else {
+	        	finish = targetDate;
+	        }
+	        
+//			System.out.println("dayOfDeliveryString = " + dayOfDeliveryString);
+//			System.out.println("dayOfOrderString = " + dayOfOrderDayOfWeek);
+//			System.out.println("week = " + week);
+//			System.out.println("start = " + start);
+//			System.out.println("finish = " + finish);
+			
+		}else {			
+			Entry<LocalDate, Entry<String, String>> entry = findNextAvailableDay(daysStep2, dateDeliveryHasSlot, dayOfWeek);
+			String mass[] = entry.getValue().getValue().split("/");
+			targetValue = entry.getValue().getValue();
+			targetKey = entry.getValue().getKey();
+			DayOfWeek dayOfOrderDayOfWeek = RUSSIAN_DAYS.get(mass[mass.length-1]);
+			String week = Arrays.asList(mass).stream().filter(s -> s.matches("н\\d+")).findFirst().orElse(null);
+			start = entry.getKey();
+			//тут определяем дату финиша.
+			//берем сначала день из текущей недели а потом применяем поправочный коэф (week) если он есть
+	        // Получаем начало недели (понедельник)
+	        LocalDate startOfWeek = start.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+
+	        // Получаем дату по названию дня (например, WEDNESDAY)
+	        DayOfWeek targetDay = dayOfOrderDayOfWeek; // Укажи нужный день недели
+	        LocalDate targetDate = startOfWeek.with(TemporalAdjusters.nextOrSame(targetDay));
+	        if(week != null) {
+	        	int dayD = 7;
+	        	int dayX = Integer.parseInt(week.replace("н", "").trim());
+	        	finish = targetDate.minusDays(dayD*dayX);
+	        }else {
+	        	finish = targetDate;
+	        }
+	        
+			
+//			System.err.println("dayOfOrderString = " + dayOfOrderDayOfWeek);
+//			System.err.println("week = " + week);
+//			System.err.println("start = " + start);
+//			System.err.println("finish = " + finish);
+		}
+		//считаем дни
+		long i = 0;
+		i = parseWeekNumber(targetValue);
+		
+		LocalDate datePostavForCalc = LocalDate.of(2024, 7, DayOfWeek.valueOf(targetKey).getValue());
+		
+		if(targetValue.split("/").length>1) {
+			targetValue = targetValue.split("/")[targetValue.split("/").length - 1];
+		}
+		
+		LocalDate dateOrderCalc = LocalDate.of(2024, 7, RUSSIAN_DAYS.get(targetValue).getValue());
+		
+		int j = datePostavForCalc.getDayOfMonth() - dateOrderCalc.getDayOfMonth(); // лог плечо
+						
+		
+		if(j < 0 && i == 0) {
+			j = j + 7;
+		}
+		if(j==0) {
+			j=7;
+		}
+		
+		i = i+j;
+		if(start.isBefore(finish)) {
+			finish = finish.minusDays(7);
+		}
+		return new DateRange(Date.valueOf(finish),Date.valueOf(start), i, targetKey, null);
+	}
+	
+	/**
+	 * Ищет ближайший доступный день с значением в `Map`, начиная с заданной даты и дня недели.
+	 * Возвращает дату найденного дня и соответствующее значение из `Map`.
+	 * 
+	 * @param dayMap   карта, где ключ — день недели, а значение — связанная с ним строка
+	 * @param startDate начальная дата поиска
+	 * @param startDay  день недели, с которого начинается поиск
+	 * @return пара {@link Map.Entry}, содержащая дату найденного дня и значение из `Map`,
+	 *         или `null`, если значение не найдено в течение недели
+	 */
+    public static Entry<LocalDate, Entry<String, String>> findNextAvailableDay(Map<String, String> dayMap, LocalDate startDate, DayOfWeek startDay) {
+        LocalDate currentDate = startDate.with(startDay); // Дата, с которой начинаем поиск
+
+        for (int i = 0; i < 7; i++) { // Максимум 7 итераций для обхода всей недели
+            String dayOfWeekString = currentDate.getDayOfWeek().toString();
+            String value = dayMap.get(dayOfWeekString);
+            if (value != null) {
+                return new SimpleEntry<>(currentDate, new SimpleEntry<>(dayOfWeekString, value)); // Возвращаем дату, ключ и значение
+            }
+            currentDate = currentDate.plusDays(1); // Переходим к следующему дню
+        }
+        return null; // Если ни одного значения не найдено
+    }
+	
 	
 	/**
 	 * Метод, который определяет:
@@ -325,7 +465,7 @@ public class ReaderSchedulePlan {
 		 
 		 
 		 
-		 DateRange dateRange = getDateRange(schedule, products); // тут раелизуются пункты 2 и 3
+		 DateRange dateRange = getDateRange(schedule, products, order); // тут раелизуются пункты 2 и 3
 		 
 		 System.out.println("dateRange = " + dateRange);
 		 
@@ -334,6 +474,8 @@ public class ReaderSchedulePlan {
 			 return new PlanResponce(200, "Просчёт кол-ва товара на логистическое плечо невозможен, т.к. расчёт ОРЛ не совпадает с графиком поставок");
 		 }
 		 if(dateRange.start == null && dateRange.days == 0) {
+			 //тут мы говорим что расчёты ОРЛ по товару отсутствуют но есть липовый график поставок и есть сток в днях. Всё равно проверяем по стоку!
+			 
 			 return new PlanResponce(200, "Расчёта заказов по продукту: " + products.get(0).getName() + " ("+products.get(0).getCodeProduct()+") невозможен, т.к. нет в базе данных расчётов потребности");
 		 }
 		 
@@ -353,7 +495,13 @@ public class ReaderSchedulePlan {
 				Double quantityOrderAll = map.get(orderLine.getGoodsId()).num;
 				Product product = productService.getProductByCode(orderLine.getGoodsId().intValue());
 				if(product!=null) {
-					List<OrderProduct> quantity = product.getOrderProductsListHasDateTarget(dateNow);
+					List<OrderProduct> quantity = null;
+					if(order.getDateOrderOrl() != null) {
+						quantity = product.getOrderProductsListHasDateTarget(order.getDateOrderOrl());
+					}else {
+						quantity = product.getOrderProductsListHasDateTarget(dateNow);
+					}
+
 					if(quantity != null) {
 						//тут происходит построчная оценка заказанного товара и принятие решения
 						int zaq = quantityOrderAll.intValue(); // СУММА заказов по периоду 
@@ -388,6 +536,11 @@ public class ReaderSchedulePlan {
 						}
 						
 					}else {
+						String dayStockMessage =  checkNumProductHasStock(order, product, dateRange); // проверяем по стокам относительно одного продукта
+						 if(dayStockMessage!= null) {
+				             result = dayStockMessage+"\n" + result;
+				             isMistakeZAQ = true;
+				         }
 						result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - отсутствует в плане заказа (Заказы поставщика от ОРЛ)\n";
 					}
 				}

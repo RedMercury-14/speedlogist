@@ -39,12 +39,22 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	}
 
 	
-	private static final String queryGetList = "from Schedule order by idSchedule";
+	private static final String queryGetListRC = "from Schedule where type='РЦ'";
 	@Transactional
 	@Override
-	public List<Schedule> getSchedules() {
+	public List<Schedule> getSchedulesListRC() {
 		Session currentSession = sessionFactory.getCurrentSession();
-		Query<Schedule> theRole = currentSession.createQuery(queryGetList, Schedule.class);
+		Query<Schedule> theRole = currentSession.createQuery(queryGetListRC, Schedule.class);
+		List <Schedule> roles = theRole.getResultList();
+		return roles;
+	}
+	
+	private static final String queryGetListTO = "from Schedule where type='ТО'";
+	@Transactional
+	@Override
+	public List<Schedule> getSchedulesListTO() {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Schedule> theRole = currentSession.createQuery(queryGetListTO, Schedule.class);
 		List <Schedule> roles = theRole.getResultList();
 		return roles;
 	}
@@ -113,6 +123,57 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 			return null;
 		}
 		return trucks;
+	}
+
+	private static final String queryGetListTOContract = "from Schedule where type='ТО' AND counterpartyContractCode=:counterpartyContractCode";
+	@Transactional
+	@Override
+	public List<Schedule> getSchedulesListTOContract(String contractCode) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Schedule> theRole = currentSession.createQuery(queryGetListTOContract, Schedule.class);
+		theRole.setParameter("counterpartyContractCode", Long.parseLong(contractCode.trim()));
+		List <Schedule> roles = theRole.getResultList();
+		return roles;
+	}
+
+	@Transactional
+	@Override
+	public List<Schedule> getSchedulesListTOСounterparty(String counterpartyName) {
+		final String queryGetListTOСounterparty = "from Schedule where type='ТО' AND name LIKE '%"+ counterpartyName + "%'";
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Schedule> theRole = currentSession.createQuery(queryGetListTOСounterparty, Schedule.class);
+		List <Schedule> roles = theRole.getResultList();
+		return roles;
+	}
+
+	private static final String queryGetSchedulesByTOType = "from Schedule where toType=:toType";
+	@Transactional
+	@Override
+	public List<Schedule> getSchedulesByTOType(String toType) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Schedule> theObject = currentSession.createQuery(queryGetSchedulesByTOType, Schedule.class);
+		theObject.setParameter("toType", toType.trim());
+		List<Schedule> trucks = theObject.getResultList();
+		if(trucks.isEmpty()) {
+			return null;
+		}
+		return trucks;
+	}
+
+	private static final String queryGetObjByNumContractAndStock = "from Schedule where counterpartyContractCode=:counterpartyContractCode AND numStock=:numStock";
+	@Transactional
+	@Override
+	public Schedule getScheduleByNumContractAndNUmStock(Long num, Integer numStock) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Schedule> theObject = currentSession.createQuery(queryGetObjByNumContractAndStock, Schedule.class);
+		theObject.setParameter("counterpartyContractCode", num);
+		theObject.setParameter("numStock", numStock);
+		List<Schedule> trucks = theObject.getResultList();
+		if(trucks.isEmpty()) {
+			return null;
+		}
+		Schedule object = trucks.stream().findFirst().get();
+		return object;
 	}
 	
 	

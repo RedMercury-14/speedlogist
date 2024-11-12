@@ -17,6 +17,7 @@ import com.google.gson.Gson;
 
 import by.base.main.model.Shop;
 import by.base.main.service.ShopService;
+import by.base.main.util.hcolossus.exceptions.FatalInsufficientPalletTruckCapacityException;
 
 /**
  * Класс подготовки и обработки магазинов
@@ -116,6 +117,65 @@ public class ShopMachine {
 		
 	}
 	
+	/**
+	 * Метод подготавливает лист магазинов уже с потребностями
+	 * <br>Метод сортирует потребность магазов от большего к меньшему и <b>от дальшего к ближнему <b>
+	 * <br> т.е. самый дальний и самый требовательный магаз
+	 * <br> Добавлена потребность магазина в килограммах
+	 * <br> Добавлен парсинг возврещаемых паллет
+	 * <br> Добавлен парсинг поля расчёта магазина от веса
+	 * <br> <b>ComparatorShopsDistanceMain</b>
+	 * @return
+	 * @throws JsonProcessingException 
+	 * @throws JsonMappingException 
+	 */
+	public List<Shop> prepareShopList5Parameters(List<Integer> shopList, List<Double> pallHasShops, List<Integer> tonnageHasShops,  Integer stock,  Map<Integer, String> shopsWithCrossDockingMap, List<Double> pallReturn
+			, List<Integer> weightDistributionList) throws JsonMappingException, JsonProcessingException {
+		Map<Integer, Shop> allShop =  shopService.getShopMap();
+		ComparatorShopsDistanceMain shopComparatorDistanceMain = new ComparatorShopsDistanceMain();
+		List<Shop> result = new ArrayList<Shop>();
+		for (int i = 0; i < shopList.size(); i++) {
+			Integer integer = shopList.get(i);
+			Shop shop = (Shop) SerializationUtils.clone(allShop.get(integer));
+			if(shop == null) {
+				System.err.println("ShopMachine.prepareShopList5Parameters: Магазин " + integer + " не найден в базе данных!");
+				return null;
+			}
+			shop.setNeedPall(pallHasShops.get(i));
+			shop.setWeight(tonnageHasShops.get(i));
+			shop.setPallReturn(pallReturn.get(i));
+			//тут проверяем, если паллеты которые нужно забрать больше ограничений - то выдаём ошибку!
+			if(shop.getPallReturn()!= null && shop.getMaxPall() != null && shop.getPallReturn() > shop.getMaxPall()) {
+				throw new FatalInsufficientPalletTruckCapacityException("Ограничение по магазину " + shop.getNumshop() + ": " + shop.getMaxPall() + " паллет. "
+						+ " Нужно забрать: " + shop.getPallReturn() + " паллет. Невозможно забрать одной машиной");
+			}
+			if(shopsWithCrossDockingMap.get(integer) != null) {
+				shop.setKrossPolugonName(shopsWithCrossDockingMap.get(integer));
+			}
+			if(weightDistributionList.contains(shop.getNumshop())) {//добавляем запись о том что магазин входит в полигон со спец. расчётами
+				shop.setSpecialWeightDistribution(true);
+			}else {
+				shop.setSpecialWeightDistribution(false);
+			}
+			result.add(shop);
+		}
+		//задаём расстояния от склада до магазина, для последующей сортировки
+		List<Shop> finalResult = new ArrayList<Shop>();
+		for (Shop shop : result) {
+			String keyForMatrix = stock+"-"+shop.getNumshop();
+			Double distanceTarget = matrixMachine.matrix.get(keyForMatrix);
+			if(distanceTarget == null) {
+				System.err.println("ShopMachine.prepareShopList5Parameters: Магазин " + shop.getNumshop() + " не найдено расстояние от склада");
+			}else {
+				shop.setDistanceFromStock(distanceTarget);
+				finalResult.add(shop);
+			}
+			
+		}
+		finalResult.sort(shopComparatorDistanceMain);
+		return finalResult;
+		
+	}
 	/**
 	 * Метод подготавливает лист магазинов уже с потребностями
 	 * <br>Метод сортирует потребность магазов от большего к меньшему и <b>от дальшего к ближнему <b>

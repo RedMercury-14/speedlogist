@@ -27,6 +27,10 @@ const POLYGON_ACTIONS_DICTIONARY = {
 		text: "Зона для расчета количества паллет",
 		color: "#17a2b8",
 	},
+	weightDistribution: {
+		text: "Зона распределения по весу",
+		color: "blue",
+	},
 }
 
 export const drawControl = new L.Control.Draw({
@@ -197,9 +201,9 @@ function getPopUpByPolygon(props, layer, onDeleteCallback) {
 
 	if (props.action === 'calcPallSum') {
 		const shopsToView = mapStore.getShopsToView()
-		const pallSum = getSelectedShopsPallSum(layer, shopsToView).toFixed(2)
+		const pallSum = getSelectedShopsPallSum(layer, shopsToView)
 		poputHTML += `
-			<span class="font-weight-bold">Общее количество паллет: ${pallSum ? pallSum : 'Нет магазинов'}</span><br>
+			<span class="font-weight-bold">Общее количество паллет: ${pallSum ? pallSum.toFixed(2) : 'Нет магазинов'}</span><br>
 			<button class="calcPallSumBtn mt-1 btn btn-info btn-sm btn-block">Пересчитать сумму паллет</button>
 		`
 	}

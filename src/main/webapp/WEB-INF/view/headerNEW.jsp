@@ -77,13 +77,13 @@
 									</a>
 									<div class="dropdown-menu">
 										<a class="dropdown-item" href="<spring:url value="/main/slots" />">Слоты</a>
-										<a class="dropdown-item" href="<spring:url value="/main/slots/delivery-schedule" />">График поставок</a>
 										<a class="dropdown-item" href="<spring:url value="/main/procurement/add-order" />">Создание заявки</a>
 										<a class="dropdown-item" href="<spring:url value="/main/procurement/orders" />">Контроль заявок</a>
 										<a class="dropdown-item" href="<spring:url value="/main/order-support/orders" />">Остаток товара</a>
 										<a class="dropdown-item" href="<spring:url value="/main/order-support/control" />">Загрузить отчет</a>
 										<!-- <a class="dropdown-item" href="<spring:url value="/main/stock-support/orders" />">Таблица Башкиров</a> -->
-										<a class="dropdown-item" href="<spring:url value="/main/orl/delivery-schedule" />">График поставок</a>
+										<a class="dropdown-item" href="<spring:url value="/main/orl/delivery-schedule" />">Графики поставок на РЦ</a>
+										<a class="dropdown-item" href="<spring:url value="/main/orl/delivery-schedule-to" />">Графики поставок на ТО</a>
 										<a class="dropdown-item" href="<spring:url value="/main/orl/need" />">Потребности</a>
 										<a class="dropdown-item" href="<spring:url value="/main/orl/arrival" />">Приход</a>
 									</div>
@@ -134,6 +134,7 @@
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/documentflow" />">Документооборот</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/shopControl" />">Список магазинов</a>
 										<a class="dropdown-item" href="<spring:url value="/main/analytics/logistics" />">Аналитика Биржи</a>
+										<a class="dropdown-item" href="<spring:url value="/main/analytics/shortage" />">Аналитика: Нехватка товаров на РЦ</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/maintenance " />">Менеджер маршрутов АХО/СГИ</a>
 									</div>
 								</li>
@@ -170,7 +171,8 @@
 								<li class="dropdown">
 									<a href="#" class="nav-item nav-link" data-toggle="dropdown">ОРЛ</a>
 									<div class="dropdown-menu">
-										<a class="dropdown-item" href="<spring:url value="/main/orl/delivery-schedule" />">График поставок</a>
+										<a class="dropdown-item" href="<spring:url value="/main/orl/delivery-schedule" />">Графики поставок на РЦ</a>
+										<!-- <a class="dropdown-item" href="<spring:url value="/main/orl/delivery-schedule-to" />">Графики поставок на ТО</a> -->
 										<a class="dropdown-item" href="<spring:url value="/main/orl/need" />">Потребности</a>
 										<!-- <a class="dropdown-item" href="<spring:url value="/main/orl/arrival" />">Приход</a> -->
 									</div>
@@ -219,13 +221,15 @@
 									</a>
 									<div class="dropdown-menu">
 										<a class="dropdown-item" href="<spring:url value="/main/slots" />">Слоты</a>
-										<a class="dropdown-item" href="<spring:url value="/main/slots/delivery-schedule" />">График поставок</a>
+										<a class="dropdown-item" href="<spring:url value="/main/slots/delivery-schedule" />">Графики поставок на РЦ</a>
+										<!-- <a class="dropdown-item" href="<spring:url value="/main/slots/delivery-schedule-to" />">Графики поставок на ТО</a> -->
 									</div>
 								</li>
 								<li class="dropdown">
 									<a href="#" class="nav-item nav-link" data-toggle="dropdown">ОРЛ</a>
 									<div class="dropdown-menu">
-										<a class="dropdown-item" href="<spring:url value="/main/orl/delivery-schedule" />">График поставок</a>
+										<a class="dropdown-item" href="<spring:url value="/main/orl/delivery-schedule" />">Графики поставок на РЦ</a>
+										<a class="dropdown-item" href="<spring:url value="/main/orl/delivery-schedule-to" />">Графики поставок на ТО</a>
 										<a class="dropdown-item" href="<spring:url value="/main/orl/need" />">Потребности</a>
 										<!-- <a class="dropdown-item" href="<spring:url value="/main/orl/arrival" />">Приход</a> -->
 									</div>
@@ -256,7 +260,8 @@
 									</a>
 									<div class="dropdown-menu">
 										<a class="dropdown-item" href="<spring:url value="/main/slots" />">Слоты</a>
-										<a class="dropdown-item" href="<spring:url value="/main/slots/delivery-schedule" />">График поставок</a>
+										<a class="dropdown-item" href="<spring:url value="/main/slots/delivery-schedule" />">Графики поставок на РЦ</a>
+										<!-- <a class="dropdown-item" href="<spring:url value="/main/slots/delivery-schedule-to" />">Графики поставок на ТО</a> -->
 									</div>
 								</li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/procurement/ordersBalance" />">Остаток товара</a></li>

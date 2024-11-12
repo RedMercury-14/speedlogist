@@ -19,6 +19,7 @@
 	<script src="${pageContext.request.contextPath}/resources/js/leaflet/leaflet.js"></script>
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/js/leaflet/leaflet.draw.css"/>
 	<script src="${pageContext.request.contextPath}/resources/js/leaflet/leaflet.draw.js"></script>
+	<script src="${pageContext.request.contextPath}/resources/js/leaflet/leaflet.geometryutil.js"></script>
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/bootstrap5overlay.css">
 </head>
 <body class="active-sidebar">
@@ -477,6 +478,7 @@
 								<option value="trafficBan">Запретить движение</option>
 								<option value="trafficSpecialBan">Запретить движение для загруженных машин</option>
 								<option value="crossDocking">Указать зону для кросс-докинга</option>
+								<option value="weightDistribution">Указать зону распределения по весу</option>
 							</select>
 						</div>
 						<div class="form-group none">

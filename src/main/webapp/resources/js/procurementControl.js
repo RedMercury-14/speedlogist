@@ -313,13 +313,13 @@ async function deleteOrder(idOrder, rowNode) {
 	clearTimeout(timeoutId)
 	bootstrap5overlay.hideOverlay()
 
-	if (res.status === '200') {
+	if (res && res.status === '200') {
 		snackbar.show('Заявка удалена')
 		rowNode.setDataValue('status', deleteStatus)
 		rowNode.setDataValue('statusToView', deleteStatusText)
 	} else {
 		console.log(res)
-		const message = res.message ? res.message : 'Неизвестная ошибка'
+		const message = res && res.message ? res.message : 'Неизвестная ошибка'
 		snackbar.show(message)
 	}
 }

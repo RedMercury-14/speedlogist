@@ -491,6 +491,32 @@ export function displayStockAndDate(calendarApi, currentStock, currentDate, foun
 	calendarApi.scrollToTime(eventTime)
 }
 
+// поиск слота на складах и его отображение
+export function searchSlot(props) {
+	const { searchValue, events, calendar, currentDate, currentStock } = props
+
+	if (!events || events.length === 0) {
+		snackbar.show('Слот не найден')
+		return
+	}
+
+	const foundEvent = events.find(event => {
+		return event.extendedProps.data.idOrder === Number(searchValue)
+			|| event.extendedProps.data.marketNumber === searchValue
+	})
+
+	if (foundEvent) {
+		const order = foundEvent.extendedProps.data
+		const eventId = order.marketNumber
+		// отображаем нужные дату и склад
+		displayStockAndDate(calendar, currentStock, currentDate, foundEvent) 
+		// подсвечиваем слот на 3 сек
+		highlightSlot(calendar, eventId)
+	} else {
+		snackbar.show('Слот не найден')
+	}
+}
+
 // подсвечивание слота в календаре
 export function highlightSlot(calendarApi, eventId) {
 	const calendarEvent = calendarApi.getEventById(eventId)

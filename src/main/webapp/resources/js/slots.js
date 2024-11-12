@@ -1,55 +1,23 @@
 import { snackbar } from "./snackbar/snackbar.js"
 import { store } from "./slots/store.js"
-import {
-	checkBookingBaseUrl,
-	checkSlotBaseUrl,
-	confirmSlotUrl,
-	deleteOrderUrl,
-	editMarketInfoBaseUrl,
-	eventColors,
-	getMarketOrderUrl,
-	getOrdersForSlotsBaseUrl,
-	loadOrderUrl,
-	preloadOrderUrl,
-	slotStocks,
-	slotsSettings,
-	updateOrderUrl,
-	userMessages,
-} from "./slots/constants.js"
+import { eventColors, slotsSettings, userMessages, } from "./slots/constants.js"
 import { gridOptions, renderTable, showInternalMovementOrders, updateTableData, updateTableRow } from "./slots/agGridUtils.js"
 import {
-	createCloseEventButton,
-	createEventElement,
 	isMobileDevice,
 	setCalendarWidth,
 	showMobileTooltop,
-	setPallInfo,
 	createDraggableElement,
-	errorHandler_100status,
-	showReloadWindowModal,
-	createPopupButton,
-	showEventInfoPopup,
-	hideEventInfoPopup,
 	addSmallHeaderClass,
 	updateDropZone,
 	copyToClipboard,
-	showMessageModal,
-	setCurrentDateAttr,
 	setStockAttr,
 	createCalendarDateInput,
-	errorHandler_105status,
-	displayStockAndDate,
-	highlightSlot,
-	createCheckSlotBtn,
-	createCheckBookingBtn,
-	createDeleteSlotBtn,
+	searchSlot,
 } from "./slots/calendarUtils.js"
-import { dateHelper, debounce, getData, isAdmin, isLogist, isSlotsObserver, isStockProcurement } from "./utils.js"
+import { debounce, isAdmin, isLogist, isSlotsObserver, isStockProcurement } from "./utils.js"
 import { uiIcons } from "./uiIcons.js"
 import { wsSlotUrl } from "./global.js"
-import { ajaxUtils } from "./ajaxUtils.js"
 import { bootstrap5overlay } from "./bootstrap5overlay/bootstrap5overlay.js"
-import { addCalendarEvent, deleteCalendarEvent, updateCalendarEvent, updateOrderAndEvent } from "./slots/eventControlMethods.js"
 import {
 	wsSlotOnCloseHandler,
 	wsSlotOnErrorHandler,
@@ -58,31 +26,18 @@ import {
 } from "./slots/wsHandlers.js"
 import {
 	checkEventId,
-	checkPallCount,
-	checkPallCountForComingDates,
-	checkSchedule,
-	hasOrderInYard,
-	isBackgroundEvent,
 	isInvalidEventDate,
-	isOldSlotNotInYard,
-	isOldSupplierOrder,
-	isOverlapWithInternalMovementTime,
-	isOverlapWithShiftChange,
-	methodAccessRules,
 } from "./slots/rules.js"
 import {
 	convertToDayMonthTime,
-	getDatesToSlotsFetch,
 	getMinUnloadDate,
-	getOrderDataForAjax,
 	getSlotInfoToCopy,
-	stockAndDayIsVisible,
-	stockIsVisible,
 } from "./slots/dataUtils.js"
 import { gridColumnLocalState } from "./AG-Grid/ag-grid-utils.js"
-import { updateChartData, getFormattedPallChartData, pallChartConfig, getMarkerBGColorData, } from "./slots/chartJSUtils.js"
+import { pallChartConfig, updatePallChart, } from "./slots/chartJSUtils.js"
 import {
 	addNewOrderBtnListner,
+	adminActionListner,
 	confitmSlotBtnListner,
 	copySlotInfoBtnListner,
 	eventInfoModalClosedListner,
@@ -93,8 +48,27 @@ import {
 	statusInfoLabelLIstners,
 	stockSelectListner,
 } from "./slots/listners.js"
-import { renderOrderCalendar } from "./slots/deliveryCalendar.js"
 import { MAX_PALL_RESTRICTIONS } from "./globalRules/maxPallRestrictions.js"
+import {
+	checkEventsForBooking,
+	confirmSlot,
+	editMarketInfo,
+	getOrderFromMarket,
+	loadOrder,
+} from "./slots/api.js"
+import {
+	dateSetHandler,
+	eventClickHandler,
+	eventContentHandler,
+	eventDidMountHandler,
+	eventDragStartHandler,
+	eventDragStopHandler,
+	eventDropHandler,
+	eventReceiveHandler,
+	eventsHandler,
+	eventsSetHandler,
+	resourcesHandler
+} from "./slots/calendarHandlers.js"
 
 
 const LOCAL_STORAGE_KEY = 'AG_Grid_column_settings_to_Slots'
@@ -197,7 +171,7 @@ const calendarOptions = {
 	eventColor: eventColors.default,
 
 	// рампы
-	resources: resourcesHandler,
+	resources: (info, successCallback, failureCallback) => resourcesHandler(successCallback, slots),
 
 	// диапазон дат календаря был первоначально установлен
 	// или изменен каким-либо образом и был обновлен DOM
@@ -212,19 +186,19 @@ const calendarOptions = {
 	// обработчик события встраивания ивента в DOM
 	eventDidMount: eventDidMountHandler,
 
-	eventDragStart: eventDragStartHandler,
+	eventDragStart: (info) => eventDragStartHandler(info, wsSlot),
 	eventDragStop: eventDragStopHandler,
 
 	// обработчик события перемещения собития камендаря
 	// (срабатывает при установке события на новое место)
-	eventDrop: eventDropHandler,
+	eventDrop: async (info) => await eventDropHandler(info, orderTableGridOption),
 
 	// вызывается, когда внешний перетаскиваемый элемент со связанными
 	// данными о событии перетаскивается в календарь (дроп)
-	eventReceive: eventReceiveHandler,
+	eventReceive: async (info) => await eventReceiveHandler(info, orderTableGridOption, orderDateClickHandler),
 
 	// обработчик события клика по собитию календаря
-	eventClick: eventClickHandler,
+	eventClick: (info) => eventClickHandler(info, orderTableGridOption, wsSlot),
 
 	// обработчик события изменения количества событий на календаре
 	// (срабатывает при изменении количества событий на календаре, 
@@ -276,6 +250,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 	slotInfoListners()
 	// закрытие модального окна с информацией об ивенте
 	eventInfoModalClosedListner()
+	// обработка действия для админа
+	adminActionListner(doAdminAction)
 
 	// отображение стартовых данных
 	if (window.initData) {
@@ -408,7 +384,13 @@ function stockSelectOnChangeHandler(e, calendar) {
 	slots = selectedStock.ramps
 
 	// обновляем данные паллетовместимости склада за период (модалка)
-	updatePallChart(selectedStock)
+	const nowDateStr = new Date().toISOString().slice(0, 10)
+	const pallChartData = store.getMaxPallDataByPeriod(
+		selectedStock.id,
+		nowDateStr,
+		slotsSettings.PALL_CHART_DATA_DAY_COUNT
+	)
+	updatePallChart(pallLineChart, pallChartData)
 
 	// подключаем кнопку "Добавить заказ" для закупок
 	if (!isAdmin(role) && !isLogist(role) && !isSlotsObserver(role) && !isStockProcurement(role)) {
@@ -461,7 +443,7 @@ function confirmSlotBtnClickHandler(e) {
 
 	// 
 	if (action === 'unSave' && status === 20) return
-	confirmSlot(fcEvent, action)
+	confirmSlot(fcEvent, action, orderTableGridOption)
 }
 
 // обработчик нажатия на кнопку копирования информации о слоте
@@ -478,35 +460,19 @@ function slotSearchFormSubmitHandler(e) {
 	const formData = new FormData(e.target)
 	const searchValue = formData.get('searchValue')
 	if (!searchValue) return
-	searchSlot(searchValue)
-}
-// поиск слота на складах и его отображение
-function searchSlot(searchValue) {
+
 	const events = store.getCalendarEvents()
-
-	if (!events || events.length === 0) {
-		snackbar.show('Слот не найден')
-		return
-	}
-
-	const foundEvent = events.find(event => {
-		return event.extendedProps.data.idOrder === Number(searchValue)
-			|| event.extendedProps.data.marketNumber === searchValue
+	const currentDate = store.getCurrentDate()
+	const currentStock = store.getCurrentStock()
+	searchSlot({
+		searchValue,
+		events,
+		calendar,
+		currentDate,
+		currentStock
 	})
-
-	if (foundEvent) {
-		const order = foundEvent.extendedProps.data
-		const eventId = order.marketNumber
-		const currentDate = store.getCurrentDate()
-		const currentStock = store.getCurrentStock()
-		// отображаем нужные дату и склад
-		displayStockAndDate(calendar, currentStock, currentDate, foundEvent) 
-		// подсвечиваем слот на 3 сек
-		highlightSlot(calendar, eventId)
-	} else {
-		snackbar.show('Слот не найден')
-	}
 }
+
 // обработка выбора даты заказа согласно графику поставок
 function orderDateClickHandler(e) {
 	const orderDateCell = e.currentTarget
@@ -520,715 +486,27 @@ function orderDateClickHandler(e) {
 		return
 	}
 
-	loadOrder(info, dateOrderOrl)
+	loadOrder(info, orderTableGridOption, dateOrderOrl)
 }
 
-/* -------------- обработчики для календаря ------------------ */
-function resourcesHandler(info, successCallback, failureCallback) {
-	successCallback(slots)
-}
-function dateSetHandler(info) {
-	const currentDateStr= info.startStr.split('T')[0]
-	const currentStock = store.getCurrentStock()
+// обработка выбора админского действия в слотах
+async function doAdminAction(e) {
+	const select = e.target
+	const action = select.value
 
-	store.setCurrendDate(currentDateStr)
+	if (!action) return
 
-	// изменение информации о паллетах для данного склада
-	if (currentStock) {
-		const maxPall = store.getMaxPallByDate(currentStock.id, currentDateStr)
-		const pallCount = store.getPallCount(currentStock, currentDateStr)
-		// сохраняем в стор данные о паллетовместимости на текущем складе
-		store.setCurrentMaxPall(maxPall)
-		// изменяем данные по паллетовместимости у пользователя
-		setPallInfo(pallCount, maxPall)
-	}
-
-	// добавляем для календаря текущую дату в атрибуты
-	setCurrentDateAttr(currentDateStr)
-}
-function eventsHandler(info, successCallback, failureCallback) {
-	const currentStock = store.getCurrentStock()
-	const events = currentStock
-		? store.getState().stocks.find(stock => stock.id === currentStock.id).events
-		: []
-	successCallback(events)
-}
-function eventContentHandler(info) {
-	const login = store.getLogin()
-	const role = store.getRole()
-	const eventElem = createEventElement(info)
-
-	// если ивент - подложка
-	if (isBackgroundEvent(info.event)) return eventElem
-
-	const showBtn = isOldSupplierOrder(info, login) && !hasOrderInYard(info.event.extendedProps.data)
-	const closeBtn = info.isDraggable || showBtn ? createCloseEventButton(info, showBtn) : ''
-	const popupBtn = createPopupButton(info, login)
-	const checkSlotBtn = createCheckSlotBtn(info)
-	const checkBookingBtn = createCheckBookingBtn(info)
-	const deleteSlotBtn = createDeleteSlotBtn(info)
-
-	const nodes = info.isDraggable || showBtn
-		? [ eventElem, closeBtn, popupBtn ]
-		: [ eventElem, popupBtn ]
-
-	// кнопка проверки слота для админа
-	if (isAdmin(role)) nodes.push(checkSlotBtn, checkBookingBtn, deleteSlotBtn)
-	else if (login === 'romashkok%!dobronom.by') nodes.push(checkBookingBtn, deleteSlotBtn)
-
-	return {
-		domNodes: nodes
-	}
-}
-function eventDidMountHandler(info) {
-	if(!info.isDraggable && !isBackgroundEvent(info.event)) {
-		info.el.children[0].children[0].style.cursor = 'default'
-		return
-	}
-}
-function eventDragStartHandler(info) {
-	const wsIsOpen = wsSlot.readyState === 1
-
-	if (!wsIsOpen) {
-		showReloadWindowModal()
-		return
-	}
-}
-function eventDragStopHandler(info) {
-	// console.log(info)
-}
-async function eventDropHandler(info) {
-	const role = store.getRole()
-	const { event: fcEvent } = info
-	const order = fcEvent.extendedProps.data
-
-	// проверка даты начала ивента
-	const minUnloadDate = getMinUnloadDate(order, role)
-	const minUnloadDateStr = convertToDayMonthTime(minUnloadDate)
-	if (isInvalidEventDate(info, minUnloadDate)) {
-	// if (isInvalidEventDate(info, minUnloadDate) && !isOldSlotNotInYard(order)) {
-		info.revert()
-		snackbar.show(userMessages.dateDropError(minUnloadDateStr))
-		return
-	}
-
-	// проверка пересечения с пересменкой
-	const currentStock = store.getCurrentStock()
-	const shiftChange = currentStock.shiftChange
-	if (isOverlapWithShiftChange(info, shiftChange)) {
-		info.revert()
-		snackbar.show(userMessages.shiftChangeError)
-		return
-	}
-
-	// проверка пересечения со временем для внутренних перемещений
-	const internaMovementsTimes = currentStock.internaMovementsTimes
-	const internalMovementsRamps = currentStock.internalMovementsRamps
-	if (isOverlapWithInternalMovementTime(info, internaMovementsTimes, internalMovementsRamps)) {
-		info.revert()
-		alert(userMessages.internalMovementTimeError)
-		return
-	}
-
-	// проверка паллетовместимости склада на соседние даты
-	const eventDateStr = fcEvent.startStr.split('T')[0]
-	const pallCount = store.getPallCount(currentStock, eventDateStr)
-	const maxPall = store.getMaxPallByDate(currentStock.id, eventDateStr)
-	if (!checkPallCountForComingDates(info, pallCount, maxPall)) {
-		info.revert()
-		snackbar.show(userMessages.pallDropError)
-		return
-	}
-
-	// проверка совпадения с графиком поставок
-	// const scheduleData = await checkSchedule(order, eventDateStr)
-	// if (scheduleData.message) alert (scheduleData.message)
-
-	updateOrder(info, false)
-}
-async function eventReceiveHandler(info) {
-	const role = store.getRole()
-	const { event: fcEvent } = info
-	const order = fcEvent.extendedProps.data
-	const eventDateStr = fcEvent.startStr.split('T')[0]
-	
-	// проверка даты начала ивента
-	const minUnloadDate = getMinUnloadDate(order, role)
-	const minUnloadDateStr = convertToDayMonthTime(minUnloadDate)
-	if (isInvalidEventDate(info, minUnloadDate)) {
-		info.revert()
-		snackbar.show(userMessages.dateDropError(minUnloadDateStr))
-		return
-	}
-
-	// проверка паллетовместимости склада
-	const currentStock = store.getCurrentStock()
-	const pallCount = store.getPallCount(currentStock, eventDateStr)
-	const maxPall = store.getMaxPallByDate(currentStock.id, eventDateStr)
-	if (!checkPallCount(info, pallCount, maxPall)) {
-		info.revert()
-		snackbar.show(userMessages.pallDropError)
-		return
-	}
-
-	// проверка пересечения с пересменкой
-	const shiftChange = currentStock.shiftChange
-	if (isOverlapWithShiftChange(info, shiftChange)) {
-		info.revert()
-		snackbar.show(userMessages.shiftChangeError)
-		return
-	}
-
-	// проверка пересечения со временем для внутренних перемещений
-	const internaMovementsTimes = currentStock.internaMovementsTimes
-	const internalMovementsRamps = currentStock.internalMovementsRamps
-	if (isOverlapWithInternalMovementTime(info, internaMovementsTimes, internalMovementsRamps)) {
-		info.revert()
-		alert(userMessages.internalMovementTimeError)
-		return
-	}
-
-	// проверка совпадения с графиком поставок
-	// const scheduleData = await checkSchedule(order, eventDateStr)
-	// if (scheduleData.message) alert (scheduleData.message)
-
-	// для логиста и админа - сложный апдейт
-	if (isAdmin(role) || isLogist(role)) {
-		updateOrder(info, true)
-		return
-	}
-
-	// загрузка заказа в БД либо требование установки даты заказа
-	const isInternalMovement = order.isInternalMovement === 'true'
-	if (isInternalMovement) {
-		loadOrder(info)
-	} else {
-		preloadOrder(info)
-		store.setCalendarInfo(info)
-	}
-}
-function eventClickHandler(info) {
-	const { event: fcEvent, jsEvent } = info
-	const wsIsOpen = wsSlot.readyState === 1
-	const login = store.getLogin()
-	const role = store.getRole()
-
-	if (!wsIsOpen) {
-		showReloadWindowModal()
-		return
-	}
-
-	// обработчик нажатия на кнопку удаления события
-	if (jsEvent.target.dataset.action === 'close') {
-		// для логиста и админа - сложный апдейт
-		if (isAdmin(role) || isLogist(role)) {
-			const method = 'update'
-			const currentStock = store.getCurrentStock()
-			const orderData = getOrderDataForAjax(info, currentStock, login, role, method)
-			deleteCalendarEvent(orderTableGridOption, orderData, false)
+	if (action === 'checkBookingForCurrentDate') {
+		select.value = ''
+		select.blur()
+		const events = store.getTodayEvents()
+		if (!events || events.length === 0) {
+			snackbar.show('На текущую дату нет заказов')
 			return
 		}
-
-		// удаление заказа из БД
-		deleteOrder(info)
+		await checkEventsForBooking(events)
 		return
 	}
-
-	// обработчик клика на кнопку информации
-	if (jsEvent.target.dataset.action === 'popup') {
-		store.setslotToConfirm(fcEvent)
-		showEventInfoPopup(fcEvent, login, role)
-		return
-	}
-
-	// обработчик клика на кнопку проверки слота
-	if (jsEvent.target.dataset.action === 'checkSlot') {
-		checkSlot(info)
-		return
-	}
-
-	// обработчик клика на кнопку проверки на бронь
-	if (jsEvent.target.dataset.action === 'checkBooking') {
-		checkBooking(info)
-		return
-	}
-
-	// обработчик клика на кнопку проверки на бронь
-	if (jsEvent.target.dataset.action === 'deleteSlot') {
-		if (confirm(`Вы уверены, что хотите удалить слот?`)) {
-			deleteOrder(info, true)
-		}
-		return
-	}
-}
-function eventsSetHandler(info) {
-	// console.log('ivents: ', info)
-}
-
-
-/* -------------- методы для обновления БД ------------------ */
-function preloadOrder(info) {
-	const method = 'preload'
-	const currentStock = store.getCurrentStock()
-	const currentLogin = store.getLogin()
-	const currentRole = store.getRole()
-	const orderData = getOrderDataForAjax(info, currentStock, currentLogin, currentRole, method)
-
-	// проверка доступа к методу
-	if (!methodAccessRules(method, orderData, currentLogin, currentRole)) {
-		info.revert()
-		snackbar.show(userMessages.operationNotAllowed)
-		return
-	}
-
-	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
-
-	ajaxUtils.postJSONdata({
-		url: preloadOrderUrl,
-		token: store.getToken(),
-		data: orderData,
-		successCallback: (data) => {
-			clearTimeout(timeoutId)
-			bootstrap5overlay.hideOverlay()
-
-			if (data.status === '200') {
-				if (!data.planResponce) {
-					// нет данных о графике - загружаем заказ в БД
-					loadOrder(info)
-				} else {
-					const plan = data.planResponce
-
-					// нет данных о датах заказов и поставок
-					if (!plan.dates) {
-						loadOrder(info)
-						return
-					}
-
-					// нет данных о датах заказов и поставок
-					if (plan.dates.length === 0) {
-						loadOrder(info)
-						return
-					}
-
-					// получаем даты заказов и поставок, ожидаем указание нужной даты
-					const orderDates = plan.dates       // Заказы
-					const deliveryDates = plan.deliveryDates    // Поставки
-					renderOrderCalendar(orderDates, deliveryDates, orderDateClickHandler)
-					$('#orderCalendarModal').modal('show')
-				}
-				return
-			}
-
-			if (data.status === '105') {
-				errorHandler_105status(info, data)
-				return
-			}
-
-			if (data.status === '100') {
-				errorHandler_100status(info, data)
-			} else {
-				snackbar.show(userMessages.actionNotCompleted)
-			}
-		},
-		errorCallback: () => {
-			info.revert()
-			clearTimeout(timeoutId)
-			bootstrap5overlay.hideOverlay()
-		}
-	})
-}
-function loadOrder(info, dateOrderOrl) {
-	const method = 'load'
-	const currentStock = store.getCurrentStock()
-	const currentLogin = store.getLogin()
-	const currentRole = store.getRole()
-	const orderData = getOrderDataForAjax(info, currentStock, currentLogin, currentRole, method)
-
-	if (dateOrderOrl) orderData.dateOrderOrl = dateOrderOrl
-
-	// проверка доступа к методу
-	if (!methodAccessRules(method, orderData, currentLogin, currentRole)) {
-		info.revert()
-		snackbar.show(userMessages.operationNotAllowed)
-		return
-	}
-
-	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
-
-	ajaxUtils.postJSONdata({
-		url: loadOrderUrl,
-		token: store.getToken(),
-		data: orderData,
-		successCallback: (data) => {
-			clearTimeout(timeoutId)
-			bootstrap5overlay.hideOverlay()
-
-			if (data.status === '200') {
-				data.info && showMessageModal(data.info)
-				addCalendarEvent(orderTableGridOption, orderData, false)
-				return
-			}
-
-			if (data.status === '105') {
-				errorHandler_105status(info, data)
-				return
-			}
-
-			if (data.status === '100') {
-				errorHandler_100status(info, data)
-			} else {
-				snackbar.show(userMessages.actionNotCompleted)
-			}
-		},
-		errorCallback: () => {
-			info.revert()
-			clearTimeout(timeoutId)
-			bootstrap5overlay.hideOverlay()
-		}
-	})
-}
-function updateOrder(info, isComplexUpdate) {
-	const method = 'update'
-	const currentStock = store.getCurrentStock()
-	const currentLogin = store.getLogin()
-	const currentRole = store.getRole()
-	const orderData = getOrderDataForAjax(info, currentStock, currentLogin, currentRole, method)
-
-	// проверка доступа к методу
-	if (!methodAccessRules(method, orderData, currentLogin, currentRole)) {
-		info.revert()
-		snackbar.show(userMessages.operationNotAllowed)
-		return
-	}
-
-	// просьба указать причину переноса слота для логистов
-	if (isLogist(currentRole)) {
-		const messageLogist = prompt(
-			`Укажите причину переноса (минимум ${slotsSettings.LOGIST_MESSAGE_MIN_LENGHT} символов): `
-		)
-		if (!messageLogist) {
-			info.revert()
-			return
-		}
-		if (messageLogist.length < slotsSettings.LOGIST_MESSAGE_MIN_LENGHT) {
-			info.revert()
-			snackbar.show(userMessages.messageLogistIsShort)
-			return
-		}
-		orderData.messageLogist = messageLogist
-	}
-
-	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
-
-	ajaxUtils.postJSONdata({
-		url: updateOrderUrl,
-		token: store.getToken(),
-		data: orderData,
-		successCallback: (data) => {
-			clearTimeout(timeoutId)
-			bootstrap5overlay.hideOverlay()
-
-			if (data.status === '200') {
-				data.info && showMessageModal(data.info)
-				isComplexUpdate
-					? addCalendarEvent(orderTableGridOption, orderData, false)
-					: updateCalendarEvent(orderTableGridOption, orderData, false)
-				return
-			}
-
-			if (data.status === '105') {
-				errorHandler_105status(info, data)
-				return
-			}
-
-			if (data.status === '100') {
-				errorHandler_100status(info, data)
-			} else {
-				snackbar.show(userMessages.actionNotCompleted)
-			}
-		},
-		errorCallback: () => {
-			info.revert()
-			clearTimeout(timeoutId)
-			bootstrap5overlay.hideOverlay()
-		}
-	})
-}
-function deleteOrder(info, deleteByAdmin) {
-	const method = 'delete'
-	const currentStock = store.getCurrentStock()
-	const currentLogin = store.getLogin()
-	const currentRole = store.getRole()
-	const orderData = getOrderDataForAjax(info, currentStock, currentLogin, currentRole, method)
-
-	// для админа - удалять заказ без переноса в дроп-зону
-	const isAnotherUser = !!deleteByAdmin
-
-	// проверка доступа к методу
-	if (!methodAccessRules(method, orderData, currentLogin, currentRole)) {
-		snackbar.show(userMessages.operationNotAllowed)
-		return
-	}
-
-	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
-
-	ajaxUtils.postJSONdata({
-		url: deleteOrderUrl,
-		token: store.getToken(),
-		data: orderData,
-		successCallback: (data) => {
-			clearTimeout(timeoutId)
-			bootstrap5overlay.hideOverlay()
-
-			if (data.status === '200') {
-				deleteCalendarEvent(orderTableGridOption, orderData, isAnotherUser)
-				return
-			}
-
-			if (data.status === '105') {
-				errorHandler_105status(info, data)
-				return
-			}
-
-			if (data.status === '100') {
-				errorHandler_100status(info, data)
-			} else {
-				snackbar.show(userMessages.actionNotCompleted)
-			}
-		},
-		errorCallback: () => {
-			info.revert()
-			clearTimeout(timeoutId)
-			bootstrap5overlay.hideOverlay()
-		}
-	})
-}
-function confirmSlot(fcEvent, action) {
-	const method = 'confirm'
-	const currentStock = store.getCurrentStock()
-	const currentLogin = store.getLogin()
-	const currentRole = store.getRole()
-	const orderData = getOrderDataForAjax({ event: fcEvent }, currentStock, currentLogin, currentRole, method)
-	orderData.status = action === 'save' ? fcEvent.extendedProps.data.status === 8 ? 100 : 20: 8
-
-	// проверка доступа к методу
-	if (!methodAccessRules(method, orderData, currentLogin, currentRole)) {
-		snackbar.show(userMessages.operationNotAllowed)
-		return
-	}
-
-	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
-
-	ajaxUtils.postJSONdata({
-		url: confirmSlotUrl,
-		token: store.getToken(),
-		data: orderData,
-		successCallback: (data) => {
-			clearTimeout(timeoutId)
-			bootstrap5overlay.hideOverlay()
-
-			if (data.status === '200') {
-				action === 'save' && data.info && showMessageModal(data.info)
-				updateCalendarEvent(orderTableGridOption, orderData, false)
-				hideEventInfoPopup()
-				return
-			}
-
-			if (data.status === '105') {
-				errorHandler_105status(null, data)
-				return
-			}
-
-			if (data.status === '100') {
-				errorHandler_100status(null, data)
-			} else {
-				snackbar.show(userMessages.actionNotCompleted)
-			}
-		},
-		errorCallback: () => {
-			clearTimeout(timeoutId)
-			bootstrap5overlay.hideOverlay()
-		}
-	})
-}
-function editMarketInfo(agGridParams) {
-	const method = 'editMarketInfo'
-	const currentLogin = store.getLogin()
-	const currentRole = store.getRole()
-
-	const order = agGridParams.data
-	const idOrder = order.idOrder
-	const marketInfo = agGridParams.newValue ? agGridParams.newValue : ''
-	const oldMarketInfo = agGridParams.oldValue ? agGridParams.oldValue : ''
-
-	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
-
-	ajaxUtils.get({
-		url: `${editMarketInfoBaseUrl}${idOrder}&${marketInfo}`,
-		successCallback: (data) => {
-			clearTimeout(timeoutId)
-			bootstrap5overlay.hideOverlay()
-
-			if (data.status === '200') {
-				// обновляем заказ с сторе и ивент
-				updateOrderAndEvent(order, currentLogin, currentRole, method)
-				return
-			}
-
-			// устанавливаем старое значение
-			setOldMarketInfo(order, oldMarketInfo, orderTableGridOption)
-
-			if (data.status === '105') {
-				errorHandler_105status(null, data)
-				return
-			}
-
-			if (data.status === '100') {
-				errorHandler_100status(null, data)
-			} else {
-				snackbar.show(userMessages.actionNotCompleted)
-			}
-		},
-		errorCallback: () => {
-			// устанавливаем старое значение
-			setOldMarketInfo(order, oldMarketInfo, orderTableGridOption)
-			clearTimeout(timeoutId)
-			bootstrap5overlay.hideOverlay()
-		}
-	})
-}
-// метод получения данных о заказе из меркета
-function getOrderFromMarket(marketNumber, eventContainer, successCallback) {
-	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
-
-	ajaxUtils.get({
-		url: getMarketOrderUrl + marketNumber,
-		successCallback: (data) => {
-			clearTimeout(timeoutId)
-			bootstrap5overlay.hideOverlay()
-
-			if (data.status === '200') {
-				// если склад не на слотах, не создаем поставку
-				const order = data.order
-				if (!slotStocks.includes(order.numStockDelivery)) {
-					snackbar.show(userMessages.orderNotForSlot)
-					return
-				}
-				successCallback(data, marketNumber, eventContainer)
-				snackbar.show(data.message)
-				return
-			}
-
-			if (data.status === '105') {
-				errorHandler_105status(null, data)
-				return
-			}
-
-			if (data.status === '100') {
-				errorHandler_100status(null, data)
-			} else {
-				snackbar.show(userMessages.actionNotCompleted)
-			}
-		},
-		errorCallback: () => {
-			clearTimeout(timeoutId)
-			bootstrap5overlay.hideOverlay()
-		}
-	})
-}
-// проверка слота
-function checkSlot(info) {
-	const method = 'checkSlot'
-	const currentLogin = store.getLogin()
-	const currentRole = store.getRole()
-
-	const { event: fcEvent } = info
-	const order = fcEvent.extendedProps.data
-	const idOrder = order.idOrder
-
-	
-	// проверка доступа к методу
-	if (!methodAccessRules(method, order, currentLogin, currentRole)) {
-		snackbar.show(userMessages.operationNotAllowed)
-		return
-	}
-	
-	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
-
-	ajaxUtils.get({
-		url: checkSlotBaseUrl + idOrder,
-		successCallback: (data) => {
-			clearTimeout(timeoutId)
-			bootstrap5overlay.hideOverlay()
-
-			if (data.status === '200') {
-				data.info && showMessageModal(data.info)
-				return
-			}
-
-			if (data.status === '105') {
-				errorHandler_105status(null, data)
-				return
-			}
-
-			if (data.status === '100') {
-				errorHandler_100status(null, data)
-			} else {
-				snackbar.show(userMessages.actionNotCompleted)
-			}
-		},
-		errorCallback: () => {
-			clearTimeout(timeoutId)
-			bootstrap5overlay.hideOverlay()
-		}
-	})
-}
-
-// проверка на бронь
-function checkBooking(info) {
-	const method = 'checkBooking'
-	const currentLogin = store.getLogin()
-	const currentRole = store.getRole()
-
-	const { event: fcEvent } = info
-	const order = fcEvent.extendedProps.data
-	const marketNumber = order.marketNumber
-
-	
-	// проверка доступа к методу
-	if (!methodAccessRules(method, order, currentLogin, currentRole)) {
-		snackbar.show(userMessages.operationNotAllowed)
-		return
-	}
-
-	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
-	
-	ajaxUtils.get({
-		url: checkBookingBaseUrl + marketNumber,
-		successCallback: (data) => {
-			clearTimeout(timeoutId)
-			bootstrap5overlay.hideOverlay()
-
-			if (data.status === '200') {
-				errorHandler_100status(null, data)
-				return
-			}
-
-			if (data.status === '100') {
-				errorHandler_100status(null, data)
-				return
-			}
-
-			if (data.status === '105') {
-				errorHandler_105status(null, data)
-				return
-			}
-		},
-		errorCallback: () => {
-			clearTimeout(timeoutId)
-			bootstrap5overlay.hideOverlay()
-		}
-	})
 }
 
 // функция создания нового заказа по информации из Маркета
@@ -1267,12 +545,12 @@ function restoreColumnState() {
 	gridColumnLocalState.restoreState(orderTableGridOption, LOCAL_STORAGE_KEY)
 }
 
-// коллбэк бля редактирования ячееек таблицы
+// коллбэк бля редактирования ячеек таблицы
 function cellValueChangedHandler(params) {
 	const columnName = params.column.colId
 
 	if (columnName === "marketInfo") {
-		editMarketInfo(params)
+		editMarketInfo(params, orderTableGridOption, setOldMarketInfo)
 	}
 }
 
@@ -1284,17 +562,4 @@ function setOldMarketInfo(order, oldValue, gridOption) {
 	const updatedOrder = store.updateOrder(order)
 	// вернуть старое значение в таблицу
 	updateTableRow(gridOption, updatedOrder)
-}
-
-// обновление данных графика паллетовместимости
-function updatePallChart(selectedStock) {
-	const nowDateStr = new Date().toISOString().slice(0, 10)
-	const pallChartData = store.getMaxPallDataByPeriod(
-		selectedStock.id,
-		nowDateStr,
-		slotsSettings.PALL_CHART_DATA_DAY_COUNT
-	)
-	const chartData = getFormattedPallChartData(pallChartData)
-	const bgData = getMarkerBGColorData(pallChartData)
-	updateChartData(pallLineChart, chartData, bgData)
 }

@@ -8,7 +8,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="${_csrf.parameterName}" content="${_csrf.token}" />
-	<title>График поставок контрагентов</title>
+	<title>Графики поставок на РЦ</title>
 	<link rel="icon" href="${pageContext.request.contextPath}/resources/img/favicon.ico">
 	<script async src="${pageContext.request.contextPath}/resources/js/getInitData.js" type="module"></script>
 	<script src="${pageContext.request.contextPath}/resources/js/AG-Grid/ag-grid-enterprise.min.js"></script>
@@ -34,7 +34,7 @@
 		</sec:authorize>
 
 		<div class="title-container">
-			<strong><h3>График поставок контрагентов</h3></strong>
+			<strong><h3>Графики поставок на РЦ</h3></strong>
 		</div>
 		<div class="toolbar">
 			<select class="btn tools-btn font-weight-bold" name="numStockSelect" id="numStockSelect">
@@ -75,12 +75,9 @@
 				<form id="addScheduleItemForm" action="">
 					<div class="modal-body">
 						<div class="inputs-container">
-							<!-- <input type="hidden" name="idSchedule" id="idSchedule"> -->
+
 							<input type="hidden" name="supplies" id="supplies">
-							<!-- <input type="hidden" name="description" id="description">
-							<input type="hidden" name="dateLasCalculation" id="dateLasCalculation">
-							<input type="hidden" name="tz" id="tz">
-							<input type="hidden" name="tp" id="tp"> -->
+							<input type="hidden" name="type" id="type" value="РЦ">
 
 							<div class="mb-3">
 								<label class="sr-only" for="counterpartyCode">Код контрагента</label>
@@ -253,12 +250,10 @@
 				<form id="editScheduleItemForm" action="">
 					<div class="modal-body">
 						<div class="inputs-container">
+
 							<input type="hidden" name="idSchedule" id="idSchedule">
 							<input type="hidden" name="supplies" id="supplies">
-							<!-- <input type="hidden" name="description" id="description">
-							<input type="hidden" name="dateLasCalculation" id="dateLasCalculation">
-							<input type="hidden" name="tz" id="tz">
-							<input type="hidden" name="tp" id="tp"> -->
+							<input type="hidden" name="type" id="type" value="РЦ">
 
 							<div class="mb-3">
 								<label class="sr-only" for="counterpartyCode">Код контрагента</label>
@@ -420,7 +415,7 @@
 		<div class="modal-dialog">
 			<div class="modal-content">
 				<div class="modal-header">
-					<h1 class="modal-title fs-5" id="sendExcelModalLabel">Загрузить магазины</h1>
+					<h1 class="modal-title fs-5 mt-0" id="sendExcelModalLabel">Загрузить графики</h1>
 					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 						<span aria-hidden="true">&times;</span>
 					</button>
@@ -436,7 +431,7 @@
 							</div>
 							<div class="form-group">
 								<label class="col-form-label text-muted font-weight-bold">Загрузите файл Excel</label>
-								<input type="file" class="form-control btn-outline-secondary" name="excel"
+								<input type="file" class="form-control btn-outline-secondary p-1" name="excel"
 									id="excel" required
 									accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel">
 							</div>

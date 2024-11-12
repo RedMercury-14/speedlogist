@@ -17,6 +17,7 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.itextpdf.text.pdf.PdfStructTreeController.returnType;
 
 @Entity
 @Table(name = "shop")
@@ -160,7 +161,13 @@ public class Shop implements Serializable{
 	private Double distanceFromStock; // расстояние от заданного склада
 	
 	@Transient
+	private Double distanceForFilter; // расстояние для фильтраций
+	
+	@Transient
 	private String krossPolugonName; // название кроссовой площадки
+	
+	@Transient
+	private Boolean specialWeightDistribution; // расчитывать ли от веса магазин
 	
 	@OneToMany(fetch=FetchType.EAGER,
 			   mappedBy="shop",
@@ -218,10 +225,26 @@ public class Shop implements Serializable{
 		this.telephone = telephone;
 	}
 
+	public Double getDistanceForFilter() {
+		return distanceForFilter;
+	}
+	public void setDistanceForFilter(Double distanceForFilter) {
+		this.distanceForFilter = distanceForFilter;
+	}
 	public LocalTime getWorkStart() {
 		return workStart;
 	}
 
+	public Boolean getSpecialWeightDistribution() {
+		if(specialWeightDistribution!=null) {
+			return specialWeightDistribution;			
+		}else {
+			return false;
+		}
+	}
+	public void setSpecialWeightDistribution(Boolean specialWeightDistribution) {
+		this.specialWeightDistribution = specialWeightDistribution;
+	}
 	public void setWorkStart(LocalTime workStart) {
 		this.workStart = workStart;
 	}

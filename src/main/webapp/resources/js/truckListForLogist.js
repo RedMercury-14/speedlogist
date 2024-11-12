@@ -179,7 +179,7 @@ async function verifyOneTruck(truckId, isVerify) {
 		: `Подтверждение прошло успешно!`
 	const res = await getData(verifyTruckBaseUrl+truckId)
 
-	if (res.status === '200') {
+	if (res && res.status === '200') {
 		snackbar.show(successMessage)
 		updateTable()
 	} else {

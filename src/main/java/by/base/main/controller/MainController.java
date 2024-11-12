@@ -387,6 +387,16 @@ public class MainController {
 		return "orlNeed";
 	}
 	
+	@GetMapping("/main/orl/delivery-schedule-to")
+	public String getDeliveryScheduleTOPageForORL(Model model, HttpServletRequest request) {
+		return "deliveryScheduleTO";
+	}
+	
+	@GetMapping("/main/slots/delivery-schedule-to")
+	public String getDeliveryScheduleTOPage(Model model, HttpServletRequest request) {
+		return "deliveryScheduleTO";
+	}
+	
 	@GetMapping("/main/orl/delivery-schedule")
 	public String getDeliverySchedulePageForORL(Model model, HttpServletRequest request) {
 		return "deliverySchedule";

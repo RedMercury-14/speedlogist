@@ -29,7 +29,7 @@ function successCallback(response) {
 
 function getInitDataUrl(url) {
 	// Контроль заявок
-	if (url.includes('procurement/orders')) {
+	if (url.includes('procurement/orders') && !url.includes('ordersBalance')) {
 		const PAGE_NAME = 'ProcurementControl'
 		const DATES_KEY = `searchDates_to_${PAGE_NAME}`
 		const getDefaultOrderBaseUrl ='../../api/manager/getOrders/'
@@ -90,7 +90,7 @@ function getInitDataUrl(url) {
 	}
 
 	// Остаток товара на складах
-	if (url.includes('order-support/orders')) {
+	if (url.includes('order-support/orders') || url.includes('procurement/ordersBalance')) {
 		return '../../api/order-support/getStockRemainder'
 	}
 

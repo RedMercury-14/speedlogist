@@ -67,6 +67,16 @@ const columnDefs = [
 		width: 75,
 	},
 	{
+		headerName: 'Кол-во паллет в машине', field: 'machineMultiplicity',
+		cellClass: 'px-1 py-0 text-center',
+		width: 75,
+	},
+	{
+		headerName: 'Связь поставок', field: 'connectionSupply',
+		cellClass: 'px-1 py-0 text-center',
+		width: 100,
+	},
+	{
 		headerName: 'Номер склада', field: 'numStock',
 		cellClass: 'px-1 py-0 text-center font-weight-bold',
 		width: 75,
@@ -170,6 +180,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 	const sendScheduleDataToMailBtn = document.querySelector('#sendScheduleDataToMail')
 	sendScheduleDataToMailBtn && sendScheduleDataToMailBtn.addEventListener('click', sendScheduleDataToMail)
+
+	// чекбоксы "Кратно машине" и поля с кратностью
+	const addMultiplicity = addScheduleItemForm.querySelector('#machineMultiplicity')
+	const editMultiplicity = editScheduleItemForm.querySelector('#machineMultiplicity')
+	const addMultipleOfTruck = document.querySelector('#AddMultipleOfTruck')
+	const editMultipleOfTruck = document.querySelector('#editMultipleOfTruck')
+	addMultipleOfTruck.addEventListener('change', (e) => onMultipleOfTruckChangeHandler(e, addMultiplicity))
+	editMultipleOfTruck.addEventListener('change', (e) => onMultipleOfTruckChangeHandler(e, editMultiplicity))
 
 	// проверка номера контракта
 	$('.counterpartyContractCode').change(checkContractNumber)
@@ -308,7 +326,23 @@ function getContextMenuItems(params) {
 	return result
 }
 
+// обработчик изменения значения чекбокса "Кратно машине"
+function onMultipleOfTruckChangeHandler(e, multiplicity) {
+	const checked = e.target.checked
+	toggleMultiplicityVisible(checked, multiplicity)
+}
 
+// переключение отображения поля кратности машины
+function toggleMultiplicityVisible(checked, multiplicity) {
+	if (checked) {
+		multiplicity.required = true
+		multiplicity.parentElement.classList.remove('d-none')
+	} else {
+		multiplicity.required = false
+		multiplicity.parentElement.classList.add('d-none')
+		multiplicity.value = ''
+	}
+}
 
 // обработчик смены склада
 function onNumStockSelectChangeHandler(e) {
@@ -509,6 +543,8 @@ function scheduleItemDataFormatter(formData) {
 	const counterpartyContractCode = Number(data.counterpartyContractCode)
 	const runoffCalculation = Number(data.runoffCalculation)
 	const numStock = Number(data.numStock)
+	const machineMultiplicity = data.machineMultiplicity ? Number(data.machineMultiplicity) : null
+	const connectionSupply = data.connectionSupply ? Number(data.connectionSupply) : null
 	let res = {
 		...data,
 		note,
@@ -519,6 +555,8 @@ function scheduleItemDataFormatter(formData) {
 		counterpartyContractCode,
 		runoffCalculation,
 		numStock,
+		machineMultiplicity,
+		connectionSupply
 	}
 	if (data.idSchedule) {
 		res = {
@@ -531,6 +569,7 @@ function scheduleItemDataFormatter(formData) {
 
 // заполнение формы редактирования магазина данными
 function setDataToForm(scheduleItem) {
+	console.log("🚀 ~ setDataToForm ~ scheduleItem:", scheduleItem)
 	const editScheduleItemForm = document.querySelector('#editScheduleItemForm')
 
 	// создаем опции в селектах с установкой графика
@@ -550,6 +589,12 @@ function setDataToForm(scheduleItem) {
 	editScheduleItemForm.note.checked = scheduleItem.note === 'неделя'
 	editScheduleItemForm.multipleOfPallet.checked = !!scheduleItem.multipleOfPallet
 	editScheduleItemForm.multipleOfTruck.checked = !!scheduleItem.multipleOfTruck
+
+	const machineMultiplicityInput = editScheduleItemForm.machineMultiplicity
+	toggleMultiplicityVisible(scheduleItem.multipleOfTruck, machineMultiplicityInput)
+	machineMultiplicityInput.value = scheduleItem.machineMultiplicity ? scheduleItem.machineMultiplicity : ''
+
+	editScheduleItemForm.connectionSupply.value = scheduleItem.connectionSupply ? scheduleItem.connectionSupply : ''
 
 	// заполняем график
 	editScheduleItemForm.monday.value = scheduleItem.monday ? scheduleItem.monday : ''

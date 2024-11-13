@@ -350,13 +350,13 @@ export function createOptions(optionData, select) {
 // функция получения массива с данными графика поставок
 export function getScheduleArrayFromScheduleObj(schedule) {
 	return [
-		schedule.monday ? schedule.monday.toLowerCase() : null,
-		schedule.tuesday ? schedule.tuesday.toLowerCase() : null,
-		schedule.wednesday ? schedule.wednesday.toLowerCase() : null,
-		schedule.thursday ? schedule.thursday.toLowerCase() : null,
-		schedule.friday ? schedule.friday.toLowerCase() : null,
-		schedule.saturday ? schedule.saturday.toLowerCase() : null,
-		schedule.sunday ? schedule.sunday.toLowerCase() : null,
+		schedule.monday ? schedule.monday : null,
+		schedule.tuesday ? schedule.tuesday : null,
+		schedule.wednesday ? schedule.wednesday : null,
+		schedule.thursday ? schedule.thursday : null,
+		schedule.friday ? schedule.friday : null,
+		schedule.saturday ? schedule.saturday : null,
+		schedule.sunday ? schedule.sunday : null,
 	]
 }
 

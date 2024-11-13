@@ -173,7 +173,7 @@ public class POIExcel {
                 "Код контрагента", "Наименование контрагента", "Номер контракта", "Пометка сроки / неделя" ,
                 "пн", "вт", "ср", "чт", "пт", "сб", "вс", 
                 "Поставок", "tz", "tp", "Расчет стока до Y-ой поставки", 
-                "Примечание", "кратно поддону", "кратно машине"
+                "Примечание", "кратно поддону", "кратно машине", "паллет в одной машине", "родительский контракт"
         };
 
         // Создаем строку заголовков
@@ -213,6 +213,9 @@ public class POIExcel {
 
             row.createCell(16).setCellValue(schedule.getMultipleOfPallet() != null && schedule.getMultipleOfPallet() ? "+" : "");
             row.createCell(17).setCellValue(schedule.getMultipleOfTruck() != null && schedule.getMultipleOfTruck() ? "+" : "");
+
+            row.createCell(18).setCellValue(schedule.getMachineMultiplicity() == null ? null : schedule.getMachineMultiplicity()+"");
+            row.createCell(19).setCellValue(schedule.getConnectionSupply() == null ? null : schedule.getConnectionSupply()+"");
         }
         
         // Устанавливаем фильтры на все столбцы

@@ -2,7 +2,7 @@ import { ajaxUtils } from "../ajaxUtils.js"
 import { bootstrap5overlay } from "../bootstrap5overlay/bootstrap5overlay.js"
 import { snackbar } from "../snackbar/snackbar.js"
 import { getData, isLogist } from "../utils.js"
-import { errorHandler_100status, errorHandler_105status, hideEventInfoPopup, showMessageModal } from "./calendarUtils.js"
+import { errorHandler_100status, errorHandler_105status, getMultiplicity, hideEventInfoPopup, showMessageModal } from "./calendarUtils.js"
 import {
 	checkBookingBaseUrl,
 	checkSlotBaseUrl,
@@ -49,6 +49,10 @@ export function preloadOrder(info, orderTableGridOption, orderDateClickHandler) 
 			bootstrap5overlay.hideOverlay()
 
 			if (data.status === '200') {
+				// if (data.schedule) {
+				// 	store.setNeedMultiplicity(true)
+				// }
+
 				if (!data.planResponce) {
 					// нет данных о графике - загружаем заказ в БД
 					loadOrder(info, orderTableGridOption)
@@ -109,6 +113,16 @@ export function loadOrder(info, orderTableGridOption, dateOrderOrl) {
 		snackbar.show(userMessages.operationNotAllowed)
 		return
 	}
+
+	// if (store.getNeedMultiplicity()) {
+	// 	store.setNeedMultiplicity(false)
+	// 	const multiplicity = getMultiplicity()
+	// 	if (!multiplicity) {
+	// 		info.revert()
+	// 		return
+	// 	}
+	// 	orderData.multiplicity = multiplicity
+	// }
 
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
 
@@ -505,7 +519,7 @@ export async function checkEventsForBooking(events) {
 		const order = event.extendedProps.data
 		const marketNumber = order.marketNumber
 		const res = await getData(checkBookingBaseUrl + marketNumber)
-		return res.info ? res.info : ''
+		return res.info ? `${marketNumber}: ${res.info}` : ''
 	}))
 	clearTimeout(timeoutId)
 	bootstrap5overlay.hideOverlay()

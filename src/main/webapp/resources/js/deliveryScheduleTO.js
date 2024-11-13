@@ -72,7 +72,7 @@ const columnDefs = [
 		headerName: 'Сегодня на сегодня', field: 'isDayToDay',
 		cellClass: 'px-1 py-0 text-center font-weight-bold grid-checkbox',
 		width: 75,
-		editable: isAdmin(role),
+		editable: isAdmin(role) || isORL(role),
 		onCellValueChanged: onIsDayToDayChangeHandler,
 	},
 	{
@@ -211,7 +211,9 @@ async function loadScheduleData(url) {
 	}
 
 	// проверка, правильно ли заполнены графики
-	checkScheduleData(scheduleData)
+	if (isAdmin(role) || isORL(role)) {
+		checkScheduleData(scheduleData)
+	}
 
 	// const counterpartyList = getCounterpartyList(scheduleData)
 	// console.log("🚀 ~ loadScheduleData ~ counterpartyList:", counterpartyList)
@@ -255,7 +257,7 @@ function getMappingData(data) {
 function getMappingScheduleItem(scheduleItem) {
 	return {
 		...scheduleItem,
-		name: scheduleItem.name,
+		name: scheduleItem.name.trim(),
 		statusToView: getScheduleStatus(scheduleItem.status),
 	}
 }
@@ -312,7 +314,7 @@ function getContextMenuItems(params) {
 		"separator",
 		...confirmUnconfirmItems,
 		{
-			name: `Добавить новое ТО по текущему коду контракта`,
+			name: `Добавить новое ТО по текущему коду контракта (копирование графика)`,
 			action: () => {
 				addShopByContract(rowNode)
 			},

@@ -6,6 +6,8 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.dto.CounterpartyDTO;
+
 import by.base.main.dao.ScheduleDAO;
 import by.base.main.model.Schedule;
 import by.base.main.service.ScheduleService;
@@ -83,6 +85,11 @@ public class ScheduleServiceImpl implements ScheduleService{
 	@Override
 	public Schedule getScheduleByNumContractAndNUmStock(Long num, Integer numStock) {
 		return scheduleDAO.getScheduleByNumContractAndNUmStock(num, numStock);
+	}
+
+	@Override
+	public List<CounterpartyDTO> getcounterpartyList() {
+		return scheduleDAO.getcounterpartyList();
 	}
 
 }

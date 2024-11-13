@@ -13,6 +13,8 @@ import org.hibernate.query.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import com.dto.CounterpartyDTO;
+
 import by.base.main.dao.ScheduleDAO;
 import by.base.main.model.Order;
 import by.base.main.model.Schedule;
@@ -175,7 +177,30 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 		Schedule object = trucks.stream().findFirst().get();
 		return object;
 	}
-	
-	
 
+
+	private static final String counterpartyConstruct = "SELECT new com.dto.CounterpartyDTO(" +
+	        "s.counterpartyCode, " +
+	        "MIN(s.name)) "; // Используем MIN для name
+	
+	private static final String queryGetcounterpartyList = counterpartyConstruct +
+            "FROM Schedule s " +
+            "WHERE s.counterpartyCode IS NOT NULL " +
+            "GROUP BY s.counterpartyCode";	
+	@Transactional
+	@Override
+	public List<CounterpartyDTO> getcounterpartyList() {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<CounterpartyDTO> theRole = currentSession.createQuery(queryGetcounterpartyList, CounterpartyDTO.class);
+		List <CounterpartyDTO> roles = theRole.getResultList();
+		for (CounterpartyDTO dto : roles) {
+		    List<Long> contractCodes = currentSession.createQuery(
+		        "SELECT c.counterpartyContractCode FROM Schedule c WHERE c.counterpartyCode = :code", Long.class)
+		        .setParameter("code", dto.getCounterpartyCode())
+		        .getResultList();
+		    
+		    dto.setCounterpartyContractCode(contractCodes); // Устанавливаем список в DTO
+		}
+		return roles;
+	}
 }

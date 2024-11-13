@@ -3,6 +3,8 @@ package by.base.main.service;
 import java.sql.Date;
 import java.util.List;
 
+import com.dto.CounterpartyDTO;
+
 import by.base.main.model.Schedule;
 
 public interface ScheduleService {
@@ -12,6 +14,12 @@ public interface ScheduleService {
 	List<Schedule> getSchedulesListRC();
 	
 	List<Schedule> getSchedulesListTO();
+	
+	/**
+	 * Возвращает лист с контрагентами <b>DTO класс</b>
+	 * @return
+	 */
+	List<CounterpartyDTO> getcounterpartyList();
 	
 	/**
 	 * Возвращает графики поставок на ТО по коду контрактов

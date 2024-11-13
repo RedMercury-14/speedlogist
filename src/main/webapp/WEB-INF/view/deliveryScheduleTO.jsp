@@ -36,20 +36,8 @@
 
 		<div class="title-container">
 			<strong><h3>Графики поставок на ТО</h3></strong>
-			<div class="search-form-container">
-				<form action="" id="searchData">
-					<div class="input-row-container">
-						<input class="form-control form-control-sm" type="text" name="searchValue" id="searchValue" placeholder="Наименование контрагента или номер контракта..." required>
-						<button class="btn btn-outline-secondary text-nowrap btn-sm" type="submit">Загрузить данные</button>
-						<button class="btn btn-outline-secondary text-nowrap btn-sm" type="button" id="loadAllData">Загрузить все данные</button>
-					</div>
-				</form>
-			</div>
 		</div>
 		<div class="toolbar">
-			<!-- <select class="btn tools-btn font-weight-bold" name="numStockSelect" id="numStockSelect">
-				<option value="">Все склады</option>
-			</select> -->
 			<button type="button" class="btn tools-btn font-weight-bold text-muted" data-toggle="modal" data-target="#addScheduleItemModal">
 				+ Добавить новый график
 			</button>
@@ -60,13 +48,15 @@
 					</button>
 				</c:when>
 			</c:choose>
-			<c:choose>
-				<c:when test="${roles == '[ROLE_ADMIN]' || login == 'romashkok%!dobronom.by'}">
-					<!-- <button type="button" id="sendScheduleDataToMail" class="btn tools-btn font-weight-bold text-muted ml-auto">
-						Отправить данные
-					</button> -->
-				</c:when>
-			</c:choose>
+			<div class="search-form-container">
+				<form action="" id="searchData">
+					<div class="input-row-container">
+						<input class="form-control form-control-sm" type="text" name="searchValue" id="searchValue" placeholder="Наименование контрагента или номер контракта..." required>
+						<button class="btn btn-outline-secondary text-nowrap btn-sm" type="submit">Загрузить данные</button>
+						<button class="btn btn-outline-secondary text-nowrap btn-sm" type="button" id="loadAllData">Загрузить все данные</button>
+					</div>
+				</form>
+			</div>
 		</div>
 		<div id="myGrid" class="ag-theme-alpine"></div>
 		<div id="snackbar"></div>

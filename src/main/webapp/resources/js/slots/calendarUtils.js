@@ -525,3 +525,27 @@ export function highlightSlot(calendarApi, eventId) {
 	calendarEvent.setProp('backgroundColor', eventColors.foundEvent)
 	setTimeout(() => calendarEvent.setProp('backgroundColor', prevColor), 3000)
 }
+
+export function getMultiplicity() {
+	const value = prompt(
+		'Для корректной работы программы необходимо указать количество паллетомест в машине. '
+		+ 'Это нужно будет сделать один раз для обновления графика поставок по данному контрагенту. '
+		+ 'Пожалуйста, укажите ЦЕЛОЕ число паллетомест (от 1 до 99).'
+	)
+
+	if (!value) return
+
+	const multiplicity = Number(value)
+
+	if (isNaN(multiplicity)) {
+		alert('Введено не число')
+		return
+	}
+
+	if (!Number.isInteger(multiplicity) || multiplicity < 1 || multiplicity > 99) {
+		alert('Введено некорректное число')
+		return
+	}
+
+	return multiplicity
+}

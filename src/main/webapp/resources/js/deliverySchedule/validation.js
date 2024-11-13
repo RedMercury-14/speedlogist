@@ -23,7 +23,7 @@ export function checkScheduleData(scheduleData) {
 		.map(schedule => {
 			const errors = getScheduleErrors(schedule)
 			return errors
-				? `${errorIndex++}. Склад ${schedule.numStock}, Номер контракта: ${schedule.counterpartyContractCode}, ${schedule.name}, Ошибки: ${errors}`
+				? `${errorIndex++}. Склад/ТО ${schedule.numStock}, Номер контракта: ${schedule.counterpartyContractCode}, ${schedule.name}. Ошибки: ${errors}`
 				: null
 		})
 		.filter(line => line)
@@ -91,13 +91,13 @@ function isSuppliesEqualToOrders(data) {
 // проверка, что дни поставок и заказов совпадают
 function compareOrdersAndSupplies(data) {
 	const schedule = {
-		"понедельник": data.monday ? data.monday.toLowerCase() : null,
-		"вторник": data.tuesday ? data.tuesday.toLowerCase() : null,
-		"среда": data.wednesday ? data.wednesday.toLowerCase() : null,
-		"четверг": data.thursday ? data.thursday.toLowerCase() : null,
-		"пятница": data.friday ? data.friday.toLowerCase() : null,
-		"суббота": data.saturday ? data.saturday.toLowerCase() : null,
-		"воскресенье": data.sunday ? data.sunday.toLowerCase() : null,
+		"понедельник": data.monday ? data.monday : null,
+		"вторник": data.tuesday ? data.tuesday : null,
+		"среда": data.wednesday ? data.wednesday : null,
+		"четверг": data.thursday ? data.thursday : null,
+		"пятница": data.friday ? data.friday : null,
+		"суббота": data.saturday ? data.saturday : null,
+		"воскресенье": data.sunday ? data.sunday : null,
 	}
 
 	// получаем список дней заказов

@@ -10,6 +10,7 @@ const role = document.querySelector("#role").value
 
 export const store = {
 	_state: {
+		needMultiplicity: false,
 		isReady: false,
 		token,
 		login,
@@ -26,6 +27,13 @@ export const store = {
 	},
 	_callSubscriber(state) {
 		console.log('subscriber is not defind')
+	},
+
+	getNeedMultiplicity() {
+		return this._state.needMultiplicity
+	},
+	setNeedMultiplicity(needMultiplicity) {
+		this._state.needMultiplicity = needMultiplicity
 	},
 
 	getReady() {

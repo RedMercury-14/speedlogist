@@ -144,6 +144,15 @@
 									</select>
 								</div>
 							</div>
+							<div class="mb-3">
+								<label class="sr-only" for="connectionSupply">Номер связанного контракта</label>
+								<div class="input-group">
+									<div class="input-group-prepend">
+										<div class="input-group-text">Номер связанного контракта</div>
+									</div>
+									<input type="number" class="form-control" name="connectionSupply" id="connectionSupply" min="0" step="1" placeholder="Номер связанного контракта">
+								</div>
+							</div>
 							<div class="input-row-container flex-wrap">
 								<div class="form-check form-group">
 									<input type="checkbox" class="form-check-input" name="multipleOfPallet" id="AddMultipleOfPallet">
@@ -152,6 +161,10 @@
 								<div class="form-check form-group">
 									<input type="checkbox" class="form-check-input" name="multipleOfTruck" id="AddMultipleOfTruck">
 									<label for="AddMultipleOfTruck" class="form-check-label text-muted font-weight-bold">Кратно машине</label>
+								</div>
+								<div class="form-group d-none">
+									<input type="number" class="form-control w-50" name="machineMultiplicity" id="machineMultiplicity" min="1" max="99" step="1" placeholder="ЦЕЛОЕ число">
+									<small class="form-text text-danger">Укажите кратность машины (количество паллетомест)</small>
 								</div>
 							</div>
 
@@ -318,6 +331,15 @@
 									</select>
 								</div>
 							</div>
+							<div class="mb-3">
+								<label class="sr-only" for="connectionSupply">Номер связанного контракта</label>
+								<div class="input-group">
+									<div class="input-group-prepend">
+										<div class="input-group-text">Номер связанного контракта</div>
+									</div>
+									<input type="number" class="form-control" name="connectionSupply" id="connectionSupply" min="0" step="1" placeholder="Номер связанного контракта">
+								</div>
+							</div>
 							<div class="input-row-container flex-wrap">
 								<div class="form-check form-group">
 									<input type="checkbox" class="form-check-input" name="multipleOfPallet" id="editMultipleOfPallet">
@@ -326,6 +348,10 @@
 								<div class="form-check form-group">
 									<input type="checkbox" class="form-check-input" name="multipleOfTruck" id="editMultipleOfTruck">
 									<label for="editMultipleOfTruck" class="form-check-label text-muted font-weight-bold">Кратно машине</label>
+								</div>
+								<div class="form-group d-none">
+									<input type="number" class="form-control w-50" name="machineMultiplicity" id="machineMultiplicity" min="1" max="99" step="1" placeholder="ЦЕЛОЕ число">
+									<small class="form-text text-danger">Укажите кратность машины (количество паллетомест)</small>
 								</div>
 							</div>
 

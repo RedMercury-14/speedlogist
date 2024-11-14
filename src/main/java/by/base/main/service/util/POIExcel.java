@@ -1328,31 +1328,42 @@ public class POIExcel {
 	
 	
 	
-    public List<Schedule> readColumns21And22(File file) throws FileNotFoundException, IOException {
-        XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
-        XSSFSheet sheet = wb.getSheetAt(0);
-        Iterator<Row> rowIterator = sheet.iterator();
+    public List<Schedule> readColumns21And22(File file) {
+        try (XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file))) {
+            XSSFSheet sheet = wb.getSheetAt(0);
 
-        // Assuming the first row is the header
-        rowIterator.next();
-        rowIterator.next();
-        while (rowIterator.hasNext()) {
-            Row row = rowIterator.next();
-            
-            Cell cell4 = row.getCell(3);
-            Cell cell5 = row.getCell(4);
-            Cell cell21 = row.getCell(20);
-            Cell cell22 = row.getCell(21);
+            // Начинаем с индекса 2, так как предполагается, что первые две строки - это заголовок
+            for (int i = 2; i <= sheet.getLastRowNum(); i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) continue; // Пропускаем пустые строки
 
-            String numComtract = getCellValue(cell4);
-            String numTO = getCellValue(cell5);
-            String value21 = getCellValue(cell21);
-            String value22 = getCellValue(cell22);
-            
-            
-            Schedule schedule = scheduleService.getScheduleByNumContractAndNumStock(Long.parseLong(numComtract), Integer.parseInt(numTO));
-           System.out.println(cell4 + "  --  " + cell5+ "  --  " +cell21+ "  --  " +cell22);
-            
+                Cell cell4 = row.getCell(3);
+                Cell cell5 = row.getCell(4);
+                Cell cell21 = row.getCell(20);
+                Cell cell22 = row.getCell(21);
+                
+
+
+
+                String value21 = getCellValue(cell21);
+                String value22 = getCellValue(cell22);
+                String numContract = getCellValue(cell4);
+                String numTO = getCellValue(cell5);
+                // Предполагается, что scheduleService и метод getScheduleByNumContractAndNumStock определены
+                Schedule schedule = scheduleService.getScheduleByNumContractAndNumStock(
+                    Long.parseLong(numContract.split("\\.")[0].trim()),
+                    Integer.parseInt(numTO.split("\\.")[0].trim())
+                );
+                
+                if(value21 != null || value22 != null) {
+                	schedule.setOrderFormationSchedule(value21);
+                	schedule.setOrderShipmentSchedule(value22);
+                	scheduleService.updateSchedule(schedule);
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 		return null;
         

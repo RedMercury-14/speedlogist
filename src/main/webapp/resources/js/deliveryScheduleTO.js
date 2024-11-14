@@ -1,4 +1,4 @@
-import { counterpartyList } from './_counterpartyList.js'
+// import { counterpartyList } from './_counterpartyList.js'
 import { AG_GRID_LOCALE_RU } from './AG-Grid/ag-grid-locale-RU.js'
 import { gridColumnLocalState, gridFilterLocalState } from './AG-Grid/ag-grid-utils.js'
 import { ajaxUtils } from './ajaxUtils.js'
@@ -6,9 +6,9 @@ import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 import { showScheduleItem } from './deliverySchedule/showScheduleItem.js'
 import {
 	changeScheduleOptions, confirmScheduleItem,
-	createCounterpartyDatalist,
-	createOptions,
-	dateFormatter, deleteScheduleItem, deliveryScheduleColumnDefs,
+	createCounterpartyDatalist, createOptions,
+	deleteScheduleItem, deliveryScheduleColumnDefs,
+	deliveryScheduleColumnDefsForAdmin,
 	deliveryScheduleRowClassRules, deliveryScheduleSideBar,
 	editScheduleItem, getSupplies, getTextareaData, onNoteChangeHandler,
 	showMessageModal, unconfirmScheduleItem
@@ -19,22 +19,22 @@ import { uiIcons } from './uiIcons.js'
 import {
 	changeGridTableMarginTop, debounce, disableButton, enableButton,
 	getData, getScheduleStatus, hideLoadingSpinner, isAdmin,
-	isORL,
-	showLoadingSpinner
+	isORL, showLoadingSpinner
 } from './utils.js'
 
-const loadExcelUrl = '../../api/slots/delivery-schedule/loadTO'
+//const loadExcelUrl = '../../api/slots/delivery-schedule/loadTO'
+const loadExcelUrl = '../../api/slots/delivery-schedule/loadTOkam'
 
 const getAllScheduleUrl = '../../api/slots/delivery-schedule/getListTO'
 const getScheduleByContractBaseUrl = '../../api/slots/delivery-schedule/getListTOContract/'
 const getScheduleByCounterpartyBaseUrl = '../../api/slots/delivery-schedule/getListTOСounterparty/'
 
 const addScheduleItemUrl = '../../api/slots/delivery-schedule/createTO'
-const editScheduleItemUrl = '../../api/slots/delivery-schedule/editTO'
+const editScheduleItemUrl = '../../api/slots/delivery-schedule/editTOByCounterpartyAndShop'
 const changeIsDayToDayBaseUrl = '../../api/slots/delivery-schedule/changeDayToDay/'
 const sendScheduleDataToMailUrl = '../../api/orl/sendEmail'
 
-const changeScheduleStatusByContractBaseUrl = ''
+const editTOByCounterpartyContractCodeOnlyUrl = '../../api/slots/delivery-schedule/editTOByCounterpartyContractCodeOnly'
 
 const PAGE_NAME = 'deliveryScheduleTO'
 const LOCAL_STORAGE_KEY = `AG_Grid_settings_to_${PAGE_NAME}`
@@ -50,6 +50,7 @@ let error = false
 let table
 let scheduleData
 let getScheduleUrl
+let counterpartyList
 
 const columnDefs = [
 	...deliveryScheduleColumnDefs,
@@ -95,20 +96,7 @@ const columnDefs = [
 // доболнительные колонки для админа
 if (isAdmin(role)) {
 	columnDefs.push(
-		{
-			headerName: 'История', field: 'history',
-			cellClass: 'px-1 py-0 text-center',
-		},
-		{
-			headerName: 'Дата последнего расчета', field: 'dateLastCalculation',
-			cellClass: 'px-1 py-0 text-center',
-			valueFormatter: dateFormatter,
-		},
-		{
-			headerName: 'Дата последнего изменения', field: 'dateLastChanging',
-			cellClass: 'px-1 py-0 text-center',
-			valueFormatter: dateFormatter,
-		},
+		...deliveryScheduleColumnDefsForAdmin
 	)
 }
 
@@ -195,9 +183,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 	$('#editScheduleItemModal').on('hidden.bs.modal', (e) => clearForm(e, editScheduleItemForm))
 	$('#sendExcelModal').on('hidden.bs.modal', (e) => clearForm(e, sendExcelForm))
 
+	// отображение стартовых данных
+	if (window.initData) {
+		await initStartData()
+	} else {
+		// подписка на кастомный ивент загрузки стартовых данных
+		document.addEventListener('initDataLoaded', async () => {
+			await initStartData()
+		})
+	}
+})
+
+// установка стартовых данных
+async function initStartData() {
+	counterpartyList = window.initData.counterparty
+	window.initData = null
+
 	// создание списков названий и кодов контрагентов
 	createCounterpartyDatalist(counterpartyList)
-})
+
+	const grouped = Object.groupBy(counterpartyList, (item => item.name))
+	console.log("🚀 ~ initStartData ~ grouped:", grouped)
+
+	const res = Object.values(grouped).filter(arr => arr.length > 1)
+	console.log("🚀 ~ initStartData ~ res:", res)
+}
 
 // загрузка и установка данных графиков
 async function loadScheduleData(url) {
@@ -278,8 +288,7 @@ function getContextMenuItems(params) {
 		},
 		{
 			name: `Подтвердить графики по текущему коду контракта`,
-			// disabled: (!isAdmin(role) && !isORL(role)) || (status !== 10 && status !== 0),
-			disabled: true,
+			disabled: (!isAdmin(role) && !isORL(role)) || (status !== 10 && status !== 0),
 			action: () => {
 				confirmScheduleItemsByContract(role, rowNode)
 			},
@@ -295,8 +304,7 @@ function getContextMenuItems(params) {
 		},
 		{
 			name: `Снять подтверждение с графиков по текущему коду контракта`,
-			// disabled: (!isAdmin(role) && !isORL(role)) || status === 0,
-			disabled: true,
+			disabled: (!isAdmin(role) && !isORL(role)) || status === 0,
 			action: () => {
 				unconfirmScheduleItemsByContract(role, rowNode)
 			},
@@ -331,8 +339,7 @@ function getContextMenuItems(params) {
 		},
 		{
 			name: `Изменить значение "Сегодня на сегодня" по текущему коду контракта`,
-			// disabled: !isAdmin(role) && !isORL(role),
-			disabled: true,
+			disabled: !isAdmin(role) && !isORL(role),
 			action: () => {
 				changeIsDayToDayByContract(role, rowNode)
 			},
@@ -348,8 +355,7 @@ function getContextMenuItems(params) {
 		},
 		{
 			name: `Удалить все графики по текущему коду контракта`,
-			// disabled: !isAdmin(role) && !isORL(role),
-			disabled: true,
+			disabled: !isAdmin(role) && !isORL(role),
 			action: () => {
 				deleteScheduleItemsByContract(role, rowNode)
 			},
@@ -366,31 +372,57 @@ function getContextMenuItems(params) {
 // подтверждение графиков поставок по номеру контракта
 async function confirmScheduleItemsByContract(role, rowNode) {
 	if (!isAdmin(role)) return
+	const status = 20
 	const scheduleItem = rowNode.data
 	const counterpartyContractCode = scheduleItem.counterpartyContractCode
 	if (!counterpartyContractCode) return
-	await changeScheduleStatusByContract(counterpartyContractCode, 20)
+	editTOByCounterpartyContractCodeOnly({
+		counterpartyContractCode,
+		status
+	})
 }
 // снятие подтверждения с графиков поставок по номеру контракта
 async function unconfirmScheduleItemsByContract(role, rowNode) {
 	if (!isAdmin(role)) return
+	const status = 10
 	const scheduleItem = rowNode.data
 	const counterpartyContractCode = scheduleItem.counterpartyContractCode
 	if (!counterpartyContractCode) return
-	await changeScheduleStatusByContract(counterpartyContractCode, 10)
+	editTOByCounterpartyContractCodeOnly({
+		counterpartyContractCode,
+		status
+	})
 }
 // удаление графиков поставок по номеру контракта
 async function deleteScheduleItemsByContract(role, rowNode) {
 	if (!isAdmin(role)) return
+	const status = 0
 	const scheduleItem = rowNode.data
 	const counterpartyContractCode = scheduleItem.counterpartyContractCode
 	if (!counterpartyContractCode) return
 	if (!confirm(
-		`Вы действительно хотите удалить ВСЕ графики по коду контракта ${counterpartyContractCode}?
-	`)) return
-	await changeScheduleStatusByContract(counterpartyContractCode, 0)
+		`Вы действительно хотите удалить ВСЕ графики по коду контракта ${counterpartyContractCode}?`
+	)) return
+	editTOByCounterpartyContractCodeOnly({
+		counterpartyContractCode,
+		status
+	})
 }
-
+// запрос на массовое изменение значения "Сегодня на сегодня" по номеру контракта
+function changeIsDayToDayByContract(role, rowNode) {
+	if (!isAdmin(role)) return
+	const scheduleItem = rowNode.data
+	const isDayToDay = !scheduleItem.isDayToDay
+	const counterpartyContractCode = scheduleItem.counterpartyContractCode
+	if (!counterpartyContractCode) return
+	if (!confirm(
+		`Вы действительно хотите изменить значение "Сегодня на сегодня" для всех графиков по коду контракта ${counterpartyContractCode}?`
+	)) return
+	editTOByCounterpartyContractCodeOnly({
+		counterpartyContractCode,
+		isDayToDay
+	})
+}
 // обработчик формы загрузки данных графиков
 async function searchDataFormHandler(e) {
 	e.preventDefault()
@@ -477,8 +509,18 @@ function addScheduleItemFormHandler(e) {
 
 	const formData = new FormData(e.target)
 	const data = scheduleItemDataFormatter(formData)
+
+	// проверка значений графика
+	// if (!isValidScheduleValues(data)) {
+	// 	snackbar.show(
+	// 		'Обнаружены ошибки в значения дней заказа или поставки.\n'
+	// 		+ 'Проверьте данные графика!'
+	// 	)
+	// 	return
+	// }
+
+	// ошибки в логике графика
 	const errorMessage = getFormErrorMessage(data, error)
-	
 	if (errorMessage) {
 		snackbar.show(errorMessage)
 		return
@@ -528,8 +570,18 @@ function editScheduleItemFormHandler(e) {
 
 	const formData = new FormData(e.target)
 	const data = scheduleItemDataFormatter(formData)
-	const errorMessage = getFormErrorMessage(data, error)
 
+	// проверка значений графика
+	// if (!isValidScheduleValues(data)) {
+	// 	snackbar.show(
+	// 		'Обнаружены ошибки в значения дней заказа или поставки.\n'
+	// 		+ 'Проверьте данные графика!'
+	// 	)
+	// 	return
+	// }
+
+	// ошибки в логике графика
+	const errorMessage = getFormErrorMessage(data, error)
 	if (errorMessage) {
 		snackbar.show(errorMessage)
 		return
@@ -586,48 +638,27 @@ async function changeIsDayToDay(idSchedule, rowNode) {
 		snackbar.show(message)
 	}
 }
-// запрос на массовое изменение значения "Сегодня на сегодня" по номеру контракта
-async function changeIsDayToDayByContract(role, rowNode) {
-	if (!isAdmin(role)) return
-	const scheduleItem = rowNode.data
-	const counterpartyContractCode = scheduleItem.counterpartyContractCode
-	if (!counterpartyContractCode) return
-	if (!confirm(
-		`Вы действительно хотите изменить значение "Сегодня на сегодня" для всех графиков по коду контракта ${counterpartyContractCode}?
-	`)) return
-	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
-	const res = await getData(``)
-	clearTimeout(timeoutId)
-	bootstrap5overlay.hideOverlay()
-
-	if (res && res.status === '200') {
-		res.message && snackbar.show(res.message)
-		// получаем обновленные данные и обновляем таблицу
-		await getScheduleData(getScheduleUrl)
-		updateTable(gridOptions, scheduleData)
-	} else {
-		console.log(res)
-		const message = res && res.message ? res.message : 'Неизвестная ошибка'
-		snackbar.show(message)
-	}
-}
-// запрос на изменение статуса графиков по номеру контракта
-async function changeScheduleStatusByContract(counterpartyContractCode, status) {
-	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
-	const res = await getData(`${changeScheduleStatusByContractBaseUrl}${counterpartyContractCode}&${status}`)
-	clearTimeout(timeoutId)
-	bootstrap5overlay.hideOverlay()
-
-	if (res && res.status === '200') {
-		res.message && snackbar.show(res.message)
-		// получаем обновленные данные и обновляем таблицу
-		await getScheduleData(getScheduleUrl)
-		updateTable(gridOptions, scheduleData)
-	} else {
-		console.log(res)
-		const message = res && res.message ? res.message : 'Неизвестная ошибка'
-		snackbar.show(message)
-	}
+// метод редактирования графиков по коду контракта (изменяет только указанные поля)
+function editTOByCounterpartyContractCodeOnly(data) {
+	ajaxUtils.postJSONdata({
+		url: editTOByCounterpartyContractCodeOnlyUrl,
+		token: token,
+		data: data,
+		successCallback: async (res) => {
+			if (res && res.status === '200') {
+				res.message && snackbar.show(res.message)
+				// получаем обновленные данные и обновляем таблицу
+				await getScheduleData(getScheduleUrl)
+				updateTable(gridOptions, scheduleData)
+			} else {
+				console.log(res)
+				const message = res && res.message ? res.message : 'Неизвестная ошибка'
+				snackbar.show(message)
+			}
+		},
+		errorCallback: () => {
+		}
+	})
 }
 // добавление нового ТО по номеру
 async function addShopByContract(rowNode) {
@@ -655,17 +686,17 @@ async function addShopByContract(rowNode) {
 		name: scheduleItem.name,
 		counterpartyContractCode,
 		numStock: [ shopNum ],
-		comment: "",
-		note: "неделя",
-		monday: scheduleItem.monday ? scheduleItem.monday : '',
-		tuesday: scheduleItem.tuesday ? scheduleItem.tuesday : '',
-		wednesday: scheduleItem.wednesday ? scheduleItem.wednesday : '',
-		thursday: scheduleItem.thursday ? scheduleItem.thursday : '',
-		friday: scheduleItem.friday ? scheduleItem.friday : '',
-		saturday: scheduleItem.saturday ? scheduleItem.saturday : '',
-		sunday: scheduleItem.sunday ? scheduleItem.sunday : '',
-		orderFormationSchedule: scheduleItem.orderFormationSchedule,
-		orderShipmentSchedule: scheduleItem.orderShipmentSchedule
+		comment: scheduleItem.comment ? scheduleItem.comment : null,
+		note: scheduleItem.note ? scheduleItem.note : null,
+		monday: scheduleItem.monday ? scheduleItem.monday : null,
+		tuesday: scheduleItem.tuesday ? scheduleItem.tuesday : null,
+		wednesday: scheduleItem.wednesday ? scheduleItem.wednesday : null,
+		thursday: scheduleItem.thursday ? scheduleItem.thursday : null,
+		friday: scheduleItem.friday ? scheduleItem.friday : null,
+		saturday: scheduleItem.saturday ? scheduleItem.saturday : null,
+		sunday: scheduleItem.sunday ? scheduleItem.sunday : null,
+		orderFormationSchedule: scheduleItem.orderFormationSchedule ? scheduleItem.orderFormationSchedule : null,
+		orderShipmentSchedule: scheduleItem.orderShipmentSchedule ? scheduleItem.orderShipmentSchedule : null
 	}
 
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
@@ -709,7 +740,7 @@ async function addShopByContract(rowNode) {
 // форматирование данных графика поставки для отправки на сервер
 function scheduleItemDataFormatter(formData) {
 	const data = Object.fromEntries(formData)
-	const note = data.note ? 'неделя' : ''
+	const note = data.note ? 'неделя' : null
 	const supplies = getSupplies(data)
 	const counterpartyCode = Number(data.counterpartyCode)
 	const counterpartyContractCode = Number(data.counterpartyContractCode)
@@ -719,6 +750,14 @@ function scheduleItemDataFormatter(formData) {
 
 	let res = {
 		...data,
+		monday: data.monday ? data.monday : null,
+		tuesday: data.tuesday ? data.tuesday : null,
+		wednesday: data.wednesday ? data.wednesday : null,
+		thursday: data.thursday ? data.thursday : null,
+		friday: data.friday ? data.friday : null,
+		saturday: data.saturday ? data.saturday : null,
+		sunday: data.sunday ? data.sunday : null,
+		comment: data.comment ? data.comment : null,
 		note,
 		supplies,
 		counterpartyCode,
@@ -726,12 +765,6 @@ function scheduleItemDataFormatter(formData) {
 		numStock,
 		orderFormationSchedule,
 		orderShipmentSchedule,
-	}
-	if (data.idSchedule) {
-		res = {
-			...res,
-			idSchedule: Number(data.idSchedule)
-		}
 	}
 	return res
 }
@@ -797,8 +830,8 @@ function autocompleteCounterpartyInfo(e, autocompleteInput, contractCodeList) {
 	const counterparty = counterpartyList.find((item) => item[comparisonField] === searchValue)
 	if (counterparty) {
 		autocompleteInput.value = counterparty[fieldToFill]
-		contractCodeList.innerHTML = ''
-		createOptions(counterparty.contractCodes, contractCodeList)
+		// contractCodeList.innerHTML = ''
+		// createOptions(counterparty.contractCodes, contractCodeList)
 	}
 }
 

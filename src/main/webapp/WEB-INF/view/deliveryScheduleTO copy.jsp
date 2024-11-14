@@ -8,7 +8,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="${_csrf.parameterName}" content="${_csrf.token}" />
-	<title>Графики поставок на РЦ</title>
+	<title>Графики поставок на ТО</title>
 	<link rel="icon" href="${pageContext.request.contextPath}/resources/img/favicon.ico">
 	<script async src="${pageContext.request.contextPath}/resources/js/getInitData.js" type="module"></script>
 	<script src="${pageContext.request.contextPath}/resources/js/AG-Grid/ag-grid-enterprise.min.js"></script>
@@ -35,12 +35,9 @@
 		</sec:authorize>
 
 		<div class="title-container">
-			<strong><h3>Графики поставок на РЦ</h3></strong>
+			<strong><h3>Графики поставок на ТО</h3></strong>
 		</div>
 		<div class="toolbar">
-			<select class="btn tools-btn font-weight-bold" name="numStockSelect" id="numStockSelect">
-				<option value="">Все склады</option>
-			</select>
 			<button type="button" class="btn tools-btn font-weight-bold text-muted" data-toggle="modal" data-target="#addScheduleItemModal">
 				+ Добавить новый график
 			</button>
@@ -51,13 +48,15 @@
 					</button>
 				</c:when>
 			</c:choose>
-			<c:choose>
-				<c:when test="${roles == '[ROLE_ADMIN]' || login == 'romashkok%!dobronom.by'}">
-					<button type="button" id="sendScheduleDataToMail" class="btn tools-btn font-weight-bold text-muted ml-auto">
-						Отправить данные
-					</button>
-				</c:when>
-			</c:choose>
+			<div class="search-form-container">
+				<form action="" id="searchData">
+					<div class="input-row-container">
+						<input class="form-control form-control-sm" type="text" name="searchValue" id="searchValue" placeholder="Наименование контрагента или номер контракта..." required>
+						<button class="btn btn-outline-secondary text-nowrap btn-sm" type="submit">Загрузить данные</button>
+						<button class="btn btn-outline-secondary text-nowrap btn-sm" type="button" id="loadAllData">Загрузить все данные</button>
+					</div>
+				</form>
+			</div>
 		</div>
 		<div id="myGrid" class="ag-theme-alpine"></div>
 		<div id="snackbar"></div>
@@ -68,7 +67,7 @@
 		<div class="modal-dialog modal-lg">
 			<div class="modal-content">
 				<div class="modal-header">
-					<h1 class="modal-title fs-5 mt-0" id="addScheduleItemModalLabel">Создание графика поставки</h1>
+					<h1 class="modal-title fs-5 mt-0" id="addScheduleItemModalLabel">Создание графика поставок на ТО</h1>
 					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 						<span aria-hidden="true">&times;</span>
 					</button>
@@ -78,7 +77,21 @@
 						<div class="inputs-container">
 
 							<input type="hidden" name="supplies" id="supplies">
-							<input type="hidden" name="type" id="type" value="РЦ">
+							<input type="hidden" name="type" id="type" value="ТО">
+
+							<div class="mb-3">
+								<label class="sr-only" for="toType">Холодный или Сухой</label>
+								<div class="input-group">
+									<div class="input-group-prepend">
+										<div class="input-group-text">Холодный или Сухой</div>
+									</div>
+									<select id="toType" name="toType" class="form-control" required>
+										<option value="" selected hidden disabled>Выберите вариант</option>
+										<option value="сухой">Сухой</option>
+										<option value="холодный">Холодный</option>
+									</select>
+								</div>
+							</div>
 
 							<div class="mb-3">
 								<label class="sr-only" for="counterpartyCode">Код контрагента</label>
@@ -90,8 +103,9 @@
 								</div>
 								<datalist id="counterpartyCodeList"></datalist>
 							</div>
+
 							<div class="mb-3">
-								<label class="sr-only" for="name">Наименование контрагента</label>
+								<label class="sr-only" for="name">Наименование</label>
 								<div class="input-group">
 									<div class="input-group-prepend">
 										<div class="input-group-text">Наименование</div>
@@ -100,27 +114,37 @@
 								</div>
 								<datalist id="counterpartyNameList"></datalist>
 							</div>
+
 							<div class="mb-3">
 								<label class="sr-only" for="counterpartyContractCode">Номер контракта</label>
 								<div class="input-group">
 									<div class="input-group-prepend">
 										<div class="input-group-text">Номер контракта</div>
 									</div>
-									<input type="number" class="form-control counterpartyContractCode" name="counterpartyContractCode" id="counterpartyContractCode" min="0" placeholder="Номер контракта" required>
+									<input type="number" class="form-control counterpartyContractCode" name="counterpartyContractCode" id="counterpartyContractCode" list="contractCodeList" min="0" placeholder="Номер контракта" required>
 								</div>
 								<div class="error-message" id="messageNumshop"></div>
+								<datalist id="contractCodeList"></datalist>
 							</div>
+
 							<div class="mb-3">
-								<label class="sr-only" for="numStock">Номер склада</label>
+								<label class="sr-only" for="numStock">Номера ТО</label>
 								<div class="input-group">
 									<div class="input-group-prepend">
-										<div class="input-group-text">Номер склада</div>
+										<div class="input-group-text custom-tooltip">
+											Номера ТО
+											<sup class="px-1 font-weight-bold text-danger">?</sup>
+											<span class="tooltiptext">Укажите номера ТО, для которых нужно создать график</span>
+										</div>
 									</div>
-									<select id="numStock" name="numStock" class="form-control" required>
-										<option value="" selected hidden disabled></option>
-									</select>
+									<textarea
+										class="form-control numStock" name="numStock" id="numStock" rows="3"
+										placeholder="Просто скопируйте сюда строку или столбец с номерами магазинов или укажите номера магазинов через ПРОБЕЛ"
+										required
+									></textarea>
 								</div>
 							</div>
+
 							<div class="mb-3">
 								<label class="sr-only" for="comment">Примечание</label>
 								<div class="input-group">
@@ -130,50 +154,50 @@
 									<input type="text" class="form-control" name="comment" id="comment" placeholder="Примечание">
 								</div>
 							</div>
+
 							<div class="mb-3">
-								<label class="sr-only" for="comment">Расчет стока до Y-й поставки</label>
-								<div class="input-group">
-									<div class="input-group-prepend">
-										<div class="input-group-text">Расчет стока до Y-й поставки</div>
-									</div>
-									<select id="runoffCalculation" name="runoffCalculation" class="form-control" required>
-										<option value="" selected hidden disabled></option>
-										<option value="1">1</option>
-										<option value="2">2</option>
-										<option value="3">3</option>
-										<option value="4">4</option>
-									</select>
-								</div>
-							</div>
-							<div class="mb-3">
-								<label class="sr-only" for="connectionSupply">Номер связанного контракта</label>
+								<label class="sr-only" for="orderFormationSchedule">График формирования заказа</label>
 								<div class="input-group">
 									<div class="input-group-prepend">
 										<div class="input-group-text custom-tooltip">
-											Номер связанного контракта
+											График формирования заказа
 											<sup class="px-1 font-weight-bold text-danger">?</sup>
-											<span class="tooltiptext">Укажите номер связанного контракта, который поставляется с текущим контрактом в одной машине. НЕ ОБЯЗАТЕЛЬНО К ЗАПОЛНЕНИЮ </span>
+											<span class="tooltiptext">Поле заполняется только в случае оформления заказа 1 раз в две недели. Указывается четность недели. В случае, если заказ производится каждую неделю, поле заполнять НЕ НУЖНО</span>
 										</div>
 									</div>
-									<input type="number" class="form-control" name="connectionSupply" id="connectionSupply" min="0" step="1" placeholder="Номер связанного контракта">
-								</div>
-							</div>
-							<div class="input-row-container flex-wrap">
-								<div class="form-check form-group">
-									<input type="checkbox" class="form-check-input" name="multipleOfPallet" id="AddMultipleOfPallet">
-									<label for="AddMultipleOfPallet" class="form-check-label text-muted font-weight-bold">Кратно поддону</label>
-								</div>
-								<div class="form-check form-group">
-									<input type="checkbox" class="form-check-input" name="multipleOfTruck" id="AddMultipleOfTruck">
-									<label for="AddMultipleOfTruck" class="form-check-label text-muted font-weight-bold">Кратно машине</label>
-								</div>
-								<div class="form-group d-none">
-									<input type="number" class="form-control w-50" name="machineMultiplicity" id="machineMultiplicity" min="1" max="99" step="1" placeholder="ЦЕЛОЕ число">
-									<small class="form-text text-danger">Укажите кратность машины (количество паллетомест)</small>
+									<select id="orderFormationSchedule" name="orderFormationSchedule" class="form-control">
+										<option value="" selected hidden disabled>Выберите вариант</option>
+										<option value="ч">Четный</option>
+										<option value="н">Нечетный</option>
+									</select>
 								</div>
 							</div>
 
-							<h5 class="mt-2 mb-0 text-muted font-weight-bold text-center">График поставок</h5>
+							<div class="mb-3">
+								<label class="sr-only" for="orderShipmentSchedule">График отгрузки заказа</label>
+								<div class="input-group">
+									<div class="input-group-prepend">
+										<div class="input-group-text custom-tooltip">
+											График отгрузки заказа
+											<sup class="px-1 font-weight-bold text-danger">?</sup>
+											<span class="tooltiptext">Поле заполняется только в случае оформления заказа 1 раз в две недели. Указывается четность недели. В случае, если заказ производится каждую неделю, поле заполнять НЕ НУЖНО</span>
+										</div>
+									</div>
+									<select id="orderShipmentSchedule" name="orderShipmentSchedule" class="form-control">
+										<option class="text-muted" value="" selected hidden disabled>Выберите вариант</option>
+										<option value="ч">Четный</option>
+										<option value="н">Нечетный</option>
+									</select>
+								</div>
+							</div>
+
+							<h5 class="mt-2 mb-0 text-muted font-weight-bold text-center">
+								<span class="custom-tooltip">
+									График поставок
+									<sup class="px-1 font-weight-bold text-danger">?</sup>
+									<span class="tooltiptext"><strong>Подсказка к заполнению полей:</strong><br><strong>День заказа: </strong>просто "з" — обозначает день, когда сделан заказ.<br><strong>День поставки: </strong>укажите день недели, когда был сделан заказ, например: "понедельник", "вторник".<br><strong>Заказ + постава в один день: </strong>формат "з/день недели", например: "з/понедельник".<br><strong>Поставки на другой неделе: </strong>формат "нX/день недели", где X — номер недели от заказа (от н0 до н10). Пример: "н2/четверг".<br><strong>Комбинированный формат: </strong>заказ, неделя и день недели — "з/нX/день недели", например: "з/н3/вторник".</span>
+								</span>
+							</h5>
 							<div class="form-check form-group">
 								<input type="checkbox" class="form-check-input" name="note" id="addNote">
 								<label for="addNote" class="form-check-label text-muted font-weight-bold">Пометка "Неделя"</label>
@@ -185,7 +209,7 @@
 										<div class="input-group-prepend">
 											<div class="input-group-text">Пн</div>
 										</div>
-										<select id="monday" name="monday" class="scheduleSelect form-control"></select>
+										<input type="text" list="scheduleOptions" id="monday" name="monday" class="scheduleSelect form-control"></input>
 									</div>
 								</div>
 								<div>
@@ -194,7 +218,7 @@
 										<div class="input-group-prepend">
 											<div class="input-group-text">Вт</div>
 										</div>
-										<select id="tuesday" name="tuesday" class="scheduleSelect form-control"></select>
+										<input type="text" list="scheduleOptions" id="tuesday" name="tuesday" class="scheduleSelect form-control"></input>
 									</div>
 								</div>
 								<div>
@@ -203,7 +227,7 @@
 										<div class="input-group-prepend">
 											<div class="input-group-text">Ср</div>
 										</div>
-										<select id="wednesday" name="wednesday" class="scheduleSelect form-control"></select>
+										<input type="text" list="scheduleOptions" id="wednesday" name="wednesday" class="scheduleSelect form-control"></input>
 									</div>
 								</div>
 								<div>
@@ -212,7 +236,7 @@
 										<div class="input-group-prepend">
 											<div class="input-group-text">Чт</div>
 										</div>
-										<select id="thursday" name="thursday" class="scheduleSelect form-control"></select>
+										<input type="text" list="scheduleOptions" id="thursday" name="thursday" class="scheduleSelect form-control"></input>
 									</div>
 								</div>
 								<div>
@@ -221,7 +245,7 @@
 										<div class="input-group-prepend">
 											<div class="input-group-text">Пт</div>
 										</div>
-										<select id="friday" name="friday" class="scheduleSelect form-control"></select>
+										<input type="text" list="scheduleOptions" id="friday" name="friday" class="scheduleSelect form-control"></input>
 									</div>
 								</div>
 								<div>
@@ -230,7 +254,7 @@
 										<div class="input-group-prepend">
 											<div class="input-group-text">Сб</div>
 										</div>
-										<select id="saturday" name="saturday" class="scheduleSelect form-control"></select>
+										<input type="text" list="scheduleOptions" id="saturday" name="saturday" class="scheduleSelect form-control"></input>
 									</div>
 								</div>
 								<div>
@@ -239,7 +263,7 @@
 										<div class="input-group-prepend">
 											<div class="input-group-text">Вс</div>
 										</div>
-										<select id="sunday" name="sunday" class="scheduleSelect form-control"></select>
+										<input type="text" list="scheduleOptions" id="sunday" name="sunday" class="scheduleSelect form-control"></input>
 									</div>
 								</div>
 							</div>
@@ -260,7 +284,7 @@
 		<div class="modal-dialog modal-lg">
 			<div class="modal-content">
 				<div class="modal-header">
-					<h1 class="modal-title fs-5 mt-0" id="editScheduleItemModalLabel">Редактирование графика поставки</h1>
+					<h1 class="modal-title fs-5 mt-0" id="editScheduleItemModalLabel">Редактирование графика поставок</h1>
 					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 						<span aria-hidden="true">&times;</span>
 					</button>
@@ -269,9 +293,23 @@
 					<div class="modal-body">
 						<div class="inputs-container">
 
-							<input type="hidden" name="idSchedule" id="idSchedule">
+							<!-- <input type="hidden" name="idSchedule" id="idSchedule"> -->
 							<input type="hidden" name="supplies" id="supplies">
-							<input type="hidden" name="type" id="type" value="РЦ">
+							<input type="hidden" name="type" id="type" value="ТО">
+
+							<div class="mb-3">
+								<label class="sr-only" for="toType">Холодный или Сухой</label>
+								<div class="input-group">
+									<div class="input-group-prepend">
+										<div class="input-group-text">Холодный или Сухой</div>
+									</div>
+									<select id="toType" name="toType" class="form-control" required>
+										<option value="" selected hidden disabled>Выберите вариант</option>
+										<option value="сухой">Сухой</option>
+										<option value="холодный">Холодный</option>
+									</select>
+								</div>
+							</div>
 
 							<div class="mb-3">
 								<label class="sr-only" for="counterpartyCode">Код контрагента</label>
@@ -279,18 +317,22 @@
 									<div class="input-group-prepend">
 										<div class="input-group-text">Код контрагента</div>
 									</div>
-									<input type="number" class="form-control" name="counterpartyCode" id="counterpartyCode" min="0" placeholder="Код контрагента" required>
+									<input type="number" class="form-control" name="counterpartyCode" id="counterpartyCode" list="counterpartyCodeList" min="0" placeholder="Код контрагента" required>
 								</div>
+								<datalist id="counterpartyCodeList"></datalist>
 							</div>
+
 							<div class="mb-3">
-								<label class="sr-only" for="name">Наименование контрагента</label>
+								<label class="sr-only" for="name">Наименование</label>
 								<div class="input-group">
 									<div class="input-group-prepend">
 										<div class="input-group-text">Наименование</div>
 									</div>
-									<input type="text" class="form-control" name="name" id="name" placeholder="Наименование контрагента" required>
+									<input type="text" class="form-control" name="name" id="name" list="counterpartyNameList" placeholder="Наименование контрагента" required>
 								</div>
+								<datalist id="counterpartyNameList"></datalist>
 							</div>
+
 							<div class="mb-3">
 								<label class="sr-only" for="counterpartyContractCode">Номер контракта</label>
 								<div class="input-group">
@@ -301,17 +343,25 @@
 								</div>
 								<div class="error-message" id="messageNumshop"></div>
 							</div>
+
 							<div class="mb-3">
-								<label class="sr-only" for="numStock">Номер склада</label>
+								<label class="sr-only" for="numStock">Номера ТО</label>
 								<div class="input-group">
 									<div class="input-group-prepend">
-										<div class="input-group-text">Номер склада</div>
+										<div class="input-group-text custom-tooltip">
+											Номера ТО
+											<sup class="px-1 font-weight-bold text-danger">?</sup>
+											<span class="tooltiptext">Укажите номера ТО, которые будут ОТРЕДАКТИРОВАНЫ</span>
+										</div>
 									</div>
-									<select id="numStock" name="numStock" class="form-control" required>
-										<option value="" selected hidden disabled></option>
-									</select>
+									<textarea
+										class="form-control numStock" name="numStock" id="numStock" rows="3"
+										placeholder="Просто скопируйте сюда строку или столбец с номерами магазинов или укажите номера магазинов через ПРОБЕЛ"
+										required
+									></textarea>
 								</div>
 							</div>
+
 							<div class="mb-3">
 								<label class="sr-only" for="comment">Примечание</label>
 								<div class="input-group">
@@ -321,50 +371,50 @@
 									<input type="text" class="form-control" name="comment" id="comment" placeholder="Примечание">
 								</div>
 							</div>
+
 							<div class="mb-3">
-								<label class="sr-only" for="comment">Расчет стока до Y-й поставки</label>
-								<div class="input-group">
-									<div class="input-group-prepend">
-										<div class="input-group-text">Расчет стока до Y-й поставки</div>
-									</div>
-									<select id="runoffCalculation" name="runoffCalculation" class="form-control" required>
-										<option value="" selected hidden disabled></option>
-										<option value="1">1</option>
-										<option value="2">2</option>
-										<option value="3">3</option>
-										<option value="4">4</option>
-									</select>
-								</div>
-							</div>
-							<div class="mb-3">
-								<label class="sr-only" for="connectionSupply">Номер связанного контракта</label>
+								<label class="sr-only" for="orderFormationSchedule">График формирования заказа</label>
 								<div class="input-group">
 									<div class="input-group-prepend">
 										<div class="input-group-text custom-tooltip">
-											Номер связанного контракта
+											График формирования заказа
 											<sup class="px-1 font-weight-bold text-danger">?</sup>
-											<span class="tooltiptext">Укажите номер связанного контракта, который поставляется с текущим контрактом в одной машине. НЕ ОБЯЗАТЕЛЬНО К ЗАПОЛНЕНИЮ </span>
+											<span class="tooltiptext">Поле заполняется только в случае оформления заказа 1 раз в две недели. Указывается четность недели. В случае, если заказ производится каждую неделю, поле заполнять НЕ НУЖНО</span>
 										</div>
 									</div>
-									<input type="number" class="form-control" name="connectionSupply" id="connectionSupply" min="0" step="1" placeholder="Номер связанного контракта">
-								</div>
-							</div>
-							<div class="input-row-container flex-wrap">
-								<div class="form-check form-group">
-									<input type="checkbox" class="form-check-input" name="multipleOfPallet" id="editMultipleOfPallet">
-									<label for="editMultipleOfPallet" class="form-check-label text-muted font-weight-bold">Кратно поддону</label>
-								</div>
-								<div class="form-check form-group">
-									<input type="checkbox" class="form-check-input" name="multipleOfTruck" id="editMultipleOfTruck">
-									<label for="editMultipleOfTruck" class="form-check-label text-muted font-weight-bold">Кратно машине</label>
-								</div>
-								<div class="form-group d-none">
-									<input type="number" class="form-control w-50" name="machineMultiplicity" id="machineMultiplicity" min="1" max="99" step="1" placeholder="ЦЕЛОЕ число">
-									<small class="form-text text-danger">Укажите кратность машины (количество паллетомест)</small>
+									<select id="orderFormationSchedule" name="orderFormationSchedule" class="form-control">
+										<option value="" selected hidden disabled>Выберите вариант</option>
+										<option value="ч">Четный</option>
+										<option value="н">Нечетный</option>
+									</select>
 								</div>
 							</div>
 
-							<h5 class="mt-2 mb-0 text-muted font-weight-bold text-center">График поставок</h5>
+							<div class="mb-3">
+								<label class="sr-only" for="orderShipmentSchedule">График отгрузки заказа</label>
+								<div class="input-group">
+									<div class="input-group-prepend">
+										<div class="input-group-text custom-tooltip">
+											График отгрузки заказа
+											<sup class="px-1 font-weight-bold text-danger">?</sup>
+											<span class="tooltiptext">Поле заполняется только в случае оформления заказа 1 раз в две недели. Указывается четность недели. В случае, если заказ производится каждую неделю, поле заполнять НЕ НУЖНО</span>
+										</div>
+									</div>
+									<select id="orderShipmentSchedule" name="orderShipmentSchedule" class="form-control">
+										<option class="text-muted" value="" selected hidden disabled>Выберите вариант</option>
+										<option value="ч">Четный</option>
+										<option value="н">Нечетный</option>
+									</select>
+								</div>
+							</div>
+
+							<h5 class="mt-2 mb-0 text-muted font-weight-bold text-center">
+								<span class="custom-tooltip">
+									График поставок
+									<sup class="px-1 font-weight-bold text-danger">?</sup>
+									<span class="tooltiptext"><strong>Подсказка к заполнению полей:</strong><br><strong>День заказа: </strong>просто "з" — обозначает день, когда сделан заказ.<br><strong>День поставки: </strong>укажите день недели, когда был сделан заказ, например: "понедельник", "вторник".<br><strong>Заказ + постава в один день: </strong>формат "з/день недели", например: "з/понедельник".<br><strong>Поставки на другой неделе: </strong>формат "нX/день недели", где X — номер недели от заказа (от н0 до н10). Пример: "н2/четверг".<br><strong>Комбинированный формат: </strong>заказ, неделя и день недели — "з/нX/день недели", например: "з/н3/вторник".</span>
+								</span>
+							</h5>
 							<div class="form-check form-group">
 								<input type="checkbox" class="form-check-input" name="note" id="editNote">
 								<label for="editNote" class="form-check-label text-muted font-weight-bold">Пометка "Неделя"</label>
@@ -376,7 +426,7 @@
 										<div class="input-group-prepend">
 											<div class="input-group-text">Пн</div>
 										</div>
-										<select id="monday" name="monday" class="scheduleSelect form-control"></select>
+										<input type="text" list="scheduleOptions" id="monday" name="monday" class="scheduleSelect form-control"></input>
 									</div>
 								</div>
 								<div>
@@ -385,7 +435,7 @@
 										<div class="input-group-prepend">
 											<div class="input-group-text">Вт</div>
 										</div>
-										<select id="tuesday" name="tuesday" class="scheduleSelect form-control"></select>
+										<input type="text" list="scheduleOptions" id="tuesday" name="tuesday" class="scheduleSelect form-control"></input>
 									</div>
 								</div>
 								<div>
@@ -394,7 +444,7 @@
 										<div class="input-group-prepend">
 											<div class="input-group-text">Ср</div>
 										</div>
-										<select id="wednesday" name="wednesday" class="scheduleSelect form-control"></select>
+										<input type="text" list="scheduleOptions" id="wednesday" name="wednesday" class="scheduleSelect form-control"></input>
 									</div>
 								</div>
 								<div>
@@ -403,7 +453,7 @@
 										<div class="input-group-prepend">
 											<div class="input-group-text">Чт</div>
 										</div>
-										<select id="thursday" name="thursday" class="scheduleSelect form-control"></select>
+										<input type="text" list="scheduleOptions" id="thursday" name="thursday" class="scheduleSelect form-control"></input>
 									</div>
 								</div>
 								<div>
@@ -412,7 +462,7 @@
 										<div class="input-group-prepend">
 											<div class="input-group-text">Пт</div>
 										</div>
-										<select id="friday" name="friday" class="scheduleSelect form-control"></select>
+										<input type="text" list="scheduleOptions" id="friday" name="friday" class="scheduleSelect form-control"></input>
 									</div>
 								</div>
 								<div>
@@ -421,7 +471,7 @@
 										<div class="input-group-prepend">
 											<div class="input-group-text">Сб</div>
 										</div>
-										<select id="saturday" name="saturday" class="scheduleSelect form-control"></select>
+										<input type="text" list="scheduleOptions" id="saturday" name="saturday" class="scheduleSelect form-control"></input>
 									</div>
 								</div>
 								<div>
@@ -430,7 +480,7 @@
 										<div class="input-group-prepend">
 											<div class="input-group-text">Вс</div>
 										</div>
-										<select id="sunday" name="sunday" class="scheduleSelect form-control"></select>
+										<input type="text" list="scheduleOptions" id="sunday" name="sunday" class="scheduleSelect form-control"></input>
 									</div>
 								</div>
 							</div>
@@ -459,9 +509,11 @@
 					<div class="modal-body">
 						<div class="inputs-container">
 							<div class="form-group">
-								<label class="col-form-label text-muted font-weight-bold">Укажите номер склада</label>
-								<select id="numStock" name="numStock" class="form-control" required>
-									<option value="" selected hidden disabled></option>
+								<label class="col-form-label text-muted font-weight-bold">Укажите, какой это график</label>
+								<select id="toType" name="toType" class="form-control" required>
+									<option value="" selected hidden disabled>Выберите вариант</option>
+									<option value="сухой">сухой</option>
+									<option value="холодный">холодный</option>
 								</select>
 							</div>
 							<div class="form-group">
@@ -534,7 +586,11 @@
 			</div>
 		</div>
 	</div>
+
+	<!-- Список опций для графика -->
+	<datalist id="scheduleOptions"></datalist>
+
 </body>
-<script src="${pageContext.request.contextPath}/resources/js/deliverySchedule.js" type="module"></script>
+<script src="${pageContext.request.contextPath}/resources/js/deliveryScheduleTO.js" type="module"></script>
 <script src='${pageContext.request.contextPath}/resources/js/mainPage/nav-fixed-top.js'></script>
 </html>

@@ -8,6 +8,7 @@ public class CounterpartyDTO {
     private Long counterpartyCode;
     private String name;
     private List<Long> counterpartyContractCode;
+    private Long counterpartyContractCodeUnic;
 	/**
 	 * @param counterpartyCode
 	 * @param name
@@ -25,11 +26,11 @@ public class CounterpartyDTO {
 	 * @param name
 	 * @param counterpartyContractCode
 	 */
-	public CounterpartyDTO(Long counterpartyCode, String name, Object counterpartyContractCode) {
+	public CounterpartyDTO(Long counterpartyCode, String name, Long counterpartyContractCode) {
 		super();
 		this.counterpartyCode = counterpartyCode;
 		this.name = name;
-		this.counterpartyContractCode = (List<Long>) counterpartyContractCode;
+		this.counterpartyContractCodeUnic = counterpartyContractCode;
 	}
 
 
@@ -55,6 +56,18 @@ public class CounterpartyDTO {
 	
 	
 	
+	public Long getCounterpartyContractCodeUnic() {
+		return counterpartyContractCodeUnic;
+	}
+
+
+
+	public void setCounterpartyContractCodeUnic(Long counterpartyContractCodeUnic) {
+		this.counterpartyContractCodeUnic = counterpartyContractCodeUnic;
+	}
+
+
+
 	@Override
 	public int hashCode() {
 		return Objects.hash(counterpartyCode, name);

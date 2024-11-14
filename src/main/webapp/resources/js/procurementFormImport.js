@@ -21,6 +21,7 @@ import {
 	inputEditBan,
 	isInvalidPointForms,
 	isValidPallCount,
+	isValidTnvdValue,
 	orderCargoInputOnChangeHandler,
 	orderPallInputOnChangeHandler,
 	orderWeightInputOnChangeHandler,
@@ -448,7 +449,7 @@ function isInvalidOrderForm(data) {
 		return true
 	}
 
-	if (!data.points.find(point => point.type === 'Выгрузка') && data.needUnloadPoint === 'false') {
+	if (!data.points.find(point => point.type === 'Выгрузка') && data.needUnloadPoint !== 'true') {
 		snackbar.show('Необходимо добавить точку выгрузки!')
 		return true
 	}
@@ -460,6 +461,11 @@ function isInvalidOrderForm(data) {
 
 	if (!isValidPallCount(data)) {
 		snackbar.show('Количество паллет на одну заявку на загрузке не может превышать 20!')
+		return true
+	}
+
+	if (!isValidTnvdValue(data)) {
+		snackbar.show('Неверное значение кода ТН ВЭД!')
 		return true
 	}
 

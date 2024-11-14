@@ -93,6 +93,7 @@ import by.base.main.service.ActService;
 import by.base.main.service.MessageService;
 import by.base.main.service.OrderService;
 import by.base.main.service.ProductService;
+import by.base.main.service.ScheduleService;
 import by.base.main.service.ServiceException;
 
 /**
@@ -124,6 +125,9 @@ public class POIExcel {
 	
 	@Autowired
 	private ProductService productService;
+	
+	@Autowired
+	private ScheduleService scheduleService;
 
 	private ArrayList<Shop> shops;
 	private ArrayList<RouteHasShop> arrayRouteHasShop;
@@ -1320,6 +1324,57 @@ public class POIExcel {
 
         wb.close();
         return schedules;
+    }
+	
+	
+	
+    public List<Schedule> readColumns21And22(File file) throws FileNotFoundException, IOException {
+        XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
+        XSSFSheet sheet = wb.getSheetAt(0);
+        Iterator<Row> rowIterator = sheet.iterator();
+
+        // Assuming the first row is the header
+        rowIterator.next();
+        rowIterator.next();
+        while (rowIterator.hasNext()) {
+            Row row = rowIterator.next();
+            
+            Cell cell4 = row.getCell(3);
+            Cell cell5 = row.getCell(4);
+            Cell cell21 = row.getCell(20);
+            Cell cell22 = row.getCell(21);
+
+            String numComtract = getCellValue(cell4);
+            String numTO = getCellValue(cell5);
+            String value21 = getCellValue(cell21);
+            String value22 = getCellValue(cell22);
+            
+            
+            Schedule schedule = scheduleService.getScheduleByNumContractAndNumStock(Long.parseLong(numComtract), Integer.parseInt(numTO));
+           System.out.println(cell4 + "  --  " + cell5+ "  --  " +cell21+ "  --  " +cell22);
+            
+        }
+		return null;
+        
+        
+    }
+    
+
+    private String getCellValue(Cell cell) {
+        if (cell == null) {
+            return null;
+        }
+        switch (cell.getCellType()) {
+            case STRING:
+                return cell.getStringCellValue();
+            case NUMERIC:
+                return String.valueOf(cell.getNumericCellValue());
+            case BOOLEAN:
+                return String.valueOf(cell.getBooleanCellValue());
+            case BLANK:
+            default:
+                return null;
+        }
     }
 	
 	/**

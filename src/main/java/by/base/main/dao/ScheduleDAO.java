@@ -16,10 +16,22 @@ public interface ScheduleDAO {
 	List<Schedule> getSchedulesListTO();
 	
 	/**
-	 * Возвращает лист с контрагентами <b>DTO класс</b>
+	 * Возвращает лист с контрагентами РЦ <b>DTO класс</b>
 	 * @return
 	 */
-	List<CounterpartyDTO> getcounterpartyList();
+	List<CounterpartyDTO> getcounterpartyListRC();
+	
+	/**
+	 * Возвращает лист с контрагентами ТО <b>DTO класс</b>
+	 * @return
+	 */
+	List<CounterpartyDTO> getcounterpartyListTO();
+	
+	/**
+	 * выдаёт лист Schedule с уникальными кодами контракта
+	 * @return
+	 */
+	List<CounterpartyDTO> getUnicCodeContractTO();
 	
 	/**
 	 * Возвращает графики поставок на ТО по коду контрактов
@@ -50,6 +62,8 @@ public interface ScheduleDAO {
 	List<Schedule> getSchedulesByTOType(String toType);
 		
 	Schedule getScheduleByNumContract(Long num);
+	
+	Schedule getScheduleByNumContractAndNumStock(Long num, Integer shock);
 	
 	/**
 	 * Отдаёт график поставок по номеру контракта и номеру магазина / склада

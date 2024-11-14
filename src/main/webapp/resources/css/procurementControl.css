@@ -82,6 +82,9 @@ footer.to-bottom {
 	right: 10px;
 	transform: rotate(90deg);
 }
+.point-container .accordion .card {
+	overflow: visible;
+}
 
 #myGrid {
 	width: 100%;

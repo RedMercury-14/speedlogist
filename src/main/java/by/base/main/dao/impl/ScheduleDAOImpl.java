@@ -183,15 +183,15 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	        "s.counterpartyCode, " +
 	        "MIN(s.name)) "; // Используем MIN для name
 	
-	private static final String queryGetcounterpartyList = counterpartyConstruct +
+	private static final String queryGetcounterpartyListRC = counterpartyConstruct +
             "FROM Schedule s " +
-            "WHERE s.counterpartyCode IS NOT NULL " +
+            "WHERE s.type ='РЦ' AND s.counterpartyCode IS NOT NULL " +
             "GROUP BY s.counterpartyCode";	
 	@Transactional
 	@Override
-	public List<CounterpartyDTO> getcounterpartyList() {
+	public List<CounterpartyDTO> getcounterpartyListRC() {
 		Session currentSession = sessionFactory.getCurrentSession();
-		Query<CounterpartyDTO> theRole = currentSession.createQuery(queryGetcounterpartyList, CounterpartyDTO.class);
+		Query<CounterpartyDTO> theRole = currentSession.createQuery(queryGetcounterpartyListRC, CounterpartyDTO.class);
 		List <CounterpartyDTO> roles = theRole.getResultList();
 		for (CounterpartyDTO dto : roles) {
 		    List<Long> contractCodes = currentSession.createQuery(
@@ -201,6 +201,60 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 		    
 		    dto.setCounterpartyContractCode(contractCodes); // Устанавливаем список в DTO
 		}
+		return roles;
+	}
+
+	private static final String queryGetcounterpartyListTO = counterpartyConstruct +
+            "FROM Schedule s " +
+            "WHERE s.type ='ТО' AND s.counterpartyCode IS NOT NULL " +
+            "GROUP BY s.counterpartyCode";
+	@Transactional
+	@Override
+	public List<CounterpartyDTO> getcounterpartyListTO() {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<CounterpartyDTO> theRole = currentSession.createQuery(queryGetcounterpartyListTO, CounterpartyDTO.class);
+		List <CounterpartyDTO> roles = theRole.getResultList();
+//		for (CounterpartyDTO dto : roles) {
+//		    List<Long> contractCodes = currentSession.createQuery(
+//		        "SELECT c.counterpartyContractCode FROM Schedule c WHERE c.counterpartyCode = :code", Long.class)
+//		        .setParameter("code", dto.getCounterpartyCode())
+//		        .getResultList();
+//		    
+//		    dto.setCounterpartyContractCode(contractCodes); // Устанавливаем список в DTO
+//		}
+		return roles;
+	}
+
+	private static final String queryGetObjByNumContractAndNumStock = "from Schedule where counterpartyContractCode=:counterpartyContractCode AND numStock=:numStock";
+	@Transactional
+	@Override
+	public Schedule getScheduleByNumContractAndNumStock(Long num, Integer shock) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Schedule> theObject = currentSession.createQuery(queryGetObjByNumContractAndNumStock, Schedule.class);
+		theObject.setParameter("counterpartyContractCode", num);
+		theObject.setParameter("numStock", shock);
+		List<Schedule> trucks = theObject.getResultList();
+		if(trucks.isEmpty()) {
+			return null;
+		}
+		Schedule object = trucks.stream().findFirst().get();
+		return object;
+	}
+
+	
+	private static final String counterpartyConstruct2 = "SELECT new com.dto.CounterpartyDTO(" +
+			"MIN(s.counterpartyCode), " +  // Используем MIN для counterpartyCode
+	        "MIN(s.name),"+ // Используем MIN для name
+	        "s.counterpartyContractCode) ";
+	private static final String queryGetUnicCodeContractTO = counterpartyConstruct2 + "FROM Schedule s " +
+            "WHERE s.type ='ТО' AND s.counterpartyContractCode IS NOT NULL " +
+            "GROUP BY s.counterpartyContractCode";
+	@Transactional
+	@Override
+	public List<CounterpartyDTO> getUnicCodeContractTO() {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<CounterpartyDTO> theRole = currentSession.createQuery(queryGetUnicCodeContractTO, CounterpartyDTO.class);
+		List <CounterpartyDTO> roles = theRole.getResultList();
 		return roles;
 	}
 }

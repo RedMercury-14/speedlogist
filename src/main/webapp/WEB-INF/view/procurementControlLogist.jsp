@@ -16,6 +16,7 @@
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/autocomplete.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/snackbar.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/bootstrap5overlay.css">
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/tooltip.css">
 	<script src="${pageContext.request.contextPath}/resources/js/sortableJS/sortable.min.js"></script>
 </head>
 <body>

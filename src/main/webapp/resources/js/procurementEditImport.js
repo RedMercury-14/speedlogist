@@ -9,6 +9,7 @@ import {
 	inputEditBan,
 	isInvalidPointForms,
 	isValidPallCount,
+	isValidTnvdValue,
 	orderCargoInputOnChangeHandler,
 	orderPallInputOnChangeHandler,
 	orderWeightInputOnChangeHandler,
@@ -93,7 +94,7 @@ function orderFormSubmitHandler(e) {
 	const data = getOrderData(formData, editableOrder, null)
 	const updatedData = updateEditFormData(data)
 
-	if (!validateForm(updatedData)) {
+	if (isInvalidForm(updatedData)) {
 		return
 	}
 
@@ -126,18 +127,23 @@ function orderFormSubmitHandler(e) {
 }
 
 // валидация формы
-function validateForm(data) {
+function isInvalidForm(data) {
 	if (!isValidPallCount(data)) {
 		snackbar.show('Количество паллет на одну заявку на загрузке не может превышать 20!')
 		return true
 	}
 
-	if (error) {
-		snackbar.show('Проверьте данные!')
-		return false
+	if (!isValidTnvdValue(data)) {
+		snackbar.show('Неверное значение кода ТН ВЭД!')
+		return true
 	}
 
-	return true
+	if (error) {
+		snackbar.show('Проверьте данные!')
+		return true
+	}
+
+	return false
 }
 
 // обновление данных формы редактирования

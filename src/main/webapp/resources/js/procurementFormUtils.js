@@ -330,6 +330,7 @@ export function hideFormField(id) {
 // проверка наличия всех обязательных данных о точках
 export function isInvalidPointForms(routeForm) {
 	const pointForms = routeForm.querySelectorAll('.pointForm')
+	// возвращаем false, чтобы работали кнопки создания точек маршрута
 	if (!pointForms.length) return false
 	const isValidPointForms = []
 
@@ -352,6 +353,20 @@ export function isValidPallCount(order) {
 	if (way === 'АХО') return pallCount <= 20
 
 	return true
+}
+
+// проверка валидного значения ТН ВЭД в точках
+export function isValidTnvdValue(order) {
+	// Регулярное выражение для проверки 10-значных чисел, разделенных запятой и пробелом
+	const regex = /^(?:\d{10})(?:, \d{10})*$/
+	if (order.way === 'АХО') return true
+	const points = order.points
+	if (!points) return true
+	return points.every(point => {
+		const tnvd = point.tnvd
+		if (!tnvd) return true
+		return regex.test(tnvd)
+	})
 }
 
 // обработчик изменения значения поля Опасный груз

@@ -88,8 +88,23 @@ public class ScheduleServiceImpl implements ScheduleService{
 	}
 
 	@Override
-	public List<CounterpartyDTO> getcounterpartyList() {
-		return scheduleDAO.getcounterpartyList();
+	public List<CounterpartyDTO> getcounterpartyListRC() {
+		return scheduleDAO.getcounterpartyListRC();
+	}
+
+	@Override
+	public List<CounterpartyDTO> getcounterpartyListTO() {
+		return scheduleDAO.getcounterpartyListTO();
+	}
+
+	@Override
+	public Schedule getScheduleByNumContractAndNumStock(Long num, Integer shock) {
+		return scheduleDAO.getScheduleByNumContractAndNumStock(num, shock);
+	}
+
+	@Override
+	public List<CounterpartyDTO> getUnicCodeContractTO() {
+		return scheduleDAO.getUnicCodeContractTO();
 	}
 
 }

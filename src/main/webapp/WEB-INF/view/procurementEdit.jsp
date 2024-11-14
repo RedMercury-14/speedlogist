@@ -14,6 +14,7 @@
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/snackbar.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/bootstrap5overlay.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/js/bootstrapSelect/bootstrapSelect.css">
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/tooltip.css">
 	<script src='${pageContext.request.contextPath}/resources/js/popper/popper.js'></script>
 </head>
 <body>

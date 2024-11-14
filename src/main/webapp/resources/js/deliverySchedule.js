@@ -5,12 +5,13 @@ import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 import { showScheduleItem } from './deliverySchedule/showScheduleItem.js'
 import {
 	changeScheduleOptions, confirmScheduleItem, createCounterpartyDatalist,
-	createOptions, dateFormatter, deleteScheduleItem, deliveryScheduleColumnDefs,
+	createOptions, deleteScheduleItem, deliveryScheduleColumnDefs,
+	deliveryScheduleColumnDefsForAdmin,
 	deliveryScheduleRowClassRules, deliveryScheduleSideBar,
 	editScheduleItem,getSupplies, onNoteChangeHandler, showMessageModal,
 	unconfirmScheduleItem
 } from './deliverySchedule/utils.js'
-import { checkScheduleData, getFormErrorMessage } from './deliverySchedule/validation.js'
+import { checkScheduleData, isValidScheduleValues, getFormErrorMessage } from './deliverySchedule/validation.js'
 import { snackbar } from "./snackbar/snackbar.js"
 import { uiIcons } from './uiIcons.js'
 import {
@@ -93,20 +94,7 @@ const columnDefs = [
 // доболнительные колонки для админа
 if (isAdmin(role)) {
 	columnDefs.push(
-		{
-			headerName: 'История', field: 'history',
-			cellClass: 'px-1 py-0 text-center',
-		},
-		{
-			headerName: 'Дата последнего расчета', field: 'dateLastCalculation',
-			cellClass: 'px-1 py-0 text-center',
-			valueFormatter: dateFormatter,
-		},
-		{
-			headerName: 'Дата последнего изменения', field: 'dateLastChanging',
-			cellClass: 'px-1 py-0 text-center',
-			valueFormatter: dateFormatter,
-		},
+		...deliveryScheduleColumnDefsForAdmin
 	)
 }
 
@@ -446,8 +434,18 @@ function addScheduleItemFormHandler(e) {
 
 	const formData = new FormData(e.target)
 	const data = scheduleItemDataFormatter(formData)
-	const errorMessage = getFormErrorMessage(data, error)
 	
+	// проверка значений графика
+	// if (!isValidScheduleValues(data)) {
+	// 	snackbar.show(
+	// 		'Обнаружены ошибки в значения дней заказа или поставки.\n'
+	// 		+ 'Проверьте данные графика!'
+	// 	)
+	// 	return
+	// }
+
+	// ошибки в логике графика
+	const errorMessage = getFormErrorMessage(data, error)
 	if (errorMessage) {
 		snackbar.show(errorMessage)
 		return
@@ -493,8 +491,18 @@ function editScheduleItemFormHandler(e) {
 
 	const formData = new FormData(e.target)
 	const data = scheduleItemDataFormatter(formData)
-	const errorMessage = getFormErrorMessage(data, error)
 
+	// проверка значений графика
+	// if (!isValidScheduleValues(data)) {
+	// 	snackbar.show(
+	// 		'Обнаружены ошибки в значения дней заказа или поставки.\n'
+	// 		+ 'Проверьте данные графика!'
+	// 	)
+	// 	return
+	// }
+
+	// ошибки в логике графика
+	const errorMessage = getFormErrorMessage(data, error)
 	if (errorMessage) {
 		snackbar.show(errorMessage)
 		return
@@ -569,7 +577,6 @@ function scheduleItemDataFormatter(formData) {
 
 // заполнение формы редактирования магазина данными
 function setDataToForm(scheduleItem) {
-	console.log("🚀 ~ setDataToForm ~ scheduleItem:", scheduleItem)
 	const editScheduleItemForm = document.querySelector('#editScheduleItemForm')
 
 	// создаем опции в селектах с установкой графика

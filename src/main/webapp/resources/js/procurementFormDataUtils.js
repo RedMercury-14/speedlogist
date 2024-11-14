@@ -133,7 +133,7 @@ export function getPointsData(way) {
 			pall: form.pall.value,
 			weight: form.weight.value ? cutToInteger(form.weight.value) : '',
 			volume: form.volume.value,
-			tnvd: form.tnvd ? form.tnvd.value : null,
+			tnvd: form.tnvd ? form.tnvd.value.trim() : null,
 			bodyAdress: removeSingleQuotes(bodyAdress),
 			timeFrame,
 			contact: removeSingleQuotes(contact),

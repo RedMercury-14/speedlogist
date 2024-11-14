@@ -10,6 +10,7 @@ import {
 	inputEditBan,
 	isInvalidPointForms,
 	isValidPallCount,
+	isValidTnvdValue,
 	orderCargoInputOnChangeHandler,
 	orderPallInputOnChangeHandler,
 	orderWeightInputOnChangeHandler,
@@ -124,7 +125,7 @@ function orderFormSubmitHandler(e) {
 	const data = getOrderData(formData, orderData, orderStatus)
 	const way = data.way
 
-	if (!validateForm(data)) {
+	if (isInvalidForm(data)) {
 		return
 	}
 
@@ -157,10 +158,10 @@ function orderFormSubmitHandler(e) {
 }
 
 // валидация формы
-function validateForm(data) {
+function isInvalidForm(data) {
 	if (!validatePointDates(data)) {
 		snackbar.show('Некорректная дата загрузки либо выгрузки')
-		return false
+		return true
 	}
 
 	if (!isValidPallCount(data)) {
@@ -168,12 +169,17 @@ function validateForm(data) {
 		return true
 	}
 
-	if (error) {
-		snackbar.show('Проверьте данные!')
-		return false
+	if (!isValidTnvdValue(data)) {
+		snackbar.show('Неверное значение кода ТН ВЭД!')
+		return true
 	}
 
-	return true
+	if (error) {
+		snackbar.show('Проверьте данные!')
+		return true
+	}
+
+	return false
 }
 
 

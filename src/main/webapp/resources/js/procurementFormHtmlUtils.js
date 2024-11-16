@@ -1,4 +1,4 @@
-import { getStockAddress } from "./procurementFormUtils.js"
+import { getStockAddress } from "./globalRules/ordersRules.js"
 import { dateHelper, getInputValue } from "./utils.js"
 
 export function getDateHTML({ isInternalMovement, pointType, way, pointIndex, value }) {

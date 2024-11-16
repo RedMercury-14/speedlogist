@@ -1694,6 +1694,8 @@ public class MainRestController {
 	@PostMapping("/slots/delivery-schedule/createTO")
 	public Map<String, Object> postCreateDeliveryScheduleTO(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
 		Map<String, Object> response = new HashMap<String, Object>();
+		boolean isNeedEMail = false;
+		
 		if(str == null) {
 			response.put("status", "100");
 			response.put("message", "Тело запроса = null");
@@ -1707,6 +1709,10 @@ public class MainRestController {
 			response.put("status", "100");
 			response.put("message", "Отсутствует номер контаркта");
 			return response;
+		}
+		
+		if(scheduleService.getScheduleByNumContract(Long.parseLong(jsonMainObject.get("counterpartyContractCode").toString())) == null) {
+			isNeedEMail = true;
 		}
 		
 		JSONArray shopsArray = (JSONArray) parser.parse(jsonMainObject.get("numStock").toString());	
@@ -1805,12 +1811,16 @@ public class MainRestController {
 //		Integer id = scheduleService.saveSchedule(schedule);		
 		
 		//тут отправляем на почту сообщение
-//		String appPath = request.getServletContext().getRealPath("");
-//		FileInputStream fileInputStream = new FileInputStream(appPath + "resources/properties/email.properties");
-//		properties = new Properties();
-//		properties.load(fileInputStream);
-//		String text = "Создан новый график поставок сотрудником: " + user.getSurname() + " " + user.getName() + " \nПоставщик: " + schedule.getName();
-//		mailService.sendSimpleEmailTwiceUsers(request, "Новый график поставок", text, properties.getProperty("email.orderSupport.1"), properties.getProperty("email.orderSupport.2"));
+		if(isNeedEMail) {
+			String appPath = request.getServletContext().getRealPath("");
+			FileInputStream fileInputStream = new FileInputStream(appPath + "resources/properties/email.properties");
+			properties = new Properties();
+			properties.load(fileInputStream);
+			String text = "Создан новый график поставок на ТО сотрудником: " + user.getSurname() + " " + user.getName() + " \nПоставщик: " + schedule.getName();
+			List<String> emails = propertiesUtils.getValuesByPartialKey(request.getServletContext(), "email.orl.head");
+			mailService.sendEmailToUsers(request, "Новый график поставок на ТО", text, emails);
+//			mailService.sendSimpleEmailTwiceUsers(request, "Новый график поставок", text, properties.getProperty("email.orderSupport.1"), properties.getProperty("email.orderSupport.2"));	--
+		}
 		
 		response.put("status", "200");
 		response.put("message", "Графики поставок созданы");

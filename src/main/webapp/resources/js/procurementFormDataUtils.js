@@ -1,3 +1,4 @@
+import { getOrderStatusByStockDelivery } from "./globalRules/ordersRules.js"
 import { cutToInteger, dateHelper, getData, removeSingleQuotes } from "./utils.js"
 
 // форматирование данных формы заявки
@@ -260,26 +261,6 @@ function getCustomsAddress(orderWay, form) {
 	// return `${country}; ${address}`
 }
 
-// получение статута заявки в зависимости от склада доставки
-export function getOrderStatusByStockDelivery(numStockDelivery) {
-	switch (numStockDelivery) {
-		case '1700':
-		case '1200':
-		case '1230':
-		case '1214':
-		case '1250':
-		case '1100':
-		case 1700:
-		case 1200:
-		case 1230:
-		case 1214:
-		case 1250:
-		case 1100:
-			return 6
-		default:
-			return 20
-	}
-}
 
 // получение заказа для копирования или редактирвания
 export async function getOrderForForm(formType) {

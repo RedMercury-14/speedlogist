@@ -1,6 +1,7 @@
 import { ajaxUtils } from './ajaxUtils.js'
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
-import { getOrderData, getOrderStatusByStockDelivery } from './procurementFormDataUtils.js'
+import { getOrderStatusByStockDelivery } from './globalRules/ordersRules.js'
+import { getOrderData } from './procurementFormDataUtils.js'
 import {
 	getAddressHTML,
 	getAddressInfoHTML,

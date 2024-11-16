@@ -436,13 +436,13 @@ function addScheduleItemFormHandler(e) {
 	const data = scheduleItemDataFormatter(formData)
 	
 	// проверка значений графика
-	// if (!isValidScheduleValues(data)) {
-	// 	snackbar.show(
-	// 		'Обнаружены ошибки в значения дней заказа или поставки.\n'
-	// 		+ 'Проверьте данные графика!'
-	// 	)
-	// 	return
-	// }
+	if (!isValidScheduleValues(data)) {
+		snackbar.show(
+			'Обнаружены ошибки в значения дней заказа или поставки.\n'
+			+ 'Проверьте данные графика!'
+		)
+		return
+	}
 
 	// ошибки в логике графика
 	const errorMessage = getFormErrorMessage(data, error)
@@ -493,13 +493,13 @@ function editScheduleItemFormHandler(e) {
 	const data = scheduleItemDataFormatter(formData)
 
 	// проверка значений графика
-	// if (!isValidScheduleValues(data)) {
-	// 	snackbar.show(
-	// 		'Обнаружены ошибки в значения дней заказа или поставки.\n'
-	// 		+ 'Проверьте данные графика!'
-	// 	)
-	// 	return
-	// }
+	if (!isValidScheduleValues(data)) {
+		snackbar.show(
+			'Обнаружены ошибки в значения дней заказа или поставки.\n'
+			+ 'Проверьте данные графика!'
+		)
+		return
+	}
 
 	// ошибки в логике графика
 	const errorMessage = getFormErrorMessage(data, error)

@@ -6,7 +6,6 @@ import {
 	changeCargoInfoInputsRequired,
 	changeForm,
 	dangerousInputOnChangeHandler,
-	getStockAddress,
 	inputEditBan,
 	isInvalidPointForms,
 	isValidPallCount,
@@ -31,7 +30,8 @@ import {
 	getTimeHTML,
 	getTnvdHTML,
 } from "./procurementFormHtmlUtils.js"
-import { getOrderData, getOrderForForm, getOrderStatusByStockDelivery } from "./procurementFormDataUtils.js"
+import { getOrderData, getOrderForForm } from "./procurementFormDataUtils.js"
+import { getOrderStatusByStockDelivery, getStockAddress } from "./globalRules/ordersRules.js"
 
 const redirectUrl = (orderStatus) => orderStatus === 20 || disableSlotRedirect ? "../orders" : "../../slots"
 const getInternalMovementShopsUrl = "../../../api/manager/getInternalMovementShops"

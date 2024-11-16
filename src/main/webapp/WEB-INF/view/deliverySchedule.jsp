@@ -173,7 +173,13 @@
 								</div>
 							</div>
 
-							<h5 class="mt-2 mb-0 text-muted font-weight-bold text-center">График поставок</h5>
+							<h5 class="mt-2 mb-0 text-muted font-weight-bold text-center">
+								<span class="custom-tooltip">
+									График поставок
+									<sup class="px-1 font-weight-bold text-danger">?</sup>
+									<span class="tooltiptext"><strong>Подсказка к заполнению полей:</strong><br><strong>День заказа: </strong>просто "з" — обозначает день, когда сделан заказ.<br><strong>День поставки: </strong>укажите день недели, когда был сделан заказ, например: "понедельник", "вторник".<br><strong>Заказ + постава в один день: </strong>формат "з/день недели", например: "з/понедельник".<br><strong>Поставки на другой неделе: </strong>формат "нX/день недели", где X — номер недели от заказа (от н0 до н10). Пример: "н2/четверг".<br><strong>Комбинированный формат: </strong>заказ, неделя и день недели — "з/нX/день недели", например: "з/н3/вторник".</span>
+								</span>
+							</h5>
 							<div class="form-check form-group">
 								<input type="checkbox" class="form-check-input" name="note" id="addNote">
 								<label for="addNote" class="form-check-label text-muted font-weight-bold">Пометка "Неделя"</label>
@@ -185,7 +191,7 @@
 										<div class="input-group-prepend">
 											<div class="input-group-text">Пн</div>
 										</div>
-										<select id="monday" name="monday" class="scheduleSelect form-control"></select>
+										<input type="text" list="scheduleOptions" id="monday" name="monday" class="scheduleSelect form-control"></input>
 									</div>
 								</div>
 								<div>
@@ -194,7 +200,7 @@
 										<div class="input-group-prepend">
 											<div class="input-group-text">Вт</div>
 										</div>
-										<select id="tuesday" name="tuesday" class="scheduleSelect form-control"></select>
+										<input type="text" list="scheduleOptions" id="tuesday" name="tuesday" class="scheduleSelect form-control"></input>
 									</div>
 								</div>
 								<div>
@@ -203,7 +209,7 @@
 										<div class="input-group-prepend">
 											<div class="input-group-text">Ср</div>
 										</div>
-										<select id="wednesday" name="wednesday" class="scheduleSelect form-control"></select>
+										<input type="text" list="scheduleOptions" id="wednesday" name="wednesday" class="scheduleSelect form-control"></input>
 									</div>
 								</div>
 								<div>
@@ -212,7 +218,7 @@
 										<div class="input-group-prepend">
 											<div class="input-group-text">Чт</div>
 										</div>
-										<select id="thursday" name="thursday" class="scheduleSelect form-control"></select>
+										<input type="text" list="scheduleOptions" id="thursday" name="thursday" class="scheduleSelect form-control"></input>
 									</div>
 								</div>
 								<div>
@@ -221,7 +227,7 @@
 										<div class="input-group-prepend">
 											<div class="input-group-text">Пт</div>
 										</div>
-										<select id="friday" name="friday" class="scheduleSelect form-control"></select>
+										<input type="text" list="scheduleOptions" id="friday" name="friday" class="scheduleSelect form-control"></input>
 									</div>
 								</div>
 								<div>
@@ -230,7 +236,7 @@
 										<div class="input-group-prepend">
 											<div class="input-group-text">Сб</div>
 										</div>
-										<select id="saturday" name="saturday" class="scheduleSelect form-control"></select>
+										<input type="text" list="scheduleOptions" id="saturday" name="saturday" class="scheduleSelect form-control"></input>
 									</div>
 								</div>
 								<div>
@@ -239,7 +245,7 @@
 										<div class="input-group-prepend">
 											<div class="input-group-text">Вс</div>
 										</div>
-										<select id="sunday" name="sunday" class="scheduleSelect form-control"></select>
+										<input type="text" list="scheduleOptions" id="sunday" name="sunday" class="scheduleSelect form-control"></input>
 									</div>
 								</div>
 							</div>
@@ -364,7 +370,13 @@
 								</div>
 							</div>
 
-							<h5 class="mt-2 mb-0 text-muted font-weight-bold text-center">График поставок</h5>
+							<h5 class="mt-2 mb-0 text-muted font-weight-bold text-center">
+								<span class="custom-tooltip">
+									График поставок
+									<sup class="px-1 font-weight-bold text-danger">?</sup>
+									<span class="tooltiptext"><strong>Подсказка к заполнению полей:</strong><br><strong>День заказа: </strong>просто "з" — обозначает день, когда сделан заказ.<br><strong>День поставки: </strong>укажите день недели, когда был сделан заказ, например: "понедельник", "вторник".<br><strong>Заказ + постава в один день: </strong>формат "з/день недели", например: "з/понедельник".<br><strong>Поставки на другой неделе: </strong>формат "нX/день недели", где X — номер недели от заказа (от н0 до н10). Пример: "н2/четверг".<br><strong>Комбинированный формат: </strong>заказ, неделя и день недели — "з/нX/день недели", например: "з/н3/вторник".</span>
+								</span>
+							</h5>
 							<div class="form-check form-group">
 								<input type="checkbox" class="form-check-input" name="note" id="editNote">
 								<label for="editNote" class="form-check-label text-muted font-weight-bold">Пометка "Неделя"</label>
@@ -376,7 +388,7 @@
 										<div class="input-group-prepend">
 											<div class="input-group-text">Пн</div>
 										</div>
-										<select id="monday" name="monday" class="scheduleSelect form-control"></select>
+										<input type="text" list="scheduleOptions" id="monday" name="monday" class="scheduleSelect form-control"></input>
 									</div>
 								</div>
 								<div>
@@ -385,7 +397,7 @@
 										<div class="input-group-prepend">
 											<div class="input-group-text">Вт</div>
 										</div>
-										<select id="tuesday" name="tuesday" class="scheduleSelect form-control"></select>
+										<input type="text" list="scheduleOptions" id="tuesday" name="tuesday" class="scheduleSelect form-control"></input>
 									</div>
 								</div>
 								<div>
@@ -394,7 +406,7 @@
 										<div class="input-group-prepend">
 											<div class="input-group-text">Ср</div>
 										</div>
-										<select id="wednesday" name="wednesday" class="scheduleSelect form-control"></select>
+										<input type="text" list="scheduleOptions" id="wednesday" name="wednesday" class="scheduleSelect form-control"></input>
 									</div>
 								</div>
 								<div>
@@ -403,7 +415,7 @@
 										<div class="input-group-prepend">
 											<div class="input-group-text">Чт</div>
 										</div>
-										<select id="thursday" name="thursday" class="scheduleSelect form-control"></select>
+										<input type="text" list="scheduleOptions" id="thursday" name="thursday" class="scheduleSelect form-control"></input>
 									</div>
 								</div>
 								<div>
@@ -412,7 +424,7 @@
 										<div class="input-group-prepend">
 											<div class="input-group-text">Пт</div>
 										</div>
-										<select id="friday" name="friday" class="scheduleSelect form-control"></select>
+										<input type="text" list="scheduleOptions" id="friday" name="friday" class="scheduleSelect form-control"></input>
 									</div>
 								</div>
 								<div>
@@ -421,7 +433,7 @@
 										<div class="input-group-prepend">
 											<div class="input-group-text">Сб</div>
 										</div>
-										<select id="saturday" name="saturday" class="scheduleSelect form-control"></select>
+										<input type="text" list="scheduleOptions" id="saturday" name="saturday" class="scheduleSelect form-control"></input>
 									</div>
 								</div>
 								<div>
@@ -430,7 +442,7 @@
 										<div class="input-group-prepend">
 											<div class="input-group-text">Вс</div>
 										</div>
-										<select id="sunday" name="sunday" class="scheduleSelect form-control"></select>
+										<input type="text" list="scheduleOptions" id="sunday" name="sunday" class="scheduleSelect form-control"></input>
 									</div>
 								</div>
 							</div>
@@ -534,6 +546,10 @@
 			</div>
 		</div>
 	</div>
+
+	<!-- Список опций для графика -->
+	<datalist id="scheduleOptions"></datalist>
+
 </body>
 <script src="${pageContext.request.contextPath}/resources/js/deliverySchedule.js" type="module"></script>
 <script src='${pageContext.request.contextPath}/resources/js/mainPage/nav-fixed-top.js'></script>

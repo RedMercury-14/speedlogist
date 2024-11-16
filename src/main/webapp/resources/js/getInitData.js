@@ -81,7 +81,7 @@ function getInitDataUrl(url) {
 
 	// График поставок на ТО
 	if (url.includes('delivery-schedule-to')) {
-		return '../../api/slots/delivery-schedule/getCounterpartyTO'
+		return '../../api/slots/delivery-schedule/getUnicContractCodeHasCounterpartyTO'
 	}
 
 	// График поставок на РЦ

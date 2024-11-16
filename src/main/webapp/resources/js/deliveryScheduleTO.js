@@ -22,8 +22,8 @@ import {
 	isORL, showLoadingSpinner
 } from './utils.js'
 
-//const loadExcelUrl = '../../api/slots/delivery-schedule/loadTO'
-const loadExcelUrl = '../../api/slots/delivery-schedule/loadTOkam'
+const loadExcelUrl = '../../api/slots/delivery-schedule/loadTO'
+//const loadExcelUrl = '../../api/slots/delivery-schedule/loadTOkam'
 
 const getAllScheduleUrl = '../../api/slots/delivery-schedule/getListTO'
 const getScheduleByContractBaseUrl = '../../api/slots/delivery-schedule/getListTOContract/'

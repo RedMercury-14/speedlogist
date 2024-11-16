@@ -1548,6 +1548,9 @@ public class MainRestController {
 		schedule.setMultipleOfTruck(jsonMainObject.get("multipleOfTruck") == null || jsonMainObject.get("multipleOfTruck").toString().isEmpty() ? null : jsonMainObject.get("multipleOfTruck").toString().equals("true") ? true : false);
 		schedule.setMachineMultiplicity(jsonMainObject.get("machineMultiplicity") == null || jsonMainObject.get("machineMultiplicity").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("machineMultiplicity").toString()));
 		schedule.setConnectionSupply(jsonMainObject.get("connectionSupply") == null || jsonMainObject.get("connectionSupply").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("connectionSupply").toString()));
+//		schedule.setCodeNameOfQuantumCounterparty(jsonMainObject.get("codeNameOfQuantumCounterparty") == null || jsonMainObject.get("codeNameOfQuantumCounterparty").toString().isEmpty() ? null : jsonMainObject.get("codeNameOfQuantumCounterparty").toString());
+//		schedule.setQuantumMeasurements(jsonMainObject.get("quantumMeasurements") == null || jsonMainObject.get("quantumMeasurements").toString().isEmpty() ? null : jsonMainObject.get("quantumMeasurements").toString());
+//		schedule.setQuantum(jsonMainObject.get("quantum") == null || jsonMainObject.get("quantum").toString().isEmpty() ? null : Double.parseDouble(jsonMainObject.get("quantum").toString()));
 
 		String history = user.getSurname() + " " + user.getName() + ";" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")) + ";update\n"; 
 		
@@ -1638,6 +1641,9 @@ public class MainRestController {
 		schedule.setOrderFormationSchedule(jsonMainObject.get("orderFormationSchedule") == null || jsonMainObject.get("orderFormationSchedule").toString().isEmpty() ? null : jsonMainObject.get("orderFormationSchedule").toString());
 		schedule.setOrderShipmentSchedule(jsonMainObject.get("orderShipmentSchedule") == null || jsonMainObject.get("orderShipmentSchedule").toString().isEmpty() ? null : jsonMainObject.get("orderShipmentSchedule").toString());
 		schedule.setToType(jsonMainObject.get("toType") == null || jsonMainObject.get("toType").toString().isEmpty() ? null : jsonMainObject.get("toType").toString());
+//		schedule.setCodeNameOfQuantumCounterparty(jsonMainObject.get("codeNameOfQuantumCounterparty") == null || jsonMainObject.get("codeNameOfQuantumCounterparty").toString().isEmpty() ? null : jsonMainObject.get("codeNameOfQuantumCounterparty").toString());
+//		schedule.setQuantumMeasurements(jsonMainObject.get("quantumMeasurements") == null || jsonMainObject.get("quantumMeasurements").toString().isEmpty() ? null : jsonMainObject.get("quantumMeasurements").toString());
+//		schedule.setQuantum(jsonMainObject.get("quantum") == null || jsonMainObject.get("quantum").toString().isEmpty() ? null : Double.parseDouble(jsonMainObject.get("quantum").toString()));
 		
 		User user = getThisUser();
 		String history = user.getSurname() + " " + user.getName() + ";" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")) + ";create\n"; 
@@ -1727,7 +1733,8 @@ public class MainRestController {
 		schedule.setMachineMultiplicity(jsonMainObject.get("machineMultiplicity") == null || jsonMainObject.get("machineMultiplicity").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("machineMultiplicity").toString()));
 		schedule.setConnectionSupply(jsonMainObject.get("connectionSupply") == null || jsonMainObject.get("connectionSupply").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("connectionSupply").toString()));
 		schedule.setIsNotCalc(false);
-		schedule.setStatus(10);
+//		schedule.setStatus(10);
+		schedule.setStatus(jsonMainObject.get("status") == null || jsonMainObject.get("status").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("status").toString()));
 		
 		schedule.setIsDayToDay(false);
 		
@@ -1754,6 +1761,9 @@ public class MainRestController {
 		schedule.setToType(toType);
 		schedule.setOrderFormationSchedule(jsonMainObject.get("orderFormationSchedule") == null || jsonMainObject.get("orderFormationSchedule").toString().isEmpty() ? null : jsonMainObject.get("orderFormationSchedule").toString());
 		schedule.setOrderShipmentSchedule(jsonMainObject.get("orderShipmentSchedule") == null || jsonMainObject.get("orderShipmentSchedule").toString().isEmpty() ? null : jsonMainObject.get("orderShipmentSchedule").toString());
+		schedule.setCodeNameOfQuantumCounterparty(jsonMainObject.get("codeNameOfQuantumCounterparty") == null || jsonMainObject.get("codeNameOfQuantumCounterparty").toString().isEmpty() ? null : jsonMainObject.get("codeNameOfQuantumCounterparty").toString());
+		schedule.setQuantumMeasurements(jsonMainObject.get("quantumMeasurements") == null || jsonMainObject.get("quantumMeasurements").toString().isEmpty() ? null : jsonMainObject.get("quantumMeasurements").toString());
+		schedule.setQuantum(jsonMainObject.get("quantum") == null || jsonMainObject.get("quantum").toString().isEmpty() ? null : Double.parseDouble(jsonMainObject.get("quantum").toString()));
 		
 		User user = getThisUser();
 		String history = user.getSurname() + " " + user.getName() + ";" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")) + ";create\n"; 
@@ -1887,6 +1897,7 @@ public class MainRestController {
 	 * + за писывает историю о редактировании
 	 * @return
 	 */
+	@Deprecated
 	private Schedule editScheduleByRequest2 (Schedule schedule, JSONObject jsonMainObject) {
 		if (jsonMainObject.get("counterpartyCode") != null && !jsonMainObject.get("counterpartyCode").toString().isEmpty()) {
 		    schedule.setCounterpartyCode(Long.parseLong(jsonMainObject.get("counterpartyCode").toString()));
@@ -2028,6 +2039,9 @@ public class MainRestController {
 		schedule.setOrderShipmentSchedule(jsonMainObject.get("orderShipmentSchedule") == null || jsonMainObject.get("orderShipmentSchedule").toString().isEmpty() ? null : jsonMainObject.get("orderShipmentSchedule").toString());
 //		schedule.setIsNotCalc(jsonMainObject.get("isNotCalc") == null || jsonMainObject.get("isNotCalc").toString().isEmpty() ? null : jsonMainObject.get("isNotCalc").toString().equals("true") ? true : false);
 //		schedule.setIsDayToDay(jsonMainObject.get("isDayToDay") == null || jsonMainObject.get("isDayToDay").toString().isEmpty() ? null : jsonMainObject.get("isDayToDay").toString().equals("true") ? true : false);
+//		schedule.setCodeNameOfQuantumCounterparty(jsonMainObject.get("codeNameOfQuantumCounterparty") == null || jsonMainObject.get("codeNameOfQuantumCounterparty").toString().isEmpty() ? null : jsonMainObject.get("codeNameOfQuantumCounterparty").toString());
+		schedule.setQuantumMeasurements(jsonMainObject.get("quantumMeasurements") == null || jsonMainObject.get("quantumMeasurements").toString().isEmpty() ? null : jsonMainObject.get("quantumMeasurements").toString());
+		schedule.setQuantum(jsonMainObject.get("quantum") == null || jsonMainObject.get("quantum").toString().isEmpty() ? null : Double.parseDouble(jsonMainObject.get("quantum").toString()));
 		
 		
 		User user = getThisUser();

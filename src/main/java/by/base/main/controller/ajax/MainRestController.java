@@ -1759,7 +1759,8 @@ public class MainRestController {
 //		schedule.setStatus(10);
 		schedule.setStatus(jsonMainObject.get("status") == null || jsonMainObject.get("status").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("status").toString()));
 		
-		schedule.setIsDayToDay(false);
+		schedule.setIsDayToDay("true".equals(jsonMainObject.get("isDayToDay").toString()));
+		
 		
 		String type = jsonMainObject.get("type") == null || jsonMainObject.get("type").toString().isEmpty() ? null : jsonMainObject.get("type").toString();
 		if(type !=null) {
@@ -1816,7 +1817,7 @@ public class MainRestController {
 			FileInputStream fileInputStream = new FileInputStream(appPath + "resources/properties/email.properties");
 			properties = new Properties();
 			properties.load(fileInputStream);
-			String text = "Создан новый график поставок на ТО сотрудником: " + user.getSurname() + " " + user.getName() + " \nПоставщик: " + schedule.getName();
+			String text = "Создан новый график поставок на ТО сотрудником: " + user.getSurname() + " " + user.getName() + " \nПоставщик: " + schedule.getName() + "; График номер: " + jsonMainObject.get("counterpartyContractCode").toString();
 			List<String> emails = propertiesUtils.getValuesByPartialKey(request.getServletContext(), "email.orl.head");
 			mailService.sendEmailToUsers(request, "Новый график поставок на ТО", text, emails);
 //			mailService.sendSimpleEmailTwiceUsers(request, "Новый график поставок", text, properties.getProperty("email.orderSupport.1"), properties.getProperty("email.orderSupport.2"));	--
@@ -1910,6 +1911,7 @@ public class MainRestController {
 		
 		for (Entry<Integer, Shop> entry: targetShopMap.entrySet()) {
 			Schedule schedule = scheduleService.getScheduleByNumContractAndNumStock(Long.parseLong(jsonMainObject.get("counterpartyContractCode").toString()), entry.getKey());
+			schedule.setDateLastChanging(Date.valueOf(LocalDate.now()));
 			scheduleService.updateSchedule(editScheduleByRequestForRC(schedule, jsonMainObject));
 		}
 		response.put("status", "200");
@@ -2029,6 +2031,7 @@ public class MainRestController {
 		if (jsonMainObject.get("isDayToDay") != null && !jsonMainObject.get("isDayToDay").toString().isEmpty()) {
 		    schedule.setIsDayToDay("true".equals(jsonMainObject.get("isDayToDay").toString()));
 		}
+		schedule.setDateLastChanging(Date.valueOf(LocalDate.now()));
 
 		
 		User user = getThisUser();

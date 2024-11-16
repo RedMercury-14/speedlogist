@@ -16,6 +16,15 @@ public interface ScheduleService {
 	List<Schedule> getSchedulesListTO();
 	
 	/**
+	 * Метод изменяет название кванта по коду контрагента.
+	 * Возвращает кол-во измененных строк.
+	 * @param counterpartyCode
+	 * @param codeNameOfQuantumCounterparty
+	 * @return
+	 */
+	int updateScheduleBycounterpartyCodeHascodeNameOfQuantumCounterparty(Long counterpartyCode, String codeNameOfQuantumCounterparty);
+	
+	/**
 	 * выдаёт лист Schedule с уникальными кодами контракта
 	 * @return
 	 */

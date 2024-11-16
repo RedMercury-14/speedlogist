@@ -11,6 +11,15 @@ public interface ScheduleDAO {
 
 	Schedule getScheduleById(Integer id);
 	
+	/**
+	 * Метод изменяет название кванта по коду контрагента.
+	 * Возвращает кол-во измененных строк.
+	 * @param counterpartyCode
+	 * @param codeNameOfQuantumCounterparty
+	 * @return
+	 */
+	int updateScheduleBycounterpartyCodeHascodeNameOfQuantumCounterparty(Long counterpartyCode, String codeNameOfQuantumCounterparty);
+	
 	List<Schedule> getSchedulesListRC();
 	
 	List<Schedule> getSchedulesListTO();

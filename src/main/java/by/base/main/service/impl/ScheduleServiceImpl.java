@@ -107,4 +107,10 @@ public class ScheduleServiceImpl implements ScheduleService{
 		return scheduleDAO.getUnicCodeContractTO();
 	}
 
+	@Override
+	public int updateScheduleBycounterpartyCodeHascodeNameOfQuantumCounterparty(Long counterpartyCode,
+			String codeNameOfQuantumCounterparty) {
+		return scheduleDAO.updateScheduleBycounterpartyCodeHascodeNameOfQuantumCounterparty(counterpartyCode, codeNameOfQuantumCounterparty);
+	}
+
 }

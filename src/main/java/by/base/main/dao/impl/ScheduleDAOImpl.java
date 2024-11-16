@@ -257,4 +257,17 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 		List <CounterpartyDTO> roles = theRole.getResultList();
 		return roles;
 	}
+
+	private static final String queryUpdateScheduleBycounterpartyCodeHascodeNameOfQuantumCounterparty = "UPDATE Schedule s SET s.codeNameOfQuantumCounterparty = :newCodeName WHERE s.counterpartyCode = :counterpartyCode";
+	@Transactional
+	@Override
+	public int updateScheduleBycounterpartyCodeHascodeNameOfQuantumCounterparty(Long counterpartyCode,
+			String codeNameOfQuantumCounterparty) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query query = currentSession.createQuery(queryUpdateScheduleBycounterpartyCodeHascodeNameOfQuantumCounterparty);
+		query.setParameter("counterpartyCode", counterpartyCode);
+		query.setParameter("newCodeName", codeNameOfQuantumCounterparty);
+		int result = query.executeUpdate();
+		return result;
+	}
 }

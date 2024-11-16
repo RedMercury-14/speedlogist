@@ -1487,6 +1487,23 @@ public class MainRestController {
 		return response;		
 	}
 	
+	/**
+	 * Метод меняет кодовое имя кванта по коду контрагента
+	 * @param request
+	 * @param num
+	 * @param status
+	 * @return
+	 */
+	@GetMapping("/slots/delivery-schedule/changeNameOfQuantum/{num}&{name}")
+	public Map<String, Object> getChangeNameOfQuantum(HttpServletRequest request, @PathVariable String num, @PathVariable String name) {
+		Map<String, Object> response = new HashMap<String, Object>();	
+		
+		if(name.trim().equals("null")) name = null;
+		response.put("count", scheduleService.updateScheduleBycounterpartyCodeHascodeNameOfQuantumCounterparty(Long.parseLong(num.trim()), name));
+		response.put("status", "200");
+		return response;
+		}
+	
 	
 	
 	/**

@@ -98,7 +98,7 @@ public class MainFileController {
 		OutputStream out = null;
 		try {
 			// Прочтите файл, который нужно загрузить, и сохраните его во входном потоке файла
-			in = new FileInputStream(appPath + "resources/others/docs/Инструкция по графикам поставок на ТО.docx");
+			in = new FileInputStream(appPath + "resources/others/docs/instruction-trading-objects.docx");
 			//  Создать выходной поток
 			out = response.getOutputStream();
 			//  Создать буфер

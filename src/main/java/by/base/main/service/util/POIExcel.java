@@ -1312,7 +1312,7 @@ public class POIExcel {
             schedule.setNote(row.getCell(29) == null || row.getCell(29).getStringCellValue().equals("") ? null : row.getCell(29).getStringCellValue());
             schedule.setStatus(20);
             schedule.setType("ТО");
-            schedule.setIsDayToDay(getCellValue(row.getCell(35)) == null || getCellValue(row.getCell(35)).equals("") ? false : getCellValue(row.getCell(35)).trim().toLowerCase().equals("cегодня"));
+            schedule.setIsDayToDay(getCellValue(row.getCell(35)) == null ? false : getCellValue(row.getCell(35)).trim().toLowerCase().equals("сегодня"));
             schedule.setToType(toType);
             schedule.setIsNotCalc(false);
             

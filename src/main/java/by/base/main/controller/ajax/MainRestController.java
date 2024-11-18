@@ -3517,11 +3517,11 @@ public class MainRestController {
 	 */
 	@RequestMapping(value = "/slots/delivery-schedule/loadTO", method = RequestMethod.POST, consumes = {
 			MediaType.MULTIPART_FORM_DATA_VALUE })
-	public Map<String, String> postLoadExcelPlanTO (Model model, HttpServletRequest request, HttpSession session,
+	public Map<String, Object> postLoadExcelPlanTO (Model model, HttpServletRequest request, HttpSession session,
 			@RequestParam(value = "excel", required = false) MultipartFile excel,
 			@RequestParam(value = "toType", required = false) String toType)	
 			throws InvalidFormatException, IOException, ServiceException {
-		Map<String, String> response = new HashMap<String, String>();	
+		Map<String, Object> response = new HashMap<String, Object>();	
 		File file1 = poiExcel.getFileByMultipartTarget(excel, request, "delivery-schedule.xlsx");
 		
 		List<Schedule> schedules = new ArrayList<Schedule>();
@@ -3536,7 +3536,7 @@ public class MainRestController {
 		});
 		
 		response.put("200", "Загружено");
-//		response.put("body", schedules.toString());
+		response.put("size", schedules.size());
 		return response;
 	}
 	

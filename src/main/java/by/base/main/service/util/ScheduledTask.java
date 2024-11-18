@@ -6,7 +6,9 @@ import java.sql.Date;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.servlet.ServletContext;
@@ -88,6 +90,41 @@ public class ScheduledTask {
 		
 		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на РЦ от " + currentTimeString, "Автоматическая отправка", files, emails);
 		System.out.println("Finish --- sendSchedulesHasORL");
+    }
+    @Scheduled(cron = "0 00 04 * * ?") // каждый день в 11:00
+    public void sendSchedulesTOHasORL() {
+    	System.out.println("Start --- sendSchedulesTOHasORL");
+    	Map<String, Object> responseMap = new HashMap<>();
+		// Получаем текущую дату для имени файла
+        LocalDate currentTime = LocalDate.now();
+        String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+        
+		List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to");
+//		List<String> emailsSupport = propertiesUtils.getValuesByPartialKey(servletContext, "email.orderSupport");
+//		emails.addAll(emailsSupport);
+		String appPath = servletContext.getRealPath("/");
+		
+		String fileName1200 = "1200 (----Холодный----).xlsx";
+		String fileName1100 = "1100 График прямой сухой.xlsx";
+		
+		try {
+			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+					appPath + "resources/others/" + fileName1200);
+			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("сухой").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+					appPath + "resources/others/" + fileName1100);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.err.println("Ошибка формирование EXCEL");
+		}
+		
+//		response.setHeader("content-disposition", "attachment;filename="+fileName+".xlsx");
+		List<File> files = new ArrayList<File>();
+		files.add(new File(appPath + "resources/others/" + fileName1200));
+		files.add(new File(appPath + "resources/others/" + fileName1100));
+		
+		
+		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от " + currentTimeString, "Автоматическая отправка TEST", files, emails);
+    	System.out.println("Finish --- sendSchedulesHasTOORL");
     }
     
     @Scheduled(cron = "0 00 20 * * ?") // каждый день в 20:00

@@ -311,56 +311,56 @@ public class MainRestController {
     private ServletContext servletContext;
 	
 	
-	@GetMapping("/test")
-	public Map<String, Object> testNewMethod(HttpServletRequest request) throws IOException, ParseException{
-		
-		java.util.Date t1 = new java.util.Date();
-		Map<String, Object> responseMap = new HashMap<>();
-		
-		responseMap.put("list", scheduleService.getUnicCodeContractTO());
-		java.util.Date t2 = new java.util.Date();
-		System.out.println(t2.getTime()-t1.getTime() + " ms - testNewMethod" );
-		responseMap.put("time", t2.getTime()-t1.getTime() + " ms");
-		return responseMap;		
-	}
-	
 //	@GetMapping("/test")
-//	public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException{
+//	public Map<String, Object> testNewMethod(HttpServletRequest request) throws IOException, ParseException{
+//		
 //		java.util.Date t1 = new java.util.Date();
 //		Map<String, Object> responseMap = new HashMap<>();
-//		// Получаем текущую дату для имени файла
-//        LocalDate currentTime = LocalDate.now();
-//        String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-//        
-//		List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
-////		List<String> emailsSupport = propertiesUtils.getValuesByPartialKey(servletContext, "email.orderSupport");
-////		emails.addAll(emailsSupport);
-//		String appPath = servletContext.getRealPath("/");
 //		
-//		String fileName1200 = "1200 (----Холодный----).xlsx";
-//		String fileName1100 = "1100 График прямой сухой.xlsx";
-//		
-//		try {
-//			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
-//					appPath + "resources/others/" + fileName1200);
-//			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("сухой").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
-//					appPath + "resources/others/" + fileName1100);
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//			System.err.println("Ошибка формирование EXCEL");
-//		}
-//		
-////		response.setHeader("content-disposition", "attachment;filename="+fileName+".xlsx");
-//		List<File> files = new ArrayList<File>();
-//		files.add(new File(appPath + "resources/others/" + fileName1200));
-//		files.add(new File(appPath + "resources/others/" + fileName1100));
-//		
-//		
-//		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от " + currentTimeString, "Автоматическая отправка TEST", files, emails);
+//		responseMap.put("list", scheduleService.getUnicCodeContractTO());
 //		java.util.Date t2 = new java.util.Date();
 //		System.out.println(t2.getTime()-t1.getTime() + " ms - testNewMethod" );
+//		responseMap.put("time", t2.getTime()-t1.getTime() + " ms");
 //		return responseMap;		
 //	}
+	
+	@GetMapping("/test")
+	public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException{
+		java.util.Date t1 = new java.util.Date();
+		Map<String, Object> responseMap = new HashMap<>();
+		// Получаем текущую дату для имени файла
+        LocalDate currentTime = LocalDate.now();
+        String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+        
+		List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+//		List<String> emailsSupport = propertiesUtils.getValuesByPartialKey(servletContext, "email.orderSupport");
+//		emails.addAll(emailsSupport);
+		String appPath = servletContext.getRealPath("/");
+		
+		String fileName1200 = "1200 (----Холодный----).xlsx";
+		String fileName1100 = "1100 График прямой сухой.xlsx";
+		
+		try {
+			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+					appPath + "resources/others/" + fileName1200);
+			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("сухой").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+					appPath + "resources/others/" + fileName1100);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.err.println("Ошибка формирование EXCEL");
+		}
+		
+//		response.setHeader("content-disposition", "attachment;filename="+fileName+".xlsx");
+		List<File> files = new ArrayList<File>();
+		files.add(new File(appPath + "resources/others/" + fileName1200));
+		files.add(new File(appPath + "resources/others/" + fileName1100));
+		
+		
+		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от " + currentTimeString, "Автоматическая отправка TEST", files, emails);
+		java.util.Date t2 = new java.util.Date();
+		System.out.println(t2.getTime()-t1.getTime() + " ms - testNewMethod" );
+		return responseMap;		
+	}
 //	
 //	@GetMapping("/test")
 //	public Map<String, Object> test(HttpServletRequest request, HttpServletResponse response){
@@ -1675,7 +1675,9 @@ public class MainRestController {
 		properties = new Properties();
 		properties.load(fileInputStream);
 		String text = "Создан новый график поставок сотрудником: " + user.getSurname() + " " + user.getName() + " \nПоставщик: " + schedule.getName();
-		mailService.sendSimpleEmailTwiceUsers(request, "Новый график поставок", text, properties.getProperty("email.orderSupport.1"), properties.getProperty("email.orderSupport.2"));
+//		mailService.sendSimpleEmailTwiceUsers(request, "Новый график поставок на РЦ", text, properties.getProperty("email.orderSupport.1"), properties.getProperty("email.orderSupport.2"));
+		List<String> emails = propertiesUtils.getValuesByPartialKey(request.getServletContext(), "email.orderSupport");
+		mailService.sendEmailToUsers(request, "Новый график поставок на РЦ", text, emails);
 		
 		response.put("status", "200");
 		response.put("message", "График поставок  "+schedule.getName()+" создан");
@@ -6977,6 +6979,7 @@ public class MainRestController {
 				|| order.getManager().split(";")[1].trim().equals("PozdnyakovR@dobronom.by")
 				|| order.getManager().split(";")[1].trim().equals("KuzmickayaE@dobronom.by")
 				|| order.getManager().split(";")[1].trim().equals("VegeroK@dobronom.by")
+				|| order.getManager().split(";")[1].trim().equals("ProrovskayaM@dobronom.by")
 				|| order.getManager().split(";")[1].trim().equals("YakzhikE@dobronom.by") // нет такого?
 				|| order.getManager().split(";")[1].trim().equals("TishalovichA@dobronom.by")){
 			flag = false;
@@ -7182,6 +7185,7 @@ public class MainRestController {
 				|| order.getManager().split(";")[1].trim().equals("PozdnyakovR@dobronom.by")
 				|| order.getManager().split(";")[1].trim().equals("KuzmickayaE@dobronom.by")
 				|| order.getManager().split(";")[1].trim().equals("VegeroK@dobronom.by")
+				|| order.getManager().split(";")[1].trim().equals("ProrovskayaM@dobronom.by")
 				|| order.getManager().split(";")[1].trim().equals("YakzhikE@dobronom.by") // нет такого?
 				|| order.getManager().split(";")[1].trim().equals("TishalovichA@dobronom.by")){
 			flag = false;

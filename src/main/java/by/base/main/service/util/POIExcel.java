@@ -242,13 +242,17 @@ public class POIExcel {
 	 */
 	public String exportToExcelScheduleListTO(List<Schedule> schedules, String filePath) throws FileNotFoundException, IOException {
 		Workbook workbook = new XSSFWorkbook();
+		if(schedules.isEmpty()) {
+			return null;
+		}
         Sheet sheet = workbook.createSheet(schedules.get(0).getNumStock() + "");
 
         // Заголовки колонок
         String[] headers = {
                 "Код контрагента", "Наименование контрагента", "Номер контракта", "Номер ТО" , "Пометка сроки / неделя" ,
                 "пн", "вт", "ср", "чт", "пт", "сб", "вс", 
-                "Количество поставок", "День в день", "График формирования заказа  четная неделя ставим метка  --ч-- , нечетная --- н ---", "График отгрузки заказа  четная неделя ставим метка  --ч-- , нечетная --- н ---"
+                "Количество поставок", "График формирования заказа  четная неделя ставим метка  --ч-- , нечетная --- н ---", "График отгрузки заказа  четная неделя ставим метка  --ч-- , нечетная --- н ---",
+                "кодовое ИМЯ КОНТРАГЕНТА","квант","измерения КВАНТА", "День в день"
         };
 
         // Создаем строку заголовков
@@ -281,10 +285,15 @@ public class POIExcel {
             row.createCell(10).setCellValue(schedule.getSaturday());
             row.createCell(11).setCellValue(schedule.getSunday());
 
-            row.createCell(12).setCellValue(schedule.getSupplies());
-            row.createCell(13).setCellValue(schedule.getIsDayToDay());
-            row.createCell(14).setCellValue(schedule.getOrderFormationSchedule());
-            row.createCell(15).setCellValue(schedule.getOrderShipmentSchedule());
+            row.createCell(12).setCellValue(schedule.getSupplies());            
+            row.createCell(13).setCellValue(schedule.getOrderFormationSchedule());
+            row.createCell(14).setCellValue(schedule.getOrderShipmentSchedule());
+            
+            if(schedule.getCodeNameOfQuantumCounterparty() != null) row.createCell(15).setCellValue(schedule.getCodeNameOfQuantumCounterparty());
+            if(schedule.getQuantum() != null) row.createCell(16).setCellValue(schedule.getQuantum());
+            if(schedule.getQuantumMeasurements() != null) row.createCell(17).setCellValue(schedule.getQuantumMeasurements());
+            		
+            row.createCell(18).setCellValue(schedule.getIsDayToDay());
         }
         
         // Устанавливаем фильтры на все столбцы
@@ -1263,6 +1272,7 @@ public class POIExcel {
 
         // Assuming the first row is the header
         rowIterator.next();
+        rowIterator.next();
 
         while (rowIterator.hasNext()) {
             Row row = rowIterator.next();
@@ -1284,26 +1294,51 @@ public class POIExcel {
             BigDecimal bigDecimalValueShop = new BigDecimal(row.getCell(4).getNumericCellValue()); // это отвечает за преобразование больших чисел
             Integer shop = Integer.parseInt(bigDecimalValueShop.toString());
             
+//            System.out.println(row.getRowNum());
             
             schedule.setCounterpartyCode(Long.parseLong(counterpartyCode));
             schedule.setName(row.getCell(1).getStringCellValue().trim());
             schedule.setNameStock(row.getCell(2).getStringCellValue().trim());
             schedule.setCounterpartyContractCode(Long.parseLong(counterpartyContractCode));
             schedule.setNumStock(shop);
-            schedule.setSupplies((int) row.getCell(5).getNumericCellValue());            
-            schedule.setMonday(row.getCell(6).getStringCellValue().equals("") ? null : row.getCell(6).getStringCellValue().toLowerCase());
-            schedule.setTuesday(row.getCell(7).getStringCellValue().equals("") ? null : row.getCell(7).getStringCellValue().toLowerCase());
-            schedule.setWednesday(row.getCell(8).getStringCellValue().equals("") ? null : row.getCell(8).getStringCellValue().toLowerCase());
-            schedule.setThursday(row.getCell(9).getStringCellValue().equals("") ? null : row.getCell(9).getStringCellValue().toLowerCase());
-            schedule.setFriday(row.getCell(10).getStringCellValue().equals("") ? null : row.getCell(10).getStringCellValue().toLowerCase());
-            schedule.setSaturday(row.getCell(11).getStringCellValue().equals("") ? null : row.getCell(11).getStringCellValue().toLowerCase());
-            schedule.setSunday(row.getCell(12).getStringCellValue().equals("") ? null : row.getCell(12).getStringCellValue().toLowerCase());
-            schedule.setNote(row.getCell(13) == null || row.getCell(13).getStringCellValue().equals("") ? null : row.getCell(13).getStringCellValue());
+            schedule.setSupplies((int) row.getCell(20).getNumericCellValue());            
+            schedule.setMonday(row.getCell(22) == null || row.getCell(22).getStringCellValue().equals("") ? null : row.getCell(22).getStringCellValue().toLowerCase());
+            schedule.setTuesday(row.getCell(23) == null || row.getCell(23).getStringCellValue().equals("") ? null : row.getCell(23).getStringCellValue().toLowerCase());
+            schedule.setWednesday(row.getCell(24) == null || row.getCell(24).getStringCellValue().equals("") ? null : row.getCell(24).getStringCellValue().toLowerCase());
+            schedule.setThursday(row.getCell(25) == null || row.getCell(25).getStringCellValue().equals("") ? null : row.getCell(25).getStringCellValue().toLowerCase());
+            schedule.setFriday(row.getCell(26) == null || row.getCell(26).getStringCellValue().equals("") ? null : row.getCell(26).getStringCellValue().toLowerCase());
+            schedule.setSaturday(row.getCell(27) == null || row.getCell(27).getStringCellValue().equals("") ? null : row.getCell(27).getStringCellValue().toLowerCase());
+            schedule.setSunday(row.getCell(28) == null || getCellValue(row.getCell(28)).equals("") ? null : row.getCell(28).getStringCellValue().toLowerCase());
+            schedule.setNote(row.getCell(29) == null || row.getCell(29).getStringCellValue().equals("") ? null : row.getCell(29).getStringCellValue());
             schedule.setStatus(20);
             schedule.setType("ТО");
-            schedule.setIsDayToDay(false);
+            schedule.setIsDayToDay(getCellValue(row.getCell(35)) == null || getCellValue(row.getCell(35)).equals("") ? false : getCellValue(row.getCell(35)).trim().toLowerCase().equals("cегодня"));
             schedule.setToType(toType);
             schedule.setIsNotCalc(false);
+            
+            
+            //прогрузка чётных и нечётных столбцов
+            Cell cell21 = row.getCell(30);
+            Cell cell22 = row.getCell(31);
+            String value21 = getCellValue(cell21);
+            String value22 = getCellValue(cell22);
+            
+            if(value21 != null || value22 != null) {
+            	schedule.setOrderFormationSchedule(value21);
+            	schedule.setOrderShipmentSchedule(value22);
+            }
+            
+            //прогрузка квантов
+            Cell cell32 = row.getCell(32);
+            Cell cell33 = row.getCell(33);
+            Cell cell34 = row.getCell(34);
+            String value32 = getCellValue(cell32);
+            String value33 = getCellValue(cell33);
+            String value34 = getCellValue(cell34);
+            if (value32 != null) schedule.setCodeNameOfQuantumCounterparty(value32);
+            if (value33 != null && !value33.equals("")) schedule.setQuantum(Double.parseDouble(value33));
+            if (value34 != null) schedule.setQuantumMeasurements(value34);
+            
             
 //            schedule.setTz(row.getCell(12) == null || row.getCell(12).getStringCellValue().equals("") ? null : row.getCell(12).getStringCellValue());
 //            schedule.setTp(row.getCell(13) == null || row.getCell(13).getStringCellValue().equals("") ? null : row.getCell(13).getStringCellValue());
@@ -1383,8 +1418,11 @@ public class POIExcel {
             case BOOLEAN:
                 return String.valueOf(cell.getBooleanCellValue());
             case BLANK:
+            	return ""; // Возвращаем пустую строку для пустой ячейки
+            case ERROR:
+            	return null; 
             default:
-                return null;
+                return "error";
         }
     }
 	

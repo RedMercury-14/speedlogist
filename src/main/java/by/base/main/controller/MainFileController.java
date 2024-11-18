@@ -92,7 +92,7 @@ public class MainFileController {
 	public String downdoadIncotermsInsuranceGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		String appPath = request.getServletContext().getRealPath("");
 		//File file = new File(appPath + "resources/others/Speedlogist.apk");
-		response.setHeader("content-disposition", "attachment;filename="+"Инструкция график поставк на ТО.docx");
+		response.setHeader("content-disposition", "attachment;filename="+"instruction-trading-objects.docx");
 		response.setContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
 		FileInputStream in = null;
 		OutputStream out = null;

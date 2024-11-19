@@ -305,3 +305,22 @@ form .form-check .form-check-label {
 #myGrid .red-row {
 	background-color: rgba(255, 0, 0, 0.3);
 }
+
+/* мигание кнопки Помощь */
+@keyframes softGreenBlink {
+	0% {
+		background-color: rgba(0, 255, 0, 0.3); /* Мягкий зелёный */
+	}
+	50% {
+		background-color: transparent; /* Прозрачный фон */
+	}
+	100% {
+		background-color: rgba(0, 255, 0, 0.3); /* Мягкий зелёный */
+	}
+}
+#downloadFAQ.softGreenBlink {
+	animation: softGreenBlink 2s infinite; /* Мигание каждые 2 секунды */
+	transition: background-color 0.5s; /* Плавный переход */
+	border: 0,1px solid rgba(0, 255, 0, 0.3); /* Мягкий зелёный контур */
+	border-radius: 5px; /* Скруглённые углы */
+}

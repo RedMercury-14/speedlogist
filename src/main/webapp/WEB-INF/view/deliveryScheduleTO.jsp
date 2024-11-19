@@ -6,28 +6,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-<style type="text/css">
-@keyframes softGreenBlink {
-    0% {
-        background-color: rgba(0, 255, 0, 0.3); /* Мягкий зелёный */
-    }
-    50% {
-        background-color: transparent; /* Прозрачный фон */
-    }
-    100% {
-        background-color: rgba(0, 255, 0, 0.3); /* Мягкий зелёный */
-    }
-}
-
-#downloadFAQ {
-    animation: softGreenBlink 2s infinite; /* Мигание каждые 2 секунды */
-    transition: background-color 0.5s; /* Плавный переход */
-    border: 0,1px solid rgba(0, 255, 0, 0.3); /* Мягкий зелёный контур */
-    border-radius: 5px; /* Скруглённые углы */
-}
-
-
-</style>
 	<meta charset="UTF-8">
 	<meta name="${_csrf.parameterName}" content="${_csrf.token}" />
 	<title>Графики поставок на ТО</title>
@@ -40,9 +18,7 @@
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/deliverySchedule.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/tooltip.css">
 </head>
-
 <body>
-
 	<jsp:include page="headerNEW.jsp" />
 
 	<div id="overlay" class="none">
@@ -60,13 +36,9 @@
 
 		<div class="title-container">
 			<strong><h3>Графики поставок на ТО</h3></strong>
-<!-- 			<button type="button" id="downloadFAQ" class="btn tools-btn font-weight-bold text-muted ml-auto py-1" title="Инструкция по работе"> -->
-<!-- 				Помощь -->
-<!-- 			</button> -->
-			<button type="button" id="downloadFAQ" class="btn tools-btn font-weight-bold text-muted ml-auto py-1" title="Инструкция по работе">
-			    Помощь
+			<button type="button" id="downloadFAQ" class="btn tools-btn font-weight-bold text-muted ml-auto py-1 softGreenBlink" title="Инструкция по работе">
+				Помощь
 			</button>
-
 		</div>
 		<div class="toolbar">
 			<button type="button" class="btn tools-btn font-weight-bold text-muted" data-toggle="modal" data-target="#addScheduleItemModal">

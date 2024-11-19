@@ -206,6 +206,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 	// кнопка скачивания файла с инструкцией
 	const downloadFAQBtn = document.querySelector('#downloadFAQ')
 	downloadFAQBtn.addEventListener('click', () => window.open(downloadFaqUrl, '_blank'))
+	// отмена мигания кнопки через 10 сек
+	setTimeout(() => downloadFAQBtn.classList.remove('softGreenBlink'), 10000)
 
 	// обновление опций графика при открытии модалки создания графика поставки
 	$('#addScheduleItemModal').on('shown.bs.modal', (e) => changeScheduleOptions(addScheduleItemForm, ''))

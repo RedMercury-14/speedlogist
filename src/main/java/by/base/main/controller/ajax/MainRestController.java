@@ -333,6 +333,7 @@ public class MainRestController {
         String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
         
 		List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+//		List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to");
 //		List<String> emailsSupport = propertiesUtils.getValuesByPartialKey(servletContext, "email.orderSupport");
 //		emails.addAll(emailsSupport);
 		String appPath = servletContext.getRealPath("/");
@@ -356,7 +357,7 @@ public class MainRestController {
 		files.add(new File(appPath + "resources/others/" + fileName1100));
 		
 		
-		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от " + currentTimeString, "Автоматическая отправка TEST", files, emails);
+		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от TEST" + currentTimeString, "Тестовая отправка сообщения.\nНе обращайте внимания / игнорируте это сообщение", files, emails);
 		java.util.Date t2 = new java.util.Date();
 		System.out.println(t2.getTime()-t1.getTime() + " ms - testNewMethod" );
 		return responseMap;		
@@ -1448,7 +1449,7 @@ public class MainRestController {
 		User user = getThisUser();
 		Integer role = user.getRoles().stream().findFirst().get().getIdRole();
 
-		if(role != 10 && role != 1) {
+		if(role != 10 && role != 1 && role != 14) {
 			response.put("status", "100");
 			response.put("message", "Отказано! Данная роль не обладает правами на действие");
 			response.put("info", "Отказано! Данная роль не обладает правами на действие");
@@ -1468,6 +1469,9 @@ public class MainRestController {
 		String statusStr = null;
 		
 		switch (status) {
+		case "0":
+			statusStr = "delete";
+			break;
 		case "10":
 			statusStr = "cancel";
 			break;

@@ -18,6 +18,7 @@ import { uiIcons } from './uiIcons.js'
 import {
 	changeGridTableMarginTop, debounce, disableButton, enableButton,
 	getData, getScheduleStatus, hideLoadingSpinner, isAdmin,
+	isOrderSupport,
 	isORL, showLoadingSpinner
 } from './utils.js'
 
@@ -33,6 +34,7 @@ const changeIsDayToDayBaseUrl = '../../api/slots/delivery-schedule/changeDayToDa
 
 const editTOByCounterpartyContractCodeOnlyUrl = '../../api/slots/delivery-schedule/editTOByCounterpartyContractCodeOnly'
 const setCodeNameBaseUrl = '../../api/slots/delivery-schedule/changeNameOfQuantum/'
+const downloadFaqUrl = '../../file/delivery-schedule-to/downdoad/instruction-trading-objects'
 
 const PAGE_NAME = 'deliveryScheduleTO'
 const LOCAL_STORAGE_KEY = `AG_Grid_settings_to_${PAGE_NAME}`
@@ -107,7 +109,7 @@ const columnDefs = [
 ]
 
 // доболнительные колонки для админа
-if (isAdmin(role)) {
+if (isAdmin(role) || isORL(role) || isOrderSupport(role) ) {
 	columnDefs.push(
 		...deliveryScheduleColumnDefsForAdmin
 	)
@@ -189,7 +191,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 		autocompleteCounterpartyInfo(e, addCounterpartyNameInput, contractCodeList)
 	})
 	addCounterpartyNameInput.addEventListener('change', (e) => {
-		autocompleteCounterpartyInfo(e, addCounterpartyCodeInput, null)
+		autocompleteCounterpartyInfo(e, addCounterpartyCodeInput, contractCodeList)
 	})
 	codeNameFormCounterpartyCodeInput.addEventListener('change', (e) => {
 		autocompleteCounterpartyInfo(e, codeNameFormCounterpartyNameInput, null)
@@ -200,6 +202,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 	const editQuantumInput = editScheduleItemForm.querySelector('#quantum')
 	addQuantumInput.addEventListener('change', (e) => onQuantumChangeHandler(e, addScheduleItemForm))
 	editQuantumInput.addEventListener('change', (e) => onQuantumChangeHandler(e, editScheduleItemForm))
+
+	// кнопка скачивания файла с инструкцией
+	const downloadFAQBtn = document.querySelector('#downloadFAQ')
+	downloadFAQBtn.addEventListener('click', () => window.open(downloadFaqUrl, '_blank'))
 
 	// обновление опций графика при открытии модалки создания графика поставки
 	$('#addScheduleItemModal').on('shown.bs.modal', (e) => changeScheduleOptions(addScheduleItemForm, ''))
@@ -248,11 +254,9 @@ async function loadScheduleData(url) {
 	if (isAdmin(role) || isORL(role)) {
 		checkScheduleData(scheduleData)
 	}
-
-	// const counterpartyList = getCounterpartyList(scheduleData)
-	// console.log("🚀 ~ loadScheduleData ~ counterpartyList:", counterpartyList)
 }
 
+// получение списка контрагентов с номерами контрактов
 function getCounterpartyList(scheduleData) {
 	return scheduleData.reduce((acc, scheduleItem) => {
 		const { name, counterpartyCode, counterpartyContractCode } = scheduleItem
@@ -305,7 +309,7 @@ function getContextMenuItems(params) {
 		? [
 			{
 				name: `Подтверждение графиков`,
-				disabled: (!isAdmin(role) && !isORL(role)) || (status !== 10 && status !== 0),
+				disabled: (!isAdmin(role) && !isORL(role) && !isOrderSupport(role)) || (status !== 10 && status !== 0),
 				icon: uiIcons.check,
 				subMenu: [
 					{
@@ -322,7 +326,7 @@ function getContextMenuItems(params) {
 		: [
 			{
 				name: 'Снять подтверждение',
-				disabled: (!isAdmin(role) && !isORL(role)) || status === 0,
+				disabled: (!isAdmin(role) && !isORL(role) && !isOrderSupport(role)) || status === 0,
 				icon: uiIcons.x_lg,
 				subMenu: [
 					{
@@ -357,7 +361,7 @@ function getContextMenuItems(params) {
 		},
 		{
 			name: `Редактировать графики по текущему коду контракта`,
-			disabled: !isAdmin(role) && !isORL(role),
+			disabled: false,
 			action: () => {
 				editScheduleItem(rowNode, setDataToForm)
 			},
@@ -365,7 +369,7 @@ function getContextMenuItems(params) {
 		},
 		{
 			name: `Изменить значение "Сегодня на сегодня" по текущему коду контракта`,
-			disabled: !isAdmin(role) && !isORL(role),
+			disabled: !isAdmin(role) && !isORL(role) && !isOrderSupport(role),
 			action: () => {
 				changeIsDayToDayByContract(role, rowNode)
 			},
@@ -373,19 +377,19 @@ function getContextMenuItems(params) {
 		},
 		{
 			name: `Удаление графиков`,
-			disabled: (!isAdmin(role) && !isORL(role)),
+			disabled: !isAdmin(role) && !isORL(role) && !isOrderSupport(role),
 			icon: uiIcons.trash,
 			subMenu: [
 				{
 					name: `Удалить текущий график`,
-					disabled: (!isAdmin(role) && !isORL(role)) || status === 0,
+					disabled: (!isAdmin(role) && !isORL(role) && !isOrderSupport(role)) || status === 0,
 					action: () => {
 						deleteScheduleItem(role, rowNode)
 					},
 				},
 				{
 					name: `Удалить все графики по текущему коду контракта`,
-					disabled: !isAdmin(role) && !isORL(role),
+					disabled: !isAdmin(role) && !isORL(role) && !isOrderSupport(role),
 					action: () => {
 						deleteScheduleItemsByContract(role, rowNode)
 					},
@@ -402,7 +406,7 @@ function getContextMenuItems(params) {
 
 // подтверждение графиков поставок по номеру контракта
 async function confirmScheduleItemsByContract(role, rowNode) {
-	if (!isAdmin(role) && !isORL(role)) return
+	if (!isAdmin(role) && !isORL(role) && !isOrderSupport(role)) return
 	const status = 20
 	const scheduleItem = rowNode.data
 	const counterpartyContractCode = scheduleItem.counterpartyContractCode
@@ -418,19 +422,20 @@ async function confirmScheduleItemsByContract(role, rowNode) {
 	const isMissingCodeName = schedulesByContract.some(item => !item.codeNameOfQuantumCounterparty)
 	if (isMissingCodeName) {
 		const counterpartyName = scheduleItem.name
-		const codeNameOfQuantumCounterparty = prompt(`Введите кодовое слово для контрагента ${counterpartyName} по контракту ${counterpartyContractCode}:`)
-		if (!codeNameOfQuantumCounterparty) {
-			snackbar.show('Кодовое слово не указано, графика не подтверждены!')
-			return
+		const codeNameOfQuantumCounterparty = prompt(
+			`Введите кодовое имя для контрагента ${counterpartyName} по контракту ${counterpartyContractCode}:`
+		)
+		if (codeNameOfQuantumCounterparty === null) return
+		if (codeNameOfQuantumCounterparty) {
+			payload.codeNameOfQuantumCounterparty = codeNameOfQuantumCounterparty
 		}
-		payload.codeNameOfQuantumCounterparty = codeNameOfQuantumCounterparty
 	}
 
 	editTOByCounterpartyContractCodeOnly(payload)
 }
 // снятие подтверждения с графиков поставок по номеру контракта
 async function unconfirmScheduleItemsByContract(role, rowNode) {
-	if (!isAdmin(role) && !isORL(role)) return
+	if (!isAdmin(role) && !isORL(role) && !isOrderSupport(role)) return
 	const status = 10
 	const scheduleItem = rowNode.data
 	const counterpartyContractCode = scheduleItem.counterpartyContractCode
@@ -442,7 +447,7 @@ async function unconfirmScheduleItemsByContract(role, rowNode) {
 }
 // удаление графиков поставок по номеру контракта
 async function deleteScheduleItemsByContract(role, rowNode) {
-	if (!isAdmin(role) && !isORL(role)) return
+	if (!isAdmin(role) && !isORL(role) && !isOrderSupport(role)) return
 	const status = 0
 	const scheduleItem = rowNode.data
 	const counterpartyContractCode = scheduleItem.counterpartyContractCode
@@ -457,7 +462,7 @@ async function deleteScheduleItemsByContract(role, rowNode) {
 }
 // запрос на массовое изменение значения "Сегодня на сегодня" по номеру контракта
 function changeIsDayToDayByContract(role, rowNode) {
-	if (!isAdmin(role) && !isORL(role)) return
+	if (!isAdmin(role) && !isORL(role) && !isOrderSupport(role)) return
 	const scheduleItem = rowNode.data
 	const isDayToDay = !scheduleItem.isDayToDay
 	const counterpartyContractCode = scheduleItem.counterpartyContractCode
@@ -524,7 +529,7 @@ async function loadAllDataBtnClickHandler(e) {
 
 // обработчик изменения значения "Сегодня на сегодня"
 async function onIsDayToDayChangeHandler(params) {
-	if (!isAdmin(role) && !isORL(role)) return
+	if (!isAdmin(role) && !isORL(role) && !isOrderSupport(role)) return
 	const data = params.data
 	const idSchedule = data.idSchedule
 	const rowNode = params.node
@@ -634,8 +639,6 @@ function addScheduleItemFormHandler(e) {
 function editScheduleItemFormHandler(e) {
 	e.preventDefault()
 
-	if (!isAdmin(role) && !isORL(role)) return
-
 	const formData = new FormData(e.target)
 	const data = scheduleItemDataFormatter(formData)
 
@@ -692,7 +695,7 @@ function editScheduleItemFormHandler(e) {
 function setCodeNameFormHandler(e) {
 	e.preventDefault()
 
-	if (!isAdmin(role) && !isORL(role)) return
+	if (!isAdmin(role) && !isORL(role) && !isOrderSupport(role)) return
 
 	const formData = new FormData(e.target)
 	const counterpartyCode = formData.get('counterpartyCode')
@@ -752,11 +755,13 @@ async function changeIsDayToDay(idSchedule, rowNode) {
 }
 // метод редактирования графиков по коду контракта (изменяет только указанные поля)
 function editTOByCounterpartyContractCodeOnly(data) {
+	bootstrap5overlay.showOverlay()
 	ajaxUtils.postJSONdata({
 		url: editTOByCounterpartyContractCodeOnlyUrl,
 		token: token,
 		data: data,
 		successCallback: async (res) => {
+			bootstrap5overlay.hideOverlay()
 			if (res && res.status === '200') {
 				res.message && snackbar.show(res.message)
 				// получаем обновленные данные и обновляем таблицу
@@ -769,6 +774,7 @@ function editTOByCounterpartyContractCodeOnly(data) {
 			}
 		},
 		errorCallback: () => {
+			bootstrap5overlay.hideOverlay()
 		}
 	})
 }
@@ -827,7 +833,7 @@ async function addShopsByContract(rowNode) {
 		sunday: scheduleItem.sunday ? scheduleItem.sunday : null,
 		orderFormationSchedule: scheduleItem.orderFormationSchedule ? scheduleItem.orderFormationSchedule : null,
 		orderShipmentSchedule: scheduleItem.orderShipmentSchedule ? scheduleItem.orderShipmentSchedule : null,
-		isDayToDay: scheduleItem.isDayToDay ? scheduleItem.isDayToDay : null,
+		isDayToDay: scheduleItem.isDayToDay ? scheduleItem.isDayToDay : false,
 		quantum: scheduleItem.quantum ? scheduleItem.quantum : null,
 		quantumMeasurements: scheduleItem.quantumMeasurements ? scheduleItem.quantumMeasurements : null,
 		codeNameOfQuantumCounterparty: scheduleItem.codeNameOfQuantumCounterparty ? scheduleItem.codeNameOfQuantumCounterparty : null,
@@ -905,7 +911,7 @@ function scheduleItemDataFormatter(formData) {
 		codeNameOfQuantumCounterparty,
 		status: 10,
 		codeNameOfQuantumCounterparty: null,
-		isDayToDay: null,
+		isDayToDay: false,
 	}
 	return res
 }

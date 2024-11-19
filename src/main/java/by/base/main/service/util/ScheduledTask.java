@@ -123,7 +123,7 @@ public class ScheduledTask {
 		files.add(new File(appPath + "resources/others/" + fileName1100));
 		
 		
-		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от " + currentTimeString, "Автоматическая отправка TEST", files, emails);
+		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO от " + currentTimeString, "Автоматическая отправка", files, emails);
     	System.out.println("Finish --- sendSchedulesHasTOORL");
     }
     

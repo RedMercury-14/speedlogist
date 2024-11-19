@@ -1,7 +1,9 @@
 import {
+	defaultOptions,
 	getScheduleArrayFromScheduleObj,
 	ORDER_REG, showMessageModal,
-	SUPPLY_REG, SUPPLY_REG_GLOBAL, WEEK_INDEX_REG
+	SUPPLY_REG, SUPPLY_REG_GLOBAL, WEEK_INDEX_REG,
+	weekOptions
 } from "./utils.js"
 
 const errorMessages = {
@@ -32,6 +34,18 @@ export function checkScheduleData(scheduleData) {
 	if (errorLines) {
 		showMessageModal(title + errorLines)
 	}
+}
+
+// проверка корректности значений в полях графика
+export function isValidScheduleValues(data) {
+	const schedule = getScheduleArrayFromScheduleObj(data)
+	const isWeekNote = data.note === 'неделя'
+	return schedule.every(el => {
+		if (!el) return true
+		return isWeekNote
+			? weekOptions.includes(el)
+			: defaultOptions.includes(el)
+	})
 }
 
 // метод получения ошибок при заполнении формы

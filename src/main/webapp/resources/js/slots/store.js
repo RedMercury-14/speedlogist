@@ -3,6 +3,7 @@ import { eventColors } from "./constants.js"
 import { getEndTime, getEventBGColor, getEventBorderColor, groupeByNumStockDelyvery } from "./dataUtils.js"
 import { editableRules, colorRules } from "./rules.js"
 import { stocks } from "../globalRules/virtualStocksForSlots.js"
+import { getVirtualStockId } from "../globalRules/ordersRules.js"
 
 const token = $("meta[name='_csrf']").attr("content")
 const login = document.querySelector("#login").value
@@ -155,13 +156,9 @@ export const store = {
 	},
 	getCurrentStockOrders() {
 		const currentStockId = this._state.currentStock.id
-		// для 1200 склада видны поставки на 1200 и 1230 склады
-		const filterCondition = (stockId) => currentStockId === '1200'
-			? stockId === currentStockId || stockId === '1230' || stockId === '1214'
-			: stockId === currentStockId
 		return this._state.orders.filter(order => {
 			const stockId = order.idRamp ? String(order.idRamp).slice(0, -2) : order.numStockDelivery
-			return filterCondition(stockId)
+			return getVirtualStockId(stockId) === currentStockId
 		})
 	},
 	setOrders(orders) {

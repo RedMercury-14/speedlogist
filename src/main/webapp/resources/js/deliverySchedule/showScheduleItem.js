@@ -29,17 +29,30 @@ function getDeliveryScheduleMatrix(schedule, note) {
 		"н2": 3,
 		"н3": 4,
 		"н4": 5,
+		"н5": 6,
+		"н6": 7,
+		"н7": 8,
+		"н8": 9,
+		"н9": 10,
+		"н10": 11,
+
 	}
 	const days = Object.keys(daysDictionary)
 	const shortDays = Object.values(daysDictionary)
 	const weekNumberKeys = Object.keys(weekNumbers)
-	const matrix = [
+	let matrix = [
 		['', ...shortDays ],
 		['н0', '', '', '', '', '', '', ''],
 		['н1', '', '', '', '', '', '', ''],
 		['н2', '', '', '', '', '', '', ''],
 		['н3', '', '', '', '', '', '', ''],
 		['н4', '', '', '', '', '', '', ''],
+		['н5', '', '', '', '', '', '', ''],
+		['н6', '', '', '', '', '', '', ''],
+		['н7', '', '', '', '', '', '', ''],
+		['н8', '', '', '', '', '', '', ''],
+		['н9', '', '', '', '', '', '', ''],
+		['н10', '', '', '', '', '', '', ''],
 	]
 	const isWeekIndicated = note === 'неделя'
 	const orderRow = matrix[1]
@@ -86,7 +99,12 @@ function getDeliveryScheduleMatrix(schedule, note) {
 			}
 		}
 	})
+
+	// обрезаем лишние строки матрицы
+	sliceMatrix(5)
+
 	return matrix
+
 
 	// получение дня заказа
 	function getOrderDay(parts, index) {
@@ -121,6 +139,16 @@ function getDeliveryScheduleMatrix(schedule, note) {
 	function findDigitAfterZ(str) {
 		const match = str.match(/з(\d)/)
 		return match ? match[1] : ''
+	}
+	// обрезка матрицы до строки со значениями или минимальной строки
+	function sliceMatrix(minRowCount) {
+		for (let i = matrix.length - 1; i > 0; i--) {
+			if (matrix[i].slice(1).some(cell => cell !== "")) {
+				const endIndex = i > minRowCount ? i + 1 : minRowCount + 1
+				matrix = matrix.slice(0, endIndex)
+				break
+			}
+		}
 	}
 }
 

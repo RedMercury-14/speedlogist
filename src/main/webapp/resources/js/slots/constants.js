@@ -28,7 +28,7 @@ export const userMessages = {
 	contractCodeIsMissing: 'Код контракта отсутствует в графике поставок',
 }
 
-export const slotStocks = ['1700','1200','1230','1214','1250','1100']
+export const slotStocks = ['1700','1200','1230','1214', '1240','1250','1100']
 
 export const eventColors = {
 	disabled: '#65979f',

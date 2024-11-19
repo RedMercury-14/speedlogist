@@ -394,6 +394,7 @@ public class MailService {
 	 * @param emailToFirstUser
 	 * @param emailToSecondUser
 	 */
+	@Deprecated
 	public void sendSimpleEmailTwiceUsers(HttpServletRequest request, String subject, String text, String emailToFirstUser, String emailToSecondUser) {
 		String appPath = request.getServletContext().getRealPath("");
 		try {

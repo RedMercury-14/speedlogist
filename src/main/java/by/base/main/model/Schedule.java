@@ -145,6 +145,24 @@ public class Schedule{
     @Column(name = "connection_supply")
     private Integer connectionSupply;
     
+    /**
+     * кодовое ИМЯ КОНТРАГЕНТА
+     */
+    @Column(name = "code_name_of_quantum_counterparty")
+    private String codeNameOfQuantumCounterparty;
+    
+    /**
+     * Квант
+     */
+    @Column(name = "quantum")
+    private Double quantum;
+    
+    /**
+     * измерения КВАНТА
+     */
+    @Column(name = "quantum_measurements")
+    private String quantumMeasurements;
+    
     
     
     @JsonIgnore
@@ -157,6 +175,57 @@ public class Schedule{
 	 */
 	public Schedule() {
 		super();
+	}
+
+
+	/**
+     * кодовое ИМЯ КОНТРАГЕНТА
+     */
+	public String getCodeNameOfQuantumCounterparty() {
+		return codeNameOfQuantumCounterparty;
+	}
+
+
+	/**
+     * кодовое ИМЯ КОНТРАГЕНТА
+     */
+	public void setCodeNameOfQuantumCounterparty(String codeNameOfQuantumCounterparty) {
+		this.codeNameOfQuantumCounterparty = codeNameOfQuantumCounterparty;
+	}
+
+
+	/**
+	 * Квант
+	 * @return
+	 */
+	public Double getQuantum() {
+		return quantum;
+	}
+
+	/**
+	 * Квант
+	 * @return
+	 */
+	public void setQuantum(Double quantum) {
+		this.quantum = quantum;
+	}
+
+
+	/**
+	 * измерения КВАНТА
+	 * @return
+	 */
+	public String getQuantumMeasurements() {
+		return quantumMeasurements;
+	}
+
+
+	/**
+	 * измерения КВАНТА
+	 * @return
+	 */
+	public void setQuantumMeasurements(String quantumMeasurements) {
+		this.quantumMeasurements = quantumMeasurements;
 	}
 
 

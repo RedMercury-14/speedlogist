@@ -1,5 +1,6 @@
 import { ajaxUtils } from "../ajaxUtils.js"
 import { bootstrap5overlay } from "../bootstrap5overlay/bootstrap5overlay.js"
+import { slotStocks } from "../globalRules/ordersRules.js"
 import { snackbar } from "../snackbar/snackbar.js"
 import { getData, isLogist } from "../utils.js"
 import { errorHandler_100status, errorHandler_105status, getMultiplicity, hideEventInfoPopup, showMessageModal } from "./calendarUtils.js"
@@ -13,7 +14,6 @@ import {
 	loadOrderUrl,
 	preloadOrderUrl,
 	slotsSettings,
-	slotStocks,
 	updateOrderUrl,
 	userMessages
 } from "./constants.js"

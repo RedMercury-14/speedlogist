@@ -1,4 +1,4 @@
-import { getStockAddress } from "./procurementFormUtils.js"
+import { getStockAddress } from "./globalRules/ordersRules.js"
 import { dateHelper, getInputValue } from "./utils.js"
 
 export function getDateHTML({ isInternalMovement, pointType, way, pointIndex, value }) {
@@ -94,9 +94,26 @@ export function getTnvdHTML({ pointType, way, pointIndex, value }) {
 	const inputValue = value ? value : ''
 	const tnvdRequired = way === "РБ" ? '' : 'required'
 	const tnvdRequiredMarker = way === "РБ" ? '' : '<span class="text-red">*</span>'
+	const tooltipText = `Код ТН ВЭД состоит из 10 цифр. `
+					+ `Если необходимо указать один код, просто укажте его без дополнительных знаков и символов. `
+					+ `Для нескольких кодов укажите каждый код через запятую С ПРОБЕЛОМ.\n`
+					+ `Примеры: `
+					+ `1234567890 - верно\n`
+					+ `1234567890, 0987654321 - верно\n`
+					+ `1234567890,0987654321 - неверно, нет пробела после запятой\n`
+					+ `12345678901 - неверно, 11 цифр\n`
+					+ `1234567890, 12345 - неверно, второе число не 10-значное`
+
+	const placeholderText = `Указывается один код ТН ВЭД или несколько кодов через запятую с пробелом. `
+						+ `Для подробностей наведите курсор на красный значок вопроса`
+
 	return `<div class='form-group'>
-				<label for="tnvd_${pointIndex}" class='col-form-label text-muted font-weight-bold'>Коды ТН ВЭД ${tnvdRequiredMarker}</label>
-				<textarea class='form-control' name='tnvd' id='tnvd_${pointIndex}' placeholder='Коды ТН ВЭД' ${tnvdRequired}>${inputValue}</textarea>
+				<label for="tnvd_${pointIndex}" class='col-form-label text-muted font-weight-bold custom-tooltip'>
+					Коды ТН ВЭД ${tnvdRequiredMarker}
+					<sup class="px-1 font-weight-bold text-danger">?</sup>
+					<span class="tooltiptext">${tooltipText}</span>
+				</label>
+				<textarea class='form-control' name='tnvd' id='tnvd_${pointIndex}' placeholder='${placeholderText}' ${tnvdRequired}>${inputValue}</textarea>
 			</div>`
 }
 

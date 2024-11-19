@@ -1,16 +1,9 @@
 import { autocomplete } from './autocomplete/autocomplete.js'
 import { countries } from './global.js'
 import { RULES_FOR_MIN_UNLOAD_TIME } from './globalRules/minUnloadTimeRules.js'
+import { INCOTERMS_INSURANCE_LIST } from './globalRules/ordersRules.js'
 import { dateHelper, inputBan, setInputValue } from './utils.js'
 
-const INCOTERMS_INSURANCE_LIST = [
-	'FAS – Free Alongside Ship',
-	'FOB – Free on Board',
-	'CFR – Cost and Freight',
-	'EXW – Ex Works',
-	'FCA – Free Carrier',
-	'CPT – Carriage Paid To',
-]
 
 // установка минимального значения ДАТЫ для точки выгрузки
 export function setUnloadDateMinValue(e, unloadDateInput) {
@@ -269,18 +262,6 @@ export function setOrderDataToOrderForm(form, orderData) {
 	form.cargo.value = orderData.cargo
 }
 
-// метод получения адреса склада по номеру
-export function getStockAddress(stockNumber) {
-	switch (stockNumber) {
-		case '1700': return 'Склад 1700, 223065, Минская обл., Минский р-н, Луговослободской с/с, РАД М4, 18км. 2а, склад W05'
-		case '1200': return 'Склад 1200, 223039, Минская обл., Минский р-н, Хатежинский с/с, 1'
-		case '1230': return 'Склад 1230, 223039, Минская обл., Минский р-н, Хатежинский с/с, 1'
-		case '1214': return 'Склад 1214, 223039, Минская обл., Минский р-н, Хатежинский с/с, 1'
-		case '1250': return 'Склад 1250, 223050, Минская обл., Минский р-н, 9-ый км Московского шоссе'
-		case '1100': return 'Склад 1100, 223039, Минская обл., Минский р-н, Хатежинский с/с, 1'
-		default: return ''
-	}
-}
 
 // изменяем аттрибут disabled всех опций, кроме выбранной и пустой
 export function changeEditingOptions(select, canEdit) {
@@ -330,6 +311,7 @@ export function hideFormField(id) {
 // проверка наличия всех обязательных данных о точках
 export function isInvalidPointForms(routeForm) {
 	const pointForms = routeForm.querySelectorAll('.pointForm')
+	// возвращаем false, чтобы работали кнопки создания точек маршрута
 	if (!pointForms.length) return false
 	const isValidPointForms = []
 
@@ -352,6 +334,20 @@ export function isValidPallCount(order) {
 	if (way === 'АХО') return pallCount <= 20
 
 	return true
+}
+
+// проверка валидного значения ТН ВЭД в точках
+export function isValidTnvdValue(order) {
+	// Регулярное выражение для проверки 10-значных чисел, разделенных запятой и пробелом
+	const regex = /^(?:\d{10})(?:, \d{10})*$/
+	if (order.way === 'АХО') return true
+	const points = order.points
+	if (!points) return true
+	return points.every(point => {
+		const tnvd = point.tnvd
+		if (!tnvd) return true
+		return regex.test(tnvd)
+	})
 }
 
 // обработчик изменения значения поля Опасный груз
@@ -730,26 +726,6 @@ export function inputEditBan(container, selector, value) {
 	}
 }
 
-// получение статута заявки в зависимости от склада доставки
-export function getOrderStatusByStockDelivery(numStockDelivery) {
-	switch (numStockDelivery) {
-		case '1700':
-		case '1200':
-		case '1230':
-		case '1214':
-		case '1250':
-		case '1100':
-		case 1700:
-		case 1200:
-		case 1230:
-		case 1214:
-		case 1250:
-		case 1100:
-			return 6
-		default:
-			return 20
-	}
-}
 
 // метод изменения поле комментарий для формы заявки АХО
 export function transformToAhoComment() {

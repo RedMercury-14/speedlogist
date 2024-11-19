@@ -36,24 +36,14 @@
 
 		<div class="title-container">
 			<strong><h3>Графики поставок на ТО</h3></strong>
-			<button type="button" id="downloadFAQ" class="btn tools-btn font-weight-bold text-muted ml-auto py-1 softGreenBlink" title="Инструкция по работе">
-				Помощь
-			</button>
 		</div>
 		<div class="toolbar">
 			<button type="button" class="btn tools-btn font-weight-bold text-muted" data-toggle="modal" data-target="#addScheduleItemModal">
-				+ Добавить график
+				+ Добавить новый график
 			</button>
 			<c:choose>
-				<c:when test="${roles == '[ROLE_ADMIN]' || roles == '[ROLE_ORL]' || roles == '[ROLE_ORDERSUPPORT]'}">
-					<button type="button" class="btn tools-btn font-weight-bold text-muted" data-toggle="modal" data-target="#setCodeNameModal">
-						Изменить кодовое имя
-					</button>
-				</c:when>
-			</c:choose>
-			<c:choose>
 				<c:when test="${roles == '[ROLE_ADMIN]'}">
-					<button type="button" class="btn tools-btn font-weight-bold text-muted ml-auto" data-toggle="modal" data-target="#sendExcelModal">
+					<button type="button" class="btn tools-btn font-weight-bold text-muted" data-toggle="modal" data-target="#sendExcelModal">
 						Загрузить Excel
 					</button>
 				</c:when>
@@ -109,7 +99,7 @@
 									<div class="input-group-prepend">
 										<div class="input-group-text">Код контрагента</div>
 									</div>
-									<input type="number" class="form-control" name="counterpartyCode" id="counterpartyCode" list="counterpartyCodeList" min="0" max="999999999999" placeholder="Код контрагента" required>
+									<input type="number" class="form-control" name="counterpartyCode" id="counterpartyCode" list="counterpartyCodeList" min="0" placeholder="Код контрагента" required>
 								</div>
 								<datalist id="counterpartyCodeList"></datalist>
 							</div>
@@ -131,7 +121,7 @@
 									<div class="input-group-prepend">
 										<div class="input-group-text">Номер контракта</div>
 									</div>
-									<input type="number" class="form-control counterpartyContractCode" name="counterpartyContractCode" id="counterpartyContractCode" list="contractCodeList" min="0" max="999999999999" placeholder="Номер контракта" required>
+									<input type="number" class="form-control counterpartyContractCode" name="counterpartyContractCode" id="counterpartyContractCode" list="contractCodeList" min="0" placeholder="Номер контракта" required>
 								</div>
 								<div class="error-message" id="messageNumshop"></div>
 								<datalist id="contractCodeList"></datalist>
@@ -152,39 +142,6 @@
 										placeholder="Просто скопируйте сюда строку или столбец с номерами магазинов или укажите номера магазинов через ПРОБЕЛ"
 										required
 									></textarea>
-								</div>
-							</div>
-
-							<div class="form-row justify-content-between mx-0 mb-3">
-								<div class="flex-grow-1 mr-2">
-									<label class="sr-only" for="quantum">Квант</label>
-									<div class="input-group">
-										<div class="input-group-prepend">
-											<div class="input-group-text custom-tooltip">
-												Квант
-												<sup class="px-1 font-weight-bold text-danger">?</sup>
-												<span class="tooltiptext">Укажите минимальный объем/кол-во/денежный эквивалент товара, который необходимо заказать, чтобы поставщик осуществил поставку.<br> В соседнем поле (появится после указания кванта) укажите единицы измерения кванта.</span>
-											</div>
-										</div>
-										<input type="number" class="form-control" name="quantum" id="quantum" min="0" step="1" placeholder="Целое число">
-									</div>
-								</div>
-								<div class="quantumMeasurements-container invisible">
-									<label class="sr-only" for="quantumMeasurements">Ед. измерения</label>
-									<div class="input-group">
-										<div class="input-group-prepend">
-											<div class="input-group-text">Ед. измерения</div>
-										</div>
-										<select id="quantumMeasurements" name="quantumMeasurements" class="form-control">
-											<option value="" selected hidden disabled>Выберите вариант</option>
-											<option value="c НДС">c НДС</option>
-											<option value="без НДС">без НДС</option>
-											<option value="кг">кг</option>
-											<option value="упаковок">упаковок</option>
-											<option value="штук">штук</option>
-											<option value="Дал">Дал</option>
-										</select>
-									</div>
 								</div>
 							</div>
 
@@ -210,7 +167,6 @@
 									</div>
 									<select id="orderFormationSchedule" name="orderFormationSchedule" class="form-control">
 										<option value="" selected hidden disabled>Выберите вариант</option>
-										<option value=""></option>
 										<option value="ч">Четный</option>
 										<option value="н">Нечетный</option>
 									</select>
@@ -229,7 +185,6 @@
 									</div>
 									<select id="orderShipmentSchedule" name="orderShipmentSchedule" class="form-control">
 										<option class="text-muted" value="" selected hidden disabled>Выберите вариант</option>
-										<option value=""></option>
 										<option value="ч">Четный</option>
 										<option value="н">Нечетный</option>
 									</select>
@@ -316,7 +271,7 @@
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-secondary" data-dismiss="modal">Отменить</button>
-						<button type="submit" class="btn btn-primary">Создать</button>
+						<button type="submit" class="btn btn-primary">Добавить</button>
 					</div>
 				</form>
 			</div>
@@ -348,7 +303,11 @@
 									<div class="input-group-prepend">
 										<div class="input-group-text">Холодный или Сухой</div>
 									</div>
-									<input type="text" readonly class="form-control" id="toType" name="toType" required>
+									<select id="toType" name="toType" class="form-control" required>
+										<option value="" selected hidden disabled>Выберите вариант</option>
+										<option value="сухой">Сухой</option>
+										<option value="холодный">Холодный</option>
+									</select>
 								</div>
 							</div>
 
@@ -358,7 +317,7 @@
 									<div class="input-group-prepend">
 										<div class="input-group-text">Код контрагента</div>
 									</div>
-									<input type="number" readonly class="form-control" name="counterpartyCode" id="counterpartyCode" list="counterpartyCodeList" min="0" max="999999999999" placeholder="Код контрагента" required>
+									<input type="number" class="form-control" name="counterpartyCode" id="counterpartyCode" list="counterpartyCodeList" min="0" placeholder="Код контрагента" required>
 								</div>
 								<datalist id="counterpartyCodeList"></datalist>
 							</div>
@@ -369,7 +328,7 @@
 									<div class="input-group-prepend">
 										<div class="input-group-text">Наименование</div>
 									</div>
-									<input type="text" readonly class="form-control" name="name" id="name" list="counterpartyNameList" placeholder="Наименование контрагента" required>
+									<input type="text" class="form-control" name="name" id="name" list="counterpartyNameList" placeholder="Наименование контрагента" required>
 								</div>
 								<datalist id="counterpartyNameList"></datalist>
 							</div>
@@ -380,7 +339,7 @@
 									<div class="input-group-prepend">
 										<div class="input-group-text">Номер контракта</div>
 									</div>
-									<input type="number" readonly class="form-control counterpartyContractCode" name="counterpartyContractCode" id="counterpartyContractCode" min="0" max="999999999999" placeholder="Номер контракта" required>
+									<input type="number" class="form-control counterpartyContractCode" name="counterpartyContractCode" id="counterpartyContractCode" min="0" placeholder="Номер контракта" required>
 								</div>
 								<div class="error-message" id="messageNumshop"></div>
 							</div>
@@ -392,7 +351,7 @@
 										<div class="input-group-text custom-tooltip">
 											Номера ТО
 											<sup class="px-1 font-weight-bold text-danger">?</sup>
-											<span class="tooltiptext">Укажите номера ТО, для которых вы хотите отредактировать график</span>
+											<span class="tooltiptext">Укажите номера ТО, которые будут ОТРЕДАКТИРОВАНЫ</span>
 										</div>
 									</div>
 									<textarea
@@ -400,39 +359,6 @@
 										placeholder="Просто скопируйте сюда строку или столбец с номерами магазинов или укажите номера магазинов через ПРОБЕЛ"
 										required
 									></textarea>
-								</div>
-							</div>
-
-							<div class="form-row justify-content-between mx-0 mb-3">
-								<div class="flex-grow-1 mr-2">
-									<label class="sr-only" for="quantum">Квант</label>
-									<div class="input-group">
-										<div class="input-group-prepend">
-											<div class="input-group-text custom-tooltip">
-												Квант
-												<sup class="px-1 font-weight-bold text-danger">?</sup>
-												<span class="tooltiptext">Укажите минимальный объем/кол-во/денежный эквивалент товара, который необходимо заказать, чтобы поставщик осуществил поставку</span>
-											</div>
-										</div>
-										<input type="number" class="form-control" name="quantum" id="quantum" min="0" step="1" placeholder="Целое число">
-									</div>
-								</div>
-								<div class="quantumMeasurements-container invisible">
-									<label class="sr-only" for="quantumMeasurements">Ед. измерения</label>
-									<div class="input-group">
-										<div class="input-group-prepend">
-											<div class="input-group-text">Ед. измерения</div>
-										</div>
-										<select id="quantumMeasurements" name="quantumMeasurements" class="form-control">
-											<option value="" selected hidden disabled>Выберите вариант</option>
-											<option value="c НДС">c НДС</option>
-											<option value="без НДС">без НДС</option>
-											<option value="кг">кг</option>
-											<option value="упаковок">упаковок</option>
-											<option value="штук">штук</option>
-											<option value="Дал">Дал</option>
-										</select>
-									</div>
 								</div>
 							</div>
 
@@ -458,7 +384,6 @@
 									</div>
 									<select id="orderFormationSchedule" name="orderFormationSchedule" class="form-control">
 										<option value="" selected hidden disabled>Выберите вариант</option>
-										<option value=""></option>
 										<option value="ч">Четный</option>
 										<option value="н">Нечетный</option>
 									</select>
@@ -477,7 +402,6 @@
 									</div>
 									<select id="orderShipmentSchedule" name="orderShipmentSchedule" class="form-control">
 										<option class="text-muted" value="" selected hidden disabled>Выберите вариант</option>
-										<option value=""></option>
 										<option value="ч">Четный</option>
 										<option value="н">Нечетный</option>
 									</select>
@@ -560,64 +484,6 @@
 									</div>
 								</div>
 							</div>
-						</div>
-					</div>
-					<div class="modal-footer">
-						<button type="button" class="btn btn-secondary" data-dismiss="modal">Отменить</button>
-						<button type="submit" class="btn btn-primary">Сохранить</button>
-					</div>
-				</form>
-			</div>
-		</div>
-	</div>
-
-
-	<!-- модальное окно установки и редактирования кодового имени контрагента -->
-	<div class="modal fade" id="setCodeNameModal" tabindex="-1" aria-labelledby="setCodeNameModalLabel" aria-hidden="true">
-		<div class="modal-dialog modal-lg">
-			<div class="modal-content">
-				<div class="modal-header">
-					<h1 class="modal-title fs-5 mt-0" id="setCodeNameModalLabel">Установка кодового имени контрагента</h1>
-					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-						<span aria-hidden="true">&times;</span>
-					</button>
-				</div>
-				<form id="setCodeNameForm" action="">
-					<div class="modal-body">
-						<div class="inputs-container">
-
-							<div class="mb-3">
-								<label class="sr-only" for="counterpartyCode">Код контрагента</label>
-								<div class="input-group">
-									<div class="input-group-prepend">
-										<div class="input-group-text">Код контрагента</div>
-									</div>
-									<input type="number" class="form-control" name="counterpartyCode" id="counterpartyCode" list="counterpartyCodeList" min="0" placeholder="Код контрагента" required>
-								</div>
-								<datalist id="counterpartyCodeList"></datalist>
-							</div>
-
-							<div class="mb-3">
-								<label class="sr-only" for="name">Наименование</label>
-								<div class="input-group">
-									<div class="input-group-prepend">
-										<div class="input-group-text">Наименование</div>
-									</div>
-									<input type="text" readonly class="form-control" name="name" id="name" list="counterpartyNameList" placeholder="Наименование контрагента">
-								</div>
-								<datalist id="counterpartyNameList"></datalist>
-							</div>
-
-							<div class="mb-3">
-								<label class="sr-only" for="codeNameOfQuantumCounterparty">Кодовое имя</label>
-								<div class="input-group">
-									<div class="input-group-prepend">
-										<div class="input-group-text">Кодовое имя</div>
-									</div>
-									<input type="text" class="form-control" name="codeNameOfQuantumCounterparty" id="codeNameOfQuantumCounterparty" placeholder="Кодовое имя">
-								</div>
-							</div>
-
 						</div>
 					</div>
 					<div class="modal-footer">

@@ -1,8 +1,10 @@
 package by.base.main.controller;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.sql.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,7 +39,7 @@ import by.base.main.service.util.MailService;
 import by.base.main.service.util.POIExcel;
 
 @Controller
-@RequestMapping("file")
+@RequestMapping(path = "file")
 public class MainFileController {
 	
 	@Autowired
@@ -78,6 +80,44 @@ public class MainFileController {
     	
     	return "Good!";
     }
+    
+    /**
+	 * Метод отвечает за скачивание документа инструкции для графика поставок для ТО
+	 * @param request
+	 * @param response
+	 * @return
+	 * @throws IOException
+	 */
+	@RequestMapping("/delivery-schedule-to/downdoad/instruction-trading-objects")
+	public String downdoadIncotermsInsuranceGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		String appPath = request.getServletContext().getRealPath("");
+		//File file = new File(appPath + "resources/others/Speedlogist.apk");
+		response.setHeader("content-disposition", "attachment;filename="+"instruction-trading-objects.docx");
+		response.setContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+		FileInputStream in = null;
+		OutputStream out = null;
+		try {
+			// Прочтите файл, который нужно загрузить, и сохраните его во входном потоке файла
+			in = new FileInputStream(appPath + "resources/others/docs/instruction-trading-objects.docx");
+			//  Создать выходной поток
+			out = response.getOutputStream();
+			//  Создать буфер
+			byte buffer[] = new byte[1024];
+			int len = 0;
+			//  Прочитать содержимое входного потока в буфер в цикле
+			while ((len = in.read(buffer)) > 0) {
+				out.write(buffer, 0, len);
+			}
+			in.close();
+			out.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}finally {
+			in.close();
+			out.close();
+		}
+		return "complited";
+	}
 	
 	private File convertMultiPartToFile(MultipartFile file, HttpServletRequest request ) throws IOException {
 		String appPath = request.getServletContext().getRealPath("");

@@ -1,5 +1,6 @@
 import { ajaxUtils } from './ajaxUtils.js'
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
+import { getStockAddress } from './globalRules/ordersRules.js'
 import {
 	addBelarusValueToCountryInputs,
 	addListnersToPoint,
@@ -8,7 +9,6 @@ import {
 	changeTemperatureInputRequired,
 	changeTruckLoadCapacityValue,
 	dangerousInputOnChangeHandler,
-	getStockAddress,
 	hideAddUnloadPointButton,
 	hideFormField,
 	inputEditBan,

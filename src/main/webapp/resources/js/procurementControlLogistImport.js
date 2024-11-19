@@ -14,6 +14,7 @@ import {
 	dangerousInputOnChangeHandler,
 	inputEditBan,
 	isInvalidPointForms,
+	isValidTnvdValue,
 	orderCargoInputOnChangeHandler,
 	orderPallInputOnChangeHandler,
 	orderWeightInputOnChangeHandler,
@@ -576,6 +577,11 @@ function routeFormSubmitHandler(e) {
 	// проверка наличия хотя бы одной точки выгрузки
 	if (!data.points.find(point => point.type === 'Выгрузка')) {
 		snackbar.show('Необходимо добавить точку выгрузки!')
+		return
+	}
+
+	if (!isValidTnvdValue(data)) {
+		snackbar.show('Неверное значение кода ТН ВЭД!')
 		return
 	}
 

@@ -2,7 +2,6 @@
 .custom-tooltip {
 	position: relative;
 	display: inline-block;
-	border-bottom: 1px dotted black;
 	/* If you want dots under the hoverable text */
 }
 
@@ -13,6 +12,8 @@
 	width: max-content;
 	background-color: #555;
 	color: #fff;
+	font-size: initial;
+	font-weight: normal;
 	text-align: center;
 	text-wrap: auto;
 	white-space: pre-wrap;

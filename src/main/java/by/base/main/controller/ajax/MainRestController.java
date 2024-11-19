@@ -310,6 +310,20 @@ public class MainRestController {
 	@Autowired
     private ServletContext servletContext;
 	
+	
+//	@GetMapping("/test")
+//	public Map<String, Object> testNewMethod(HttpServletRequest request) throws IOException, ParseException{
+//		
+//		java.util.Date t1 = new java.util.Date();
+//		Map<String, Object> responseMap = new HashMap<>();
+//		
+//		responseMap.put("list", scheduleService.getUnicCodeContractTO());
+//		java.util.Date t2 = new java.util.Date();
+//		System.out.println(t2.getTime()-t1.getTime() + " ms - testNewMethod" );
+//		responseMap.put("time", t2.getTime()-t1.getTime() + " ms");
+//		return responseMap;		
+//	}
+	
 	@GetMapping("/test")
 	public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException{
 		java.util.Date t1 = new java.util.Date();
@@ -319,6 +333,7 @@ public class MainRestController {
         String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
         
 		List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+//		List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to");
 //		List<String> emailsSupport = propertiesUtils.getValuesByPartialKey(servletContext, "email.orderSupport");
 //		emails.addAll(emailsSupport);
 		String appPath = servletContext.getRealPath("/");
@@ -342,7 +357,7 @@ public class MainRestController {
 		files.add(new File(appPath + "resources/others/" + fileName1100));
 		
 		
-		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от " + currentTimeString, "Автоматическая отправка TEST", files, emails);
+		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от TEST" + currentTimeString, "Тестовая отправка сообщения.\nНе обращайте внимания / игнорируте это сообщение", files, emails);
 		java.util.Date t2 = new java.util.Date();
 		System.out.println(t2.getTime()-t1.getTime() + " ms - testNewMethod" );
 		return responseMap;		
@@ -498,7 +513,60 @@ public class MainRestController {
 		return response;
 				
 	}
-
+	
+	/**
+	 * Метод возвращает контрагентов и коды контрактов к каждому контрагенту
+	 * @param request
+	 * @param response
+	 * @return
+	 * @throws IOException
+	 */
+	@GetMapping("/slots/delivery-schedule/getCounterpartyRC")
+	public Map<String, Object> getCounterpartyRC(HttpServletRequest request, HttpServletResponse response) throws IOException{
+		java.util.Date t1 = new java.util.Date();
+		Map<String, Object> responseMap = new HashMap<>();
+		responseMap.put("counterparty", scheduleService.getcounterpartyListRC());
+		responseMap.put("status", "200");
+		java.util.Date t2 = new java.util.Date();
+		responseMap.put("time", t2.getTime()-t1.getTime() + " ms" );
+		return responseMap;		
+	}
+	
+	/**
+	 * Метод возвращает контрагентов и коды контрактов к каждому контрагенту
+	 * @param request
+	 * @param response
+	 * @return
+	 * @throws IOException
+	 */
+	@GetMapping("/slots/delivery-schedule/getCounterpartyTO")
+	public Map<String, Object> getCounterpartyTO(HttpServletRequest request, HttpServletResponse response) throws IOException{
+		java.util.Date t1 = new java.util.Date();
+		Map<String, Object> responseMap = new HashMap<>();
+		responseMap.put("counterparty", scheduleService.getcounterpartyListTO());
+		responseMap.put("status", "200");
+		java.util.Date t2 = new java.util.Date();
+		responseMap.put("time", t2.getTime()-t1.getTime() + " ms" );
+		return responseMap;		
+	}
+	
+	/**
+	 * Метод возвращает уникальные значения кодов контрактов с данными по коду контрагентов
+	 * @param request
+	 * @param response
+	 * @return
+	 * @throws IOException
+	 */
+	@GetMapping("/slots/delivery-schedule/getUnicContractCodeHasCounterpartyTO")
+	public Map<String, Object> getUnicContractCodeHasCounterpartyTO(HttpServletRequest request, HttpServletResponse response) throws IOException{
+		java.util.Date t1 = new java.util.Date();
+		Map<String, Object> responseMap = new HashMap<>();
+		responseMap.put("counterparty", scheduleService.getUnicCodeContractTO());
+		responseMap.put("status", "200");
+		java.util.Date t2 = new java.util.Date();
+		responseMap.put("time", t2.getTime()-t1.getTime() + " ms" );
+		return responseMap;		
+	}
 	
 	@PostMapping("/logistics/deliveryShops/updateList")
 	public Map<String, Object> postdeliveryShopsAddList(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
@@ -1381,7 +1449,7 @@ public class MainRestController {
 		User user = getThisUser();
 		Integer role = user.getRoles().stream().findFirst().get().getIdRole();
 
-		if(role != 10 && role != 1) {
+		if(role != 10 && role != 1 && role != 14) {
 			response.put("status", "100");
 			response.put("message", "Отказано! Данная роль не обладает правами на действие");
 			response.put("info", "Отказано! Данная роль не обладает правами на действие");
@@ -1401,6 +1469,9 @@ public class MainRestController {
 		String statusStr = null;
 		
 		switch (status) {
+		case "0":
+			statusStr = "delete";
+			break;
 		case "10":
 			statusStr = "cancel";
 			break;
@@ -1419,6 +1490,23 @@ public class MainRestController {
 		response.put("info", "Статус изменен");
 		return response;		
 	}
+	
+	/**
+	 * Метод меняет кодовое имя кванта по коду контрагента
+	 * @param request
+	 * @param num
+	 * @param status
+	 * @return
+	 */
+	@GetMapping("/slots/delivery-schedule/changeNameOfQuantum/{num}&{name}")
+	public Map<String, Object> getChangeNameOfQuantum(HttpServletRequest request, @PathVariable String num, @PathVariable String name) {
+		Map<String, Object> response = new HashMap<String, Object>();	
+		
+		if(name.trim().equals("null")) name = null;
+		response.put("count", scheduleService.updateScheduleBycounterpartyCodeHascodeNameOfQuantumCounterparty(Long.parseLong(num.trim()), name));
+		response.put("status", "200");
+		return response;
+		}
 	
 	
 	
@@ -1481,6 +1569,9 @@ public class MainRestController {
 		schedule.setMultipleOfTruck(jsonMainObject.get("multipleOfTruck") == null || jsonMainObject.get("multipleOfTruck").toString().isEmpty() ? null : jsonMainObject.get("multipleOfTruck").toString().equals("true") ? true : false);
 		schedule.setMachineMultiplicity(jsonMainObject.get("machineMultiplicity") == null || jsonMainObject.get("machineMultiplicity").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("machineMultiplicity").toString()));
 		schedule.setConnectionSupply(jsonMainObject.get("connectionSupply") == null || jsonMainObject.get("connectionSupply").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("connectionSupply").toString()));
+//		schedule.setCodeNameOfQuantumCounterparty(jsonMainObject.get("codeNameOfQuantumCounterparty") == null || jsonMainObject.get("codeNameOfQuantumCounterparty").toString().isEmpty() ? null : jsonMainObject.get("codeNameOfQuantumCounterparty").toString());
+//		schedule.setQuantumMeasurements(jsonMainObject.get("quantumMeasurements") == null || jsonMainObject.get("quantumMeasurements").toString().isEmpty() ? null : jsonMainObject.get("quantumMeasurements").toString());
+//		schedule.setQuantum(jsonMainObject.get("quantum") == null || jsonMainObject.get("quantum").toString().isEmpty() ? null : Double.parseDouble(jsonMainObject.get("quantum").toString()));
 
 		String history = user.getSurname() + " " + user.getName() + ";" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")) + ";update\n"; 
 		
@@ -1571,6 +1662,9 @@ public class MainRestController {
 		schedule.setOrderFormationSchedule(jsonMainObject.get("orderFormationSchedule") == null || jsonMainObject.get("orderFormationSchedule").toString().isEmpty() ? null : jsonMainObject.get("orderFormationSchedule").toString());
 		schedule.setOrderShipmentSchedule(jsonMainObject.get("orderShipmentSchedule") == null || jsonMainObject.get("orderShipmentSchedule").toString().isEmpty() ? null : jsonMainObject.get("orderShipmentSchedule").toString());
 		schedule.setToType(jsonMainObject.get("toType") == null || jsonMainObject.get("toType").toString().isEmpty() ? null : jsonMainObject.get("toType").toString());
+//		schedule.setCodeNameOfQuantumCounterparty(jsonMainObject.get("codeNameOfQuantumCounterparty") == null || jsonMainObject.get("codeNameOfQuantumCounterparty").toString().isEmpty() ? null : jsonMainObject.get("codeNameOfQuantumCounterparty").toString());
+//		schedule.setQuantumMeasurements(jsonMainObject.get("quantumMeasurements") == null || jsonMainObject.get("quantumMeasurements").toString().isEmpty() ? null : jsonMainObject.get("quantumMeasurements").toString());
+//		schedule.setQuantum(jsonMainObject.get("quantum") == null || jsonMainObject.get("quantum").toString().isEmpty() ? null : Double.parseDouble(jsonMainObject.get("quantum").toString()));
 		
 		User user = getThisUser();
 		String history = user.getSurname() + " " + user.getName() + ";" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")) + ";create\n"; 
@@ -1585,7 +1679,9 @@ public class MainRestController {
 		properties = new Properties();
 		properties.load(fileInputStream);
 		String text = "Создан новый график поставок сотрудником: " + user.getSurname() + " " + user.getName() + " \nПоставщик: " + schedule.getName();
-		mailService.sendSimpleEmailTwiceUsers(request, "Новый график поставок", text, properties.getProperty("email.orderSupport.1"), properties.getProperty("email.orderSupport.2"));
+//		mailService.sendSimpleEmailTwiceUsers(request, "Новый график поставок на РЦ", text, properties.getProperty("email.orderSupport.1"), properties.getProperty("email.orderSupport.2"));
+		List<String> emails = propertiesUtils.getValuesByPartialKey(request.getServletContext(), "email.orderSupport");
+		mailService.sendEmailToUsers(request, "Новый график поставок на РЦ", text, emails);
 		
 		response.put("status", "200");
 		response.put("message", "График поставок  "+schedule.getName()+" создан");
@@ -1604,6 +1700,8 @@ public class MainRestController {
 	@PostMapping("/slots/delivery-schedule/createTO")
 	public Map<String, Object> postCreateDeliveryScheduleTO(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
 		Map<String, Object> response = new HashMap<String, Object>();
+		boolean isNeedEMail = false;
+		
 		if(str == null) {
 			response.put("status", "100");
 			response.put("message", "Тело запроса = null");
@@ -1617,6 +1715,10 @@ public class MainRestController {
 			response.put("status", "100");
 			response.put("message", "Отсутствует номер контаркта");
 			return response;
+		}
+		
+		if(scheduleService.getScheduleByNumContract(Long.parseLong(jsonMainObject.get("counterpartyContractCode").toString())) == null) {
+			isNeedEMail = true;
 		}
 		
 		JSONArray shopsArray = (JSONArray) parser.parse(jsonMainObject.get("numStock").toString());	
@@ -1660,9 +1762,11 @@ public class MainRestController {
 		schedule.setMachineMultiplicity(jsonMainObject.get("machineMultiplicity") == null || jsonMainObject.get("machineMultiplicity").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("machineMultiplicity").toString()));
 		schedule.setConnectionSupply(jsonMainObject.get("connectionSupply") == null || jsonMainObject.get("connectionSupply").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("connectionSupply").toString()));
 		schedule.setIsNotCalc(false);
-		schedule.setStatus(10);
+//		schedule.setStatus(10);
+		schedule.setStatus(jsonMainObject.get("status") == null || jsonMainObject.get("status").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("status").toString()));
 		
-		schedule.setIsDayToDay(false);
+		schedule.setIsDayToDay("true".equals(jsonMainObject.get("isDayToDay").toString()));
+		
 		
 		String type = jsonMainObject.get("type") == null || jsonMainObject.get("type").toString().isEmpty() ? null : jsonMainObject.get("type").toString();
 		if(type !=null) {
@@ -1687,6 +1791,9 @@ public class MainRestController {
 		schedule.setToType(toType);
 		schedule.setOrderFormationSchedule(jsonMainObject.get("orderFormationSchedule") == null || jsonMainObject.get("orderFormationSchedule").toString().isEmpty() ? null : jsonMainObject.get("orderFormationSchedule").toString());
 		schedule.setOrderShipmentSchedule(jsonMainObject.get("orderShipmentSchedule") == null || jsonMainObject.get("orderShipmentSchedule").toString().isEmpty() ? null : jsonMainObject.get("orderShipmentSchedule").toString());
+		schedule.setCodeNameOfQuantumCounterparty(jsonMainObject.get("codeNameOfQuantumCounterparty") == null || jsonMainObject.get("codeNameOfQuantumCounterparty").toString().isEmpty() ? null : jsonMainObject.get("codeNameOfQuantumCounterparty").toString());
+		schedule.setQuantumMeasurements(jsonMainObject.get("quantumMeasurements") == null || jsonMainObject.get("quantumMeasurements").toString().isEmpty() ? null : jsonMainObject.get("quantumMeasurements").toString());
+		schedule.setQuantum(jsonMainObject.get("quantum") == null || jsonMainObject.get("quantum").toString().isEmpty() ? null : Double.parseDouble(jsonMainObject.get("quantum").toString()));
 		
 		User user = getThisUser();
 		String history = user.getSurname() + " " + user.getName() + ";" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")) + ";create\n"; 
@@ -1711,18 +1818,276 @@ public class MainRestController {
 //		Integer id = scheduleService.saveSchedule(schedule);		
 		
 		//тут отправляем на почту сообщение
-//		String appPath = request.getServletContext().getRealPath("");
-//		FileInputStream fileInputStream = new FileInputStream(appPath + "resources/properties/email.properties");
-//		properties = new Properties();
-//		properties.load(fileInputStream);
-//		String text = "Создан новый график поставок сотрудником: " + user.getSurname() + " " + user.getName() + " \nПоставщик: " + schedule.getName();
-//		mailService.sendSimpleEmailTwiceUsers(request, "Новый график поставок", text, properties.getProperty("email.orderSupport.1"), properties.getProperty("email.orderSupport.2"));
+		if(isNeedEMail) {
+			String appPath = request.getServletContext().getRealPath("");
+			FileInputStream fileInputStream = new FileInputStream(appPath + "resources/properties/email.properties");
+			properties = new Properties();
+			properties.load(fileInputStream);
+			String text = "Создан новый график поставок на ТО сотрудником: " + user.getSurname() + " " + user.getName() + " \nПоставщик: " + schedule.getName() + "; График номер: " + jsonMainObject.get("counterpartyContractCode").toString();
+			List<String> emails = propertiesUtils.getValuesByPartialKey(request.getServletContext(), "email.orl.head");
+			mailService.sendEmailToUsers(request, "Новый график поставок на ТО", text, emails);
+//			mailService.sendSimpleEmailTwiceUsers(request, "Новый график поставок", text, properties.getProperty("email.orderSupport.1"), properties.getProperty("email.orderSupport.2"));	--
+		}
 		
 		response.put("status", "200");
 		response.put("message", "Графики поставок созданы");
 //		response.put("idSchedule", id.toString());
 		return response;		
 	}
+	
+	/**
+	 * метод редактирует все графики поставок по коду контракта.
+	 * Редактирует только те поля, которые пришли.
+	 * Те полая, которые не пришли - не редактирует
+	 * @param request
+	 * @param str
+	 * @return
+	 * @throws ParseException
+	 * @throws IOException
+	 */
+	@PostMapping("/slots/delivery-schedule/editTOByCounterpartyContractCodeOnly")
+	public Map<String, Object> postEditDeliveryScheduleTOContractCodeOnly(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+		Map<String, Object> response = new HashMap<String, Object>();
+		if(str == null) {
+			response.put("status", "100");
+			response.put("message", "Тело запроса = null");
+			return response;
+		}
+		
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		
+		if(jsonMainObject.get("counterpartyContractCode") == null) {
+			response.put("status", "100");
+			response.put("message", "Отсутствует номер контаркта");
+			return response;
+		}
+	
+		List<Schedule> schedules = scheduleService.getSchedulesListTOContract(jsonMainObject.get("counterpartyContractCode").toString());
+		for (Schedule schedule : schedules) {
+			scheduleService.updateSchedule(editScheduleByRequest2(schedule, jsonMainObject));
+		}
+		response.put("status", "200");
+		response.put("message", "Графики поставок отредактированы");
+		return response;		
+	}
+	
+	/**
+	 * метод редактирует все графики поставок по коду контракта И по магазинам
+	 * @param request
+	 * @param str
+	 * @return
+	 * @throws ParseException
+	 * @throws IOException
+	 */
+	@PostMapping("/slots/delivery-schedule/editTOByCounterpartyAndShop")
+	public Map<String, Object> postEditDeliveryScheduleTO(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+		Map<String, Object> response = new HashMap<String, Object>();
+		if(str == null) {
+			response.put("status", "100");
+			response.put("message", "Тело запроса = null");
+			return response;
+		}
+		
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		
+		if(jsonMainObject.get("counterpartyContractCode") == null) {
+			response.put("status", "100");
+			response.put("message", "Отсутствует номер контаркта");
+			return response;
+		}
+		
+		JSONArray shopsArray = (JSONArray) parser.parse(jsonMainObject.get("numStock").toString());	
+		
+		Map<Integer, Shop> shopMap =  shopService.getShopMap();
+		Map<Integer, Shop> targetShopMap = new HashMap<Integer, Shop>();
+		for (Object object : shopsArray) {
+			Integer numShop = Integer.parseInt(object.toString());
+			Shop shop =  shopMap.get(numShop);
+			if(shop!=null) {
+				targetShopMap.put(numShop, shop);
+				
+			}else {
+				response.put("status", "100");
+				response.put("message", "В базе данных остуствует магазин " + numShop + ". Обратитесь в отдел транспортной лгистики");
+				return response;
+			}
+		}
+		
+		for (Entry<Integer, Shop> entry: targetShopMap.entrySet()) {
+			Schedule schedule = scheduleService.getScheduleByNumContractAndNumStock(Long.parseLong(jsonMainObject.get("counterpartyContractCode").toString()), entry.getKey());
+			schedule.setDateLastChanging(Date.valueOf(LocalDate.now()));
+			scheduleService.updateSchedule(editScheduleByRequestForRC(schedule, jsonMainObject));
+		}
+		response.put("status", "200");
+		response.put("message", "Графики поставок отредактированы");
+		return response;		
+	}
+	
+	
+	
+	/**
+	 * Метод отвечает за редактирование графика поставок, если есть поле, то редактирует, если нет - не редактирует
+	 * + за писывает историю о редактировании
+	 * @return
+	 */
+	@Deprecated
+	private Schedule editScheduleByRequest2 (Schedule schedule, JSONObject jsonMainObject) {
+		if (jsonMainObject.get("counterpartyCode") != null && !jsonMainObject.get("counterpartyCode").toString().isEmpty()) {
+		    schedule.setCounterpartyCode(Long.parseLong(jsonMainObject.get("counterpartyCode").toString()));
+		}
+
+		if (jsonMainObject.get("counterpartyContractCode") != null && !jsonMainObject.get("counterpartyContractCode").toString().isEmpty()) {
+		    schedule.setCounterpartyContractCode(Long.parseLong(jsonMainObject.get("counterpartyContractCode").toString()));
+		}
+
+		if (jsonMainObject.get("supplies") != null && !jsonMainObject.get("supplies").toString().isEmpty()) {
+		    schedule.setSupplies(Integer.parseInt(jsonMainObject.get("supplies").toString()));
+		}
+
+		if (jsonMainObject.get("runoffCalculation") != null && !jsonMainObject.get("runoffCalculation").toString().isEmpty()) {
+		    schedule.setRunoffCalculation(Integer.parseInt(jsonMainObject.get("runoffCalculation").toString()));
+		}
+
+		if (jsonMainObject.get("name") != null && !jsonMainObject.get("name").toString().isEmpty()) {
+		    schedule.setName(jsonMainObject.get("name").toString());
+		}
+
+		if (jsonMainObject.get("note") != null && !jsonMainObject.get("note").toString().isEmpty()) {
+		    schedule.setNote(jsonMainObject.get("note").toString());
+		}
+
+		if (jsonMainObject.get("monday") != null && !jsonMainObject.get("monday").toString().isEmpty()) {
+		    schedule.setMonday(jsonMainObject.get("monday").toString());
+		}
+
+		if (jsonMainObject.get("tuesday") != null && !jsonMainObject.get("tuesday").toString().isEmpty()) {
+		    schedule.setTuesday(jsonMainObject.get("tuesday").toString());
+		}
+
+		if (jsonMainObject.get("wednesday") != null && !jsonMainObject.get("wednesday").toString().isEmpty()) {
+		    schedule.setWednesday(jsonMainObject.get("wednesday").toString());
+		}
+
+		if (jsonMainObject.get("thursday") != null && !jsonMainObject.get("thursday").toString().isEmpty()) {
+		    schedule.setThursday(jsonMainObject.get("thursday").toString());
+		}
+
+		if (jsonMainObject.get("friday") != null && !jsonMainObject.get("friday").toString().isEmpty()) {
+		    schedule.setFriday(jsonMainObject.get("friday").toString());
+		}
+
+		if (jsonMainObject.get("saturday") != null && !jsonMainObject.get("saturday").toString().isEmpty()) {
+		    schedule.setSaturday(jsonMainObject.get("saturday").toString());
+		}
+
+		if (jsonMainObject.get("sunday") != null && !jsonMainObject.get("sunday").toString().isEmpty()) {
+		    schedule.setSunday(jsonMainObject.get("sunday").toString());
+		}
+
+		if (jsonMainObject.get("tz") != null && !jsonMainObject.get("tz").toString().isEmpty()) {
+		    schedule.setTz(jsonMainObject.get("tz").toString());
+		}
+
+		if (jsonMainObject.get("tp") != null && !jsonMainObject.get("tp").toString().isEmpty()) {
+		    schedule.setTp(jsonMainObject.get("tp").toString());
+		}
+
+		if (jsonMainObject.get("comment") != null && !jsonMainObject.get("comment").toString().isEmpty()) {
+		    schedule.setComment(jsonMainObject.get("comment").toString());
+		}
+
+		if (jsonMainObject.get("description") != null && !jsonMainObject.get("description").toString().isEmpty()) {
+		    schedule.setDescription(jsonMainObject.get("description").toString());
+		}
+
+		if (jsonMainObject.get("multipleOfPallet") != null && !jsonMainObject.get("multipleOfPallet").toString().isEmpty()) {
+		    schedule.setMultipleOfPallet("true".equals(jsonMainObject.get("multipleOfPallet").toString()));
+		}
+
+		if (jsonMainObject.get("multipleOfTruck") != null && !jsonMainObject.get("multipleOfTruck").toString().isEmpty()) {
+		    schedule.setMultipleOfTruck("true".equals(jsonMainObject.get("multipleOfTruck").toString()));
+		}
+
+		if (jsonMainObject.get("machineMultiplicity") != null && !jsonMainObject.get("machineMultiplicity").toString().isEmpty()) {
+		    schedule.setMachineMultiplicity(Integer.parseInt(jsonMainObject.get("machineMultiplicity").toString()));
+		}
+
+		if (jsonMainObject.get("connectionSupply") != null && !jsonMainObject.get("connectionSupply").toString().isEmpty()) {
+		    schedule.setConnectionSupply(Integer.parseInt(jsonMainObject.get("connectionSupply").toString()));
+		}
+
+		if (jsonMainObject.get("status") != null && !jsonMainObject.get("status").toString().isEmpty()) {
+		    schedule.setStatus(Integer.parseInt(jsonMainObject.get("status").toString()));
+		}
+
+		if (jsonMainObject.get("orderFormationSchedule") != null && !jsonMainObject.get("orderFormationSchedule").toString().isEmpty()) {
+		    schedule.setOrderFormationSchedule(jsonMainObject.get("orderFormationSchedule").toString());
+		}
+
+		if (jsonMainObject.get("orderShipmentSchedule") != null && !jsonMainObject.get("orderShipmentSchedule").toString().isEmpty()) {
+		    schedule.setOrderShipmentSchedule(jsonMainObject.get("orderShipmentSchedule").toString());
+		}
+
+		if (jsonMainObject.get("isNotCalc") != null && !jsonMainObject.get("isNotCalc").toString().isEmpty()) {
+		    schedule.setIsNotCalc("true".equals(jsonMainObject.get("isNotCalc").toString()));
+		}
+
+		if (jsonMainObject.get("isDayToDay") != null && !jsonMainObject.get("isDayToDay").toString().isEmpty()) {
+		    schedule.setIsDayToDay("true".equals(jsonMainObject.get("isDayToDay").toString()));
+		}
+		schedule.setDateLastChanging(Date.valueOf(LocalDate.now()));
+
+		
+		User user = getThisUser();
+		String history = user.getSurname() + " " + user.getName() + ";" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")) + ";edit\n"; 
+		
+		schedule.setHistory((schedule.getHistory() != null ? schedule.getHistory() : "") + history);
+		return schedule;
+	}
+	
+	
+	private Schedule editScheduleByRequestForRC (Schedule schedule, JSONObject jsonMainObject) {
+		schedule.setCounterpartyCode(jsonMainObject.get("counterpartyCode") == null || jsonMainObject.get("counterpartyCode").toString().isEmpty() ? null : Long.parseLong(jsonMainObject.get("counterpartyCode").toString()));
+		schedule.setCounterpartyContractCode(jsonMainObject.get("counterpartyContractCode") == null || jsonMainObject.get("counterpartyContractCode").toString().isEmpty() ? null : Long.parseLong(jsonMainObject.get("counterpartyContractCode").toString()));
+		schedule.setSupplies(jsonMainObject.get("supplies") == null || jsonMainObject.get("supplies").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("supplies").toString()));
+		schedule.setRunoffCalculation(jsonMainObject.get("runoffCalculation") == null || jsonMainObject.get("runoffCalculation").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("runoffCalculation").toString()));
+		schedule.setName(jsonMainObject.get("name") == null || jsonMainObject.get("name").toString().isEmpty() ? null : jsonMainObject.get("name").toString());
+		schedule.setNote(jsonMainObject.get("note") == null || jsonMainObject.get("note").toString().isEmpty() ? null : jsonMainObject.get("note").toString());
+		schedule.setMonday(jsonMainObject.get("monday") == null || jsonMainObject.get("monday").toString().isEmpty() ? null : jsonMainObject.get("monday").toString());
+		schedule.setTuesday(jsonMainObject.get("tuesday") == null || jsonMainObject.get("tuesday").toString().isEmpty() ? null : jsonMainObject.get("tuesday").toString());
+		schedule.setWednesday(jsonMainObject.get("wednesday") == null || jsonMainObject.get("wednesday").toString().isEmpty() ? null : jsonMainObject.get("wednesday").toString());
+		schedule.setThursday(jsonMainObject.get("thursday") == null || jsonMainObject.get("thursday").toString().isEmpty() ? null : jsonMainObject.get("thursday").toString());
+		schedule.setFriday(jsonMainObject.get("friday") == null || jsonMainObject.get("friday").toString().isEmpty() ? null : jsonMainObject.get("friday").toString());
+		schedule.setSaturday(jsonMainObject.get("saturday") == null || jsonMainObject.get("saturday").toString().isEmpty() ? null : jsonMainObject.get("saturday").toString());
+		schedule.setSunday(jsonMainObject.get("sunday") == null || jsonMainObject.get("sunday").toString().isEmpty() ? null : jsonMainObject.get("sunday").toString());
+		schedule.setTz(jsonMainObject.get("tz") == null || jsonMainObject.get("tz").toString().isEmpty() ? null : jsonMainObject.get("tz").toString());
+		schedule.setTp(jsonMainObject.get("tp") == null || jsonMainObject.get("tp").toString().isEmpty() ? null : jsonMainObject.get("tp").toString());
+		schedule.setComment(jsonMainObject.get("comment") == null || jsonMainObject.get("comment").toString().isEmpty() ? null : jsonMainObject.get("comment").toString());
+		schedule.setDescription(jsonMainObject.get("description") == null || jsonMainObject.get("description").toString().isEmpty() ? null : jsonMainObject.get("description").toString());
+//		schedule.setMultipleOfPallet(jsonMainObject.get("multipleOfPallet") == null || jsonMainObject.get("multipleOfPallet").toString().isEmpty() ? null : jsonMainObject.get("multipleOfPallet").toString().equals("true") ? true : false);
+//		schedule.setMultipleOfTruck(jsonMainObject.get("multipleOfTruck") == null || jsonMainObject.get("multipleOfTruck").toString().isEmpty() ? null : jsonMainObject.get("multipleOfTruck").toString().equals("true") ? true : false);
+//		schedule.setMachineMultiplicity(jsonMainObject.get("machineMultiplicity") == null || jsonMainObject.get("machineMultiplicity").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("machineMultiplicity").toString()));
+//		schedule.setConnectionSupply(jsonMainObject.get("connectionSupply") == null || jsonMainObject.get("connectionSupply").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("connectionSupply").toString()));
+//		schedule.setStatus(jsonMainObject.get("status") == null || jsonMainObject.get("status").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("status").toString()));
+		schedule.setOrderFormationSchedule(jsonMainObject.get("orderFormationSchedule") == null || jsonMainObject.get("orderFormationSchedule").toString().isEmpty() ? null : jsonMainObject.get("orderFormationSchedule").toString());
+		schedule.setOrderShipmentSchedule(jsonMainObject.get("orderShipmentSchedule") == null || jsonMainObject.get("orderShipmentSchedule").toString().isEmpty() ? null : jsonMainObject.get("orderShipmentSchedule").toString());
+//		schedule.setIsNotCalc(jsonMainObject.get("isNotCalc") == null || jsonMainObject.get("isNotCalc").toString().isEmpty() ? null : jsonMainObject.get("isNotCalc").toString().equals("true") ? true : false);
+//		schedule.setIsDayToDay(jsonMainObject.get("isDayToDay") == null || jsonMainObject.get("isDayToDay").toString().isEmpty() ? null : jsonMainObject.get("isDayToDay").toString().equals("true") ? true : false);
+//		schedule.setCodeNameOfQuantumCounterparty(jsonMainObject.get("codeNameOfQuantumCounterparty") == null || jsonMainObject.get("codeNameOfQuantumCounterparty").toString().isEmpty() ? null : jsonMainObject.get("codeNameOfQuantumCounterparty").toString());
+		schedule.setQuantumMeasurements(jsonMainObject.get("quantumMeasurements") == null || jsonMainObject.get("quantumMeasurements").toString().isEmpty() ? null : jsonMainObject.get("quantumMeasurements").toString());
+		schedule.setQuantum(jsonMainObject.get("quantum") == null || jsonMainObject.get("quantum").toString().isEmpty() ? null : Double.parseDouble(jsonMainObject.get("quantum").toString()));
+		
+		
+		User user = getThisUser();
+		String history = user.getSurname() + " " + user.getName() + ";" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")) + ";edit\n"; 
+		
+		schedule.setHistory((schedule.getHistory() != null ? schedule.getHistory() : "") + history);
+		return schedule;
+	}
+	
+	
 	
 	/**
 	 * метод, который отдаёт все графики поставок на РЦ
@@ -3156,11 +3521,11 @@ public class MainRestController {
 	 */
 	@RequestMapping(value = "/slots/delivery-schedule/loadTO", method = RequestMethod.POST, consumes = {
 			MediaType.MULTIPART_FORM_DATA_VALUE })
-	public Map<String, String> postLoadExcelPlanTO (Model model, HttpServletRequest request, HttpSession session,
+	public Map<String, Object> postLoadExcelPlanTO (Model model, HttpServletRequest request, HttpSession session,
 			@RequestParam(value = "excel", required = false) MultipartFile excel,
 			@RequestParam(value = "toType", required = false) String toType)	
 			throws InvalidFormatException, IOException, ServiceException {
-		Map<String, String> response = new HashMap<String, String>();	
+		Map<String, Object> response = new HashMap<String, Object>();	
 		File file1 = poiExcel.getFileByMultipartTarget(excel, request, "delivery-schedule.xlsx");
 		
 		List<Schedule> schedules = new ArrayList<Schedule>();
@@ -3175,6 +3540,37 @@ public class MainRestController {
 		});
 		
 		response.put("200", "Загружено");
+		response.put("size", schedules.size());
+		return response;
+	}
+	
+	/**
+	 * прогрузка графика поставок из excel на РЦ КАМАКО
+	 * @param model
+	 * @param request
+	 * @param session
+	 * @param excel
+	 * @return
+	 * @throws InvalidFormatException
+	 * @throws IOException
+	 * @throws ServiceException
+	 */
+	@RequestMapping(value = "/slots/delivery-schedule/loadTOkam", method = RequestMethod.POST, consumes = {
+			MediaType.MULTIPART_FORM_DATA_VALUE })
+	public Map<String, String> postLoadExcelPlanTOkam (Model model, HttpServletRequest request, HttpSession session,
+			@RequestParam(value = "excel", required = false) MultipartFile excel,
+			@RequestParam(value = "toType", required = false) String toType)	
+			throws InvalidFormatException, IOException, ServiceException {
+		Map<String, String> response = new HashMap<String, String>();	
+		File file1 = poiExcel.getFileByMultipartTarget(excel, request, "delivery-schedule.xlsx");
+		
+		List<Schedule> schedules = new ArrayList<Schedule>();
+		try {
+			schedules = poiExcel.readColumns21And22(file1);
+		}catch (Exception e) {
+		}
+		
+		response.put("200", "Обновлено");
 //		response.put("body", schedules.toString());
 		return response;
 	}
@@ -6587,6 +6983,7 @@ public class MainRestController {
 				|| order.getManager().split(";")[1].trim().equals("PozdnyakovR@dobronom.by")
 				|| order.getManager().split(";")[1].trim().equals("KuzmickayaE@dobronom.by")
 				|| order.getManager().split(";")[1].trim().equals("VegeroK@dobronom.by")
+				|| order.getManager().split(";")[1].trim().equals("ProrovskayaM@dobronom.by")
 				|| order.getManager().split(";")[1].trim().equals("YakzhikE@dobronom.by") // нет такого?
 				|| order.getManager().split(";")[1].trim().equals("TishalovichA@dobronom.by")){
 			flag = false;
@@ -6792,6 +7189,7 @@ public class MainRestController {
 				|| order.getManager().split(";")[1].trim().equals("PozdnyakovR@dobronom.by")
 				|| order.getManager().split(";")[1].trim().equals("KuzmickayaE@dobronom.by")
 				|| order.getManager().split(";")[1].trim().equals("VegeroK@dobronom.by")
+				|| order.getManager().split(";")[1].trim().equals("ProrovskayaM@dobronom.by")
 				|| order.getManager().split(";")[1].trim().equals("YakzhikE@dobronom.by") // нет такого?
 				|| order.getManager().split(";")[1].trim().equals("TishalovichA@dobronom.by")){
 			flag = false;

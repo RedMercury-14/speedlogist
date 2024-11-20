@@ -141,10 +141,6 @@ public class RouteDTO {
 	@JsonFormat(pattern = "HH-mm")
 	private LocalTime timeUnloadActually;
 
-//	private Set<RouteHasShop> roteHasShop;
-
-	private Set<OrderDTO> orders;
-
 	@JsonFormat(pattern = "HH-mm")
 	private Time timeUnloadPreviouslyStock;
 
@@ -240,10 +236,10 @@ public class RouteDTO {
 	 * форматер для простого отображения дат во view
 	 */
 	private DateTimeFormatter simpleFormatterDate = DateTimeFormatter.ofPattern("dd.MM.yyy");
+	
+//	private Set<RouteHasShop> roteHasShop;
 
-	private DateTimeFormatter mainFormatterDate = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
-	private DateTimeFormatter mainFormatterTime = DateTimeFormatter.ofPattern("HH-mm");
+	private Set<OrderDTO> orders;
 
 	public RouteDTO() {
 		Date dateNow = Date.valueOf(LocalDate.now());

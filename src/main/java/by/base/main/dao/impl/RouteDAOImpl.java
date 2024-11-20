@@ -21,10 +21,13 @@ import org.hibernate.query.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import com.dto.OrderDTO;
 import com.dto.RouteDTO;
 
 import by.base.main.dao.RouteDAO;
+import by.base.main.model.Address;
 import by.base.main.model.Message;
+import by.base.main.model.Order;
 import by.base.main.model.Route;
 import by.base.main.model.Truck;
 import by.base.main.model.User;
@@ -116,7 +119,13 @@ public class RouteDAOImpl implements RouteDAO {
 		return object;
 	}
 
-	private static final String queryGetListAsDate = "from Route r LEFT JOIN FETCH r.orders ord LEFT JOIN FETCH ord.addresses addr LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d where r.dateLoadPreviously BETWEEN :frmdate and :todate";
+	private static final String queryGetListAsDate = "from Route r LEFT JOIN FETCH r.orders ord "
+			+ "LEFT JOIN FETCH ord.addresses addr "
+			+ "LEFT JOIN FETCH r.user u "
+			+ "LEFT JOIN FETCH r.truck tr "
+			+ "LEFT JOIN FETCH r.roteHasShop rhs "
+			+ "LEFT JOIN FETCH r.driver d "
+			+ "where r.dateLoadPreviously BETWEEN :frmdate and :todate";
 
 	@Override
 	@Transactional
@@ -126,6 +135,76 @@ public class RouteDAOImpl implements RouteDAO {
 		theObject.setParameter("frmdate", dateStart, TemporalType.DATE);
 		theObject.setParameter("todate", dateFinish, TemporalType.DATE);
 		List<Route> objects = theObject.getResultList();
+		// Преобразуем связанные заказы в DTO
+	    for (Route route : objects) {
+	        Set<Order> orders = route.getOrders(); // Инициализируем заказы
+	        Set<OrderDTO> orderDTOs = orders.stream()
+	            .map(order -> new OrderDTO(
+	                order.getIdOrder(),
+	                order.getCounterparty(),
+	                order.getContact(),
+	                order.getCargo(),
+	                order.getTypeLoad(),
+	                order.getMethodLoad(),
+	                order.getTypeTruck(),
+	                order.getTemperature(),
+	                order.getControl(),
+	                order.getComment(),
+	                order.getStatus(),
+	                order.getDateCreate(),
+	                order.getDateDelivery(),
+	                order.getManager(),
+	                order.getTelephoneManager(),
+	                order.getStacking(),
+	                order.getLogist(),
+	                order.getLogistTelephone(),
+	                order.getMarketNumber(),
+	                order.getOnloadWindowDate(),
+	                order.getOnloadWindowTime(),
+	                order.getLoadNumber(),
+	                order.getNumStockDelivery(),
+	                order.getPall(),
+	                order.getWay(),
+	                order.getOnloadTime(),
+	                order.getIncoterms(),
+	                order.getChangeStatus(),
+	                order.getNeedUnloadPoint(),
+	                order.getIdRamp(),
+	                order.getTimeDelivery(),
+	                order.getTimeUnload(),
+	                order.getLoginManager(),
+	                order.getSku(),
+	                order.getMonoPall(),
+	                order.getMixPall(),
+	                order.getIsInternalMovement(),
+	                order.getMailInfo(),
+	                order.getSlotInfo(),
+	                order.getDateCreateMarket(),
+	                order.getMarketInfo(),
+	                order.getMarketContractType(),
+	                order.getMarketContractGroupId(),
+	                order.getMarketContractNumber(),
+	                order.getMarketContractorId(),
+	                order.getNumProduct(),
+	                order.getStatusYard(),
+	                order.getUnloadStartYard(),
+	                order.getUnloadFinishYard(),
+	                order.getPallFactYard(),
+	                order.getWeightFactYard(),
+	                order.getMarketOrderSumFirst(),
+	                order.getMarketOrderSumFinal(),
+	                order.getArrivalFactYard(),
+	                order.getRegistrationFactYard(),
+	                order.getAddresses().stream()
+	                     .findFirst() // Извлекаем первый адрес, если он существует
+	                     .map(Address::getBodyAddress)
+	                     .orElse(null),
+	                order.getLastDatetimePointLoad(),
+	                order.getDateOrderOrl()
+	            )).collect(Collectors.toSet());
+	        // Если нужно, добавьте OrderDTO обратно в Route или сохраните для дальнейшей обработки
+	        route.setOrdersDTO(orderDTOs); // Добавьте это поле в `Route`, если требуется
+	    }
 		return objects;
 	}
 
@@ -444,62 +523,9 @@ public class RouteDAOImpl implements RouteDAO {
 			+ "d.name,"
 			+ "d.surname,"
 			+ "d.patronymic)";
-	
-//	private static final String routeConstruct = "SELECT new com.dto.RouteDTO(r.idRoute, "
-//			+ "r.numStock, "
-//			+ "r.dateLoadPreviously, "
-//			+ "r.timeLoadPreviously, "
-//			+ "r.timeLoadPreviouslyStock, "
-//			+ "r.actualTimeArrival, "
-//			+ "r.startLoad, "
-//			+ "r.finishLoad, "
-//			+ "r.deliveryDocuments, "
-//			+ "r.isSanitization, "
-//			+ "r.temperature, "
-//			+ "r.nameLoader,"
-//			+ "r.ramp, "
-//			+ "r.totalLoadPall, "
-//			+ "r.totalCargoWeight, "
-//			+ "r.lines, "
-//			+ "r.comments, "
-//			+ "r.routeDirection, "
-//			+ "r.startPrice, "
-//			+ "r.finishPrice, "
-//			+ "r.time, "
-//			+ "r.statusRoute, "
-//			+ "r.statusStock, "
-//			+ "r.typeTrailer, "
-//			+ "r.startCurrency, "
-//			+ "r.userComments, "
-//			+ "r.stepCost, "
-//			+ "r.optimalCost, "
-//			+ "r.customer, "
-//			+ "r.run, "
-//			+ "r.logistInfo, "
-//			+ "r.tnvd, "
-//			+ "r.way, "
-//			+ "r.expeditionCost, "
-//			+ "r.loadNumber, "
-//			+ "r.dateLoadActually, "
-//			+ "r.timeLoadActually, "
-//			+ "r.dateUnloadActually, "
-//			+ "r.timeUnloadActually, "
-//			+ "r.timeUnloadPreviouslyStock, "
-//			+ "r.dateUnloadPreviouslyStock, "
-//			+ "r.createDate, "
-//			+ "r.createTime, "
-//			+ "r.onloadWindowDate, "
-//			+ "r.onloadWindowTime, "
-//			+ "r.onloadTime, "
-//			+ "r.logistComment, "
-//			+ "r.truckInfo, "
-//			+ "r.kmInfo, "
-//			+ "r.cargoInfo, "
-//			+ "r.routeDirectionInternational, "
-//			+ "r.typeLoad, "
-//			+ "r.methodLoad)";
-
+		
 	private static final String queryGetRouteListAsDateDTO = routeConstruct + " from Route r LEFT JOIN r.orders ord LEFT JOIN ord.addresses addr LEFT JOIN r.user u LEFT JOIN r.truck tr LEFT JOIN r.roteHasShop rhs LEFT JOIN r.driver d where r.dateLoadPreviously BETWEEN :frmdate and :todate ";
+	
 	@Transactional
 	@Override
 	public List<RouteDTO> getRouteListAsDateDTO(Date dateStart, Date dateFinish) {
@@ -508,6 +534,14 @@ public class RouteDAOImpl implements RouteDAO {
 		theObject.setParameter("frmdate", dateStart, TemporalType.DATE);
 		theObject.setParameter("todate", dateFinish, TemporalType.DATE);
 		List<RouteDTO> objects = theObject.getResultList();
+//		for (RouteDTO routeDTO : objects) {
+//			Route route = new Route();
+//			route.setIdRoute(routeDTO.getIdRoute());
+//			Query<OrderDTO> orders = currentSession.createQuery(queryGetRouteListAsDateDTOFOrOrders, OrderDTO.class);
+//			orders.setParameter("route", route);
+//			Set<OrderDTO> res = orders.getResultList().stream().collect(Collectors.toSet());
+//			routeDTO.setOrders(res);
+//		}
 		return objects;
 	}
 }

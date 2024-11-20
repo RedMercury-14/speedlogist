@@ -35,6 +35,7 @@ import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
+import com.dto.OrderDTO;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -226,8 +227,11 @@ public class Route implements Serializable{
 	@ManyToMany(fetch = FetchType.LAZY, 
 			cascade = { CascadeType.ALL })
 	@JoinTable(name = "route_has_order", joinColumns = @JoinColumn(name = "route_idroute"), inverseJoinColumns = @JoinColumn(name = "order_idorder"))
-	@JsonBackReference //возможно зря ТУТ ФАТАЛКА
+//	@JsonBackReference // ТУТ БЫЛО ВКЛЮЧЕНО!!!!
+	@JsonIgnore
 	private Set<Order> orders;
+	
+	
 	
 	@Column(name="timeUnload_previouslyStock")
 	@JsonFormat(pattern = "HH-mm")
@@ -304,6 +308,8 @@ public class Route implements Serializable{
 	@Transient
 	private String cargoWeightForAct;
 	
+	@Transient
+	private Set<OrderDTO> ordersDTO;
 	
 
 
@@ -335,6 +341,18 @@ public class Route implements Serializable{
 
 	
 	
+	public Set<OrderDTO> getOrdersDTO() {
+		return ordersDTO;
+	}
+
+
+
+	public void setOrdersDTO(Set<OrderDTO> ordersDTO) {
+		this.ordersDTO = ordersDTO;
+	}
+
+
+
 	public String getTypeLoad() {
 		return typeLoad;
 	}

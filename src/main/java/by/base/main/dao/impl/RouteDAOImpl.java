@@ -21,6 +21,8 @@ import org.hibernate.query.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import com.dto.RouteDTO;
+
 import by.base.main.dao.RouteDAO;
 import by.base.main.model.Message;
 import by.base.main.model.Route;
@@ -52,7 +54,7 @@ public class RouteDAOImpl implements RouteDAO {
 		currentSession.saveOrUpdate(route);
 
 	}
-	
+
 	private static final String queryGetObjById = "from Route r LEFT JOIN FETCH r.orders ord LEFT JOIN FETCH ord.addresses addr LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d where r.idRoute=:idRoute";
 
 	@Override
@@ -115,6 +117,7 @@ public class RouteDAOImpl implements RouteDAO {
 	}
 
 	private static final String queryGetListAsDate = "from Route r LEFT JOIN FETCH r.orders ord LEFT JOIN FETCH ord.addresses addr LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d where r.dateLoadPreviously BETWEEN :frmdate and :todate";
+
 	@Override
 	@Transactional
 	public List<Route> getRouteListAsDate(Date dateStart, Date dateFinish) {
@@ -122,7 +125,7 @@ public class RouteDAOImpl implements RouteDAO {
 		Query<Route> theObject = currentSession.createQuery(queryGetListAsDate, Route.class);
 		theObject.setParameter("frmdate", dateStart, TemporalType.DATE);
 		theObject.setParameter("todate", dateFinish, TemporalType.DATE);
-		List<Route> objects = theObject.getResultList();		
+		List<Route> objects = theObject.getResultList();
 		return objects;
 	}
 
@@ -149,12 +152,12 @@ public class RouteDAOImpl implements RouteDAO {
 	public List<Route> getRouteListAsStatus(String stat1, String stat2) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<Route> theObject;
-		if(stat1.equals("1")&&stat2.equals("1")) {
+		if (stat1.equals("1") && stat2.equals("1")) {
 			theObject = currentSession.createQuery(queryGetListAsStatus1And1, Route.class);
 			System.out.println("queryGetListAsStatus1And1");
-		}else {
+		} else {
 			theObject = currentSession.createQuery(queryGetListAsStatus, Route.class);
-		}		
+		}
 		theObject.setParameter("frstat", stat1);
 		theObject.setParameter("tostat", stat2);
 		List<Route> objects = theObject.getResultList();
@@ -186,6 +189,7 @@ public class RouteDAOImpl implements RouteDAO {
 	}
 
 	private static final String queryUpdate = "UPDATE Route SET finishPrice =: finishPrice, startCurrency=: currency, user=:user, statusRoute=:statusRoute where idRoute=:idRoute";
+
 	@Override
 	@Transactional
 	public int updateRouteInBase(Integer idRoute, Integer finishCost, String currency, User user, String statusRoute) {
@@ -197,10 +201,11 @@ public class RouteDAOImpl implements RouteDAO {
 		query.setParameter("user", user);
 		query.setParameter("statusRoute", statusRoute);
 		int result = query.executeUpdate();
-		return result;		
+		return result;
 	}
-	
+
 	private static final String queryUpdateSimple = "UPDATE Route SET statusRoute=:statusRoute where idRoute=:idRoute";
+
 	@Override
 	@Transactional
 	public int updateRouteInBase(Integer idRoute, String statusRoute) {
@@ -209,27 +214,30 @@ public class RouteDAOImpl implements RouteDAO {
 		query.setParameter("idRoute", idRoute);
 		query.setParameter("statusRoute", statusRoute);
 		int result = query.executeUpdate();
-		return result;		
+		return result;
 	}
 
 	@Override
 	@Transactional
-	public List<Route> getRouteListAsRouteDirection(Route route) { //09.10.2023
+	public List<Route> getRouteListAsRouteDirection(Route route) { // 09.10.2023
 		Session currentSession = sessionFactory.getCurrentSession();
 		String SQL;
-		if(route.getRouteDirection().contains("[")) {
-			SQL = "SELECT * FROM `route` WHERE `routeDirection` LIKE '"+route.getRouteDirection().split(" \\[")[0]+"%'";
-		}else {
-			SQL = "SELECT * FROM `route` WHERE `routeDirection` LIKE '"+route.getRouteDirection().split(" N")[0]+"%'";
-		}		
+		if (route.getRouteDirection().contains("[")) {
+			SQL = "SELECT * FROM `route` WHERE `routeDirection` LIKE '" + route.getRouteDirection().split(" \\[")[0]
+					+ "%'";
+		} else {
+			SQL = "SELECT * FROM `route` WHERE `routeDirection` LIKE '" + route.getRouteDirection().split(" N")[0]
+					+ "%'";
+		}
 		List<Route> theObject = currentSession.createSQLQuery(SQL).addEntity(Route.class).list();
 		return theObject;
 	}
-	
+
 	private static final String queryGetListAsDateAndUser = "from Route r LEFT JOIN FETCH r.orders LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d where r.dateLoadPreviously BETWEEN :frmdate and :todate AND r.user =:user";
+
 	@Override
 	@Transactional
-	public List<Route> getRouteListAsDateAndUser(Date dateStart, Date dateFinish, User user) {		
+	public List<Route> getRouteListAsDateAndUser(Date dateStart, Date dateFinish, User user) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<Route> theObject = currentSession.createQuery(queryGetListAsDateAndUser, Route.class);
 		theObject.setParameter("frmdate", dateStart, TemporalType.DATE);
@@ -240,6 +248,7 @@ public class RouteDAOImpl implements RouteDAO {
 	}
 
 	private static final String queryUpdateDates = "UPDATE Route r SET r.dateLoadActually =:dateLoadActually, r.dateUnloadActually =:dateUnloadActually, r.timeLoadActually=:timeLoadActually, r.timeUnloadActually=:timeUnloadActually, r.truck=:truck, r.driver =:driver where idRoute=:idRoute";
+
 	@Transactional
 	@Override
 	@Deprecated
@@ -250,15 +259,17 @@ public class RouteDAOImpl implements RouteDAO {
 		query.setParameter("idRoute", idRoute);
 		query.setParameter("dateLoadActually", dateLoadActually, TemporalType.DATE);
 		query.setParameter("dateUnloadActually", dateUnloadActually, TemporalType.DATE);
-		query.setParameter("timeLoadActually", timeLoadActually.toLocalTime(), TemporalType.TIME); //стедать стрингом
-		query.setParameter("timeUnloadActually", timeUnloadActually.toLocalTime(), TemporalType.TIME); //стедать стрингом
+		query.setParameter("timeLoadActually", timeLoadActually.toLocalTime(), TemporalType.TIME); // стедать стрингом
+		query.setParameter("timeUnloadActually", timeUnloadActually.toLocalTime(), TemporalType.TIME); // стедать
+																										// стрингом
 		query.setParameter("truck", truck);
 		query.setParameter("driver", driver);
 		int result = query.executeUpdate();
-		return result;	
+		return result;
 	}
 
 	private static final String queryUpdateDateDoute = "UPDATE Route SET dateLoadPreviously =:dateLoadPreviously where idRoute=:idRoute";
+
 	@Transactional
 	@Override
 	public int updateRouteInBase(Integer idRoute, Date dateLoadPreviously) {
@@ -267,10 +278,11 @@ public class RouteDAOImpl implements RouteDAO {
 		query.setParameter("idRoute", idRoute);
 		query.setParameter("dateLoadPreviously", dateLoadPreviously, TemporalType.DATE);
 		int result = query.executeUpdate();
-		return result;	
+		return result;
 	}
-	
+
 	private static final String queryUpdateDrop = "UPDATE Route r SET r.dateLoadActually =NULL, r.dateUnloadActually =NULL, r.timeLoadActually=NULL, r.timeUnloadActually=NULL, r.truck=NULL, r.driver =NULL where r.idRoute=:idRoute";
+
 	@Transactional
 	@Override
 	public int updateDropRouteDateOfCarrier(Integer idRoute) {
@@ -290,6 +302,7 @@ public class RouteDAOImpl implements RouteDAO {
 	}
 
 	private static final String queryGetObjByCompanyNameMessage = "from Message where status=1 AND companyName=:companuName AND date BETWEEN :frmdate and :todate";
+
 	@Transactional
 	@Override
 	public List<Route> getRouteListParticipated(User user) {
@@ -302,8 +315,9 @@ public class RouteDAOImpl implements RouteDAO {
 		query1.setParameter("todate", finish, TemporalType.DATE);
 		Set<String> idRoutes = new HashSet<String>();
 		List<Message> objects = query1.getResultList();
-		ChatEnpoint.internationalMessegeList.stream().filter(m->m.getFromUser().equals(user.getLogin())).forEach(m-> idRoutes.add(m.getIdRoute())); // получаем idRoute что находятся в кеше
-		objects.forEach(m-> idRoutes.add(m.getIdRoute()));
+		ChatEnpoint.internationalMessegeList.stream().filter(m -> m.getFromUser().equals(user.getLogin()))
+				.forEach(m -> idRoutes.add(m.getIdRoute())); // получаем idRoute что находятся в кеше
+		objects.forEach(m -> idRoutes.add(m.getIdRoute()));
 		Set<Route> routes = new HashSet<Route>();
 		for (String idStr : idRoutes) {
 			routes.add(getRouteById(Integer.parseInt(idStr)));
@@ -312,6 +326,7 @@ public class RouteDAOImpl implements RouteDAO {
 	}
 
 	private static final String queryПetRouteListByUserHasPeriod = "from Route r LEFT JOIN FETCH r.orders LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d where r.user =:user AND r.dateLoadPreviously BETWEEN :frmdate and :todate";
+
 	@Transactional
 	@Override
 	public List<Route> getRouteListByUserHasPeriod(User user, LocalDate start, LocalDate end) {
@@ -329,6 +344,7 @@ public class RouteDAOImpl implements RouteDAO {
 	}
 
 	private static final String queryGetMaintenanceListAsDate = "from Route r LEFT JOIN FETCH r.orders ord LEFT JOIN FETCH ord.addresses addr LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d where r.comments ='maintenance' AND r.dateLoadPreviously BETWEEN :frmdate and :todate";
+
 	@Override
 	@Transactional
 	public List<Route> getMaintenanceListAsDate(Date dateStart, Date dateFinish) {
@@ -339,8 +355,9 @@ public class RouteDAOImpl implements RouteDAO {
 		List<Route> objects = theObject.getResultList();
 		return objects;
 	}
-	
+
 	private static final String queryGetMaintenanceListAsDateAndLogin = "from Route r LEFT JOIN FETCH r.orders ord LEFT JOIN FETCH ord.addresses addr LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d where r.comments ='maintenance' AND r.user =:user AND r.dateLoadPreviously BETWEEN :frmdate and :todate";
+
 	@Transactional
 	@Override
 	public List<Route> getMaintenanceListAsDateAndLogin(Date dateStart, Date dateFinish, User user) {
@@ -350,6 +367,147 @@ public class RouteDAOImpl implements RouteDAO {
 		theObject.setParameter("todate", dateFinish, TemporalType.DATE);
 		theObject.setParameter("user", user);
 		List<Route> objects = theObject.getResultList();
+		return objects;
+	}
+
+	private static final String routeConstruct = "SELECT new com.dto.RouteDTO(r.idRoute, "
+			+ "r.numStock, "
+			+ "r.dateLoadPreviously, "
+			+ "r.timeLoadPreviously, "
+			+ "r.timeLoadPreviouslyStock, "
+			+ "r.actualTimeArrival, "
+			+ "r.startLoad, "
+			+ "r.finishLoad, "
+			+ "r.deliveryDocuments, "
+			+ "r.isSanitization, "
+			+ "r.temperature, "
+			+ "r.nameLoader,"
+			+ "r.ramp, "
+			+ "r.totalLoadPall, "
+			+ "r.totalCargoWeight, "
+			+ "r.lines, "
+			+ "r.comments, "
+			+ "r.routeDirection, "
+			+ "r.startPrice, "
+			+ "r.finishPrice, "
+			+ "r.time, "
+			+ "r.statusRoute, "
+			+ "r.statusStock, "
+			+ "r.typeTrailer, "
+			+ "r.startCurrency, "
+			+ "r.userComments, "
+			+ "r.stepCost, "
+			+ "r.optimalCost, "
+			+ "r.customer, "
+			+ "r.run, "
+			+ "r.logistInfo, "
+			+ "r.tnvd, "
+			+ "r.way, "
+			+ "r.expeditionCost, "
+			+ "r.loadNumber, "
+			+ "r.dateLoadActually, "
+			+ "r.timeLoadActually, "
+			+ "r.dateUnloadActually, "
+			+ "r.timeUnloadActually, "
+			+ "r.timeUnloadPreviouslyStock, "
+			+ "r.dateUnloadPreviouslyStock, "
+			+ "r.createDate, "
+			+ "r.createTime, "
+			+ "r.onloadWindowDate, "
+			+ "r.onloadWindowTime, "
+			+ "r.onloadTime, "
+			+ "r.logistComment, "
+			+ "r.truckInfo, "
+			+ "r.kmInfo, "
+			+ "r.cargoInfo, "
+			+ "r.routeDirectionInternational, "
+			+ "r.typeLoad, "
+			+ "r.methodLoad, "
+			+ "u.companyName, " //-----------
+			+ "tr.numTruck, "
+			+ "tr.modelTruck, "
+			+ "tr.brandTruck, "
+			+ "tr.typeTrailer, "
+			+ "tr.brandTrailer, "
+			+ "tr.ownerTruck, "
+			+ "tr.cargoCapacity, "
+			+ "tr.pallCapacity, "
+			+ "tr.numTrailer, "
+			+ "tr.hitchType, "
+			+ "tr.info, "
+			+ "tr.volumeTrailer, "
+			+ "tr.dimensionsBody, "
+			+ "tr.number_axes, "
+			+ "tr.technicalCertificate, "
+			+ "d.telephone, "
+			+ "d.numPass,"
+			+ "d.name,"
+			+ "d.surname,"
+			+ "d.patronymic)";
+	
+//	private static final String routeConstruct = "SELECT new com.dto.RouteDTO(r.idRoute, "
+//			+ "r.numStock, "
+//			+ "r.dateLoadPreviously, "
+//			+ "r.timeLoadPreviously, "
+//			+ "r.timeLoadPreviouslyStock, "
+//			+ "r.actualTimeArrival, "
+//			+ "r.startLoad, "
+//			+ "r.finishLoad, "
+//			+ "r.deliveryDocuments, "
+//			+ "r.isSanitization, "
+//			+ "r.temperature, "
+//			+ "r.nameLoader,"
+//			+ "r.ramp, "
+//			+ "r.totalLoadPall, "
+//			+ "r.totalCargoWeight, "
+//			+ "r.lines, "
+//			+ "r.comments, "
+//			+ "r.routeDirection, "
+//			+ "r.startPrice, "
+//			+ "r.finishPrice, "
+//			+ "r.time, "
+//			+ "r.statusRoute, "
+//			+ "r.statusStock, "
+//			+ "r.typeTrailer, "
+//			+ "r.startCurrency, "
+//			+ "r.userComments, "
+//			+ "r.stepCost, "
+//			+ "r.optimalCost, "
+//			+ "r.customer, "
+//			+ "r.run, "
+//			+ "r.logistInfo, "
+//			+ "r.tnvd, "
+//			+ "r.way, "
+//			+ "r.expeditionCost, "
+//			+ "r.loadNumber, "
+//			+ "r.dateLoadActually, "
+//			+ "r.timeLoadActually, "
+//			+ "r.dateUnloadActually, "
+//			+ "r.timeUnloadActually, "
+//			+ "r.timeUnloadPreviouslyStock, "
+//			+ "r.dateUnloadPreviouslyStock, "
+//			+ "r.createDate, "
+//			+ "r.createTime, "
+//			+ "r.onloadWindowDate, "
+//			+ "r.onloadWindowTime, "
+//			+ "r.onloadTime, "
+//			+ "r.logistComment, "
+//			+ "r.truckInfo, "
+//			+ "r.kmInfo, "
+//			+ "r.cargoInfo, "
+//			+ "r.routeDirectionInternational, "
+//			+ "r.typeLoad, "
+//			+ "r.methodLoad)";
+
+	private static final String queryGetRouteListAsDateDTO = routeConstruct + " from Route r LEFT JOIN r.orders ord LEFT JOIN ord.addresses addr LEFT JOIN r.user u LEFT JOIN r.truck tr LEFT JOIN r.roteHasShop rhs LEFT JOIN r.driver d where r.dateLoadPreviously BETWEEN :frmdate and :todate ";
+	@Transactional
+	@Override
+	public List<RouteDTO> getRouteListAsDateDTO(Date dateStart, Date dateFinish) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<RouteDTO> theObject = currentSession.createQuery(queryGetRouteListAsDateDTO, RouteDTO.class);
+		theObject.setParameter("frmdate", dateStart, TemporalType.DATE);
+		theObject.setParameter("todate", dateFinish, TemporalType.DATE);
+		List<RouteDTO> objects = theObject.getResultList();
 		return objects;
 	}
 }

@@ -77,6 +77,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.dto.OrderDTO;
 import com.dto.PlanResponce;
+import com.dto.RouteDTO;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
@@ -399,6 +400,26 @@ public class MainRestController {
 //		System.out.println(t2.getTime()-t1.getTime() + " ms - preloadTEST" );
 //		return responseMap;		
 //	}
+	
+	/**
+	 * отдаёт все маршруты для новой страницы менеджер международных маршрутов
+	 * @param request
+	 * @param dateStart 2024-03-15
+	 * @param dateFinish 2024-03-15
+	 * @return
+	 */
+	@GetMapping("/manager/getRouteDTOForInternational/{dateStart}&{dateFinish}")
+	public Set<RouteDTO> getRouteDTOForInternational(HttpServletRequest request, @PathVariable Date dateStart, @PathVariable Date dateFinish) {
+		java.util.Date t1 = new java.util.Date();
+		Set<RouteDTO> routes = new HashSet<RouteDTO>();
+		List<RouteDTO>targetRoutes = routeService.getRouteListAsDateDTO(dateStart, dateFinish);
+		targetRoutes.stream()
+			.filter(r-> r.getComments() != null && r.getComments().equals("international") && Integer.parseInt(r.getStatusRoute())<=8)
+			.forEach(r -> routes.add(r)); // проверяет созданы ли точки вручную, и отдаёт только международные маршруты	
+		java.util.Date t2 = new java.util.Date();
+		System.out.println("getRouteDTOForInternational :" + (t2.getTime() - t1.getTime()) + " ms");
+		return routes;
+	}
 	
 //	@PostMapping("/398")
 	@GetMapping("/398")

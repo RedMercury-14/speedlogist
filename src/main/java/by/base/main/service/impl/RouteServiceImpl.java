@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.dto.RouteDTO;
+
 import by.base.main.dao.RouteDAO;
 import by.base.main.dao.UserDAO;
 import by.base.main.model.Route;
@@ -199,6 +201,11 @@ public class RouteServiceImpl implements RouteService{
 	public List<Route> getMaintenanceListAsDateAndLogin(Date dateStart, Date dateFinish, User user) {
 		// TODO Auto-generated method stub
 		return routeDAO.getMaintenanceListAsDateAndLogin(dateStart, dateFinish, user);
+	}
+
+	@Override
+	public List<RouteDTO> getRouteListAsDateDTO(Date dateStart, Date dateFinish) {
+		return routeDAO.getRouteListAsDateDTO(dateStart, dateFinish);
 	}
 
 	

@@ -1,6 +1,6 @@
 import { AG_GRID_LOCALE_RU } from "./AG-Grid/ag-grid-locale-RU.js"
 import { ResetStateToolPanel, dateComparator, gridColumnLocalState, gridFilterLocalState } from "./AG-Grid/ag-grid-utils.js"
-import { changeGridTableMarginTop, dateHelper, debounce, getData, getRouteStatus } from "./utils.js"
+import { changeGridTableMarginTop, dateHelper, debounce, getData, getRouteStatus, isAdmin } from "./utils.js"
 import { ws } from './global.js'
 import { wsHead } from './global.js'
 import { snackbar } from "./snackbar/snackbar.js"
@@ -12,9 +12,12 @@ const PAGE_NAME = 'internationalManagerNew'
 const LOCAL_STORAGE_KEY = `AG_Grid_settings_to_${PAGE_NAME}`
 const DATES_KEY = `searchDates_to_${PAGE_NAME}`
 const ROW_INDEX_KEY = `AG_Grid_rowIndex_to_${PAGE_NAME}`
+const role = document.querySelector('#role').value
 
 const getRouteBaseUrl = '../../api/manager/getRouteForInternational/'
 const getRouteMessageBaseUrl = `../../api/info/message/numroute/`
+
+const getProposalBaseUrl = `../../api/logistics/getProposal/`
 
 export const rowClassRules = {
 	'finishRow': params => params.node.data.statusRoute === '4',
@@ -59,6 +62,14 @@ const columnDefs = [
 	{ headerName: 'Данные по водителю', field: 'driverInfo',  wrapText: true, autoHeight: true,},
 	{ headerName: 'Заказчик', field: 'customer', wrapText: true, autoHeight: true, minWidth: 160, width: 160, },
 	{ headerName: 'Паллеты/Объем', field: 'cargoInfo', },
+	{ headerName: 'ID заявки', field: 'idOrder', cellRenderer: idORderRenderer, },
+	{ headerName: 'Сверка УКЗ', field: 'ukz', wrapText: true, autoHeight: true, },
+	{ headerName: 'Груз', field: 'cargo', wrapText: true, autoHeight: true, },
+	{ headerName: 'Тип загрузки авто', field: 'typeLoad', },
+	{ headerName: 'Тип кузова', field: 'typeTruck', },
+	{ headerName: 'Способ загрузки авто', field: 'methodLoad', },
+	{ headerName: 'Температурные условия', field: 'temperature', wrapText: true, autoHeight: true, },
+	{ headerName: 'Контактное лицо контрагента', field: 'contact', wrapText: true, autoHeight: true, },
 	{ headerName: 'Общий вес', field: 'totalCargoWeight', valueFormatter: params => params.value + ' кг' },
 	{ headerName: 'Комментарии', field: 'userComments', wrapText: true, autoHeight: true, minWidth: 240, width: 640, },
 	{ headerName: 'Начальная стоимость перевозки', field: 'startRouteCostInfo', wrapText: true, autoHeight: true, },
@@ -363,7 +374,7 @@ async function updateTable(gridOptions, searchForm, data) {
 		gridOptions.api.showNoRowsOverlay()
 		return
 	}
-
+	// console.log(data)
 	const mappingData = await getMappingData(routes)
 
 	gridOptions.api.setRowData(mappingData)
@@ -389,6 +400,15 @@ async function getMappingData(data) {
 			: 0
 
 		const isSavedRow = false
+		const orderInfo = getOrderInfo(route)
+		const idOrder =  orderInfo.idOrder ? orderInfo.idOrder : ''
+		const contact = orderInfo.contact ? orderInfo.contact : ''
+		const ukz = orderInfo.control ? 'Необходима сверка УКЗ' : 'Нет'
+		const cargo = orderInfo ? orderInfo.cargo : ''
+		const typeLoad = orderInfo.typeLoad ? orderInfo.typeLoad : ''
+		const typeTruck = orderInfo.typeTruck ? orderInfo.typeTruck : ''
+		const methodLoad = orderInfo.methodLoad ? orderInfo.methodLoad : ''
+		const temperature = orderInfo.temperature ? orderInfo.temperature : ''
 
 		return {
 			...route,
@@ -405,6 +425,14 @@ async function getMappingData(data) {
 			startRouteCostInfo,
 			statusRouteToView,
 			counterparty,
+			idOrder,
+			contact,
+			ukz,
+			cargo,
+			typeLoad,
+			typeTruck,
+			methodLoad,
+			temperature,
 		}
 	}))
 }
@@ -479,6 +507,17 @@ function getContextMenuItems(params) {
 		"excelExport",
 	]
 
+	if (isAdmin(role)) {
+		result.push("separator")
+		result.push({
+			name: `Скачать заявку для перевозчика`,
+			icon: uiIcons.fileArrowDown,
+			action: () => {
+				getProposal(idRoute)
+			},
+		})
+	}
+
 	return result
 }
 
@@ -532,6 +571,15 @@ function offerCountRenderer(params) {
 		const linkHTML = `<a class="text-primary" id="tenderOfferLink" data-idroute="${idRoute}" data-status="${status}" href="${link}">История предложений</a>`
 		return `${linkHTML}`
 	}
+}
+
+// рендерер ID заявки со ссылкой
+function idORderRenderer(params) {
+	const value = params.value
+	const idOrder = value ? value : ''
+	const link = `./ordersLogist/order?idOrder=${idOrder}`
+	const linkHTML = `<a class="text-primary" href="${link}">${idOrder}</a>`
+	return idOrder ? linkHTML : ''
 }
 
 // асинхронное обновление количества предложений для конкретного маршрута
@@ -680,6 +728,15 @@ function errorCallback(error) {
 	snackbar.show('Возникла ошибка - обновите страницу!')
 }
 
+function getProposal(idRoute) {
+	fetch(getProposalBaseUrl + idRoute)
+		.then(res => {
+			console.log(res)
+			snackbar.show('Выполнено')
+		})
+		.catch(errorCallback)
+}
+
 
 // функции получения данных для таблицы
 function getUnloadToView(route) {
@@ -762,4 +819,29 @@ function getCounterparty(route) {
 	if (array.length < 2) return ''
 	const counterparty = array[0].replace('<', '')
 	return counterparty
+}
+function getOrderInfo(route) {
+	const orderInfo = {
+		idOrder: null,
+		contact: null,
+		control: null,
+		cargo: null,
+		typeLoad: null,
+		typeTruck: null,
+		methodLoad: null,
+		temperature: null,
+	}
+	const orders = route.ordersDTO
+	if (!orders || !orders.length) return orderInfo
+	const order = orders[0]
+	return {
+		idOrder: order.idOrder,
+		contact: order.contact,
+		control: order.control,
+		cargo: order.cargo,
+		typeLoad: order.typeLoad,
+		typeTruck: order.typeTruck,
+		methodLoad: order.methodLoad,
+		temperature: order.temperature,
+	}
 }

@@ -96,6 +96,8 @@ import com.graphhopper.util.JsonFeature;
 import com.graphhopper.util.PointList;
 import com.graphhopper.util.Translation;
 import com.graphhopper.util.shapes.GHPoint;
+import com.itextpdf.text.DocumentException;
+
 import by.base.main.controller.MainController;
 import by.base.main.dto.MarketDataFor398Request;
 import by.base.main.dto.MarketDataForClear;
@@ -145,6 +147,7 @@ import by.base.main.service.util.CheckOrderNeeds;
 import by.base.main.service.util.CustomJSONParser;
 import by.base.main.service.util.MailService;
 import by.base.main.service.util.OrderCreater;
+import by.base.main.service.util.PDFWriter;
 import by.base.main.service.util.POIExcel;
 import by.base.main.service.util.PropertiesUtils;
 import by.base.main.service.util.ReaderSchedulePlan;
@@ -286,6 +289,9 @@ public class MainRestController {
 	@Autowired
     private TGUserService tgUserService;
 	
+	@Autowired
+	private PDFWriter pdfWriter;
+	
 	private static String classLog;
 	private static String marketJWT;
 	//в отдельный файл
@@ -325,44 +331,44 @@ public class MainRestController {
 //		return responseMap;		
 //	}
 	
-	@GetMapping("/test")
-	public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException{
-		java.util.Date t1 = new java.util.Date();
-		Map<String, Object> responseMap = new HashMap<>();
-		// Получаем текущую дату для имени файла
-        LocalDate currentTime = LocalDate.now();
-        String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-        
-		List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
-//		List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to");
-//		List<String> emailsSupport = propertiesUtils.getValuesByPartialKey(servletContext, "email.orderSupport");
-//		emails.addAll(emailsSupport);
-		String appPath = servletContext.getRealPath("/");
-		
-		String fileName1200 = "1200 (----Холодный----).xlsx";
-		String fileName1100 = "1100 График прямой сухой.xlsx";
-		
-		try {
-			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
-					appPath + "resources/others/" + fileName1200);
-			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("сухой").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
-					appPath + "resources/others/" + fileName1100);
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.err.println("Ошибка формирование EXCEL");
-		}
-		
-//		response.setHeader("content-disposition", "attachment;filename="+fileName+".xlsx");
-		List<File> files = new ArrayList<File>();
-		files.add(new File(appPath + "resources/others/" + fileName1200));
-		files.add(new File(appPath + "resources/others/" + fileName1100));
-		
-		
-		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от TEST" + currentTimeString, "Тестовая отправка сообщения.\nНе обращайте внимания / игнорируте это сообщение", files, emails);
-		java.util.Date t2 = new java.util.Date();
-		System.out.println(t2.getTime()-t1.getTime() + " ms - testNewMethod" );
-		return responseMap;		
-	}
+//	@GetMapping("/test")
+//	public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException{
+//		java.util.Date t1 = new java.util.Date();
+//		Map<String, Object> responseMap = new HashMap<>();
+//		// Получаем текущую дату для имени файла
+//        LocalDate currentTime = LocalDate.now();
+//        String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+//        
+//		List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+////		List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to");
+////		List<String> emailsSupport = propertiesUtils.getValuesByPartialKey(servletContext, "email.orderSupport");
+////		emails.addAll(emailsSupport);
+//		String appPath = servletContext.getRealPath("/");
+//		
+//		String fileName1200 = "1200 (----Холодный----).xlsx";
+//		String fileName1100 = "1100 График прямой сухой.xlsx";
+//		
+//		try {
+//			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+//					appPath + "resources/others/" + fileName1200);
+//			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("сухой").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+//					appPath + "resources/others/" + fileName1100);
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//			System.err.println("Ошибка формирование EXCEL");
+//		}
+//		
+////		response.setHeader("content-disposition", "attachment;filename="+fileName+".xlsx");
+//		List<File> files = new ArrayList<File>();
+//		files.add(new File(appPath + "resources/others/" + fileName1200));
+//		files.add(new File(appPath + "resources/others/" + fileName1100));
+//		
+//		
+//		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от TEST" + currentTimeString, "Тестовая отправка сообщения.\nНе обращайте внимания / игнорируте это сообщение", files, emails);
+//		java.util.Date t2 = new java.util.Date();
+//		System.out.println(t2.getTime()-t1.getTime() + " ms - testNewMethod" );
+//		return responseMap;		
+//	}
 //	
 //	@GetMapping("/test")
 //	public Map<String, Object> test(HttpServletRequest request, HttpServletResponse response){
@@ -400,6 +406,22 @@ public class MainRestController {
 //		System.out.println(t2.getTime()-t1.getTime() + " ms - preloadTEST" );
 //		return responseMap;		
 //	}
+	
+	@GetMapping("/logistics/getProposal/{idRoute}")
+	public Map<String, Object> getProposal(HttpServletRequest request, @PathVariable String idRoute) throws NumberFormatException, FileNotFoundException, DocumentException {
+		java.util.Date t1 = new java.util.Date();
+		Map<String, Object> response = new HashMap<>();
+		
+		pdfWriter.getProposal(request, routeService.getRouteById(Integer.parseInt(idRoute)));
+		
+		response.put("status", "200");
+		response.put("idRoute", idRoute);
+		response.put("message", "Метод в разработке");
+		
+		java.util.Date t2 = new java.util.Date();
+		System.out.println("getProposal :" + (t2.getTime() - t1.getTime()) + " ms");
+		return response;
+	}
 	
 	/**
 	 * отдаёт все маршруты для новой страницы менеджер международных маршрутов

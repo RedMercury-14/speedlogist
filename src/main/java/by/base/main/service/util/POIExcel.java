@@ -249,9 +249,9 @@ public class POIExcel {
 
         // Заголовки колонок
         String[] headers = {
-                "Код контрагента", "Наименование контрагента", "Номер контракта", "Номер ТО" , "Пометка сроки / неделя" ,
+                "Код контрагента", "Наименование контрагента","График формирования заказа  четная неделя ставим метка  --ч-- , нечетная --- н ---", "Номер контракта", "Номер ТО" , "Пометка сроки / неделя" ,
                 "пн", "вт", "ср", "чт", "пт", "сб", "вс", 
-                "Количество поставок", "График формирования заказа  четная неделя ставим метка  --ч-- , нечетная --- н ---", "График отгрузки заказа  четная неделя ставим метка  --ч-- , нечетная --- н ---",
+                "Количество поставок", 
                 "кодовое ИМЯ КОНТРАГЕНТА","квант","измерения КВАНТА", "День в день"
         };
 
@@ -273,27 +273,32 @@ public class POIExcel {
 
             row.createCell(0).setCellValue(schedule.getCounterpartyCode());
             row.createCell(1).setCellValue(schedule.getName());
-            row.createCell(2).setCellValue(schedule.getCounterpartyContractCode());            
-            row.createCell(3).setCellValue(schedule.getNumStock());
-            row.createCell(4).setCellValue(schedule.getNote());
+            row.createCell(2).setCellValue(schedule.getOrderFormationSchedule());
+            row.createCell(3).setCellValue(schedule.getCounterpartyContractCode());            
+            row.createCell(4).setCellValue(schedule.getNumStock());
+            if(schedule.getIsDayToDay()) {
+            	row.createCell(5).setCellValue("сегодня");            	
+            }else {
+            	row.createCell(5).setCellValue(schedule.getNote());
+            }
 
-            row.createCell(5).setCellValue(schedule.getMonday());
-            row.createCell(6).setCellValue(schedule.getTuesday());
-            row.createCell(7).setCellValue(schedule.getWednesday());
-            row.createCell(8).setCellValue(schedule.getThursday());
-            row.createCell(9).setCellValue(schedule.getFriday());
-            row.createCell(10).setCellValue(schedule.getSaturday());
-            row.createCell(11).setCellValue(schedule.getSunday());
+            row.createCell(6).setCellValue(schedule.getMonday());
+            row.createCell(7).setCellValue(schedule.getTuesday());
+            row.createCell(8).setCellValue(schedule.getWednesday());
+            row.createCell(9).setCellValue(schedule.getThursday());
+            row.createCell(10).setCellValue(schedule.getFriday());
+            row.createCell(11).setCellValue(schedule.getSaturday());
+            row.createCell(12).setCellValue(schedule.getSunday());
 
-            row.createCell(12).setCellValue(schedule.getSupplies());            
-            row.createCell(13).setCellValue(schedule.getOrderFormationSchedule());
-            row.createCell(14).setCellValue(schedule.getOrderShipmentSchedule());
+            row.createCell(13).setCellValue(schedule.getSupplies());            
             
-            if(schedule.getCodeNameOfQuantumCounterparty() != null) row.createCell(15).setCellValue(schedule.getCodeNameOfQuantumCounterparty());
-            if(schedule.getQuantum() != null) row.createCell(16).setCellValue(schedule.getQuantum());
-            if(schedule.getQuantumMeasurements() != null) row.createCell(17).setCellValue(schedule.getQuantumMeasurements());
+//            row.createCell(14).setCellValue(schedule.getOrderShipmentSchedule());
+            
+            if(schedule.getCodeNameOfQuantumCounterparty() != null) row.createCell(14).setCellValue(schedule.getCodeNameOfQuantumCounterparty());
+            if(schedule.getQuantum() != null) row.createCell(15).setCellValue(schedule.getQuantum());
+            if(schedule.getQuantumMeasurements() != null) row.createCell(16).setCellValue(schedule.getQuantumMeasurements());
             		
-            row.createCell(18).setCellValue(schedule.getIsDayToDay());
+            row.createCell(17).setCellValue(schedule.getIsDayToDay());
         }
         
         // Устанавливаем фильтры на все столбцы

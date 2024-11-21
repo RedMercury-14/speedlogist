@@ -331,44 +331,44 @@ public class MainRestController {
 //		return responseMap;		
 //	}
 	
-//	@GetMapping("/test")
-//	public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException{
-//		java.util.Date t1 = new java.util.Date();
-//		Map<String, Object> responseMap = new HashMap<>();
-//		// Получаем текущую дату для имени файла
-//        LocalDate currentTime = LocalDate.now();
-//        String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-//        
-//		List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
-////		List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to");
-////		List<String> emailsSupport = propertiesUtils.getValuesByPartialKey(servletContext, "email.orderSupport");
-////		emails.addAll(emailsSupport);
-//		String appPath = servletContext.getRealPath("/");
-//		
-//		String fileName1200 = "1200 (----Холодный----).xlsx";
-//		String fileName1100 = "1100 График прямой сухой.xlsx";
-//		
-//		try {
-//			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
-//					appPath + "resources/others/" + fileName1200);
-//			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("сухой").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
-//					appPath + "resources/others/" + fileName1100);
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//			System.err.println("Ошибка формирование EXCEL");
-//		}
-//		
-////		response.setHeader("content-disposition", "attachment;filename="+fileName+".xlsx");
-//		List<File> files = new ArrayList<File>();
-//		files.add(new File(appPath + "resources/others/" + fileName1200));
-//		files.add(new File(appPath + "resources/others/" + fileName1100));
-//		
-//		
-//		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от TEST" + currentTimeString, "Тестовая отправка сообщения.\nНе обращайте внимания / игнорируте это сообщение", files, emails);
-//		java.util.Date t2 = new java.util.Date();
-//		System.out.println(t2.getTime()-t1.getTime() + " ms - testNewMethod" );
-//		return responseMap;		
-//	}
+	@GetMapping("/test")
+	public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException{
+		java.util.Date t1 = new java.util.Date();
+		Map<String, Object> responseMap = new HashMap<>();
+		// Получаем текущую дату для имени файла
+        LocalDate currentTime = LocalDate.now();
+        String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+        
+		List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+//		List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to");
+//		List<String> emailsSupport = propertiesUtils.getValuesByPartialKey(servletContext, "email.orderSupport");
+//		emails.addAll(emailsSupport);
+		String appPath = servletContext.getRealPath("/");
+		
+		String fileName1200 = "1200 (----Холодный----).xlsx";
+		String fileName1100 = "1100 График прямой сухой.xlsx";
+		
+		try {
+			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+					appPath + "resources/others/" + fileName1200);
+			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("сухой").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+					appPath + "resources/others/" + fileName1100);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.err.println("Ошибка формирование EXCEL");
+		}
+		
+//		response.setHeader("content-disposition", "attachment;filename="+fileName+".xlsx");
+		List<File> files = new ArrayList<File>();
+		files.add(new File(appPath + "resources/others/" + fileName1200));
+		files.add(new File(appPath + "resources/others/" + fileName1100));
+		
+		
+		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от TEST" + currentTimeString, "Тестовая отправка сообщения.\nНе обращайте внимания / игнорируте это сообщение", files, emails);
+		java.util.Date t2 = new java.util.Date();
+		System.out.println(t2.getTime()-t1.getTime() + " ms - testNewMethod" );
+		return responseMap;		
+	}
 //	
 //	@GetMapping("/test")
 //	public Map<String, Object> test(HttpServletRequest request, HttpServletResponse response){

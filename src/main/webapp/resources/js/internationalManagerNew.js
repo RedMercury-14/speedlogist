@@ -115,16 +115,6 @@ const gridOptions = {
 	onColumnPinned: debouncedSaveColumnState,
 	onFilterChanged: debouncedSaveFilterState,
 
-	// отображение сохраненной строки таблицы
-	onRowDataUpdated: event => {
-		const rowNode = displaySavedRowId(event, ROW_INDEX_KEY)
-		if (!rowNode) return
-		// отображаем строку ещё раз после установки ширины строк
-		setTimeout(() => {
-			event.api.ensureNodeVisible(rowNode, 'top')
-		}, 300)
-	},
-
 	rowSelection: 'multiple',
 	suppressRowClickSelection: true,
 	suppressDragLeaveHidesColumns: true,
@@ -216,9 +206,10 @@ window.addEventListener("unload", () => {
 // установка стартовых данных
 async function initStartData(routeSearchForm) {
 	await updateTable(gridOptions, routeSearchForm, window.initData)
+	displaySavedRow(gridOptions, ROW_INDEX_KEY)
 	isInitDataLoaded = true
 	window.initData = null
-	
+
 	// получение настроек таблицы из localstorage
 	restoreColumnState()
 	restoreFilterState()
@@ -228,6 +219,7 @@ async function initStartData(routeSearchForm) {
 async function searchFormSubmitHandler(e) {
 	e.preventDefault()
 	await updateTable(gridOptions, e.target)
+	displaySavedRow(gridOptions, ROW_INDEX_KEY)
 	isInitDataLoaded = true
 }
 
@@ -505,18 +497,15 @@ function getContextMenuItems(params) {
 		},
 		"separator",
 		"excelExport",
-	]
-
-	if (isAdmin(role)) {
-		result.push("separator")
-		result.push({
+		"separator",
+		{
 			name: `Скачать заявку для перевозчика`,
 			icon: uiIcons.fileArrowDown,
 			action: () => {
 				getProposal(idRoute)
 			},
-		})
-	}
+		}
+	]
 
 	return result
 }
@@ -609,7 +598,7 @@ function highlightRow(rowNode) {
 }
 
 // отображение сохраненной в locacstorage строки таблицы
-function displaySavedRowId(gridOptions, key) {
+function displaySavedRow(gridOptions, key) {
 	const rowId = localStorage.getItem(key)
 	if (!rowId) return
 
@@ -621,6 +610,12 @@ function displaySavedRowId(gridOptions, key) {
 	gridOptions.api.applyTransaction({ update: [{ ...rowNode.data, isSavedRow: true} ] })
 	gridOptions.api.ensureNodeVisible(rowNode, 'top')
 	localStorage.removeItem(key)
+
+	// отображаем строку ещё раз после установки ширины строк
+	setTimeout(() => {
+		gridOptions.api.ensureNodeVisible(rowNode, 'top')
+	}, 500)
+
 	return rowNode
 }
 // сохранение строки таблицы в locacstorage
@@ -670,13 +665,17 @@ function sendTender(idRoute, routeDirection) {
 		status: "1"
 	}
 
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 500)
+
 	fetch(url)
 		.then(res => {
 			updateCellData(idRoute, columnName, newValue)
 			snackbar.show('Тендер отправлен на биржу')
 			sendHeadMessage(headMessage)
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
 		})
-		.catch(errorCallback)
+		.catch(err => errorCallback(err, timeoutId))
 }
 function showUnloadPoints(idRoute) {
 	var url = `../logistics/international/routeShow?idRoute=${idRoute}`;
@@ -700,15 +699,21 @@ async function completeRoute(idRoute) {
 
 	const isRouteCompleted = routeFinishInfo.filter(item => item.text === 'На_выгрузке').length > 0
 
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 500)
+
 	if (isRouteCompleted) {
 		fetch(url)
 			.then(res => {
 				updateCellData(idRoute, columnName, newValue)
 				snackbar.show('Маршрут завершен')
+				clearTimeout(timeoutId)
+				bootstrap5overlay.hideOverlay()
 			})
-			.catch(errorCallback)
+			.catch(err => errorCallback(err, timeoutId))
 	} else {
 		snackbar.show('Маршрут не может быть завершен, т.к. авто не прибыло на место разгрузки')
+		clearTimeout(timeoutId)
+		bootstrap5overlay.hideOverlay()
 	}
 }
 function cancelTender(idRoute) {
@@ -716,25 +721,39 @@ function cancelTender(idRoute) {
 	const columnName = 'statusRoute'
 	const newValue = '5'
 
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 500)
+
 	fetch(url)
 		.then(res => {
 			updateCellData(idRoute, columnName, newValue)
 			snackbar.show('Маршрут отменен')
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
 		})
-		.catch(errorCallback)
+		.catch(err => errorCallback(err, timeoutId))
 }
-function errorCallback(error) {
+function errorCallback(error, timeoutId) {
 	console.error(error)
 	snackbar.show('Возникла ошибка - обновите страницу!')
+	timeoutId && clearTimeout(timeoutId)
+	bootstrap5overlay.hideOverlay()
 }
 
 function getProposal(idRoute) {
 	fetch(getProposalBaseUrl + idRoute)
 		.then(res => {
-			console.log(res)
-			snackbar.show('Выполнено')
+			console.log("🚀 ~ getProposal ~ res:", res)
+			if (!res.ok) {
+				throw new Error('Ошибка при получении файла')
+			}
+			res.blob().then(blob => {
+				const link = document.createElement('a')
+				link.href = window.URL.createObjectURL(blob)
+				link.download = 'Заявка ' + idRoute + '.pdf'
+				link.click()
+			})
 		})
-		.catch(errorCallback)
+		.catch(err => errorCallback(err, null))
 }
 
 

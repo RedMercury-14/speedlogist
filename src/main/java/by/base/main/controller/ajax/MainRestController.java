@@ -408,20 +408,82 @@ public class MainRestController {
 //	}
 	
 	@GetMapping("/logistics/getProposal/{idRoute}")
-	public Map<String, Object> getProposal(HttpServletRequest request, @PathVariable String idRoute) throws NumberFormatException, FileNotFoundException, DocumentException {
+	public void getProposal(HttpServletRequest request, HttpServletResponse response, @PathVariable String idRoute) throws NumberFormatException, DocumentException, IOException {
 		java.util.Date t1 = new java.util.Date();
-		Map<String, Object> response = new HashMap<>();
 		
 		pdfWriter.getProposal(request, routeService.getRouteById(Integer.parseInt(idRoute)));
-		
-		response.put("status", "200");
-		response.put("idRoute", idRoute);
-		response.put("message", "Метод в разработке");
-		
-		java.util.Date t2 = new java.util.Date();
+		String appPath = request.getServletContext().getRealPath("");
+        String folderPath = appPath + "resources/others/proposal.pdf";
+
+        // Полный путь к файлу
+        File file = new File(folderPath);
+        
+        System.out.println(file);
+
+        // Проверяем существование файла
+        if (!file.exists()) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            try {
+                response.getWriter().write("Файл не найден: proposal.pdf");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return;
+        }
+     // Настройка заголовков для скачивания файла
+        response.setContentType("application/pdf");
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + "proposal.pdf" + "\"");
+        response.setContentLength((int) file.length());
+
+        // Передаём файл клиенту
+        try (FileInputStream in = new FileInputStream(file);
+             OutputStream out = response.getOutputStream()) {
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = in.read(buffer)) != -1) {
+                out.write(buffer, 0, bytesRead);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+        java.util.Date t2 = new java.util.Date();
 		System.out.println("getProposal :" + (t2.getTime() - t1.getTime()) + " ms");
-		return response;
-	}
+    }
+	
+//	@GetMapping("/logistics/getProposal/{idRoute}")
+//	public void getProposal(HttpServletRequest request, HttpServletResponse response, @PathVariable String idRoute) throws NumberFormatException, DocumentException, IOException {
+//		java.util.Date t1 = new java.util.Date();
+//		Map<String, Object> responseMap = new HashMap<>();
+//		
+//		pdfWriter.getProposal(request, routeService.getRouteById(Integer.parseInt(idRoute)));
+//		
+//		String appPath = request.getServletContext().getRealPath("");
+//		//File file = new File(appPath + "resources/others/Speedlogist.apk");
+//		response.setHeader("content-disposition", "attachment;filename="+"proposal.pdf");
+////		response.setHeader("Content-Disposition", "attachment; filename=\"proposal.pdf\"");
+//		
+//		response.setContentType("application/pdf");
+//		try (FileInputStream in = new FileInputStream(appPath + "resources/others/proposal.pdf");
+//				OutputStream out = response.getOutputStream()) {
+//			byte[] buffer = new byte[1024];
+//			int len;
+//			while ((len = in.read(buffer)) > 0) {
+//				out.write(buffer, 0, len);
+//			}
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
+//		
+//		
+//		responseMap.put("status", "200");
+//		responseMap.put("idRoute", idRoute);
+//		responseMap.put("message", "Метод в разработке");
+//		
+//		java.util.Date t2 = new java.util.Date();
+//		System.out.println("getProposal :" + (t2.getTime() - t1.getTime()) + " ms");
+////		return responseMap;
+//	}
 	
 	/**
 	 * отдаёт все маршруты для новой страницы менеджер международных маршрутов

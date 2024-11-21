@@ -76,11 +76,11 @@ const columnDefs = [
 		cellClass: 'px-1 py-0 text-center font-weight-bold',
 		width: 75,
 	},
-	{
-		headerName: 'График отгрузки заказа', field: 'orderShipmentSchedule',
-		cellClass: 'px-1 py-0 text-center font-weight-bold',
-		width: 75,
-	},
+	// {
+	// 	headerName: 'График отгрузки заказа', field: 'orderShipmentSchedule',
+	// 	cellClass: 'px-1 py-0 text-center font-weight-bold',
+	// 	width: 75,
+	// },
 	{
 		headerName: 'Холодный или Сухой', field: 'toType',
 		cellClass: 'px-1 py-0 text-center font-weight-bold',
@@ -834,7 +834,7 @@ async function addShopsByContract(rowNode) {
 		saturday: scheduleItem.saturday ? scheduleItem.saturday : null,
 		sunday: scheduleItem.sunday ? scheduleItem.sunday : null,
 		orderFormationSchedule: scheduleItem.orderFormationSchedule ? scheduleItem.orderFormationSchedule : null,
-		orderShipmentSchedule: scheduleItem.orderShipmentSchedule ? scheduleItem.orderShipmentSchedule : null,
+		// orderShipmentSchedule: scheduleItem.orderShipmentSchedule ? scheduleItem.orderShipmentSchedule : null,
 		isDayToDay: scheduleItem.isDayToDay ? scheduleItem.isDayToDay : false,
 		quantum: scheduleItem.quantum ? scheduleItem.quantum : null,
 		quantumMeasurements: scheduleItem.quantumMeasurements ? scheduleItem.quantumMeasurements : null,
@@ -889,7 +889,7 @@ function scheduleItemDataFormatter(formData) {
 	const counterpartyContractCode = Number(data.counterpartyContractCode)
 	const numStock = getTextareaData(data.numStock)
 	const orderFormationSchedule = data.orderFormationSchedule && note ? data.orderFormationSchedule : null
-	const orderShipmentSchedule = data.orderShipmentSchedule && note ? data.orderShipmentSchedule : null
+	// const orderShipmentSchedule = data.orderShipmentSchedule && note ? data.orderShipmentSchedule : null
 	const quantum = data.quantum ? Number(data.quantum) : null
 
 	let res = {
@@ -908,7 +908,7 @@ function scheduleItemDataFormatter(formData) {
 		counterpartyContractCode,
 		numStock,
 		orderFormationSchedule,
-		orderShipmentSchedule,
+		// orderShipmentSchedule,
 		quantum,
 		codeNameOfQuantumCounterparty,
 		status: 10,
@@ -943,7 +943,7 @@ function setDataToForm(scheduleItem) {
 	editScheduleItemForm.comment.value = scheduleItem.comment ? scheduleItem.comment : ''
 	editScheduleItemForm.note.checked = scheduleItem.note === 'неделя'
 	editScheduleItemForm.orderFormationSchedule.value = scheduleItem.orderFormationSchedule ? scheduleItem.orderFormationSchedule : ''
-	editScheduleItemForm.orderShipmentSchedule.value = scheduleItem.orderShipmentSchedule ? scheduleItem.orderShipmentSchedule : ''
+	// editScheduleItemForm.orderShipmentSchedule.value = scheduleItem.orderShipmentSchedule ? scheduleItem.orderShipmentSchedule : ''
 	editScheduleItemForm.quantum.value = scheduleItem.quantum ? scheduleItem.quantum : ''
 	editScheduleItemForm.quantumMeasurements.value = quantumMeasurements
 

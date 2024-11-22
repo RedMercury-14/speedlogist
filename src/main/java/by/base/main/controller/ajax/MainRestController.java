@@ -2063,6 +2063,11 @@ public class MainRestController {
 		
 		for (Entry<Integer, Shop> entry: targetShopMap.entrySet()) {
 			Schedule schedule = scheduleService.getScheduleByNumContractAndNumStock(Long.parseLong(jsonMainObject.get("counterpartyContractCode").toString()), entry.getKey());
+			if(schedule == null) {
+				response.put("status", "100");
+				response.put("message", "Для магазина " + entry.getValue().getNumshop() + " отсутствует график поставок с кодом контракта " + jsonMainObject.get("counterpartyContractCode").toString());
+				return response;
+			}
 			schedule.setDateLastChanging(Date.valueOf(LocalDate.now()));
 			scheduleService.updateSchedule(editScheduleByRequestForRC(schedule, jsonMainObject));
 		}

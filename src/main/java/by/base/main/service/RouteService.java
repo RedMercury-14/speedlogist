@@ -5,6 +5,8 @@ import java.sql.Time;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.dto.RouteDTO;
+
 import by.base.main.model.Route;
 import by.base.main.model.Tender;
 import by.base.main.model.Truck;
@@ -31,6 +33,8 @@ public interface RouteService {
 	void unparseTenderAndUpdateByRourteAndUpdate(Tender tender);
 	
 	List<Route> getRouteListAsDate(Date dateStart, Date dateFinish);
+	
+	List<RouteDTO> getRouteListAsDateDTO(Date dateStart, Date dateFinish);
 	
 	List<Route> getRouteListAsDateAndStatus(Date dateStart, Date dateFinish, String stat1, String stat2);
 	

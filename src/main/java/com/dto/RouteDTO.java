@@ -1,4 +1,4 @@
-package by.base.main.model;
+package com.dto;
 
 import java.io.Serializable;
 import java.sql.Date;
@@ -35,322 +35,418 @@ import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
-import com.dto.OrderDTO;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.itextpdf.text.pdf.PdfStructTreeController.returnType;
 
-@DynamicUpdate
-@DynamicInsert
-@Entity(name = "Route")
-@Table(name = "route")
-public class Route implements Serializable{
+public class RouteDTO {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -650717876587103650L;
-	
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "idroute")
 	private Integer idRoute;
-	
-	@Column(name = "numStock")
+
 	private Integer numStock;
-	
-	@Column(name = "dateLoad_previously")
+
 	@JsonFormat(pattern = "yyyy-MM-dd", timezone = "Europe/Moscow")
 	private LocalDate dateLoadPreviously;
-	
-	@Column(name = "timeLoad_previously")
+
 	@JsonFormat(pattern = "HH:mm")
 	private LocalTime timeLoadPreviously;
-	
-	@Column(name = "timeLoad_previouslyStock")
+
 	@JsonFormat(pattern = "HH:mm")
 	private LocalTime timeLoadPreviouslyStock;
-	
-	@Column(name = "actualTimeArrival")
+
 	private LocalDateTime actualTimeArrival;
-	
-	@Column(name = "startLoad")
+
 	private LocalDateTime startLoad;
-	
-	@Column(name = "finishLoad")
+
 	private LocalDateTime finishLoad;
-	
-	@Column(name = "deliveryDocuments")
+
 	private LocalDateTime deliveryDocuments;
-	
-	@Column(name = "sanitization")
+
 	private boolean isSanitization;
-	
-	@Column(name = "temperature")
+
 	private String temperature;
-	
-	@Column(name = "nameloader")
+
 	private String nameLoader;
-	
-	@Column(name = "rump")
+
 	private Integer ramp;
-	
-	@Column(name = "loadPall_total")
+
 	private String totalLoadPall;
-	
-	@Column(name = "cargoWeight_total")
+
 	private String totalCargoWeight;
-	
-	@Column(name = "`lines`")
+
 	private String lines;
-	
-	@Column(name = "comments")
+
 	private String comments;
-	
-	@Column(name = "routeDirection")
+
 	private String routeDirection;
-	
-	@Column(name = "startPrice")
+
 	private Integer startPrice;
-	
-	@Column(name = "finishPrice")
+
 	private Integer finishPrice;
-	
-	@Column(name = "time")
+
 	@JsonFormat(pattern = "HH-mm")
 	private LocalTime time;
-	
-	@Column(name = "statusRoute")
+
 	private String statusRoute;
-	
-	@Column(name = "statusStock")
+
 	private String statusStock;
-	
-	@Column(name = "typeTrailer")
+
 	private String typeTrailer;
-	
-	@Column(name = "startCurrency")
+
 	private String startCurrency;
-	
-	@Column(name = "userComments")
+
 	private String userComments;
-	
-	@Column(name = "stepCost")
+
 	private String stepCost;
-	
-	@Column(name = "optimalCost")
+
 	private String optimalCost;
-	
-	@Column(name = "customer")
+
 	private String customer;
-	
-	@Column(name = "run")
+
 	private String run;
-	
-	@Column(name = "logist_info")
+
 	private String logistInfo;
-	
-	@Column(name = "tnvd")
+
 	private String tnvd;
-	
-	@Column(name="way")
+
 	private String way;
-	
-	@Column(name="expedition_cost")
+
 	private Integer expeditionCost;
-	
-	@Column(name = "load_number")
+
 	private String loadNumber;
-	
+
 	/**
 	 * дата загрузки от перевозчика
 	 */
-	@Column(name = "dateLoad_actually")
 	@JsonFormat(pattern = "yyyy-MM-dd", timezone = "Europe/Moscow")
 	private LocalDate dateLoadActually;
-	
+
 	/**
 	 * время загрузки от перевозчика
 	 */
-	@Column(name = "timeLoad_actually")
 	@JsonFormat(pattern = "HH-mm")
 	private LocalTime timeLoadActually;
-	
+
 	/**
 	 * дата выгрузки от перевозчика
 	 */
-	@Column(name = "dateUnload_actually")
 	@JsonFormat(pattern = "yyyy-MM-dd", timezone = "Europe/Moscow")
 	private LocalDate dateUnloadActually;
-	
+
 	/**
 	 * время выгрузки от перевозчика
 	 */
-	@Column(name = "timeUnload_actually")
 	@JsonFormat(pattern = "HH-mm")
 	private LocalTime timeUnloadActually;
-	
-	@ManyToOne(fetch = FetchType.LAZY, 
-			cascade = { CascadeType.PERSIST, 
-						CascadeType.MERGE, 
-						CascadeType.DETACH,
-						CascadeType.REFRESH })
-	@JoinColumn(name = "truck_idtruck")
-	//@JsonBackReference
-	private Truck truck;
-	
-	@ManyToOne(fetch = FetchType.LAZY, 
-			cascade = { CascadeType.PERSIST, 
-						CascadeType.MERGE, 
-						CascadeType.DETACH,
-						CascadeType.REFRESH })
-	@JoinColumn(name = "user_iduser_manager") // перевозчик
-//	@JsonBackReference
-//	@JsonManagedReference
-//	@JsonIgnore
-	private User user;
-	
-	@OneToMany(fetch=FetchType.LAZY, orphanRemoval = true,
-			   mappedBy="route",
-			   cascade= {CascadeType.ALL})
-	private Set<RouteHasShop> roteHasShop;
-	
-	@OneToOne(cascade=CascadeType.ALL) // не просто так не стоит fetch=FetchType.LAZY
-	@JoinColumn(name="user_iduser_driver")
-//	@JsonBackReference
-//	@JsonIgnore 
-	// СТАЛ ПОКАЗЫВАТЬ DRIVER!!!!!!!!!!!!!!
-	private User driver;
-	
-	@ManyToMany(fetch = FetchType.LAZY, 
-			cascade = { CascadeType.ALL })
-	@JoinTable(name = "route_has_order", joinColumns = @JoinColumn(name = "route_idroute"), inverseJoinColumns = @JoinColumn(name = "order_idorder"))
-//	@JsonBackReference // ТУТ БЫЛО ВКЛЮЧЕНО!!!!
-	@JsonIgnore
-	private Set<Order> orders;
-	
-	
-	
-	@Column(name="timeUnload_previouslyStock")
+
 	@JsonFormat(pattern = "HH-mm")
 	private Time timeUnloadPreviouslyStock;
-	
-	@Column(name="dateUnload_previouslyStock")
+
 	@JsonFormat(pattern = "yyyy-MM-dd", timezone = "Europe/Moscow")
 	private Date dateUnloadPreviouslyStock;
-	
-	@Column(name="create_date")
+
 	private Date createDate;
-	
-	@Column(name="create_time")
+
 	private Time createTime;
-	
+
 	/**
 	 * окно на выгрузку от Карины
 	 */
-	@Column(name = "onload_window_date")
 	private Date onloadWindowDate;
-	
+
 	/**
 	 * окно на выгрузку от Карины
 	 */
-	@Column(name = "onload_window_time")
 	private Time onloadWindowTime;
-	
+
 	/**
 	 * непосредственно сколько времени занимает сама выгрузка
 	 */
-	@Column(name = "onload_time")
 	private Time onloadTime;
-	
-	@Column(name="logist_comment")
-	private String logistComment;
-	
-	@Column(name="truck_info")
-	private String truckInfo;
-	
-	@Column(name="km_info")
-	private Integer kmInfo;
-	
-	@Column(name="cargo_info")
-	private String cargoInfo;
-	
-	@Column(name="routeDirectionInternational")
-	private String routeDirectionInternational;
-	
-	@Column(name="type_load")
-	private String typeLoad;
-	
-	@Column(name="method_load")
-	private String methodLoad;
-	
-	@Transient
-	private Map<String, String> cost = new HashMap<String, String>();
-	/**
-	 * хранит в себе значения цен, где ключ - это номер касты, значение - цена для данной касты.
-	 * для каждорого вызова маршрута, если нужна цена - она просчитывается. в бд записывается уже
-	 * окончательная цена.
-	 */
-	@Transient
-	private Double nds;
-	@Transient
-	private String numWayList;
-	@Transient
-	private String numTruckAndTrailer;
-	@Transient
-	private String cmr;
-	@Transient
-	private String costWay;
-	@Transient
-	private String dateUnload;
-	@Transient
-	private String cargoWeightForAct;
-	
-	@Transient
-	private Set<OrderDTO> ordersDTO;
-	
 
+	private String logistComment;
+
+	private String truckInfo;
+
+	private Integer kmInfo;
+
+	private String cargoInfo;
+
+	private String routeDirectionInternational;
+
+	private String typeLoad;
+
+	private String methodLoad;
+
+	// тут инфа по перевозчику
+	private String nameOfСarrier;
+
+	/*
+	 * тут инфа по транспорту
+	 */
+	private String numOfTruck;
+	private String modelOfTruck;
+	private String brandOfTruck;
+	private String typeOfTrailer;
+	private String brandOfTrailer;
+	/**
+	 * владелец транспорта
+	 */
+	private String ownerOfTruck;
+	private String cargoCapacityOfTruck;
+	private String pallCapacityOfTruck;
+	private String numTrailerOfTruck;
+	/**
+	 * тип сцепки: \nгрузовик\nполуприцеп\nсцепка
+	 */
+	private String hitchTypeofTruck;
+	private String infoOfTruck;
+	/**
+	 * объем, м. куб
+	 */
+	private Integer volumeTrailerOfTruck;
+
+	/**
+	 * внутринние габариты кузова (Д/Ш/В), м
+	 */
+	private String dimensionsBodyOfTruck;
+
+	/**
+	 * Number of axes\n2\n3\n4+
+	 */
+	private String numberAxesOfTruck;
+
+	/**
+	 * Технический паспорт МАА 325845 РЭП ГАИ 02.02.2022\n
+	 */
+	private String technicalCertificateOfTruck;
+
+	/*
+	 * тут инфа по водителю
+	 */
+	private String numtelOfDriver;
+	private String pasportOfDriver;
+	private String nameOfDriver;
+	private String surnameOfDriver;
+	private String patronymicOfDriver;
 
 	/**
 	 * форматер для простого отображения дат во view
 	 */
-	@Transient
 	private DateTimeFormatter simpleFormatterDate = DateTimeFormatter.ofPattern("dd.MM.yyy");
-	@Transient
-	private DateTimeFormatter mainFormatterDate = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-	@Transient
-	private DateTimeFormatter mainFormatterTime = DateTimeFormatter.ofPattern("HH-mm");
 	
-	
-	
-	/**
-	 * 
-	 */
-	public Route() {
+//	private Set<RouteHasShop> roteHasShop;
+
+	private Set<OrderDTO> orders;
+
+	public RouteDTO() {
 		Date dateNow = Date.valueOf(LocalDate.now());
 		Time timeNow = Time.valueOf(LocalTime.now());
-		if(createDate == null) {
+		if (createDate == null) {
 			this.createDate = dateNow;
 		}
-		if(createTime == null) {
+		if (createTime == null) {
 			this.createTime = timeNow;
 		}
 	}
-
 	
 	
-	public Set<OrderDTO> getOrdersDTO() {
-		return ordersDTO;
+	public RouteDTO(Integer idRoute, Integer numStock, Object dateLoadPreviously, Object timeLoadPreviously,
+			Object timeLoadPreviouslyStock, Object actualTimeArrival, Object startLoad,
+			Object finishLoad, Object deliveryDocuments, boolean isSanitization, String temperature,
+			String nameLoader, Integer ramp, String totalLoadPall, String totalCargoWeight, String lines,
+			String comments, String routeDirection, Integer startPrice, Integer finishPrice, Object time,
+			String statusRoute, String statusStock, String typeTrailer, String startCurrency, String userComments,
+			String stepCost, String optimalCost, String customer, String run, String logistInfo, String tnvd,
+			String way, Integer expeditionCost, String loadNumber, Object dateLoadActually,
+			Object timeLoadActually, Object dateUnloadActually, Object timeUnloadActually,
+			Object timeUnloadPreviouslyStock, Object dateUnloadPreviouslyStock, Object createDate,
+			Object createTime, Object onloadWindowDate, Object onloadWindowTime, Object onloadTime, String logistComment,
+			String truckInfo, Integer kmInfo, String cargoInfo, String routeDirectionInternational, String typeLoad,
+			String methodLoad, String nameOfСarrier,
+			String numOfTruck, String modelOfTruck, String brandOfTruck, String typeOfTrailer, String brandOfTrailer,
+			String ownerOfTruck, String cargoCapacityOfTruck, String pallCapacityOfTruck, String numTrailerOfTruck,
+			String hitchTypeofTruck, String infoOfTruck, Integer volumeTrailerOfTruck, String dimensionsBodyOfTruck,
+			String numberAxesOfTruck, String technicalCertificateOfTruck, String numtelOfDriver,
+			String pasportOfDriver, String nameOfDriver, String surnameOfDriver, String patronymicOfDriver) {
+		super();
+		this.idRoute = idRoute;
+		this.numStock = numStock;
+		this.dateLoadPreviously = (LocalDate) dateLoadPreviously;
+		this.timeLoadPreviously = (LocalTime) timeLoadPreviously;
+		this.timeLoadPreviouslyStock = (LocalTime) timeLoadPreviouslyStock;
+		this.actualTimeArrival = (LocalDateTime) actualTimeArrival;
+		this.startLoad = (LocalDateTime) startLoad;
+		this.finishLoad = (LocalDateTime) finishLoad;
+		this.deliveryDocuments = (LocalDateTime) deliveryDocuments;
+		this.isSanitization = isSanitization;
+		this.temperature = temperature;
+		this.nameLoader = nameLoader;
+		this.ramp = ramp;
+		this.totalLoadPall = totalLoadPall;
+		this.totalCargoWeight = totalCargoWeight;
+		this.lines = lines;
+		this.comments = comments;
+		this.routeDirection = routeDirection;
+		this.startPrice = startPrice;
+		this.finishPrice = finishPrice;
+		this.time = (LocalTime) time;
+		this.statusRoute = statusRoute;
+		this.statusStock = statusStock;
+		this.typeTrailer = typeTrailer;
+		this.startCurrency = startCurrency;
+		this.userComments = userComments;
+		this.stepCost = stepCost;
+		this.optimalCost = optimalCost;
+		this.customer = customer;
+		this.run = run;
+		this.logistInfo = logistInfo;
+		this.tnvd = tnvd;
+		this.way = way;
+		this.expeditionCost = expeditionCost;
+		this.loadNumber = loadNumber;
+		this.dateLoadActually = (LocalDate) dateLoadActually;
+		this.timeLoadActually = (LocalTime) timeLoadActually;
+		this.dateUnloadActually = (LocalDate) dateUnloadActually;
+		this.timeUnloadActually = (LocalTime) timeUnloadActually;
+		this.timeUnloadPreviouslyStock = (Time) timeUnloadPreviouslyStock;
+		this.dateUnloadPreviouslyStock = (Date) dateUnloadPreviouslyStock;
+		this.createDate = (Date) createDate;
+		this.createTime = (Time) createTime;
+		this.onloadWindowDate = (Date) onloadWindowDate;
+		this.onloadWindowTime = (Time) onloadWindowTime;
+		this.onloadTime = (Time) onloadTime;
+		this.logistComment = logistComment;
+		this.truckInfo = truckInfo;
+		this.kmInfo = kmInfo;
+		this.cargoInfo = cargoInfo;
+		this.routeDirectionInternational = routeDirectionInternational;
+		this.typeLoad = typeLoad;
+		this.methodLoad = methodLoad;
+		/*
+		 * фирма
+		 */
+		this.nameOfСarrier = nameOfСarrier;
+		/*
+		 * машина
+		 */
+		this.numOfTruck = numOfTruck;
+		this.modelOfTruck = modelOfTruck;
+		this.brandOfTruck = brandOfTruck;
+		this.typeOfTrailer = typeOfTrailer;
+		this.brandOfTrailer = brandOfTrailer;
+		this.ownerOfTruck = ownerOfTruck;
+		this.cargoCapacityOfTruck = cargoCapacityOfTruck;
+		this.pallCapacityOfTruck = pallCapacityOfTruck;
+		this.numTrailerOfTruck = numTrailerOfTruck;
+		this.hitchTypeofTruck = hitchTypeofTruck;
+		this.infoOfTruck = infoOfTruck;
+		this.volumeTrailerOfTruck = volumeTrailerOfTruck;
+		this.dimensionsBodyOfTruck = dimensionsBodyOfTruck;
+		this.numberAxesOfTruck = numberAxesOfTruck;
+		this.technicalCertificateOfTruck = technicalCertificateOfTruck;
+		/*
+		 * водила
+		 */
+		this.numtelOfDriver = numtelOfDriver;
+		this.pasportOfDriver = pasportOfDriver;
+		this.nameOfDriver = nameOfDriver;
+		this.surnameOfDriver = surnameOfDriver;
+		this.patronymicOfDriver = patronymicOfDriver;
+	}
+	
+	public RouteDTO(Integer idRoute, Integer numStock, Object dateLoadPreviously, Object timeLoadPreviously,
+			Object timeLoadPreviouslyStock, Object actualTimeArrival, Object startLoad,
+			Object finishLoad, Object deliveryDocuments, Object isSanitization, String temperature,
+			String nameLoader, Integer ramp, String totalLoadPall, String totalCargoWeight, String lines,
+			String comments, String routeDirection, Integer startPrice, Integer finishPrice, Object time,
+			String statusRoute, String statusStock, String typeTrailer, String startCurrency, String userComments,
+			String stepCost, String optimalCost, String customer, String run, String logistInfo, String tnvd,
+			String way, Integer expeditionCost, String loadNumber, Object dateLoadActually,
+			Object timeLoadActually, Object dateUnloadActually, Object timeUnloadActually,
+			Object timeUnloadPreviouslyStock, Object dateUnloadPreviouslyStock, Object createDate,
+			Object createTime, Object onloadWindowDate, Object onloadWindowTime, Object onloadTime, String logistComment,
+			String truckInfo, Integer kmInfo, String cargoInfo, String routeDirectionInternational, String typeLoad,
+			String methodLoad) {
+		super();
+		this.idRoute = idRoute;
+		this.numStock = numStock;
+		this.dateLoadPreviously = (LocalDate) dateLoadPreviously;
+		this.timeLoadPreviously = (LocalTime) timeLoadPreviously;
+		this.timeLoadPreviouslyStock = (LocalTime) timeLoadPreviouslyStock;
+		this.actualTimeArrival = (LocalDateTime) actualTimeArrival;
+		this.startLoad = (LocalDateTime) startLoad;
+		this.finishLoad = (LocalDateTime) finishLoad;
+		this.deliveryDocuments = (LocalDateTime) deliveryDocuments;
+		this.isSanitization = (boolean) isSanitization;
+		this.temperature = temperature;
+		this.nameLoader = nameLoader;
+		this.ramp = ramp;
+		this.totalLoadPall = totalLoadPall;
+		this.totalCargoWeight = totalCargoWeight;
+		this.lines = lines;
+		this.comments = comments;
+		this.routeDirection = routeDirection;
+		this.startPrice = startPrice;
+		this.finishPrice = finishPrice;
+		this.time = (LocalTime) time;
+		this.statusRoute = statusRoute;
+		this.statusStock = statusStock;
+		this.typeTrailer = typeTrailer;
+		this.startCurrency = startCurrency;
+		this.userComments = userComments;
+		this.stepCost = stepCost;
+		this.optimalCost = optimalCost;
+		this.customer = customer;
+		this.run = run;
+		this.logistInfo = logistInfo;
+		this.tnvd = tnvd;
+		this.way = way;
+		this.expeditionCost = expeditionCost;
+		this.loadNumber = loadNumber;
+		this.dateLoadActually = (LocalDate) dateLoadActually;
+		this.timeLoadActually = (LocalTime) timeLoadActually;
+		this.dateUnloadActually = (LocalDate) dateUnloadActually;
+		this.timeUnloadActually = (LocalTime) timeUnloadActually;
+		this.timeUnloadPreviouslyStock = (Time) timeUnloadPreviouslyStock;
+		this.dateUnloadPreviouslyStock = (Date) dateUnloadPreviouslyStock;
+		this.createDate = (Date) createDate;
+		this.createTime = (Time) createTime;
+		this.onloadWindowDate = (Date) onloadWindowDate;
+		this.onloadWindowTime = (Time) onloadWindowTime;
+		this.onloadTime = (Time) onloadTime;
+		this.logistComment = logistComment;
+		this.truckInfo = truckInfo;
+		this.kmInfo = kmInfo;
+		this.cargoInfo = cargoInfo;
+		this.routeDirectionInternational = routeDirectionInternational;
+		this.typeLoad = typeLoad;
+		this.methodLoad = methodLoad;
+		
 	}
 
 
 
-	public void setOrdersDTO(Set<OrderDTO> ordersDTO) {
-		this.ordersDTO = ordersDTO;
+	public String getSurnameOfDriver() {
+		return surnameOfDriver;
 	}
 
+
+	public void setSurnameOfDriver(String surnameOfDriver) {
+		this.surnameOfDriver = surnameOfDriver;
+	}
+
+
+	public String getPatronymicOfDriver() {
+		return patronymicOfDriver;
+	}
+
+
+	public void setPatronymicOfDriver(String patronymicOfDriver) {
+		this.patronymicOfDriver = patronymicOfDriver;
+	}
 
 
 	public String getTypeLoad() {
@@ -381,41 +477,33 @@ public class Route implements Serializable{
 		return logistComment;
 	}
 
-
 	public String getCargoInfo() {
 		return cargoInfo;
 	}
-
 
 	public void setCargoInfo(String cargoInfo) {
 		this.cargoInfo = cargoInfo;
 	}
 
-
 	public Integer getKmInfo() {
 		return kmInfo;
 	}
-
 
 	public void setKmInfo(Integer kmInfo) {
 		this.kmInfo = kmInfo;
 	}
 
-
 	public void setLogistComment(String logistComment) {
 		this.logistComment = logistComment;
 	}
-
 
 	public String getTruckInfo() {
 		return truckInfo;
 	}
 
-
 	public void setTruckInfo(String truckInfo) {
 		this.truckInfo = truckInfo;
 	}
-
 
 	public Integer getIdRoute() {
 		return idRoute;
@@ -440,7 +528,7 @@ public class Route implements Serializable{
 	public Date getOnloadWindowDate() {
 		return onloadWindowDate;
 	}
-	
+
 	public Integer getExpeditionCost() {
 		return expeditionCost;
 	}
@@ -469,13 +557,15 @@ public class Route implements Serializable{
 		this.onloadWindowTime = onloadWindowTime;
 	}
 
-	public void setDateLoadPreviously(LocalDate dateLoadPreviously) {		
+	public void setDateLoadPreviously(LocalDate dateLoadPreviously) {
 		this.dateLoadPreviously = dateLoadPreviously;
 	}
-	public void setDateLoadPreviously(Date dateLoadPreviously) {		
+
+	public void setDateLoadPreviously(Date dateLoadPreviously) {
 		this.dateLoadPreviously = dateLoadPreviously.toLocalDate();
 	}
-	public void setDateLoadPreviously(String dateLoadPreviously) {		
+
+	public void setDateLoadPreviously(String dateLoadPreviously) {
 		this.dateLoadPreviously = LocalDate.parse(dateLoadPreviously);
 	}
 
@@ -493,6 +583,7 @@ public class Route implements Serializable{
 
 	/**
 	 * непосредственно сколько времени занимает сама выгрузка
+	 * 
 	 * @return
 	 */
 	public Time getOnloadTime() {
@@ -501,6 +592,7 @@ public class Route implements Serializable{
 
 	/**
 	 * непосредственно сколько времени занимает сама выгрузка
+	 * 
 	 * @param onloadTime
 	 */
 	public void setOnloadTime(Time onloadTime) {
@@ -546,7 +638,7 @@ public class Route implements Serializable{
 	public boolean isSanitization() {
 		return isSanitization;
 	}
-	
+
 	public boolean getIsSanitization() {
 		return isSanitization;
 	}
@@ -620,7 +712,7 @@ public class Route implements Serializable{
 	}
 
 	public String getRouteDirection() {
-		if(way != null && routeDirectionInternational!= null && way.equals("Импорт")) {
+		if (way != null && routeDirectionInternational != null && way.equals("Импорт")) {
 			return routeDirectionInternational.trim();
 		}
 		return routeDirection.trim().replaceAll(" +", " ");
@@ -662,41 +754,6 @@ public class Route implements Serializable{
 		this.statusRoute = statusRoute;
 	}
 
-	public Truck getTruck() {
-		return truck;
-	}
-
-	public void setTruck(Truck truck) {
-		this.truck = truck;
-	}
-
-	public User getUser() {
-		return user;
-	}
-	
-	public String getNumPoint() {
-		if(getRoteHasShop() !=null) {
-			return getRoteHasShop().size()+"";
-		}else {
-			return null;
-		}
-		
-	}
-
-	public void setUser(User userManager) {
-		this.user = userManager;
-	}
-
-	public Set<RouteHasShop> getRoteHasShop() {
-		return roteHasShop;
-	}
-
-	public void setRoteHasShop(Set<RouteHasShop> roteHasShopList) {
-		this.roteHasShop = roteHasShopList;
-	}
-	
-	
-
 	public String getStatusStock() {
 		return statusStock;
 	}
@@ -720,23 +777,6 @@ public class Route implements Serializable{
 	public void setFinishPrice(Integer finishPrice) {
 		this.finishPrice = finishPrice;
 	}
-	
-
-	public User getDriver() {
-		return driver;
-	}
-
-	public void setDriver(User driver) {
-		this.driver = driver;
-	}
-	
-	public Map<String, String> getCost() {
-		return cost;
-	}
-
-	public void setCost(Map<String, String> cost) {
-		this.cost = cost;
-	}
 
 	public String getTypeTrailer() {
 		return typeTrailer;
@@ -745,7 +785,7 @@ public class Route implements Serializable{
 	public void setTypeTrailer(String typeTrailer) {
 		this.typeTrailer = typeTrailer;
 	}
-	
+
 	public String getStartCurrency() {
 		return startCurrency;
 	}
@@ -753,7 +793,7 @@ public class Route implements Serializable{
 	public void setStartCurrency(String startCurrency) {
 		this.startCurrency = startCurrency;
 	}
-	
+
 	public String getUserComments() {
 		return userComments;
 	}
@@ -782,59 +822,11 @@ public class Route implements Serializable{
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 		return dateLoadPreviously.format(formatter);
 	}
+
 	public void setSimpleDateStart(String simpleDateStart) {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 		this.dateLoadPreviously = LocalDate.parse(simpleDateStart, formatter);
 	}
-	
-	public Double getNds() {
-		if (finishPrice != null) {
-			nds = (double) (finishPrice*20.0/100.0);
-			return nds;
-		}else {
-			return null;
-		}		
-	}	
-
-	public String getNumWayList() {
-		return numWayList;
-	}
-
-	public void setNumWayList(String numWayList) {
-		this.numWayList = numWayList;
-	}
-
-	public String getNumTruckAndTrailer() {
-		return numTruckAndTrailer;
-	}
-
-	public void setNumTruckAndTrailer(String numTruckAndTrailer) {
-		this.numTruckAndTrailer = numTruckAndTrailer;
-	}
-
-	public String getCmr() {
-		return cmr;
-	}
-
-	public void setCmr(String cmr) {
-		this.cmr = cmr;
-	}	
-
-	public String getCostWay() {
-		return costWay;
-	}
-
-	public void setCostWay(String costWay) {
-		this.costWay = costWay;
-	}	
-
-	public String getDateUnload() {
-		return dateUnload;
-	}
-
-	public void setDateUnload(String dateUnload) {
-		this.dateUnload = dateUnload;
-	}	
 
 	public String getCustomer() {
 		return customer;
@@ -858,17 +850,17 @@ public class Route implements Serializable{
 	public LocalDate getDateLoadActually() {
 		return dateLoadActually;
 	}
-	
+
 	/**
 	 * дата загрузки от перевозчика STRING
 	 */
 	public String getDateLoadActuallySimple() {
-		if(dateLoadActually != null) {
+		if (dateLoadActually != null) {
 			return dateLoadActually.format(simpleFormatterDate);
-		}else {
+		} else {
 			return null;
 		}
-		
+
 	}
 
 	/**
@@ -877,33 +869,34 @@ public class Route implements Serializable{
 	public void setDateLoadActually(LocalDate dateLoadActually) {
 		this.dateLoadActually = dateLoadActually;
 	}
-	
+
 	public void setDateLoadActually(Date dateLoadActually) {
 		this.dateLoadActually = dateLoadActually.toLocalDate();
 	}
-	
+
 	public void setDateLoadActually(String dateLoadActually) {
 		this.dateLoadActually = LocalDate.parse(dateLoadActually);
 	}
-	
+
 	public String getSimpleDateActually() { // отдаёт стринг даты в удобном формате
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 		if (dateLoadActually == null) {
 			return null;
-		}else {
+		} else {
 			return dateLoadActually.format(formatter);
 		}
-		
+
 	}
+
 	public void setSimpleDateActually(String simpleDateActually) {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 		this.dateLoadActually = LocalDate.parse(simpleDateActually, formatter);
 	}
-	
+
 	public String getWay() {
 		if (way == null) {
 			return null;
-		}else {	
+		} else {
 			return way;
 		}
 	}
@@ -911,19 +904,19 @@ public class Route implements Serializable{
 	public void setWay(String way) {
 		this.way = way;
 	}
-	
+
 	public String getSimpleWay() {
 		if (way == null) {
 			return null;
-		}else if(way.length()<3){	
+		} else if (way.length() < 3) {
 			return way;
-		}else {
+		} else {
 			return way.substring(0, 3);
 		}
 	}
-	
-	public SimpleRoute getSimpleRoute() {
-		return new SimpleRoute(idRoute, dateLoadPreviously, routeDirection, finishPrice, startCurrency);
+
+	public SimpleRouteDTO getSimpleRoute() {
+		return new SimpleRouteDTO(idRoute, dateLoadPreviously, routeDirection, finishPrice, startCurrency);
 	}
 
 	/**
@@ -946,16 +939,16 @@ public class Route implements Serializable{
 	public LocalDate getDateUnloadActually() {
 		return dateUnloadActually;
 	}
-	
+
 	/**
 	 * дата выгрузки от перевозчика STRING
 	 */
 	public String getDateUnloadActuallySimple() {
-		if(dateUnloadActually != null) {
+		if (dateUnloadActually != null) {
 			return dateUnloadActually.format(simpleFormatterDate);
-		}else {
+		} else {
 			return null;
-		}		
+		}
 	}
 
 	/**
@@ -979,57 +972,39 @@ public class Route implements Serializable{
 		this.timeUnloadActually = timeUnloadActually;
 	}
 
-	public Set<Order> getOrders() {
-		return orders;
-	}
-
-	public void setOrders(Set<Order> orders) {
-		this.orders = orders;
-	}
-
 	public Time getTimeUnloadPreviouslyStock() {
 		return timeUnloadPreviouslyStock;
 	}
-	
-	public String getCargoWeightForAct() {
-		return cargoWeightForAct;
-	}
-
-	public void setCargoWeightForAct(String cargoWeightForAct) {
-		this.cargoWeightForAct = cargoWeightForAct;
-	}
 
 	public void setTimeUnloadPreviouslyStock(String timeUnloadPreviouslyStock) {
-		if(timeUnloadPreviouslyStock == null || timeUnloadPreviouslyStock.isEmpty()) {
+		if (timeUnloadPreviouslyStock == null || timeUnloadPreviouslyStock.isEmpty()) {
 			this.timeUnloadPreviouslyStock = null;
-		}else {
-			if(timeUnloadPreviouslyStock.split(":").length<3) {
-				this.timeUnloadPreviouslyStock = Time.valueOf(timeUnloadPreviouslyStock+":00");
-			}else {
+		} else {
+			if (timeUnloadPreviouslyStock.split(":").length < 3) {
+				this.timeUnloadPreviouslyStock = Time.valueOf(timeUnloadPreviouslyStock + ":00");
+			} else {
 				this.timeUnloadPreviouslyStock = Time.valueOf(timeUnloadPreviouslyStock);
 			}
-			
+
 		}
-		
+
 	}
 
 	public Date getDateUnloadPreviouslyStock() {
 		return dateUnloadPreviouslyStock;
 	}
-	
 
 //	public void setDateUnloadPreviouslyStock(Date dateUnloadPreviouslyStock) {
 //		this.dateUnloadPreviouslyStock = dateUnloadPreviouslyStock;
 //	}
 
-
 	public void setDateUnloadPreviouslyStock(String dateUnloadPreviouslyStock) {
-		if(dateUnloadPreviouslyStock == null || dateUnloadPreviouslyStock.isEmpty()) {
+		if (dateUnloadPreviouslyStock == null || dateUnloadPreviouslyStock.isEmpty()) {
 			this.dateUnloadPreviouslyStock = null;
-		}else {
+		} else {
 			this.dateUnloadPreviouslyStock = Date.valueOf(dateUnloadPreviouslyStock);
 		}
-		
+
 	}
 
 	public Date getCreateDate() {
@@ -1056,9 +1031,171 @@ public class Route implements Serializable{
 		this.logistInfo = logistInfo;
 	}
 
+	// ------------------------------
+
 	@Override
 	public int hashCode() {
 		return Objects.hash(idRoute);
+	}
+
+	public Set<OrderDTO> getOrders() {
+		return orders;
+	}
+
+	public void setOrders(Set<OrderDTO> orders) {
+		this.orders = orders;
+	}
+
+	public String getNameOfСarrier() {
+		return nameOfСarrier;
+	}
+
+	public void setNameOfСarrier(String nameOfСarrier) {
+		this.nameOfСarrier = nameOfСarrier;
+	}
+
+	public String getNumOfTruck() {
+		return numOfTruck;
+	}
+
+	public void setNumOfTruck(String numOfTruck) {
+		this.numOfTruck = numOfTruck;
+	}
+
+	public String getModelOfTruck() {
+		return modelOfTruck;
+	}
+
+	public void setModelOfTruck(String modelOfTruck) {
+		this.modelOfTruck = modelOfTruck;
+	}
+
+	public String getBrandOfTruck() {
+		return brandOfTruck;
+	}
+
+	public void setBrandOfTruck(String brandOfTruck) {
+		this.brandOfTruck = brandOfTruck;
+	}
+
+	public String getTypeOfTrailer() {
+		return typeOfTrailer;
+	}
+
+	public void setTypeOfTrailer(String typeOfTrailer) {
+		this.typeOfTrailer = typeOfTrailer;
+	}
+
+	public String getBrandOfTrailer() {
+		return brandOfTrailer;
+	}
+
+	public void setBrandOfTrailer(String brandOfTrailer) {
+		this.brandOfTrailer = brandOfTrailer;
+	}
+
+	public String getOwnerOfTruck() {
+		return ownerOfTruck;
+	}
+
+	public void setOwnerOfTruck(String ownerOfTruck) {
+		this.ownerOfTruck = ownerOfTruck;
+	}
+
+	public String getCargoCapacityOfTruck() {
+		return cargoCapacityOfTruck;
+	}
+
+	public void setCargoCapacityOfTruck(String cargoCapacityOfTruck) {
+		this.cargoCapacityOfTruck = cargoCapacityOfTruck;
+	}
+
+	public String getPallCapacityOfTruck() {
+		return pallCapacityOfTruck;
+	}
+
+	public void setPallCapacityOfTruck(String pallCapacityOfTruck) {
+		this.pallCapacityOfTruck = pallCapacityOfTruck;
+	}
+
+	public String getNumTrailerOfTruck() {
+		return numTrailerOfTruck;
+	}
+
+	public void setNumTrailerOfTruck(String numTrailerOfTruck) {
+		this.numTrailerOfTruck = numTrailerOfTruck;
+	}
+
+	public String getHitchTypeofTruck() {
+		return hitchTypeofTruck;
+	}
+
+	public void setHitchTypeofTruck(String hitchTypeofTruck) {
+		this.hitchTypeofTruck = hitchTypeofTruck;
+	}
+
+	public String getInfoOfTruck() {
+		return infoOfTruck;
+	}
+
+	public void setInfoOfTruck(String infoOfTruck) {
+		this.infoOfTruck = infoOfTruck;
+	}
+
+	public Integer getVolumeTrailerOfTruck() {
+		return volumeTrailerOfTruck;
+	}
+
+	public void setVolumeTrailerOfTruck(Integer volumeTrailerOfTruck) {
+		this.volumeTrailerOfTruck = volumeTrailerOfTruck;
+	}
+
+	public String getDimensionsBodyOfTruck() {
+		return dimensionsBodyOfTruck;
+	}
+
+	public void setDimensionsBodyOfTruck(String dimensionsBodyOfTruck) {
+		this.dimensionsBodyOfTruck = dimensionsBodyOfTruck;
+	}
+
+	public String getNumberAxesOfTruck() {
+		return numberAxesOfTruck;
+	}
+
+	public void setNumberAxesOfTruck(String numberAxesOfTruck) {
+		this.numberAxesOfTruck = numberAxesOfTruck;
+	}
+
+	public String getTechnicalCertificateOfTruck() {
+		return technicalCertificateOfTruck;
+	}
+
+	public void setTechnicalCertificateOfTruck(String technicalCertificateOfTruck) {
+		this.technicalCertificateOfTruck = technicalCertificateOfTruck;
+	}
+
+	public String getNameOfDriver() {
+		return nameOfDriver;
+	}
+
+	public void setNameOfDriver(String nameOfDriver) {
+		this.nameOfDriver = nameOfDriver;
+	}
+
+	public String getNumtelOfDriver() {
+		return numtelOfDriver;
+	}
+
+	public void setNumtelOfDriver(String numtelOfDriver) {
+		this.numtelOfDriver = numtelOfDriver;
+	}
+
+	public String getPasportOfDriver() {
+		return pasportOfDriver;
+	}
+
+	public void setPasportOfDriver(String pasportOfDriver) {
+		this.pasportOfDriver = pasportOfDriver;
 	}
 
 	@Override
@@ -1069,7 +1206,7 @@ public class Route implements Serializable{
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		Route other = (Route) obj;
+		RouteDTO other = (RouteDTO) obj;
 		return idRoute == other.idRoute;
 	}
 
@@ -1081,13 +1218,7 @@ public class Route implements Serializable{
 				+ ", totalCargoWeight=" + totalCargoWeight + ", comments=" + comments + ", routeDirection="
 				+ routeDirection + ", startPrice=" + startPrice + ", finishPrice=" + finishPrice + ", time=" + time
 				+ ", statusRoute=" + statusRoute + ", statusStock=" + statusStock + ", typeTrailer=" + typeTrailer
-				+ "User="+user+"]";
+				+ "]";
 	}
 
-	
-
-
-	
-	
-	
 }

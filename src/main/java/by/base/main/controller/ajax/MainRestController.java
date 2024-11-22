@@ -41,6 +41,8 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -77,6 +79,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.dto.OrderDTO;
 import com.dto.PlanResponce;
+import com.dto.RouteDTO;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
@@ -95,6 +98,8 @@ import com.graphhopper.util.JsonFeature;
 import com.graphhopper.util.PointList;
 import com.graphhopper.util.Translation;
 import com.graphhopper.util.shapes.GHPoint;
+import com.itextpdf.text.DocumentException;
+
 import by.base.main.controller.MainController;
 import by.base.main.dto.MarketDataFor398Request;
 import by.base.main.dto.MarketDataForClear;
@@ -144,6 +149,7 @@ import by.base.main.service.util.CheckOrderNeeds;
 import by.base.main.service.util.CustomJSONParser;
 import by.base.main.service.util.MailService;
 import by.base.main.service.util.OrderCreater;
+import by.base.main.service.util.PDFWriter;
 import by.base.main.service.util.POIExcel;
 import by.base.main.service.util.PropertiesUtils;
 import by.base.main.service.util.ReaderSchedulePlan;
@@ -285,6 +291,9 @@ public class MainRestController {
 	@Autowired
     private TGUserService tgUserService;
 	
+	@Autowired
+	private PDFWriter pdfWriter;
+	
 	private static String classLog;
 	private static String marketJWT;
 	//в отдельный файл
@@ -340,12 +349,15 @@ public class MainRestController {
 		
 		String fileName1200 = "1200 (----Холодный----).xlsx";
 		String fileName1100 = "1100 График прямой сухой.xlsx";
+		String fileNameSample = "График для шаблоново.xlsx";
 		
 		try {
 			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
 					appPath + "resources/others/" + fileName1200);
 			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("сухой").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
 					appPath + "resources/others/" + fileName1100);
+			poiExcel.exportToExcelSampleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+					appPath + "resources/others/" + fileNameSample);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.err.println("Ошибка формирование EXCEL");
@@ -355,13 +367,49 @@ public class MainRestController {
 		List<File> files = new ArrayList<File>();
 		files.add(new File(appPath + "resources/others/" + fileName1200));
 		files.add(new File(appPath + "resources/others/" + fileName1100));
+		files.add(new File(appPath + "resources/others/" + fileNameSample));
 		
+		 File zipFile = createZipFile(files, appPath + "resources/others/TO.zip");
+		 List<File> filesZip = new ArrayList<File>();
+		 filesZip.add(zipFile);
 		
-		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от TEST" + currentTimeString, "Тестовая отправка сообщения.\nНе обращайте внимания / игнорируте это сообщение", files, emails);
+//		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от TEST" + currentTimeString, "Тестовая отправка сообщения.\nНе обращайте внимания / игнорируте это сообщение", files, emails);
+		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от TEST" + currentTimeString, "Тестовая отправка сообщения.\nНе обращайте внимания / игнорируте это сообщение", filesZip, emails);
 		java.util.Date t2 = new java.util.Date();
 		System.out.println(t2.getTime()-t1.getTime() + " ms - testNewMethod" );
 		return responseMap;		
 	}
+	
+    public static File createZipFile(List<File> files, String zipFilePath) throws IOException {
+        File zipFile = new File(zipFilePath);
+        try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile))) {
+            for (File file : files) {
+                if (file.exists() && !file.isDirectory()) {
+                    addFileToZip(file, zos);
+                } else {
+                    System.err.println("File not found or is a directory: " + file.getAbsolutePath());
+                }
+            }
+        }
+        return zipFile; // Возвращаем объект File архива
+    }
+
+    private static void addFileToZip(File file, ZipOutputStream zos) throws IOException {
+        try (FileInputStream fis = new FileInputStream(file)) {
+            ZipEntry zipEntry = new ZipEntry(file.getName());
+            zos.putNextEntry(zipEntry);
+
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = fis.read(buffer)) > 0) {
+                zos.write(buffer, 0, length);
+            }
+
+            zos.closeEntry();
+        }
+    }
+	
+	
 //	
 //	@GetMapping("/test")
 //	public Map<String, Object> test(HttpServletRequest request, HttpServletResponse response){
@@ -399,6 +447,104 @@ public class MainRestController {
 //		System.out.println(t2.getTime()-t1.getTime() + " ms - preloadTEST" );
 //		return responseMap;		
 //	}
+	
+	@GetMapping("/logistics/getProposal/{idRoute}")
+	public void getProposal(HttpServletRequest request, HttpServletResponse response, @PathVariable String idRoute) throws NumberFormatException, DocumentException, IOException {
+		java.util.Date t1 = new java.util.Date();
+		
+		pdfWriter.getProposal(request, routeService.getRouteById(Integer.parseInt(idRoute)));
+		String appPath = request.getServletContext().getRealPath("");
+        String folderPath = appPath + "resources/others/proposal.pdf";
+
+        // Полный путь к файлу
+        File file = new File(folderPath);
+        
+//        System.out.println(file);
+
+        // Проверяем существование файла
+        if (!file.exists()) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            try {
+                response.getWriter().write("Файл не найден: proposal.pdf");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return;
+        }
+     // Настройка заголовков для скачивания файла
+        response.setContentType("application/pdf");
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + "proposal.pdf" + "\"");
+        response.setContentLength((int) file.length());
+
+        // Передаём файл клиенту
+        try (FileInputStream in = new FileInputStream(file);
+             OutputStream out = response.getOutputStream()) {
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = in.read(buffer)) != -1) {
+                out.write(buffer, 0, bytesRead);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+        java.util.Date t2 = new java.util.Date();
+		System.out.println("getProposal :" + (t2.getTime() - t1.getTime()) + " ms");
+    }
+	
+//	@GetMapping("/logistics/getProposal/{idRoute}")
+//	public void getProposal(HttpServletRequest request, HttpServletResponse response, @PathVariable String idRoute) throws NumberFormatException, DocumentException, IOException {
+//		java.util.Date t1 = new java.util.Date();
+//		Map<String, Object> responseMap = new HashMap<>();
+//		
+//		pdfWriter.getProposal(request, routeService.getRouteById(Integer.parseInt(idRoute)));
+//		
+//		String appPath = request.getServletContext().getRealPath("");
+//		//File file = new File(appPath + "resources/others/Speedlogist.apk");
+//		response.setHeader("content-disposition", "attachment;filename="+"proposal.pdf");
+////		response.setHeader("Content-Disposition", "attachment; filename=\"proposal.pdf\"");
+//		
+//		response.setContentType("application/pdf");
+//		try (FileInputStream in = new FileInputStream(appPath + "resources/others/proposal.pdf");
+//				OutputStream out = response.getOutputStream()) {
+//			byte[] buffer = new byte[1024];
+//			int len;
+//			while ((len = in.read(buffer)) > 0) {
+//				out.write(buffer, 0, len);
+//			}
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
+//		
+//		
+//		responseMap.put("status", "200");
+//		responseMap.put("idRoute", idRoute);
+//		responseMap.put("message", "Метод в разработке");
+//		
+//		java.util.Date t2 = new java.util.Date();
+//		System.out.println("getProposal :" + (t2.getTime() - t1.getTime()) + " ms");
+////		return responseMap;
+//	}
+	
+	/**
+	 * отдаёт все маршруты для новой страницы менеджер международных маршрутов
+	 * @param request
+	 * @param dateStart 2024-03-15
+	 * @param dateFinish 2024-03-15
+	 * @return
+	 */
+	@GetMapping("/manager/getRouteDTOForInternational/{dateStart}&{dateFinish}")
+	public Set<RouteDTO> getRouteDTOForInternational(HttpServletRequest request, @PathVariable Date dateStart, @PathVariable Date dateFinish) {
+		java.util.Date t1 = new java.util.Date();
+		Set<RouteDTO> routes = new HashSet<RouteDTO>();
+		List<RouteDTO>targetRoutes = routeService.getRouteListAsDateDTO(dateStart, dateFinish);
+		targetRoutes.stream()
+			.filter(r-> r.getComments() != null && r.getComments().equals("international") && Integer.parseInt(r.getStatusRoute())<=8)
+			.forEach(r -> routes.add(r)); // проверяет созданы ли точки вручную, и отдаёт только международные маршруты	
+		java.util.Date t2 = new java.util.Date();
+		System.out.println("getRouteDTOForInternational :" + (t2.getTime() - t1.getTime()) + " ms");
+		return routes;
+	}
 	
 //	@PostMapping("/398")
 	@GetMapping("/398")
@@ -1186,7 +1332,7 @@ public class MainRestController {
         String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
         String appPath = request.getServletContext().getRealPath("");
         User user = getThisUser();
-		List<String> emails = propertiesUtils.getValuesByPartialKey(request.getServletContext(), "email.orl");
+		List<String> emails = propertiesUtils.getValuesByPartialKey(request.getServletContext(), "email.orl.rc");
 		List<String> emailsSupport = propertiesUtils.getValuesByPartialKey(request.getServletContext(), "email.orderSupport");
 		emails.addAll(emailsSupport);
 		
@@ -1917,6 +2063,11 @@ public class MainRestController {
 		
 		for (Entry<Integer, Shop> entry: targetShopMap.entrySet()) {
 			Schedule schedule = scheduleService.getScheduleByNumContractAndNumStock(Long.parseLong(jsonMainObject.get("counterpartyContractCode").toString()), entry.getKey());
+			if(schedule == null) {
+				response.put("status", "100");
+				response.put("message", "Для магазина " + entry.getValue().getNumshop() + " отсутствует график поставок с кодом контракта " + jsonMainObject.get("counterpartyContractCode").toString());
+				return response;
+			}
 			schedule.setDateLastChanging(Date.valueOf(LocalDate.now()));
 			scheduleService.updateSchedule(editScheduleByRequestForRC(schedule, jsonMainObject));
 		}

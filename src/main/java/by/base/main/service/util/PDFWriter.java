@@ -6,7 +6,11 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -39,7 +43,10 @@ import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.text.pdf.PdfStructTreeController.returnType;
 
 import by.base.main.model.Act;
+import by.base.main.model.Address;
+import by.base.main.model.Order;
 import by.base.main.model.Route;
+import by.base.main.model.RouteHasShop;
 import by.base.main.model.User;
 import by.base.main.service.ActService;
 
@@ -51,7 +58,158 @@ public class PDFWriter {
 	
 	@Autowired
 	private ActService actService;
+	
+	public int getProposal(HttpServletRequest request, Route route) throws FileNotFoundException, DocumentException {
+	    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+	    DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+	    DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+	    String path = request.getServletContext().getRealPath("");
+	    com.itextpdf.text.Font fontMainHeader = FontFactory.getFont(path + "resources/others/fonts/DejaVuSans-Bold.ttf", "cp1251", BaseFont.EMBEDDED, 14);
+	    com.itextpdf.text.Font fontMainText = FontFactory.getFont(path + "resources/others/fonts/DejaVuSans.ttf", "cp1251", BaseFont.EMBEDDED, 10);
+	    com.itextpdf.text.Font fontForRequisitesBolt = FontFactory.getFont(path + "resources/others/fonts/DejaVuSans-Bold.ttf", "cp1251", BaseFont.EMBEDDED, 8);
+	    com.itextpdf.text.Font fontMainTextBold = FontFactory.getFont(path + "resources/others/fonts/DejaVuSans-Bold.ttf", "cp1251", BaseFont.EMBEDDED, 10);
 
+	    Document document = new Document();
+	    String fileName = "proposal";
+	    PdfWriter pdfWriter = PdfWriter.getInstance(document, new FileOutputStream(path + "resources/others/" + fileName + ".pdf"));
+	    document.open();
+
+//	    System.err.println(path+"resources/others/");  //это важно! Не удалять
+	    
+	    // Заголовок
+	    Paragraph p1 = new Paragraph("Заявка на перевозку ЗАО Доброном №" + route.getIdRoute() + " от " + route.getDateLoadPreviously().format(dateFormatter), fontMainHeader);
+	    p1.setSpacingBefore(-30f); // Отступ сверху
+	    p1.setSpacingAfter(20f);   // Отступ снизу
+	    p1.setAlignment(Element.ALIGN_CENTER);
+	    document.add(p1);
+
+	    // Создание таблицы
+	    PdfPTable table = new PdfPTable(2);
+	    table.setWidthPercentage(100); // Ширина таблицы на 100% страницы
+	    table.setSpacingBefore(20f); // Отступ сверху таблицы
+
+	    table.addCell(new Paragraph("Перевозчик", fontMainTextBold));
+	    table.addCell(new Paragraph(route.getUser() != null ? route.getUser().getCompanyName() : "", fontMainText));
+	    
+	    table.addCell(new Paragraph("Выставляемая стоимость :", fontMainTextBold));
+	    table.addCell(new Paragraph(route.getFinishPrice() != null ? route.getFinishPrice() + " " + route.getStartCurrency() : "", fontMainText));
+	    
+
+	    int numPoint = 1;
+	    Order order = route.getOrders().stream().findFirst().get();
+	    List<Address> addresses = new ArrayList<Address>(order.getAddresses());
+	    if(addresses.get(0).getType().equalsIgnoreCase("выгрузка")) {
+	    	Collections.reverse(addresses);
+	    }
+	    
+	    for (Address point : addresses) {
+	        // Внутренние строки для точки
+	        addRowToTable(table, "Точка: " + numPoint, point.getType(), fontMainTextBold, fontMainText,true,false,true);
+
+	        if (point.getType().equalsIgnoreCase("загрузка")) {
+	            addRowToTable(table, "Дата:", point.getDate().toLocalDate().format(dateFormatter) + " " + point.getTime().toLocalTime().format(timeFormatter), fontMainTextBold, fontMainText, false, false, true);
+	            addRowToTable(table, "Наименование контрагента:", order.getCounterparty(), fontMainTextBold, fontMainText, false, false, true);
+	        } else {
+	            addRowToTable(table, "Дата:", order.getTimeDelivery() != null 
+	            		? order.getTimeDelivery().toLocalDateTime().format(dateTimeFormatter) 
+	            		: "Уточнить у специалиста по логистике", fontMainTextBold, fontMainText, false, false, true);
+	        }
+
+	        
+	        addRowToTable(table, "Контактное лицо контрагента:", order.getContact(), fontMainTextBold, fontMainText, false, false, true);
+	        addRowToTable(table, "Адрес склада:", point.getBodyAddress(), fontMainTextBold, fontMainText, false, false, true);
+	        
+	        if(order != null && order.getWay().toLowerCase().equals("импорт") || order != null && order.getWay().toLowerCase().equals("экспорт")) {
+	        	addRowToTable(table, "Адрес таможенного пункта: ", point.getCustomsAddress(), fontMainTextBold, fontMainText, false, false, true);
+	        }
+
+	        addRowToTable(table, "Время работы склада:", point.getTimeFrame(), fontMainTextBold, fontMainText, false, false, true);
+	        addRowToTable(table, "Контактное лицо на складе:", point.getContact(), fontMainTextBold, fontMainText, false, false, true);
+	        
+	        if(point.getType().equalsIgnoreCase("загрузка")) {
+	        	String cargoInfo = point.getCargo() + "; ";
+		        if (point.getPall() != null) cargoInfo += point.getPall() + " палл; ";
+		        if (point.getWeight() != null) cargoInfo += point.getWeight() + " кг; ";
+		        if (point.getVolume() != null) cargoInfo += point.getVolume() + " м.куб;";
+		        addRowToTable(table, "Информация о грузе:", cargoInfo, fontMainTextBold, fontMainText, false, false, true);
+		        addRowToTable(table, "Тип загрузки:", order.getTypeLoad(), fontMainTextBold, fontMainText, false, false, true);
+		        addRowToTable(table, "Способ загрузки:", order.getMethodLoad(), fontMainTextBold, fontMainText, false, false, true);
+		        addRowToTable(table, "Тип кузова:", order.getTypeTruck(), fontMainTextBold, fontMainText, false, false, true);
+		        addRowToTable(table, "Штабелирование:", order.getStacking() ? "Да" : "Нет", fontMainTextBold, fontMainText, false, false, true);
+		        addRowToTable(table, "Температура:", order.getTemperature(), fontMainTextBold, fontMainText, false, false, true); 
+		        if(order.getControl() != null) addRowToTable(table, "Сверка УКЗ: ", order.getControl() ? "Да, сверять УКЗ" : "Нет, не сверять УКЗ", fontMainTextBold, fontMainText, false, false, true);
+	        }
+	        
+	        
+	        if(point.getType().equalsIgnoreCase("выгрузка")) {
+	        	if(order.getIncoterms() != null) addRowToTable(table, "Условия поставки :", order.getIncoterms(), fontMainTextBold, fontMainText, false, false, true);
+	        	addRowToTable(table, "Номер машины/ прицепа:", route.getTruck() != null ? route.getTruck().getNumTruck() + " / " + route.getTruck().getNumTrailer() : null, fontMainTextBold, fontMainText, false, true, true);
+	        }
+
+	        numPoint++;
+	    }
+
+	    // Добавляем таблицу в документ
+	    document.add(table);
+	    
+	    Paragraph paragraph = new Paragraph("Перевозчик:", fontMainTextBold);
+	    paragraph.setAlignment(Element.ALIGN_RIGHT); // Устанавливаем выравнивание по правой стороне
+	    paragraph.setSpacingBefore(20f); // Отступ перед параграфом
+        document.add(paragraph); // Добавляем параграф в документ
+	    
+        
+	    Paragraph paragraph123 = new Paragraph(route.getUser() != null ? route.getUser().getCompanyName() : "", fontMainTextBold);
+	    paragraph123.setAlignment(Element.ALIGN_RIGHT); // Устанавливаем выравнивание по правой стороне
+//	    paragraph123.setSpacingBefore(20f); // Отступ перед параграфом
+        document.add(paragraph123); // Добавляем параграф в документ
+
+	    // Закрываем документ
+	    document.close();
+
+	    return 0;
+	}
+	
+
+//	// Вспомогательный метод для добавления строки
+//	private void addRowToTable(PdfPTable table, String label, String value, com.itextpdf.text.Font labelFont, com.itextpdf.text.Font valueFont) {
+//	    table.addCell(new PdfPCell(new Paragraph(label, labelFont)));
+//	    table.addCell(new PdfPCell(new Paragraph(value, valueFont)));
+//	}
+	private void addRowToTable(PdfPTable table, String label, String value, 
+            com.itextpdf.text.Font labelFont, com.itextpdf.text.Font valueFont, 
+            boolean thickTopBorder, boolean thickBottomBorder, boolean thickSideBorders) {
+			// Создаем ячейки для label и value
+			PdfPCell labelCell = new PdfPCell(new Paragraph(label, labelFont));
+			PdfPCell valueCell = new PdfPCell(new Paragraph(value, valueFont));
+			
+			labelCell.setPadding(3f);
+			valueCell.setPadding(3f);
+			
+			// Устанавливаем толщину верхней границы, если требуется
+			if (thickTopBorder) {
+			labelCell.setBorderWidthTop(2f);
+			valueCell.setBorderWidthTop(2f);
+			}
+			
+			// Устанавливаем толщину нижней границы, если требуется
+			if (thickBottomBorder) {
+			labelCell.setBorderWidthBottom(2f);
+			valueCell.setBorderWidthBottom(2f);
+			}
+			
+			// Устанавливаем толщину боковых границ, если требуется
+			if (thickSideBorders) {
+			labelCell.setBorderWidthLeft(2f);
+			valueCell.setBorderWidthRight(2f);
+			}
+			
+			// Добавляем ячейки в таблицу
+			table.addCell(labelCell);
+			table.addCell(valueCell);
+			}
+
+
+	
 	
 	/**
 	 *	Метод отвечает за формирование акта в формате PDF

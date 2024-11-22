@@ -53,7 +53,7 @@
 			<iframe
 				title="Изменение матрицы"
 				width="100%" height="780px"
-				src="https://app.powerbi.com/reportEmbed?reportId=bcc5fe37-bb58-4ee5-bb2e-82551625053a&autoAuth=true&ctid=a9af5edf-b4be-4591-ba34-a3a96434b108"
+				src="https://app.powerbi.com/reportEmbed?reportId=4f272d07-3afa-43ad-ad2a-eee2a38bb656&autoAuth=true&ctid=a9af5edf-b4be-4591-ba34-a3a96434b108"
 				frameborder="0"
 				allowFullScreen="true">
 			</iframe>

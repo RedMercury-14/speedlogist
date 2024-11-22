@@ -217,7 +217,7 @@
 								</div>
 							</div>
 
-							<div class="mb-3">
+							<!-- <div class="mb-3">
 								<label class="sr-only" for="orderShipmentSchedule">График отгрузки заказа</label>
 								<div class="input-group">
 									<div class="input-group-prepend">
@@ -234,7 +234,7 @@
 										<option value="н">Нечетный</option>
 									</select>
 								</div>
-							</div>
+							</div> -->
 
 							<h5 class="mt-2 mb-0 text-muted font-weight-bold text-center">
 								<span class="custom-tooltip">
@@ -465,7 +465,7 @@
 								</div>
 							</div>
 
-							<div class="mb-3">
+							<!-- <div class="mb-3">
 								<label class="sr-only" for="orderShipmentSchedule">График отгрузки заказа</label>
 								<div class="input-group">
 									<div class="input-group-prepend">
@@ -482,7 +482,7 @@
 										<option value="н">Нечетный</option>
 									</select>
 								</div>
-							</div>
+							</div> -->
 
 							<h5 class="mt-2 mb-0 text-muted font-weight-bold text-center">
 								<span class="custom-tooltip">

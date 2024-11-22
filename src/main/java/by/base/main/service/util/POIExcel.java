@@ -38,8 +38,10 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.PrintSetup;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -249,9 +251,9 @@ public class POIExcel {
 
         // Заголовки колонок
         String[] headers = {
-                "Код контрагента", "Наименование контрагента", "Номер контракта", "Номер ТО" , "Пометка сроки / неделя" ,
+                "Код контрагента", "Наименование контрагента","График формирования заказа  четная неделя ставим метка  --ч-- , нечетная --- н ---", "Номер контракта", "Номер ТО" , "Пометка сроки / неделя" ,
                 "пн", "вт", "ср", "чт", "пт", "сб", "вс", 
-                "Количество поставок", "График формирования заказа  четная неделя ставим метка  --ч-- , нечетная --- н ---", "График отгрузки заказа  четная неделя ставим метка  --ч-- , нечетная --- н ---",
+                "Количество поставок", 
                 "кодовое ИМЯ КОНТРАГЕНТА","квант","измерения КВАНТА", "День в день"
         };
 
@@ -261,6 +263,16 @@ public class POIExcel {
             Cell cell = headerRow.createCell(i);
             cell.setCellValue(headers[i]);
         }
+        
+     // Создаем стиль для окрашивания
+        CellStyle coloredStyle = workbook.createCellStyle();
+        coloredStyle.setFillForegroundColor(IndexedColors.LIGHT_YELLOW.getIndex());
+        coloredStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        // Не задаем границы, чтобы сохранить дефолтные
+
+        // Диапазон колонок для окрашивания
+        int startColumn = 2; // Индекс "График формирования заказа"
+        int endColumn = 12;  // Индекс "вс"
 
         // Заполняем данные
         int rowNum = 1;
@@ -273,27 +285,139 @@ public class POIExcel {
 
             row.createCell(0).setCellValue(schedule.getCounterpartyCode());
             row.createCell(1).setCellValue(schedule.getName());
-            row.createCell(2).setCellValue(schedule.getCounterpartyContractCode());            
-            row.createCell(3).setCellValue(schedule.getNumStock());
-            row.createCell(4).setCellValue(schedule.getNote());
+            row.createCell(2).setCellValue(schedule.getOrderFormationSchedule());
+            row.createCell(3).setCellValue(schedule.getCounterpartyContractCode());            
+            row.createCell(4).setCellValue(schedule.getNumStock());
+            if(schedule.getIsDayToDay()) {
+            	row.createCell(5).setCellValue("сегодня");            	
+            }else {
+            	row.createCell(5).setCellValue(schedule.getNote());
+            }
 
-            row.createCell(5).setCellValue(schedule.getMonday());
-            row.createCell(6).setCellValue(schedule.getTuesday());
-            row.createCell(7).setCellValue(schedule.getWednesday());
-            row.createCell(8).setCellValue(schedule.getThursday());
-            row.createCell(9).setCellValue(schedule.getFriday());
-            row.createCell(10).setCellValue(schedule.getSaturday());
-            row.createCell(11).setCellValue(schedule.getSunday());
+            row.createCell(6).setCellValue(schedule.getMonday());
+            row.createCell(7).setCellValue(schedule.getTuesday());
+            row.createCell(8).setCellValue(schedule.getWednesday());
+            row.createCell(9).setCellValue(schedule.getThursday());
+            row.createCell(10).setCellValue(schedule.getFriday());
+            row.createCell(11).setCellValue(schedule.getSaturday());
+            row.createCell(12).setCellValue(schedule.getSunday());
 
-            row.createCell(12).setCellValue(schedule.getSupplies());            
-            row.createCell(13).setCellValue(schedule.getOrderFormationSchedule());
-            row.createCell(14).setCellValue(schedule.getOrderShipmentSchedule());
+            row.createCell(13).setCellValue(schedule.getSupplies());            
             
-            if(schedule.getCodeNameOfQuantumCounterparty() != null) row.createCell(15).setCellValue(schedule.getCodeNameOfQuantumCounterparty());
-            if(schedule.getQuantum() != null) row.createCell(16).setCellValue(schedule.getQuantum());
-            if(schedule.getQuantumMeasurements() != null) row.createCell(17).setCellValue(schedule.getQuantumMeasurements());
+//            row.createCell(14).setCellValue(schedule.getOrderShipmentSchedule());
+            
+            if(schedule.getCodeNameOfQuantumCounterparty() != null) row.createCell(14).setCellValue(schedule.getCodeNameOfQuantumCounterparty());
+            if(schedule.getQuantum() != null) row.createCell(15).setCellValue(schedule.getQuantum());
+            if(schedule.getQuantumMeasurements() != null) row.createCell(16).setCellValue(schedule.getQuantumMeasurements());
             		
-            row.createCell(18).setCellValue(schedule.getIsDayToDay());
+            row.createCell(17).setCellValue(schedule.getIsDayToDay());
+            
+         // Окрашиваем колонки в указанном диапазоне
+            for (int i = startColumn; i <= endColumn; i++) {
+                Cell cell = row.getCell(i);
+                if (cell == null) {
+                    cell = row.createCell(i); // Если ячейка еще не создана
+                }
+                cell.setCellStyle(coloredStyle);
+            }
+        }
+        
+        // Устанавливаем фильтры на все столбцы
+        sheet.setAutoFilter(new CellRangeAddress(0, 0, 0, headers.length - 1));
+
+        // Сохраняем файл
+        try (FileOutputStream fileOut = new FileOutputStream(filePath)) {
+            workbook.write(fileOut);
+        }        
+        workbook.close();
+		return filePath;
+	}
+	
+	/**
+	 * Метод формирует ексель с шаблоном для ММЗ и Беллакт
+	 * @param schedules
+	 * @param filePath
+	 * @return
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
+	public String exportToExcelSampleListTO(List<Schedule> schedules, String filePath) throws FileNotFoundException, IOException {
+		Workbook workbook = new XSSFWorkbook();
+		if(schedules.isEmpty()) {
+			return null;
+		}
+        Sheet sheet = workbook.createSheet(schedules.get(0).getNumStock() + "");
+
+        // Заголовки колонок
+        String[] headers = {
+                "Код контрагента", "Наименование контрагента","Наименование склада/WarehouseNameInfo", "Номер контракта", "Номер ТО" , 
+                "пн", "вт", "ср", "чт", "пт", "сб", "вс", 
+                "Количество поставок", 
+                "пн", "вт", "ср", "чт", "пт", "сб", "вс", 
+        };
+
+        // Создаем строку заголовков
+        Row headerRow = sheet.createRow(0);
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]);
+        }
+        
+        // Закрепляем строку заголовка
+        sheet.createFreezePane(0, 1); // 0 столбцов, 1 строка
+        
+        Map<Integer, Shop> mapShop = shopDAO.getShopMap();
+
+        // Заполняем данные
+        int rowNum = 1;
+        for (Schedule schedule : schedules) {
+        	if(schedule.getIsNotCalc() != null && schedule.getIsNotCalc()) {
+        		continue;
+        	}
+        	
+            Row row = sheet.createRow(rowNum++);
+
+            row.createCell(0).setCellValue(schedule.getCounterpartyCode());
+            row.createCell(1).setCellValue(schedule.getName());
+            if(mapShop.get(schedule.getNumStock()) != null) {
+            	row.createCell(2).setCellValue(mapShop.get(schedule.getNumStock()).getAddress());            	
+            }else {
+            	row.createCell(2).setCellValue("Не найден в базе данных!");  
+            }
+            row.createCell(3).setCellValue(schedule.getCounterpartyContractCode());            
+            row.createCell(4).setCellValue(schedule.getNumStock());
+//            if(schedule.getIsDayToDay()) {
+//            	row.createCell(5).setCellValue("сегодня");            	
+//            }else {
+//            	row.createCell(5).setCellValue(schedule.getNote());
+//            }
+
+            row.createCell(5).setCellValue(schedule.getMonday() != null && schedule.getMonday().contains("з") ? schedule.getMonday().split("/")[0] : null);
+            row.createCell(6).setCellValue(schedule.getTuesday() != null && schedule.getTuesday().contains("з") ? schedule.getTuesday().split("/")[0] : null);
+            row.createCell(7).setCellValue(schedule.getWednesday() != null && schedule.getWednesday().contains("з") ? schedule.getWednesday().split("/")[0] : null);
+            row.createCell(8).setCellValue(schedule.getThursday() != null && schedule.getThursday().contains("з") ? schedule.getThursday().split("/")[0] : null);
+            row.createCell(9).setCellValue(schedule.getFriday() != null && schedule.getFriday().contains("з") ? schedule.getFriday().split("/")[0] : null);
+            row.createCell(10).setCellValue(schedule.getSaturday() != null && schedule.getSaturday().contains("з") ? schedule.getSaturday().split("/")[0] : null);
+            row.createCell(11).setCellValue(schedule.getSunday() != null && schedule.getSunday().contains("з") ? schedule.getSunday().split("/")[0] : null);
+
+            row.createCell(12).setCellValue(schedule.getSupplies());   
+            
+            row.createCell(13).setCellValue(schedule.getMonday() != null ? schedule.getMonday().startsWith("з/") ? schedule.getMonday().substring(2).trim() : 
+            	schedule.getMonday().startsWith("з") ? schedule.getMonday().substring(1).trim() : schedule.getMonday().trim() : null);
+            row.createCell(14).setCellValue(schedule.getTuesday() != null  ? schedule.getTuesday().startsWith("з/") ? schedule.getTuesday().substring(2).trim() : 
+            	schedule.getTuesday().startsWith("з") ? schedule.getTuesday().substring(1).trim() : schedule.getTuesday().trim() : null);
+            row.createCell(15).setCellValue(schedule.getWednesday() != null ? schedule.getWednesday().startsWith("з/") ? schedule.getWednesday().substring(2).trim() : 
+            	schedule.getWednesday().startsWith("з") ? schedule.getWednesday().substring(1).trim() : schedule.getWednesday().trim() : null);
+            row.createCell(16).setCellValue(schedule.getThursday() != null ? schedule.getThursday().startsWith("з/") ? schedule.getThursday().substring(2).trim() : 
+            	schedule.getThursday().startsWith("з") ? schedule.getThursday().substring(1).trim() : schedule.getThursday().trim() : null);
+            row.createCell(17).setCellValue(schedule.getFriday() != null ? schedule.getFriday().startsWith("з/") ? schedule.getFriday().substring(2).trim() : 
+            	schedule.getFriday().startsWith("з") ? schedule.getFriday().substring(1).trim() : schedule.getFriday().trim() : null);
+            row.createCell(18).setCellValue(schedule.getSaturday() != null ? schedule.getSaturday().startsWith("з/") ? schedule.getSaturday().substring(2).trim() : 
+            	schedule.getSaturday().startsWith("з") ? schedule.getSaturday().substring(1).trim() : schedule.getSaturday().trim() : null);
+            row.createCell(19).setCellValue(schedule.getSunday() != null ? schedule.getSunday().startsWith("з/") ? schedule.getSunday().substring(2).trim() : 
+            	schedule.getSunday().startsWith("з") ? schedule.getSunday().substring(1).trim() : schedule.getSunday().trim() : null);
+
+            
         }
         
         // Устанавливаем фильтры на все столбцы

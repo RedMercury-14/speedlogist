@@ -1,6 +1,8 @@
 package by.base.main.dao.impl;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
@@ -29,6 +31,17 @@ public class ShopDAOImpl implements ShopDAO{
 		Query<Shop> theObject = currentSession.createQuery(queryGetList, Shop.class);
 		List <Shop> objects = theObject.getResultList();
 		return objects;
+	}
+	
+	@Override
+	@Transactional
+	public Map<Integer, Shop> getShopMap() {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Shop> theObject = currentSession.createQuery(queryGetList, Shop.class);
+		List <Shop> objects = theObject.getResultList();
+		Map<Integer, Shop> shopMap = objects.stream()
+                .collect(Collectors.toMap(Shop::getNumshop, shop -> shop));
+		return shopMap;
 	}
 
 	//не сохраняет, если магаз имеется!
@@ -82,5 +95,7 @@ public class ShopDAOImpl implements ShopDAO{
 		Session currentSession = sessionFactory.getCurrentSession();
 		currentSession.saveOrUpdate(shop);		
 	}
+
+	
 
 }

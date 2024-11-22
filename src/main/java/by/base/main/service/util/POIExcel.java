@@ -402,20 +402,20 @@ public class POIExcel {
 
             row.createCell(12).setCellValue(schedule.getSupplies());   
             
-            row.createCell(13).setCellValue(schedule.getMonday() != null ? schedule.getMonday().startsWith("з/") ? schedule.getMonday().substring(2) : 
-            	schedule.getMonday().startsWith("з") ? schedule.getMonday().substring(1) : schedule.getMonday(): null);
-            row.createCell(14).setCellValue(schedule.getTuesday() != null  ? schedule.getTuesday().startsWith("з/") ? schedule.getTuesday().substring(2) : 
-            	schedule.getTuesday().startsWith("з") ? schedule.getTuesday().substring(1) : schedule.getTuesday(): null);
-            row.createCell(15).setCellValue(schedule.getWednesday() != null ? schedule.getWednesday().startsWith("з/") ? schedule.getWednesday().substring(2) : 
-            	schedule.getWednesday().startsWith("з") ? schedule.getWednesday().substring(1) : schedule.getWednesday() : null);
-            row.createCell(16).setCellValue(schedule.getThursday() != null ? schedule.getThursday().startsWith("з/") ? schedule.getThursday().substring(2) : 
-            	schedule.getThursday().startsWith("з") ? schedule.getThursday().substring(1) : schedule.getThursday() : null);
-            row.createCell(17).setCellValue(schedule.getFriday() != null ? schedule.getFriday().startsWith("з/") ? schedule.getFriday().substring(2) : 
-            	schedule.getFriday().startsWith("з") ? schedule.getFriday().substring(1) : schedule.getFriday() : null);
-            row.createCell(18).setCellValue(schedule.getSaturday() != null ? schedule.getSaturday().startsWith("з/") ? schedule.getSaturday().substring(2) : 
-            	schedule.getSaturday().startsWith("з") ? schedule.getSaturday().substring(1) : schedule.getSaturday() : null);
-            row.createCell(19).setCellValue(schedule.getSunday() != null ? schedule.getSunday().startsWith("з/") ? schedule.getSunday().substring(2) : 
-            	schedule.getSunday().startsWith("з") ? schedule.getSunday().substring(1) : schedule.getSunday() : null);
+            row.createCell(13).setCellValue(schedule.getMonday() != null ? schedule.getMonday().startsWith("з/") ? schedule.getMonday().substring(2).trim() : 
+            	schedule.getMonday().startsWith("з") ? schedule.getMonday().substring(1).trim() : schedule.getMonday().trim() : null);
+            row.createCell(14).setCellValue(schedule.getTuesday() != null  ? schedule.getTuesday().startsWith("з/") ? schedule.getTuesday().substring(2).trim() : 
+            	schedule.getTuesday().startsWith("з") ? schedule.getTuesday().substring(1).trim() : schedule.getTuesday().trim() : null);
+            row.createCell(15).setCellValue(schedule.getWednesday() != null ? schedule.getWednesday().startsWith("з/") ? schedule.getWednesday().substring(2).trim() : 
+            	schedule.getWednesday().startsWith("з") ? schedule.getWednesday().substring(1).trim() : schedule.getWednesday().trim() : null);
+            row.createCell(16).setCellValue(schedule.getThursday() != null ? schedule.getThursday().startsWith("з/") ? schedule.getThursday().substring(2).trim() : 
+            	schedule.getThursday().startsWith("з") ? schedule.getThursday().substring(1).trim() : schedule.getThursday().trim() : null);
+            row.createCell(17).setCellValue(schedule.getFriday() != null ? schedule.getFriday().startsWith("з/") ? schedule.getFriday().substring(2).trim() : 
+            	schedule.getFriday().startsWith("з") ? schedule.getFriday().substring(1).trim() : schedule.getFriday().trim() : null);
+            row.createCell(18).setCellValue(schedule.getSaturday() != null ? schedule.getSaturday().startsWith("з/") ? schedule.getSaturday().substring(2).trim() : 
+            	schedule.getSaturday().startsWith("з") ? schedule.getSaturday().substring(1).trim() : schedule.getSaturday().trim() : null);
+            row.createCell(19).setCellValue(schedule.getSunday() != null ? schedule.getSunday().startsWith("з/") ? schedule.getSunday().substring(2).trim() : 
+            	schedule.getSunday().startsWith("з") ? schedule.getSunday().substring(1).trim() : schedule.getSunday().trim() : null);
 
             
         }

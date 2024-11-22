@@ -91,6 +91,9 @@ public class PDFWriter {
 	    table.addCell(new Paragraph("Перевозчик", fontMainTextBold));
 	    table.addCell(new Paragraph(route.getUser() != null ? route.getUser().getCompanyName() : "", fontMainText));
 	    
+	    table.addCell(new Paragraph("Выставляемая стоимость :", fontMainTextBold));
+	    table.addCell(new Paragraph(route.getFinishPrice() != null ? route.getFinishPrice() + " " + route.getStartCurrency() : "", fontMainText));
+	    
 
 	    int numPoint = 1;
 	    Order order = route.getOrders().stream().findFirst().get();
@@ -105,13 +108,14 @@ public class PDFWriter {
 
 	        if (point.getType().equalsIgnoreCase("загрузка")) {
 	            addRowToTable(table, "Дата:", point.getDate().toLocalDate().format(dateFormatter) + " " + point.getTime().toLocalTime().format(timeFormatter), fontMainTextBold, fontMainText, false, false, true);
+	            addRowToTable(table, "Наименование контрагента:", order.getCounterparty(), fontMainTextBold, fontMainText, false, false, true);
 	        } else {
 	            addRowToTable(table, "Дата:", order.getTimeDelivery() != null 
 	            		? order.getTimeDelivery().toLocalDateTime().format(dateTimeFormatter) 
 	            		: "Уточнить у специалиста по логистике", fontMainTextBold, fontMainText, false, false, true);
 	        }
 
-	        addRowToTable(table, "Наименование контрагента:", order.getCounterparty(), fontMainTextBold, fontMainText, false, false, true);
+	        
 	        addRowToTable(table, "Контактное лицо контрагента:", order.getContact(), fontMainTextBold, fontMainText, false, false, true);
 	        addRowToTable(table, "Адрес склада:", point.getBodyAddress(), fontMainTextBold, fontMainText, false, false, true);
 	        
@@ -119,22 +123,26 @@ public class PDFWriter {
 	        	addRowToTable(table, "Адрес таможенного пункта: ", point.getCustomsAddress(), fontMainTextBold, fontMainText, false, false, true);
 	        }
 
-	        String cargoInfo = point.getCargo() + "; ";
-	        if (point.getPall() != null) cargoInfo += point.getPall() + " палл; ";
-	        if (point.getWeight() != null) cargoInfo += point.getWeight() + " кг; ";
-	        if (point.getVolume() != null) cargoInfo += point.getVolume() + " м.куб;";
-	        addRowToTable(table, "Информация о грузе:", cargoInfo, fontMainTextBold, fontMainText, false, false, true);
-
 	        addRowToTable(table, "Время работы склада:", point.getTimeFrame(), fontMainTextBold, fontMainText, false, false, true);
 	        addRowToTable(table, "Контактное лицо на складе:", point.getContact(), fontMainTextBold, fontMainText, false, false, true);
-	        addRowToTable(table, "Тип загрузки:", order.getTypeLoad(), fontMainTextBold, fontMainText, false, false, true);
-	        addRowToTable(table, "Способ загрузки:", order.getMethodLoad(), fontMainTextBold, fontMainText, false, false, true);
-	        addRowToTable(table, "Тип кузова:", order.getTypeTruck(), fontMainTextBold, fontMainText, false, false, true);
-	        addRowToTable(table, "Штабелирование:", order.getStacking() ? "Да" : "Нет", fontMainTextBold, fontMainText, false, false, true);
-	        addRowToTable(table, "Температура:", order.getTemperature(), fontMainTextBold, fontMainText, false, false, true); 
+	        
+	        if(point.getType().equalsIgnoreCase("загрузка")) {
+	        	String cargoInfo = point.getCargo() + "; ";
+		        if (point.getPall() != null) cargoInfo += point.getPall() + " палл; ";
+		        if (point.getWeight() != null) cargoInfo += point.getWeight() + " кг; ";
+		        if (point.getVolume() != null) cargoInfo += point.getVolume() + " м.куб;";
+		        addRowToTable(table, "Информация о грузе:", cargoInfo, fontMainTextBold, fontMainText, false, false, true);
+		        addRowToTable(table, "Тип загрузки:", order.getTypeLoad(), fontMainTextBold, fontMainText, false, false, true);
+		        addRowToTable(table, "Способ загрузки:", order.getMethodLoad(), fontMainTextBold, fontMainText, false, false, true);
+		        addRowToTable(table, "Тип кузова:", order.getTypeTruck(), fontMainTextBold, fontMainText, false, false, true);
+		        addRowToTable(table, "Штабелирование:", order.getStacking() ? "Да" : "Нет", fontMainTextBold, fontMainText, false, false, true);
+		        addRowToTable(table, "Температура:", order.getTemperature(), fontMainTextBold, fontMainText, false, false, true); 
+		        if(order.getControl() != null) addRowToTable(table, "Сверка УКЗ: ", order.getControl() ? "Да, сверять УКЗ" : "Нет, не сверять УКЗ", fontMainTextBold, fontMainText, false, false, true);
+	        }
+	        
+	        
 	        if(point.getType().equalsIgnoreCase("выгрузка")) {
 	        	if(order.getIncoterms() != null) addRowToTable(table, "Условия поставки :", order.getIncoterms(), fontMainTextBold, fontMainText, false, false, true);
-	        	if(order.getControl() != null) addRowToTable(table, "Сверка УКЗ: ", order.getControl() ? "Да, сверять УКЗ" : "Нет, не сверять УКЗ", fontMainTextBold, fontMainText, false, false, true);
 	        	addRowToTable(table, "Номер машины/ прицепа:", route.getTruck() != null ? route.getTruck().getNumTruck() + " / " + route.getTruck().getNumTrailer() : null, fontMainTextBold, fontMainText, false, true, true);
 	        }
 

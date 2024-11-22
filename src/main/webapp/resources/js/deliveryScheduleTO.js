@@ -51,6 +51,7 @@ let table
 let scheduleData
 let getScheduleUrl
 let counterpartyList
+let counterpartyContractCodeList
 
 const columnDefs = [
 	...deliveryScheduleColumnDefs,
@@ -237,6 +238,8 @@ async function initStartData() {
 		counterpartyData.map(el => ({ ...el, counterpartyContractCode: el.counterpartyContractCodeUnic })
 	))
 
+	counterpartyContractCodeList = counterpartyData.map(el => el.counterpartyContractCodeUnic)
+
 	// создание списков названий и кодов контрагентов
 	createCounterpartyDatalist(counterpartyList)
 }
@@ -379,12 +382,12 @@ function getContextMenuItems(params) {
 		},
 		{
 			name: `Удаление графиков`,
-			disabled: !isAdmin(role) && !isORL(role) && !isOrderSupport(role),
+			// disabled: !isAdmin(role) && !isORL(role) && !isOrderSupport(role),
 			icon: uiIcons.trash,
 			subMenu: [
 				{
 					name: `Удалить текущий график`,
-					disabled: (!isAdmin(role) && !isORL(role) && !isOrderSupport(role)) || status === 0,
+					// disabled: (!isAdmin(role) && !isORL(role) && !isOrderSupport(role)) || status === 0,
 					action: () => {
 						deleteScheduleItem(role, rowNode)
 					},
@@ -579,7 +582,7 @@ function sendExcelFormHandler(e) {
 	})
 }
 // обработчик отправки формы создания графика поставки
-function addScheduleItemFormHandler(e) {
+async function addScheduleItemFormHandler(e) {
 	e.preventDefault()
 
 	const formData = new FormData(e.target)
@@ -599,6 +602,18 @@ function addScheduleItemFormHandler(e) {
 	if (errorMessage) {
 		snackbar.show(errorMessage)
 		return
+	}
+
+	const counterpartyContractCode = data.counterpartyContractCode
+	const isExistCounterpartyContractCode = counterpartyContractCodeList.includes(counterpartyContractCode)
+	if (isExistCounterpartyContractCode) {
+		// делаем запрос для получения данных
+		const scheduleData = await getScheduleData(`${getScheduleByContractBaseUrl}${counterpartyContractCode}`)
+		if (!scheduleData) return
+		const schedule = scheduleData[0]
+		data.isDayToDay = schedule.isDayToDay
+		data.codeNameOfQuantumCounterparty = schedule.codeNameOfQuantumCounterparty
+		data.status = 20
 	}
 
 	disableButton(e.submitter)

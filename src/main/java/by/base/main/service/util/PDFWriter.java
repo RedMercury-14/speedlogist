@@ -74,7 +74,7 @@ public class PDFWriter {
 	    PdfWriter pdfWriter = PdfWriter.getInstance(document, new FileOutputStream(path + "resources/others/" + fileName + ".pdf"));
 	    document.open();
 
-	    System.err.println(path+"resources/others/");  //это важно! Не удалять
+//	    System.err.println(path+"resources/others/");  //это важно! Не удалять
 	    
 	    // Заголовок
 	    Paragraph p1 = new Paragraph("Заявка на перевозку ЗАО Доброном №" + route.getIdRoute() + " от " + route.getDateLoadPreviously().format(dateFormatter), fontMainHeader);

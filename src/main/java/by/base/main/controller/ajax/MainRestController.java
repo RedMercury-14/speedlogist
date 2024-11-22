@@ -41,6 +41,8 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -347,12 +349,15 @@ public class MainRestController {
 		
 		String fileName1200 = "1200 (----Холодный----).xlsx";
 		String fileName1100 = "1100 График прямой сухой.xlsx";
+		String fileNameSample = "График для шаблоново.xlsx";
 		
 		try {
 			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
 					appPath + "resources/others/" + fileName1200);
 			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("сухой").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
 					appPath + "resources/others/" + fileName1100);
+			poiExcel.exportToExcelSampleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+					appPath + "resources/others/" + fileNameSample);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.err.println("Ошибка формирование EXCEL");
@@ -362,13 +367,49 @@ public class MainRestController {
 		List<File> files = new ArrayList<File>();
 		files.add(new File(appPath + "resources/others/" + fileName1200));
 		files.add(new File(appPath + "resources/others/" + fileName1100));
+		files.add(new File(appPath + "resources/others/" + fileNameSample));
 		
+		 File zipFile = createZipFile(files, appPath + "resources/others/TO.zip");
+		 List<File> filesZip = new ArrayList<File>();
+		 filesZip.add(zipFile);
 		
-		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от TEST" + currentTimeString, "Тестовая отправка сообщения.\nНе обращайте внимания / игнорируте это сообщение", files, emails);
+//		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от TEST" + currentTimeString, "Тестовая отправка сообщения.\nНе обращайте внимания / игнорируте это сообщение", files, emails);
+		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от TEST" + currentTimeString, "Тестовая отправка сообщения.\nНе обращайте внимания / игнорируте это сообщение", filesZip, emails);
 		java.util.Date t2 = new java.util.Date();
 		System.out.println(t2.getTime()-t1.getTime() + " ms - testNewMethod" );
 		return responseMap;		
 	}
+	
+    public static File createZipFile(List<File> files, String zipFilePath) throws IOException {
+        File zipFile = new File(zipFilePath);
+        try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile))) {
+            for (File file : files) {
+                if (file.exists() && !file.isDirectory()) {
+                    addFileToZip(file, zos);
+                } else {
+                    System.err.println("File not found or is a directory: " + file.getAbsolutePath());
+                }
+            }
+        }
+        return zipFile; // Возвращаем объект File архива
+    }
+
+    private static void addFileToZip(File file, ZipOutputStream zos) throws IOException {
+        try (FileInputStream fis = new FileInputStream(file)) {
+            ZipEntry zipEntry = new ZipEntry(file.getName());
+            zos.putNextEntry(zipEntry);
+
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = fis.read(buffer)) > 0) {
+                zos.write(buffer, 0, length);
+            }
+
+            zos.closeEntry();
+        }
+    }
+	
+	
 //	
 //	@GetMapping("/test")
 //	public Map<String, Object> test(HttpServletRequest request, HttpServletResponse response){
@@ -418,7 +459,7 @@ public class MainRestController {
         // Полный путь к файлу
         File file = new File(folderPath);
         
-        System.out.println(file);
+//        System.out.println(file);
 
         // Проверяем существование файла
         if (!file.exists()) {
@@ -1291,7 +1332,7 @@ public class MainRestController {
         String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
         String appPath = request.getServletContext().getRealPath("");
         User user = getThisUser();
-		List<String> emails = propertiesUtils.getValuesByPartialKey(request.getServletContext(), "email.orl");
+		List<String> emails = propertiesUtils.getValuesByPartialKey(request.getServletContext(), "email.orl.rc");
 		List<String> emailsSupport = propertiesUtils.getValuesByPartialKey(request.getServletContext(), "email.orderSupport");
 		emails.addAll(emailsSupport);
 		

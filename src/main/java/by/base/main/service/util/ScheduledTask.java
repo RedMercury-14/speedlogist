@@ -1,6 +1,8 @@
 package by.base.main.service.util;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.Date;
 import java.time.LocalDate;
@@ -10,6 +12,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import javax.servlet.ServletContext;
 
@@ -60,7 +64,7 @@ public class ScheduledTask {
         LocalDate currentTime = LocalDate.now();
         String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
         
-		List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl");
+		List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.rc");
 		List<String> emailsSupport = propertiesUtils.getValuesByPartialKey(servletContext, "email.orderSupport");
 		emails.addAll(emailsSupport);
 		String appPath = servletContext.getRealPath("/");
@@ -94,41 +98,82 @@ public class ScheduledTask {
     
     
     
-//    @Scheduled(cron = "0 00 04 * * ?") // каждый день в 11:00
-//    public void sendSchedulesTOHasORL() {
-//    	System.out.println("Start --- sendSchedulesTOHasORL");
-//    	Map<String, Object> responseMap = new HashMap<>();
-//		// Получаем текущую дату для имени файла
-//        LocalDate currentTime = LocalDate.now();
-//        String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-//        
-//		List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to");
-////		List<String> emailsSupport = propertiesUtils.getValuesByPartialKey(servletContext, "email.orderSupport");
-////		emails.addAll(emailsSupport);
-//		String appPath = servletContext.getRealPath("/");
-//		
-//		String fileName1200 = "1200 (----Холодный----).xlsx";
-//		String fileName1100 = "1100 График прямой сухой.xlsx";
-//		
-//		try {
-//			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
-//					appPath + "resources/others/" + fileName1200);
-//			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("сухой").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
-//					appPath + "resources/others/" + fileName1100);
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//			System.err.println("Ошибка формирование EXCEL");
-//		}
-//		
-////		response.setHeader("content-disposition", "attachment;filename="+fileName+".xlsx");
-//		List<File> files = new ArrayList<File>();
-//		files.add(new File(appPath + "resources/others/" + fileName1200));
-//		files.add(new File(appPath + "resources/others/" + fileName1100));
-//		
-//		
-//		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO от " + currentTimeString, "Автоматическая отправка", files, emails);
-//    	System.out.println("Finish --- sendSchedulesHasTOORL");
-//    }
+    @Scheduled(cron = "0 00 04 * * ?") // каждый день в 04:00
+    public void sendSchedulesTOHasORL() {
+    	System.out.println("Start --- sendSchedulesTOHasORL");
+    	// Получаем текущую дату для имени файла
+        LocalDate currentTime = LocalDate.now();
+        String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+        
+		List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to");
+//		emails.addAll(emailsSupport);
+		String appPath = servletContext.getRealPath("/");
+		
+		String fileName1200 = "1200 (----Холодный----).xlsx";
+		String fileName1100 = "1100 График прямой сухой.xlsx";
+		String fileNameSample = "График для шаблоново.xlsx";
+		
+		try {
+			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+					appPath + "resources/others/" + fileName1200);
+			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("сухой").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+					appPath + "resources/others/" + fileName1100);
+			poiExcel.exportToExcelSampleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+					appPath + "resources/others/" + fileNameSample);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.err.println("Ошибка формирование EXCEL");
+		}
+		
+//		response.setHeader("content-disposition", "attachment;filename="+fileName+".xlsx");
+		List<File> files = new ArrayList<File>();
+		files.add(new File(appPath + "resources/others/" + fileName1200));
+		files.add(new File(appPath + "resources/others/" + fileName1100));
+		files.add(new File(appPath + "resources/others/" + fileNameSample));
+		
+		 File zipFile;
+		 List<File> filesZip = new ArrayList<File>();
+		try {
+			zipFile = createZipFile(files, appPath + "resources/others/TO.zip");
+			filesZip.add(zipFile);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+//		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от TEST" + currentTimeString, "Тестовая отправка сообщения.\nНе обращайте внимания / игнорируте это сообщение", files, emails);
+		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от TEST" + currentTimeString, "Тестовая отправка сообщения.\nНе обращайте внимания / игнорируте это сообщение", filesZip, emails);
+    	System.out.println("Finish --- sendSchedulesHasTOORL");
+    }
+    
+    public File createZipFile(List<File> files, String zipFilePath) throws IOException {
+        File zipFile = new File(zipFilePath);
+        try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile))) {
+            for (File file : files) {
+                if (file.exists() && !file.isDirectory()) {
+                    addFileToZip(file, zos);
+                } else {
+                    System.err.println("File not found or is a directory: " + file.getAbsolutePath());
+                }
+            }
+        }
+        return zipFile; // Возвращаем объект File архива
+    }
+
+    private void addFileToZip(File file, ZipOutputStream zos) throws IOException {
+        try (FileInputStream fis = new FileInputStream(file)) {
+            ZipEntry zipEntry = new ZipEntry(file.getName());
+            zos.putNextEntry(zipEntry);
+
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = fis.read(buffer)) > 0) {
+                zos.write(buffer, 0, length);
+            }
+
+            zos.closeEntry();
+        }
+    }
     
     @Scheduled(cron = "0 00 20 * * ?") // каждый день в 20:00
     public void clearMessageList() {

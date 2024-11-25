@@ -142,7 +142,7 @@ public class ScheduledTask {
 		}
 		
 //		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от TEST" + currentTimeString, "Тестовая отправка сообщения.\nНе обращайте внимания / игнорируте это сообщение", files, emails);
-		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от TEST" + currentTimeString, "Тестовая отправка сообщения.\nНе обращайте внимания / игнорируте это сообщение", filesZip, emails);
+		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO" + currentTimeString, "Автоматическая отправка графиков поставок на ТО", filesZip, emails);
     	System.out.println("Finish --- sendSchedulesHasTOORL");
     }
     

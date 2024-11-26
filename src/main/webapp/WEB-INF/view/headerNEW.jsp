@@ -173,6 +173,7 @@
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/orl/need" />">Потребности</a></li>
 							</c:when>
 							<c:when test="${roles == '[ROLE_SLOTOBSERVER]'}">
+								<li><a class="nav-item nav-link" href="<spring:url value="/main/logistics/maintenance " />">Менеджер маршрутов АХО/СГИ</a></li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/procurement/orders" />">Контроль заявок</a></li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/slots" />">Слоты</a></li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/procurement/ordersBalance" />">Остаток товара</a></li>

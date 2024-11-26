@@ -177,7 +177,7 @@
 										</div>
 										<select id="quantumMeasurements" name="quantumMeasurements" class="form-control">
 											<option value="" selected hidden disabled>Выберите вариант</option>
-											<option value="c НДС">с НДС</option>
+											<option value="с НДС">с НДС</option>
 											<option value="без НДС">без НДС</option>
 											<option value="кг">кг</option>
 											<option value="упаковок">упаковок</option>
@@ -425,7 +425,7 @@
 										</div>
 										<select id="quantumMeasurements" name="quantumMeasurements" class="form-control">
 											<option value="" selected hidden disabled>Выберите вариант</option>
-											<option value="с НДС">c НДС</option>
+											<option value="с НДС">с НДС</option>
 											<option value="без НДС">без НДС</option>
 											<option value="кг">кг</option>
 											<option value="упаковок">упаковок</option>

@@ -319,7 +319,7 @@ function getContextMenuItems(params) {
 				subMenu: [
 					{
 						name: `Подтвердить текущий график`,
-						action: () => confirmScheduleItem(role, rowNode),
+						action: () => confirmScheduleItem(rowNode),
 					},
 					{
 						name: `Подтвердить графики по текущему коду контракта (с указанием кодового слова)`,
@@ -336,7 +336,7 @@ function getContextMenuItems(params) {
 				subMenu: [
 					{
 						name: `Снять подтверждение с текущего графика`,
-						action: () => unconfirmScheduleItem(role, rowNode),
+						action: () => unconfirmScheduleItem(rowNode),
 					},
 					{
 						name: `Снять подтверждение с графиков по текущему коду контракта`,
@@ -389,7 +389,7 @@ function getContextMenuItems(params) {
 					name: `Удалить текущий график`,
 					// disabled: (!isAdmin(role) && !isORL(role) && !isOrderSupport(role)) || status === 0,
 					action: () => {
-						deleteScheduleItem(role, rowNode)
+						deleteScheduleItem(rowNode)
 					},
 				},
 				{
@@ -604,6 +604,7 @@ async function addScheduleItemFormHandler(e) {
 		return
 	}
 
+	// для существующего кода контракта добавляем метку Сегодня на сегодня и Кодовое имя, а также меняем статус
 	const counterpartyContractCode = data.counterpartyContractCode
 	const isExistCounterpartyContractCode = counterpartyContractCodeList.includes(counterpartyContractCode)
 	if (isExistCounterpartyContractCode) {

@@ -448,6 +448,59 @@ public class MainRestController {
 //		return responseMap;		
 //	}
 	
+//    @GetMapping("/logistics/getOrdersLinks/{idOrder}")
+//	public Map<String, Object> getOrdersLinks(HttpServletRequest request, HttpServletResponse response, @PathVariable String idOrder) throws NumberFormatException, DocumentException, IOException {
+//    	Map<String, Object> responseMap = new HashMap<String, Object>();
+//    	Order order = orderService.getOrderById(Integer.parseInt(idOrder));
+//    	
+//		return responseMap;    	
+//    }
+    
+    
+    /**
+     * Метод устаналвивает связи.  Принимает массив id ордеров и связывает их
+     */
+    @PostMapping("/{type}/order-linking/set")
+	public Map<String, Object> postOrderLinking(HttpServletRequest request, @RequestBody String str, @PathVariable String type) throws ParseException, IOException {
+		Map<String, Object> response = new HashMap<String, Object>();
+		
+		  switch (type) {
+	        case "procurement":
+	            // Логика для procurement
+	            break;
+	        case "slots":
+	            // Логика для logistics
+	            break;
+	        case "logistics":
+	        	// Логика для logistics
+	        	break;
+	        default:
+	            throw new IllegalArgumentException("Неизвестная команда: " + type);
+	    }
+		JSONParser parser = new JSONParser();
+		JSONArray jsonMainObjectArray = (JSONArray) parser.parse(str);
+		List<Order> orders = new ArrayList<Order>();
+		for (Object num : jsonMainObjectArray) {
+			orders.add(orderService.getOrderById(Integer.parseInt(num.toString().trim())));
+		}
+		Integer link = orders.get(0).getIdOrder();
+		for (Order order : orders) {
+            order.setLink(link);
+            orderService.updateOrder(order);
+        }
+		response.put("status", "200");
+		return response;	
+	}
+    
+    /**
+     * Метод отдаёт (скачивает) заявку в пдф
+     * @param request
+     * @param response
+     * @param idRoute
+     * @throws NumberFormatException
+     * @throws DocumentException
+     * @throws IOException
+     */
 	@GetMapping("/logistics/getProposal/{idRoute}")
 	public void getProposal(HttpServletRequest request, HttpServletResponse response, @PathVariable String idRoute) throws NumberFormatException, DocumentException, IOException {
 		java.util.Date t1 = new java.util.Date();

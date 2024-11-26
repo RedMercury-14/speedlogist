@@ -378,5 +378,10 @@ public class OrderServiceImpl implements OrderService {
 	            .collect(Collectors.toList()); // Собираем в список
 	    return orderDAO.getOrderByPeriodDeliveryAndListCodeContract(dateStart, dateEnd, numContracts);
 	}
+
+	@Override
+	public List<Order> getOrderByLink(Integer link) {
+		return orderDAO.getOrderByLink(link);
+	}
 	
 }

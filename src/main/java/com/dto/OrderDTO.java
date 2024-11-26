@@ -151,6 +151,8 @@ public class OrderDTO {
 	
 	private Date dateOrderOrl;
 	
+	private Integer link;
+	
 	public OrderDTO() {
 		
 	}
@@ -167,7 +169,8 @@ public class OrderDTO {
 			String marketInfo, String marketContractType, String marketContractGroupId, String marketContractNumber,
 			String marketContractorId, String numProduct, Integer statusYard, Object unloadStartYard,
 			Object unloadFinishYard, Integer pallFactYard, Double weightFactYard, Double marketOrderSumFirst,
-			Double marketOrderSumFinal, Object arrivalFactYard, Object registrationFactYard, String addressLoading, Object lastDatetimePointLoad, Object dateOrderOrl) {
+			Double marketOrderSumFinal, Object arrivalFactYard, Object registrationFactYard, String addressLoading, Object lastDatetimePointLoad, Object dateOrderOrl,
+			Integer link) {
 		super();
 		this.idOrder = idOrder;
 		this.counterparty = counterparty;
@@ -227,6 +230,7 @@ public class OrderDTO {
 		this.addressLoading = addressLoading;
 		this.lastDatetimePointLoad = (Timestamp) lastDatetimePointLoad;
 		this.dateOrderOrl = (Date) dateOrderOrl;
+		this.link = link;
 	}
 	
 	@Deprecated
@@ -312,6 +316,16 @@ public class OrderDTO {
 
 	public void setDateOrderOrl(Date dateOrderOrl) {
 		this.dateOrderOrl = dateOrderOrl;
+	}
+
+
+	public Integer getLink() {
+		return link;
+	}
+
+
+	public void setLink(Integer link) {
+		this.link = link;
 	}
 
 

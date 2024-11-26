@@ -448,13 +448,22 @@ public class MainRestController {
 //		return responseMap;		
 //	}
 	
-//    @GetMapping("/logistics/getOrdersLinks/{idOrder}")
-//	public Map<String, Object> getOrdersLinks(HttpServletRequest request, HttpServletResponse response, @PathVariable String idOrder) throws NumberFormatException, DocumentException, IOException {
-//    	Map<String, Object> responseMap = new HashMap<String, Object>();
-//    	Order order = orderService.getOrderById(Integer.parseInt(idOrder));
-//    	
-//		return responseMap;    	
-//    }
+    @GetMapping("/logistics/getOrdersLinks/{idOrder}")
+	public Map<String, Object> getOrdersLinks(HttpServletRequest request, HttpServletResponse response, @PathVariable String idOrder) throws NumberFormatException, DocumentException, IOException {
+    	Map<String, Object> responseMap = new HashMap<String, Object>();
+    	Order order = orderService.getOrderById(Integer.parseInt(idOrder));
+    	if(order.getLink() == null) {
+    		responseMap.put("status", "100");
+    		responseMap.put("message", "Связанные заказы отсутствуют");
+    		responseMap.put("info", "Связанные заказы отсутствуют");
+    		return responseMap;
+    	}
+    	List<Order> orders = orderService.getOrderByLink(order.getLink());
+    	responseMap.put("status", "200");
+    	responseMap.put("parentalOrder", order);
+    	responseMap.put("linkOrders", orders);    	
+		return responseMap;    	
+    }
     
     
     /**

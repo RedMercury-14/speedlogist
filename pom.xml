@@ -18,6 +18,15 @@
 
 	<dependencies>
 		
+		
+		<!-- https://mvnrepository.com/artifact/org.springframework/spring-aspects -->
+<dependency>
+    <groupId>org.springframework</groupId>
+    <artifactId>spring-aspects</artifactId>
+    <version>6.2.0</version>
+</dependency>
+
+		
 		<!-- https://mvnrepository.com/artifact/io.github.dostonhamrakulov/java-telegram-bot-calendar -->
 <dependency>
     <groupId>io.github.dostonhamrakulov</groupId>

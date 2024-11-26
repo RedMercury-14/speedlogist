@@ -100,6 +100,7 @@ import com.graphhopper.util.Translation;
 import com.graphhopper.util.shapes.GHPoint;
 import com.itextpdf.text.DocumentException;
 
+import by.base.main.aspect.TimedExecution;
 import by.base.main.controller.MainController;
 import by.base.main.dto.MarketDataFor398Request;
 import by.base.main.dto.MarketDataForClear;
@@ -510,10 +511,9 @@ public class MainRestController {
      * @throws DocumentException
      * @throws IOException
      */
+    @TimedExecution
 	@GetMapping("/logistics/getProposal/{idRoute}")
-	public void getProposal(HttpServletRequest request, HttpServletResponse response, @PathVariable String idRoute) throws NumberFormatException, DocumentException, IOException {
-		java.util.Date t1 = new java.util.Date();
-		
+	public void getProposal(HttpServletRequest request, HttpServletResponse response, @PathVariable String idRoute) throws NumberFormatException, DocumentException, IOException {		
 		pdfWriter.getProposal(request, routeService.getRouteById(Integer.parseInt(idRoute)));
 		String appPath = request.getServletContext().getRealPath("");
         String folderPath = appPath + "resources/others/proposal.pdf";
@@ -550,8 +550,6 @@ public class MainRestController {
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
-        java.util.Date t2 = new java.util.Date();
-		System.out.println("getProposal :" + (t2.getTime() - t1.getTime()) + " ms");
     }
 	
 //	@GetMapping("/logistics/getProposal/{idRoute}")

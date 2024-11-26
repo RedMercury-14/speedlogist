@@ -92,7 +92,7 @@ const columnDefs = [
 ]
 
 // доболнительные колонки для админа
-if (isAdmin(role)) {
+if (isAdmin(role) || login === 'romashkok%!dobronom.by') {
 	columnDefs.push(
 		...deliveryScheduleColumnDefsForAdmin
 	)
@@ -267,7 +267,7 @@ function getContextMenuItems(params) {
 			name: `Подтвердить график`,
 			disabled: (!isAdmin(role) && !isOrderSupport(role)) || (status !== 10 && status !== 0),
 			action: () => {
-				confirmScheduleItem(role, rowNode)
+				confirmScheduleItem(rowNode)
 			},
 			icon: uiIcons.check,
 		}
@@ -275,7 +275,7 @@ function getContextMenuItems(params) {
 			name: `Снять подтверждение с графика`,
 			disabled: (!isAdmin(role) && !isOrderSupport(role)) || status === 0,
 			action: () => {
-				unconfirmScheduleItem(role, rowNode)
+				unconfirmScheduleItem(rowNode)
 			},
 			icon: uiIcons.x_lg,
 		}
@@ -302,7 +302,7 @@ function getContextMenuItems(params) {
 			name: `Удалить график`,
 			disabled: (!isAdmin(role) && !isOrderSupport(role)) || status === 0,
 			action: () => {
-				deleteScheduleItem(role, rowNode)
+				deleteScheduleItem(rowNode)
 			},
 			icon: uiIcons.trash,
 		},

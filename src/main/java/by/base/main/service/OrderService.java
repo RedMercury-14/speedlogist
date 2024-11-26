@@ -19,6 +19,8 @@ public interface OrderService {
 	
 	List<Order> getOrderByDateDelivery(Date date);
 	
+	List<Order> getOrderByLink(Integer link);
+	
 	Order getOrderByRoute(Route route);
 	
 	Order getOrderByIdRoute(Integer idRoute);

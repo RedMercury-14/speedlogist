@@ -236,6 +236,9 @@ public class Order {
 	@Column(name = "date_order_orl")
 	private Date dateOrderOrl;
 	
+	@Column(name = "link")
+	private Integer link;
+	
 	@Transient
 	private List<Address> addressesSort;
 	
@@ -300,6 +303,12 @@ public class Order {
 		return orderLines;
 	}
 	
+	public Integer getLink() {
+		return link;
+	}
+	public void setLink(Integer link) {
+		this.link = link;
+	}
 	/**
 	 * Возвращает Map<код товара, кол-во>
 	 * <br>Суммируем количество, если ключ уже существует

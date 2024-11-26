@@ -109,14 +109,14 @@ public class ScheduledTask {
 //		emails.addAll(emailsSupport);
 		String appPath = servletContext.getRealPath("/");
 		
-		String fileName1200 = "1200 (----Холодный----).xlsx";
-		String fileName1100 = "1100 График прямой сухой.xlsx";
+		String fileName1200 = "1200 (----Холодный----).xlsm";
+		String fileName1100 = "1100 График прямой сухой.xlsm";
 		String fileNameSample = "График для шаблоново.xlsx";
 		
 		try {
-			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+			poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
 					appPath + "resources/others/" + fileName1200);
-			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("сухой").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+			poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesByTOType("сухой").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
 					appPath + "resources/others/" + fileName1100);
 			poiExcel.exportToExcelSampleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
 					appPath + "resources/others/" + fileNameSample);
@@ -142,7 +142,7 @@ public class ScheduledTask {
 		}
 		
 //		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от TEST" + currentTimeString, "Тестовая отправка сообщения.\nНе обращайте внимания / игнорируте это сообщение", files, emails);
-		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO" + currentTimeString, "Автоматическая отправка графиков поставок на ТО", filesZip, emails);
+		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO" + currentTimeString, "Автоматическая отправка графиков поставок на ТО\nВерсия с макросом выделений (Ctr+t)", filesZip, emails);
     	System.out.println("Finish --- sendSchedulesHasTOORL");
     }
     

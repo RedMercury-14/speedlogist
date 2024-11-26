@@ -200,7 +200,8 @@ public class RouteDAOImpl implements RouteDAO {
 	                     .map(Address::getBodyAddress)
 	                     .orElse(null),
 	                order.getLastDatetimePointLoad(),
-	                order.getDateOrderOrl()
+	                order.getDateOrderOrl(),
+	                order.getLink()
 	            )).collect(Collectors.toSet());
 	        // Если нужно, добавьте OrderDTO обратно в Route или сохраните для дальнейшей обработки
 	        route.setOrdersDTO(orderDTOs); // Добавьте это поле в `Route`, если требуется

@@ -74,6 +74,17 @@ public class OrderDAOImpl implements OrderDAO{
 		List<Order> trucks = theObject.getResultList();		
 		return trucks;
 	}
+	
+	private static final String queryGetOrderByLink = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH o.addresses a where o.link=:link";
+	@Transactional
+	@Override
+	public List<Order> getOrderByLink(Integer link) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Order> theObject = currentSession.createQuery(queryGetOrderByLink, Order.class);
+		theObject.setParameter("link", link);
+		List<Order> trucks = theObject.getResultList();		
+		return trucks;
+	}
 
 	private static final String queryGetObjByRoute = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH o.addresses a where r=:route";
 	@Transactional
@@ -448,7 +459,8 @@ public class OrderDAOImpl implements OrderDAO{
 	        "o.registrationFactYard,"+
 	        "a.bodyAddress, "+
 	        "o.lastDatetimePointLoad,"+
-	        "o.dateOrderOrl)"; // добавлено 27,09,2024
+	        "o.dateOrderOrl,"+ // добавлено 27,09,2024
+	        "o.link)"; // добавлен 26,11,2024
 	
 	private static final String queryGetOrderDTOByPeriodDeliveryAndSlots = orderConstruct + " from Order o LEFT JOIN o.addresses a where \r\n"
 			+ "(CASE \r\n"
@@ -535,6 +547,5 @@ public class OrderDAOImpl implements OrderDAO{
 	    Set<Order> orders = theObject.getResultList().stream().collect(Collectors.toSet());
 	    return new ArrayList<>(orders); 
 	}
-
 
 }

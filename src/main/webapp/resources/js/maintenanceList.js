@@ -1,6 +1,6 @@
 import { AG_GRID_LOCALE_RU } from "./AG-Grid/ag-grid-locale-RU.js"
 import { ResetStateToolPanel, dateComparator, gridColumnLocalState, gridFilterLocalState } from "./AG-Grid/ag-grid-utils.js"
-import { changeGridTableMarginTop, dateHelper, debounce, getAhoStatusRoute, getData, isCarrier } from "./utils.js"
+import { changeGridTableMarginTop, dateHelper, debounce, getAhoStatusRoute, getData, isCarrier, isSlotsObserver } from "./utils.js"
 import { snackbar } from "./snackbar/snackbar.js"
 import { uiIcons } from "./uiIcons.js"
 import { bootstrap5overlay } from "./bootstrap5overlay/bootstrap5overlay.js"
@@ -456,6 +456,8 @@ function getContextMenuItems(params) {
 	const isAddFinishPriceDisabled = status !== '220' && status !== '225'
 	const isRemoveFinishPriceDisabled = status !== '225'
 	const isCloseRouteDisabled = status !== '225'
+
+	if (isSlotsObserver(role)) return []
 
 	const logistResult = [
 		{

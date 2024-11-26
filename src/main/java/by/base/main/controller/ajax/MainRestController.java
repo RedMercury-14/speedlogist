@@ -347,14 +347,14 @@ public class MainRestController {
 //		emails.addAll(emailsSupport);
 		String appPath = servletContext.getRealPath("/");
 		
-		String fileName1200 = "1200 (----Холодный----).xlsx";
-		String fileName1100 = "1100 График прямой сухой.xlsx";
+		String fileName1200 = "1200 (----Холодный----).xlsm";
+		String fileName1100 = "1100 График прямой сухой.xlsm";
 		String fileNameSample = "График для шаблоново.xlsx";
 		
 		try {
-			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+			poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
 					appPath + "resources/others/" + fileName1200);
-			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("сухой").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+			poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesByTOType("сухой").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
 					appPath + "resources/others/" + fileName1100);
 			poiExcel.exportToExcelSampleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
 					appPath + "resources/others/" + fileNameSample);
@@ -374,7 +374,7 @@ public class MainRestController {
 		 filesZip.add(zipFile);
 		
 //		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от TEST" + currentTimeString, "Тестовая отправка сообщения.\nНе обращайте внимания / игнорируте это сообщение", files, emails);
-		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от TEST" + currentTimeString, "Тестовая отправка сообщения.\nНе обращайте внимания / игнорируте это сообщение", filesZip, emails);
+		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от TEST" + currentTimeString, "Тестовая отправка сообщения.\nНе обращайте внимания / игнорируте это сообщение \nВерсия с макросом выделений (Ctr+t)", filesZip, emails);
 		java.util.Date t2 = new java.util.Date();
 		System.out.println(t2.getTime()-t1.getTime() + " ms - testNewMethod" );
 		return responseMap;		
@@ -448,6 +448,59 @@ public class MainRestController {
 //		return responseMap;		
 //	}
 	
+//    @GetMapping("/logistics/getOrdersLinks/{idOrder}")
+//	public Map<String, Object> getOrdersLinks(HttpServletRequest request, HttpServletResponse response, @PathVariable String idOrder) throws NumberFormatException, DocumentException, IOException {
+//    	Map<String, Object> responseMap = new HashMap<String, Object>();
+//    	Order order = orderService.getOrderById(Integer.parseInt(idOrder));
+//    	
+//		return responseMap;    	
+//    }
+    
+    
+    /**
+     * Метод устаналвивает связи.  Принимает массив id ордеров и связывает их
+     */
+    @PostMapping("/{type}/order-linking/set")
+	public Map<String, Object> postOrderLinking(HttpServletRequest request, @RequestBody String str, @PathVariable String type) throws ParseException, IOException {
+		Map<String, Object> response = new HashMap<String, Object>();
+		
+		  switch (type) {
+	        case "procurement":
+	            // Логика для procurement
+	            break;
+	        case "slots":
+	            // Логика для logistics
+	            break;
+	        case "logistics":
+	        	// Логика для logistics
+	        	break;
+	        default:
+	            throw new IllegalArgumentException("Неизвестная команда: " + type);
+	    }
+		JSONParser parser = new JSONParser();
+		JSONArray jsonMainObjectArray = (JSONArray) parser.parse(str);
+		List<Order> orders = new ArrayList<Order>();
+		for (Object num : jsonMainObjectArray) {
+			orders.add(orderService.getOrderById(Integer.parseInt(num.toString().trim())));
+		}
+		Integer link = orders.get(0).getIdOrder();
+		for (Order order : orders) {
+            order.setLink(link);
+            orderService.updateOrder(order);
+        }
+		response.put("status", "200");
+		return response;	
+	}
+    
+    /**
+     * Метод отдаёт (скачивает) заявку в пдф
+     * @param request
+     * @param response
+     * @param idRoute
+     * @throws NumberFormatException
+     * @throws DocumentException
+     * @throws IOException
+     */
 	@GetMapping("/logistics/getProposal/{idRoute}")
 	public void getProposal(HttpServletRequest request, HttpServletResponse response, @PathVariable String idRoute) throws NumberFormatException, DocumentException, IOException {
 		java.util.Date t1 = new java.util.Date();
@@ -1595,12 +1648,12 @@ public class MainRestController {
 		User user = getThisUser();
 		Integer role = user.getRoles().stream().findFirst().get().getIdRole();
 
-		if(role != 10 && role != 1 && role != 14) {
-			response.put("status", "100");
-			response.put("message", "Отказано! Данная роль не обладает правами на действие");
-			response.put("info", "Отказано! Данная роль не обладает правами на действие");
-			return response;
-		}
+//		if(role != 10 && role != 1 && role != 14) {
+//			response.put("status", "100");
+//			response.put("message", "Отказано! Данная роль не обладает правами на действие");
+//			response.put("info", "Отказано! Данная роль не обладает правами на действие");
+//			return response;
+//		}
 		
 		if(num == null || status == null) {
 			response.put("status", "100");

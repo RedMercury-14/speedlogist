@@ -375,37 +375,36 @@ export function editScheduleItem(rowNode, setDataToForm) {
 }
 
 // подтверждение графика поставки
-export function confirmScheduleItem(role, rowNode) {
+export function confirmScheduleItem(rowNode) {
 	const scheduleItem = rowNode.data
 	const idSchedule = scheduleItem.idSchedule
 	if (!idSchedule) return
 	const confirmStatus = 20
-	changeScheduleStatus({ role, idSchedule, status: confirmStatus, rowNode })
+	changeScheduleStatus({ idSchedule, status: confirmStatus, rowNode })
 }
 
 // снятие подтверждения графика поставки
-export function unconfirmScheduleItem(role, rowNode) {
+export function unconfirmScheduleItem(rowNode) {
 	const scheduleItem = rowNode.data
 	const idSchedule = scheduleItem.idSchedule
 	if (!idSchedule) return
 	const unconfirmStatus = 10
-	changeScheduleStatus({ role, idSchedule, status: unconfirmStatus, rowNode })
+	changeScheduleStatus({ idSchedule, status: unconfirmStatus, rowNode })
 }
 
 // удаление графика поставок
-export function deleteScheduleItem(role, rowNode) {
+export function deleteScheduleItem(rowNode) {
 	const scheduleItem = rowNode.data
 	const idSchedule = scheduleItem.idSchedule
 	if (!idSchedule) return
 	const deleteStatus = 0
-	changeScheduleStatus({ role, idSchedule, status: deleteStatus, rowNode })
+	changeScheduleStatus({ idSchedule, status: deleteStatus, rowNode })
 }
 
 
 // запрос на изменение статуса графика поставки
 export async function changeScheduleStatus(props) {
-	const { role, status, idSchedule, rowNode } = props
-	if (!isAdmin(role) && !isOrderSupport(role) && !isORL(role)) return
+	const { status, idSchedule, rowNode } = props
 	const statusText = getScheduleStatus(status)
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
 	const res = await getData(`${changeScheduleStatusBaseUrl}${idSchedule}&${status}`)

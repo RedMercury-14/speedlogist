@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.codec.DecoderException;
@@ -47,6 +48,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.PropertyTemplate;
 import org.apache.poi.xssf.usermodel.XSSFCell;
@@ -130,6 +132,9 @@ public class POIExcel {
 	
 	@Autowired
 	private ScheduleService scheduleService;
+	
+	@Autowired
+    private ServletContext servletContext;
 
 	private ArrayList<Shop> shops;
 	private ArrayList<RouteHasShop> arrayRouteHasShop;
@@ -235,26 +240,13 @@ public class POIExcel {
 		return filePath;
 	}
 	
-	/**
-	 * Метод для создания графика поставок в excel НА TO
-	 * @param schedules
-	 * @param filePath
-	 * @throws IOException 
-	 * @throws FileNotFoundException 
-	 */
-	public String exportToExcelScheduleListTO(List<Schedule> schedules, String filePath) throws FileNotFoundException, IOException {
-		Workbook workbook = new XSSFWorkbook();
-		if(schedules.isEmpty()) {
-			return null;
-		}
-        Sheet sheet = workbook.createSheet(schedules.get(0).getNumStock() + "");
-
-        // Заголовки колонок
+	
+    // Метод заполнения данных
+    private void fillExcelData(Sheet sheet, List<Schedule> schedules) {
         String[] headers = {
-                "Код контрагента", "Наименование контрагента","График формирования заказа  четная неделя ставим метка  --ч-- , нечетная --- н ---", "Номер контракта", "Номер ТО" , "Пометка сроки / неделя" ,
-                "пн", "вт", "ср", "чт", "пт", "сб", "вс", 
-                "Количество поставок", 
-                "кодовое ИМЯ КОНТРАГЕНТА","квант","измерения КВАНТА", "День в день"
+                "Код контрагента", "Наименование контрагента", "График формирования заказа четная неделя ставим метка  --ч-- , нечетная --- н ---",
+                "Номер контракта", "Номер ТО", "Пометка сроки / неделя", "пн", "вт", "ср", "чт", "пт", "сб", "вс",
+                "Количество поставок", "кодовое ИМЯ КОНТРАГЕНТА", "квант", "измерения КВАНТА", "День в день"
         };
 
         // Создаем строку заголовков
@@ -263,12 +255,11 @@ public class POIExcel {
             Cell cell = headerRow.createCell(i);
             cell.setCellValue(headers[i]);
         }
-        
-     // Создаем стиль для окрашивания
-        CellStyle coloredStyle = workbook.createCellStyle();
+
+        // Создаем стиль для окрашивания
+        CellStyle coloredStyle = sheet.getWorkbook().createCellStyle();
         coloredStyle.setFillForegroundColor(IndexedColors.LIGHT_YELLOW.getIndex());
         coloredStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        // Не задаем границы, чтобы сохранить дефолтные
 
         // Диапазон колонок для окрашивания
         int startColumn = 2; // Индекс "График формирования заказа"
@@ -277,23 +268,18 @@ public class POIExcel {
         // Заполняем данные
         int rowNum = 1;
         for (Schedule schedule : schedules) {
-        	if(schedule.getIsNotCalc() != null && schedule.getIsNotCalc()) {
-        		continue;
-        	}
-        	
+            if (schedule.getIsNotCalc() != null && schedule.getIsNotCalc()) {
+                continue;
+            }
+
             Row row = sheet.createRow(rowNum++);
 
             row.createCell(0).setCellValue(schedule.getCounterpartyCode());
             row.createCell(1).setCellValue(schedule.getName());
             row.createCell(2).setCellValue(schedule.getOrderFormationSchedule());
-            row.createCell(3).setCellValue(schedule.getCounterpartyContractCode());            
+            row.createCell(3).setCellValue(schedule.getCounterpartyContractCode());
             row.createCell(4).setCellValue(schedule.getNumStock());
-            if(schedule.getIsDayToDay()) {
-            	row.createCell(5).setCellValue("сегодня");            	
-            }else {
-            	row.createCell(5).setCellValue(schedule.getNote());
-            }
-
+            row.createCell(5).setCellValue(schedule.getIsDayToDay() ? "сегодня" : schedule.getNote());
             row.createCell(6).setCellValue(schedule.getMonday());
             row.createCell(7).setCellValue(schedule.getTuesday());
             row.createCell(8).setCellValue(schedule.getWednesday());
@@ -301,18 +287,16 @@ public class POIExcel {
             row.createCell(10).setCellValue(schedule.getFriday());
             row.createCell(11).setCellValue(schedule.getSaturday());
             row.createCell(12).setCellValue(schedule.getSunday());
-
-            row.createCell(13).setCellValue(schedule.getSupplies());            
-            
-//            row.createCell(14).setCellValue(schedule.getOrderShipmentSchedule());
-            
-            if(schedule.getCodeNameOfQuantumCounterparty() != null) row.createCell(14).setCellValue(schedule.getCodeNameOfQuantumCounterparty());
-            if(schedule.getQuantum() != null) row.createCell(15).setCellValue(schedule.getQuantum());
-            if(schedule.getQuantumMeasurements() != null) row.createCell(16).setCellValue(schedule.getQuantumMeasurements());
-            		
+            row.createCell(13).setCellValue(schedule.getSupplies());
+            if (schedule.getCodeNameOfQuantumCounterparty() != null)
+                row.createCell(14).setCellValue(schedule.getCodeNameOfQuantumCounterparty());
+            if (schedule.getQuantum() != null)
+                row.createCell(15).setCellValue(schedule.getQuantum());
+            if (schedule.getQuantumMeasurements() != null)
+                row.createCell(16).setCellValue(schedule.getQuantumMeasurements());
             row.createCell(17).setCellValue(schedule.getIsDayToDay());
-            
-         // Окрашиваем колонки в указанном диапазоне
+
+            // Окрашиваем колонки в указанном диапазоне
             for (int i = startColumn; i <= endColumn; i++) {
                 Cell cell = row.getCell(i);
                 if (cell == null) {
@@ -321,17 +305,160 @@ public class POIExcel {
                 cell.setCellStyle(coloredStyle);
             }
         }
-        
+
         // Устанавливаем фильтры на все столбцы
         sheet.setAutoFilter(new CellRangeAddress(0, 0, 0, headers.length - 1));
+    }
+
+    // Оригинальный метод
+    /**
+	 * Метод для создания графика поставок в excel НА TO
+	 * @param schedules
+	 * @param filePath
+	 * @throws IOException 
+	 * @throws FileNotFoundException 
+	 */
+    public String exportToExcelScheduleListTO(List<Schedule> schedules, String filePath) throws IOException {
+        Workbook workbook = new XSSFWorkbook();
+        if (schedules.isEmpty()) {
+            return null;
+        }
+        Sheet sheet = workbook.createSheet(schedules.get(0).getNumStock() + "");
+
+        // Заполнение данными
+        fillExcelData(sheet, schedules);
 
         // Сохраняем файл
         try (FileOutputStream fileOut = new FileOutputStream(filePath)) {
             workbook.write(fileOut);
-        }        
+        }
         workbook.close();
-		return filePath;
-	}
+        return filePath;
+    }
+
+    // Новый метод для использования шаблона с макросом
+    public String exportToExcelScheduleListTOWithMacro(List<Schedule> schedules, String filePath) throws IOException {
+    	String appPath = servletContext.getRealPath("/");
+    	String filePathTemplate = appPath+"resources/others/templateForTO.xlsm";
+    	System.out.println(appPath+"resources/others/templateForTO.xlsm");
+        // Открываем файл-шаблон с макросом
+        try (FileInputStream fis = new FileInputStream(filePathTemplate);
+             Workbook workbook = WorkbookFactory.create(fis)) {
+
+            Sheet sheet = workbook.getSheetAt(0);
+
+            // Заполнение данными
+            fillExcelData(sheet, schedules);
+
+            // Сохраняем файл
+            try (FileOutputStream fos = new FileOutputStream(filePath)) {
+                workbook.write(fos);
+            }
+        }
+        return filePath;
+    }
+	
+	
+	// --------------- ТУТ ДРУГАЯ РЕАЛИЗАЦИЯ ЭТОГО (НИЖНЕГО) МЕТОДА
+	
+	/**
+	 * Метод для создания графика поставок в excel НА TO
+	 * @param schedules
+	 * @param filePath
+	 * @throws IOException 
+	 * @throws FileNotFoundException 
+	 */
+//	@Deprecated
+//	public String exportToExcelScheduleListTO(List<Schedule> schedules, String filePath) throws FileNotFoundException, IOException {
+//		Workbook workbook = new XSSFWorkbook();
+//		if(schedules.isEmpty()) {
+//			return null;
+//		}
+//        Sheet sheet = workbook.createSheet(schedules.get(0).getNumStock() + "");
+//
+//        // Заголовки колонок
+//        String[] headers = {
+//                "Код контрагента", "Наименование контрагента","График формирования заказа  четная неделя ставим метка  --ч-- , нечетная --- н ---", "Номер контракта", "Номер ТО" , "Пометка сроки / неделя" ,
+//                "пн", "вт", "ср", "чт", "пт", "сб", "вс", 
+//                "Количество поставок", 
+//                "кодовое ИМЯ КОНТРАГЕНТА","квант","измерения КВАНТА", "День в день"
+//        };
+//
+//        // Создаем строку заголовков
+//        Row headerRow = sheet.createRow(0);
+//        for (int i = 0; i < headers.length; i++) {
+//            Cell cell = headerRow.createCell(i);
+//            cell.setCellValue(headers[i]);
+//        }
+//        
+//     // Создаем стиль для окрашивания
+//        CellStyle coloredStyle = workbook.createCellStyle();
+//        coloredStyle.setFillForegroundColor(IndexedColors.LIGHT_YELLOW.getIndex());
+//        coloredStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+//        // Не задаем границы, чтобы сохранить дефолтные
+//
+//        // Диапазон колонок для окрашивания
+//        int startColumn = 2; // Индекс "График формирования заказа"
+//        int endColumn = 12;  // Индекс "вс"
+//
+//        // Заполняем данные
+//        int rowNum = 1;
+//        for (Schedule schedule : schedules) {
+//        	if(schedule.getIsNotCalc() != null && schedule.getIsNotCalc()) {
+//        		continue;
+//        	}
+//        	
+//            Row row = sheet.createRow(rowNum++);
+//
+//            row.createCell(0).setCellValue(schedule.getCounterpartyCode());
+//            row.createCell(1).setCellValue(schedule.getName());
+//            row.createCell(2).setCellValue(schedule.getOrderFormationSchedule());
+//            row.createCell(3).setCellValue(schedule.getCounterpartyContractCode());            
+//            row.createCell(4).setCellValue(schedule.getNumStock());
+//            if(schedule.getIsDayToDay()) {
+//            	row.createCell(5).setCellValue("сегодня");            	
+//            }else {
+//            	row.createCell(5).setCellValue(schedule.getNote());
+//            }
+//
+//            row.createCell(6).setCellValue(schedule.getMonday());
+//            row.createCell(7).setCellValue(schedule.getTuesday());
+//            row.createCell(8).setCellValue(schedule.getWednesday());
+//            row.createCell(9).setCellValue(schedule.getThursday());
+//            row.createCell(10).setCellValue(schedule.getFriday());
+//            row.createCell(11).setCellValue(schedule.getSaturday());
+//            row.createCell(12).setCellValue(schedule.getSunday());
+//
+//            row.createCell(13).setCellValue(schedule.getSupplies());            
+//            
+////            row.createCell(14).setCellValue(schedule.getOrderShipmentSchedule());
+//            
+//            if(schedule.getCodeNameOfQuantumCounterparty() != null) row.createCell(14).setCellValue(schedule.getCodeNameOfQuantumCounterparty());
+//            if(schedule.getQuantum() != null) row.createCell(15).setCellValue(schedule.getQuantum());
+//            if(schedule.getQuantumMeasurements() != null) row.createCell(16).setCellValue(schedule.getQuantumMeasurements());
+//            		
+//            row.createCell(17).setCellValue(schedule.getIsDayToDay());
+//            
+//         // Окрашиваем колонки в указанном диапазоне
+//            for (int i = startColumn; i <= endColumn; i++) {
+//                Cell cell = row.getCell(i);
+//                if (cell == null) {
+//                    cell = row.createCell(i); // Если ячейка еще не создана
+//                }
+//                cell.setCellStyle(coloredStyle);
+//            }
+//        }
+//        
+//        // Устанавливаем фильтры на все столбцы
+//        sheet.setAutoFilter(new CellRangeAddress(0, 0, 0, headers.length - 1));
+//
+//        // Сохраняем файл
+//        try (FileOutputStream fileOut = new FileOutputStream(filePath)) {
+//            workbook.write(fileOut);
+//        }        
+//        workbook.close();
+//		return filePath;
+//	}
 	
 	/**
 	 * Метод формирует ексель с шаблоном для ММЗ и Беллакт

@@ -62,7 +62,7 @@ const columnDefs = [
 	{ headerName: 'Данные по водителю', field: 'driverInfo',  wrapText: true, autoHeight: true,},
 	{ headerName: 'Заказчик', field: 'customer', wrapText: true, autoHeight: true, minWidth: 160, width: 160, },
 	{ headerName: 'Паллеты/Объем', field: 'cargoInfo', },
-	{ headerName: 'ID заявки', field: 'idOrder', cellRenderer: idORderRenderer, },
+	{ headerName: 'ID заявки', field: 'idOrder', cellRenderer: idOrderRenderer, },
 	{ headerName: 'Сверка УКЗ', field: 'ukz', wrapText: true, autoHeight: true, },
 	{ headerName: 'Груз', field: 'cargo', wrapText: true, autoHeight: true, },
 	{ headerName: 'Тип загрузки авто', field: 'typeLoad', },
@@ -393,15 +393,14 @@ async function getMappingData(data) {
 
 		const isSavedRow = false
 		const orderInfo = getOrderInfo(route)
-		const idOrder =  orderInfo.idOrder ? orderInfo.idOrder : ''
-		const contact = orderInfo.contact ? orderInfo.contact : ''
-		const ukz = orderInfo.control ? 'Необходима сверка УКЗ' : 'Нет'
-		const cargo = orderInfo ? orderInfo.cargo : ''
-		const typeLoad = orderInfo.typeLoad ? orderInfo.typeLoad : ''
-		const typeTruck = orderInfo.typeTruck ? orderInfo.typeTruck : ''
-		const methodLoad = orderInfo.methodLoad ? orderInfo.methodLoad : ''
-		const temperature = orderInfo.temperature ? orderInfo.temperature : ''
-
+		const idOrder =  orderInfo.idOrder
+		const contact = orderInfo.contact
+		const ukz = orderInfo.control
+		const cargo = orderInfo.cargo
+		const typeLoad = orderInfo.typeLoad
+		const typeTruck = orderInfo.typeTruck
+		const methodLoad = orderInfo.methodLoad
+		const temperature = orderInfo.temperature
 		return {
 			...route,
 			offerCount,
@@ -563,12 +562,15 @@ function offerCountRenderer(params) {
 }
 
 // рендерер ID заявки со ссылкой
-function idORderRenderer(params) {
+function idOrderRenderer(params) {
 	const value = params.value
-	const idOrder = value ? value : ''
-	const link = `./ordersLogist/order?idOrder=${idOrder}`
-	const linkHTML = `<a class="text-primary" href="${link}">${idOrder}</a>`
-	return idOrder ? linkHTML : ''
+	if (!value) return ''
+	const idOrders = value.split('; ')
+	const linkHTML = (idOrder) => {
+		const link = `./ordersLogist/order?idOrder=${idOrder}`
+		return `<a class="text-primary" href="${link}">${idOrder}</a>`
+	}
+	return idOrders.map(idOrder => linkHTML(idOrder)).join('<br>')
 }
 
 // асинхронное обновление количества предложений для конкретного маршрута
@@ -840,27 +842,31 @@ function getCounterparty(route) {
 	return counterparty
 }
 function getOrderInfo(route) {
-	const orderInfo = {
-		idOrder: null,
-		contact: null,
-		control: null,
-		cargo: null,
-		typeLoad: null,
-		typeTruck: null,
-		methodLoad: null,
-		temperature: null,
-	}
 	const orders = route.ordersDTO
-	if (!orders || !orders.length) return orderInfo
-	const order = orders[0]
+	const processField = (field) =>
+		Array.from(new Set(orders?.map(order => order[field]).filter(Boolean))).join('\n')
+
+	if (!orders || !orders.length) {
+		return {
+			idOrder: null,
+			contact: null,
+			control: null,
+			cargo: null,
+			typeLoad: null,
+			typeTruck: null,
+			methodLoad: null,
+			temperature: null,
+		}
+	}
+
 	return {
-		idOrder: order.idOrder,
-		contact: order.contact,
-		control: order.control,
-		cargo: order.cargo,
-		typeLoad: order.typeLoad,
-		typeTruck: order.typeTruck,
-		methodLoad: order.methodLoad,
-		temperature: order.temperature,
+		idOrder: orders.map(order => order.idOrder).join('; '),
+		contact: orders.map(order => order.contact).filter(Boolean).join('\n'),
+		control: orders.some(order => order.control) ? 'Необходима сверка УКЗ' : 'Нет',
+		cargo: orders.map(order => order.cargo).filter(Boolean).join('\n'),
+		typeLoad: processField('typeLoad'),
+		typeTruck: processField('typeTruck'),
+		methodLoad: processField('methodLoad'),
+		temperature: processField('temperature'),
 	}
 }

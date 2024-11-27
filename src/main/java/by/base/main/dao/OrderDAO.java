@@ -1,6 +1,7 @@
 package by.base.main.dao;
 
 import java.sql.Date;
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Set;
@@ -48,12 +49,20 @@ public interface OrderDAO {
 	List<Order> getOrderByPeriodCreateMarket(Date dateStart, Date dateEnd);
 	
 	/**
-	 * отдаёт ордеры по дате доставки ()без учёта времени)
+	 * отдаёт ордеры по дате доставки (без учёта времени)
 	 * @param dateStart
 	 * @param dateEnd
 	 * @return
 	 */
 	List<Order> getOrderByTimeDelivery(Date dateStart, Date dateEnd);
+	
+	/**
+	 * отдаёт ордеры по дате доставки и времени, где время это time начиная от окончания выгрузки таргетного заказа
+	 * @param dateStart
+	 * @param dateEnd
+	 * @return
+	 */
+	List<Order> getOrderByTimeAfterUnload(Order order, Time time);
 	
 	/**
 	 * Отдаёт заказы по номеру из маркета (должен быть один)

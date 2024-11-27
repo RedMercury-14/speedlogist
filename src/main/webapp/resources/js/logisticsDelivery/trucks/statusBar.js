@@ -2,11 +2,12 @@
 export class CargoCapacitySumStatusBarComponent {
 	init(params) {
 		this.params = params
+		this.appStore = params.appStore
 
 		this.eGui = document.createElement("div")
 		this.eGui.className = "ag-status-name-value"
 
-		var label = document.createElement("span")
+		const label = document.createElement("span")
 		label.innerText = "Тоннаж: "
 		this.eGui.appendChild(label)
 
@@ -29,19 +30,29 @@ export class CargoCapacitySumStatusBarComponent {
 	}
 
 	onGridReady() {
-		this.eCount.innerText = this.getCargoCapacitySum() + ""
+		this.updateStatusBar()
 	}
 
 	onModelUpdated() {
-		this.eCount.innerText = this.getCargoCapacitySum() + ""
+		this.updateStatusBar()
+	}
+
+	updateStatusBar() {
+		this.eCount.innerText = `${this.getCargoCapacitySum()} (${this.getTotalCargoCapacitySum()})`
 	}
 
 	getCargoCapacitySum() {
 		const rowNodes = []
-		this.params.api.forEachNode(node => rowNodes.push(node))
+		this.params.api.forEachNodeAfterFilter(node => rowNodes.push(node))
 		return rowNodes
 			.reduce((sum, rowNode) => sum + Number(rowNode.data.cargoCapacity), 0)
 			.toFixed(1)
+	}
+
+	getTotalCargoCapacitySum() {
+		return this.appStore.getTrucksByCurrentDate()
+			.reduce((sum, truck) => sum + Number(truck.cargoCapacity), 0)
+			.toFixed(0)
 	}
 }
 
@@ -49,11 +60,12 @@ export class CargoCapacitySumStatusBarComponent {
 export class PallSumStatusBarComponent {
 	init(params) {
 		this.params = params
+		this.appStore = params.appStore
 
 		this.eGui = document.createElement("div")
 		this.eGui.className = "ag-status-name-value"
 
-		var label = document.createElement("span")
+		const label = document.createElement("span")
 		label.innerText = "Паллет: "
 		this.eGui.appendChild(label)
 
@@ -76,18 +88,28 @@ export class PallSumStatusBarComponent {
 	}
 
 	onGridReady() {
-		this.eCount.innerText = this.getPallSum() + ""
+		this.updateStatusBar()
 	}
 
 	onModelUpdated() {
-		this.eCount.innerText = this.getPallSum() + ""
+		this.updateStatusBar()
+	}
+
+	updateStatusBar() {
+		this.eCount.innerText = this.getPallSum() + " " + `(${this.getTotalPallSum()})`
 	}
 
 	getPallSum() {
 		const rowNodes = []
-		this.params.api.forEachNode(node => rowNodes.push(node))
+		this.params.api.forEachNodeAfterFilter(node => rowNodes.push(node))
 		return rowNodes
 			.reduce((sum, rowNode) => sum + rowNode.data.pall, 0)
+			.toFixed(0)
+	}
+
+	getTotalPallSum() {
+		return this.appStore.getTrucksByCurrentDate()
+			.reduce((sum, truck) => sum + truck.pall, 0)
 			.toFixed(0)
 	}
 }
@@ -96,11 +118,12 @@ export class PallSumStatusBarComponent {
 export class CountStatusBarComponent {
 	init(params) {
 		this.params = params
+		this.appStore = params.appStore
 
 		this.eGui = document.createElement("div")
 		this.eGui.className = "ag-status-name-value"
 
-		var label = document.createElement("span")
+		const label = document.createElement("span")
 		label.innerText = "Машин: "
 		this.eGui.appendChild(label)
 
@@ -123,23 +146,35 @@ export class CountStatusBarComponent {
 	}
 
 	onGridReady() {
-		this.eCount.innerText = this.params.api.getModel().getRowCount() + ""
+		this.updateStatusBar()
 	}
 
 	onModelUpdated() {
-		this.eCount.innerText = this.params.api.getModel().getRowCount() + ""
+		this.updateStatusBar()
+	}
+
+	updateStatusBar() {
+		this.eCount.innerText = `${this.getRowCount()} (${this.getTotalTrucks()})`
+	}
+
+	getRowCount() {
+		return this.params.api.getModel().getRowCount()
+	}
+
+	getTotalTrucks() {
+		return this.appStore.getTrucksByCurrentDate().length
 	}
 }
 
-// компонент отображения количества строк
+// компонент отображения легенды
 export class RowLegengStatusBarComponent {
 	init(params) {
 		this.params = params
 
 		this.eGui = document.createElement("div")
 		this.eGui.className = "ag-status-name-value d-flex"
-		
-		var label = document.createElement("span")
+
+		const label = document.createElement("span")
 		label.className = 'font-weight-bold'
 		label.innerText = "Машины на 2 рейса -"
 		this.eGui.appendChild(label)

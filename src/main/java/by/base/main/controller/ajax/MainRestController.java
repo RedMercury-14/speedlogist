@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -100,6 +101,7 @@ import com.graphhopper.util.Translation;
 import com.graphhopper.util.shapes.GHPoint;
 import com.itextpdf.text.DocumentException;
 
+import by.base.main.aspect.TimedExecution;
 import by.base.main.controller.MainController;
 import by.base.main.dto.MarketDataFor398Request;
 import by.base.main.dto.MarketDataForClear;
@@ -448,13 +450,32 @@ public class MainRestController {
 //		return responseMap;		
 //	}
 	
-//    @GetMapping("/logistics/getOrdersLinks/{idOrder}")
-//	public Map<String, Object> getOrdersLinks(HttpServletRequest request, HttpServletResponse response, @PathVariable String idOrder) throws NumberFormatException, DocumentException, IOException {
-//    	Map<String, Object> responseMap = new HashMap<String, Object>();
-//    	Order order = orderService.getOrderById(Integer.parseInt(idOrder));
-//    	
-//		return responseMap;    	
-//    }
+    /**
+     * Метод отдаёт связанные ордеры по текущему ордеру, если они есть
+     * @param request
+     * @param response
+     * @param idOrder
+     * @return
+     * @throws NumberFormatException
+     * @throws DocumentException
+     * @throws IOException
+     */
+    @GetMapping("/logistics/getOrdersLinks/{idOrder}")
+	public Map<String, Object> getOrdersLinks(HttpServletRequest request, HttpServletResponse response, @PathVariable String idOrder) throws NumberFormatException, DocumentException, IOException {
+    	Map<String, Object> responseMap = new HashMap<String, Object>();
+    	Order order = orderService.getOrderById(Integer.parseInt(idOrder));
+    	if(order.getLink() == null) {
+    		responseMap.put("status", "200");
+    		responseMap.put("message", "Связанные заказы отсутствуют");
+    		responseMap.put("info", "Связанные заказы отсутствуют");
+    		return responseMap;
+    	}
+    	List<Order> orders = orderService.getOrderByLink(order.getLink());
+    	responseMap.put("status", "200");
+    	responseMap.put("parentalOrder", order);
+    	responseMap.put("linkOrders", orders);    	
+		return responseMap;    	
+    }
     
     
     /**
@@ -501,10 +522,9 @@ public class MainRestController {
      * @throws DocumentException
      * @throws IOException
      */
+    @TimedExecution
 	@GetMapping("/logistics/getProposal/{idRoute}")
-	public void getProposal(HttpServletRequest request, HttpServletResponse response, @PathVariable String idRoute) throws NumberFormatException, DocumentException, IOException {
-		java.util.Date t1 = new java.util.Date();
-		
+	public void getProposal(HttpServletRequest request, HttpServletResponse response, @PathVariable String idRoute) throws NumberFormatException, DocumentException, IOException {		
 		pdfWriter.getProposal(request, routeService.getRouteById(Integer.parseInt(idRoute)));
 		String appPath = request.getServletContext().getRealPath("");
         String folderPath = appPath + "resources/others/proposal.pdf";
@@ -541,8 +561,6 @@ public class MainRestController {
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
-        java.util.Date t2 = new java.util.Date();
-		System.out.println("getProposal :" + (t2.getTime() - t1.getTime()) + " ms");
     }
 	
 //	@GetMapping("/logistics/getProposal/{idRoute}")
@@ -2410,6 +2428,14 @@ public class MainRestController {
 		return response;		
 	}
 	
+	/**
+	 * Новый метод отправки стоимости рейсов!
+	 * @param request
+	 * @param str
+	 * @return
+	 * @throws ParseException
+	 * @throws IOException
+	 */
 	@PostMapping("/carrier/cost")
 	public Map<String, String> postSetCarrierCost(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
 //		User user = getThisUser();
@@ -2430,6 +2456,7 @@ public class MainRestController {
 		message.setFullName(jsonMainObject.get("fullName") == null ? null : jsonMainObject.get("fullName").toString());
 		message.setStatus(jsonMainObject.get("status") == null ? null : jsonMainObject.get("status").toString());
 		message.setComment(jsonMainObject.get("comment") == null ? null : jsonMainObject.get("comment").toString());
+		message.setYnp(jsonMainObject.get("ynp") == null ? null : jsonMainObject.get("ynp").toString());
 		DateTimeFormatter formatter1 = DateTimeFormatter.ofPattern("d-MM-yyyy; HH:mm:ss");
 		message.setDatetime(LocalDateTime.now().format(formatter1));
 		chatEnpoint.onMessageFromRest(message);
@@ -6453,6 +6480,15 @@ public class MainRestController {
 		}
 		return response;
 	}
+	
+	// Метод для объединения onloadWindowDate и onloadWindowTime в Timestamp
+    private static Timestamp combineDateAndTime(java.sql.Date date, Time time) {
+        if (date == null) {
+            return null; // Если нет даты, возвращаем null
+        }
+        long timeInMillis = time != null ? time.getTime() : 0;
+        return new Timestamp(date.getTime() + timeInMillis);
+    }
 
 	/**
 	 * создание маршрута через заявку
@@ -6470,7 +6506,7 @@ public class MainRestController {
 		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
 		String points = jsonMainObject.get("points").toString();
 		JSONArray idOrdersJSON = (JSONArray) parser.parse(jsonMainObject.get("idOrders").toString());
-		Set<Order> orders = new HashSet<Order>();
+		List<Order> orders = new ArrayList<Order>();
 		
 		for (Object string : idOrdersJSON) {
 			Order order = orderService.getOrderById(Integer.parseInt(string.toString()));
@@ -6487,8 +6523,28 @@ public class MainRestController {
 				//возможна доп обработка самого ордера
 				return response;
 			}
+			
+			
 			orders.add(order);			
 		}
+		//тут я фильтруюсь по ордеру который выгружается раньше.
+		/*
+		 * Основной принцип сортировки:			
+			    Если timeDelivery не null, используется он.
+			    Если timeDelivery == null, создаем Timestamp из onloadWindowDate и onloadWindowTime. Если оба тоже null, сортировка поставит объект в конец.
+			
+			Метод combineDateAndTime:
+			    Объединяет дату (onloadWindowDate) и время (onloadWindowTime) в Timestamp.
+			
+			Сортировка:			
+			    Используем Comparator с помощью метода Comparator.comparing, чтобы задать логику сортировки.
+		 */
+		orders.sort(Comparator.comparing(
+	            order -> Optional.ofNullable(order.getTimeDelivery())
+	                    .orElseGet(() -> combineDateAndTime(order.getOnloadWindowDate(), order.getOnloadWindowTime()))
+	        ));
+		
+		
 		Order order = orders.stream().findFirst().get();	
 		//проверяем не отменена ли заявка
 		if(order.getStatus() == 10) {
@@ -6517,7 +6573,7 @@ public class MainRestController {
 		String tnvd="";
 		
 
-		route.setOrders(orders);
+		route.setOrders(orders.stream().collect(Collectors.toSet()));
 //		route.setStartPrice(target.getStartPrice());
 		route.setIdRoute(routeService.saveRouteAndReturnId(route));
 
@@ -6558,6 +6614,7 @@ public class MainRestController {
 			route.setTimeLoadPreviously(null);
 		}
 
+		//тут доработать: выяснить какой из ордеров раньше выгружается - и внести эту инфу туда!
 		if(order.getTimeDelivery() == null) {
 			route.setDateUnloadPreviouslyStock(order.getOnloadWindowDate() == null ? null : order.getOnloadWindowDate().toLocalDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
 			route.setTimeUnloadPreviouslyStock(order.getOnloadWindowTime() == null ? null : order.getOnloadTime().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")));
@@ -6779,8 +6836,28 @@ public class MainRestController {
 		Order order = orderService.getOrderById(idOrder);
 		switch (status) {
 		case 10:
+			/*
+			 * 1) если ордер в 20 или 40 статусе - удаляем!
+			 * 2) если ордер в каком нибудь другом статусе - удаление запрещено - сначала отменяется маршрут!
+			 */
 			
-			order.setChangeStatus(order.getChangeStatus() + "\nУдалил заявку: " + order.getManager().split(";")[0] + " " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:SS")));
+			if(order.getRoutes().size()!=0) {
+				Route route = order.getRoutes().stream().findFirst().get();
+				if(!route.getStatusRoute().equals("5")) {
+					response.put("status", "100");
+					response.put("message", "Отмена заказа запрещена, т.к. заказ уже взят в работу специалистами отдела транспортной логистики. Обратитесь в указаныый отдел, для отмены мрашрута."); 
+					return response;
+				}
+			}
+			
+			if(order.getStatus() == 10) {
+				response.put("status", "100");
+				response.put("message", "Заявка уже отменена. Обновите страницу."); 
+				return response;
+			}
+			
+			
+			order.setChangeStatus(order.getChangeStatus() + "\nУдалил заявку: " + user.getSurname() + " " + user.getName() + " " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:SS")));
 			//отправляем на почту к логистам
 			String text = "Заявка №" + order.getIdOrder() + " " + order.getCounterparty() + " от менеджера " + order.getManager()+" отменена! ";
 			if(!order.getRoutes().isEmpty()) {
@@ -6806,20 +6883,21 @@ public class MainRestController {
 				Message messageWS = new Message("slot", user.getLogin(), null, "200", null, idOrder.toString(), "delete from table");
 				messageWS.setPayload(order.toJsonForDelete());
 				slotWebSocket.sendMessage(messageWS);
-				Order orderNew = new Order();
-				orderNew.setCounterparty(order.getCounterparty());
-				orderNew.setCargo(order.getCargo());
-				orderNew.setDateDelivery(order.getDateDelivery());
-				orderNew.setMarketNumber(order.getMarketNumber());
-				orderNew.setTimeUnload(order.getTimeUnload());
-				orderNew.setChangeStatus("Пересоздан про прошлому заказу № " + order.getIdOrder() +" в " + LocalDate.now());
-				orderNew.setNumStockDelivery(order.getNumStockDelivery());
-				orderNew.setPall(order.getPall());
-				orderNew.setSku(order.getSku());
-				orderNew.setMonoPall(order.getMonoPall());
-				orderNew.setMixPall(order.getMixPall());
-				orderNew.setStatus(5);
-				orderService.saveOrder(orderNew);
+				//не создаём 5 статусы! они всё портят!
+//				Order orderNew = new Order();
+//				orderNew.setCounterparty(order.getCounterparty());
+//				orderNew.setCargo(order.getCargo());
+//				orderNew.setDateDelivery(order.getDateDelivery());
+//				orderNew.setMarketNumber(order.getMarketNumber());
+//				orderNew.setTimeUnload(order.getTimeUnload());
+//				orderNew.setChangeStatus("Пересоздан про прошлому заказу № " + order.getIdOrder() +" в " + LocalDate.now());
+//				orderNew.setNumStockDelivery(order.getNumStockDelivery());
+//				orderNew.setPall(order.getPall());
+//				orderNew.setSku(order.getSku());
+//				orderNew.setMonoPall(order.getMonoPall());
+//				orderNew.setMixPall(order.getMixPall());
+//				orderNew.setStatus(5);
+//				orderService.saveOrder(orderNew);
 			}
 			break;
 		default:
@@ -7413,22 +7491,6 @@ public class MainRestController {
 				}
 			}
 		}
-		
-//		if(needUnloadPoint != null) {
-//			if(needUnloadPoint.equals("true")) {
-//				order.setNeedUnloadPoint("true");
-//				order.setStatus(15); // статус башкирова
-//			}else {
-////				order.setStatus(20);
-//				if(order.getWay().equals("РБ") && flag) {
-//					System.err.println("17 STATUS!!!!");
-//					order.setStatus(17); // статус карины
-//				}else {
-//					order.setStatus(20);
-//				}				
-//			}
-//		}
-		
 
 		LocalDateTime dateTimeNow = LocalDateTime.now();
 		LocalDate dateNow = LocalDate.now();

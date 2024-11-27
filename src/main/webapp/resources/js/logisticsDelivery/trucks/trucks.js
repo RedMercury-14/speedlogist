@@ -3,6 +3,7 @@ import { store } from './store.js'
 import { getData } from '../../utils.js'
 import {
 	renderTable,
+	setStoreInStatusPanel,
 	trucksColumnDefs,
 	trucksGridOptions,
 	updateTableData,
@@ -149,6 +150,10 @@ async function init() {
 
 	store.setTrucks(trucks)
 	store.setLists(lists)
+
+	// добавляем стор в строки состояния таблиц
+	setStoreInStatusPanel(freeTrucksGridOptions, store)
+	setStoreInStatusPanel(selectedTrucksGridOptions, store)
 }
 
 
@@ -215,6 +220,12 @@ function changeCurrentDateHandler(e) {
 	updateTableData(selectedTrucksGridOptions, [])
 	// обновляем селект выбора списка авто
 	updateTruckListsOptions(truckLists)
+
+	// const totalTrucks = store.getTrucksByCurrentDate()
+	// // updateTotalTrucksInStatusPanel(freeTrucksGridOptions, totalTrucks)
+	// // updateTotalTrucksInStatusPanel(selectedTrucksGridOptions, totalTrucks)
+
+	// console.log(freeTrucksGridOptions.api.getStatusPanel(2))
 }
 
 // обработчик изменения отображаемого списка машин

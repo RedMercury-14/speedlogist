@@ -1014,13 +1014,14 @@ public class MainController {
 					}).start();
 				}				
 				break;
-			case 5:
+			case 5: // обработчик отмены заказов
 				route.setStatusRoute(statRoute);
 				Set<Order> orders2 = route.getOrders();
 				if(orders2 != null && orders2.size() != 0) {
 					for (Order o : orders2) {
 						if(o.getStatus() != 10) {
 							o.setStatus(40);
+							o.setRoutes(null);
 							orderService.updateOrder(o);
 						}
 					}						

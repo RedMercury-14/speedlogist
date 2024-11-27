@@ -6850,6 +6850,12 @@ public class MainRestController {
 				}
 			}
 			
+			if(order.getStatus() == 10) {
+				response.put("status", "100");
+				response.put("message", "Заявка уже отменена. Обновите страницу."); 
+				return response;
+			}
+			
 			
 			order.setChangeStatus(order.getChangeStatus() + "\nУдалил заявку: " + user.getSurname() + " " + user.getName() + " " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:SS")));
 			//отправляем на почту к логистам

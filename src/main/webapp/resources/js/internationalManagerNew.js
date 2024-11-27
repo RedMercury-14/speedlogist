@@ -35,6 +35,8 @@ const debouncedSaveFilterState = debounce(saveFilterState, 300)
 let table
 let isInitDataLoaded = false
 
+
+
 const columnDefs = [
 	// {
 	// 	field: '', colId: 'selectionRow',
@@ -226,6 +228,7 @@ async function searchFormSubmitHandler(e) {
 // обработчик сообщений WebSocket
 async function onMessageHandler(e) {
 	const message = JSON.parse(e.data)
+	console.log(message);
 	if (!message) return
 	if (!isInitDataLoaded) return
 

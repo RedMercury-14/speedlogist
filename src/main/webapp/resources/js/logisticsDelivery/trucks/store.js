@@ -102,6 +102,11 @@ export const store = {
 		return this._state.trucks
 	},
 
+	getTrucksByCurrentDate() {
+		const trucksByCurrentDate = this._state.trucks[this._state.currentDate]
+		return trucksByCurrentDate ? trucksByCurrentDate : []
+	},
+
 	/**
 	 * @returns {Array<{
 	 * 	idTGTruck: number, numTruck: string, modelTruck: string, pall: number,

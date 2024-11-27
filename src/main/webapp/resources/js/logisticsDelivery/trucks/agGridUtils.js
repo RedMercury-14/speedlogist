@@ -39,9 +39,9 @@ export const trucksGridOptions = {
 	statusBar: {
 		statusPanels: [
 			{ statusPanel: RowLegengStatusBarComponent, align: 'left', },
-			{ statusPanel: CountStatusBarComponent, },
-			{ statusPanel: PallSumStatusBarComponent, },
-			{ statusPanel: CargoCapacitySumStatusBarComponent, },
+			{ statusPanel: CountStatusBarComponent,  statusPanelParams: null, },
+			{ statusPanel: PallSumStatusBarComponent, statusPanelParams: null, },
+			{ statusPanel: CargoCapacitySumStatusBarComponent, statusPanelParams: null, },
 		],
 	},
 }
@@ -120,4 +120,14 @@ export function getTableData(gridOptions) {
 	const data = []
 	gridOptions.api.forEachNode(node => data.push(node.data))
 	return data
+}
+
+// установка стора в параметры строки состояния
+export function setStoreInStatusPanel(gridOptions, store) {
+	gridOptions.statusBar.statusPanels.forEach(item => {
+		item.statusPanelParams = {
+			...item.statusPanelParams,
+			appStore: store,
+		}
+	})
 }

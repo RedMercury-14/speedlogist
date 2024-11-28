@@ -242,3 +242,105 @@ function getWayToView(order) {
 	const isInternalMovement = order.isInternalMovement === 'true'
 	return isInternalMovement ? 'Внутреннее перемещение' : way
 }
+
+// проверка заказов на объединение
+export function checkCombineOrders(orders) {
+	const isExistOrders = orders.every(Boolean)
+	if (!isExistOrders) {
+		return 'Один или несколько заказов не найдены, проверьте данные!'
+	}
+
+	const firstOrder = orders[0]
+	const isValidStatuses = orders.every(order => order.status === firstOrder.status)
+	if (!isValidStatuses) {
+		return 'Объединять можно только те заказы, у которых одинаковый статус!'
+	}
+
+	const isExistLink = orders.some(order => order.link)
+	if (isExistLink) {
+		return 'Один или несколько заказов уже имеют связь!'
+	}
+
+	if (firstOrder.ststus === 6) {
+		const isIdenticalTrucks = orders.every(order => {
+			return firstOrder.typeLoad === order.typeLoad
+				&& firstOrder.typeTruck === order.typeTruck
+				&& firstOrder.methodLoad === order.methodLoad
+				&& firstOrder.incoterms === order.incoterms
+		})
+		if (!isIdenticalTrucks) {
+			return 'Требования к машине в заказах не должны отличаться!'
+		}
+	}
+
+	return ''
+}
+
+// проверка нескольких заказов перед созданием маршрута
+export function checkCombineRoutes(orderData) {
+	const firstOrder = orderData[0]
+
+	const isVerifyOrderWay = orderData.every(order =>
+		order.way === firstOrder.way
+		&& order.isInternalMovement === firstOrder.isInternalMovement
+	)
+	if (!isVerifyOrderWay) {
+		return 'Нельзя объединить заявки с разным типом маршрута!'
+	}
+
+	const isVerifyOrdersLink = orderData.every(order => firstOrder.link === order.link)
+	if (!isVerifyOrdersLink) {
+		return 'Невозможно создать маршрут - связи в заказах отличаются!'
+	}
+
+	const isIdenticalTrucks = orderData.every(order =>
+		firstOrder.typeLoad === order.typeLoad
+		&& firstOrder.typeTruck === order.typeTruck
+		&& firstOrder.methodLoad === order.methodLoad
+		&& firstOrder.incoterms === order.incoterms
+	)
+	if (!isIdenticalTrucks) {
+		return 'Нельзя объединить заявки с разными требованиями к машине!'
+	}
+	return ''
+}
+
+// объединение точек маршрута
+export function mergeRoutePoints(points) {
+	const mergedPoints = {}
+
+	points.forEach(point => {
+		const key = `${point.bodyAddress}_${point.type}` // Ключ для группировки
+
+		if (!mergedPoints[key]) {
+			// Создаем новую точку в объекте, если такой еще нет
+			mergedPoints[key] = { ...point }
+			mergedPoints[key].pall = point.pall ? Number(point.pall) : null
+			mergedPoints[key].weight = point.weight ? Number(point.weight) : null
+			mergedPoints[key].volume = point.volume ? Number(point.volume) : null
+		} else {
+			// Обновляем существующую точку
+			const existingPoint = mergedPoints[key]
+			existingPoint.pall = (existingPoint.pall !== null || point.pall) 
+				? (Number(existingPoint.pall || 0) + Number(point.pall || 0)) 
+				: null
+			existingPoint.weight = (existingPoint.weight !== null || point.weight) 
+				? (Number(existingPoint.weight || 0) + Number(point.weight || 0)) 
+				: null
+			existingPoint.volume = (existingPoint.volume !== null || point.volume) 
+				? (Number(existingPoint.volume || 0) + Number(point.volume || 0)) 
+				: null
+		}
+	})
+
+	// Преобразуем объект обратно в массив
+	return Object.values(mergedPoints)
+		.map(point => {
+			// Если все значения равны 0 или отсутствуют, делаем null
+			point.pall = point.pall === 0 ? null : point.pall
+			point.weight = point.weight === 0 ? null : point.weight
+			point.volume = point.volume === 0 ? null : point.volume
+			return point
+		})
+		.sort((a, b) => a.idAddress - b.idAddress)
+}

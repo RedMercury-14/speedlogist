@@ -3,6 +3,7 @@ import { bootstrap5overlay } from "../bootstrap5overlay/bootstrap5overlay.js"
 import { slotStocks } from "../globalRules/ordersRules.js"
 import { snackbar } from "../snackbar/snackbar.js"
 import { getData, isLogist } from "../utils.js"
+import { updateTableData } from "./agGridUtils.js"
 import { errorHandler_100status, errorHandler_105status, getMultiplicity, hideEventInfoPopup, showMessageModal } from "./calendarUtils.js"
 import {
 	checkBookingBaseUrl,
@@ -13,6 +14,7 @@ import {
 	getMarketOrderUrl,
 	loadOrderUrl,
 	preloadOrderUrl,
+	setOrderLinkingUrl,
 	slotsSettings,
 	updateOrderUrl,
 	userMessages
@@ -332,6 +334,12 @@ export function editMarketInfo(agGridParams, orderTableGridOption, errorCallback
 	const marketInfo = agGridParams.newValue ? agGridParams.newValue : ''
 	const oldMarketInfo = agGridParams.oldValue ? agGridParams.oldValue : ''
 
+	// проверка доступа к методу
+	if (!methodAccessRules(method, order, currentLogin, currentRole)) {
+		snackbar.show(userMessages.operationNotAllowed)
+		return
+	}
+
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
 
 	ajaxUtils.get({
@@ -370,6 +378,16 @@ export function editMarketInfo(agGridParams, orderTableGridOption, errorCallback
 }
 // метод получения данных о заказе из меркета
 export function getOrderFromMarket(marketNumber, eventContainer, successCallback) {
+	const method = 'getOrderFromMarket'
+	const currentLogin = store.getLogin()
+	const currentRole = store.getRole()
+
+	// проверка доступа к методу
+	if (!methodAccessRules(method, null, currentLogin, currentRole)) {
+		snackbar.show(userMessages.operationNotAllowed)
+		return
+	}
+
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
 
 	ajaxUtils.get({
@@ -528,4 +546,47 @@ export async function checkEventsForBooking(events) {
 		const messagesStr = messages.filter(Boolean).join('<br>')
 		showMessageModal(messagesStr)
 	}
+}
+
+// связывание заказов
+export function setOrderLinking(idOrderArray, gridOptions) {
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
+
+	ajaxUtils.postJSONdata({
+		url: setOrderLinkingUrl,
+		token: store.getToken(),
+		data: idOrderArray,
+		successCallback: (data) => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+
+			if (data.status === '200') {
+				data.info && showMessageModal(data.info)
+				const orderLink = idOrderArray[0]
+				idOrderArray.forEach(id => {
+					const order = store.getOrderById(id)
+					order.link = orderLink
+					store.updateOrder(order)
+				})
+				updateTableData(gridOptions, store.getCurrentStockOrders())
+				snackbar.show(`Заказы ${idOrderArray} объединены`)
+				return
+			}
+
+			if (data.status === '105') {
+				errorHandler_105status(null, data)
+				return
+			}
+
+			if (data.status === '100') {
+				errorHandler_100status(null, data)
+			} else {
+				snackbar.show(userMessages.actionNotCompleted)
+			}
+		},
+		errorCallback: () => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+		}
+	})
 }

@@ -1,6 +1,6 @@
 import { AG_GRID_LOCALE_RU } from "./AG-Grid/ag-grid-locale-RU.js"
 import { ResetStateToolPanel, dateComparator, gridColumnLocalState, gridFilterLocalState } from "./AG-Grid/ag-grid-utils.js"
-import { changeGridTableMarginTop, dateHelper, debounce, getData, getRouteStatus, isAdmin } from "./utils.js"
+import { changeGridTableMarginTop, dateHelper, debounce, getData, getRouteStatus, isAdmin, isObserver } from "./utils.js"
 import { ws } from './global.js'
 import { wsHead } from './global.js'
 import { snackbar } from "./snackbar/snackbar.js"
@@ -34,8 +34,6 @@ const debouncedSaveFilterState = debounce(saveFilterState, 300)
 
 let table
 let isInitDataLoaded = false
-
-
 
 const columnDefs = [
 	// {
@@ -228,7 +226,6 @@ async function searchFormSubmitHandler(e) {
 // обработчик сообщений WebSocket
 async function onMessageHandler(e) {
 	const message = JSON.parse(e.data)
-	console.log(message);
 	if (!message) return
 	if (!isInitDataLoaded) return
 
@@ -452,7 +449,7 @@ function getContextMenuItems(params) {
 		},
 		{
 			name: `Отправить тендер`,
-			disabled: status !== '0',
+			disabled: status !== '0' || isObserver(role),
 			action: () => {
 				sendTender(idRoute, routeDirection)
 			},
@@ -475,6 +472,7 @@ function getContextMenuItems(params) {
 			},
 		},
 		{
+			disabled: isObserver(role),
 			name: `Редактировать маршрут`,
 			icon: uiIcons.pencil,
 			action: () => {
@@ -483,7 +481,7 @@ function getContextMenuItems(params) {
 		},
 		{
 			name: `Завершить маршрут`,
-			disabled: status !== '4',
+			disabled: status !== '4' || isObserver(role),
 			icon: uiIcons.checkObject,
 			action: () => {
 				completeRoute(idRoute)
@@ -491,7 +489,7 @@ function getContextMenuItems(params) {
 		},
 		{
 			name: `Отменить тендер`,
-			disabled: status === '5',
+			disabled: status === '5' || isObserver(role),
 			icon: uiIcons.cancel,
 			action: () => {
 				cancelTender(idRoute)
@@ -864,7 +862,7 @@ function getOrderInfo(route) {
 
 	return {
 		idOrder: orders.map(order => order.idOrder).join('; '),
-		contact: orders.map(order => order.contact).filter(Boolean).join('\n'),
+		contact: processField('contact'),
 		control: orders.some(order => order.control) ? 'Необходима сверка УКЗ' : 'Нет',
 		cargo: orders.map(order => order.cargo).filter(Boolean).join('\n'),
 		typeLoad: processField('typeLoad'),

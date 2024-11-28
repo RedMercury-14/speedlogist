@@ -116,6 +116,15 @@ display: inline-block;
 				<!-- <li><a href="<spring:url value="/main/carrier" />">Перевозки</a></li> -->
 				<li><a href="<spring:url value="/main/admin" />">Администрация</a></li>
 			</c:when>	
+			<c:when test="${roles == '[ROLE_SHOW]'}">
+				<li><a href="<spring:url value="/main/logistics" />">Отдел логистики</a></li>
+				<li><a href="<spring:url value="/main/depot" />">Маршрутизатор</a></li>
+				<li><a href="<spring:url value="/main/slots" />">Слоты</a></li>
+				<!-- <li><a href="<spring:url value="/main/shop" />">Магазин</a></li> -->
+				<li><a href="<spring:url value="/main/procurement" />">Заявки на перевозки</a></li>
+				<li><a href="<spring:url value="/main/order-support/orders" />">Сопровождение заказовк</a></li>
+				<!-- <li><a href="<spring:url value="/main/carrier" />">Перевозки</a></li> -->
+			</c:when>	
 			<c:when test="${roles == '[ROLE_MANAGER]'}">
 				<li><a href="<spring:url value="/main/logistics" />">Отдел логистики</a></li>
 				<li><a href="<spring:url value="/main/depot" />">Маршрутизатор</a></li>

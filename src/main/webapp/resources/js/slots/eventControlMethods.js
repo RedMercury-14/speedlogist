@@ -132,6 +132,7 @@ export function updateOrderAndEvent(order, currentLogin, currentRole, method) {
 	}
 }
 
+
 function changePallCapacity(orderData, currentStock, order) {
 	const currentDate = store.getCurrentDate()
 	const stockId = orderData.stockId

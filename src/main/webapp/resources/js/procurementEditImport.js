@@ -17,7 +17,7 @@ import {
 	transformAddressInputToSelect,
 	typeTruckOnChangeHandler
 } from "./procurementFormUtils.js"
-import { dateHelper, disableButton, enableButton, getData } from "./utils.js"
+import { dateHelper, disableButton, enableButton, getData, isObserver } from "./utils.js"
 import { getOrderData, getOrderForForm } from "./procurementFormDataUtils.js"
 import {
 	getAddressHTML,
@@ -33,6 +33,7 @@ import { bootstrap5overlay } from "./bootstrap5overlay/bootstrap5overlay.js"
 const editProcurement = "../../../api/manager/editProcurement"
 const getInternalMovementShopsUrl = "../../../api/manager/getInternalMovementShops"
 const token = $("meta[name='_csrf']").attr("content")
+const role = document.querySelector('#role').value
 
 const FORM_TYPE = 'edit'
 
@@ -95,6 +96,11 @@ function orderFormSubmitHandler(e) {
 	const updatedData = updateEditFormData(data)
 
 	if (isInvalidForm(updatedData)) {
+		return
+	}
+
+	if (isObserver(role)) {
+		snackbar.show('Недостаточно прав!')
 		return
 	}
 

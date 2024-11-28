@@ -103,6 +103,57 @@
 								
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/admin" />">Администрация</a></li>
 							</c:when>	
+							<c:when test="${roles == '[ROLE_SHOW]'}">
+								<li class="dropdown">
+									<a href="#" class="nav-item nav-link" data-toggle="dropdown">
+										Отдел логистики
+									</a>
+									<div class="dropdown-menu">
+										<a class="dropdown-item" href="<spring:url value="/main/logistics/international" />">Менеджер международных маршрутов</a>
+										<a class="dropdown-item" href="<spring:url value="/main/logistics/internationalNew" />">New Менеджер международных маршрутов</a>
+										<a class="dropdown-item" href="<spring:url value="/main/logistics/internationalCarrier" />">Список перевозчиков</a>
+										<a class="dropdown-item" href="<spring:url value="/main/logistics/ordersLogist" />">Менеджер заявок</a>
+										<a class="dropdown-item" href="<spring:url value="/main/logistics/documentflow" />">Документооборот</a>
+										<a class="dropdown-item" href="<spring:url value="/main/logistics/shopControl" />">Список магазинов</a>
+										<a class="dropdown-item" href="<spring:url value="/main/logistics/maintenance " />">Менеджер маршрутов АХО/СГИ</a>
+									</div>
+								</li>
+								<li class="dropdown">
+									<a href="#" class="nav-item nav-link" data-toggle="dropdown">
+										Развоз
+									</a>
+									<div class="dropdown-menu">
+										<a class="dropdown-item" href="<spring:url value="/main/logistics-delivery/truck" />">Создание списка машин</a>
+										<a class="dropdown-item" href="<spring:url value="/main/logistics-delivery/router" />">Маршрутизатор</a>
+									</div>
+								</li>
+								<li><a class="nav-item nav-link" href="<spring:url value="/main/depot" />">Маршрутизатор</a></li>
+								<li class="dropdown">
+									<a href="#" class="nav-item nav-link" data-toggle="dropdown">
+										Заказы, слоты
+									</a>
+									<div class="dropdown-menu">
+										<a class="dropdown-item" href="<spring:url value="/main/slots" />">Слоты</a>
+										<a class="dropdown-item" href="<spring:url value="/main/procurement/add-order" />">Создание заявки</a>
+										<a class="dropdown-item" href="<spring:url value="/main/procurement/orders" />">Контроль заявок</a>
+										<a class="dropdown-item" href="<spring:url value="/main/order-support/orders" />">Остаток товара</a>
+										<a class="dropdown-item" href="<spring:url value="/main/orl/delivery-schedule" />">Графики поставок на РЦ</a>
+										<a class="dropdown-item" href="<spring:url value="/main/orl/delivery-schedule-to" />">Графики поставок на ТО</a>
+										<a class="dropdown-item" href="<spring:url value="/main/orl/need" />">Потребности</a>
+									</div>
+								</li>
+								
+								<li class="dropdown">
+									<a href="#" class="nav-item nav-link" data-toggle="dropdown">Аналитика</a>
+									<div class="dropdown-menu">
+										<a class="dropdown-item" href="<spring:url value="/main/analytics/shortage" />">Нехватка товаров на РЦ</a>
+										<a class="dropdown-item" href="<spring:url value="/main/analytics/logistics" />">Аналитика Биржи</a>
+										<a class="dropdown-item" href="<spring:url value="/main/analytics/zero" />">Аналитика нулей</a>
+										<a class="dropdown-item" href="<spring:url value="/main/analytics/changing-matrix" />">Изменения матрицы</a>
+										<a class="dropdown-item" href="<spring:url value="/main/analytics/needs" />">Аналитика Слотов</a>
+									</div>
+								</li>
+							</c:when>	
 							<c:when test="${roles == '[ROLE_MANAGER]'}">
 								<li class="dropdown">
 									<a href="#" class="nav-item nav-link" data-toggle="dropdown">

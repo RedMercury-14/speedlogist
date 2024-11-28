@@ -377,7 +377,6 @@ public class RouteDAOImpl implements RouteDAO {
 	@Override
 	public Integer saveRouteAndReturnId(Route route) {
 		Session currentSession = sessionFactory.getCurrentSession();
-		currentSession.clear();
 		currentSession.save(route);
 		return Integer.parseInt(currentSession.getIdentifier(route).toString());
 	}

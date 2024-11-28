@@ -1,6 +1,6 @@
 import { BtnCellRenderer } from './ArrowBtn.js'
 import { store } from './store.js'
-import { getData } from '../../utils.js'
+import { getData, isObserver } from '../../utils.js'
 import {
 	renderTable,
 	setStoreInStatusPanel,
@@ -163,7 +163,7 @@ function getContextMenuItemsForFreeTrucks(params) {
 
 	const result = [
 		{
-			disabled: !selectedRowsData.length,
+			disabled: !selectedRowsData.length || isObserver(store.getRole()),
 			name: `Добавить в список выделенные машины`,
 			action: () => {
 				const currentNameList = store.getCurrentNameList()
@@ -189,7 +189,7 @@ function getContextMenuItemsForSelectedTrucks(params) {
 
 	const result = [
 		{
-			disabled: !selectedRowsData.length,
+			disabled: !selectedRowsData.length || isObserver(store.getRole()),
 			name: `Удалить из списка выделенные машины`,
 			action: () => {
 				loadTruckList(selectedRowsData, null, 'toAll')
@@ -247,6 +247,12 @@ function truckListsSelectChangeHandler(e) {
 // обработчик формы сохранения нового списка
 function addNewListSubmitFormHandler(e) {
 	e.preventDefault()
+
+	if (isObserver(store.getRole())) {
+		snackbar.show('Недостаточно прав!')
+		return
+	}
+
 	const formData = new FormData(e.target)
 	const nameList = formData.get('nameList')
 	const currentDate = store.getCurrentDate()
@@ -270,6 +276,12 @@ function addNewListSubmitFormHandler(e) {
 // обработчик формы удаления текущего списка
 function removeCurrentListSubmitFormHandler(e) {
 	e.preventDefault()
+
+	if (isObserver(store.getRole())) {
+		snackbar.show('Недостаточно прав!')
+		return
+	}
+
 	const currentNameList = store.getCurrentNameList()
 	if (!currentNameList) {
 		snackbar.show('Не выбран ни один список!')
@@ -283,6 +295,11 @@ function removeCurrentListSubmitFormHandler(e) {
 
 // обработчик удаления текущего списка
 function deleteCurrentList() {
+	if (isObserver(store.getRole())) {
+		snackbar.show('Недостаточно прав!')
+		return
+	}
+
 	setTimeout(() => {
 		const nameList = store.getCurrentNameList()
 		store.removeList(nameList)
@@ -294,6 +311,11 @@ function deleteCurrentList() {
 
 // ДЕЙСТВИЯ ТЕКУЩЕГО ПОЛЬЗОВАТЕЛЯ функции для перемещения машин между таблицами
 async function toSelectedList(e, button, params) {
+	if (isObserver(store.getRole())) {
+		snackbar.show('Недостаточно прав!')
+		return
+	}
+
 	const currentNameList = store.getCurrentNameList()
 	if (!currentNameList) {
 		snackbar.show('Не выбран ни один список!')
@@ -309,6 +331,11 @@ async function toSelectedList(e, button, params) {
 	loadTruck(truck, currentNameList, action)
 }
 async function toAllList(e, button, params) {
+	if (isObserver(store.getRole())) {
+		snackbar.show('Недостаточно прав!')
+		return
+	}
+
 	const action = 'toAll'
 	const truck = params.node.data
 	// блокируем кнопку после нажатия
@@ -328,6 +355,11 @@ async function toAllList(e, button, params) {
  * @param {string} action
  */
 function loadTruck(truck, nameList, action) {
+	if (isObserver(store.getRole())) {
+		snackbar.show('Недостаточно прав!')
+		return
+	}
+
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 200)
 	const truckData = getTruckDateForAjax([truck], nameList, action)
 
@@ -368,6 +400,11 @@ function loadTruck(truck, nameList, action) {
  * @param {boolean} deleteList
  */
 function loadTruckList(trucks, nameList, action, deleteList) {
+	if (isObserver(store.getRole())) {
+		snackbar.show('Недостаточно прав!')
+		return
+	}
+
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 200)
 	const truckData = getTruckDateForAjax(trucks, nameList, action)
 

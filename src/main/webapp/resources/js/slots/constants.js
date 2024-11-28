@@ -51,6 +51,7 @@ export const getMarketOrderUrl = `../api/manager/getMarketOrder/`
 export const checkScheduleBaseUrl = '../api/slots/delivery-schedule/checkSchedule/'
 export const checkSlotBaseUrl = '../api/slot/getTest/'
 export const checkBookingBaseUrl = '../api/manager/testMarketOrderStatus/'
+export const setOrderLinkingUrl = '../api/slots/order-linking/set'
 
 export const messagePattern = {
 	idMessage: null,

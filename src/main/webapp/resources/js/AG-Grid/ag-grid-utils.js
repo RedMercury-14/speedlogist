@@ -294,3 +294,8 @@ function dateToNum(date) {
 export function highlightRow(gridOptions, rowNode) {
 	gridOptions.api.flashCells({ rowNodes: [rowNode] })
 }
+
+// отмена выделения строк через чекбоксы
+export function deselectAllCheckboxes(gridOptions) {
+	gridOptions.api.deselectAll('checkboxSelected')
+}

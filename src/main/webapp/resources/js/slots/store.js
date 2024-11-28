@@ -167,6 +167,9 @@ export const store = {
 	getOrderByMarketNumber(marketNumber) {
 		return this._state.orders.find(order => order.marketNumber === marketNumber)
 	},
+	getOrderById(idOrder) {
+		return this._state.orders.find(order => order.idOrder === idOrder)
+	},
 	updateOrder(orderData) {
 		const marketNumber = orderData.marketNumber
 		const timeDelivery = orderData.timeDelivery ? new Date(orderData.timeDelivery).getTime() : null
@@ -196,6 +199,7 @@ export const store = {
 			idRamp: Number(orderData.idRamp),
 			loginManager: orderData.loginManager,
 			marketInfo,
+			link: orderData.link,
 		}
 		// для сообщений от Двора
 		if (orderData.hasOwnProperty('statusYard')) {

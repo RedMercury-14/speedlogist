@@ -17,7 +17,17 @@
 	<div class="container my-container">
 		<div class="card">
 			<div class="card-header d-flex justify-content-between">
-				<h3 class="mb-0">Заявка № ${order.idOrder}</h3>
+				<h3 class="mb-0">
+					<c:choose>
+						<c:when test="${order.link != null}">
+							Заявка № ${order.idOrder}
+							<span class="text-danger"> (заказ объединен по связи ${order.link})</span>
+						</c:when>
+						<c:otherwise>
+							Заявка № ${order.idOrder}
+						</c:otherwise>
+					</c:choose>
+				</h3>
 			</div>
 			<div class="card-body">
 				<div class="order-container">

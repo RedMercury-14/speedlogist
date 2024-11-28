@@ -129,6 +129,7 @@
 				<div class="status-info-container">
 					<span id="statusInfoLabel" class="status-info-label">?</span>
 					<div id="statusInfo" class="status-info">
+						<ul><span class="mr-1">37951 <span class="text-danger font-weight-bold">!</span></span><span> - Связанный заказ</span></ul>
 						<ul><span class="led"></span><span>5 - Виртуальный заказ</span></ul>
 						<ul><span class="led led-orange"></span><span>6 - Заказ на самовывоз</span></ul>
 						<ul><span class="led led-turquoise"></span><span>7 - Слот на самовывоз, не подтвержден</span></ul>

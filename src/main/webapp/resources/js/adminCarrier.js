@@ -3,13 +3,14 @@ import { gridColumnLocalState, gridFilterSessionState } from './AG-Grid/ag-grid-
 import { ajaxUtils } from './ajaxUtils.js'
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 import { snackbar } from './snackbar/snackbar.js'
-import { changeGridTableMarginTop, debounce, getData } from './utils.js'
+import { changeGridTableMarginTop, debounce, getData, isObserver } from './utils.js'
 
 const changeNumContractUrl = `../../api/manager/changeNumDocument`
 const changeIsBlockedBaseUrl = `../../api/manager/blockCarrier/`
 const PAGE_NAME = 'adminCarrier'
 const LOCAL_STORAGE_KEY = `AG_Grid_setting_to_${PAGE_NAME}`
 const token = $("meta[name='_csrf']").attr("content")
+const role = document.querySelector('#role').value
 
 const fileModal = $('#fileModal')
 
@@ -67,7 +68,7 @@ const columnDefs = [
 	{
 		headerName: "Номер договора", field: "numContract",
 		width: 180,
-		editable: true,
+		editable: !isObserver(role),
 		onCellValueChanged: onNumContractChanged,
 	},
 	{ headerName: "Автопарк", field: "numCar", cellClass: 'text-center', },
@@ -77,7 +78,7 @@ const columnDefs = [
 	{
 		headerName: "Заблокировать", field: "block",
 		width: 120, cellClass: 'row-center',
-		editable: true,
+		editable: !isObserver(role),
 		onCellValueChanged: onIsBlockedChanged,
 	},
 	{ headerName: "TIR", field: "tir", width: 60, cellClass: 'text-center', },

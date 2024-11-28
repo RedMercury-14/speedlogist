@@ -225,7 +225,9 @@ public class Route implements Serializable{
 	private User driver;
 	
 	@ManyToMany(fetch = FetchType.LAZY, 
-			cascade = { CascadeType.ALL })
+//			cascade = { CascadeType.ALL }
+			cascade = {CascadeType.MERGE, CascadeType.PERSIST}
+	)
 	@JoinTable(name = "route_has_order", joinColumns = @JoinColumn(name = "route_idroute"), inverseJoinColumns = @JoinColumn(name = "order_idorder"))
 //	@JsonBackReference // ТУТ БЫЛО ВКЛЮЧЕНО!!!!
 	@JsonIgnore

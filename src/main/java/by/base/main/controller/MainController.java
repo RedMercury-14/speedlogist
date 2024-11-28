@@ -1021,7 +1021,6 @@ public class MainController {
 					for (Order o : orders2) {
 						if(o.getStatus() != 10) {
 							o.setStatus(40);
-							o.setRoutes(null);
 							orderService.updateOrder(o);
 						}
 					}						

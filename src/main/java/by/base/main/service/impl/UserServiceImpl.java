@@ -225,6 +225,18 @@ public class UserServiceImpl implements UserService{
 				user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
 			}
 			break;
+		case 16: //Роль для наблюдателя за всей системой без возможности внесение каких либо данных
+			user.setEnablet(true);
+			user.setIsDriver(false);
+			user.setStatus("0");
+			role = roleDAO.getRole(16);
+			rolest.add(role);
+			user.setRoles(rolest);
+			user.setCompanyName("Доброном");
+			if (user.getPassword() != null) {				
+				user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+			}
+			break;
 		default:
 			break;
 		}

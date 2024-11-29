@@ -14,7 +14,7 @@ import {
 	createCalendarDateInput,
 	searchSlot,
 } from "./slots/calendarUtils.js"
-import { debounce, isAdmin, isLogist, isSlotsObserver, isStockProcurement } from "./utils.js"
+import { debounce, isAdmin, isLogist, isObserver, isSlotsObserver, isStockProcurement } from "./utils.js"
 import { uiIcons } from "./uiIcons.js"
 import { wsSlotUrl } from "./global.js"
 import { bootstrap5overlay } from "./bootstrap5overlay/bootstrap5overlay.js"
@@ -33,7 +33,7 @@ import {
 	getMinUnloadDate,
 	getSlotInfoToCopy,
 } from "./slots/dataUtils.js"
-import { gridColumnLocalState } from "./AG-Grid/ag-grid-utils.js"
+import { deselectAllCheckboxes, gridColumnLocalState } from "./AG-Grid/ag-grid-utils.js"
 import { pallChartConfig, updatePallChart, } from "./slots/chartJSUtils.js"
 import {
 	addNewOrderBtnListner,
@@ -55,6 +55,7 @@ import {
 	editMarketInfo,
 	getOrderFromMarket,
 	loadOrder,
+	setOrderLinking,
 } from "./slots/api.js"
 import {
 	dateSetHandler,
@@ -69,6 +70,8 @@ import {
 	eventsSetHandler,
 	resourcesHandler
 } from "./slots/calendarHandlers.js"
+import { checkCombineOrders } from "./procurementControlUtils.js"
+import { ajaxUtils } from "./ajaxUtils.js"
 
 
 const LOCAL_STORAGE_KEY = 'AG_Grid_column_settings_to_Slots'
@@ -269,7 +272,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 async function initStartData() {
 	// не загружаем заказы в стор со статусов 5 (виртуальные заказы)
 	// const filtredOrders = window.initData.filter(order => order.status !== 5) -- ДЛЯ РАБОТЫ БЕЗ ВИРТУАЛЬНЫХ ЗАКАЗОВ
-	store.setOrders(window.initData)
+	const ordersWithoutAHO = window.initData.filter(order => order.way !== 'АХО')
+	store.setOrders(ordersWithoutAHO)
 	// добавляем ивенты на виртуальные склады
 	store.setStockEvents()
 	// сохраняем ограничения паллет
@@ -292,13 +296,18 @@ async function initStartData() {
 function getContextMenuItemsForOrderTable(params) {
 	const role = store.getRole()
 	const order = params.node.data
+	const idOrder = order.idOrder
 	const marketNumber = order.marketNumber
 	const idRamp = order.idRamp
 	const status = order.status
 
+	const selectedRowsData = params.api.getSelectedRows()
+	const isVeryfyCombineOrders = !selectedRowsData.filter(order => order.status !== 5 && order.status !== 6).length
+	const isExistLink = selectedRowsData.some(order => order.link)
+
 	const result = [
 		{
-			disabled: !!idRamp || status !== 6 || isLogist(role) || isAdmin(role) || isSlotsObserver(role),
+			disabled: !!idRamp || status !== 6 || isLogist(role) || isAdmin(role) || isSlotsObserver(role) || isObserver(role),
 			name: `Создать слот заказа на самовывоз`,
 			action: () => {
 				const eventContainer = document.querySelector("#external-events")
@@ -308,7 +317,7 @@ function getContextMenuItemsForOrderTable(params) {
 			icon: uiIcons.clickBoadrPlus
 		},
 		{
-			disabled: !!idRamp || status !== 5 || isLogist(role) || isAdmin(role) || isSlotsObserver(role),
+			disabled: !!idRamp || status !== 5 || isLogist(role) || isAdmin(role) || isSlotsObserver(role) || isObserver(role),
 			name: `Создать слот заказа от поставщика`,
 			action: () => {
 				const eventContainer = document.querySelector("#external-events")
@@ -318,13 +327,30 @@ function getContextMenuItemsForOrderTable(params) {
 			icon: uiIcons.clickBoadrPlus
 		},
 		{
-			disabled: !!idRamp || status !== 5 || isLogist(role) || isAdmin(role) || isSlotsObserver(role),
+			disabled: !!idRamp || status !== 5 || isLogist(role) || isAdmin(role) || isSlotsObserver(role) || isObserver(role),
 			name: `Обновить заказ`,
 			action: () => {
 				// получаем обновленный заказ по номеру Маркета и обновляем в сторе и таблице
 				getOrderFromMarket(marketNumber, null, updateOrderFromMarket)
 			},
 			icon: uiIcons.refresh
+		},
+		"separator",
+		{
+			disabled: !!idRamp || (status !== 5 && status !== 6) || order.link
+					|| isLogist(role) || isSlotsObserver(role) || isObserver(role),
+			name: `Объединить заказ с ...`,
+			action: () => {
+				combineOrderByMarketNumber(marketNumber, orderTableGridOption)
+			},
+		},
+		{
+			disabled: selectedRowsData.length < 2 || !isVeryfyCombineOrders || isExistLink
+					|| isLogist(role) || isSlotsObserver(role) || isObserver(role),
+			name: `Объединить выделенные заказы`,
+			action: () => {
+				combineSelectedOrders(selectedRowsData, orderTableGridOption)
+			},
 		},
 		"separator",
 		"excelExport",
@@ -507,6 +533,49 @@ async function doAdminAction(e) {
 		await checkEventsForBooking(events)
 		return
 	}
+}
+
+// объединение заказов с указанием номеров из Маркета
+function combineOrderByMarketNumber(marketNumber, gridOptions) {
+	const value = prompt(
+		`Введите номер заказа из Маркета (или несколько номеров через пробел),`
+		+ ` которые необходимо объединить с заказом ${marketNumber}:`
+	)
+	if (!value) return
+
+	const regex = /^\d{8,13}(\s\d{8,13})*$/
+	if (!regex.test(value)) {
+		alert('Неверный формат ввода!')
+		return
+	}
+
+	const numbers = value.split(' ')
+	numbers.push(marketNumber)
+
+	const unicNumbers =  numbers.filter((num, i, arr) => i === arr.indexOf(num))
+	const orders = unicNumbers.map(num => store.getOrderByMarketNumber(num))
+
+	const errorMessage = checkCombineOrders(orders)
+	if (errorMessage) {
+		alert(errorMessage)
+		return
+	}
+
+	const ids = orders.map(order => order.idOrder)
+	setOrderLinking(ids, gridOptions)
+}
+
+function combineSelectedOrders(selectedRowsData, gridOptions) {
+	const errorMessage = checkCombineOrders(selectedRowsData)
+	if (errorMessage) {
+		alert(errorMessage)
+		deselectAllCheckboxes(gridOptions)
+		return
+	}
+
+	const ids = selectedRowsData.map(order => order.idOrder)
+	setOrderLinking(ids, gridOptions)
+	deselectAllCheckboxes(gridOptions)
 }
 
 // функция создания нового заказа по информации из Маркета

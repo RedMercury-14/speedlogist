@@ -1,10 +1,11 @@
 import { AG_GRID_LOCALE_RU } from '../js/AG-Grid/ag-grid-locale-RU.js'
-import { ResetStateToolPanel, dateComparator, gridColumnLocalState, gridFilterLocalState } from './AG-Grid/ag-grid-utils.js'
-import { debounce, getData, dateHelper, getStatus, changeGridTableMarginTop, rowClassRules, isAdmin, isStockProcurement, isSlotsObserver } from './utils.js'
+import { ResetStateToolPanel, dateComparator, deselectAllCheckboxes, gridColumnLocalState, gridFilterLocalState } from './AG-Grid/ag-grid-utils.js'
+import { debounce, getData, dateHelper, getStatus, changeGridTableMarginTop, rowClassRules, isAdmin, isStockProcurement, isSlotsObserver, isObserver } from './utils.js'
 import { snackbar } from './snackbar/snackbar.js'
 import { uiIcons } from './uiIcons.js'
-import { excelStyles, mapCallbackForProcurementControl, procurementExcelExportParams } from "./procurementControlUtils.js"
+import { checkCombineOrders, excelStyles, mapCallbackForProcurementControl, procurementExcelExportParams } from "./procurementControlUtils.js"
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
+import { ajaxUtils } from './ajaxUtils.js'
 
 const PAGE_NAME = 'ProcurementControl'
 const LOCAL_STORAGE_KEY = `AG_Grid_settings_to_${PAGE_NAME}`
@@ -13,6 +14,9 @@ const getDefaultOrderBaseUrl ='../../api/manager/getOrders/'
 const getOrdersForStockProcurementBaseUrl ='../../api/manager/getOrdersForStockProcurement/'
 const getSearchOrderBaseUrl ='../../api/manager/getOrdersHasCounterparty/'
 const getChangeOrderStatusBaseUrl ='../../api/manager/changeOrderStatus/'
+const setOrderLinkingUrl = '../../api/slots/order-linking/set'
+
+const token = $("meta[name='_csrf']").attr("content")
 
 const debouncedSaveColumnState = debounce(saveColumnState, 300)
 const debouncedSaveFilterState = debounce(saveFilterState, 300)
@@ -21,6 +25,14 @@ const role = document.querySelector('#role').value
 const getOrderBaseUrl = isStockProcurement(role) ? getOrdersForStockProcurementBaseUrl : getDefaultOrderBaseUrl
 
 const columnDefs = [
+	{
+		field: '', colId: 'selectionRow',
+		width: 30, lockPosition: 'left',
+		pinned: 'left', lockPinned: true,
+		checkboxSelection: true,
+		suppressMovable: true, suppressMenu: true,
+		resizable: false, sortable: false, filter: false,
+	},
 	{ 
 		headerName: 'ID заявки', field: 'idOrder', colId: 'idOrder',
 		cellClass: 'group-cell', pinned: 'left', width: 100,
@@ -68,6 +80,7 @@ const columnDefs = [
 	{ headerName: 'Информация (из Маркета)', field: 'marketInfo', },
 	{ headerName: 'Начальная сумма заказа без НДС', field: 'marketOrderSumFirst', },
 	{ headerName: 'Конечная сумма заказа с НДС', field: 'marketOrderSumFinal', },
+	{ headerName: 'Связь', field: 'link', },
 ]
 
 if (isAdmin(role)) {
@@ -101,6 +114,7 @@ const gridOptions = {
 	onColumnVisible: debouncedSaveColumnState,
 	onColumnPinned: debouncedSaveColumnState,
 	onFilterChanged: debouncedSaveFilterState,
+	rowSelection: 'multiple',
 	suppressRowClickSelection: true,
 	suppressDragLeaveHidesColumns: true,
 	getContextMenuItems: getContextMenuItems,
@@ -254,9 +268,14 @@ function getMappingData(data) {
 }
 
 function getContextMenuItems(params) {
-	const idOrder = params.node.data.idOrder
-	const status = params.node.data.status
 	const rowNode = params.node
+	if (!rowNode) return
+	const idOrder = rowNode.data.idOrder
+	const status = rowNode.data.status
+
+	const selectedRows = params.api.getSelectedNodes()
+	const selectedRowsData = selectedRows.map(rowNode => rowNode.data)
+	const isVeryfyCombineOrders = !selectedRowsData.filter(order => order.status !== 20 && order.status !== 6).length
 
 	const result = [
 		{
@@ -275,7 +294,7 @@ function getContextMenuItems(params) {
 			icon: uiIcons.files,
 		},
 		{
-			disabled: (status === 10 || status === 70) || isSlotsObserver(role),
+			disabled: (status === 10 || status === 70) || isSlotsObserver(role) || isObserver(role),
 			name: `Редактировать заявку`,
 			action: () => {
 				editOrder(idOrder)
@@ -283,12 +302,29 @@ function getContextMenuItems(params) {
 			icon: uiIcons.pencil,
 		},
 		{
-			disabled: (status === 10 || status === 70) || isSlotsObserver(role),
+			disabled: (status !== 6 && status !== 20 && status !== 40) || isSlotsObserver(role) || isObserver(role),
 			name: `Отменить заявку`,
 			action: () => {
 				deleteOrder(idOrder, rowNode)
 			},
 			icon: uiIcons.trash,
+		},
+		"separator",
+		{
+			disabled: selectedRowsData.length < 2 || !isVeryfyCombineOrders || isSlotsObserver(role),
+			name: `Объединить выделенные заказы`,
+			action: () => {
+				const errorMessage = checkCombineOrders(selectedRowsData)
+				if (errorMessage) {
+					alert(errorMessage)
+					deselectAllCheckboxes(gridOptions)
+					return
+				}
+
+				const ids = selectedRowsData.map(order => order.idOrder)
+				setOrderLinking(ids, selectedRows)
+				deselectAllCheckboxes(gridOptions)
+			},
 		},
 		"separator",
 		"excelExport",
@@ -324,11 +360,44 @@ async function deleteOrder(idOrder, rowNode) {
 	}
 }
 
+// связывание заказов
+function setOrderLinking(idOrderArray, selectedRows) {
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
+
+	ajaxUtils.postJSONdata({
+		url: setOrderLinkingUrl,
+		token: token,
+		data: idOrderArray,
+		successCallback: (data) => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+
+			if (data.status === '200') {
+				const orderLink = idOrderArray[0]
+				selectedRows.forEach(rowNode => rowNode.setDataValue('link', orderLink))
+				snackbar.show(`Заказы ${idOrderArray} объединены`)
+				return
+			}
+
+			console.log(res)
+			const message = res && res.message ? res.message : 'Неизвестная ошибка'
+			snackbar.show(message)
+		},
+		errorCallback: () => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+		}
+	})
+}
+
 function orderLinkRenderer(params) {
 	const data = params.node.data
 	const link = `./orders/order?idOrder=${data.idOrder}`
 
-	return `<a class="text-primary" href="${link}">${params.value}</a>`
+	const isLinkedOrder = data.link
+	const isLinkedOrderLabel = isLinkedOrder ? ' <span class="text-danger"> (объединен)</span>' : ''
+
+	return `<a class="text-primary" href="${link}">${params.value}${isLinkedOrderLabel}</a>`
 }
 
 async function searchFormSubmitHandler(e) {

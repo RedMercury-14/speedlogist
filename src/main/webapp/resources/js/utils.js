@@ -718,6 +718,9 @@ export function isCarrier(role) {
 export function isORL(role) {
 	return role === '[ROLE_ORL]'
 }
+export function isObserver(role) {
+	return role === '[ROLE_SHOW]'
+}
 
 export function isLogisticsDeliveryPage() {
 	return window.location.href.includes('logistics-delivery')

@@ -18,6 +18,7 @@ import { uiIcons } from './uiIcons.js'
 import {
 	changeGridTableMarginTop, debounce, disableButton, enableButton,
 	getData, getScheduleStatus, hideLoadingSpinner, isAdmin,
+	isObserver,
 	isOrderSupport,
 	isORL, showLoadingSpinner
 } from './utils.js'
@@ -358,7 +359,7 @@ function getContextMenuItems(params) {
 		...confirmUnconfirmItems,
 		{
 			name: `Добавить новые ТО по текущему коду контракта (копирование графика)`,
-			disabled: status !== 20 && status !== 10,
+			disabled: status !== 20 && status !== 10 || isObserver(role),
 			action: () => {
 				addShopsByContract(rowNode)
 			},
@@ -366,7 +367,7 @@ function getContextMenuItems(params) {
 		},
 		{
 			name: `Редактировать графики по текущему коду контракта`,
-			disabled: false,
+			disabled: isObserver(role),
 			action: () => {
 				editScheduleItem(rowNode, setDataToForm)
 			},
@@ -382,7 +383,7 @@ function getContextMenuItems(params) {
 		},
 		{
 			name: `Удаление графиков`,
-			// disabled: !isAdmin(role) && !isORL(role) && !isOrderSupport(role),
+			disabled: isObserver(role),
 			icon: uiIcons.trash,
 			subMenu: [
 				{
@@ -585,6 +586,11 @@ function sendExcelFormHandler(e) {
 async function addScheduleItemFormHandler(e) {
 	e.preventDefault()
 
+	if (isObserver(role)) {
+		snackbar.show('Недостаточно прав!')
+		return
+	}
+
 	const formData = new FormData(e.target)
 	const data = scheduleItemDataFormatter(formData)
 
@@ -656,6 +662,11 @@ async function addScheduleItemFormHandler(e) {
 // обработчик отправки формы редактирования графика поставки
 function editScheduleItemFormHandler(e) {
 	e.preventDefault()
+
+	if (isObserver(role)) {
+		snackbar.show('Недостаточно прав!')
+		return
+	}
 
 	const formData = new FormData(e.target)
 	const data = scheduleItemDataFormatter(formData)
@@ -798,6 +809,11 @@ function editTOByCounterpartyContractCodeOnly(data) {
 }
 // добавление нового ТО по номеру
 async function addShopsByContract(rowNode) {
+	if (isObserver(role)) {
+		snackbar.show('Недостаточно прав!')
+		return
+	}
+
 	const scheduleItem = rowNode.data
 	const counterpartyContractCode = scheduleItem.counterpartyContractCode
 	if (!counterpartyContractCode) return

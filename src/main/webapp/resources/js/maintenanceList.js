@@ -1,6 +1,6 @@
 import { AG_GRID_LOCALE_RU } from "./AG-Grid/ag-grid-locale-RU.js"
 import { ResetStateToolPanel, dateComparator, gridColumnLocalState, gridFilterLocalState } from "./AG-Grid/ag-grid-utils.js"
-import { changeGridTableMarginTop, dateHelper, debounce, getAhoStatusRoute, getData, isCarrier, isSlotsObserver } from "./utils.js"
+import { changeGridTableMarginTop, dateHelper, debounce, getAhoStatusRoute, getData, isCarrier, isObserver, isSlotsObserver } from "./utils.js"
 import { snackbar } from "./snackbar/snackbar.js"
 import { uiIcons } from "./uiIcons.js"
 import { bootstrap5overlay } from "./bootstrap5overlay/bootstrap5overlay.js"
@@ -461,7 +461,7 @@ function getContextMenuItems(params) {
 
 	const logistResult = [
 		{
-			disabled: isAddCarrierDisabled,
+			disabled: isAddCarrierDisabled || isObserver(role),
 			name: `Назначить перевозчика`,
 			icon: uiIcons.personPlus,
 			action: () => {
@@ -469,7 +469,7 @@ function getContextMenuItems(params) {
 			},
 		},
 		{
-			disabled: isRemoveCarrierDisabled,
+			disabled: isRemoveCarrierDisabled || isObserver(role),
 			name: `Удалить перевозчика`,
 			icon: uiIcons.trash,
 			action: () => {
@@ -477,7 +477,7 @@ function getContextMenuItems(params) {
 			},
 		},
 		{
-			disabled: isAddMileageDisabled,
+			disabled: isAddMileageDisabled || isObserver(role),
 			name: `Добавить пробег`,
 			icon: uiIcons.route2,
 			action: () => {
@@ -485,7 +485,7 @@ function getContextMenuItems(params) {
 			},
 		},
 		{
-			disabled: isRemoveMileageDisabled,
+			disabled: isRemoveMileageDisabled || isObserver(role),
 			name: `Удалить пробег`,
 			icon: uiIcons.eraser,
 			action: () => {
@@ -493,7 +493,7 @@ function getContextMenuItems(params) {
 			},
 		},
 		{
-			disabled: isAddFinishPriceDisabled,
+			disabled: isAddFinishPriceDisabled || isObserver(role),
 			name: `Указать стоимость перевозки`,
 			icon: uiIcons.banknotes,
 			action: () => {
@@ -501,7 +501,7 @@ function getContextMenuItems(params) {
 			},
 		},
 		{
-			disabled: isRemoveFinishPriceDisabled,
+			disabled: isRemoveFinishPriceDisabled || isObserver(role),
 			name: `Удалить стоимость`,
 			icon: uiIcons.banknotesRemoved,
 			action: () => {
@@ -509,7 +509,7 @@ function getContextMenuItems(params) {
 			},
 		},
 		{
-			disabled: isCloseRouteDisabled,
+			disabled: isCloseRouteDisabled || isObserver(role),
 			name: `Завершить маршрут`,
 			icon: uiIcons.checks,
 			action: () => {

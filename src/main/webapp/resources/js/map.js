@@ -4,6 +4,7 @@ import { debounce,
 	getEncodedString,
 	hideLoadingSpinner,
 	isAdmin, isLogistDelivery, isLogisticsDeliveryPage, isManager,
+	isObserver,
 	isTopManager,
 	randomColor,
 	showLoadingSpinner
@@ -604,7 +605,7 @@ function showContentByRole(role) {
 						&& polygon.properties.action !== 'weightDistribution'
 		)
 
-	if (isAdmin(role) || isLogistDelivery(role)) {
+	if (isAdmin(role) || isLogistDelivery(role) || isObserver(role)) {
 		displayPolygons(filtredPolygons)
 		showPoligonControl()
 		displayShops()
@@ -819,6 +820,11 @@ function poligonControlFormSubmitHandler(e) {
 		return
 	}
 
+	if (isObserver(role)) {
+		snackbar.show('Недостаточно прав!')
+		return
+	}
+
 	ajaxUtils.postJSONdata({
 		url: sendGeojsonDataUrl,
 		token: token,
@@ -844,6 +850,11 @@ function deletePolygon(props) {
 		const layer = getLayerByEncodedName(name)
 		layer && drawnItems.removeLayer(layer)
 		mapStore.removePolygon(name)
+		return
+	}
+
+	if (isObserver(role)) {
+		snackbar.show('Недостаточно прав!')
 		return
 	}
 

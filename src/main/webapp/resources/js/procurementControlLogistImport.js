@@ -1,6 +1,6 @@
 import { AG_GRID_LOCALE_RU } from './AG-Grid/ag-grid-locale-RU.js'
-import { ResetStateToolPanel, dateComparator, gridColumnLocalState, gridFilterLocalState } from './AG-Grid/ag-grid-utils.js'
-import { debounce, getData, dateHelper, getStatus, changeGridTableMarginTop, rowClassRules, disableButton, enableButton, isAdmin } from './utils.js'
+import { ResetStateToolPanel, dateComparator, deselectAllCheckboxes, gridColumnLocalState, gridFilterLocalState } from './AG-Grid/ag-grid-utils.js'
+import { debounce, getData, dateHelper, getStatus, changeGridTableMarginTop, rowClassRules, disableButton, enableButton, isAdmin, isObserver } from './utils.js'
 import { snackbar } from './snackbar/snackbar.js'
 import { ajaxUtils } from './ajaxUtils.js'
 import { uiIcons } from './uiIcons.js'
@@ -20,7 +20,7 @@ import {
 	orderWeightInputOnChangeHandler,
 	typeTruckOnChangeHandler,
 } from "./procurementFormUtils.js"
-import { excelStyles, mapCallbackForProcurementControl, procurementExcelExportParams } from './procurementControlUtils.js'
+import { checkCombineRoutes, excelStyles, mapCallbackForProcurementControl, mergeRoutePoints, procurementExcelExportParams } from './procurementControlUtils.js'
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 import { getAddressHTML, getAddressInfoHTML, getCargoInfoHTML, getCustomsAddressHTML, getDateHTML, getTimeHTML, getTnvdHTML } from './procurementFormHtmlUtils.js'
 import { getComment, getPointsData } from './procurementFormDataUtils.js'
@@ -33,6 +33,7 @@ const getOrderBaseUrl ='../../api/manager/getOrdersForLogist/'
 const getSearchOrderBaseUrl ='../../api/manager/getOrdersHasCounterparty/'
 const createRouteUrl = (way) => way === 'АХО' ? '../../api/manager/maintenance/add' : '../../api/manager/createNewRoute'
 const getDataHasOrderBaseUrl ='../../api/manager/getDataHasOrder2/'
+const getOrdersLinksBaseUrl = `../../api/logistics/getOrdersLinks/`
 
 const role = document.querySelector('#role').value
 
@@ -110,6 +111,7 @@ const columnDefs = [
 	{ headerName: 'Склад доставки (из Маркета)', field: 'numStockDelivery', },
 	{ headerName: 'Начальная сумма заказа без НДС', field: 'marketOrderSumFirst', },
 	{ headerName: 'Конечная сумма заказа с НДС', field: 'marketOrderSumFinal', },
+	{ headerName: 'Связь', field: 'link', },
 ]
 
 if (isAdmin(role)) {
@@ -281,7 +283,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 	// dangerousInput && dangerousInput.addEventListener('change', dangerousInputOnChangeHandler)
 
 	// листнер на очистку формы маршрута при закрытии модального окна
-	$('#routeModal').on('hide.bs.modal', (e) => clearRouteForm())
+	$('#routeModal').on('hide.bs.modal', (e) => {
+		deselectAllCheckboxes(gridOptions)
+		clearRouteForm()
+	})
 
 	// делаем контейнер с точками сортируемым с помощью перетаскивания
 	Sortable.create(pointList, {
@@ -352,9 +357,10 @@ function getContextMenuItems(params) {
 	const routeData = params.node.data
 	const idOrder = routeData.idOrder
 	const status = routeData.status
-
 	const selectedRowsData = params.api.getSelectedRows()
-	const isVeryfySelectedOrder = !selectedRowsData.filter(order => order.status !== 20).length
+
+	const isVerifySelectedOrderStatus = (order) => order.status === 20 || order.status === 40
+	const isVerifySelectedOrder = selectedRowsData.every(order => isVerifySelectedOrderStatus(order))
 
 	const result = [
 		{
@@ -366,15 +372,15 @@ function getContextMenuItems(params) {
 		},
 		{
 			name: `Создать маршрут`,
-			disabled: (status !== 20 && status !== 40) || selectedRowsData.length,
-			action: () => {
-				createRoute(routeData)
+			disabled: (status !== 20 && status !== 40) || selectedRowsData.length || isObserver(role),
+			action: async () => {
+				createRouteBySingleOrder(routeData)
 			},
 			icon: uiIcons.cardText,
 		},
 		{
 			name: `Создать маршрут по выделенным заявкам`,
-			disabled: !selectedRowsData.length || !isVeryfySelectedOrder,
+			disabled: !selectedRowsData.length || selectedRowsData.length < 2 || !isVerifySelectedOrder || isObserver(role),
 			action: () => {
 				createRouteByOrders(selectedRowsData)
 			},
@@ -383,7 +389,7 @@ function getContextMenuItems(params) {
 		{
 			name: `Подтвердить и отправить данные`,
 			// disabled: status !== 60 || !hasConfirmRouteDataResponse,
-			disabled: status !== 60,
+			disabled: status !== 60 || isObserver(role),
 			action: () => {
 				// hasConfirmRouteDataResponse = false
 				confirmRouteData(idOrder)
@@ -397,34 +403,94 @@ function getContextMenuItems(params) {
 	return result
 }
 
+// получение связанных заказов
+async function getLinkedOrders(link) {
+	const res = await getData(`${getOrdersLinksBaseUrl}${link}`)
+	if (res && res.status === '200') {
+		return res.linkOrders.map(order => {
+			return {
+				...order,
+				addressesToView: order.addresses.filter(address => address.isCorrect)
+			}
+		})
+	}
+	return []
+}
+
+// редирект на страницу заказа
 function showOrder(idOrder) {
 	window.location.href = `ordersLogist/order?idOrder=${idOrder}`
 }
-// функции создания маршрута
-function createRoute(orderData) {
-	const routeForm = document.querySelector('#routeForm')
+
+// создание маргшрута по одному заказу
+async function createRouteBySingleOrder(orderData) {
+	const orderLink = orderData.link
+	if (orderLink) {
+		alert(
+			`ВНИМАНИЕ, заявка ${orderData.idOrder} объединена с другими заказами.`
+			+ ` В форме создания маршрута будут данные всех связанных заказов.`
+			+ ` Если в точках загрузки/выгрузки совпадают адреса, то точки будут`
+			+ ` объединены с суммированием паллет, веса и объема груза.`
+			+ ` Пожалуйста, проверьте/отредактируйте название и точки маршрута.`
+		)
+		const linkedOrders = await getLinkedOrders(orderLink)
+		createRouteByOrders(linkedOrders)
+		return
+	}
+
 	const addressesByOrder = orderData.addressesToView.map(address => ({ ...address, idOrder: orderData.idOrder }))
 	const updatedOrderData = { ...orderData, addresses: addressesByOrder }
-
-	changeForm(updatedOrderData, FORM_TYPE)
-	addDataToRouteForm(updatedOrderData, routeForm, createPoint)
-	changeEditingRules(updatedOrderData, routeForm)
-	openRouteModal()
+	createRoute(updatedOrderData)
 }
+// создание маршрута по нескольким заказам
 function createRouteByOrders(orderData) {
-	const routeForm = document.querySelector('#routeForm')
+	const firstOrder = orderData[0]
+
+	const errorMessage = checkCombineRoutes(orderData)
+	if (errorMessage) {
+		alert(errorMessage)
+		deselectAllCheckboxes(gridOptions)
+		return
+	}
+
+	const processField = (field) =>
+		Array.from(new Set(orderData?.map(order => order[field]).filter(Boolean))).join(' + ')
+
+	const idOrders = orderData.map(order => order.idOrder)
+	const counterparty = processField('counterparty')
+	const contact = processField('contact')
+	const control = orderData.some(order => order.control)
+	const loadNumber = orderData.map(order => order.loadNumber).join('/')
+	const marketInfo = processField('marketInfo')
+	const stacking = orderData.every(order => order.stacking)
+	const cargo = processField('cargo')
+	const temperature = processField('temperature')
+	const comment = processField('comment')
+
 	const addresses = orderData.reduce((acc, order) => {
 		const addressesByOrder = order.addressesToView.map(address => ({ ...address, idOrder: order.idOrder }))
 		acc.push(...addressesByOrder)
 		return acc
 	}, [])
-	const unitedOrderData = { ...orderData[0], addresses: addresses }
+	const mergedRoutePoints = mergeRoutePoints(addresses)
+	const unitedOrderData = {
+		...firstOrder, idOrders, addresses: mergedRoutePoints,
+		counterparty, contact, control, loadNumber, marketInfo,
+		stacking, cargo, temperature, comment,
+	}
+	createRoute(unitedOrderData)
+}
 
-	changeForm(unitedOrderData, FORM_TYPE)
-	addDataToRouteForm(unitedOrderData, routeForm, createPoint)
-	changeEditingRules(unitedOrderData, routeForm)
+// функция создания маршрута
+function createRoute(orderData) {
+	const routeForm = document.querySelector('#routeForm')
+	changeForm(orderData, FORM_TYPE)
+	addDataToRouteForm(orderData, routeForm, createPoint)
+	changeEditingRules(orderData, routeForm)
 	openRouteModal()
 }
+
+// отправка данных по маршруту
 function confirmRouteData(idOrder) {
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
 	ajaxUtils.get({
@@ -525,7 +591,10 @@ function orderLinkRenderer(params) {
 	const data = params.node.data
 	const link = `./ordersLogist/order?idOrder=${data.idOrder}`
 
-	return `<a class="text-primary" href="${link}">${params.value}</a>`
+	const isLinkedOrder = data.link
+	const isLinkedOrderLabel = isLinkedOrder ? ' <span class="text-danger"> (объединен)</span>' : ''
+
+	return `<a class="text-primary" href="${link}">${params.value}${isLinkedOrderLabel}</a>`
 }
 
 // функции управления состоянием колонок
@@ -624,7 +693,7 @@ function routeFormDataFormatter(routeForm) {
 
 	const points = getPointsData(data.way)
 	const updatedPoints = points.map(point => ({ ...point, number: point.pointNumber }))
-	const updatedIdOrders = getIdOrders(routeForm)
+	const idOrders = data.idOrders.split(',').map(Number)
 
 	const dateDelivery = points.length && points[points.length - 1].date
 		? points[points.length - 1].date
@@ -632,7 +701,7 @@ function routeFormDataFormatter(routeForm) {
 
 	return {
 		...data,
-		idOrders: updatedIdOrders,
+		idOrders,
 		dateDelivery,
 		points: updatedPoints,
 		comment: getComment(data)

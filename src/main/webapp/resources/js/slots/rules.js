@@ -1,4 +1,4 @@
-import { dateHelper, getData, isAdmin, isLogist, isSlotsObserver} from "../utils.js"
+import { dateHelper, getData, isAdmin, isLogist, isObserver, isSlotsObserver} from "../utils.js"
 import { adminLogins, checkScheduleBaseUrl, userMessages } from "./constants.js"
 import {
 	getMinUnloadDateForLogist,
@@ -21,7 +21,7 @@ export function editableRules(order, currentLogin, currentRole) {
 	const isPickupOrder = status === 7
 	const isSupplierOrder = status === 8
 	
-	if (isSlotsObserver(currentRole)) return false
+	if (isSlotsObserver(currentRole) || isObserver(currentRole)) return false
 
 	if (
 		(
@@ -65,7 +65,7 @@ export function editableRulesToConfirmBtn(order, currentLogin, currentRole) {
 	const isPickupOrder = status === 7
 	const isSupplierOrder = status === 8 || status === 100
 
-	if (isSlotsObserver(currentRole)) return false
+	if (isSlotsObserver(currentRole) || isObserver(currentRole)) return false
 
 	return (
 			isAdmin(currentRole)
@@ -142,27 +142,29 @@ export function methodAccessRules(method, order, currentLogin, currentRole) {
 		case 'confirm': return confirmMethodAccessRules(order, currentLogin, currentRole)
 		case 'checkSlot': return (isAdmin(currentRole) || currentLogin === 'romashkok%!dobronom.by')
 		case 'checkBooking': return (isAdmin(currentRole) || currentLogin === 'romashkok%!dobronom.by')
+		case 'editMarketInfo': return !isSlotsObserver(currentRole) && !isObserver(currentRole)
+		case 'getOrderFromMarket': return !isSlotsObserver(currentRole) && !isObserver(currentRole)
 		default: return true
 	}
 }
 function loadMethodAccessRules(order, currentLogin, currentRole) {
 	const orderLogin = order.loginManager.toLowerCase()
-	if (isSlotsObserver(currentRole)) return false
+	if (isSlotsObserver(currentRole) || isObserver(currentRole)) return false
 	return !isLogist(currentRole) && (!isAnotherUser(orderLogin, currentLogin) || isAdmin(currentRole))
 }
 function updateMethodAccessRules(order, currentLogin, currentRole) {
 	const orderLogin = order.loginManager.toLowerCase()
-	if (isSlotsObserver(currentRole)) return false
+	if (isSlotsObserver(currentRole) || isObserver(currentRole)) return false
 	return !isAnotherUser(orderLogin, currentLogin) || isAdmin(currentRole) || isLogist(currentRole)
 }
 function deleteMethodAccessRules(order, currentLogin, currentRole) {
 	const orderLogin = order.loginManager.toLowerCase()
-	if (isSlotsObserver(currentRole)) return false
+	if (isSlotsObserver(currentRole) || isObserver(currentRole)) return false
 	return !isLogist(currentRole) && (!isAnotherUser(orderLogin, currentLogin) || isAdmin(currentRole))
 }
 function confirmMethodAccessRules(order, currentLogin, currentRole) {
 	const orderLogin = order.loginManager.toLowerCase()
-	if (isSlotsObserver(currentRole)) return false
+	if (isSlotsObserver(currentRole) || isObserver(currentRole)) return false
 	return !isLogist(currentRole) && (!isAnotherUser(orderLogin, currentLogin) || isAdmin(currentRole))
 }
 
@@ -170,6 +172,7 @@ export function removeDraggableElementRules(currentRole) {
 	return !isAdmin(currentRole)
 		&& !isLogist(currentRole)
 		&& !isSlotsObserver(currentRole)
+		&& !isObserver(currentRole)
 }
 
 
@@ -180,6 +183,7 @@ export function colorRules(order, currentLogin, currentRole) {
 			|| !isAnotherUser(orderLogin, currentLogin)
 			|| isLogist(currentRole)
 			|| isSlotsObserver(currentRole)
+			|| isObserver(currentRole)
 }
 
 

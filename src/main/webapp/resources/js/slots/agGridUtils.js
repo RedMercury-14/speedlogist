@@ -4,10 +4,18 @@ import { dateHelper, rowClassRules } from "../utils.js"
 import { convertToDDMMYYYY, convertToDayMonthTime, getEndTime } from "./dataUtils.js"
 
 const columnDefs = [
+	{
+		field: '', colId: 'selectionRow',
+		width: 30, lockPosition: 'left',
+		pinned: 'left', lockPinned: true,
+		checkboxSelection: true,
+		suppressMovable: true, suppressMenu: true,
+		resizable: false, sortable: false, filter: false,
+	},
 	{ headerName: "Дата доставки", field: "dateDeliveryToView", width: 80, comparator: dateComparator, },
 	{ headerName: "Дата начала выгрузки", field: "timeDeliveryStartDate", width: 80, comparator: dateComparator, cellClass: 'px-1 text-center font-weight-bold',},
 	{ headerName: "Склад доставки (из Маркета)", field: "numStockDelivery", width: 120, },
-	{ headerName: "ID", field: "idOrder", width: 100, },
+	{ headerName: "ID", field: "idOrder", width: 100, cellRenderer: idOrderRenderer},
 	{ headerName: "Номер из Маркета", field: "marketNumber", width: 100, },
 	{ headerName: "Статус", field: 'status', width: 60, },
 	{ headerName: "Менеджер", field: "loginManager", },
@@ -31,6 +39,7 @@ const columnDefs = [
 		valueGetter: (params) => params.data.isInternalMovement === 'true' ? 'Да': 'Нет',
 	},
 	{ headerName: "Номер контракта", field: "marketContractType", },
+	{ headerName: "Связь", field: "link", },
 ]
 
 export const gridOptions = {
@@ -53,6 +62,7 @@ export const gridOptions = {
 	},
 	getRowId: (params) => params.data.idOrder,
 	suppressRowClickSelection: true,
+	rowSelection: 'multiple',
 	suppressDragLeaveHidesColumns: true,
 	enableBrowserTooltips: true,
 	localeText: AG_GRID_LOCALE_RU,
@@ -171,4 +181,12 @@ export function showInternalMovementOrders(gridOptions) {
 	const isInternalMovementComponent = gridOptions.api.getFilterInstance('isInternalMovement')
 	isInternalMovementComponent.setModel({ values: ['Да'] })
 	gridOptions.api.onFilterChanged()
+}
+
+// отображение ID заказа
+function idOrderRenderer(params) {
+	const data = params.node.data
+	const isLinkedOrder = data.link
+	const isLinkedOrderLabel = isLinkedOrder ? ' <span class="text-danger font-weight-bold">!</span>' : ''
+	return `<span>${params.value}${isLinkedOrderLabel}</span>`
 }

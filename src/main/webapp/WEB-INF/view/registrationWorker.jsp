@@ -97,6 +97,7 @@
   						<option value="13">Заказ транспорта для вн. пер-й</option>
   						<option value="14">Специалист ОРЛ</option>
   						<option value="15">Специалист отдела транспортной логистики (занимается развозом)</option>
+  						<option value="16">Роль для наблюдателя за всей системой</option>
  						</select>
 				</c:when>
 			</c:choose>

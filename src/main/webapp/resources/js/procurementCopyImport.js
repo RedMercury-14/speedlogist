@@ -19,7 +19,7 @@ import {
 	typeTruckOnChangeHandler,
 	validatePointDates,
 } from "./procurementFormUtils.js"
-import { dateHelper, disableButton, enableButton, getData } from "./utils.js"
+import { dateHelper, disableButton, enableButton, getData, isObserver } from "./utils.js"
 import { bootstrap5overlay } from "./bootstrap5overlay/bootstrap5overlay.js"
 import {
 	getAddressHTML,
@@ -39,6 +39,7 @@ const getInternalMovementShopsUrl = "../../../api/manager/getInternalMovementSho
 const getMarketOrderBaseUrl = `../../../api/manager/getMarketOrder/`
 
 const token = $("meta[name='_csrf']").attr("content")
+const role = document.querySelector('#role').value
 
 const FORM_TYPE = 'copy'
 
@@ -126,6 +127,11 @@ function orderFormSubmitHandler(e) {
 	const way = data.way
 
 	if (isInvalidForm(data)) {
+		return
+	}
+
+	if (isObserver(role)) {
+		snackbar.show('Недостаточно прав!')
 		return
 	}
 

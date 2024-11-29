@@ -37,7 +37,7 @@ import {
 	validatePointDates,
 } from "./procurementFormUtils.js"
 import { snackbar } from "./snackbar/snackbar.js"
-import { disableButton, enableButton, getData, isStockProcurement, setInputValue, } from './utils.js'
+import { disableButton, enableButton, getData, isObserver, isStockProcurement, setInputValue, } from './utils.js'
 
 const redirectUrl = (orderStatus) => orderStatus === 20 || disableSlotRedirect ? "orders" : "../slots"
 const getInternalMovementShopsUrl = "../../api/manager/getInternalMovementShops"
@@ -45,6 +45,7 @@ const getInternalMovementShopsUrl = "../../api/manager/getInternalMovementShops"
 const getMarketOrderBaseUrl = `../../api/manager/getMarketOrder/`
 
 const token = $("meta[name='_csrf']").attr("content")
+const role = document.querySelector('#role').value
 
 let error = false
 // отключения переадресации в слоты
@@ -398,6 +399,11 @@ function orderFormSubmitHandler(e) {
 	const data = getOrderData(formData, orderData, orderStatus)
 
 	if (isInvalidOrderForm(data)) {
+		return
+	}
+
+	if (isObserver(role)) {
+		snackbar.show('Недостаточно прав!')
 		return
 	}
 

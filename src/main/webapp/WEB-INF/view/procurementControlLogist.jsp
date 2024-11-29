@@ -73,6 +73,7 @@
 								<div class="form-section left">
 									<input type="hidden" class="form-control" name="isInternalMovement" id="isInternalMovement">
 									<input type="hidden" class="form-control" name="needUnloadPoint" id="needUnloadPoint">
+									<input type="hidden" class="form-control" name="idOrders" id="idOrders">
 									<div class="form-group">
 										<label for="counterparty" class="col-form-label text-muted font-weight-bold">Наименование контрагента <span class="text-red">*</span></label>
 										<input type="text" class="form-control" name="counterparty" id="counterparty" placeholder="Наименование контрагента (поставщика)" readonly required>

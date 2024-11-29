@@ -1,6 +1,7 @@
 package by.base.main.dao.impl;
 
 import java.sql.Date;
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -546,6 +547,15 @@ public class OrderDAOImpl implements OrderDAO{
 	    
 	    Set<Order> orders = theObject.getResultList().stream().collect(Collectors.toSet());
 	    return new ArrayList<>(orders); 
+	}
+
+	private static final String queryGetOrderByTimeAfterUnload = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH r.truck t LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH o.addresses a where o.status !=10 AND o.timeDelivery BETWEEN :dateStart and :dateEnd";
+	@Transactional
+	@Override
+	//остановился тут
+	public List<Order> getOrderByTimeAfterUnload(Order order, Time time) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

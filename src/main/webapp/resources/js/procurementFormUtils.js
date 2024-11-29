@@ -634,6 +634,7 @@ export function addDataToRouteForm(data, routeForm, createPointMethod) {
 	const pointList = routeForm.querySelector('#pointList')
 	const points = data.addresses
 
+	routeForm.idOrders && (routeForm.idOrders.value = data.idOrders)
 	routeForm.isInternalMovement.value = data.isInternalMovement
 	routeForm.counterparty.value = data.counterparty
 	routeForm.contact.value = data.contact ? data.contact : ''

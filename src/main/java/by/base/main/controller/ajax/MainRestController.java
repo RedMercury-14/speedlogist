@@ -470,7 +470,7 @@ public class MainRestController {
     		responseMap.put("info", "Связанные заказы отсутствуют");
     		return responseMap;
     	}
-    	List<Order> orders = orderService.getOrderByLink(order.getLink());
+    	Set<Order> orders = orderService.getOrderByLink(order.getLink()).stream().collect(Collectors.toSet());
     	responseMap.put("status", "200");
     	responseMap.put("parentalOrder", order);
     	responseMap.put("linkOrders", orders);    	

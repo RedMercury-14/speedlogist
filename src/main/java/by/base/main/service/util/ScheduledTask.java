@@ -112,6 +112,7 @@ public class ScheduledTask {
 		String fileName1200 = "1200 (----Холодный----).xlsm";
 		String fileName1100 = "1100 График прямой сухой.xlsm";
 		String fileNameSample = "График для шаблоново.xlsx";
+		String draftFolder = appPath + "resources/others/drafts/";
 		
 		try {
 			poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
@@ -120,26 +121,43 @@ public class ScheduledTask {
 					appPath + "resources/others/" + fileName1100);
 			poiExcel.exportToExcelSampleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
 					appPath + "resources/others/" + fileNameSample);
+			poiExcel.exportToExcelDrafts(scheduleService.getSchedulesListTO().stream().filter(s -> s.getStatus() == 20).collect(Collectors.toList()), draftFolder);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.err.println("Ошибка формирование EXCEL");
 		}
 		
 //		response.setHeader("content-disposition", "attachment;filename="+fileName+".xlsx");
-		List<File> files = new ArrayList<File>();
-		files.add(new File(appPath + "resources/others/" + fileName1200));
-		files.add(new File(appPath + "resources/others/" + fileName1100));
-		files.add(new File(appPath + "resources/others/" + fileNameSample));
-		
-		 File zipFile;
-		 List<File> filesZip = new ArrayList<File>();
-		try {
-			zipFile = createZipFile(files, appPath + "resources/others/TO.zip");
-			filesZip.add(zipFile);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+
+	       List<File> files = new ArrayList<File>();
+	       files.add(new File(appPath + "resources/others/" + fileName1200));
+	       files.add(new File(appPath + "resources/others/" + fileName1100));
+	       files.add(new File(appPath + "resources/others/" + fileNameSample));
+
+	       File folder = new File(draftFolder);
+	       List<File> draftFiles = new ArrayList<File>();
+
+	       File[] drafts = folder.listFiles();
+	       for (File file: drafts){
+	          draftFiles.add(file);
+	       }
+	       //files.add(new File(appPath + "resources/others/drafts"));
+
+	       System.out.println(appPath + "resources/others/");
+
+	       File zipFile;
+	       File zipFileDrafts;
+	       List<File> filesZip = new ArrayList<File>();
+
+	       try {
+	          zipFile = createZipFile(files, appPath + "resources/others/TO.zip");
+	          zipFileDrafts = createZipFile(draftFiles, appPath + "resources/others/Шаблоны.zip");
+	          filesZip.add(zipFile);
+	          filesZip.add(zipFileDrafts);
+	       } catch (IOException e) {
+	          // TODO Auto-generated catch block
+	          e.printStackTrace();
+	       }
 		
 //		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от TEST" + currentTimeString, "Тестовая отправка сообщения.\nНе обращайте внимания / игнорируте это сообщение", files, emails);
 		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO" + currentTimeString, "Автоматическая отправка графиков поставок на ТО\nВерсия с макросом выделений (Ctr+t)", filesZip, emails);

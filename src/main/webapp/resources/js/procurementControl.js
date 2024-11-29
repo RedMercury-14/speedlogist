@@ -302,7 +302,7 @@ function getContextMenuItems(params) {
 			icon: uiIcons.pencil,
 		},
 		{
-			disabled: (status !== 6 && status !== 20 && status !== 40) || isSlotsObserver(role) || isObserver(role),
+			disabled: (status !== 6 && status !== 7 && status !== 20 && status !== 40) || isSlotsObserver(role) || isObserver(role),
 			name: `Отменить заявку`,
 			action: () => {
 				deleteOrder(idOrder, rowNode)

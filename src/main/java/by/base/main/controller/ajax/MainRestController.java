@@ -1500,14 +1500,90 @@ public class MainRestController {
 		response.put("route", route);
 		return response;		
 	}
+	
+	@GetMapping("/orl/sendEmailTO")
+	public Map<String, Object> getSendEmailTO(HttpServletRequest request) {
+		Map<String, Object> response = new HashMap<String, Object>();
+		System.out.println("Start --- sendSchedulesTOHasORL");
+		User user = getThisUser();
+    	// Получаем текущую дату для имени файла
+        LocalDate currentTime = LocalDate.now();
+        String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+        
+		List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to");
+//		emails.addAll(emailsSupport);
+		String appPath = servletContext.getRealPath("/");
+		
+		String fileName1200 = "1200 (----Холодный----).xlsm";
+		String fileName1100 = "1100 График прямой сухой.xlsm";
+		String fileNameSample = "График для шаблоново.xlsx";
+		String draftFolder = appPath + "resources/others/drafts/";
+		
+	    File draftFolderFile = new File(draftFolder);
+	    if (!draftFolderFile.exists()) {
+	          draftFolderFile.mkdir();
+	    }
+		
+		try {
+			poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+					appPath + "resources/others/" + fileName1200);
+			poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesByTOType("сухой").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+					appPath + "resources/others/" + fileName1100);
+			poiExcel.exportToExcelSampleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+					appPath + "resources/others/" + fileNameSample);
+			poiExcel.exportToExcelDrafts(scheduleService.getSchedulesListTO().stream().filter(s -> s.getStatus() == 20).collect(Collectors.toList()), draftFolder);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.err.println("Ошибка формирование EXCEL");
+		}
+		
+//		response.setHeader("content-disposition", "attachment;filename="+fileName+".xlsx");
+
+	       List<File> files = new ArrayList<File>();
+	       files.add(new File(appPath + "resources/others/" + fileName1200));
+	       files.add(new File(appPath + "resources/others/" + fileName1100));
+	       files.add(new File(appPath + "resources/others/" + fileNameSample));
+
+	       File folder = new File(draftFolder);
+	       List<File> draftFiles = new ArrayList<File>();
+
+	       File[] drafts = folder.listFiles();
+	       for (File file: drafts){
+	          draftFiles.add(file);
+	       }
+	       //files.add(new File(appPath + "resources/others/drafts"));
+
+	       System.out.println(appPath + "resources/others/");
+
+	       File zipFile;
+	       File zipFileDrafts;
+	       List<File> filesZip = new ArrayList<File>();
+
+	       try {
+	          zipFile = createZipFile(files, appPath + "resources/others/TO.zip");
+	          zipFileDrafts = createZipFile(draftFiles, appPath + "resources/others/Шаблоны.zip");
+	          filesZip.add(zipFile);
+	          filesZip.add(zipFileDrafts);
+	       } catch (IOException e) {
+	          // TODO Auto-generated catch block
+	          e.printStackTrace();
+	       }
+		
+		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок (ТО) на " + currentTimeString, "Сообщение отправлено вручную пользователем : " + user.getSurname() + " " + user.getName()+"\nВерсия с макросом выделений (Ctr+t)", filesZip, emails);
+    	System.out.println("Finish --- sendSchedulesHasTOORL");
+    	response.put("status", "200");
+		response.put("message", "Сообщение отправлено");
+		
+		return response;			
+	}
 		
 	/**
-	 * Ручная отправка сообщения с графиком поставок
+	 * Ручная отправка сообщения с графиком поставок на РЦ
 	 * @param request
 	 * @return
 	 */
 	@GetMapping("/orl/sendEmail")
-	public Map<String, Object> getSendEmail(HttpServletRequest request) {
+	public Map<String, Object> getSendEmailRC(HttpServletRequest request) {
 		// Получаем текущую дату для имени файла
 		Map<String, Object> response = new HashMap<String, Object>();
         LocalDate currentTime = LocalDate.now();
@@ -1541,7 +1617,7 @@ public class MainRestController {
 		files.add(new File(appPath + "resources/others/" + fileName1700));
 		
 		
-		mailService.sendEmailWithFilesToUsers(request.getServletContext(), "Графики поставок на " + currentTimeString, "Сообщение отправлено вручную пользователем : " + user.getSurname() + " " + user.getName() , files, emails);
+		mailService.sendEmailWithFilesToUsers(request.getServletContext(), "Графики поставок (РЦ) на " + currentTimeString, "Сообщение отправлено вручную пользователем : " + user.getSurname() + " " + user.getName() , files, emails);
 		response.put("status", "200");
 		response.put("message", "Сообщение отправлено");
 		

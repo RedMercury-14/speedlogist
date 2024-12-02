@@ -920,8 +920,8 @@ function scheduleItemDataFormatter(formData) {
 	const counterpartyCode = Number(data.counterpartyCode)
 	const counterpartyContractCode = Number(data.counterpartyContractCode)
 	const numStock = getTextareaData(data.numStock)
-	const orderFormationSchedule = data.orderFormationSchedule && note ? data.orderFormationSchedule : null
-	// const orderShipmentSchedule = data.orderShipmentSchedule && note ? data.orderShipmentSchedule : null
+	const orderFormationSchedule = data.orderFormationSchedule ? data.orderFormationSchedule : null
+	// const orderShipmentSchedule = data.orderShipmentSchedule ? data.orderShipmentSchedule : null
 	const quantum = data.quantum ? Number(data.quantum) : null
 
 	let res = {

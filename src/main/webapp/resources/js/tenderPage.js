@@ -6,6 +6,7 @@ const token = $("meta[name='_csrf']").attr("content")
 ws.onopen = () => onOpenSock();
 ws.onmessage = (e) => onMessage(JSON.parse(e.data));
 ws.onclose = (e) => onClose();
+
 function sendCost() {
 	if (document.querySelector('input[name=cost]').value != '' && document.querySelector('input[name=cost]').value % 1 == 0) {
 		sendMessage({
@@ -101,7 +102,8 @@ function onOpenSock() {
 };
 
 function onMessage(msg) {
-	changeCost();
+	// отключено для закрытых тендеров
+	// changeCost();
 };
 
 function onClose() {
@@ -194,25 +196,25 @@ tenderOfferForm.addEventListener('submit', (e)=>{
 		if (parseInt(document.querySelector('input[name=cost]').value) > 0) {
 			if (document.querySelector('#startPriceChoice') != null) {
 				if (parseInt(document.querySelector('.lastCost').innerHTML) > parseInt(document.querySelector('input[name=cost]').value)) {
-					sendCost();
-					backToTender()
-					// sendCostPOST()
+					// sendCost();
+					// backToTender()
+					sendCostPOST()
 				} else {
 					alert('Недопустимое цена! Ваша цена должна быть меньше последней предложенной');
 				}
 			} else {
-				sendCost();
-				backToTender()
-				// sendCostPOST()
+				// sendCost();
+				// backToTender()
+				sendCostPOST()
 			}
 		}
 	}
 
 	// кнопка Отменить
 	if (submitBtnName === 'notagree') {
-		cancelCost()
-		backToTender()
-		// cancelCostPOST()
+		// cancelCost()
+		// backToTender()
+		cancelCostPOST()
 	}
 })
 

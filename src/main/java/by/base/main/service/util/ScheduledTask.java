@@ -114,6 +114,11 @@ public class ScheduledTask {
 		String fileNameSample = "График для шаблоново.xlsx";
 		String draftFolder = appPath + "resources/others/drafts/";
 		
+	    File draftFolderFile = new File(draftFolder);
+	    if (!draftFolderFile.exists()) {
+	          draftFolderFile.mkdir();
+	    }
+		
 		try {
 			poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
 					appPath + "resources/others/" + fileName1200);

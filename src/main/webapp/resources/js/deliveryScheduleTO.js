@@ -28,14 +28,13 @@ const loadExcelUrl = '../../api/slots/delivery-schedule/loadTO'
 const getAllScheduleUrl = '../../api/slots/delivery-schedule/getListTO'
 const getScheduleByContractBaseUrl = '../../api/slots/delivery-schedule/getListTOContract/'
 const getScheduleByCounterpartyBaseUrl = '../../api/slots/delivery-schedule/getListTOСounterparty/'
-
 const addScheduleItemUrl = '../../api/slots/delivery-schedule/createTO'
 const editScheduleItemUrl = '../../api/slots/delivery-schedule/editTOByCounterpartyAndShop'
 const changeIsDayToDayBaseUrl = '../../api/slots/delivery-schedule/changeDayToDay/'
-
 const editTOByCounterpartyContractCodeOnlyUrl = '../../api/slots/delivery-schedule/editTOByCounterpartyContractCodeOnly'
 const setCodeNameBaseUrl = '../../api/slots/delivery-schedule/changeNameOfQuantum/'
 const downloadFaqUrl = '../../file/delivery-schedule-to/downdoad/instruction-trading-objects'
+const sendScheduleDataToMailUrl = '../../api/orl/sendEmailTO'
 
 const PAGE_NAME = 'deliveryScheduleTO'
 const LOCAL_STORAGE_KEY = `AG_Grid_settings_to_${PAGE_NAME}`
@@ -176,6 +175,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 	// форма установки кодовых слов
 	const setCodeNameForm = document.querySelector('#setCodeNameForm')
 	setCodeNameForm && setCodeNameForm.addEventListener('submit', setCodeNameFormHandler)
+
+	// кнопка отправки данных на почту
+	const sendScheduleDataToMailBtn = document.querySelector('#sendScheduleDataToMail')
+	sendScheduleDataToMailBtn && sendScheduleDataToMailBtn.addEventListener('click', sendScheduleDataToMail)
 
 	// чекбоксы пометки "Неделя"
 	const addNoteCheckbox = addScheduleItemForm.querySelector('#addNote')
@@ -555,6 +558,25 @@ async function getScheduleData(url) {
 	scheduleData = res.body
 	return res.body
 }
+// отправка данных на почту
+async function sendScheduleDataToMail(e) {
+	const btn = e.target
+	btn.disabled = true
+
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 0)
+	const res = await getData(sendScheduleDataToMailUrl)
+	clearTimeout(timeoutId)
+	bootstrap5overlay.hideOverlay()
+	btn.disabled = false
+
+	if (res && res.status === '200') {
+		snackbar.show(res.message)
+	} else {
+		console.log(res)
+		const message = res && res.message ? res.message : 'Неизвестная ошибка'
+		snackbar.show(message)
+	}
+}
 // обработчик отправки формы загрузки таблицы эксель
 function sendExcelFormHandler(e) {
 	e.preventDefault()
@@ -920,8 +942,8 @@ function scheduleItemDataFormatter(formData) {
 	const counterpartyCode = Number(data.counterpartyCode)
 	const counterpartyContractCode = Number(data.counterpartyContractCode)
 	const numStock = getTextareaData(data.numStock)
-	const orderFormationSchedule = data.orderFormationSchedule && note ? data.orderFormationSchedule : null
-	// const orderShipmentSchedule = data.orderShipmentSchedule && note ? data.orderShipmentSchedule : null
+	const orderFormationSchedule = data.orderFormationSchedule ? data.orderFormationSchedule : null
+	// const orderShipmentSchedule = data.orderShipmentSchedule ? data.orderShipmentSchedule : null
 	const quantum = data.quantum ? Number(data.quantum) : null
 
 	let res = {

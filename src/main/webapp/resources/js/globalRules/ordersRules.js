@@ -12,6 +12,7 @@ export const INCOTERMS_INSURANCE_LIST = [
 
 // список номеров складов, заказы на которые будут отображаться в слотах
 export const slotStocks = [
+	'1800',
 	'1700',
 	'1200',
 	'1230',
@@ -25,6 +26,7 @@ export const slotStocks = [
 // метод получения адреса склада по номеру
 export function getStockAddress(stockNumber) {
 	switch (stockNumber) {
+		case '1800': return 'Склад 1800, Минская область, Минский р-н, РАД М-4, 18км,  2А/2, склад W07'
 		case '1700': return 'Склад 1700, 223065, Минская обл., Минский р-н, Луговослободской с/с, РАД М4, 18км. 2а, склад W05'
 		case '1200': return 'Склад 1200, 223039, Минская обл., Минский р-н, Хатежинский с/с, 1'
 		case '1230': return 'Склад 1230, 223039, Минская обл., Минский р-н, Хатежинский с/с, 1'
@@ -40,6 +42,7 @@ export function getStockAddress(stockNumber) {
 // получение статуса заявки в зависимости от склада доставки
 export function getOrderStatusByStockDelivery(numStockDelivery) {
 	switch (numStockDelivery) {
+		case '1800':
 		case '1700':
 		case '1200':
 		case '1230':
@@ -47,6 +50,7 @@ export function getOrderStatusByStockDelivery(numStockDelivery) {
 		// case '1240':
 		case '1250':
 		case '1100':
+		case 1800:
 		case 1700:
 		case 1200:
 		case 1230:
@@ -64,6 +68,8 @@ export function getOrderStatusByStockDelivery(numStockDelivery) {
 // получение id виртуального склада, на котором будут отображаться поставки складов
 export function getVirtualStockId(stockId) {
 	switch (stockId) {
+		case '1800':
+			return '1800'
 		case '1700':
 			return '1700'
 		case '1200':

@@ -333,23 +333,24 @@ public class POIExcel {
               }
         }
 
+        // Заголовки колонок
+        String[] headers = {
+              "По коду / По номеру контракта", "Код / Номер контракта", "Склады куда", "Период расходов с", "Период расходов по", "Условия поставки",
+              "Дней в остатках (делитель)", "Точка заказа (дней)", "Макс. запас (дней)", "Дата поставки", "Дата крайней поставки",
+              "Проверить репликацию", "Учитывать только типы расходов 11,21,22", "Добавить последний приход", "Оставить кол-во заказа > 0", "Контролировать планограмму",
+              "Для СП", "Учитывать пр.заказы поставщикам", "Учитывать «В пути на склад»", "Учитывать «Зарезервировано»", "Учитывать «Заказы в EMark»",
+              "Потолок заказа (дней)", "Точка заказа для параметра «Зал»", "Создавать пустые заказы"
+
+        };
+
         for (Long counterpartyContractCode: currentSchedules.keySet()) {
-           Workbook workbook = new XSSFWorkbook();
+
            if(schedules.isEmpty()) {
               return null;
            }
 
+           Workbook workbook = new XSSFWorkbook();
            Sheet sheet = workbook.createSheet("Лист 1");
-
-           // Заголовки колонок
-           String[] headers = {
-                 "По коду / По номеру контракта", "Код / Номер контракта", "Склады куда", "Период расходов с", "Период расходов по", "Условия поставки",
-                 "Дней в остатках (делитель)", "Точка заказа (дней)", "Макс. запас (дней)", "Дата поставки", "Дата крайней поставки",
-                 "Проверить репликацию", "Учитывать только типы расходов 11,21,22", "Добавить последний приход", "Оставить кол-во заказа > 0", "Контролировать планограмму",
-                 "Для СП", "Учитывать пр.заказы поставщикам", "Учитывать «В пути на склад»", "Учитывать «Зарезервировано»", "Учитывать «Заказы в EMark»",
-                 "Потолок заказа (дней)", "Точка заказа для параметра «Зал»", "Создавать пустые заказы"
-
-           };
 
            // Создаем строку заголовков
            Row headerRow = sheet.createRow(2);
@@ -360,12 +361,16 @@ public class POIExcel {
 
            boolean isSheetEmpty = true;
            // Заполняем данные
+
            int rowNum = 3;
-
-
 
            List<Schedule> s = currentSchedules.get(counterpartyContractCode);
            //List<Schedule> currentSchedules = schedules.stream().filter(sch -> sch.getCounterpartyContractCode().equals(counterpartyContractCode)).collect(Collectors.toList());
+
+           if (counterpartyContractCode == 123567){
+              int o = 0;
+           }
+
            for (Schedule schedule : s) {
               if(schedule.getIsNotCalc() != null && schedule.getIsNotCalc()) {
                  continue;
@@ -377,40 +382,8 @@ public class POIExcel {
 
               if (!supplyDates.isEmpty()) {
                  isSheetEmpty = false;
-                 for (LocalDate supplyDate: supplyDates) {
-                    Row row = sheet.createRow(rowNum++);
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-                    String periodOfExpensesFromStr = today.plusDays(-7).format(formatter);
-                    String periodOfExpensesForStr = today.plusDays(-1).format(formatter);
-                    String supplyDateStr = supplyDate.format(formatter);
-                    String supplyDateLast = supplyDate.plusDays(1).format(formatter);
+                 rowNum = fillTable(sheet, supplyDates, today, schedule.getCounterpartyContractCode(), schedule.getNumStock(), rowNum);
 
-                    row.createCell(0, CellType.NUMERIC).setCellValue(1);
-                    row.createCell(1).setCellValue(schedule.getCounterpartyContractCode());
-                    row.createCell(2).setCellValue(schedule.getNumStock());
-                    row.createCell(3).setCellValue(periodOfExpensesFromStr);
-                    row.createCell(4).setCellValue(periodOfExpensesForStr);
-                    row.createCell(5, CellType.NUMERIC).setCellValue(0);
-                    row.createCell(6, CellType.NUMERIC).setCellValue(0);
-                    row.createCell(7, CellType.NUMERIC).setCellValue(0);
-                    row.createCell(8, CellType.NUMERIC).setCellValue(0);
-                    row.createCell(9).setCellValue(supplyDateStr);
-                    row.createCell(10).setCellValue(supplyDateLast);
-                    row.createCell(11, CellType.NUMERIC).setCellValue(0);
-                    row.createCell(12, CellType.NUMERIC).setCellValue(1);
-                    row.createCell(13, CellType.NUMERIC).setCellValue(1);
-                    row.createCell(14, CellType.NUMERIC).setCellValue(0);
-                    row.createCell(15, CellType.NUMERIC).setCellValue(1);
-                    row.createCell(16, CellType.NUMERIC).setCellValue(0);
-                    row.createCell(17, CellType.NUMERIC).setCellValue(1);
-                    row.createCell(18, CellType.NUMERIC).setCellValue(1);
-                    row.createCell(19, CellType.NUMERIC).setCellValue(1);
-                    row.createCell(20, CellType.NUMERIC).setCellValue(1);
-                    row.createCell(21, CellType.NUMERIC).setCellValue(9999);
-                    row.createCell(22, CellType.NUMERIC).setCellValue(0);
-                    row.createCell(23, CellType.NUMERIC).setCellValue(1);
-
-                 }
               }
            }
            String fullFilePath = filePath + "Шаблон(МС) Прямые на ТО " + counterpartyContractCode + ".xlsx";
@@ -425,14 +398,12 @@ public class POIExcel {
 
         }
 
+
+
         return filePath;
     }
 
     private List<LocalDate>  checkSchedule(Schedule schedule, LocalDate today){
-
-        if (schedule.getCounterpartyContractCode() == 910 && schedule.getNumStock() == 2772) {
-           int o = 0;
-        }
 
         List<LocalDate> supplyDates = new ArrayList<>();
 
@@ -517,8 +488,6 @@ public class POIExcel {
            supplyDates.addAll(getDates(schedule, today.plusDays(1), resultOfTomorrow, forSearchTomorrow, dayNumber + 1));
         }
 
-
-
         return supplyDates;
 
     }
@@ -539,49 +508,49 @@ public class POIExcel {
 
               LocalDate supplyDate;
 
-              int numberOfDay = 0;
               List<Integer> daysOfSupplies = new ArrayList<>();
 
               int addWeeks = 0;
+
+
               if (resultOfTheDay.contains("з") || resultOfTheDay.contains("н0")){
                  if (schedule.getMonday() != null && schedule.getMonday().contains(forSearch)){
-                    numberOfDay = 1;
                     daysOfSupplies.add(1);
-                    addWeeks = checkN(schedule.getMonday());
+                    addWeeks = checkN(schedule.getMonday(), resultOfTheDay, forSearch);
+
                  }
                  if (schedule.getTuesday() != null && schedule.getTuesday().contains(forSearch)){
-                    numberOfDay = 2;
                     daysOfSupplies.add(2);
-                    addWeeks = checkN(schedule.getTuesday());
+                    addWeeks = checkN(schedule.getTuesday(), resultOfTheDay, forSearch);
+
                  }
                  if (schedule.getWednesday() != null && schedule.getWednesday().contains(forSearch)){
-                    numberOfDay = 3;
                     daysOfSupplies.add(3);
-                    addWeeks = checkN(schedule.getWednesday());
+                    addWeeks = checkN(schedule.getWednesday(), resultOfTheDay, forSearch);
+
 
                  }
                  if (schedule.getThursday() != null && schedule.getThursday().contains(forSearch)){
-                    numberOfDay = 4;
                     daysOfSupplies.add(4);
-                    addWeeks = checkN(schedule.getThursday());
+                    addWeeks = checkN(schedule.getThursday(), resultOfTheDay, forSearch);
+
 
                  }
                  if (schedule.getFriday() != null && schedule.getFriday().contains(forSearch)){
-                    numberOfDay = 5;
                     daysOfSupplies.add(5);
-                    addWeeks = checkN(schedule.getFriday());
+                    addWeeks = checkN(schedule.getFriday(), resultOfTheDay, forSearch);
+
 
                  }
                  if (schedule.getSaturday() != null && schedule.getSaturday().contains(forSearch)){
-                    numberOfDay = 6;
                     daysOfSupplies.add(6);
-                    addWeeks = checkN(schedule.getSaturday());
+                    addWeeks = checkN(schedule.getSaturday(), resultOfTheDay, forSearch);
+
 
                  }
                  if (schedule.getSunday() != null && schedule.getSunday().contains(forSearch)){
-                    numberOfDay = 7;
                     daysOfSupplies.add(7);
-                    addWeeks = checkN(schedule.getSunday());
+                    addWeeks = checkN(schedule.getSunday(), resultOfTheDay, forSearch);
 
                  }
 
@@ -606,24 +575,70 @@ public class POIExcel {
 
     }
 
-    private int checkN (String daySearch) {
+    private int checkN (String daySearch, String resultOfTheDay, String forSearch) {
         int week = 0;
+
         if (daySearch.contains("н10")) {
            week = 10 * 7;
 
         } else {
-           for (int x = 2; x <= 9; x++) {
+           for (int x = 1; x <= 9; x++) {
 
               String weekStr = "н" + x;
               int weeks;
               if (daySearch.contains(weekStr)) {
                  weeks = x;
-                 week = weeks * 7;
+                 week = weeks *
+                       7;
                  break;
               }
            }
         }
+        if (week == 0) {
+           if (resultOfTheDay.contains(forSearch)){
+              week = 7;
+           }
+        }
         return week;
+    }
+    
+    private int fillTable(Sheet sheet, List<LocalDate> supplyDates, LocalDate today, Long counterpartyContractCode, Integer numStock , int rowNum){
+
+        for (LocalDate supplyDate: supplyDates) {
+           Row row = sheet.createRow(rowNum++);
+           DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+           String periodOfExpensesFromStr = today.plusDays(-7).format(formatter);
+           String periodOfExpensesForStr = today.plusDays(-1).format(formatter);
+           String supplyDateStr = supplyDate.format(formatter);
+           String supplyDateLast = supplyDate.plusDays(1).format(formatter);
+
+           row.createCell(0, CellType.NUMERIC).setCellValue(1);
+           row.createCell(1).setCellValue(counterpartyContractCode);
+           row.createCell(2).setCellValue(numStock);
+           row.createCell(3).setCellValue(periodOfExpensesFromStr);
+           row.createCell(4).setCellValue(periodOfExpensesForStr);
+           row.createCell(5, CellType.NUMERIC).setCellValue(0);
+           row.createCell(6, CellType.NUMERIC).setCellValue(0);
+           row.createCell(7, CellType.NUMERIC).setCellValue(0);
+           row.createCell(8, CellType.NUMERIC).setCellValue(0);
+           row.createCell(9).setCellValue(supplyDateStr);
+           row.createCell(10).setCellValue(supplyDateLast);
+           row.createCell(11, CellType.NUMERIC).setCellValue(0);
+           row.createCell(12, CellType.NUMERIC).setCellValue(1);
+           row.createCell(13, CellType.NUMERIC).setCellValue(1);
+           row.createCell(14, CellType.NUMERIC).setCellValue(0);
+           row.createCell(15, CellType.NUMERIC).setCellValue(1);
+           row.createCell(16, CellType.NUMERIC).setCellValue(0);
+           row.createCell(17, CellType.NUMERIC).setCellValue(1);
+           row.createCell(18, CellType.NUMERIC).setCellValue(1);
+           row.createCell(19, CellType.NUMERIC).setCellValue(1);
+           row.createCell(20, CellType.NUMERIC).setCellValue(1);
+           row.createCell(21, CellType.NUMERIC).setCellValue(9999);
+           row.createCell(22, CellType.NUMERIC).setCellValue(0);
+           row.createCell(23, CellType.NUMERIC).setCellValue(1);
+
+        }
+        return rowNum;
     }
     
     

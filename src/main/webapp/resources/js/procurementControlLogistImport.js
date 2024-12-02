@@ -439,7 +439,7 @@ async function createRouteBySingleOrder(orderData) {
 	}
 
 	const addressesByOrder = orderData.addressesToView.map(address => ({ ...address, idOrder: orderData.idOrder }))
-	const updatedOrderData = { ...orderData, addresses: addressesByOrder }
+	const updatedOrderData = { ...orderData, idOrders: [orderData.idOrder], addresses: addressesByOrder }
 	createRoute(updatedOrderData)
 }
 // создание маршрута по нескольким заказам

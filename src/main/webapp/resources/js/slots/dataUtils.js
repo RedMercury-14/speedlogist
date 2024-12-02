@@ -1,5 +1,6 @@
+import { slotsSettings } from "../globalRules/slotsRules.js"
 import { dateHelper, isAdmin, isLogist } from "../utils.js"
-import { eventColors, slotsSettings } from "./constants.js"
+import { eventColors } from "./constants.js"
 
 // получение минимальной даты слота
 export function getMinUnloadDate(order, role) {

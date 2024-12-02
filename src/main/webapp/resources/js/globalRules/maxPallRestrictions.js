@@ -245,17 +245,25 @@ export const MAX_PALL_RESTRICTIONS = [
 	// ------------------------------------
 	{
 		stockId: '1100',
-		date: '2024-10-30',
+		date: '2024-11-29',
 		maxPall: {
-			externalMovement: 160,
+			externalMovement: 90,
 			internalMovement: 500,
 		},
 	},
 	{
 		stockId: '1100',
-		date: '2024-10-31',
+		date: '2024-11-30',
 		maxPall: {
-			externalMovement: 140,
+			externalMovement: 90,
+			internalMovement: 500,
+		},
+	},
+	{
+		stockId: '1100',
+		date: '2024-12-01',
+		maxPall: {
+			externalMovement: 90,
 			internalMovement: 500,
 		},
 	},

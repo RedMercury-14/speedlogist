@@ -1,4 +1,5 @@
-import { getOrdersForSlotsBaseUrl, slotsSettings } from "./slots/constants.js"
+import { slotsSettings } from "./globalRules/slotsRules.js"
+import { getOrdersForSlotsBaseUrl } from "./slots/constants.js"
 import { getDatesToSlotsFetch } from "./slots/dataUtils.js"
 import { dateHelper, getData, isCarrier, isLogisticsDeliveryPage, isStockProcurement } from "./utils.js"
 

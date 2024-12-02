@@ -1,6 +1,7 @@
 import { ajaxUtils } from "../ajaxUtils.js"
 import { bootstrap5overlay } from "../bootstrap5overlay/bootstrap5overlay.js"
 import { slotStocks } from "../globalRules/ordersRules.js"
+import { slotsSettings } from "../globalRules/slotsRules.js"
 import { snackbar } from "../snackbar/snackbar.js"
 import { getData, isLogist } from "../utils.js"
 import { updateTableData } from "./agGridUtils.js"
@@ -15,7 +16,6 @@ import {
 	loadOrderUrl,
 	preloadOrderUrl,
 	setOrderLinkingUrl,
-	slotsSettings,
 	updateOrderUrl,
 	userMessages
 } from "./constants.js"

@@ -282,14 +282,15 @@ export const store = {
 				// constraint: stockId === '1700' ? null : 'businessHours',
 			}
 
-			if (stockId !== '1700') event.constraint = 'businessHours'
+			// костыль для внутренних перемещений на 1700 и 1800 складах
+			if (stockId !== '1700' && stockId !== '1800') event.constraint = 'businessHours'
 
 			stock.events.push(event)
 		})
 
 		const backgroundEvent = {
 			id: 'background1',
-			resourceId: '170001',
+			resourceId: null,
 			display: 'background',
 			startTime: '12:00',
 			endTime: '20:00',
@@ -302,7 +303,12 @@ export const store = {
 			},
 		}
 		const stock1700 = this._state.stocks.find(stock => stock.id === '1700')
+		backgroundEvent.resourceId = '170001'
 		stock1700.events.push(backgroundEvent)
+
+		const stock1800 = this._state.stocks.find(stock => stock.id === '1800')
+		backgroundEvent.resourceId = '180001'
+		stock1800.events.push(backgroundEvent)
 	},
 
 

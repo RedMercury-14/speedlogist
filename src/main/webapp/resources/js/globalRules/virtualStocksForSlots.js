@@ -82,6 +82,31 @@ export const stocks = [
 		events: [],
 	},
 	{
+		id: '1800',
+		name: 'Склад 1800',
+		address: '223065, Беларусь, Луговослободской с/с, Минский р-н, Минская обл., РАД М4, 18км. 2а, склад W06',
+		contact: '+375293473695',
+		workingHoursStart: '00:00',
+		workingHoursEnd: '24:00',
+		shiftChange: ['08:00', '09:00', '20:00', '21:00'],
+		internaMovementsTimes: ['12:00', '20:00'],
+		internalMovementsRamps: ['180001'],
+		maxPall: {
+			externalMovement: 200, // редактировать ПОСТОЯННУЮ паллетовместимость ЗДЕСЬ
+			internalMovement: 500, // паллетовместимость внутренних перевозок
+		},
+		weekends: [],
+		ramps: [
+			{ id: "180001", title: "Рампа 1", businessHours: { startTime: '00:00', endTime: '24:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
+			{ id: "180002", title: "Рампа 2", businessHours: { startTime: '00:00', endTime: '24:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
+			{ id: "180003", title: "Рампа 3", businessHours: { startTime: '00:00', endTime: '24:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
+			{ id: "180004", title: "Рампа 4", businessHours: { startTime: '00:00', endTime: '24:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
+			{ id: "180005", title: "Рампа 5", businessHours: { startTime: '00:00', endTime: '24:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
+			{ id: "180006", title: "Рампа 6 (Резерв)", businessHours: { startTime: '00:00', endTime: '24:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
+		],
+		events: [],
+	},
+	{
 		id: '1200',
 		name: 'Склад 1200',
 		address: '223039, Республика Беларусь, Минская область, Минский район, Хатежинский с/с, 1',
@@ -135,7 +160,7 @@ export const stocks = [
 		internaMovementsTimes: [],
 		internalMovementsRamps: [],
 		maxPall: {
-			externalMovement: 90, // редактировать ПОСТОЯННУЮ паллетовместимость ЗДЕСЬ
+			externalMovement: 60, // редактировать ПОСТОЯННУЮ паллетовместимость ЗДЕСЬ
 			internalMovement: 500, // паллетовместимость внутренних перевозок
 		},
 		weekends: [],

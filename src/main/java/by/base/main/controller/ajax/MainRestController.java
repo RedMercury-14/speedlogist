@@ -342,75 +342,72 @@ public class MainRestController {
     public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException{
        Map<String, Object> responseMap = new HashMap<>();
        System.out.println("Start --- sendSchedulesTOHasORL");
-       // Получаем текущую дату для имени файла
+   	// Получаем текущую дату для имени файла
        LocalDate currentTime = LocalDate.now();
        String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-
-       List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
-       System.out.println(emails);
-//     emails.addAll(emailsSupport);
-       String appPath = servletContext.getRealPath("/");
-
-       String fileName1200 = "1200 (----Холодный----).xlsx";
-       String fileName1100 = "1100 График прямой сухой.xlsx";
-       String fileNameSample = "График для шаблоново.xlsx";
-       String draftFolder = appPath + "resources/others/drafts/";
        
-       File draftFolderFile = new File(draftFolder);
-       if (!draftFolderFile.exists()) {
-           draftFolderFile.mkdir();
-       }
+		List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+//		emails.addAll(emailsSupport);
+		String appPath = servletContext.getRealPath("/");
+		
+		String fileName1200 = "1200 (----Холодный----).xlsm";
+		String fileName1100 = "1100 График прямой сухой.xlsm";
+		String fileNameSample = "График для шаблоново.xlsx";
+		String draftFolder = appPath + "resources/others/drafts/";
+		
+	    File draftFolderFile = new File(draftFolder);
+	    if (!draftFolderFile.exists()) {
+	          draftFolderFile.mkdir();
+	    }
+		
+		try {
+			poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+					appPath + "resources/others/" + fileName1200);
+			poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesByTOType("сухой").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+					appPath + "resources/others/" + fileName1100);
+			poiExcel.exportToExcelSampleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+					appPath + "resources/others/" + fileNameSample);
+			poiExcel.exportToExcelDrafts(scheduleService.getSchedulesListTO().stream().filter(s -> s.getStatus() == 20).collect(Collectors.toList()), draftFolder);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.err.println("Ошибка формирование EXCEL");
+		}
+		
+//		response.setHeader("content-disposition", "attachment;filename="+fileName+".xlsx");
 
-       try {
-          poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()),
-                appPath + "resources/others/" + fileName1200);
-          poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("сухой").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()),
-                appPath + "resources/others/" + fileName1100);
-          poiExcel.exportToExcelSampleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()),
-                appPath + "resources/others/" + fileNameSample);
-          poiExcel.exportToExcelDrafts(scheduleService.getSchedulesListTO().stream().filter(s -> s.getStatus() == 20).collect(Collectors.toList()), draftFolder);
+	       List<File> files = new ArrayList<File>();
+	       files.add(new File(appPath + "resources/others/" + fileName1200));
+	       files.add(new File(appPath + "resources/others/" + fileName1100));
+	       files.add(new File(appPath + "resources/others/" + fileNameSample));
 
-       } catch (IOException e) {
-          e.printStackTrace();
-          System.err.println("Ошибка формирование EXCEL");
-       }
+	       File folder = new File(draftFolder);
+	       List<File> draftFiles = new ArrayList<File>();
 
-//     response.setHeader("content-disposition", "attachment;filename="+fileName+".xlsx");
-       List<File> files = new ArrayList<File>();
-       files.add(new File(appPath + "resources/others/" + fileName1200));
-       files.add(new File(appPath + "resources/others/" + fileName1100));
-       files.add(new File(appPath + "resources/others/" + fileNameSample));
+	       File[] drafts = folder.listFiles();
+	       for (File file: drafts){
+	          draftFiles.add(file);
+	       }
+	       //files.add(new File(appPath + "resources/others/drafts"));
 
-       File folder = new File(draftFolder);
-       List<File> draftFiles = new ArrayList<File>();
+	       System.out.println(appPath + "resources/others/");
 
-       File[] drafts = folder.listFiles();
-       for (File file: drafts){
-          draftFiles.add(file);
-       }
-       //files.add(new File(appPath + "resources/others/drafts"));
+	       File zipFile;
+	       File zipFileDrafts;
+	       List<File> filesZip = new ArrayList<File>();
 
-       System.out.println(appPath + "resources/others/");
-
-       File zipFile;
-       File zipFileDrafts;
-       List<File> filesZip = new ArrayList<File>();
-
-       try {
-          zipFile = createZipFile(files, appPath + "resources/others/TO.zip");
-          zipFileDrafts = createZipFile(draftFiles, appPath + "resources/others/Шаблоны.zip");
-          filesZip.add(zipFile);
-          filesZip.add(zipFileDrafts);
-       } catch (IOException e) {
-          // TODO Auto-generated catch block
-          e.printStackTrace();
-       }
-
-
-
-       mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от TEST" + currentTimeString, "Тестовая отправка сообщения.\nНе обращайте внимания / игнорируте это сообщение", filesZip, emails);
-//     mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO" + currentTimeString, "Автоматическая отправка графиков поставок на ТО", filesZip, emails);
-       System.out.println("Finish --- sendSchedulesHasTOORL");
+	       try {
+	          zipFile = createZipFile(files, appPath + "resources/others/TO.zip");
+	          zipFileDrafts = createZipFile(draftFiles, appPath + "resources/others/Шаблоны.zip");
+	          filesZip.add(zipFile);
+	          filesZip.add(zipFileDrafts);
+	       } catch (IOException e) {
+	          // TODO Auto-generated catch block
+	          e.printStackTrace();
+	       }
+		
+		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от TEST" + currentTimeString, "Тестовая отправка сообщения.\nНе обращайте внимания / игнорируте это сообщение", filesZip, emails);
+//		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO" + currentTimeString, "Автоматическая отправка графиков поставок на ТО\nВерсия с макросом выделений (Ctr+t)", filesZip, emails);
+		System.out.println("Finish --- sendSchedulesHasTOORL");
        return responseMap;       
     }
     

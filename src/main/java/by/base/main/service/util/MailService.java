@@ -247,7 +247,6 @@ public class MailService {
 
 	        // Отправляем сообщение
 	        transport.sendMessage(message, message.getAllRecipients());
-
 	        transport.close();
 	    } catch (Exception e) {
 	        e.printStackTrace();

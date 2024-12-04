@@ -19,6 +19,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -317,329 +318,393 @@ public class POIExcel {
      */
     
     
-    public String exportToExcelDrafts(List<Schedule> schedules, String filePath) throws FileNotFoundException, IOException {
+    /**
+	 * Метод для создания черновиков в excel НА TO
+	 * @param schedules
+	 * @param filePath
+	 * @throws IOException
+	 * @throws FileNotFoundException
+	 * @author IRA
+	 */
+	public String exportToExcelDrafts(List<Schedule> schedules, String filePath) throws FileNotFoundException, IOException {
 
-        Map<Long, List<Schedule>> currentSchedules = new HashMap<>();
-        for (Schedule schedule : schedules) {
-           Long code = schedule.getCounterpartyContractCode();
-           if (currentSchedules.containsKey(code)) {
-              List<Schedule> sch = currentSchedules.get(code);
-              sch.add(schedule);
-              currentSchedules.put(code, sch);
-           } else {
-              List<Schedule> sch = new ArrayList<>();
-              sch.add(schedule);
-              currentSchedules.put(code, sch);
-              }
+		Map<Long, List<Schedule>> currentSchedules = new HashMap<>();
+		for (Schedule schedule : schedules) {
+			Long code = schedule.getCounterpartyContractCode();
+			if (currentSchedules.containsKey(code)) {
+				List<Schedule> sch = currentSchedules.get(code);
+				sch.add(schedule);
+				currentSchedules.put(code, sch);
+			} else {
+				List<Schedule> sch = new ArrayList<>();
+				sch.add(schedule);
+				currentSchedules.put(code, sch);
+ 			}
+		}
+
+		LocalDate today = LocalDate.now();
+
+		// Заголовки колонок
+		String[] headers = {
+				"По коду / По номеру контракта", "Код / Номер контракта", "Склады куда", "Период расходов с", "Период расходов по", "Условия поставки",
+				"Дней в остатках (делитель)", "Точка заказа (дней)", "Макс. запас (дней)", "Дата поставки", "Дата крайней поставки",
+				"Проверить репликацию", "Учитывать только типы расходов 11,21,22", "Добавить последний приход", "Оставить кол-во заказа > 0", "Контролировать планограмму",
+				"Для СП", "Учитывать пр.заказы поставщикам", "Учитывать «В пути на склад»", "Учитывать «Зарезервировано»", "Учитывать «Заказы в EMark»",
+				"Потолок заказа (дней)", "Точка заказа для параметра «Зал»", "Создавать пустые заказы"
+
+		};
+
+		for (Long counterpartyContractCode: currentSchedules.keySet()) {
+
+			if(schedules.isEmpty()) {
+				return null;
+			}
+
+			Workbook workbook = new XSSFWorkbook();
+			Sheet sheet = workbook.createSheet("Лист 1");
+
+			// Создаем строку заголовков
+			Row headerRow = sheet.createRow(2);
+			for (int i = 0; i < headers.length; i++) {
+				Cell cell = headerRow.createCell(i);
+				cell.setCellValue(headers[i]);
+			}
+
+			boolean isSheetEmpty = true;
+			// Заполняем данные
+
+			int rowNum = 3;
+
+			List<Schedule> s = currentSchedules.get(counterpartyContractCode);
+			//List<Schedule> currentSchedules = schedules.stream().filter(sch -> sch.getCounterpartyContractCode().equals(counterpartyContractCode)).collect(Collectors.toList());
+
+			for (Schedule schedule : s) {
+				if(schedule.getIsNotCalc() != null && schedule.getIsNotCalc()) {
+					continue;
+				}
+
+				List<LocalDate> supplyDates = checkSchedule(schedule, today);
+
+				if (!supplyDates.isEmpty()) {
+					isSheetEmpty = false;
+					rowNum = fillRow(sheet, supplyDates, today, schedule.getCounterpartyContractCode(), schedule.getNumStock(), rowNum);
+
+				}
+			}
+			String fullFilePath = filePath + "Шаблон(МС) Прямые на ТО " + counterpartyContractCode + ".xlsx";
+
+			if(!isSheetEmpty) {
+				try (FileOutputStream fileOut = new FileOutputStream(fullFilePath)) {
+					workbook.write(fileOut);
+				}// Сохраняем файл
+			}
+
+			workbook.close();
+
+		}
+
+        //начало для виртуального склада
+
+		List<Schedule> schedulesCold = schedules.stream()
+				.filter(sch -> sch.getToType().equals("холодный"))
+				.sorted(Comparator.comparingLong(Schedule::getCounterpartyContractCode))
+				.collect(Collectors.toList());
+
+		XSSFWorkbook workbookVirtual = new XSSFWorkbook();
+		Sheet sheetVirtual = workbookVirtual.createSheet("Лист 1");
+
+		// Создаем строку заголовков
+		Row headerRow = sheetVirtual.createRow(2);
+		for (int i = 0; i < headers.length; i++) {
+			Cell cell = headerRow.createCell(i);
+			cell.setCellValue(headers[i]);
+		}
+
+		boolean isSheetEmpty = true;
+
+		// Заполняем данные
+		int rowNum = 3;
+		long oldCode = 0L;
+
+		for (Schedule schedule: schedulesCold) {
+
+			List<LocalDate> supplyDates = checkSchedule(schedule, today);
+			Long currentCode = schedule.getCounterpartyContractCode();
+
+			if (!supplyDates.isEmpty()){
+				if (oldCode != currentCode) {
+					isSheetEmpty = false;
+
+					List<LocalDate> uniqueSchedule = new ArrayList<>();
+					uniqueSchedule.add(supplyDates.get(0));
+					rowNum = fillRow(sheetVirtual, uniqueSchedule, today, schedule.getCounterpartyContractCode(), 671, rowNum);
+
+					oldCode = currentCode;
+				}
+			}
         }
 
-        // Заголовки колонок
-        String[] headers = {
-              "По коду / По номеру контракта", "Код / Номер контракта", "Склады куда", "Период расходов с", "Период расходов по", "Условия поставки",
-              "Дней в остатках (делитель)", "Точка заказа (дней)", "Макс. запас (дней)", "Дата поставки", "Дата крайней поставки",
-              "Проверить репликацию", "Учитывать только типы расходов 11,21,22", "Добавить последний приход", "Оставить кол-во заказа > 0", "Контролировать планограмму",
-              "Для СП", "Учитывать пр.заказы поставщикам", "Учитывать «В пути на склад»", "Учитывать «Зарезервировано»", "Учитывать «Заказы в EMark»",
-              "Потолок заказа (дней)", "Точка заказа для параметра «Зал»", "Создавать пустые заказы"
-
-        };
-
-        for (Long counterpartyContractCode: currentSchedules.keySet()) {
-
-           if(schedules.isEmpty()) {
-              return null;
-           }
-
-           Workbook workbook = new XSSFWorkbook();
-           Sheet sheet = workbook.createSheet("Лист 1");
-
-           // Создаем строку заголовков
-           Row headerRow = sheet.createRow(2);
-           for (int i = 0; i < headers.length; i++) {
-              Cell cell = headerRow.createCell(i);
-              cell.setCellValue(headers[i]);
-           }
-
-           boolean isSheetEmpty = true;
-           // Заполняем данные
-
-           int rowNum = 3;
-
-           List<Schedule> s = currentSchedules.get(counterpartyContractCode);
-           //List<Schedule> currentSchedules = schedules.stream().filter(sch -> sch.getCounterpartyContractCode().equals(counterpartyContractCode)).collect(Collectors.toList());
-
-           if (counterpartyContractCode == 123567){
-              int o = 0;
-           }
-
-           for (Schedule schedule : s) {
-              if(schedule.getIsNotCalc() != null && schedule.getIsNotCalc()) {
-                 continue;
-              }
-
-              LocalDate today = LocalDate.now();
-
-              List<LocalDate> supplyDates = checkSchedule(schedule, today);
-
-              if (!supplyDates.isEmpty()) {
-                 isSheetEmpty = false;
-                 rowNum = fillTable(sheet, supplyDates, today, schedule.getCounterpartyContractCode(), schedule.getNumStock(), rowNum);
-
-              }
-           }
-           String fullFilePath = filePath + "Шаблон(МС) Прямые на ТО " + counterpartyContractCode + ".xlsx";
-
-           if(!isSheetEmpty) {
-              try (FileOutputStream fileOut = new FileOutputStream(fullFilePath)) {
-                 workbook.write(fileOut);
-              }// Сохраняем файл
-           }
-
-           workbook.close();
-
-        }
-
-
-
-        return filePath;
-    }
-
-    private List<LocalDate>  checkSchedule(Schedule schedule, LocalDate today){
-
-        List<LocalDate> supplyDates = new ArrayList<>();
-
-        DayOfWeek currentDay = today.getDayOfWeek();
-        String resultOfToday;
-        String resultOfTomorrow;
-        String forSearchToday;
-        String forSearchTomorrow;
-
-        int dayNumber;
-
-        switch (currentDay) {
-           case MONDAY:
-              resultOfToday = schedule.getMonday();
-              resultOfTomorrow = schedule.getTuesday();
-              forSearchToday = "понедельник";
-              forSearchTomorrow = "вторник";
-              dayNumber = 1;
-
-              break;
-           case TUESDAY:
-              resultOfToday = schedule.getTuesday();
-              resultOfTomorrow = schedule.getWednesday();
-              forSearchToday = "вторник";
-              forSearchTomorrow = "среда";
-              dayNumber = 2;
-
-              break;
-           case WEDNESDAY:
-              resultOfToday = schedule.getWednesday();
-              resultOfTomorrow = schedule.getThursday();
-              forSearchToday = "среда";
-              forSearchTomorrow = "четверг";
-              dayNumber = 3;
-
-              break;
-           case THURSDAY:
-              resultOfToday = schedule.getThursday();
-              resultOfTomorrow = schedule.getFriday();
-              forSearchToday = "четверг";
-              forSearchTomorrow = "пятница";
-              dayNumber = 4;
-
-              break;
-           case FRIDAY:
-              resultOfToday = schedule.getFriday();
-              resultOfTomorrow = schedule.getSaturday();
-              forSearchToday = "пятница";
-              forSearchTomorrow = "суббота";
-              dayNumber = 5;
-
-              break;
-           case SATURDAY:
-              resultOfToday = schedule.getSaturday();
-              resultOfTomorrow = schedule.getSunday();
-              forSearchToday = "суббота";
-              forSearchTomorrow = "воскресенье";
-              dayNumber = 6;
-
-              break;
-           case SUNDAY:
-              resultOfToday = schedule.getSunday();
-              resultOfTomorrow = schedule.getMonday();
-              forSearchToday = "воскресенье";
-              forSearchTomorrow = "понедельник";
-              dayNumber = 7;
-
-              break;
-           default:
-              resultOfToday = null;
-              resultOfTomorrow = null;
-              forSearchToday = null;
-              forSearchTomorrow = null;
-              dayNumber = 0;
-
-        }
-
-        if (resultOfToday != null){
-           supplyDates = getDates(schedule, today, resultOfToday, forSearchToday, dayNumber);
-        }
-        if (resultOfTomorrow != null) {
-           supplyDates.addAll(getDates(schedule, today.plusDays(1), resultOfTomorrow, forSearchTomorrow, dayNumber + 1));
-        }
-
-        return supplyDates;
-
-    }
-
-    private List<LocalDate> getDates(Schedule schedule, LocalDate day, String resultOfTheDay, String forSearch, int dayNumber){
-
-        List<LocalDate> supplyDates = new ArrayList<>();
-
-        String orderFormation = schedule.getOrderFormationSchedule();
-        int weekNumberParity = day.get(ChronoField.ALIGNED_WEEK_OF_YEAR)%2;
-
-           if ((orderFormation == null)
-              || (orderFormation.isEmpty())
-              || (weekNumberParity == 0 && orderFormation.equals("ч"))
-              || (weekNumberParity == 1 && orderFormation.equals("н"))) {
-
-           if ((day.equals(LocalDate.now()) && schedule.getIsDayToDay()) || (day.equals(LocalDate.now().plusDays(1))) && !schedule.getIsDayToDay()){
-
-              LocalDate supplyDate;
-
-              List<Integer> daysOfSupplies = new ArrayList<>();
-
-              int addWeeks = 0;
-
-
-              if (resultOfTheDay.contains("з") || resultOfTheDay.contains("н0")){
-                 if (schedule.getMonday() != null && schedule.getMonday().contains(forSearch)){
-                    daysOfSupplies.add(1);
-                    addWeeks = checkN(schedule.getMonday(), resultOfTheDay, forSearch);
-
-                 }
-                 if (schedule.getTuesday() != null && schedule.getTuesday().contains(forSearch)){
-                    daysOfSupplies.add(2);
-                    addWeeks = checkN(schedule.getTuesday(), resultOfTheDay, forSearch);
-
-                 }
-                 if (schedule.getWednesday() != null && schedule.getWednesday().contains(forSearch)){
-                    daysOfSupplies.add(3);
-                    addWeeks = checkN(schedule.getWednesday(), resultOfTheDay, forSearch);
-
-
-                 }
-                 if (schedule.getThursday() != null && schedule.getThursday().contains(forSearch)){
-                    daysOfSupplies.add(4);
-                    addWeeks = checkN(schedule.getThursday(), resultOfTheDay, forSearch);
-
-
-                 }
-                 if (schedule.getFriday() != null && schedule.getFriday().contains(forSearch)){
-                    daysOfSupplies.add(5);
-                    addWeeks = checkN(schedule.getFriday(), resultOfTheDay, forSearch);
-
-
-                 }
-                 if (schedule.getSaturday() != null && schedule.getSaturday().contains(forSearch)){
-                    daysOfSupplies.add(6);
-                    addWeeks = checkN(schedule.getSaturday(), resultOfTheDay, forSearch);
-
-
-                 }
-                 if (schedule.getSunday() != null && schedule.getSunday().contains(forSearch)){
-                    daysOfSupplies.add(7);
-                    addWeeks = checkN(schedule.getSunday(), resultOfTheDay, forSearch);
-
-                 }
-
-                 int i = 0;
-
-                 for (Integer daysOfSupply : daysOfSupplies) {
-
-                           if (dayNumber > daysOfSupply) {
-                               supplyDate = day.plusDays(7 - dayNumber + daysOfSupply + addWeeks);
-
-                           } else {
-                               supplyDate = day.plusDays(daysOfSupply - dayNumber + addWeeks);
-                           }
-
-                    supplyDates.add(supplyDate);
-                       }
-              }
-           }
-        }
-
-        return supplyDates;
-
-    }
-
-    private int checkN (String daySearch, String resultOfTheDay, String forSearch) {
-        int week = 0;
-
-        if (daySearch.contains("н10")) {
-           week = 10 * 7;
-
-        } else {
-           for (int x = 1; x <= 9; x++) {
-
-              String weekStr = "н" + x;
-              int weeks;
-              if (daySearch.contains(weekStr)) {
-                 weeks = x;
-                 week = weeks *
-                       7;
-                 break;
-              }
-           }
-        }
-        if (week == 0) {
-           if (resultOfTheDay.contains(forSearch)){
-              week = 7;
-           }
-        }
-        return week;
-    }
-    
-    private int fillTable(Sheet sheet, List<LocalDate> supplyDates, LocalDate today, Long counterpartyContractCode, Integer numStock , int rowNum){
-
-        for (LocalDate supplyDate: supplyDates) {
-           Row row = sheet.createRow(rowNum++);
-           DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-           String periodOfExpensesFromStr = today.plusDays(-7).format(formatter);
-           String periodOfExpensesForStr = today.plusDays(-1).format(formatter);
-           String supplyDateStr = supplyDate.format(formatter);
-           String supplyDateLast = supplyDate.plusDays(1).format(formatter);
-
-           row.createCell(0, CellType.NUMERIC).setCellValue(1);
-           row.createCell(1).setCellValue(counterpartyContractCode);
-           row.createCell(2).setCellValue(numStock);
-           row.createCell(3).setCellValue(periodOfExpensesFromStr);
-           row.createCell(4).setCellValue(periodOfExpensesForStr);
-           row.createCell(5, CellType.NUMERIC).setCellValue(0);
-           row.createCell(6, CellType.NUMERIC).setCellValue(0);
-           row.createCell(7, CellType.NUMERIC).setCellValue(0);
-           row.createCell(8, CellType.NUMERIC).setCellValue(0);
-           row.createCell(9).setCellValue(supplyDateStr);
-           row.createCell(10).setCellValue(supplyDateLast);
-           row.createCell(11, CellType.NUMERIC).setCellValue(0);
-           row.createCell(12, CellType.NUMERIC).setCellValue(1);
-           row.createCell(13, CellType.NUMERIC).setCellValue(1);
-           row.createCell(14, CellType.NUMERIC).setCellValue(0);
-           row.createCell(15, CellType.NUMERIC).setCellValue(1);
-           row.createCell(16, CellType.NUMERIC).setCellValue(0);
-           row.createCell(17, CellType.NUMERIC).setCellValue(1);
-           row.createCell(18, CellType.NUMERIC).setCellValue(1);
-           row.createCell(19, CellType.NUMERIC).setCellValue(1);
-           row.createCell(20, CellType.NUMERIC).setCellValue(1);
-           row.createCell(21, CellType.NUMERIC).setCellValue(9999);
-           row.createCell(22, CellType.NUMERIC).setCellValue(0);
-           row.createCell(23, CellType.NUMERIC).setCellValue(1);
-
-        }
-        return rowNum;
-    }
+		String fullFilePath  = filePath + "Шаблон(МС) Прямые на ТО виртуальный.xlsx";
+
+		if(!isSheetEmpty) {
+			try (FileOutputStream fileOut = new FileOutputStream(fullFilePath)) {
+				workbookVirtual.write(fileOut);
+			}
+		}
+
+		workbookVirtual.close();
+
+		//конец для виртуального склада
+
+		return filePath;
+	}
+
+	/**
+	 * @author IRA
+	 * @param schedule
+	 * @param today
+	 * @return
+	 */
+	private List<LocalDate> checkSchedule(Schedule schedule, LocalDate today){
+
+		List<LocalDate> supplyDates = new ArrayList<>();
+
+		DayOfWeek currentDay = today.getDayOfWeek();
+		String resultOfToday;
+		String resultOfTomorrow;
+		String forSearchToday;
+		String forSearchTomorrow;
+
+		int dayNumber;
+
+	    switch (currentDay) {
+			case MONDAY:
+				resultOfToday = schedule.getMonday();
+				resultOfTomorrow = schedule.getTuesday();
+				forSearchToday = "понедельник";
+				forSearchTomorrow = "вторник";
+				dayNumber = 1;
+
+				break;
+			case TUESDAY:
+				resultOfToday = schedule.getTuesday();
+				resultOfTomorrow = schedule.getWednesday();
+				forSearchToday = "вторник";
+				forSearchTomorrow = "среда";
+				dayNumber = 2;
+
+				break;
+			case WEDNESDAY:
+				resultOfToday = schedule.getWednesday();
+				resultOfTomorrow = schedule.getThursday();
+				forSearchToday = "среда";
+				forSearchTomorrow = "четверг";
+				dayNumber = 3;
+
+				break;
+			case THURSDAY:
+				resultOfToday = schedule.getThursday();
+				resultOfTomorrow = schedule.getFriday();
+				forSearchToday = "четверг";
+				forSearchTomorrow = "пятница";
+				dayNumber = 4;
+
+				break;
+			case FRIDAY:
+				resultOfToday = schedule.getFriday();
+				resultOfTomorrow = schedule.getSaturday();
+				forSearchToday = "пятница";
+				forSearchTomorrow = "суббота";
+				dayNumber = 5;
+
+				break;
+			case SATURDAY:
+				resultOfToday = schedule.getSaturday();
+				resultOfTomorrow = schedule.getSunday();
+				forSearchToday = "суббота";
+				forSearchTomorrow = "воскресенье";
+				dayNumber = 6;
+
+				break;
+			case SUNDAY:
+				resultOfToday = schedule.getSunday();
+				resultOfTomorrow = schedule.getMonday();
+				forSearchToday = "воскресенье";
+				forSearchTomorrow = "понедельник";
+				dayNumber = 7;
+
+				break;
+			default:
+				resultOfToday = null;
+				resultOfTomorrow = null;
+				forSearchToday = null;
+				forSearchTomorrow = null;
+				dayNumber = 0;
+
+		}
+
+		if (resultOfToday != null){
+			supplyDates = getDates(schedule, today, resultOfToday, forSearchToday, dayNumber);
+		}
+		if (resultOfTomorrow != null) {
+			supplyDates.addAll(getDates(schedule, today.plusDays(1), resultOfTomorrow, forSearchTomorrow, dayNumber + 1));
+		}
+
+		return supplyDates;
+
+	}
+
+	/**
+	 * @author IRA
+	 * @param schedule
+	 * @param day
+	 * @param resultOfTheDay
+	 * @param forSearch
+	 * @param dayNumber
+	 * @return
+	 */
+	private List<LocalDate> getDates(Schedule schedule, LocalDate day, String resultOfTheDay, String forSearch, int dayNumber){
+
+		List<LocalDate> supplyDates = new ArrayList<>();
+
+		String orderFormation = schedule.getOrderFormationSchedule();
+		int weekNumberParity = day.get(ChronoField.ALIGNED_WEEK_OF_YEAR)%2;
+
+        if ((orderFormation == null)
+				|| (orderFormation.isEmpty())
+				|| (weekNumberParity == 0 && orderFormation.equals("ч"))
+				|| (weekNumberParity == 1 && orderFormation.equals("н"))) {
+
+			if ((day.equals(LocalDate.now()) && schedule.getIsDayToDay()) || (day.equals(LocalDate.now().plusDays(1))) && !schedule.getIsDayToDay()){
+
+				LocalDate supplyDate;
+
+				List<Integer> daysOfSupplies = new ArrayList<>();
+
+				int addWeeks = 0;
+
+				if (schedule.getCounterpartyContractCode() == 1837){
+					int d = 0;
+				}
+
+				if (resultOfTheDay.contains("з") || resultOfTheDay.contains("н0")){
+					if (schedule.getMonday() != null && schedule.getMonday().contains(forSearch)){
+						daysOfSupplies.add(1);
+						addWeeks = checkN(schedule.getMonday(), resultOfTheDay, forSearch);
+					}
+					if (schedule.getTuesday() != null && schedule.getTuesday().contains(forSearch)){
+						daysOfSupplies.add(2);
+						addWeeks = checkN(schedule.getTuesday(), resultOfTheDay, forSearch);
+					}
+					if (schedule.getWednesday() != null && schedule.getWednesday().contains(forSearch)){
+						daysOfSupplies.add(3);
+						addWeeks = checkN(schedule.getWednesday(), resultOfTheDay, forSearch);
+					}
+					if (schedule.getThursday() != null && schedule.getThursday().contains(forSearch)){
+						daysOfSupplies.add(4);
+						addWeeks = checkN(schedule.getThursday(), resultOfTheDay, forSearch);
+					}
+					if (schedule.getFriday() != null && schedule.getFriday().contains(forSearch)){
+						daysOfSupplies.add(5);
+						addWeeks = checkN(schedule.getFriday(), resultOfTheDay, forSearch);
+					}
+					if (schedule.getSaturday() != null && schedule.getSaturday().contains(forSearch)){
+						daysOfSupplies.add(6);
+						addWeeks = checkN(schedule.getSaturday(), resultOfTheDay, forSearch);
+					}
+					if (schedule.getSunday() != null && schedule.getSunday().contains(forSearch)){
+						daysOfSupplies.add(7);
+						addWeeks = checkN(schedule.getSunday(), resultOfTheDay, forSearch);
+					}
+
+					for (Integer daysOfSupply : daysOfSupplies) {
+
+					    if (dayNumber > daysOfSupply) {
+					       if (addWeeks != 0) {
+					          addWeeks -= 7;
+					       }
+					       supplyDate = day.plusDays(7 - dayNumber + daysOfSupply + addWeeks);
+					    } else {
+					       supplyDate = day.plusDays(daysOfSupply - dayNumber + addWeeks);
+					    }
+
+					    supplyDates.add(supplyDate);
+					}
+				}
+			}
+		}
+
+		return supplyDates;
+
+	}
+
+	private int checkN (String daySearch, String resultOfTheDay, String forSearch) {
+		int week = 0;
+
+		if (daySearch.contains("н10")) {
+			week = 10 * 7;
+
+		} else {
+			for (int x = 1; x <= 9; x++) {
+
+				String weekStr = "н" + x;
+				int weeks;
+
+				if (daySearch.contains(weekStr)) {
+					weeks = x;
+					week = weeks * 7;
+					break;
+				}
+			}
+		}
+
+		if (week == 0) {
+			if (resultOfTheDay.contains(forSearch)){
+				week = 7;
+			}
+		}
+
+		return week;
+	}
+
+	private int fillRow(Sheet sheet, List<LocalDate> supplyDates, LocalDate today, Long counterpartyContractCode, Integer numStock , int rowNum){
+
+		for (LocalDate supplyDate: supplyDates) {
+			Row row = sheet.createRow(rowNum++);
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+			String periodOfExpensesFromStr = today.plusDays(-7).format(formatter);
+			String periodOfExpensesForStr = today.plusDays(-1).format(formatter);
+			String supplyDateStr = supplyDate.format(formatter);
+			String supplyDateLast = supplyDate.plusDays(1).format(formatter);
+
+			row.createCell(0, CellType.NUMERIC).setCellValue(1);
+			row.createCell(1).setCellValue(counterpartyContractCode);
+			row.createCell(2).setCellValue(numStock);
+			row.createCell(3).setCellValue(periodOfExpensesFromStr);
+			row.createCell(4).setCellValue(periodOfExpensesForStr);
+			row.createCell(5, CellType.NUMERIC).setCellValue(0);
+			row.createCell(6, CellType.NUMERIC).setCellValue(0);
+			row.createCell(7, CellType.NUMERIC).setCellValue(0);
+			row.createCell(8, CellType.NUMERIC).setCellValue(0);
+			row.createCell(9).setCellValue(supplyDateStr);
+			row.createCell(10).setCellValue(supplyDateLast);
+			row.createCell(11, CellType.NUMERIC).setCellValue(0);
+			row.createCell(12, CellType.NUMERIC).setCellValue(1);
+			row.createCell(13, CellType.NUMERIC).setCellValue(1);
+			row.createCell(14, CellType.NUMERIC).setCellValue(0);
+			row.createCell(15, CellType.NUMERIC).setCellValue(1);
+			row.createCell(16, CellType.NUMERIC).setCellValue(0);
+			row.createCell(17, CellType.NUMERIC).setCellValue(1);
+			row.createCell(18, CellType.NUMERIC).setCellValue(1);
+			row.createCell(19, CellType.NUMERIC).setCellValue(1);
+			row.createCell(20, CellType.NUMERIC).setCellValue(1);
+			row.createCell(21, CellType.NUMERIC).setCellValue(9999);
+			row.createCell(22, CellType.NUMERIC).setCellValue(0);
+			row.createCell(23, CellType.NUMERIC).setCellValue(1);
+
+		}
+		return rowNum;
+	}
     
     
     /*

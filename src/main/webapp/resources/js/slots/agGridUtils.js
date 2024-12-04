@@ -23,7 +23,7 @@ const columnDefs = [
 	{ headerName: "Паллеты", field: 'pall', width: 60, },
 	{ headerName: "Груз", field: 'cargo', },
 	{ headerName: "Длительность", field: 'timeUnload', width: 60, },
-	{ headerName: "Рампа", field: "idRamp", width: 60, },
+	// { headerName: "Рампа", field: "idRamp", width: 60, },
 	{ headerName: "Время", field: "timeDeliveryInfo", width: 190, wrapText: true, autoHeight: true, },
 	{ headerName: "Создатель заявки", field: "manager", width: 190, wrapText: true, autoHeight: true, },
 	{ headerName: "Адрес загрузки", field: "loadAddress", width: 390, wrapText: true, autoHeight: true, },

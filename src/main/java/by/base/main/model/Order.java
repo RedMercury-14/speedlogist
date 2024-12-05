@@ -239,6 +239,9 @@ public class Order {
 	@Column(name = "link")
 	private Integer link;
 	
+	@Column(name = "first_load_slot")
+	private Timestamp firstLoadSlot;
+	
 	@Transient
 	private List<Address> addressesSort;
 	
@@ -287,6 +290,12 @@ public class Order {
 
 	
 	
+	public Timestamp getFirstLoadSlot() {
+		return firstLoadSlot;
+	}
+	public void setFirstLoadSlot(Timestamp firstLoadSlot) {
+		this.firstLoadSlot = firstLoadSlot;
+	}
 	public Date getDateOrderOrl() {
 		return dateOrderOrl;
 	}

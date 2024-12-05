@@ -14,7 +14,10 @@ import {
 	createCalendarDateInput,
 	searchSlot,
 } from "./slots/calendarUtils.js"
-import { debounce, isAdmin, isLogist, isObserver, isSlotsObserver, isStockProcurement } from "./utils.js"
+import {
+	blurActiveElem, debounce, isAdmin, isLogist, isObserver,
+	isOrderSupport, isProcurement, isSlotsObserver, isStockProcurement
+} from "./utils.js"
 import { uiIcons } from "./uiIcons.js"
 import { wsSlotUrl } from "./global.js"
 import { bootstrap5overlay } from "./bootstrap5overlay/bootstrap5overlay.js"
@@ -265,6 +268,12 @@ document.addEventListener('DOMContentLoaded', async function() {
 			await initStartData()
 		})
 	}
+
+	// снятие фокуса с активного элемента при закрытии модального окна
+	$('#eventInfoModal').on('hide.bs.modal', blurActiveElem)
+	$('#orderCalendarModal').on('hide.bs.modal', blurActiveElem)
+	$('#displayMessageModal').on('hide.bs.modal', blurActiveElem)
+	$('#pallChartModal').on('hide.bs.modal', blurActiveElem)
 })
 
 
@@ -419,7 +428,7 @@ function stockSelectOnChangeHandler(e, calendar) {
 	updatePallChart(pallLineChart, pallChartData)
 
 	// подключаем кнопку "Добавить заказ" для закупок
-	if (!isAdmin(role) && !isLogist(role) && !isSlotsObserver(role) && !isStockProcurement(role)) {
+	if (isProcurement(role) || isOrderSupport(role)) {
 		const addNewOrderButton = document.querySelector("#addNewOrder")
 		addNewOrderButton.removeAttribute("disabled")
 	}

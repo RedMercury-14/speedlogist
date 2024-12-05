@@ -14,7 +14,8 @@ const columnDefs = [
 	},
 	{ headerName: "Дата доставки", field: "dateDeliveryToView", width: 80, comparator: dateComparator, },
 	{ headerName: "Дата начала выгрузки", field: "timeDeliveryStartDate", width: 80, comparator: dateComparator, cellClass: 'px-1 text-center font-weight-bold',},
-	{ headerName: "Склад доставки (из Маркета)", field: "numStockDelivery", width: 120, },
+	// ВРЕМЕННО ДЛЯ 1800
+	// { headerName: "Склад доставки (из Маркета)", field: "numStockDelivery", width: 120, },
 	{ headerName: "ID", field: "idOrder", width: 100, cellRenderer: idOrderRenderer},
 	{ headerName: "Номер из Маркета", field: "marketNumber", width: 100, },
 	{ headerName: "Статус", field: 'status', width: 60, },
@@ -23,8 +24,17 @@ const columnDefs = [
 	{ headerName: "Паллеты", field: 'pall', width: 60, },
 	{ headerName: "Груз", field: 'cargo', },
 	{ headerName: "Длительность", field: 'timeUnload', width: 60, },
+	// ВРЕМЕННО ДЛЯ 1800
 	// { headerName: "Рампа", field: "idRamp", width: 60, },
-	{ headerName: "Время", field: "timeDeliveryInfo", width: 190, wrapText: true, autoHeight: true, },
+	{
+		headerName: "Время выгрузки",
+		field: "timeDeliveryInfo",
+		width: 190,
+		wrapText: true, autoHeight: true,
+		filterParams: {
+			valueFormatter: (params) => params.value ? params.value.replaceAll('\n', ' ') : null,
+		},
+	},
 	{ headerName: "Создатель заявки", field: "manager", width: 190, wrapText: true, autoHeight: true, },
 	{ headerName: "Адрес загрузки", field: "loadAddress", width: 390, wrapText: true, autoHeight: true, },
 	{ headerName: "Перен-но логистом", field: "isLogistEdited", width: 90, cellClass: 'px-1 text-center font-weight-bold', },

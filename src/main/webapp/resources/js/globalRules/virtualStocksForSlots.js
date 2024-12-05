@@ -83,7 +83,7 @@ export const stocks = [
 	},
 	{
 		id: '1800',
-		name: 'Склад 1700 (только самовывоз)',
+		name: 'Склад 1700 (только самовывоз)', // ВРЕМЕННО ДЛЯ 1800
 		address: '223065, Беларусь, Минская область, Минский р-н, РАД М-4, 18км, 2А/2, склад W07',
 		contact: '+375293473695',
 		workingHoursStart: '00:00',
@@ -92,7 +92,7 @@ export const stocks = [
 		internaMovementsTimes: ['12:00', '20:00'],
 		internalMovementsRamps: ['180001'],
 		maxPall: {
-			externalMovement: 200, // редактировать ПОСТОЯННУЮ паллетовместимость ЗДЕСЬ
+			externalMovement: 800, // редактировать ПОСТОЯННУЮ паллетовместимость ЗДЕСЬ
 			internalMovement: 500, // паллетовместимость внутренних перевозок
 		},
 		weekends: [],

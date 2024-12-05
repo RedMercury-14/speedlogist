@@ -1,6 +1,6 @@
 package by.base.main.model;
+import java.sql.Date;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -111,8 +111,30 @@ public class Schedule{
      */
     @Column(name = "type")
     private String type;
-    
-    /*
+
+	@Column(name = "start_date_temp")
+	private Date startDateTemp;
+
+	@Column(name = "end_date_temp")
+	private Date endDateTemp;
+
+	public Date getStartDateTemp() {
+		return startDateTemp;
+	}
+
+	public void setStartDateTemp(Date startDateTemp) {
+		this.startDateTemp = startDateTemp;
+	}
+
+	public Date getEndDateTemp() {
+		return endDateTemp;
+	}
+
+	public void setEndDateTemp(Date endDateTemp) {
+		this.endDateTemp = endDateTemp;
+	}
+
+	/*
      * График формирования заказа  четная неделя ставим метка  --ч-- , нечетная --- н ---
      */
     @Column(name = "order_formation_schedule")

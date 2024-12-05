@@ -3,7 +3,7 @@ import { ajaxUtils } from './ajaxUtils.js'
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 import { snackbar } from "./snackbar/snackbar.js"
 import { uiIcons } from './uiIcons.js'
-import { changeGridTableMarginTop, getData, hideLoadingSpinner, isAdmin, showLoadingSpinner } from './utils.js'
+import { blurActiveElem, changeGridTableMarginTop, getData, hideLoadingSpinner, isAdmin, showLoadingSpinner } from './utils.js'
 
 const getAllShopsUrl = '../../api/manager/getAllShops'
 const loadShopsUrl = '../../api/map/loadShop'
@@ -129,8 +129,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 	editShopForm.addEventListener("submit", (e) => editShopFormHandler(e))
 
 	$('#numshop').change(checkSopNumber)
-	$('#addShopModal').on('hidden.bs.modal', (e) => addShopForm.reset())
-	$('#editShopModal').on('hidden.bs.modal', (e) => editShopForm.reset())
+	$('#addShopModal').on('hidden.bs.modal', (e) => {
+		blurActiveElem(e)
+		addShopForm.reset()
+	})
+	$('#editShopModal').on('hidden.bs.modal', (e) => {
+		blurActiveElem(e)
+		editShopForm.reset()
+	})
 
 	bootstrap5overlay.hideOverlay()
 })

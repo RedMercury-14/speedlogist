@@ -307,6 +307,8 @@ public class MainRestController {
 	private static final String serviceNumber = "CD6AE87C-2477-4852-A4E7-8BA5BD01C156";
 	private static final String loginMarket = "SpeedLogist";
 	private static final String passwordMarket = "12345678";
+	
+	// test
 
 
 	public static final Comparator<Address> comparatorAddressId = (Address e1, Address e2) -> (e1.getIdAddress() - e2.getIdAddress());
@@ -3710,6 +3712,10 @@ public class MainRestController {
 			return response;
 		}
 		Order order = orderService.getOrderById(idOrder);
+		//тут ставим, если слот ставится впервый раз - ставим дату и время.
+		if(order.getFirstLoadSlot() == null) {
+			order.setFirstLoadSlot(Timestamp.valueOf(LocalDateTime.now()));
+		}
 		if(order.getLoginManager() != null) {//обработка одновременного вытягивания объекта из дроп зоны
 			response.put("status", "100");
 			response.put("message", "Ошибка доступа. Заказ не зафиксирован. Данный заказ уже поставлен другим пользователем");

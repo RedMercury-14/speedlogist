@@ -101,113 +101,122 @@ public class ScheduledTask {
     @Scheduled(cron = "0 00 04 * * ?") // каждый день в 04:00
     public void sendSchedulesTOHasORL() {
     	System.out.println("Start --- sendSchedulesTOHasORL");
-        // Получаем текущую дату для имени файла
-        LocalDate currentTime = LocalDate.now();
-        String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+		// Получаем текущую дату для имени файла
+		LocalDate currentTime = LocalDate.now();
+		String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
 
-        List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to");
-        Map<String, List<String>> draftLists = propertiesUtils.getListForDraftFolders(servletContext);
+		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to.ORL");
+		List<String> emailsSupportDepartment = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to.supportDepartment");
 
-        System.out.println(emails);
+		Map<String, List<String>> draftLists = propertiesUtils.getListForDraftFolders(servletContext);
+
+		System.out.println(emailsORL);
 //      emails.addAll(emailsSupport);
-        String appPath = servletContext.getRealPath("/");
+		String appPath = servletContext.getRealPath("/");
 
 
 
-        String fileName1200 = "1200 (----Холодный----).xlsx";
-        String fileName1100 = "1100 График прямой сухой.xlsx";
-        String fileNameSample = "График для шаблоново.xlsx";
-        String draftFolder = appPath + "resources/others/drafts/";
+		String fileName1200 = "1200 (----Холодный----).xlsx";
+		String fileName1100 = "1100 График прямой сухой.xlsx";
+		String fileNameSample = "График для шаблоново.xlsx";
+		String draftFolder = appPath + "resources/others/drafts/";
 
-        File draftFolderFile = new File(draftFolder);
-        if (draftFolderFile.exists()) {
-           deleteFolder(draftFolderFile);
-        }
-        
-        draftFolderFile.mkdir();
+		File draftFolderFile = new File(draftFolder);
+		if (draftFolderFile.exists()) {
+			deleteFolder(draftFolderFile);
+		}
 
-        try {
-           poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()),
-                 appPath + "resources/others/" + fileName1200);
-           poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("сухой").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()),
-                 appPath + "resources/others/" + fileName1100);
-           poiExcel.exportToExcelSampleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()),
-                 appPath + "resources/others/" + fileNameSample);
-           poiExcel.exportToExcelDrafts(scheduleService.getSchedulesListTO().stream().filter(s -> s.getStatus() == 20).collect(Collectors.toList()), draftFolder);
+		draftFolderFile.mkdir();
 
-        } catch (IOException e) {
-           e.printStackTrace();
-           System.err.println("Ошибка формирование EXCEL");
-        }
+		try {
+			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()),
+					appPath + "resources/others/" + fileName1200);
+			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("сухой").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()),
+					appPath + "resources/others/" + fileName1100);
+			poiExcel.exportToExcelSampleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()),
+					appPath + "resources/others/" + fileNameSample);
+			poiExcel.exportToExcelDrafts(scheduleService.getSchedulesListTO().stream().filter(s -> s.getStatus() == 20).collect(Collectors.toList()), draftFolder);
+
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.err.println("Ошибка формирование EXCEL");
+		}
 
 //      response.setHeader("content-disposition", "attachment;filename="+fileName+".xlsx");
-        List<File> files = new ArrayList<File>();
-        files.add(new File(appPath + "resources/others/" + fileName1200));
-        files.add(new File(appPath + "resources/others/" + fileName1100));
-        files.add(new File(appPath + "resources/others/" + fileNameSample));
+		List<File> files = new ArrayList<File>();
+		files.add(new File(appPath + "resources/others/" + fileName1200));
+		files.add(new File(appPath + "resources/others/" + fileName1100));
+		files.add(new File(appPath + "resources/others/" + fileNameSample));
 
-        File folder = new File(draftFolder);
-        List<File> draftFiles = new ArrayList<File>(); //для теста черновиков
-        Map <String, List<File>> draftFilesMap = new HashMap<>();
+		File folder = new File(draftFolder);
+		List<File> draftFiles = new ArrayList<File>(); //для теста черновиков
+		Map <String, List<File>> draftFilesMap = new HashMap<>();
 
-        File[] drafts = folder.listFiles();
+		File[] drafts = folder.listFiles();
 
-        for (String key: draftLists.keySet()){
-           draftFilesMap.put(key, new ArrayList<>());
-        }
+		for (String key: draftLists.keySet()){
+			draftFilesMap.put(key, new ArrayList<>());
+		}
 
-        if (drafts != null) {
-           for (File file: drafts){
-              String fileName = file.getName();
+		if (drafts != null) {
+			for (File file: drafts){
+				String fileName = file.getName();
 
-              for (String key: draftLists.keySet()){
+				for (String key: draftLists.keySet()){
 
-                 for (String draftNumber: draftLists.get(key)){
-                    String regEx = " " + draftNumber + ".";
+					for (String draftNumber: draftLists.get(key)){
+						String regEx = " " + draftNumber + ".";
 
-                    if (fileName.contains(regEx)){
-                       draftFilesMap.get(key).add(file);
-                    }
-                 }
-              }
+						if (fileName.contains(regEx)){
+							draftFilesMap.get(key).add(file);
+						}
+					}
+				}
 
-              if (fileName.contains("виртуальный")){
-                 draftFilesMap.get("ORL").add(file);
-              }
+				if (fileName.contains("виртуальный")){
+					draftFilesMap.get("ORL").add(file);
+				}
 
-              draftFiles.add(file); //для теста черновиков
-           }
+				draftFiles.add(file); //для теста черновиков
+			}
 
-        }
+		}
 
-         //files.add(new File(appPath + "resources/others/drafts"));
+		//files.add(new File(appPath + "resources/others/drafts"));
 
-        System.out.println(appPath + "resources/others/");
+		System.out.println(appPath + "resources/others/");
 
-        File zipFile;
-        File zipFileDrafts; //для теста черновиков
-        List <File> zipFileDraftsList = new ArrayList<>();
-        List <File> filesZip = new ArrayList<File>();
+		File zipFile;
+		File zipFileDrafts; //для теста черновиков
+		File zipFileDraftsListORL;
+		File zipFileDraftsListSupportDepartment;
 
-        try {
-           zipFile = createZipFile(files, appPath + "resources/others/TO.zip");
-           zipFileDrafts = createZipFile(draftFiles, appPath + "resources/others/Шаблоны.zip"); //для теста черновиков
+		List <File> filesZipORL = new ArrayList<File>();
+		List <File> filesZipSupportDepartment = new ArrayList<File>();
 
-           for (String key: draftFilesMap.keySet()){
-              zipFileDraftsList.add(createZipFile(draftFilesMap.get(key), appPath + "resources/others/" + key + ".zip"));
-           }
 
-           filesZip.add(zipFile);
-           filesZip.add(zipFileDrafts); //для теста черновиков
-             filesZip.addAll(zipFileDraftsList);
+		try {
+			zipFile = createZipFile(files, appPath + "resources/others/TO.zip");
+			zipFileDrafts = createZipFile(draftFiles, appPath + "resources/others/Шаблоны.zip"); //для теста черновиков
 
-        } catch (IOException e) {
-           // TODO Auto-generated catch block
-           e.printStackTrace();
-        }
+			zipFileDraftsListORL = createZipFile(draftFilesMap.get("ORL"), appPath + "resources/others/ORL.zip");
+			zipFileDraftsListSupportDepartment = createZipFile(draftFilesMap.get("SupportDepartment"), appPath + "resources/others/SupportDepartment.zip");
 
-      mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO" + currentTimeString, "Автоматическая отправка графиков поставок на ТО\nВерсия с макросом выделений (Ctr+t)", filesZip, emails);
-        System.out.println("Finish --- sendSchedulesHasTOORL");
+			filesZipORL.add(zipFile);
+			filesZipSupportDepartment.add(zipFile);
+
+			filesZipORL.add(zipFileDraftsListORL);
+			filesZipSupportDepartment.add(zipFileDraftsListSupportDepartment);
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO" + currentTimeString, "Автоматическая отправка графиков поставок на ТО\nВерсия с макросом выделений (Ctr+t)", filesZipORL, emailsORL);
+		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO" + currentTimeString, "Автоматическая отправка графиков поставок на ТО\nВерсия с макросом выделений (Ctr+t)", filesZipSupportDepartment, emailsSupportDepartment);
+
+		System.out.println("Finish --- sendSchedulesHasTOORL");
     }
     
     public static boolean deleteFolder(File folder) {

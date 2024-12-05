@@ -308,7 +308,7 @@ public class MainRestController {
 	private static final String loginMarket = "SpeedLogist";
 	private static final String passwordMarket = "12345678";
 	
-	// test test
+	// test ira
 
 
 	public static final Comparator<Address> comparatorAddressId = (Address e1, Address e2) -> (e1.getIdAddress() - e2.getIdAddress());
@@ -1648,7 +1648,7 @@ public class MainRestController {
         File zipFile;
         File zipFileDrafts; //для теста черновиков
         List <File> zipFileDraftsList = new ArrayList<>();
-        List <File> filesZipMain = new ArrayList<File>();
+        List <File> filesZip = new ArrayList<File>();
 
         try {
            zipFile = createZipFile(files, appPath + "resources/others/TO.zip");
@@ -1658,18 +1658,16 @@ public class MainRestController {
               zipFileDraftsList.add(createZipFile(draftFilesMap.get(key), appPath + "resources/others/" + key + ".zip"));
            }
 
-           filesZipMain.add(zipFile);
-           filesZipMain.add(zipFileDrafts); //для теста черновиков
-             filesZipMain.addAll(zipFileDraftsList);
+           filesZip.add(zipFile);
+           filesZip.add(zipFileDrafts); //для теста черновиков
+             filesZip.addAll(zipFileDraftsList);
 
         } catch (IOException e) {
            // TODO Auto-generated catch block
            e.printStackTrace();
         }
 		
-        filesZipMain.forEach(s-> System.out.println(s.getName()));
-        
-		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок (ТО) на " + currentTimeString, "Сообщение отправлено вручную пользователем : " + user.getSurname() + " " + user.getName()+"\nВерсия с макросом выделений (Ctr+t)", filesZipMain, emails);
+		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок (ТО) на " + currentTimeString, "Сообщение отправлено вручную пользователем : " + user.getSurname() + " " + user.getName()+"\nВерсия с макросом выделений (Ctr+t)", filesZip, emails);
     	System.out.println("Finish --- sendSchedulesHasTOORL");
     	response.put("status", "200");
 		response.put("message", "Сообщение отправлено");

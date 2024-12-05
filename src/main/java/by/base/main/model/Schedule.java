@@ -111,8 +111,30 @@ public class Schedule{
      */
     @Column(name = "type")
     private String type;
-    
-    /*
+
+	@Column(name = "start_date_temp")
+	private Date startDateTemp;
+
+	@Column(name = "end_date_temp")
+	private Date endDateTemp;
+
+	public Date getStartDateTemp() {
+		return startDateTemp;
+	}
+
+	public void setStartDateTemp(Date startDateTemp) {
+		this.startDateTemp = startDateTemp;
+	}
+
+	public Date getEndDateTemp() {
+		return endDateTemp;
+	}
+
+	public void setEndDateTemp(Date endDateTemp) {
+		this.endDateTemp = endDateTemp;
+	}
+
+	/*
      * График формирования заказа  четная неделя ставим метка  --ч-- , нечетная --- н ---
      */
     @Column(name = "order_formation_schedule")

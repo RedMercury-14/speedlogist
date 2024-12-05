@@ -127,7 +127,9 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 		return trucks;
 	}
 
-	private static final String queryGetListTOContract = "from Schedule where type='ТО' AND counterpartyContractCode=:counterpartyContractCode";
+	private static final String queryGetListTOContract = "from Schedule where type='ТО' AND counterpartyContractCode=:counterpartyContractCode AND CASE WHEN startDateTemp IS NOT NULL THEN '2024-12-02' END BETWEEN startDateTemp AND endDateTemp";
+
+	//private static final String queryGetListTOContract = "from Schedule where type='ТО' AND counterpartyContractCode=:counterpartyContractCode";
 	@Transactional
 	@Override
 	public List<Schedule> getSchedulesListTOContract(String contractCode) {

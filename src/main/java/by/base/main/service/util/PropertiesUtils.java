@@ -2,10 +2,7 @@ package by.base.main.service.util;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -18,7 +15,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class PropertiesUtils {
 	
-    public List<String> getValuesByPartialKey(HttpServletRequest request, String partialKey) {    	
+    public List<String> getValuesByPartialKey(HttpServletRequest request, String partialKey) {
     	String appPath = request.getServletContext().getRealPath("");
     	
         // Путь к файлу properties
@@ -54,7 +51,7 @@ public class PropertiesUtils {
      * @param partialKey
      * @return
      */
-    public List<String> getValuesByPartialKey(ServletContext servletContext, String partialKey) {    	
+    public List<String> getValuesByPartialKey(ServletContext servletContext, String partialKey) {
     	String appPath = servletContext.getRealPath("/");
     	
         // Путь к файлу properties
@@ -116,6 +113,35 @@ public class PropertiesUtils {
         }
         
         return valuesList;
+    }
+
+    public Map<String, List<String>> getListForDraftFolders(ServletContext servletContext) {
+        String appPath = servletContext.getRealPath("/");
+
+        // Путь к файлу properties
+        String filePath = appPath + "resources/properties/draftFolders.properties";
+
+        // Список для хранения значений
+        List<String> valuesList = new ArrayList<String>();
+        Map<String, List<String>> draftLists = new HashMap<>();
+        try (FileInputStream input = new FileInputStream(filePath)) {
+            Properties properties = new Properties();
+            properties.load(input);
+
+            // Получаем все ключи из файла
+            Set<String> keys = properties.stringPropertyNames();
+
+
+            // Фильтруем ключи и добавляем значения в список
+            for (String key : keys) {
+                draftLists.put(key, Arrays.asList(properties.getProperty(key).split(";")));
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return draftLists;
     }
 
 }

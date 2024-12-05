@@ -85,6 +85,7 @@ export function getOrderDataForAjax(info, currentStock, currentLogin, currentRol
 	const messageLogist = null
 
 	let status
+	if (method === 'preload') status = eventData.status
 	if (method === 'load') status = eventData.status === 5 ? 8 : 7
 	if (method === 'update') status = eventData.status
 	if (method === 'delete') status = eventData.status === 8 || eventData.status === 100 ? 5 : 6

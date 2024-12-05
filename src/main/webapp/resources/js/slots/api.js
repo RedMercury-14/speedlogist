@@ -33,6 +33,19 @@ export function preloadOrder(info, orderTableGridOption, orderDateClickHandler) 
 	const currentRole = store.getRole()
 	const orderData = getOrderDataForAjax(info, currentStock, currentLogin, currentRole, method)
 
+	// Фильтр для самовывоза
+	if (currentStock.id === '1800'
+		&& (
+			orderData.status === 5
+			|| orderData.status === 8
+			|| orderData.status === 100
+		)
+	) {
+		alert('Только для самовывоза!')
+		info.revert()
+		return
+	}
+
 	// проверка доступа к методу
 	if (!methodAccessRules(method, orderData, currentLogin, currentRole)) {
 		info.revert()
@@ -109,6 +122,19 @@ export function loadOrder(info, orderTableGridOption, dateOrderOrl) {
 
 	if (dateOrderOrl) orderData.dateOrderOrl = dateOrderOrl
 
+	// Фильтр для самовывоза
+	if (currentStock.id === '1800'
+		&& (
+			orderData.status === 5
+			|| orderData.status === 8
+			|| orderData.status === 100
+		)
+	) {
+		alert('Только для самовывоза!')
+		info.revert()
+		return
+	}
+
 	// проверка доступа к методу
 	if (!methodAccessRules(method, orderData, currentLogin, currentRole)) {
 		info.revert()
@@ -166,6 +192,19 @@ export function updateOrder(info, orderTableGridOption, isComplexUpdate) {
 	const currentLogin = store.getLogin()
 	const currentRole = store.getRole()
 	const orderData = getOrderDataForAjax(info, currentStock, currentLogin, currentRole, method)
+
+	// Фильтр для самовывоза
+	if (currentStock.id === '1800'
+		&& (
+			orderData.status === 5
+			|| orderData.status === 8
+			|| orderData.status === 100
+		)
+	) {
+		alert('Только для самовывоза!')
+		info.revert()
+		return
+	}
 
 	// проверка доступа к методу
 	if (!methodAccessRules(method, orderData, currentLogin, currentRole)) {

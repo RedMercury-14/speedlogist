@@ -261,7 +261,7 @@ export function checkCombineOrders(orders) {
 		return 'Один или несколько заказов уже имеют связь!'
 	}
 
-	if (firstOrder.ststus === 6) {
+	if (firstOrder.status === 6 || firstOrder.status === 20) {
 		const isIdenticalTrucks = orders.every(order => {
 			return firstOrder.typeLoad === order.typeLoad
 				&& firstOrder.typeTruck === order.typeTruck

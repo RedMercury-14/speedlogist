@@ -1,4 +1,4 @@
-import { ResetStateToolPanel } from "../AG-Grid/ag-grid-utils.js"
+import { BtnCellRenderer, ResetStateToolPanel } from "../AG-Grid/ag-grid-utils.js"
 import { bootstrap5overlay } from "../bootstrap5overlay/bootstrap5overlay.js"
 import { snackbar } from "../snackbar/snackbar.js"
 import { dateHelper, getData, getScheduleStatus, isAdmin, isOrderSupport, isORL } from "../utils.js"
@@ -276,6 +276,15 @@ export const deliveryScheduleColumnDefsForAdmin = [
 		headerName: 'История', field: 'history',
 		cellClass: 'px-1 py-0 text-center',
 		width: 500,
+		// cellRenderer: BtnCellRenderer,
+		// cellRendererParams: {
+		// 	onClick: showHistory,
+		// 	label: 'Показать историю',
+		// 	className: 'btn btn-primary',
+		// },
+		filterParams: {
+			valueFormatter: (params) => params.value ? params.value.replaceAll('\n', ' ') : null,
+		},
 	},
 	{
 		headerName: 'Дата последнего расчета', field: 'dateLastCalculation',
@@ -506,4 +515,12 @@ export function getTextareaData(value) {
 		default:
 			return value.split('\n').filter(point => point !== '')
 	}
+}
+
+// отображение модального окна с историей
+function showHistory(params) {
+	const historyContainer = document.querySelector('#messageContainer')
+	const history = params.value
+	historyContainer.innerHTML = history
+	$('#displayMessageModal').modal('show')
 }

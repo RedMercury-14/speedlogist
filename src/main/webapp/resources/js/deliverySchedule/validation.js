@@ -13,6 +13,7 @@ const errorMessages = {
 	isNotOrdersAndSupplies: 'Не указаны дни заказа и поставки',
 	isNotSuppliesEqualToOrders: 'Количество поставок и заказов не совпадает',
 	isNotValidSuppliesNumber: 'Указанное количество поставок не совпадает с фактическим',
+	isNotValidExeption_MHP: 'Для МИНСКХЛЕБПРОМа: если заказ в пятницу, то поставка в субботу, воскресенье и понедельник может быть только с пятницы',
 }
 
 // отображение графиков с ошибками 
@@ -62,24 +63,32 @@ function getScheduleErrors(data) {
 	if (!data) return ''
 
 	const errorMessageData = []
-	// исключение для МИНСКХЛЕБПРОМ
-	const isExeption = data.counterpartyCode === 9732 && data.type === 'ТО' && data.supplies > 4
+	
+	/**
+	 * исключение для МИНСКХЛЕБПРОМ
+	 */
+	const isExeption_MHP = data.counterpartyCode === 9732 && data.type === 'ТО' && data.supplies >= 5
 
 	// Выполняем проверки, добавляем ошибки только если это не исключение
-	if (!compareOrdersAndSupplies(data) && !isExeption) {
-		errorMessageData.push(errorMessages.isNotCompareOrdersAndSupplies)
-	}
-	if (!checkSupplyWeekIndexes(data)) {
-		errorMessageData.push(errorMessages.isNotValidSupplyWeekIndexes)
-	}
 	if (!isOrdersAndSupplies(data)) {
 		errorMessageData.push(errorMessages.isNotOrdersAndSupplies)
 	}
-	if (!isSuppliesEqualToOrders(data) && !isExeption) {
+	if (!isSuppliesEqualToOrders(data) && !isExeption_MHP) {
 		errorMessageData.push(errorMessages.isNotSuppliesEqualToOrders)
+	}
+	if (!compareOrdersAndSupplies(data)) {
+		if (!isExeption_MHP) {
+			errorMessageData.push(errorMessages.isNotCompareOrdersAndSupplies)
+		}
+		if (!checkValidException_MHP(data)) {
+			errorMessageData.push(errorMessages.isNotValidExeption_MHP)
+		}
 	}
 	if (!checkSuppliesNumber(data)) {
 		errorMessageData.push(errorMessages.isNotValidSuppliesNumber)
+	}
+	if (!checkSupplyWeekIndexes(data)) {
+		errorMessageData.push(errorMessages.isNotValidSupplyWeekIndexes)
 	}
 
 	return errorMessageData.join('; ')
@@ -185,3 +194,30 @@ function checkSuppliesNumber(data) {
 	return supplies === Number(data.supplies)
 }
 
+/**
+ * Проверка на корректность исключения для МИНСКХЛЕБПРОМ.
+ * Суть исключения: если заказ в пятницу, то поставка в субботу,
+ * воскресенье и понедельник может быть только с пятницы.
+ */
+function checkValidException_MHP(data) {
+	if (data.counterpartyCode !== 9732) return true
+	if (data.type !== 'ТО') return true
+	if (data.supplies < 5) return true
+
+	// проверка, что есть заказ в пятницу
+	const isOrderOnFriday = SUPPLY_REG.test(data.friday)
+
+	if (isOrderOnFriday) {
+		// проверяем, что в понедельник, субботу и воскресенье
+		// есть поставка с пятницы или нет никаких поставок
+		const validValueReg = /(з|пятница|з\/пятница)/
+		const isValidMondayValue = data.monday ? validValueReg.test(data.monday) : true
+		const isValidSaturdayValue = data.saturday ? validValueReg.test(data.saturday) : true
+		const isValidSundayValue = data.sunday ? validValueReg.test(data.sunday) : true
+
+		// если хотя бы в один из дней поставка не с пятницы, выдаем ошибку исключения
+		return isValidMondayValue && isValidSaturdayValue && isValidSundayValue
+	}
+
+	return true
+}

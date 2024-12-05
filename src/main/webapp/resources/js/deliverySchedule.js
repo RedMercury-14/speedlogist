@@ -15,6 +15,7 @@ import { checkScheduleData, isValidScheduleValues, getFormErrorMessage } from '.
 import { snackbar } from "./snackbar/snackbar.js"
 import { uiIcons } from './uiIcons.js'
 import {
+	blurActiveElem,
 	changeGridTableMarginTop, debounce, disableButton, enableButton,
 	getData, getScheduleStatus, hideLoadingSpinner, isAdmin,
 	isOrderSupport, showLoadingSpinner
@@ -182,9 +183,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 	// обновление опций графика при открытии модалки создания графика поставки
 	$('#addScheduleItemModal').on('shown.bs.modal', (e) => changeScheduleOptions(addScheduleItemForm, ''))
 	// очистка форм при закрытии модалки
-	$('#addScheduleItemModal').on('hidden.bs.modal', (e) => clearForm(e, addScheduleItemForm))
-	$('#editScheduleItemModal').on('hidden.bs.modal', (e) => clearForm(e, editScheduleItemForm))
-	$('#sendExcelModal').on('hidden.bs.modal', (e) => clearForm(e, sendExcelForm))
+	$('#addScheduleItemModal').on('hidden.bs.modal', (e) => {
+		clearForm(e, addScheduleItemForm)
+		blurActiveElem(e)
+	})
+	$('#editScheduleItemModal').on('hidden.bs.modal', (e) => {
+		clearForm(e, editScheduleItemForm)
+		blurActiveElem(e)
+	})
+	$('#sendExcelModal').on('hidden.bs.modal', (e) => {
+		clearForm(e, sendExcelForm)
+		blurActiveElem(e)
+	})
 
 	// отображение стартовых данных
 	if (window.initData) {

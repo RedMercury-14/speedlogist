@@ -436,7 +436,7 @@ public class POIExcel {
 					isSheetEmpty = false;
 
 					List<LocalDate> uniqueSchedule = new ArrayList<>();
-					uniqueSchedule.add(supplyDates.get(0));
+					uniqueSchedule.add(today.plusDays(1));
 					rowNum = fillRow(sheetVirtual, uniqueSchedule, today, schedule.getCounterpartyContractCode(), 671, rowNum);
 
 					oldCode = currentCode;

@@ -3710,6 +3710,10 @@ public class MainRestController {
 			return response;
 		}
 		Order order = orderService.getOrderById(idOrder);
+		//тут ставим, если слот ставится впервый раз - ставим дату и время.
+		if(order.getFirstLoadSlot() == null) {
+			order.setFirstLoadSlot(Timestamp.valueOf(LocalDateTime.now()));
+		}
 		if(order.getLoginManager() != null) {//обработка одновременного вытягивания объекта из дроп зоны
 			response.put("status", "100");
 			response.put("message", "Ошибка доступа. Заказ не зафиксирован. Данный заказ уже поставлен другим пользователем");

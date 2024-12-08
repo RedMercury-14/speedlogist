@@ -257,7 +257,7 @@ public class Message implements Serializable{
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(comment, companyName, currency, datetime, fromUser, fullName, idMessage, idRoute, nds,
+		return Objects.hash(companyName, currency, fromUser, fullName, idMessage, idRoute, nds,
 				status, text, toUser, url, ynp);
 	}
 	@Override
@@ -269,24 +269,23 @@ public class Message implements Serializable{
 		if (getClass() != obj.getClass())
 			return false;
 		Message other = (Message) obj;
-		return Objects.equals(comment, other.comment) && Objects.equals(companyName, other.companyName)
-				&& Objects.equals(currency, other.currency) && Objects.equals(datetime, other.datetime)
+		return Objects.equals(companyName, other.companyName)
+				&& Objects.equals(currency, other.currency)
 				&& Objects.equals(fromUser, other.fromUser) && Objects.equals(fullName, other.fullName)
 				&& Objects.equals(idMessage, other.idMessage) && Objects.equals(idRoute, other.idRoute)
 				&& Objects.equals(nds, other.nds) && Objects.equals(status, other.status)
 				&& Objects.equals(text, other.text) && Objects.equals(toUser, other.toUser)
 				&& Objects.equals(url, other.url) && Objects.equals(ynp, other.ynp);
 	}
+	
+	
+	
+	
 	@Override
 	public String toString() {
 		return "Message [idMessage=" + idMessage + ", fromUser=" + fromUser + ", toUser=" + toUser + ", text=" + text
 				+ ", idRoute=" + idRoute + ", status=" + status + ", companyName=" + companyName + ", comment="
 				+ comment + ", datetime=" + datetime + ", currency=" + currency + ", url=" + url + "]";
 	}
-	
-	
-	
-	
-	
 	
 }

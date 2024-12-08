@@ -2083,37 +2083,105 @@ public class POIExcel {
 	 */
 	public Map<Integer, OrderProduct> loadNeedExcel(File file, String date) throws ServiceException, InvalidFormatException, IOException, ParseException {
 		
+		System.out.println("КОл-во колонок = " + getColumnCount(file));
 		Map<Integer, OrderProduct> orderMap = new HashMap<>();
         XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
         XSSFSheet sheet = wb.getSheetAt(0);
-        for (int i = 3; i <= sheet.getLastRowNum(); i++) { // Начинаем с 1, чтобы пропустить заголовок
-            Row row = sheet.getRow(i);
+        //тут мы проверяем по кол-ву столбцов: если больше 3-х то это новый файл.
+        if(getColumnCount(file) > 3) { // Это реализация новго файла excel с доп колонками
+        	for (int i = 3; i <= sheet.getLastRowNum(); i++) { // Начинаем с 3, чтобы пропустить заголовок
+                Row row = sheet.getRow(i);
 
-            if (row != null) {
-                Integer code = (int) row.getCell(0).getNumericCellValue();
-                String nameProduct = row.getCell(1).getStringCellValue();
-                int quantity = (int) roundВouble(row.getCell(2).getNumericCellValue(), 0);
+                if (row != null) {
+                    Integer code = (int) row.getCell(0).getNumericCellValue();
+                    String nameProduct = row.getCell(1).getStringCellValue();
+                    int quantityInPallet = (int) roundВouble(row.getCell(2).getNumericCellValue(), 0);                    
+                    int quantity = (int) roundВouble(row.getCell(3).getNumericCellValue(), 0);
+                    int quantity1800 = (int) roundВouble(row.getCell(4).getNumericCellValue(), 0);
+                    int quantity1700Max = (int) roundВouble(row.getCell(5).getNumericCellValue(), 0);
+                    int quantity1800Max = (int) roundВouble(row.getCell(6).getNumericCellValue(), 0);
 
-                OrderProduct orderProduct = new OrderProduct();
-                orderProduct.setQuantity(quantity);
-                orderProduct.setNameProduct(nameProduct);
-                orderProduct.setCodeProduct(code);;
-                if(date != null) {
-                	Timestamp timestamp = Timestamp.valueOf(LocalDateTime.of(LocalDate.parse(date), LocalTime.now()));
-                	orderProduct.setDateCreate(timestamp);
-                }else {
-                    orderProduct.setDateCreate(new Timestamp(System.currentTimeMillis()));
-//                  orderProduct.setDateCreate(Timestamp.valueOf(LocalDateTime.now()));
+                    OrderProduct orderProduct = new OrderProduct();
+                    orderProduct.setQuantity(quantity);
+                    orderProduct.setQuantity1700(quantity);
+                    orderProduct.setQuantity1800(quantity1800);
+                    orderProduct.setQuantityInPallet(quantityInPallet);
+                    orderProduct.setQuantity1700Max(quantity1700Max);
+                    orderProduct.setQuantity1800Max(quantity1800Max);
+                    orderProduct.setNameProduct(nameProduct);
+                    orderProduct.setCodeProduct(code);;
+                    if(date != null) {
+                    	Timestamp timestamp = Timestamp.valueOf(LocalDateTime.of(LocalDate.parse(date), LocalTime.now()));
+                    	orderProduct.setDateCreate(timestamp);
+                    }else {
+                        orderProduct.setDateCreate(new Timestamp(System.currentTimeMillis()));
+//                      orderProduct.setDateCreate(Timestamp.valueOf(LocalDateTime.now()));
+                    }
+
+
+                    // Привязываем код как ключ и объект OrderProduct как значение
+                    orderMap.put(code, orderProduct);
                 }
-
-
-                // Привязываем код как ключ и объект OrderProduct как значение
-                orderMap.put(code, orderProduct);
             }
-        }
 
-        wb.close();
+            wb.close();
+        }else {// Это старая реализация екселя
+        	for (int i = 3; i <= sheet.getLastRowNum(); i++) { // Начинаем с 3, чтобы пропустить заголовок
+                Row row = sheet.getRow(i);
+
+                if (row != null) {
+                    Integer code = (int) row.getCell(0).getNumericCellValue();
+                    String nameProduct = row.getCell(1).getStringCellValue();
+                    int quantity = (int) roundВouble(row.getCell(2).getNumericCellValue(), 0);
+
+                    OrderProduct orderProduct = new OrderProduct();
+                    orderProduct.setQuantity(quantity);
+                    orderProduct.setQuantity1700(quantity);
+                    orderProduct.setNameProduct(nameProduct);
+                    orderProduct.setCodeProduct(code);
+                    if(date != null) {
+                    	Timestamp timestamp = Timestamp.valueOf(LocalDateTime.of(LocalDate.parse(date), LocalTime.now()));
+                    	orderProduct.setDateCreate(timestamp);
+                    }else {
+                        orderProduct.setDateCreate(new Timestamp(System.currentTimeMillis()));
+//                      orderProduct.setDateCreate(Timestamp.valueOf(LocalDateTime.now()));
+                    }
+
+
+                    // Привязываем код как ключ и объект OrderProduct как значение
+                    orderMap.put(code, orderProduct);
+                }
+            }
+
+            wb.close();
+        }
+        
+        
         return orderMap;
+    }
+	
+	/**
+	 * Возвращает кол-во колонок в ексель файле
+	 * @param file
+	 * @return
+	 * @throws IOException
+	 * @author Dima Hrushevsky
+	 */
+	private int getColumnCount(File file) throws IOException {
+        try (FileInputStream fis = new FileInputStream(file);
+             Workbook workbook = WorkbookFactory.create(fis)) {
+
+            // Берём первый лист
+            Sheet sheet = workbook.getSheetAt(0);
+
+            // Берём первую строку с данными
+//            Row firstRow = sheet.getRow(sheet.getFirstRowNum());
+            Row firstRow = sheet.getRow(2);
+            if (firstRow != null) {
+                return firstRow.getPhysicalNumberOfCells();
+            }
+            return 0; // Если строк нет
+        }
     }
 	
 	

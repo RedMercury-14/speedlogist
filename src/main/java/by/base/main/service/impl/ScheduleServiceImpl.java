@@ -2,9 +2,7 @@ package by.base.main.service.impl;
 
 import java.sql.Date;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -66,11 +64,13 @@ public class ScheduleServiceImpl implements ScheduleService{
 	}
 
 	@Override
+	@Deprecated
 	public List<Schedule> getSchedulesListTO() {
   		return scheduleDAO.getSchedulesListTO();
 	}
 
 	@Override
+	@Deprecated
 	public List<Schedule> getSchedulesListTOContract(String contractCode) {
 		return scheduleDAO.getSchedulesListTOContract(contractCode);
 	}
@@ -119,16 +119,22 @@ public class ScheduleServiceImpl implements ScheduleService{
 	/**
 	 * @author Ira
 	 * @param contract
+	 * <br>Возвращает список всех графиков на ТО по номеру контракта - и временных, и постоянных</br>
 	 * @return
 	 */
 	@Override
-	public List<Schedule> getSchedulesTOByNumContractWithTemp(Long contract) {
-		return scheduleDAO.getSchedulesTOByNumContractWithTemp(contract);
+	public List<Schedule> getSchedulesListTOContractWithTemp(Long contract) {
+		return scheduleDAO.getSchedulesListTOContractWithTemp(contract);
 
 	}
 
+	/**
+	 * @author Ira
+	 * <br>Возвращает список только актуальных графиков на ТО - либо временных, либо постоянных</br>
+	 * @return
+	 */
 	@Override
-	public List<Schedule> getSchedulesListTOWithTemp() {
+	public List<Schedule> getSchedulesListTOOnlyTemp() {
 		List<Schedule> allSchedules = scheduleDAO.getSchedulesListTOWithTemp();
 		List<Schedule> actualSchedules = new ArrayList<>(allSchedules);
 		for (Schedule schedule: allSchedules){
@@ -139,6 +145,7 @@ public class ScheduleServiceImpl implements ScheduleService{
                 actualSchedules.removeIf(sch -> sch.getCounterpartyContractCode() == counterpartyContractNumber
                         && sch.getNumStock() == numStock
                         && sch.getStartDateTemp() == null);
+
 			}
 		}
 

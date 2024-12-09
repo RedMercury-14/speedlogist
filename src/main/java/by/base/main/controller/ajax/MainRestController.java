@@ -642,6 +642,26 @@ public class MainRestController {
      * @throws DocumentException
      * @throws IOException
      */
+    @GetMapping("/carrier/delivery-shop/getTrucks")
+    public Map<String, Object> getTrucks(HttpServletRequest request, HttpServletResponse response) throws NumberFormatException, DocumentException, IOException {
+    	Map<String, Object> responseMap = new HashMap<String, Object>();
+    	User user = getThisUser();
+    	// остановился тут. Добавить в DAO поиск по id_user
+    	responseMap.put("status", "200");	
+    	return responseMap;    	
+    }
+    
+    
+    /**
+     * Метод отдаёт связанные ордеры по текущему ордеру, если они есть
+     * @param request
+     * @param response
+     * @param idOrder
+     * @return
+     * @throws NumberFormatException
+     * @throws DocumentException
+     * @throws IOException
+     */
     @GetMapping("/logistics/getOrdersLinks/{idOrder}")
 	public Map<String, Object> getOrdersLinks(HttpServletRequest request, HttpServletResponse response, @PathVariable String idOrder) throws NumberFormatException, DocumentException, IOException {
     	Map<String, Object> responseMap = new HashMap<String, Object>();

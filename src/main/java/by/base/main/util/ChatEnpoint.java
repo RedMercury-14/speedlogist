@@ -199,31 +199,37 @@ public class ChatEnpoint {
 				if (message.getFromUser() == null) {
 					message.setFromUser(user.getLogin());
 				}			
-			}		
+			}
+			
+			//вынес этот блок из цикла
+			if (message.getFromUser().equals("system")) {
+				//не записываем сообщение от системы
+			}else if (message.getToUser() != null && message.getToUser().equals("disposition")) {
+				
+			}
+			else{
+				System.out.println("Пришло: "+message);
+				if(!internationalMessegeList.contains(message)) {
+					System.err.println("Записываем: "+message);
+					internationalMessegeList.add(message);
+				}						
+				//аварийная сериализация кеша, на случай если сервер упадёт
+				try {
+					FileOutputStream fos =
+		                     new FileOutputStream(appPath + "resources/others/hashmap.ser");
+		                  ObjectOutputStream oos = new ObjectOutputStream(fos);
+		                  oos.writeObject(internationalMessegeList);
+		                  oos.close();
+		                  fos.close();
+				} catch (Exception e) {
+//					e.printStackTrace();
+				}
+				
+			}
+			
 			sessionList.forEach(s->{
 //				UsernamePasswordAuthenticationToken upat = (UsernamePasswordAuthenticationToken) s.getUserPrincipal();
-					if (message.getFromUser().equals("system")) {
-						//не записываем сообщение от системы
-					}else if (message.getToUser() != null && message.getToUser().equals("disposition")) {
-						
-					}
-					else{
-						if(!internationalMessegeList.contains(message)) {
-							internationalMessegeList.add(message);
-						}						
-						//аварийная сериализация кеша, на случай если сервер упадёт
-						try {
-							FileOutputStream fos =
-				                     new FileOutputStream(appPath + "resources/others/hashmap.ser");
-				                  ObjectOutputStream oos = new ObjectOutputStream(fos);
-				                  oos.writeObject(internationalMessegeList);
-				                  oos.close();
-				                  fos.close();
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-						
-					}
+					//тут была проверка и записи 
 					//return;
 				try {	
 					if(s != null) {

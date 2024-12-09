@@ -68,6 +68,9 @@ public class TGTruck implements Serializable{
 	@Column(name = "is_second_round")
 	private Boolean isSecondRound;
 	
+	@Column(name = "id_user")
+	private Integer idUser;
+	
 	
 	public Boolean isSecondRound() {
 		return isSecondRound;
@@ -266,6 +269,14 @@ public class TGTruck implements Serializable{
 	public void setChatIdUserTruck(Long chatIdUserTruck) {
 		this.chatIdUserTruck = chatIdUserTruck;
 	}
+	
+	public Integer getIdUser() {
+		return idUser;
+	}
+
+	public void setIdUser(Integer idUser) {
+		this.idUser = idUser;
+	}
 
     // Метод клонирования
     public TGTruck cloneWithNewId(Integer newIdTGTruck) {
@@ -283,10 +294,15 @@ public class TGTruck implements Serializable{
         clonedTruck.idList = this.idList;
         clonedTruck.status = this.status;
         clonedTruck.companyName = this.companyName;
+        clonedTruck.idUser = this.idUser;
 
         return clonedTruck;
     }
+    
+    
 	
+	
+
 	@Override
 	public int hashCode() {
 		return Objects.hash(cargoCapacity, chatIdUserTruck, dateRequisition, idList, idTGTruck, modelTruck, nameList,

@@ -251,7 +251,9 @@ public class UserServiceImpl implements UserService{
 		}else {
 			user.setEnablet(true);	
 		}
-		user.setDateRegistration(Date.valueOf(LocalDate.now()));
+		if(user.getDateRegistration() == null) {
+			user.setDateRegistration(Date.valueOf(LocalDate.now()));			
+		}
 		userDAO.saveOrUpdateUser(user);			
 	}
 

@@ -33,7 +33,7 @@ public class TGUser implements Serializable{
 	private String companyName;
 	
 	@Column(name = "chat_id")
-	private long chatId;
+	private Long chatId;
 	
 	@Column(name = "telephone")
 	private String telephone;
@@ -65,11 +65,11 @@ public class TGUser implements Serializable{
 		this.idTGUser = idTGUser;
 	}
 
-	public long getChatId() {
+	public Long getChatId() {
 		return chatId;
 	}
 
-	public void setChatId(long chatId) {
+	public void setChatId(Long chatId) {
 		this.chatId = chatId;
 	}
 

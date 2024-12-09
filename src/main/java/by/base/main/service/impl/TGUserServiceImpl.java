@@ -10,6 +10,7 @@ import by.base.main.dao.TGTruckDAO;
 import by.base.main.dao.TGUserDAO;
 import by.base.main.model.TGTruck;
 import by.base.main.model.TGUser;
+import by.base.main.model.User;
 import by.base.main.service.TGTruckService;
 import by.base.main.service.TGUserService;
 
@@ -45,6 +46,17 @@ public class TGUserServiceImpl implements TGUserService{
 			tgUser.setTrucksForBot(map);
 		}
 		return tgUser;
+	}
+
+	@Override
+	public TGUser getTGUserByMainUser(User user) {
+		return tgUserDAO.getTGUserByMainUser(user);
+	}
+
+	@Override
+	public TGUser getTGUserByTelephone(String telephone) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 

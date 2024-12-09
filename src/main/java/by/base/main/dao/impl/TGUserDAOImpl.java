@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import by.base.main.dao.TGUserDAO;
 import by.base.main.model.TGUser;
+import by.base.main.model.User;
 
 @Repository
 public class TGUserDAOImpl implements TGUserDAO{
@@ -68,6 +69,32 @@ public class TGUserDAOImpl implements TGUserDAO{
 			return object;
 		}
 		
+	}
+
+	private static final String queryGetTGUserByMainUser = "from TGUser u where u.telephone LIKE :telephone";
+	@Transactional
+	@Override
+	public TGUser getTGUserByMainUser(User user) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<TGUser> theObject = currentSession.createQuery(queryGetTGUserByMainUser, TGUser.class);
+		String telephone = user.getTelephone().replaceAll("[^\\d]", ""); // используем только цифры!!!
+		if (telephone.length() > 12) {
+		    telephone = telephone.substring(0, 12); // Обрезаем до первых 12 символов
+		}
+		theObject.setParameter("telephone", "%" + telephone + "%");
+		List<TGUser> trucks = theObject.getResultList();
+		if(trucks.isEmpty()) {
+			return null;
+		}else {
+			TGUser object = trucks.stream().findFirst().get();
+			return object;
+		}
+	}
+
+	@Override
+	public TGUser getTGUserByTelephone(String telephone) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

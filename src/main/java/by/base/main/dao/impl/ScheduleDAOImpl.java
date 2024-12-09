@@ -2,6 +2,7 @@ package by.base.main.dao.impl;
 
 import java.sql.Date;
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
 
@@ -270,4 +271,38 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 		int result = query.executeUpdate();
 		return result;
 	}
+
+
+	/**
+	 * @author Ira
+	 * @param num
+	 * @return
+	 */
+	private static final String queryGetTemporaryObjByNumContractAndStock = "from Schedule s where type = 'ТО' AND counterpartyContractCode=:counterpartyContractCode AND ((startDateTemp IS NOT NULL AND endDateTemp IS NOT NULL AND CURRENT_DATE BETWEEN startDateTemp AND endDateTemp) or (startDateTemp IS NULL AND endDateTemp IS NULL))";
+
+	@Transactional
+	@Override
+	public List<Schedule> getSchedulesTOByNumContractWithTemp(Long num) {
+		LocalDate localDate = LocalDate.now();
+		Date date = Date.valueOf(localDate);
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Schedule> theObject = currentSession.createQuery(queryGetTemporaryObjByNumContractAndStock, Schedule.class);
+		theObject.setParameter("counterpartyContractCode", num);
+
+		List<Schedule> schedules = theObject.getResultList();
+
+		return schedules;
+	}
+
+	private static final String queryGetListTOWithTemp = "from Schedule where type='ТО' AND ((startDateTemp IS NOT NULL AND endDateTemp IS NOT NULL AND CURRENT_DATE BETWEEN startDateTemp AND endDateTemp) or (startDateTemp IS NULL AND endDateTemp IS NULL))";
+	@Transactional
+	@Override
+	public List<Schedule> getSchedulesListTOWithTemp() {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Schedule> theRole = currentSession.createQuery(queryGetListTOWithTemp, Schedule.class);
+		List <Schedule> roles = theRole.getResultList();
+		return roles;
+	}
+
+
 }

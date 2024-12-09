@@ -94,4 +94,14 @@ public interface ScheduleService {
 	 * @return
 	 */
 	List<Schedule> getSchedulesByDateOrder(Date date, Integer numStock);
+
+	/**
+	 * @author Ira
+	 * @param contract
+	 * @return
+	 */
+	List<Schedule> getSchedulesTOByNumContractWithTemp(Long contract);
+
+	List<Schedule> getSchedulesListTOWithTemp();
 }
+

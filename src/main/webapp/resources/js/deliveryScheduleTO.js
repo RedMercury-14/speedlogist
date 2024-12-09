@@ -420,6 +420,14 @@ function getContextMenuItems(params) {
 		// 	icon: uiIcons.addTempElem,
 		// },
 		{
+			name: `Создать временный график по текущему коду контракта`,
+			disabled: isObserver(role),
+			action: () => {
+				createTempSchedule(rowNode, setDataToCreateTempForm)
+			},
+			icon: uiIcons.addTempElem,
+		},
+		{
 			name: `Изменить значение "Сегодня на сегодня" по текущему коду контракта`,
 			disabled: !isAdmin(role) && !isORL(role) && !isOrderSupport(role),
 			action: () => {

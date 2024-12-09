@@ -94,5 +94,15 @@ public interface ScheduleDAO {
 	 * @return
 	 */
 	List<Schedule> getSchedulesByDateOrder(Date date, Integer numStock);
+
+	/**
+	 * @author Ira
+	 * @param num
+	 * @return
+	 */
+	public List<Schedule> getSchedulesTOByNumContractWithTemp(Long num);
+
+	public List<Schedule> getSchedulesListTOWithTemp();
+
 	
 }

@@ -57,6 +57,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.aspectj.lang.annotation.Around;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -341,8 +342,7 @@ public class MainRestController {
 	@GetMapping("/test")
 	@TimedExecution
     public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException{
-
-		Map<String, Object> map = new HashMap<>();
+       Map<String, Object> responseMap = new HashMap<>();
 		System.out.println("Start --- sendSchedulesTOHasORL");
 		// Получаем текущую дату для имени файла
 		LocalDate currentTime = LocalDate.now();
@@ -378,7 +378,7 @@ public class MainRestController {
 					appPath + "resources/others/" + fileName1100);
 			poiExcel.exportToExcelSampleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()),
 					appPath + "resources/others/" + fileNameSample);
-			poiExcel.exportToExcelDrafts(scheduleService.getSchedulesListTO().stream().filter(s -> s.getStatus() == 20).collect(Collectors.toList()), draftFolder);
+			poiExcel.exportToExcelDrafts(scheduleService.getSchedulesListTOWithTemp().stream().filter(s -> s.getStatus() == 20).collect(Collectors.toList()), draftFolder);
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -393,6 +393,8 @@ public class MainRestController {
 
 		File folder = new File(draftFolder);
 		List<File> draftFiles = new ArrayList<File>(); //для теста черновиков
+		List<File> draftFilesORL = new ArrayList<>();
+		List<File> draftFilesSupportDepartment = new ArrayList<>();
 		Map <String, List<File>> draftFilesMap = new HashMap<>();
 
 		File[] drafts = folder.listFiles();
@@ -431,38 +433,48 @@ public class MainRestController {
 
 		File zipFile;
 		File zipFileDrafts; //для теста черновиков
-		File zipFileDraftsListORL;
-		File zipFileDraftsListSupportDepartment;
-
-		List <File> filesZipORL = new ArrayList<File>();
-		List <File> filesZipSupportDepartment = new ArrayList<File>();
+		File zipFilesORL;
+		File zipFilesSupportDepartment;
+		List <File> zipFileDraftsList = new ArrayList<>();
+		List <File> filesZip = new ArrayList<File>();
+		List <File> filesZipORL = new ArrayList<>();
+		List <File> filesZipSupportDepartment = new ArrayList<>();
 
 
 		try {
 			zipFile = createZipFile(files, appPath + "resources/others/TO.zip");
 			zipFileDrafts = createZipFile(draftFiles, appPath + "resources/others/Шаблоны.zip"); //для теста черновиков
 
-			zipFileDraftsListORL = createZipFile(draftFilesMap.get("ORL"), appPath + "resources/others/ORL.zip");
-			zipFileDraftsListSupportDepartment = createZipFile(draftFilesMap.get("SupportDepartment"), appPath + "resources/others/SupportDepartment.zip");
+			zipFilesORL = createZipFile(draftFilesMap.get("ORL"), appPath + "resources/others/ORL.zip");
+			zipFilesSupportDepartment = createZipFile(draftFilesMap.get("SupportDepartment"), appPath + "resources/others/SupportDepartment.zip");
 
+//			for (String key: draftFilesMap.keySet()){
+//				zipFileDraftsList.add(createZipFile(draftFilesMap.get(key), appPath + "resources/others/" + key + ".zip"));
+//			}
+
+//			filesZip.add(zipFile);
+//			filesZip.add(zipFileDrafts);//для теста черновиков
+//			filesZip.addAll(zipFileDraftsList);
 			filesZipORL.add(zipFile);
-			filesZipSupportDepartment.add(zipFile);
+			filesZipORL.add(zipFilesORL);
 
-			filesZipORL.add(zipFileDraftsListORL);
-			filesZipSupportDepartment.add(zipFileDraftsListSupportDepartment);
+			filesZipSupportDepartment.add(zipFile);
+			filesZipSupportDepartment.add(zipFilesSupportDepartment);
 
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
+		//mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO" + currentTimeString, "Автоматическая отправка графиков поставок на ТО\nВерсия с макросом выделений (Ctr+t)", filesZip, emails);
 		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO" + currentTimeString, "Автоматическая отправка графиков поставок на ТО\nВерсия с макросом выделений (Ctr+t)", filesZipORL, emailsORL);
 		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO" + currentTimeString, "Автоматическая отправка графиков поставок на ТО\nВерсия с макросом выделений (Ctr+t)", filesZipSupportDepartment, emailsSupportDepartment);
 
 		System.out.println("Finish --- sendSchedulesHasTOORL");
+	    //responseMap.put("sched", scheduleService.getSchedulesTOByNumContractWithTemp(14L));
 
-		return map;
-	}
+	   return responseMap;
+    }
 	
 	public static boolean deleteFolder(File folder) {
 	    if (folder.isDirectory()) {

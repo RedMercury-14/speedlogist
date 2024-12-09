@@ -52,7 +52,7 @@ export class CargoCapacitySumStatusBarComponent {
 	getTotalCargoCapacitySum() {
 		return this.appStore.getTrucksByCurrentDate()
 			.reduce((sum, truck) => sum + Number(truck.cargoCapacity), 0)
-			.toFixed(0)
+			.toFixed(1)
 	}
 }
 

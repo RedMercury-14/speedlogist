@@ -16,11 +16,10 @@ import { checkScheduleData, getFormErrorMessage, isValidScheduleValues } from '.
 import { snackbar } from "./snackbar/snackbar.js"
 import { uiIcons } from './uiIcons.js'
 import {
-	changeGridTableMarginTop, debounce, disableButton, enableButton,
+	blurActiveElem,
+	changeGridTableMarginTop, dateHelper, debounce, disableButton, enableButton,
 	getData, getScheduleStatus, hideLoadingSpinner, isAdmin,
-	isObserver,
-	isOrderSupport,
-	isORL, showLoadingSpinner
+	isObserver, isOrderSupport, isORL, showLoadingSpinner
 } from './utils.js'
 
 const loadExcelUrl = '../../api/slots/delivery-schedule/loadTO'
@@ -171,6 +170,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 	// форма редактирования графика поставки
 	const editScheduleItemForm = document.querySelector('#editScheduleItemForm')
 	editScheduleItemForm && editScheduleItemForm.addEventListener('submit', editScheduleItemFormHandler)
+	// форма создания временного графика поставки
+	const createTempScheduleItemForm = document.querySelector('#createTempScheduleItemForm')
+	createTempScheduleItemForm && createTempScheduleItemForm.addEventListener('submit', createTempScheduleItemFormHandler)
 
 	// форма установки кодовых слов
 	const setCodeNameForm = document.querySelector('#setCodeNameForm')
@@ -182,9 +184,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 	// чекбоксы пометки "Неделя"
 	const addNoteCheckbox = addScheduleItemForm.querySelector('#addNote')
-	addNoteCheckbox && addNoteCheckbox.addEventListener('change', onNoteChangeHandler)
 	const editNoteCheckbox = editScheduleItemForm.querySelector('#editNote')
+	const addTempNoteCheckbox = createTempScheduleItemForm.querySelector('#addNote')
+	addNoteCheckbox && addNoteCheckbox.addEventListener('change', onNoteChangeHandler)
 	editNoteCheckbox && editNoteCheckbox.addEventListener('change', onNoteChangeHandler)
+	addTempNoteCheckbox && addTempNoteCheckbox.addEventListener('change', onNoteChangeHandler)
+
+	// период действия временного графика
+	const tempScheduleDateRangeFromInput = document.querySelector('#tempScheduleDateRange_from')
+	const tempScheduleDateRangeToInput = document.querySelector('#tempScheduleDateRange_to')
+	const todayDateString = dateHelper.getDateForInput(new Date())
+	tempScheduleDateRangeFromInput.min = todayDateString
+	tempScheduleDateRangeToInput.min = todayDateString
+	tempScheduleDateRangeFromInput.addEventListener('change', (e) => {
+		tempScheduleDateRangeToInput.value = ''
+		tempScheduleDateRangeToInput.min = e.target.value
+	})
 
 	// настройка автозаполнения полей контрагента
 	const contractCodeList = addScheduleItemForm.querySelector('#contractCodeList')
@@ -205,8 +220,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 	// переключение видимости поля "Ед. измерения" в зависимости от значения поля "Квант"
 	const addQuantumInput = addScheduleItemForm.querySelector('#quantum')
 	const editQuantumInput = editScheduleItemForm.querySelector('#quantum')
-	addQuantumInput.addEventListener('change', (e) => onQuantumChangeHandler(e, addScheduleItemForm))
-	editQuantumInput.addEventListener('change', (e) => onQuantumChangeHandler(e, editScheduleItemForm))
+	const addTempQuantumInput = createTempScheduleItemForm.querySelector('#quantum')
+	addQuantumInput && addQuantumInput.addEventListener('change', (e) => onQuantumChangeHandler(e, addScheduleItemForm))
+	editQuantumInput && editQuantumInput.addEventListener('change', (e) => onQuantumChangeHandler(e, editScheduleItemForm))
+	addTempQuantumInput && addTempQuantumInput.addEventListener('change', (e) => onQuantumChangeHandler(e, createTempScheduleItemForm))
 
 	// кнопка скачивания файла с инструкцией
 	const downloadFAQBtn = document.querySelector('#downloadFAQ')
@@ -217,10 +234,26 @@ document.addEventListener('DOMContentLoaded', async () => {
 	// обновление опций графика при открытии модалки создания графика поставки
 	$('#addScheduleItemModal').on('shown.bs.modal', (e) => changeScheduleOptions(addScheduleItemForm, ''))
 	// очистка форм при закрытии модалки
-	$('#addScheduleItemModal').on('hidden.bs.modal', (e) => clearForm(e, addScheduleItemForm))
-	$('#editScheduleItemModal').on('hidden.bs.modal', (e) => clearForm(e, editScheduleItemForm))
-	$('#sendExcelModal').on('hidden.bs.modal', (e) => clearForm(e, sendExcelForm))
-	$('#setCodeNameModal').on('hidden.bs.modal', (e) => clearForm(e, setCodeNameForm))
+	$('#addScheduleItemModal').on('hidden.bs.modal', (e) => {
+		clearForm(e, addScheduleItemForm)
+		blurActiveElem(e)
+	})
+	$('#editScheduleItemModal').on('hidden.bs.modal', (e) => {
+		clearForm(e, editScheduleItemForm)
+		blurActiveElem(e)
+	})
+	$('#createTempScheduleItemModal').on('hidden.bs.modal', (e) => {
+		clearForm(e, createTempScheduleItemForm)
+		blurActiveElem(e)
+	})
+	$('#sendExcelModal').on('hidden.bs.modal', (e) => {
+		clearForm(e, sendExcelForm)
+		blurActiveElem(e)
+	})
+	$('#setCodeNameModal').on('hidden.bs.modal', (e) => {
+		clearForm(e, setCodeNameForm)
+		blurActiveElem(e)
+	})
 
 	// отображение стартовых данных
 	if (window.initData) {
@@ -254,10 +287,12 @@ async function loadScheduleData(url) {
 	updateTable(gridOptions, scheduleData)
 
 	// получение настроек таблицы из localstorage
-	if (url === getAllScheduleUrl) {
-		restoreColumnState()
-		restoreFilterState()
-	}
+	restoreColumnState()
+	restoreFilterState()
+	// if (url === getAllScheduleUrl) {
+	// 	restoreColumnState()
+	// 	restoreFilterState()
+	// }
 
 	// проверка, правильно ли заполнены графики
 	if (isAdmin(role) || isORL(role)) {
@@ -372,9 +407,17 @@ function getContextMenuItems(params) {
 			name: `Редактировать графики по текущему коду контракта`,
 			disabled: isObserver(role),
 			action: () => {
-				editScheduleItem(rowNode, setDataToForm)
+				editScheduleItem(rowNode, setDataToEditForm)
 			},
 			icon: uiIcons.pencil,
+		},
+		{
+			name: `Создать временный график по текущему коду контракта`,
+			disabled: isObserver(role),
+			action: () => {
+				createTempSchedule(rowNode, setDataToCreateTempForm)
+			},
+			icon: uiIcons.addTempElem,
 		},
 		{
 			name: `Изменить значение "Сегодня на сегодня" по текущему коду контракта`,
@@ -468,6 +511,13 @@ async function deleteScheduleItemsByContract(role, rowNode) {
 		counterpartyContractCode,
 		status
 	})
+}
+// создание временного графика
+function createTempSchedule(rowNode, setDataToForm) {
+	const scheduleItem = rowNode.data
+	setDataToForm(scheduleItem)
+	$(`#createTempScheduleItemModal`).modal('show')
+
 }
 // запрос на массовое изменение значения "Сегодня на сегодня" по номеру контракта
 function changeIsDayToDayByContract(role, rowNode) {
@@ -742,6 +792,69 @@ function editScheduleItemFormHandler(e) {
 		}
 	})
 }
+// обработчик отправки формы создания временного графика
+function createTempScheduleItemFormHandler(e) {
+	e.preventDefault()
+
+	if (isObserver(role)) {
+		snackbar.show('Недостаточно прав!')
+		return
+	}
+
+	const formData = new FormData(e.target)
+	const data = scheduleItemDataFormatter(formData)
+
+	// проверка значений графика
+	if (!isValidScheduleValues(data)) {
+		snackbar.show(
+			'Обнаружены ошибки в значения дней заказа или поставки.\n'
+			+ 'Проверьте данные графика!'
+		)
+		return
+	}
+
+	// ошибки в логике графика
+	const errorMessage = getFormErrorMessage(data, error)
+	if (errorMessage) {
+		snackbar.show(errorMessage)
+		return
+	}
+
+	console.log(data)
+
+	// disableButton(e.submitter)
+
+	// ajaxUtils.postJSONdata({
+	// 	url: addScheduleItemUrl,
+	// 	token: token,
+	// 	data: data,
+	// 	successCallback: async (res) => {
+	// 		enableButton(e.submitter)
+	// 		if (res.status === '200') {
+	// 			$(`#createTempScheduleItemModal`).modal('hide')
+	// 			snackbar.show(res.message)
+	// 			// получаем обновленные данные и обновляем таблицу
+	// 			await getScheduleData(getScheduleUrl)
+	// 			updateTable(gridOptions, scheduleData)
+	// 			return
+	// 		}
+
+	// 		if (res.status === '100') {
+	// 			const message = res.message ? res.message : 'Неизвестная ошибка'
+	// 			snackbar.show(message)
+	// 			return
+	// 		}
+	// 		if (res.status === '105') {
+	// 			$(`#createTempScheduleItemModal`).modal('hide')
+	// 			showMessageModal(res.message)
+	// 			return
+	// 		}
+	// 	},
+	// 	errorCallback: () => {
+	// 		enableButton(e.submitter)
+	// 	}
+	// })
+}
 // обработчик формы установки кодового слова
 function setCodeNameFormHandler(e) {
 	e.preventDefault()
@@ -969,46 +1082,58 @@ function scheduleItemDataFormatter(formData) {
 		codeNameOfQuantumCounterparty: null,
 		isDayToDay: false,
 	}
+	// if (data.formType && data.formType === 'createTempSchedule') {
+	// 	res.isTempSchedule = true
+	// 	res.tempScheduleDateRange = [ data.tempScheduleDateRange_from, data.tempScheduleDateRange_to ]
+	// }
 	return res
 }
 
 // заполнение формы редактирования магазина данными
-function setDataToForm(scheduleItem) {
-	const editScheduleItemForm = document.querySelector('#editScheduleItemForm')
+function setDataToEditForm(scheduleItem) {
+	setDataToForm('#editScheduleItemForm', scheduleItem)
+}
+// заполнение формы создания временного графика
+function setDataToCreateTempForm(scheduleItem) {
+	setDataToForm('#createTempScheduleItemForm', scheduleItem)
+}
+// заполнение формы данными графика
+function setDataToForm(formId, scheduleItem) {
+	const form = document.querySelector(formId)
 	const quantumMeasurements = scheduleItem.quantumMeasurements ? scheduleItem.quantumMeasurements : ''
 
 	// создаем опции в селектах с установкой графика
-	changeScheduleOptions(editScheduleItemForm, scheduleItem.note)
+	changeScheduleOptions(form, scheduleItem.note)
 	// отображение поля "Единицы измерения"
-	quantumMeasurementsVisibleToggler(editScheduleItemForm, quantumMeasurements)
+	quantumMeasurementsVisibleToggler(form, quantumMeasurements)
 
 	// заполняем скрытые поля
-	editScheduleItemForm.supplies.value = scheduleItem.supplies ? scheduleItem.supplies : ''
-	editScheduleItemForm.type.value = scheduleItem.type ? scheduleItem.type : ''
+	form.supplies.value = scheduleItem.supplies ? scheduleItem.supplies : ''
+	form.type.value = scheduleItem.type ? scheduleItem.type : ''
 
 	// заполняем видимые поля
-	editScheduleItemForm.toType.value = scheduleItem.toType ? scheduleItem.toType : ''
-	editScheduleItemForm.counterpartyCode.value = scheduleItem.counterpartyCode ? scheduleItem.counterpartyCode : ''
-	editScheduleItemForm.name.value = scheduleItem.name ? scheduleItem.name : ''
-	editScheduleItemForm.counterpartyContractCode.value = scheduleItem.counterpartyContractCode ? scheduleItem.counterpartyContractCode : ''
+	form.toType.value = scheduleItem.toType ? scheduleItem.toType : ''
+	form.counterpartyCode.value = scheduleItem.counterpartyCode ? scheduleItem.counterpartyCode : ''
+	form.name.value = scheduleItem.name ? scheduleItem.name : ''
+	form.counterpartyContractCode.value = scheduleItem.counterpartyContractCode ? scheduleItem.counterpartyContractCode : ''
 
-	editScheduleItemForm.numStock.value = ''
+	form.numStock.value = ''
 
-	editScheduleItemForm.comment.value = scheduleItem.comment ? scheduleItem.comment : ''
-	editScheduleItemForm.note.checked = scheduleItem.note === 'неделя'
-	editScheduleItemForm.orderFormationSchedule.value = scheduleItem.orderFormationSchedule ? scheduleItem.orderFormationSchedule : ''
-	// editScheduleItemForm.orderShipmentSchedule.value = scheduleItem.orderShipmentSchedule ? scheduleItem.orderShipmentSchedule : ''
-	editScheduleItemForm.quantum.value = scheduleItem.quantum ? scheduleItem.quantum : ''
-	editScheduleItemForm.quantumMeasurements.value = quantumMeasurements
+	form.comment.value = scheduleItem.comment ? scheduleItem.comment : ''
+	form.note.checked = scheduleItem.note === 'неделя'
+	form.orderFormationSchedule.value = scheduleItem.orderFormationSchedule ? scheduleItem.orderFormationSchedule : ''
+	// form.orderShipmentSchedule.value = scheduleItem.orderShipmentSchedule ? scheduleItem.orderShipmentSchedule : ''
+	form.quantum.value = scheduleItem.quantum ? scheduleItem.quantum : ''
+	form.quantumMeasurements.value = quantumMeasurements
 
 	// заполняем график
-	editScheduleItemForm.monday.value = scheduleItem.monday ? scheduleItem.monday : ''
-	editScheduleItemForm.tuesday.value = scheduleItem.tuesday ? scheduleItem.tuesday : ''
-	editScheduleItemForm.wednesday.value = scheduleItem.wednesday ? scheduleItem.wednesday : ''
-	editScheduleItemForm.thursday.value = scheduleItem.thursday ? scheduleItem.thursday : ''
-	editScheduleItemForm.friday.value = scheduleItem.friday ? scheduleItem.friday : ''
-	editScheduleItemForm.saturday.value = scheduleItem.saturday ? scheduleItem.saturday : ''
-	editScheduleItemForm.sunday.value = scheduleItem.sunday ? scheduleItem.sunday : ''
+	form.monday.value = scheduleItem.monday ? scheduleItem.monday : ''
+	form.tuesday.value = scheduleItem.tuesday ? scheduleItem.tuesday : ''
+	form.wednesday.value = scheduleItem.wednesday ? scheduleItem.wednesday : ''
+	form.thursday.value = scheduleItem.thursday ? scheduleItem.thursday : ''
+	form.friday.value = scheduleItem.friday ? scheduleItem.friday : ''
+	form.saturday.value = scheduleItem.saturday ? scheduleItem.saturday : ''
+	form.sunday.value = scheduleItem.sunday ? scheduleItem.sunday : ''
 }
 
 // получение массива ТО по номеру контракта

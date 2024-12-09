@@ -288,27 +288,25 @@ export const store = {
 			stock.events.push(event)
 		})
 
-		const backgroundEvent = {
-			id: 'background1',
-			resourceId: null,
-			display: 'background',
-			startTime: '12:00',
-			endTime: '20:00',
-			eventOverlap: true,
-			title: '',
-			extendedProps: {
-				data: {
-					pall: 0,
-				}
-			},
-		}
-		const stock1700 = this._state.stocks.find(stock => stock.id === '1700')
-		backgroundEvent.resourceId = '170001'
-		stock1700.events.push(backgroundEvent)
-
-		const stock1800 = this._state.stocks.find(stock => stock.id === '1800')
-		backgroundEvent.resourceId = '180001'
-		stock1800.events.push(backgroundEvent)
+		// добавление фона для зоны внутренних перемещений
+		this._state.stocks.forEach(stock => {
+			if (stock.id === '1700' || stock.id === '1800') {
+				stock.events.push({
+					id: `background${stock.id}`,
+					resourceId: `${stock.id}01`,
+					display: 'background',
+					startTime: '12:00',
+					endTime: '20:00',
+					eventOverlap: true,
+					title: '',
+					extendedProps: {
+						data: {
+							pall: 0,
+						}
+					},
+				})
+			}
+		})
 	},
 
 

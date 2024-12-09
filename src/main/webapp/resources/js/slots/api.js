@@ -33,6 +33,7 @@ export function preloadOrder(info, orderTableGridOption, orderDateClickHandler) 
 	const currentRole = store.getRole()
 	const orderData = getOrderDataForAjax(info, currentStock, currentLogin, currentRole, method)
 
+	// ВРЕМЕННО ДЛЯ 1800
 	// Фильтр для самовывоза
 	if (currentStock.id === '1800'
 		&& (
@@ -122,6 +123,7 @@ export function loadOrder(info, orderTableGridOption, dateOrderOrl) {
 
 	if (dateOrderOrl) orderData.dateOrderOrl = dateOrderOrl
 
+	// ВРЕМЕННО ДЛЯ 1800
 	// Фильтр для самовывоза
 	if (currentStock.id === '1800'
 		&& (
@@ -193,6 +195,7 @@ export function updateOrder(info, orderTableGridOption, isComplexUpdate) {
 	const currentRole = store.getRole()
 	const orderData = getOrderDataForAjax(info, currentStock, currentLogin, currentRole, method)
 
+	// ВРЕМЕННО ДЛЯ 1800
 	// Фильтр для самовывоза
 	if (currentStock.id === '1800'
 		&& (

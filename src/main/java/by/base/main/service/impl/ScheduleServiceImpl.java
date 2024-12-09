@@ -1,7 +1,10 @@
 package by.base.main.service.impl;
 
 import java.sql.Date;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -64,7 +67,7 @@ public class ScheduleServiceImpl implements ScheduleService{
 
 	@Override
 	public List<Schedule> getSchedulesListTO() {
-		return scheduleDAO.getSchedulesListTO();
+  		return scheduleDAO.getSchedulesListTO();
 	}
 
 	@Override
@@ -113,4 +116,32 @@ public class ScheduleServiceImpl implements ScheduleService{
 		return scheduleDAO.updateScheduleBycounterpartyCodeHascodeNameOfQuantumCounterparty(counterpartyCode, codeNameOfQuantumCounterparty);
 	}
 
+	/**
+	 * @author Ira
+	 * @param contract
+	 * @return
+	 */
+	@Override
+	public List<Schedule> getSchedulesTOByNumContractWithTemp(Long contract) {
+		return scheduleDAO.getSchedulesTOByNumContractWithTemp(contract);
+
+	}
+
+	@Override
+	public List<Schedule> getSchedulesListTOWithTemp() {
+		List<Schedule> allSchedules = scheduleDAO.getSchedulesListTOWithTemp();
+		List<Schedule> actualSchedules = new ArrayList<>(allSchedules);
+		for (Schedule schedule: allSchedules){
+			if (schedule.getStartDateTemp() != null) {
+				long counterpartyContractNumber = schedule.getCounterpartyContractCode();
+				int numStock = schedule.getNumStock();
+
+                actualSchedules.removeIf(sch -> sch.getCounterpartyContractCode() == counterpartyContractNumber
+                        && sch.getNumStock() == numStock
+                        && sch.getStartDateTemp() == null);
+			}
+		}
+
+        return actualSchedules;
+	}
 }

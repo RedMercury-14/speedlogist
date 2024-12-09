@@ -920,3 +920,9 @@ export function getInputValue(container, selector) {
 
 	return input.value
 }
+
+export function blurActiveElem(e) {
+	const activeElem = document.activeElement
+	if (!activeElem) return
+	activeElem.blur()
+}

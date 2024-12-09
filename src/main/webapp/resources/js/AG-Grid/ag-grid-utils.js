@@ -299,3 +299,30 @@ export function highlightRow(gridOptions, rowNode) {
 export function deselectAllCheckboxes(gridOptions) {
 	gridOptions.api.deselectAll('checkboxSelected')
 }
+
+export class BtnCellRenderer {
+	init(params) {
+		this.params = params
+
+		this.emptyElem = document.createElement('span')
+		this.eGui = document.createElement("button")
+		this.eGui.className = this.params.className || ''
+		this.eGui.id = this.params.id || ''
+		this.eGui.innerText = this.params.label || ''
+
+		this.btnClickedHandler = this.btnClickedHandler.bind(this)
+		this.eGui.addEventListener("click", this.btnClickedHandler)
+	}
+
+	getGui() {
+		return this.params.value ? this.eGui : this.emptyElem
+	}
+
+	btnClickedHandler(event) {
+		this.params.onClick(this.params)
+	}
+
+	destroy() {
+		this.eGui.removeEventListener("click", this.btnClickedHandler)
+	}
+}

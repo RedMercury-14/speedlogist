@@ -37,7 +37,23 @@
 			<strong><h3>Потребности</h3></strong>
 		</div>
 		<div class="toolbar">
-			<input class="btn tools-btn font-weight-bold" type="date" name="filterDate" id="filterDate">
+			
+			<div class="btn-group">
+				<button type="button" class="btn tools tools-btn px-0 font-weight-bold text-muted" id="datePrev">
+					<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368">
+						<path d="M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z"/>
+					</svg>
+				</button>
+
+				<input class="btn tools-btn font-weight-bold" type="date" name="filterDate" id="filterDate">
+
+				<button type="button" class="btn tools tools-btn px-0 font-weight-bold text-muted" id="dateNext">
+					<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368">
+						<path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z"/>
+					</svg>
+				</button>
+			</div>
+
 			<c:choose>
 				<c:when test="${roles == '[ROLE_ADMIN]' || roles == '[ROLE_ORDERSUPPORT]'}">
 					<button type="button" class="btn tools-btn font-weight-bold text-muted" data-toggle="modal" data-target="#sendExcelModal">

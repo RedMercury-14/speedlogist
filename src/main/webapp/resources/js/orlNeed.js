@@ -15,9 +15,10 @@ const columnDefs = [
 	{
 		headerName: 'ID', field: 'idOrderProduct',
 		cellClass: 'px-1 py-0 text-center',
+		hide: true,
 	},
 	{
-		headerName: 'Количество заказанного товара', field: 'quantity',
+		headerName: 'Код товара', field: 'codeProduct',
 		cellClass: 'px-1 py-0 text-center',
 		flex: 2,
 	},
@@ -26,10 +27,40 @@ const columnDefs = [
 		cellClass: 'px-1 py-0 text-center',
 		flex: 5,
 	},
+	// {
+	// 	headerName: 'Количество заказанного товара', field: 'quantity',
+	// 	cellClass: 'px-1 py-0 text-center',
+	// 	flex: 2,
+	// },
+	{
+		headerName: 'Колличество в поддоне', field: 'quantityInPallet',
+		cellClass: 'px-1 py-0 text-center',
+		flex: 2,
+	},
+	{
+		headerName: 'Заказ 1700', field: 'quantity1700',
+		cellClass: 'px-1 py-0 text-center',
+		flex: 2,
+	},
+	{
+		headerName: 'Заказ 1800', field: 'quantity1800',
+		cellClass: 'px-1 py-0 text-center',
+		flex: 2,
+	},
+	{
+		headerName: 'Увеличенный заказ 1700', field: 'quantity1700Max',
+		cellClass: 'px-1 py-0 text-center',
+		flex: 2,
+	},
+	{
+		headerName: 'Увеличенный заказ 1800', field: 'quantity1800Max',
+		cellClass: 'px-1 py-0 text-center',
+		flex: 2,
+	},
 	{
 		headerName: 'Комментарий', field: 'comment',
 		cellClass: 'px-1 py-0 text-center',
-		flex: 5,
+		flex: 3,
 	},
 ]
 
@@ -57,12 +88,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 	// изменение отступа для таблицы
 	changeGridTableMarginTop()
 
+	const filterDateInput = document.querySelector('#filterDate')
+	// кнопка переключения даты вперед
+	const datePrevBtn = document.querySelector('#datePrev')
+	// кнопка переключения даты назад
+	const dateNextBtn = document.querySelector('#dateNext')
+
 	// создание таблицы
 	const gridDiv = document.querySelector('#myGrid')
 	renderTable(gridDiv, gridOptions, orlNeedData)
 
 	// установка фильтра даты
-	const filterDateInput = document.querySelector('#filterDate')
 	const filterDate = dateHelper.getDateForInput(new Date())
 	setFilterDate(filterDate)
 
@@ -71,6 +107,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 		const filterDate = e.target.value
 		updateTable(gridOptions, filterDate)
 	})
+
+	// переключение отображаемой даты
+	datePrevBtn.addEventListener('click', () => prevDate(filterDateInput))
+	dateNextBtn.addEventListener('click', () => nextDate(filterDateInput))
 
 	// обработка отправки формы отправки excel файла
 	const sendExcelForm = document.querySelector('#sendExcelForm')
@@ -125,8 +165,10 @@ function getMappingData(data) {
 	return data.map(getMappingScheduleItem)
 }
 function getMappingScheduleItem(item) {
+	const quantity1700 = item.quantity1700 ? item.quantity1700 : item.quantity
 	return {
 		...item,
+		quantity1700,
 	}
 }
 
@@ -174,4 +216,22 @@ function sendExcelFormHandler(e) {
 function setFilterDate(value) {
 	const filterDateInput = document.querySelector('#filterDate')
 	filterDateInput && (filterDateInput.value = value)
+}
+
+// функции управдения датой
+function nextDate(dateInput) {
+	const currentDate = dateInput.value
+	const nextMs = new Date(currentDate).getTime() + dateHelper.DAYS_TO_MILLISECONDS
+	const nextDate = dateHelper.getDateForInput(nextMs)
+
+	dateInput.value = nextDate
+	dateInput.dispatchEvent(new Event("change"))
+}
+function prevDate(dateInput) {
+	const currentDate = dateInput.value
+	const prevMs = new Date(currentDate).getTime() - dateHelper.DAYS_TO_MILLISECONDS
+	const prevDate = dateHelper.getDateForInput(prevMs)
+
+	dateInput.value = prevDate
+	dateInput.dispatchEvent(new Event("change"))
 }

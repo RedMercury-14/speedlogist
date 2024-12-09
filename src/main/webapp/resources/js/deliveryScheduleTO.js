@@ -411,6 +411,14 @@ function getContextMenuItems(params) {
 			},
 			icon: uiIcons.pencil,
 		},
+		// {
+		// 	name: `Создать временный график по текущему коду контракта`,
+		// 	disabled: isObserver(role),
+		// 	action: () => {
+		// 		createTempSchedule(rowNode, setDataToCreateTempForm)
+		// 	},
+		// 	icon: uiIcons.addTempElem,
+		// },
 		{
 			name: `Создать временный график по текущему коду контракта`,
 			disabled: isObserver(role),

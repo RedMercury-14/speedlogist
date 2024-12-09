@@ -41,6 +41,21 @@ public class OrderProduct {
 
     @Column(name = "name_product")
     private String nameProduct;
+    
+    @Column(name = "quantity1700")
+    private Integer quantity1700;
+    
+    @Column(name = "quantity1800")
+    private Integer quantity1800;
+    
+    @Column(name = "quantity1800_max")
+    private Integer quantity1800Max;
+    
+    @Column(name = "quantity1700_max")
+    private Integer quantity1700Max;
+    
+    @Column(name = "quantity_in_pallet")
+    private Integer quantityInPallet;
 
     @ManyToOne
     @JoinColumn(name = "product_idproduct", nullable = false)
@@ -102,6 +117,46 @@ public class OrderProduct {
 
 	public void setCodeProduct(Integer codeProduct) {
 		this.codeProduct = codeProduct;
+	}
+
+	public Integer getQuantity1700() {
+		return quantity1700;
+	}
+
+	public void setQuantity1700(Integer quantity1700) {
+		this.quantity1700 = quantity1700;
+	}
+
+	public Integer getQuantity1800() {
+		return quantity1800;
+	}
+
+	public void setQuantity1800(Integer quantity1800) {
+		this.quantity1800 = quantity1800;
+	}
+
+	public Integer getQuantity1800Max() {
+		return quantity1800Max;
+	}
+
+	public void setQuantity1800Max(Integer quantity1800Max) {
+		this.quantity1800Max = quantity1800Max;
+	}
+
+	public Integer getQuantity1700Max() {
+		return quantity1700Max;
+	}
+
+	public void setQuantity1700Max(Integer quantity1700Max) {
+		this.quantity1700Max = quantity1700Max;
+	}
+
+	public Integer getQuantityInPallet() {
+		return quantityInPallet;
+	}
+
+	public void setQuantityInPallet(Integer quantityInPallet) {
+		this.quantityInPallet = quantityInPallet;
 	}
 
 	@Override

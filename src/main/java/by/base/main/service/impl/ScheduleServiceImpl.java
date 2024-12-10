@@ -100,10 +100,10 @@ public class ScheduleServiceImpl implements ScheduleService{
 		return scheduleDAO.getcounterpartyListTO();
 	}
 
-	@Override
-	public Schedule getScheduleByNumContractAndNumStock(Long num, Integer shock) {
-		return scheduleDAO.getScheduleByNumContractAndNumStock(num, shock);
-	}
+//	@Override
+//	public Schedule getScheduleByNumContractAndNumStock(Long num, Integer shock) {
+//		return scheduleDAO.getScheduleByNumContractAndNumStock(num, shock);
+//	}
 
 	@Override
 	public List<CounterpartyDTO> getUnicCodeContractTO() {
@@ -150,5 +150,39 @@ public class ScheduleServiceImpl implements ScheduleService{
 		}
 
         return actualSchedules;
+	}
+
+	/**
+	 * @author Ira
+	 * <br>Возвращает список графиков на ТО по номеру контракта и номеру ТО - и временных, и постоянных</br>
+	 * @return
+	 */
+	@Override
+	public List<Schedule> getScheduleByNumContractAndNUmStockWithTemp(Long num, Integer numStock) {
+		return scheduleDAO.getScheduleByNumContractAndNUmStockWithTemp(num, numStock);
+	}
+
+	/**
+	 * @author Ira
+	 * <br>Проверяет создаваемый график на пересечение временных границ с существующими графиками</br>
+	 * @return
+	 */
+	@Override
+	public boolean checkScheduleIntersection(List<Schedule> existingSchedules, Schedule newSchedule){
+		for (Schedule sch: existingSchedules) {
+			if (sch.getStartDateTemp() != null && sch.getEndDateTemp() != null) {
+				Date currentStartDate = sch.getStartDateTemp();
+				Date currentEndDate = sch.getEndDateTemp();
+				Date newScheduleStartDate = newSchedule.getStartDateTemp();
+				Date newScheduleEndDate = newSchedule.getEndDateTemp();
+
+				if(!((newScheduleStartDate.after(currentEndDate) && newScheduleEndDate.after(currentEndDate))
+						|| (newScheduleStartDate.before(currentStartDate) && newScheduleEndDate.before(currentStartDate)))){
+					return false;
+				}
+			}
+		}
+		return true;
+
 	}
 }

@@ -72,7 +72,7 @@ public interface ScheduleService {
 		
 	Schedule getScheduleByNumContract(Long num);
 	
-	Schedule getScheduleByNumContractAndNumStock(Long num, Integer shock);
+//	Schedule getScheduleByNumContractAndNumStock(Long num, Integer shock);
 	
 	/**
 	 * Отдаёт график поставок по номеру контракта и номеру магазина / склада
@@ -109,5 +109,19 @@ public interface ScheduleService {
 	 * @return
 	 */
 	List<Schedule> getSchedulesListTOOnlyTemp();
+
+	/**
+	 * @author Ira
+	 * <br>Возвращает список графиков на ТО по номеру контракта и номеру ТО - и временных, и постоянных</br>
+	 * @return
+	 */
+	List<Schedule> getScheduleByNumContractAndNUmStockWithTemp(Long num, Integer numStock);
+
+	/**
+	 * @author Ira
+	 * <br>Проверяет создаваемый график на пересечение временных границ с существующими графиками</br>
+	 * @return
+	 */
+	boolean checkScheduleIntersection(List<Schedule> schedules, Schedule schedule);
 }
 

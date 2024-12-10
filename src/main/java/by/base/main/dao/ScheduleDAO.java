@@ -72,7 +72,7 @@ public interface ScheduleDAO {
 		
 	Schedule getScheduleByNumContract(Long num);
 	
-	Schedule getScheduleByNumContractAndNumStock(Long num, Integer shock);
+//	Schedule getScheduleByNumContractAndNumStock(Long num, Integer shock);
 	
 	/**
 	 * Отдаёт график поставок по номеру контракта и номеру магазина / склада
@@ -111,5 +111,12 @@ public interface ScheduleDAO {
 	 */
 	public List<Schedule> getSchedulesListTOWithTemp();
 
-	//List<Schedule> getSchedulesByTOTypeWithTemp(String toType);
+	/**
+	 * @author Ira
+	 * <br>Возвращает список графиков на ТО по номеру контракта и номеру ТО - и временных, и постоянных</br>
+	 * @return
+	 */
+	List<Schedule> getScheduleByNumContractAndNUmStockWithTemp(Long num, Integer numStock);
+
+//List<Schedule> getSchedulesByTOTypeWithTemp(String toType);
 }

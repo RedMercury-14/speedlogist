@@ -166,6 +166,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	private static final String queryGetObjByNumContractAndStock = "from Schedule where counterpartyContractCode=:counterpartyContractCode AND numStock=:numStock";
 	@Transactional
 	@Override
+	@Deprecated
 	public Schedule getScheduleByNumContractAndNUmStock(Long num, Integer numStock) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<Schedule> theObject = currentSession.createQuery(queryGetObjByNumContractAndStock, Schedule.class);
@@ -226,21 +227,21 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 		return roles;
 	}
 
-	private static final String queryGetObjByNumContractAndNumStock = "from Schedule where counterpartyContractCode=:counterpartyContractCode AND numStock=:numStock";
-	@Transactional
-	@Override
-	public Schedule getScheduleByNumContractAndNumStock(Long num, Integer shock) {
-		Session currentSession = sessionFactory.getCurrentSession();
-		Query<Schedule> theObject = currentSession.createQuery(queryGetObjByNumContractAndNumStock, Schedule.class);
-		theObject.setParameter("counterpartyContractCode", num);
-		theObject.setParameter("numStock", shock);
-		List<Schedule> trucks = theObject.getResultList();
-		if(trucks.isEmpty()) {
-			return null;
-		}
-		Schedule object = trucks.stream().findFirst().get();
-		return object;
-	}
+//	private static final String queryGetObjByNumContractAndNumStock = "from Schedule where counterpartyContractCode=:counterpartyContractCode AND numStock=:numStock";
+//	@Transactional
+//	@Override
+//	public Schedule getScheduleByNumContractAndNumStock(Long num, Integer shock) {
+//		Session currentSession = sessionFactory.getCurrentSession();
+//		Query<Schedule> theObject = currentSession.createQuery(queryGetObjByNumContractAndNumStock, Schedule.class);
+//		theObject.setParameter("counterpartyContractCode", num);
+//		theObject.setParameter("numStock", shock);
+//		List<Schedule> trucks = theObject.getResultList();
+//		if(trucks.isEmpty()) {
+//			return null;
+//		}
+//		Schedule object = trucks.stream().findFirst().get();
+//		return object;
+//	}
 
 	
 	private static final String counterpartyConstruct2 = "SELECT new com.dto.CounterpartyDTO(" +
@@ -309,6 +310,24 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 
 		return schedules;
 	}
+
+	/**
+	 * @author Ira
+	 * <br>Возвращает список графиков на ТО по номеру контракта и номеру ТО - и временных, и постоянных</br>
+	 * @return
+	 */
+	private static final String queryGetObjByNumContractAndNumStockWithTemp = "from Schedule where counterpartyContractCode=:counterpartyContractCode AND numStock=:numStock";
+	@Transactional
+	@Override
+	public List<Schedule> getScheduleByNumContractAndNUmStockWithTemp(Long num, Integer numStock) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Schedule> theObject = currentSession.createQuery(queryGetObjByNumContractAndNumStockWithTemp, Schedule.class);
+		theObject.setParameter("counterpartyContractCode", num);
+		theObject.setParameter("numStock", numStock);
+		List<Schedule> schedules = theObject.getResultList();
+		return schedules;
+	}
+
 
 //	/**
 //	 * @author Ira

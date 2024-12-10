@@ -1,5 +1,9 @@
 import { AG_GRID_LOCALE_RU } from '../../AG-Grid/ag-grid-locale-RU.js'
+import { gridColumnLocalState } from '../../AG-Grid/ag-grid-utils.js'
+import { debounce } from '../../utils.js'
 import { CargoCapacitySumStatusBarComponent, CountStatusBarComponent, PallSumStatusBarComponent, RowLegengStatusBarComponent } from './statusBar.js'
+
+const LOCAL_STORAGE_KEY = 'AG_Grid_settings_to_logisticksDelivery'
 
 export const trucksColumnDefs = [
 	{ headerName: 'id', field: 'idTGTruck', minWidth: 60, flex: 1, sort: 'desc', hide: true, },
@@ -8,10 +12,12 @@ export const trucksColumnDefs = [
 	// { headerName: 'Модель', field: 'modelTruck', width: 150, },
 	{ headerName: 'Перевозчик', field: 'companyName', flex: 4, wrapText: true, autoHeight: true, },
 	{ headerName: 'Тип', field: 'typeTrailer', flex: 2, },
-	{ headerName: 'Паллеты', field: 'pall', flex: 1, },
-	{ headerName: 'Тоннаж', field: 'cargoCapacity', flex: 1, },
+	{ headerName: 'Тоннаж', field: 'cargoCapacity', flex: 1, cellClass: 'px-1 text-center font-weight-bold fs-1rem', },
+	{ headerName: 'Паллеты', field: 'pall', flex: 1, cellClass: 'px-1 text-center font-weight-bold fs-1rem', },
 	{ headerName: 'Доп. инф-я', field: 'otherInfo', flex: 4, wrapText: true, autoHeight: true,},
 ]
+
+const debouncedSaveColumnState = debounce(saveColumnState, 500)
 
 export const trucksGridOptions = {
 	defaultColDef: {
@@ -19,6 +25,7 @@ export const trucksGridOptions = {
 		cellClass: 'px-1 text-center',
 		flex: 3,
 		resizable: true,
+		lockPinned: true,
 		suppressMenu: true,
 		sortable: true,
 		filter: true,
@@ -35,6 +42,11 @@ export const trucksGridOptions = {
 	rowSelection: 'multiple',
 	suppressDragLeaveHidesColumns: true,
 	enableBrowserTooltips: true,
+	onSortChanged: debouncedSaveColumnState,
+	onColumnResized: debouncedSaveColumnState,
+	onColumnMoved: debouncedSaveColumnState,
+	onColumnVisible: debouncedSaveColumnState,
+	onColumnPinned: debouncedSaveColumnState,
 	localeText: AG_GRID_LOCALE_RU,
 	statusBar: {
 		statusPanels: [
@@ -130,4 +142,15 @@ export function setStoreInStatusPanel(gridOptions, store) {
 			appStore: store,
 		}
 	})
+}
+
+// функции управления состоянием колонок
+function saveColumnState(params) {
+	gridColumnLocalState.saveState(params, LOCAL_STORAGE_KEY + params.api.getGridId())
+}
+export function restoreColumnState(params) {
+	gridColumnLocalState.restoreState(params, LOCAL_STORAGE_KEY + params.api.getGridId())
+}
+export function resetColumnState(params) {
+	gridColumnLocalState.resetState(params, LOCAL_STORAGE_KEY + params.api.getGridId())
 }

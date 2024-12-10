@@ -2,6 +2,7 @@ package by.base.main.service;
 
 import java.util.List;
 
+import by.base.main.dao.DAOException;
 import by.base.main.model.TGUser;
 import by.base.main.model.User;
 
@@ -26,11 +27,13 @@ public interface TGUserService {
 	TGUser getTGUserByMainUser (User user);
 
 	/**
-	 * Возвращает юзера по номеру телефона <b>без + </b>
+	 * Возвращает юзера по id_user
 	 * @param user
 	 * @return
 	 * @author DIma Hrushevsky
 	 */
-	TGUser getTGUserByTelephone (String telephone);
+	TGUser getTGUserByIdUser(Integer idUser);
+	
+	TGUser getTGUserByTelephone(String telephone) throws DAOException;
 
 }

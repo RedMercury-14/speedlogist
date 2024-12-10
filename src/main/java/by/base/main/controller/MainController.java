@@ -1192,18 +1192,11 @@ public class MainController {
 	@RequestMapping("/main/carrier/delivery-shop")
 	public String deliveryShopPage(Model model, HttpSession session, HttpServletRequest request) {
 		User user = getThisUser();
-		if(user.getChatId() == null) {
-			TGUser tgUser = tgUserService.getTGUserByMainUser(user);
-			if(tgUser != null) {
-				user.setChatId(tgUser.getChatId());
-				userService.saveOrUpdateUser(user, 0);
-				request.setAttribute("isTgLink", true);
-			}else {
-				request.setAttribute("isTgLink", false);
-			}
+		if(user.getTgBotStatus() == null) {
+			request.setAttribute("isTgLink", false);
 		}else {
 			request.setAttribute("isTgLink", true);
-		}		
+		}
 		return "deliveryShop";
 	}
 	

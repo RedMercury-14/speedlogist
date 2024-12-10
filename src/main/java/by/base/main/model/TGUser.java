@@ -53,6 +53,9 @@ public class TGUser implements Serializable{
 	@Column(name = "validity_truck")
 	private String validityTruck;
 	
+	@Column(name = "id_user")
+	private Integer idUser;
+	
 	public TGUser() {
 		// TODO Auto-generated constructor stub
 	}
@@ -146,6 +149,14 @@ public class TGUser implements Serializable{
 
 	public void setCompanyName(String companyName) {
 		this.companyName = companyName;
+	}
+
+	public Integer getIdUser() {
+		return idUser;
+	}
+
+	public void setIdUser(Integer idUser) {
+		this.idUser = idUser;
 	}
 
 	@Override

@@ -91,10 +91,48 @@ public class TGUserDAOImpl implements TGUserDAO{
 		}
 	}
 
+	private static final String queryGetTGUserByIdUser = "from TGUser u where u.idUser=:idUser";
+	@Transactional
+	@Override
+	public TGUser getTGUserByIdUser(Integer idUser) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<TGUser> theObject = currentSession.createQuery(queryGetTGUserByIdUser, TGUser.class);
+		theObject.setParameter("idUser", idUser);
+		List<TGUser> trucks = theObject.getResultList();
+		if(trucks.isEmpty()) {
+			return null;
+		}else {
+			TGUser object = trucks.stream().findFirst().get();
+			return object;
+		}
+	}
+
+	private static final String queryGetTGUserByTelephone = "from TGUser u where u.telephone LIKE :telephone";
+	@Transactional
 	@Override
 	public TGUser getTGUserByTelephone(String telephone) {
-		// TODO Auto-generated method stub
-		return null;
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<TGUser> theObject = currentSession.createQuery(queryGetTGUserByMainUser, TGUser.class);
+		String telephone2 = telephone.replaceAll("[^\\d]", ""); // используем только цифры!!!
+		if (telephone2.length() > 12) {
+		    telephone2 = telephone2.substring(0, 12); // Обрезаем до первых 12 символов
+		}
+		theObject.setParameter("telephone", "%" + telephone + "%");
+		List<TGUser> trucks = theObject.getResultList();
+		
+		if(trucks.isEmpty()) {
+			return null;
+		}else {
+			if(trucks.size() > 1) {
+				throw new DTOException("Результат вернулся > 1.");
+			}else {
+				TGUser object = trucks.stream().findFirst().get();
+				return object;				
+			}
+		}
+		
+		
+		
 	}
 
 }

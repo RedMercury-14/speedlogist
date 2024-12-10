@@ -92,5 +92,10 @@ public class TGTruckServiceImpl implements TGTruckService{
 		return tgTruckDAO.getTGTruckByChatNumTruckStrict(numTruck, date, tgUser);
 	}
 
+	@Override
+	public List<TGTruck> getTGTruckByidUserPeriod(Integer idUser, Date dateStart, Date dateFinish) {
+		return tgTruckDAO.getTGTruckByidUserPeriod(idUser, dateStart, dateFinish);
+	}
+
 	
 }

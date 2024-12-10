@@ -6,6 +6,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import by.base.main.dao.DAOException;
 import by.base.main.dao.TGTruckDAO;
 import by.base.main.dao.TGUserDAO;
 import by.base.main.model.TGTruck;
@@ -54,10 +55,16 @@ public class TGUserServiceImpl implements TGUserService{
 	}
 
 	@Override
-	public TGUser getTGUserByTelephone(String telephone) {
-		// TODO Auto-generated method stub
-		return null;
+	public TGUser getTGUserByIdUser(Integer idUser) {
+		return tgUserDAO.getTGUserByIdUser(idUser);
 	}
+
+	@Override
+	public TGUser getTGUserByTelephone(String telephone) throws DAOException {
+		return tgUserDAO.getTGUserByTelephone(telephone);
+	}
+
+	
 
 
 }

@@ -91,10 +91,20 @@ public class TGUserDAOImpl implements TGUserDAO{
 		}
 	}
 
+	private static final String queryGetTGUserByIdUser = "from TGUser u where u.idUser=:idUser";
+	@Transactional
 	@Override
-	public TGUser getTGUserByTelephone(String telephone) {
-		// TODO Auto-generated method stub
-		return null;
+	public TGUser getTGUserByIdUser(Integer idUser) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<TGUser> theObject = currentSession.createQuery(queryGetTGUserByIdUser, TGUser.class);
+		theObject.setParameter("idUser", idUser);
+		List<TGUser> trucks = theObject.getResultList();
+		if(trucks.isEmpty()) {
+			return null;
+		}else {
+			TGUser object = trucks.stream().findFirst().get();
+			return object;
+		}
 	}
 
 }

@@ -54,10 +54,11 @@ public class TGUserServiceImpl implements TGUserService{
 	}
 
 	@Override
-	public TGUser getTGUserByTelephone(String telephone) {
-		// TODO Auto-generated method stub
-		return null;
+	public TGUser getTGUserByIdUser(Integer idUser) {
+		return tgUserDAO.getTGUserByIdUser(idUser);
 	}
+
+	
 
 
 }

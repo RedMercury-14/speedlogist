@@ -169,6 +169,7 @@ import by.base.main.util.hcolossus.pojo.Solution;
 import by.base.main.util.hcolossus.pojo.VehicleWay;
 import by.base.main.util.hcolossus.service.LogicAnalyzer;
 import by.base.main.util.hcolossus.service.MatrixMachine;
+import scala.annotation.meta.field;
 
 @RestController
 @RequestMapping(path = "api", produces = "application/json")
@@ -632,22 +633,30 @@ public class MainRestController {
 //		return responseMap;		
 //	}
 	
+    
+    
+    
+    /*
+     * Два поля которые указывают период выборки авто для метода getTrucks
+     * 
+     */
+    private static final Integer dayBefore = 30;
+    private static final Integer dayAfter = 30;
     /**
-     * Метод отдаёт связанные ордеры по текущему ордеру, если они есть
+     * Метод возвращает машины по юзеру за месяц вперед и назад
      * @param request
      * @param response
-     * @param idOrder
      * @return
-     * @throws NumberFormatException
-     * @throws DocumentException
-     * @throws IOException
      */
     @GetMapping("/carrier/delivery-shop/getTrucks")
-    public Map<String, Object> getTrucks(HttpServletRequest request, HttpServletResponse response) throws NumberFormatException, DocumentException, IOException {
+    public Map<String, Object> getTrucks(HttpServletRequest request, HttpServletResponse response) {
     	Map<String, Object> responseMap = new HashMap<String, Object>();
     	User user = getThisUser();
-    	// остановился тут. Добавить в DAO поиск по id_user
+    	Date dateStart = Date.valueOf(LocalDate.now().minusDays(dayBefore));
+    	Date dateFinish = Date.valueOf(LocalDate.now().plusDays(dayAfter));
+    	List<TGTruck> tgTrucks = tgTruckService.getTGTruckByidUserPeriod(user.getIdUser(), dateStart, dateFinish);    	
     	responseMap.put("status", "200");	
+    	responseMap.put("trucks", tgTrucks);
     	return responseMap;    	
     }
     

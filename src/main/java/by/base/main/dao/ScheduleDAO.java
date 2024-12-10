@@ -7,6 +7,8 @@ import com.dto.CounterpartyDTO;
 
 import by.base.main.model.Schedule;
 
+import javax.transaction.Transactional;
+
 public interface ScheduleDAO {
 
 	Schedule getScheduleById(Integer id);
@@ -72,7 +74,7 @@ public interface ScheduleDAO {
 		
 	Schedule getScheduleByNumContract(Long num);
 	
-//	Schedule getScheduleByNumContractAndNumStock(Long num, Integer shock);
+	Schedule getScheduleByNumContractAndNumStock(Long num, Integer shock);
 	
 	/**
 	 * Отдаёт график поставок по номеру контракта и номеру магазина / склада
@@ -118,5 +120,12 @@ public interface ScheduleDAO {
 	 */
 	List<Schedule> getScheduleByNumContractAndNUmStockWithTemp(Long num, Integer numStock);
 
-//List<Schedule> getSchedulesByTOTypeWithTemp(String toType);
+	/**
+	 * @author Ira
+	 * <br>Возвращает список графиков по типу ТО - и временных, и постоянных</br>
+	 * @param toType
+	 * @return
+	 */
+	List<Schedule> getSchedulesByTOTypeWithTemp(String toType);
+
 }

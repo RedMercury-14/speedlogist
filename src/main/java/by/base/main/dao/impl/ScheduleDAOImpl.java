@@ -227,21 +227,21 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 		return roles;
 	}
 
-//	private static final String queryGetObjByNumContractAndNumStock = "from Schedule where counterpartyContractCode=:counterpartyContractCode AND numStock=:numStock";
-//	@Transactional
-//	@Override
-//	public Schedule getScheduleByNumContractAndNumStock(Long num, Integer shock) {
-//		Session currentSession = sessionFactory.getCurrentSession();
-//		Query<Schedule> theObject = currentSession.createQuery(queryGetObjByNumContractAndNumStock, Schedule.class);
-//		theObject.setParameter("counterpartyContractCode", num);
-//		theObject.setParameter("numStock", shock);
-//		List<Schedule> trucks = theObject.getResultList();
-//		if(trucks.isEmpty()) {
-//			return null;
-//		}
-//		Schedule object = trucks.stream().findFirst().get();
-//		return object;
-//	}
+	private static final String queryGetObjByNumContractAndNumStock = "from Schedule where counterpartyContractCode=:counterpartyContractCode AND numStock=:numStock";
+	@Transactional
+	@Override
+	public Schedule getScheduleByNumContractAndNumStock(Long num, Integer shock) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Schedule> theObject = currentSession.createQuery(queryGetObjByNumContractAndNumStock, Schedule.class);
+		theObject.setParameter("counterpartyContractCode", num);
+		theObject.setParameter("numStock", shock);
+		List<Schedule> trucks = theObject.getResultList();
+		if(trucks.isEmpty()) {
+			return null;
+		}
+		Schedule object = trucks.stream().findFirst().get();
+		return object;
+	}
 
 	
 	private static final String counterpartyConstruct2 = "SELECT new com.dto.CounterpartyDTO(" +
@@ -329,24 +329,25 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	}
 
 
-//	/**
-//	 * @author Ira
-//	 * @param num
-//	 * @return
-//	 */
-//	private static final String queryGetSchedulesByTOTypeWithTemp = "from Schedule where toType=:toType AND ((startDateTemp IS NOT NULL AND endDateTemp IS NOT NULL AND CURRENT_DATE BETWEEN startDateTemp AND endDateTemp) or (startDateTemp IS NULL AND endDateTemp IS NULL))";
-//	@Transactional
-//	@Override
-//	public List<Schedule> getSchedulesByTOTypeWithTemp(String toType) {
-//		Session currentSession = sessionFactory.getCurrentSession();
-//		Query<Schedule> theObject = currentSession.createQuery(queryGetSchedulesByTOTypeWithTemp, Schedule.class);
-//		theObject.setParameter("toType", toType.trim());
-//		List<Schedule> trucks = theObject.getResultList();
-//		if(trucks.isEmpty()) {
-//			return null;
-//		}
-//		return trucks;
-//	}
+	/**
+	 * @author Ira
+	 * <br>Возвращает список графиков по типу ТО - и временных, и постоянных</br>
+	 * @param toType
+	 * @return
+	 */
+	private static final String queryGetSchedulesByTOTypeWithTemp = "from Schedule where toType=:toType AND ((startDateTemp IS NOT NULL AND endDateTemp IS NOT NULL AND CURRENT_DATE BETWEEN startDateTemp AND endDateTemp) or (startDateTemp IS NULL AND endDateTemp IS NULL))";
+	@Transactional
+	@Override
+	public List<Schedule> getSchedulesByTOTypeWithTemp(String toType) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Schedule> theObject = currentSession.createQuery(queryGetSchedulesByTOTypeWithTemp, Schedule.class);
+		theObject.setParameter("toType", toType.trim());
+		List<Schedule> schedules = theObject.getResultList();
 
+		if(schedules.isEmpty()) {
+			return null;
+		}
+		return schedules;
+	}
 
 }

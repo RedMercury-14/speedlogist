@@ -72,7 +72,7 @@ public interface ScheduleService {
 		
 	Schedule getScheduleByNumContract(Long num);
 	
-//	Schedule getScheduleByNumContractAndNumStock(Long num, Integer shock);
+	Schedule getScheduleByNumContractAndNumStock(Long num, Integer shock);
 	
 	/**
 	 * Отдаёт график поставок по номеру контракта и номеру магазина / склада
@@ -108,7 +108,7 @@ public interface ScheduleService {
 	 * <br>Возвращает список только актуальных графиков на ТО - либо временных, либо постоянных</br>
 	 * @return
 	 */
-	List<Schedule> getSchedulesListTOOnlyTemp();
+	List<Schedule> getSchedulesListTOWithTemp();
 
 	/**
 	 * @author Ira
@@ -123,5 +123,21 @@ public interface ScheduleService {
 	 * @return
 	 */
 	boolean checkScheduleIntersection(List<Schedule> schedules, Schedule schedule);
+
+	/**
+	 * @author Ira
+	 * <br>Возвращает список графиков по типу ТО - и временных, и постоянных</br>
+	 * @param toType
+	 * @return
+	 */
+	List<Schedule> getSchedulesByTOTypeWithTemp(String toType);
+
+	/**
+	 * @author Ira
+	 * <br>Получает на вход лист графиков, фильтрует, возвращает лист графиков, действующих на текущий момент</br>
+	 * @param allSchedules
+	 * @return
+	 */
+	List<Schedule> getSchedulesListTOOnlyActual(List<Schedule> allSchedules);
 }
 

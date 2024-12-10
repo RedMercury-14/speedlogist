@@ -81,6 +81,7 @@ public class ScheduleServiceImpl implements ScheduleService{
 	}
 
 	@Override
+	@Deprecated
 	public List<Schedule> getSchedulesByTOType(String toType) {
 		return scheduleDAO.getSchedulesByTOType(toType);
 	}
@@ -100,10 +101,10 @@ public class ScheduleServiceImpl implements ScheduleService{
 		return scheduleDAO.getcounterpartyListTO();
 	}
 
-//	@Override
-//	public Schedule getScheduleByNumContractAndNumStock(Long num, Integer shock) {
-//		return scheduleDAO.getScheduleByNumContractAndNumStock(num, shock);
-//	}
+	@Override
+	public Schedule getScheduleByNumContractAndNumStock(Long num, Integer shock) {
+		return scheduleDAO.getScheduleByNumContractAndNumStock(num, shock);
+	}
 
 	@Override
 	public List<CounterpartyDTO> getUnicCodeContractTO() {
@@ -134,22 +135,8 @@ public class ScheduleServiceImpl implements ScheduleService{
 	 * @return
 	 */
 	@Override
-	public List<Schedule> getSchedulesListTOOnlyTemp() {
-		List<Schedule> allSchedules = scheduleDAO.getSchedulesListTOWithTemp();
-		List<Schedule> actualSchedules = new ArrayList<>(allSchedules);
-		for (Schedule schedule: allSchedules){
-			if (schedule.getStartDateTemp() != null) {
-				long counterpartyContractNumber = schedule.getCounterpartyContractCode();
-				int numStock = schedule.getNumStock();
-
-                actualSchedules.removeIf(sch -> sch.getCounterpartyContractCode() == counterpartyContractNumber
-                        && sch.getNumStock() == numStock
-                        && sch.getStartDateTemp() == null);
-
-			}
-		}
-
-        return actualSchedules;
+	public List<Schedule> getSchedulesListTOWithTemp() {
+		return scheduleDAO.getSchedulesListTOWithTemp();
 	}
 
 	/**
@@ -184,5 +171,39 @@ public class ScheduleServiceImpl implements ScheduleService{
 		}
 		return true;
 
+	}
+
+	/**
+	 * @author Ira
+	 * <br>Возвращает список графиков по типу ТО - и временных, и постоянных</br>
+	 * @param toType
+	 * @return
+	 */
+	@Override
+	public List<Schedule> getSchedulesByTOTypeWithTemp(String toType) {
+		return scheduleDAO.getSchedulesByTOTypeWithTemp(toType);
+	}
+
+	/**
+	 * @author Ira
+	 * <br>Получает на вход лист графиков, фильтрует, возвращает только графики, действующие на текущий момент</br>
+	 * @param allSchedules
+	 * @return
+	 */
+	@Override
+	public List<Schedule> getSchedulesListTOOnlyActual(List<Schedule> allSchedules){
+		List<Schedule> actualSchedules = new ArrayList<>(allSchedules);
+		for (Schedule schedule: allSchedules){
+			if (schedule.getStartDateTemp() != null) {
+				long counterpartyContractNumber = schedule.getCounterpartyContractCode();
+				int numStock = schedule.getNumStock();
+
+				actualSchedules.removeIf(sch -> sch.getCounterpartyContractCode() == counterpartyContractNumber
+						&& sch.getNumStock() == numStock
+						&& sch.getStartDateTemp() == null);
+
+			}
+		}
+		return actualSchedules;
 	}
 }

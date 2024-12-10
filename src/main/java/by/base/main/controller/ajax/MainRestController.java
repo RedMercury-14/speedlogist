@@ -634,6 +634,124 @@ public class MainRestController {
 //		return responseMap;		
 //	}
 	
+    /**
+     * Метод отвечает за редактирования и перезаписть всех точкек в маршруте.
+     * @param request
+     * @param str
+     * @return
+     * @throws ParseException
+     * @throws IOException
+     */
+    @PostMapping("/logistics/editRouteHasShop")
+	public Map<String, Object> postEditRouteHasShop(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+		Map<String, Object> response = new HashMap<String, Object>();
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		Integer idRoute = jsonMainObject.get("idRoute") == null ? null : Integer.parseInt(jsonMainObject.get("idRoute").toString());
+		if(idRoute == null) {
+			response.put("status", "100");
+			response.put("message", "Отсутствует idRoute");
+			return response;
+		}
+		Route route = routeService.getRouteById(idRoute);
+		Set<RouteHasShop> routeHasShops = new HashSet<RouteHasShop>();
+		
+		JSONArray jsonMainObjectArray = (JSONArray) parser.parse(jsonMainObject.get("routeHasShops").toString());
+		
+		
+		for (Object object : jsonMainObjectArray) {
+			JSONObject jsonRHSObject = (JSONObject) parser.parse(object.toString());
+			RouteHasShop routeHasShop = new RouteHasShop();
+			routeHasShop.setRoute(route);
+		
+			routeHasShop.setIdRouteHasShop(jsonRHSObject.get("idRouteHasShop") != null ?  Integer.parseInt(jsonRHSObject.get("idRouteHasShop").toString()) : null);
+			routeHasShop.setPosition(jsonRHSObject.get("position") != null ? jsonRHSObject.get("position").toString() : null);
+			routeHasShop.setOrder(jsonRHSObject.get("order") != null ?  Integer.parseInt(jsonRHSObject.get("order").toString()) : null);
+			routeHasShop.setAddress(jsonRHSObject.get("address") != null ? jsonRHSObject.get("address").toString() : null);
+			routeHasShop.setCargo(jsonRHSObject.get("cargo") != null ? jsonRHSObject.get("cargo").toString() : null);
+			routeHasShop.setPall(jsonRHSObject.get("pall") == null || jsonRHSObject.get("pall").toString().isEmpty() ? null : jsonRHSObject.get("pall").toString());
+			routeHasShop.setWeight(jsonRHSObject.get("weight") == null || jsonRHSObject.get("weight").toString().isEmpty() ? null : jsonRHSObject.get("weight").toString());
+			routeHasShop.setVolume(jsonRHSObject.get("volume") == null || jsonRHSObject.get("volume").toString().isEmpty() ? null : jsonRHSObject.get("volume").toString());
+			routeHasShops.add(routeHasShop);			
+		}
+		route.setRoteHasShop(routeHasShops);
+		routeService.saveOrUpdateRoute(route);
+		response.put("status", "200");
+		return response;	
+	}
+    
+    /**
+     * Главный метод для изменения статусов маршрутов!
+     * @param request
+     * @param response
+     * @param idRoute
+     * @param status
+     * @return
+     */
+    @GetMapping("/logistics/routeUpdate/{idRoute}&{status}")
+    @TimedExecution
+    public Map<String, Object> getRouteUpdate(HttpServletRequest request, HttpServletResponse response, @PathVariable String idRoute, @PathVariable String status) {
+    	Map<String, Object> responseMap = new HashMap<String, Object>();	
+    	Route route = routeService.getRouteById(Integer.parseInt(idRoute));
+    	switch (Integer.parseInt(status.trim())) {
+		case 1:
+			route.setStatusRoute(status);
+			String orderMailStatus = ""; //переменная для письма, указывает создавался ли заказ, или нет
+			Set<Order> orders = route.getOrders();
+			
+			if(orders != null && orders.size() != 0) { //поменять метод в ДАО чтобы сразу база записывала изменения
+				for (Order o : orders) {
+					o.setStatus(50);
+					orderService.updateOrderFromStatus(o);
+					orderMailStatus = orderMailStatus + "Заказ номер "+ o.getIdOrder() + " от " + o.getManager()+".\n";
+				}						
+			}else {
+				orderMailStatus = "Маршрут создан без заказа.";
+			}
+			String textStatus = orderMailStatus;
+			//отправляем письмо, запускаем его в отдельном потоке, т.к. отправка проходит в среднем 2 секунды
+			new Thread(new Runnable() {					
+				@Override
+				public void run() {
+					telegramBot.sendMessageHasSubscription("Маршрут " +route.getRouteDirection() + " с загрузкой от " +route.getDateLoadPreviously()+ " стал доступен для торгов!");
+					mailService.sendSimpleEmail(request, "Статус маршрута", "Маршрут "+route.getRouteDirection() + " стал доступен для торгов "
+							+LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yyy")) 
+							+ " в " 
+							+ LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))+"."
+//							+"\n"+textStatus, "ArtyuhevichO@dobronom.by");	
+					+"\n"+textStatus, "GrushevskiyD@dobronom.by");	
+				}
+				
+			}).start();				
+			break;
+		case 5: // обработчик отмены заказов
+			route.setStatusRoute(status);
+			Set<Order> orders2 = route.getOrders();
+			if(orders2 != null && orders2.size() != 0) { //поменять метод в ДАО чтобы сразу база записывала изменения
+				for (Order o : orders2) {
+					if(o.getStatus() != 10) {
+						o.setStatus(40);
+						orderService.updateOrder(o);
+					}
+				}						
+			}
+			break;
+
+		default:
+			//вставить обработчик
+			break;
+		}
+    	
+    	if(route.getTime() == null) {
+			route.setTime(LocalTime.parse("00:05"));
+		}
+		routeService.saveOrUpdateRoute(route);
+				
+    	responseMap.put("status", "200");	
+    	responseMap.put("object", new TGTruck());
+    	return responseMap;    	
+    }
+    
     @GetMapping("/carrier/delivery-shop/get")
     public Map<String, Object> get(HttpServletRequest request, HttpServletResponse response) {
     	Map<String, Object> responseMap = new HashMap<String, Object>();	

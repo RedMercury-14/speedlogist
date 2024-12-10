@@ -655,7 +655,7 @@ function displayTenderOffer(idRoute, status) {
 	window.location.href = url
 }
 function sendTender(idRoute, routeDirection) {
-	const url = `../logistics/rouadUpdate?id=${idRoute}&statRoute=1&comment=international`
+	const url = `../../api/logistics/routeUpdate/${idRoute}&1`
 	const columnName = 'statusRoute'
 	const newValue = '1'
 
@@ -720,7 +720,7 @@ async function completeRoute(idRoute) {
 	}
 }
 function cancelTender(idRoute) {
-	const url = `../logistics/rouadUpdate?id=${idRoute}&statRoute=5&comment=international`
+	const url = `../../api/logistics/routeUpdate/${idRoute}&5`
 	const columnName = 'statusRoute'
 	const newValue = '5'
 

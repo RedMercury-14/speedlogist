@@ -634,6 +634,13 @@ public class MainRestController {
 //		return responseMap;		
 //	}
 	
+    @GetMapping("/carrier/delivery-shop/get")
+    public Map<String, Object> get(HttpServletRequest request, HttpServletResponse response) {
+    	Map<String, Object> responseMap = new HashMap<String, Object>();	
+    	responseMap.put("status", "200");	
+    	responseMap.put("object", new TGTruck());
+    	return responseMap;    	
+    }
     
     /**
      * Метод отвечает за привязку аккаунта из тг к номрельному юзеру по номеру телефона

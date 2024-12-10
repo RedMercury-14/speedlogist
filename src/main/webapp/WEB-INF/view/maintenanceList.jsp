@@ -20,6 +20,7 @@
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/maintenanceList.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/snackbar.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/bootstrap5overlay.css">
+	<script src="${pageContext.request.contextPath}/resources/js/sortableJS/sortable.min.js"></script>
 </head>
 <body id="body">
 	<jsp:include page="headerNEW.jsp" />		
@@ -167,6 +168,41 @@
 					<div class="modal-footer">
 						<button class="btn btn-secondary" type="button" data-dismiss="modal">Отмена</button>
 						<button class="btn btn-primary" type="submit">Подтвердить изменения</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<!-- Модальное окно редактирования точек маршрута АХО -->
+	<div class="modal fade" id="editPointsModal" tabindex="-1" data-backdrop="static" data-keyboard="false" aria-labelledby="editPointsModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-xl">
+			<div class="modal-content">
+				<div class="modal-header align-items-center text-white">
+					<h3 class="modal-title" id="editPointsModalLabel">Редактирование точек маршрута</h3>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<form id="editPointsForm" name="editPointsForm" action="">
+					<div class="modal-body">
+						<input type="hidden" id="idRoute" name="idRoute">
+						<div class="" id="pointList"></div>
+						<div class="d-flex">
+							<div class="">
+								<button id="addNewPoint" type="button" class="btn btn-outline-secondary font-weight-bold">+ Добавить точку</button>
+							</div>
+							<div class="col">
+								<span class="text-danger ">
+									* Порядок точек определяется положением точек относительно друг друга.
+									Изменяйте порядок точек, перетаскивая точки и меняя их местами.
+								</span>
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button class="btn btn-primary" type="submit">Подтвердить изменения</button>
+						<button class="btn btn-secondary" type="button" data-dismiss="modal">Отмена</button>
 					</div>
 				</form>
 			</div>

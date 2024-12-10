@@ -319,6 +319,13 @@ form .form-check .form-check-label {
 	color: #495a6e;
 }
 
+.dragItem {
+	cursor: grab;
+}
+.dragItem .dragText{
+	color: #bebebe;
+}
+
 
 #myGrid .activRow{
 	background-color: #494f5252;

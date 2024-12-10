@@ -241,8 +241,15 @@ function contextMenu() {
 			window.location.href = url;
 		}, false);
 		document.querySelector("#l2").addEventListener("click", () => {
-			var url = `../logistics/rouadUpdate?id=${route}&statRoute=1&comment=international`
-			window.location.href = url;
+			var url = `../../api/logistics/routeUpdate/${route}&1`
+			fetch(url)
+				.then(res => {
+					if (!res.ok) {
+						alert('Ошибка при отправке тендера')
+						return
+					}
+					window.location.reload()
+				})
 			sendMessage({
 				fromUser: "logist",
 				toUser: "international",
@@ -299,8 +306,15 @@ function contextMenu() {
 		// 	window.location.href = url;
 		// }, false);
 		document.querySelector("#l7").addEventListener("click", () => {
-			var url = `../logistics/rouadUpdate?id=${route}&statRoute=5&comment=international`
-			window.location.href = url;
+			var url = `../../api/logistics/routeUpdate/${route}&5`
+			fetch(url)
+				.then(res => {
+					if (!res.ok) {
+						alert('Ошибка при отмене маршрута')
+						return
+					}
+					window.location.reload()
+				})
 		}, false);
 	})();
 }

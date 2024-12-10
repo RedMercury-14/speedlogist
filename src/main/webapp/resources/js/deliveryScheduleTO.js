@@ -55,6 +55,24 @@ let counterpartyContractCodeList
 const columnDefs = [
 	...deliveryScheduleColumnDefs,
 	{
+		headerName: 'Пост-й/Врем-й график', field: 'isTempSchedule',
+		cellClass: 'px-1 py-0 text-center font-weight-bold',
+		cellClassRules: {
+			'bg-warning': (params) => params.value === 'Временный'
+		},
+		pinned: 'left', lockPinned: true,
+		width: 100,
+	},
+	{
+		headerName: 'Действующий', field: 'isActualSchedule',
+		cellClass: 'px-1 py-0 text-center font-weight-bold',
+		cellClassRules: {
+			'text-danger': (params) => params.value === 'Не действует'
+		},
+		pinned: 'left', lockPinned: true,
+		width: 120,
+	},
+	{
 		headerName: 'Номер TO', field: 'numStock',
 		cellClass: 'px-1 py-0 text-center font-weight-bold',
 		width: 75,
@@ -341,6 +359,9 @@ function getMappingScheduleItem(scheduleItem) {
 		...scheduleItem,
 		name: scheduleItem.name.trim(),
 		statusToView: getScheduleStatus(scheduleItem.status),
+		// определение временных графиков
+		isTempSchedule: scheduleItem.comment === 'temp' ? 'Временный' : 'Постоянный',
+		isActualSchedule: scheduleItem.comment === 'temp' ? 'Не действует' : 'Действует',
 	}
 }
 function getContextMenuItems(params) {
@@ -348,12 +369,15 @@ function getContextMenuItems(params) {
 	if (!rowNode) return
 
 	const status = rowNode.data.status
+	const isTempSchedule = rowNode.data.isTempSchedule === 'Временный'
 
 	const confirmUnconfirmItems = status === 10 || status === 0
 		? [
 			{
 				name: `Подтверждение графиков`,
-				disabled: (!isAdmin(role) && !isORL(role) && !isOrderSupport(role)) || (status !== 10 && status !== 0),
+				disabled: (!isAdmin(role) && !isORL(role) && !isOrderSupport(role))
+					|| (status !== 10 && status !== 0)
+					|| isTempSchedule,
 				icon: uiIcons.check,
 				subMenu: [
 					{
@@ -370,7 +394,9 @@ function getContextMenuItems(params) {
 		: [
 			{
 				name: 'Снять подтверждение',
-				disabled: (!isAdmin(role) && !isORL(role) && !isOrderSupport(role)) || status === 0,
+				disabled: (!isAdmin(role) && !isORL(role) && !isOrderSupport(role))
+					|| status === 0
+					|| isTempSchedule,
 				icon: uiIcons.x_lg,
 				subMenu: [
 					{
@@ -397,7 +423,9 @@ function getContextMenuItems(params) {
 		...confirmUnconfirmItems,
 		{
 			name: `Добавить новые ТО по текущему коду контракта (копирование графика)`,
-			disabled: status !== 20 && status !== 10 || isObserver(role),
+			disabled: (status !== 20 && status !== 10)
+					|| isObserver(role)
+					|| isTempSchedule,
 			action: () => {
 				addShopsByContract(rowNode)
 			},
@@ -405,7 +433,7 @@ function getContextMenuItems(params) {
 		},
 		{
 			name: `Редактировать графики по текущему коду контракта`,
-			disabled: isObserver(role),
+			disabled: isObserver(role) || isTempSchedule,
 			action: () => {
 				editScheduleItem(rowNode, setDataToEditForm)
 			},
@@ -413,23 +441,16 @@ function getContextMenuItems(params) {
 		},
 		// {
 		// 	name: `Создать временный график по текущему коду контракта`,
-		// 	disabled: isObserver(role),
+		// 	disabled: isObserver(role) || isTempSchedule,
 		// 	action: () => {
 		// 		createTempSchedule(rowNode, setDataToCreateTempForm)
 		// 	},
 		// 	icon: uiIcons.addTempElem,
 		// },
 		{
-			name: `Создать временный график по текущему коду контракта`,
-			disabled: isObserver(role),
-			action: () => {
-				createTempSchedule(rowNode, setDataToCreateTempForm)
-			},
-			icon: uiIcons.addTempElem,
-		},
-		{
 			name: `Изменить значение "Сегодня на сегодня" по текущему коду контракта`,
-			disabled: !isAdmin(role) && !isORL(role) && !isOrderSupport(role),
+			disabled: (!isAdmin(role) && !isORL(role) && !isOrderSupport(role))
+				|| isTempSchedule,
 			action: () => {
 				changeIsDayToDayByContract(role, rowNode)
 			},
@@ -437,7 +458,7 @@ function getContextMenuItems(params) {
 		},
 		{
 			name: `Удаление графиков`,
-			disabled: isObserver(role),
+			disabled: isObserver(role) || isTempSchedule,
 			icon: uiIcons.trash,
 			subMenu: [
 				{
@@ -525,7 +546,6 @@ function createTempSchedule(rowNode, setDataToForm) {
 	const scheduleItem = rowNode.data
 	setDataToForm(scheduleItem)
 	$(`#createTempScheduleItemModal`).modal('show')
-
 }
 // запрос на массовое изменение значения "Сегодня на сегодня" по номеру контракта
 function changeIsDayToDayByContract(role, rowNode) {

@@ -5,14 +5,14 @@ export class CargoCapacitySumStatusBarComponent {
 		this.appStore = params.appStore
 
 		this.eGui = document.createElement("div")
-		this.eGui.className = "ag-status-name-value"
+		this.eGui.className = "ag-status-name-value fs-1rem"
 
 		const label = document.createElement("span")
 		label.innerText = "Тоннаж: "
 		this.eGui.appendChild(label)
 
 		this.eCount = document.createElement("span")
-		this.eCount.className = "ag-status-name-value-value"
+		this.eCount.className = "ag-status-name-value-value fs-1rem"
 
 		this.eGui.appendChild(this.eCount)
 
@@ -38,7 +38,9 @@ export class CargoCapacitySumStatusBarComponent {
 	}
 
 	updateStatusBar() {
-		this.eCount.innerText = `${this.getCargoCapacitySum()} (${this.getTotalCargoCapacitySum()})`
+		this.eCount.innerText = this.appStore
+			? `${this.getCargoCapacitySum()} (${this.getTotalCargoCapacitySum()})`
+			: `${this.getCargoCapacitySum()}`
 	}
 
 	getCargoCapacitySum() {
@@ -63,14 +65,14 @@ export class PallSumStatusBarComponent {
 		this.appStore = params.appStore
 
 		this.eGui = document.createElement("div")
-		this.eGui.className = "ag-status-name-value"
+		this.eGui.className = "ag-status-name-value fs-1rem"
 
 		const label = document.createElement("span")
 		label.innerText = "Паллет: "
 		this.eGui.appendChild(label)
 
 		this.eCount = document.createElement("span")
-		this.eCount.className = "ag-status-name-value-value"
+		this.eCount.className = "ag-status-name-value-value fs-1rem"
 
 		this.eGui.appendChild(this.eCount)
 
@@ -96,7 +98,9 @@ export class PallSumStatusBarComponent {
 	}
 
 	updateStatusBar() {
-		this.eCount.innerText = this.getPallSum() + " " + `(${this.getTotalPallSum()})`
+		this.eCount.innerText = this.appStore
+			? this.getPallSum() + " " + `(${this.getTotalPallSum()})`
+			: this.getPallSum() + " "
 	}
 
 	getPallSum() {
@@ -121,14 +125,14 @@ export class CountStatusBarComponent {
 		this.appStore = params.appStore
 
 		this.eGui = document.createElement("div")
-		this.eGui.className = "ag-status-name-value"
+		this.eGui.className = "ag-status-name-value fs-1rem"
 
 		const label = document.createElement("span")
 		label.innerText = "Машин: "
 		this.eGui.appendChild(label)
 
 		this.eCount = document.createElement("span")
-		this.eCount.className = "ag-status-name-value-value"
+		this.eCount.className = "ag-status-name-value-value fs-1rem"
 
 		this.eGui.appendChild(this.eCount)
 
@@ -154,7 +158,9 @@ export class CountStatusBarComponent {
 	}
 
 	updateStatusBar() {
-		this.eCount.innerText = `${this.getRowCount()} (${this.getTotalTrucks()})`
+		this.eCount.innerText = this.appStore
+			? `${this.getRowCount()} (${this.getTotalTrucks()})`
+			: `${this.getRowCount()}`
 	}
 
 	getRowCount() {
@@ -172,17 +178,17 @@ export class RowLegengStatusBarComponent {
 		this.params = params
 
 		this.eGui = document.createElement("div")
-		this.eGui.className = "ag-status-name-value d-flex"
+		this.eGui.className = "ag-status-name-value d-flex fs-1rem"
 
 		const label = document.createElement("span")
-		label.className = 'font-weight-bold'
+		label.className = 'font-weight-bold fs-1rem'
 		label.innerText = "Машины на 2 рейса -"
 		this.eGui.appendChild(label)
 		
 		this.coloredBlock = document.createElement("span")
 		this.coloredBlock.className = "light-orange-row"
 		this.coloredBlock.style.display = "inline-block"
-		this.coloredBlock.style.height = "20px"
+		this.coloredBlock.style.height = "24px"
 		this.coloredBlock.style.width = "40px"
 		this.coloredBlock.style.marginLeft = "5px"
 

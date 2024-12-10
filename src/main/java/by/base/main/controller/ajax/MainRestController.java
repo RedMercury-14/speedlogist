@@ -3972,23 +3972,23 @@ public class MainRestController {
 		//конец проверки на лимит приемки
 		//главная проверка по графику поставок
 		String infoCheck = null;		
-		
-		if(!checkDeepImport(order, request)) {
-			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {			
-				PlanResponce planResponce = readerSchedulePlan.process(order);
-				if(planResponce.getStatus() == 0) {
-					infoCheck = planResponce.getMessage();
-					response.put("status", "105");
-					response.put("info", infoCheck.replace("\n", "<br>"));
-					return response;
-				}else {
-					infoCheck = planResponce.getMessage();
-					response.put("info", infoCheck.replace("\n", "<br>"));
-					response.put("status", "200");
-				}		
-				
-			}
-		}
+		//ТЕСТОВО ОТКЛЮЧИЛ!
+//		if(!checkDeepImport(order, request)) {
+//			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {			
+//				PlanResponce planResponce = readerSchedulePlan.process(order);
+//				if(planResponce.getStatus() == 0) {
+//					infoCheck = planResponce.getMessage();
+//					response.put("status", "105");
+//					response.put("info", infoCheck.replace("\n", "<br>"));
+//					return response;
+//				}else {
+//					infoCheck = planResponce.getMessage();
+//					response.put("info", infoCheck.replace("\n", "<br>"));
+//					response.put("status", "200");
+//				}		
+//				
+//			}
+//		}
 		
 		//конец главная проверка по графику поставок
 		

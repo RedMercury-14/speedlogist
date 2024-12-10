@@ -643,42 +643,58 @@ public class MainRestController {
      * @throws IOException
      */
     @PostMapping("/logistics/editRouteHasShop")
-	public Map<String, Object> postEditRouteHasShop(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
-		Map<String, Object> response = new HashMap<String, Object>();
-		JSONParser parser = new JSONParser();
-		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
-		Integer idRoute = jsonMainObject.get("idRoute") == null ? null : Integer.parseInt(jsonMainObject.get("idRoute").toString());
-		if(idRoute == null) {
-			response.put("status", "100");
-			response.put("message", "Отсутствует idRoute");
-			return response;
-		}
-		Route route = routeService.getRouteById(idRoute);
-		Set<RouteHasShop> routeHasShops = new HashSet<RouteHasShop>();
-		
-		JSONArray jsonMainObjectArray = (JSONArray) parser.parse(jsonMainObject.get("routeHasShops").toString());
-		
-		
-		for (Object object : jsonMainObjectArray) {
-			JSONObject jsonRHSObject = (JSONObject) parser.parse(object.toString());
-			RouteHasShop routeHasShop = new RouteHasShop();
-			routeHasShop.setRoute(route);
-		
-			routeHasShop.setIdRouteHasShop(jsonRHSObject.get("idRouteHasShop") != null ?  Integer.parseInt(jsonRHSObject.get("idRouteHasShop").toString()) : null);
-			routeHasShop.setPosition(jsonRHSObject.get("position") != null ? jsonRHSObject.get("position").toString() : null);
-			routeHasShop.setOrder(jsonRHSObject.get("order") != null ?  Integer.parseInt(jsonRHSObject.get("order").toString()) : null);
-			routeHasShop.setAddress(jsonRHSObject.get("address") != null ? jsonRHSObject.get("address").toString() : null);
-			routeHasShop.setCargo(jsonRHSObject.get("cargo") != null ? jsonRHSObject.get("cargo").toString() : null);
-			routeHasShop.setPall(jsonRHSObject.get("pall") == null || jsonRHSObject.get("pall").toString().isEmpty() ? null : jsonRHSObject.get("pall").toString());
-			routeHasShop.setWeight(jsonRHSObject.get("weight") == null || jsonRHSObject.get("weight").toString().isEmpty() ? null : jsonRHSObject.get("weight").toString());
-			routeHasShop.setVolume(jsonRHSObject.get("volume") == null || jsonRHSObject.get("volume").toString().isEmpty() ? null : jsonRHSObject.get("volume").toString());
-			routeHasShops.add(routeHasShop);			
-		}
-		route.setRoteHasShop(routeHasShops);
-		routeService.saveOrUpdateRoute(route);
-		response.put("status", "200");
-		return response;	
-	}
+    public Map<String, Object> postEditRouteHasShop(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+        Map<String, Object> response = new HashMap<>();
+        JSONParser parser = new JSONParser();
+        JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+        Integer idRoute = jsonMainObject.get("idRoute") == null ? null : Integer.parseInt(jsonMainObject.get("idRoute").toString());
+        
+        if (idRoute == null) {
+            response.put("status", "100");
+            response.put("message", "Отсутствует idRoute");
+            return response;
+        }
+        
+        Route route = routeService.getRouteById(idRoute);
+        Set<RouteHasShop> routeHasShops = route.getRoteHasShop();
+        Set<RouteHasShop> routeHasShopsNew = new HashSet<>();
+        JSONArray jsonMainObjectArray = (JSONArray) parser.parse(jsonMainObject.get("routeHasShops").toString());
+        
+        for (Object object : jsonMainObjectArray) {
+            JSONObject jsonRHSObject = (JSONObject) parser.parse(object.toString());
+            Integer idRouteHashShop = jsonRHSObject.get("idRouteHasShop") == null || jsonRHSObject.get("idRouteHasShop").toString().isEmpty()
+                    ? null
+                    : Integer.parseInt(jsonRHSObject.get("idRouteHasShop").toString());
+            
+            RouteHasShop routeHasShop;
+            if (idRouteHashShop != null) {
+                routeHasShop = routeHasShops.stream()
+                        .filter(rhs -> rhs.getIdRouteHasShop().equals(idRouteHashShop))
+                        .findFirst()
+                        .orElse(new RouteHasShop());
+            } else {
+                routeHasShop = new RouteHasShop();
+            }
+            
+            routeHasShop.setRoute(route);
+            routeHasShop.setPosition(jsonRHSObject.get("position") != null ? jsonRHSObject.get("position").toString() : null);
+            routeHasShop.setOrder(jsonRHSObject.get("order") != null ? Integer.parseInt(jsonRHSObject.get("order").toString()) : null);
+            routeHasShop.setAddress(jsonRHSObject.get("address") != null ? jsonRHSObject.get("address").toString() : null);
+            routeHasShop.setCargo(jsonRHSObject.get("cargo") != null ? jsonRHSObject.get("cargo").toString() : null);
+            routeHasShop.setPall(jsonRHSObject.get("pall") == null || jsonRHSObject.get("pall").toString().isEmpty() ? null : jsonRHSObject.get("pall").toString());
+            routeHasShop.setWeight(jsonRHSObject.get("weight") == null || jsonRHSObject.get("weight").toString().isEmpty() ? null : jsonRHSObject.get("weight").toString());
+            routeHasShop.setVolume(jsonRHSObject.get("volume") == null || jsonRHSObject.get("volume").toString().isEmpty() ? null : jsonRHSObject.get("volume").toString());
+            routeHasShopsNew.add(routeHasShop);
+        }
+        
+        // Обновляем коллекцию
+        routeHasShops.clear();
+        routeHasShops.addAll(routeHasShopsNew);
+        
+        routeService.saveOrUpdateRoute(route);
+        response.put("status", "200");
+        return response;
+    }
     
     /**
      * Главный метод для изменения статусов маршрутов!

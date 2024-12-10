@@ -1191,7 +1191,12 @@ public class MainController {
 	
 	@RequestMapping("/main/carrier/delivery-shop")
 	public String deliveryShopPage(Model model, HttpSession session, HttpServletRequest request) {
-			
+		User user = getThisUser();
+		if(user.getTgBotStatus() == null) {
+			request.setAttribute("isTgLink", false);
+		}else {
+			request.setAttribute("isTgLink", true);
+		}
 		return "deliveryShop";
 	}
 	

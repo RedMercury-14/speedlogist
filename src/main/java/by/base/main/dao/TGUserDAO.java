@@ -33,4 +33,6 @@ public interface TGUserDAO {
 	 * @author DIma Hrushevsky
 	 */
 	TGUser getTGUserByIdUser(Integer idUser);
+	
+	TGUser getTGUserByTelephone(String telephone) throws DAOException;
 }

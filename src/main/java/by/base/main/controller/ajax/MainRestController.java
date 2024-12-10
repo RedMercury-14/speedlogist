@@ -101,6 +101,7 @@ import com.itextpdf.text.DocumentException;
 
 import by.base.main.aspect.TimedExecution;
 import by.base.main.controller.MainController;
+import by.base.main.dao.DAOException;
 import by.base.main.dto.MarketDataFor398Request;
 import by.base.main.dto.MarketDataForClear;
 import by.base.main.dto.MarketDataForLoginDto;
@@ -634,7 +635,36 @@ public class MainRestController {
 //	}
 	
     
-    
+    /**
+     * Метод отвечает за привязку аккаунта из тг к номрельному юзеру по номеру телефона
+     * @param request
+     * @param response
+     * @param telephone
+     * @return
+     */
+    @GetMapping("/carrier/delivery-shop/link/{telephone}")
+    public Map<String, Object> getLingkTelephone(HttpServletRequest request, HttpServletResponse response, @PathVariable String telephone) {
+    	Map<String, Object> responseMap = new HashMap<String, Object>();
+    	User user = getThisUser();
+    	TGUser tgUser;
+    	try {
+			tgUser = tgUserService.getTGUserByTelephone(telephone);
+		} catch (DAOException e) {
+			responseMap.put("status", "200");	
+	    	responseMap.put("message", "В базе данных несколько номеров телефонов. Пожалуйста введтие полностью номер телефона (напр. 375296856859)");
+	    	responseMap.put("info", "В базе данных несколько номеров телефонов. Пожалуйста введтие полностью номер телефона (напр. 375296856859)");
+	    	return responseMap;  
+		}
+    	user.setChatId(tgUser.getChatId());
+    	user.setTgBotStatus(1);
+    	tgUser.setIdUser(user.getIdUser());
+    	userService.saveOrUpdateUser(user, 0);
+    	tgUserService.saveOrUpdateTGUser(tgUser);
+    	responseMap.put("status", "200");	
+    	responseMap.put("message", "Привязка выполнена");
+    	responseMap.put("info", "Привязка выполнена");
+    	return responseMap;    	
+    }
     
     /*
      * Два поля которые указывают период выборки авто для метода getTrucks

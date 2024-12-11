@@ -6,6 +6,7 @@ import { wsHead } from './global.js'
 import { snackbar } from "./snackbar/snackbar.js"
 import { uiIcons } from "./uiIcons.js"
 import { bootstrap5overlay } from "./bootstrap5overlay/bootstrap5overlay.js"
+import { ajaxUtils } from "./ajaxUtils.js"
 
 const token = $("meta[name='_csrf']").attr("content")
 const PAGE_NAME = 'internationalManagerNew'
@@ -72,7 +73,8 @@ const columnDefs = [
 	{ headerName: 'Контактное лицо контрагента', field: 'contact', wrapText: true, autoHeight: true, },
 	{ headerName: 'Общий вес', field: 'totalCargoWeight', valueFormatter: params => params.value + ' кг' },
 	{ headerName: 'Комментарии', field: 'userComments', wrapText: true, autoHeight: true, minWidth: 240, width: 640, },
-	{ headerName: 'Начальная стоимость перевозки', field: 'startRouteCostInfo', wrapText: true, autoHeight: true, },
+	{ headerName: 'Комментарии', field: 'userComments', wrapText: true, autoHeight: true, },
+	{ headerName: 'Логист', field: 'logistInfo', wrapText: true, autoHeight: true, },
 	{
 		headerName: 'Статус', field: 'statusRoute',
 		cellClass: 'px-2 text-center font-weight-bold',
@@ -655,7 +657,7 @@ function displayTenderOffer(idRoute, status) {
 	window.location.href = url
 }
 function sendTender(idRoute, routeDirection) {
-	const url = `../logistics/rouadUpdate?id=${idRoute}&statRoute=1&comment=international`
+	const url = `../../api/logistics/routeUpdate/${idRoute}&1`
 	const columnName = 'statusRoute'
 	const newValue = '1'
 
@@ -670,15 +672,20 @@ function sendTender(idRoute, routeDirection) {
 
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 500)
 
-	fetch(url)
-		.then(res => {
+	ajaxUtils.get({
+		url: url,
+		successCallback: () => {
 			updateCellData(idRoute, columnName, newValue)
 			snackbar.show('Тендер отправлен на биржу')
 			sendHeadMessage(headMessage)
 			clearTimeout(timeoutId)
 			bootstrap5overlay.hideOverlay()
-		})
-		.catch(err => errorCallback(err, timeoutId))
+		},
+		errorCallback: () => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+		}
+	})
 }
 function showUnloadPoints(idRoute) {
 	var url = `../logistics/international/routeShow?idRoute=${idRoute}`;
@@ -720,20 +727,25 @@ async function completeRoute(idRoute) {
 	}
 }
 function cancelTender(idRoute) {
-	const url = `../logistics/rouadUpdate?id=${idRoute}&statRoute=5&comment=international`
+	const url = `../../api/logistics/routeUpdate/${idRoute}&5`
 	const columnName = 'statusRoute'
 	const newValue = '5'
 
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 500)
 
-	fetch(url)
-		.then(res => {
+	ajaxUtils.get({
+		url: url,
+		successCallback: () => {
 			updateCellData(idRoute, columnName, newValue)
 			snackbar.show('Маршрут отменен')
 			clearTimeout(timeoutId)
 			bootstrap5overlay.hideOverlay()
-		})
-		.catch(err => errorCallback(err, timeoutId))
+		},
+		errorCallback: () => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+		}
+	})
 }
 function errorCallback(error, timeoutId) {
 	console.error(error)

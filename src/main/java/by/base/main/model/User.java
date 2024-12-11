@@ -228,6 +228,15 @@ public class User implements Serializable{
 	@Column(name = "date_registration")
 	private Date dateRegistration;	
 	
+	@Column(name = "chat_id")
+	private Long chatId;
+	
+	/**
+	 * Статус, пользовался ли юзер телеграмм ботом, для заявки машин на развоз. Есть 0 то не пользовался, если 1 то пользовался. Если null - то нужно спросить
+	 */
+	@Column(name = "tg_bot_status")
+	private Integer tgBotStatus;
+	
 	@Transient
 	private String confirmPassword;
 	
@@ -260,6 +269,22 @@ public class User implements Serializable{
 		this.address = address;
 		this.enablet = enablet;
 		this.department = departament;
+	}
+
+	public Integer getTgBotStatus() {
+		return tgBotStatus;
+	}
+
+	public void setTgBotStatus(Integer tgBotStatus) {
+		this.tgBotStatus = tgBotStatus;
+	}
+
+	public Long getChatId() {
+		return chatId;
+	}
+
+	public void setChatId(Long chatId) {
+		this.chatId = chatId;
 	}
 
 	public int getIdUser() {

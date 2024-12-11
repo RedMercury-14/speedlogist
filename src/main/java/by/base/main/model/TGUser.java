@@ -33,7 +33,7 @@ public class TGUser implements Serializable{
 	private String companyName;
 	
 	@Column(name = "chat_id")
-	private long chatId;
+	private Long chatId;
 	
 	@Column(name = "telephone")
 	private String telephone;
@@ -53,6 +53,9 @@ public class TGUser implements Serializable{
 	@Column(name = "validity_truck")
 	private String validityTruck;
 	
+	@Column(name = "id_user")
+	private Integer idUser;
+	
 	public TGUser() {
 		// TODO Auto-generated constructor stub
 	}
@@ -65,11 +68,11 @@ public class TGUser implements Serializable{
 		this.idTGUser = idTGUser;
 	}
 
-	public long getChatId() {
+	public Long getChatId() {
 		return chatId;
 	}
 
-	public void setChatId(long chatId) {
+	public void setChatId(Long chatId) {
 		this.chatId = chatId;
 	}
 
@@ -146,6 +149,14 @@ public class TGUser implements Serializable{
 
 	public void setCompanyName(String companyName) {
 		this.companyName = companyName;
+	}
+
+	public Integer getIdUser() {
+		return idUser;
+	}
+
+	public void setIdUser(Integer idUser) {
+		this.idUser = idUser;
 	}
 
 	@Override

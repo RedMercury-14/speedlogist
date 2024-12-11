@@ -88,7 +88,8 @@ public class RouteHasShop implements Serializable{
 	@JsonBackReference
 	private Shop shop;
 	
-	@ManyToOne(fetch = FetchType.LAZY, cascade = { CascadeType.ALL})
+//	@ManyToOne(fetch = FetchType.LAZY, cascade = { CascadeType.ALL})
+	@ManyToOne(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE})
 	@JsonBackReference
 	private Route route;
 
@@ -200,6 +201,7 @@ public class RouteHasShop implements Serializable{
 	public void setCustomsAddress(String customsAddress) {
 		this.customsAddress = customsAddress;
 	}
+	
 
 	@Override
 	public int hashCode() {
@@ -226,6 +228,5 @@ public class RouteHasShop implements Serializable{
 				+ weight + ", status=" + status + ", address=" + address + ", cargo=" + cargo + ", position=" + position
 				+ ", shop=" + shop + "]";
 	}
-
 	
 }

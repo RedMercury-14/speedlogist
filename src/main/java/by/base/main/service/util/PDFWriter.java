@@ -107,7 +107,11 @@ public class PDFWriter {
 	        addRowToTable(table, "Точка: " + numPoint, point.getType(), fontMainTextBold, fontMainText,true,false,true);
 
 	        if (point.getType().equalsIgnoreCase("загрузка")) {
-	            addRowToTable(table, "Дата:", point.getDate().toLocalDate().format(dateFormatter) + " " + point.getTime().toLocalTime().format(timeFormatter), fontMainTextBold, fontMainText, false, false, true);
+//	            addRowToTable(table, "Дата:", point.getDate().toLocalDate().format(dateFormatter) + " " + point.getTime().toLocalTime().format(timeFormatter), fontMainTextBold, fontMainText, false, false, true);
+	        	/*
+	        	 * Изменил объект от которого берется дата
+	        	 */
+	            addRowToTable(table, "Дата:", route.getDateLoadPreviously().format(dateFormatter) + " " + route.getTimeLoadPreviously().format(timeFormatter), fontMainTextBold, fontMainText, false, false, true); 
 	            addRowToTable(table, "Наименование контрагента:", order.getCounterparty(), fontMainTextBold, fontMainText, false, false, true);
 	        } else {
 	            addRowToTable(table, "Дата:", order.getTimeDelivery() != null 

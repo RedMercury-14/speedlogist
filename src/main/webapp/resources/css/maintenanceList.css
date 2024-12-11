@@ -319,6 +319,23 @@ form .form-check .form-check-label {
 	color: #495a6e;
 }
 
+.point .dragItem,
+.point[draggable="false"] .dragItem {
+	cursor: grab;
+}
+.point[draggable="true"] .dragItem {
+	cursor: grabbing;
+}
+.dragItem .dragText{
+	color: #bebebe;
+}
+
+.requiredField::after {
+	content: " *";
+	position: relative;
+	color: red;
+}
+
 
 #myGrid .activRow{
 	background-color: #494f5252;

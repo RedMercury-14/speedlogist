@@ -3,6 +3,8 @@ import { store } from './store.js'
 import { getData, isObserver } from '../../utils.js'
 import {
 	renderTable,
+	resetColumnState,
+	restoreColumnState,
 	setStoreInStatusPanel,
 	trucksColumnDefs,
 	trucksGridOptions,
@@ -120,6 +122,9 @@ window.onload = async function() {
 	// рендер таблиц машин
 	renderTable(freeTrucksGridDiv, freeTrucksGridOptions, freeTrucks)
 	renderTable(selectedTrucksGridDiv, selectedTrucksGridOptions, selectedTrucks)
+	// устанавливаем состояние колонок
+	restoreColumnState(freeTrucksGridOptions)
+	restoreColumnState(selectedTrucksGridOptions)
 
 	// устанавливаем опции селекта списков машин
 	updateTruckListsOptions(store.getListsByCurrentDate())
@@ -176,7 +181,14 @@ function getContextMenuItemsForFreeTrucks(params) {
 			},
 			icon: uiIcons.toLeftArrow
 		},
-
+		"separator",
+		{
+			name: `Сбросить настройки колонок`,
+			action: () => {
+				resetColumnState(params)
+			},
+			icon: uiIcons.addList
+		},
 		"separator",
 		"excelExport",
 	]
@@ -196,7 +208,14 @@ function getContextMenuItemsForSelectedTrucks(params) {
 			},
 			icon: uiIcons.toRightArrow
 		},
-
+		"separator",
+		{
+			name: `Сбросить настройки колонок`,
+			action: () => {
+				resetColumnState(params)
+			},
+			icon: uiIcons.addList
+		},
 		"separator",
 		"excelExport",
 	]

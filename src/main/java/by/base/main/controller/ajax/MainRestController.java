@@ -4,7 +4,6 @@ import static com.graphhopper.json.Statement.If;
 import static com.graphhopper.json.Statement.Op.LIMIT;
 import static com.graphhopper.json.Statement.Op.MULTIPLY;
 
-import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataOutputStream;
@@ -32,7 +31,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -103,6 +101,7 @@ import com.itextpdf.text.DocumentException;
 
 import by.base.main.aspect.TimedExecution;
 import by.base.main.controller.MainController;
+import by.base.main.dao.DAOException;
 import by.base.main.dto.MarketDataFor398Request;
 import by.base.main.dto.MarketDataForClear;
 import by.base.main.dto.MarketDataForLoginDto;
@@ -165,15 +164,13 @@ import by.base.main.util.GraphHopper.JSpiritMachine;
 import by.base.main.util.GraphHopper.RoutingMachine;
 import by.base.main.util.bots.TelegramBot;
 import by.base.main.util.hcolossus.ColossusProcessorANDRestrictions3;
-import by.base.main.util.hcolossus.ColossusProcessorANDRestrictions4;
 import by.base.main.util.hcolossus.ColossusProcessorANDRestrictions5;
 import by.base.main.util.hcolossus.exceptions.FatalInsufficientPalletTruckCapacityException;
-import by.base.main.util.hcolossus.exceptions.InsufficientPalletTruckCapacityException;
 import by.base.main.util.hcolossus.pojo.Solution;
-import by.base.main.util.hcolossus.pojo.Vehicle;
 import by.base.main.util.hcolossus.pojo.VehicleWay;
 import by.base.main.util.hcolossus.service.LogicAnalyzer;
 import by.base.main.util.hcolossus.service.MatrixMachine;
+import scala.annotation.meta.field;
 
 @RestController
 @RequestMapping(path = "api", produces = "application/json")
@@ -341,8 +338,7 @@ public class MainRestController {
 	@GetMapping("/test")
 	@TimedExecution
     public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException{
-
-		Map<String, Object> map = new HashMap<>();
+       Map<String, Object> responseMap = new HashMap<>();
 		System.out.println("Start --- sendSchedulesTOHasORL");
 		// Получаем текущую дату для имени файла
 		LocalDate currentTime = LocalDate.now();
@@ -378,7 +374,7 @@ public class MainRestController {
 					appPath + "resources/others/" + fileName1100);
 			poiExcel.exportToExcelSampleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()),
 					appPath + "resources/others/" + fileNameSample);
-			poiExcel.exportToExcelDrafts(scheduleService.getSchedulesListTO().stream().filter(s -> s.getStatus() == 20).collect(Collectors.toList()), draftFolder);
+			poiExcel.exportToExcelDrafts(scheduleService.getSchedulesListTOOnlyTemp().stream().filter(s -> s.getStatus() == 20).collect(Collectors.toList()), draftFolder);
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -393,6 +389,8 @@ public class MainRestController {
 
 		File folder = new File(draftFolder);
 		List<File> draftFiles = new ArrayList<File>(); //для теста черновиков
+		List<File> draftFilesORL = new ArrayList<>();
+		List<File> draftFilesSupportDepartment = new ArrayList<>();
 		Map <String, List<File>> draftFilesMap = new HashMap<>();
 
 		File[] drafts = folder.listFiles();
@@ -431,38 +429,48 @@ public class MainRestController {
 
 		File zipFile;
 		File zipFileDrafts; //для теста черновиков
-		File zipFileDraftsListORL;
-		File zipFileDraftsListSupportDepartment;
-
-		List <File> filesZipORL = new ArrayList<File>();
-		List <File> filesZipSupportDepartment = new ArrayList<File>();
+		File zipFilesORL;
+		File zipFilesSupportDepartment;
+		List <File> zipFileDraftsList = new ArrayList<>();
+		List <File> filesZip = new ArrayList<File>();
+		List <File> filesZipORL = new ArrayList<>();
+		List <File> filesZipSupportDepartment = new ArrayList<>();
 
 
 		try {
 			zipFile = createZipFile(files, appPath + "resources/others/TO.zip");
 			zipFileDrafts = createZipFile(draftFiles, appPath + "resources/others/Шаблоны.zip"); //для теста черновиков
 
-			zipFileDraftsListORL = createZipFile(draftFilesMap.get("ORL"), appPath + "resources/others/ORL.zip");
-			zipFileDraftsListSupportDepartment = createZipFile(draftFilesMap.get("SupportDepartment"), appPath + "resources/others/SupportDepartment.zip");
+			zipFilesORL = createZipFile(draftFilesMap.get("ORL"), appPath + "resources/others/ORL.zip");
+			zipFilesSupportDepartment = createZipFile(draftFilesMap.get("SupportDepartment"), appPath + "resources/others/SupportDepartment.zip");
 
+//			for (String key: draftFilesMap.keySet()){
+//				zipFileDraftsList.add(createZipFile(draftFilesMap.get(key), appPath + "resources/others/" + key + ".zip"));
+//			}
+
+//			filesZip.add(zipFile);
+//			filesZip.add(zipFileDrafts);//для теста черновиков
+//			filesZip.addAll(zipFileDraftsList);
 			filesZipORL.add(zipFile);
-			filesZipSupportDepartment.add(zipFile);
+			filesZipORL.add(zipFilesORL);
 
-			filesZipORL.add(zipFileDraftsListORL);
-			filesZipSupportDepartment.add(zipFileDraftsListSupportDepartment);
+			filesZipSupportDepartment.add(zipFile);
+			filesZipSupportDepartment.add(zipFilesSupportDepartment);
 
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
-		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO" + currentTimeString, "Автоматическая отправка графиков поставок на ТО\nВерсия с макросом выделений (Ctr+t)", filesZipORL, emailsORL);
-		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO" + currentTimeString, "Автоматическая отправка графиков поставок на ТО\nВерсия с макросом выделений (Ctr+t)", filesZipSupportDepartment, emailsSupportDepartment);
+		//mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO" + currentTimeString, "Автоматическая отправка графиков поставок на ТО\nВерсия с макросом выделений (Ctr+t)", filesZip, emails);
+//		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO" + currentTimeString, "Автоматическая отправка графиков поставок на ТО\nВерсия с макросом выделений (Ctr+t)", filesZipORL, emailsORL);
+//		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO" + currentTimeString, "Автоматическая отправка графиков поставок на ТО\nВерсия с макросом выделений (Ctr+t)", filesZipSupportDepartment, emailsSupportDepartment);
 
 		System.out.println("Finish --- sendSchedulesHasTOORL");
+	    //responseMap.put("sched", scheduleService.getSchedulesTOByNumContractWithTemp(14L));
 
-		return map;
-	}
+	   return responseMap;
+    }
 	
 	public static boolean deleteFolder(File folder) {
 	    if (folder.isDirectory()) {
@@ -626,6 +634,204 @@ public class MainRestController {
 //		return responseMap;		
 //	}
 	
+    /**
+     * Метод отвечает за редактирования и перезаписть всех точкек в маршруте.
+     * @param request
+     * @param str
+     * @return
+     * @throws ParseException
+     * @throws IOException
+     */
+    @PostMapping("/logistics/editRouteHasShop")
+    public Map<String, Object> postEditRouteHasShop(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+        Map<String, Object> response = new HashMap<>();
+        JSONParser parser = new JSONParser();
+        JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+        Integer idRoute = jsonMainObject.get("idRoute") == null ? null : Integer.parseInt(jsonMainObject.get("idRoute").toString());
+        
+        if (idRoute == null) {
+            response.put("status", "100");
+            response.put("message", "Отсутствует idRoute");
+            return response;
+        }
+        
+        Route route = routeService.getRouteById(idRoute);
+        Set<RouteHasShop> routeHasShops = route.getRoteHasShop();
+        Set<RouteHasShop> routeHasShopsNew = new HashSet<>();
+        JSONArray jsonMainObjectArray = (JSONArray) parser.parse(jsonMainObject.get("routeHasShops").toString());
+        
+        for (Object object : jsonMainObjectArray) {
+            JSONObject jsonRHSObject = (JSONObject) parser.parse(object.toString());
+            Integer idRouteHashShop = jsonRHSObject.get("idRouteHasShop") == null || jsonRHSObject.get("idRouteHasShop").toString().isEmpty()
+                    ? null
+                    : Integer.parseInt(jsonRHSObject.get("idRouteHasShop").toString());
+            
+            RouteHasShop routeHasShop;
+            if (idRouteHashShop != null) {
+                routeHasShop = routeHasShops.stream()
+                        .filter(rhs -> rhs.getIdRouteHasShop().equals(idRouteHashShop))
+                        .findFirst()
+                        .orElse(new RouteHasShop());
+            } else {
+                routeHasShop = new RouteHasShop();
+            }
+            
+            routeHasShop.setRoute(route);
+            routeHasShop.setPosition(jsonRHSObject.get("position") != null ? jsonRHSObject.get("position").toString() : null);
+            routeHasShop.setOrder(jsonRHSObject.get("order") != null ? Integer.parseInt(jsonRHSObject.get("order").toString()) : null);
+            routeHasShop.setAddress(jsonRHSObject.get("address") != null ? jsonRHSObject.get("address").toString() : null);
+            routeHasShop.setCargo(jsonRHSObject.get("cargo") != null ? jsonRHSObject.get("cargo").toString() : null);
+            routeHasShop.setPall(jsonRHSObject.get("pall") == null || jsonRHSObject.get("pall").toString().isEmpty() ? null : jsonRHSObject.get("pall").toString());
+            routeHasShop.setWeight(jsonRHSObject.get("weight") == null || jsonRHSObject.get("weight").toString().isEmpty() ? null : jsonRHSObject.get("weight").toString());
+            routeHasShop.setVolume(jsonRHSObject.get("volume") == null || jsonRHSObject.get("volume").toString().isEmpty() ? null : jsonRHSObject.get("volume").toString());
+            routeHasShopsNew.add(routeHasShop);
+        }
+        
+        // Обновляем коллекцию
+        routeHasShops.clear();
+        routeHasShops.addAll(routeHasShopsNew);
+        
+        routeService.saveOrUpdateRoute(route);
+        response.put("status", "200");
+        return response;
+    }
+    
+    /**
+     * Главный метод для изменения статусов маршрутов!
+     * @param request
+     * @param response
+     * @param idRoute
+     * @param status
+     * @return
+     */
+    @GetMapping("/logistics/routeUpdate/{idRoute}&{status}")
+    @TimedExecution
+    public Map<String, Object> getRouteUpdate(HttpServletRequest request, HttpServletResponse response, @PathVariable String idRoute, @PathVariable String status) {
+    	Map<String, Object> responseMap = new HashMap<String, Object>();	
+    	Route route = routeService.getRouteById(Integer.parseInt(idRoute));
+    	switch (Integer.parseInt(status.trim())) {
+		case 1:
+			route.setStatusRoute(status);
+			String orderMailStatus = ""; //переменная для письма, указывает создавался ли заказ, или нет
+			Set<Order> orders = route.getOrders();
+			
+			if(orders != null && orders.size() != 0) { //поменять метод в ДАО чтобы сразу база записывала изменения
+				for (Order o : orders) {
+					o.setStatus(50);
+					orderService.updateOrderFromStatus(o);
+					orderMailStatus = orderMailStatus + "Заказ номер "+ o.getIdOrder() + " от " + o.getManager()+".\n";
+				}						
+			}else {
+				orderMailStatus = "Маршрут создан без заказа.";
+			}
+			String textStatus = orderMailStatus;
+			//отправляем письмо, запускаем его в отдельном потоке, т.к. отправка проходит в среднем 2 секунды
+			new Thread(new Runnable() {					
+				@Override
+				public void run() {
+					telegramBot.sendMessageHasSubscription("Маршрут " +route.getRouteDirection() + " с загрузкой от " +route.getDateLoadPreviously()+ " стал доступен для торгов!");
+					mailService.sendSimpleEmail(request, "Статус маршрута", "Маршрут "+route.getRouteDirection() + " стал доступен для торгов "
+							+LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yyy")) 
+							+ " в " 
+							+ LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))+"."
+							+"\n"+textStatus, "ArtyuhevichO@dobronom.by");	
+//					+"\n"+textStatus, "GrushevskiyD@dobronom.by");	
+				}
+				
+			}).start();				
+			break;
+		case 5: // обработчик отмены заказов
+			route.setStatusRoute(status);
+			Set<Order> orders2 = route.getOrders();
+			if(orders2 != null && orders2.size() != 0) { //поменять метод в ДАО чтобы сразу база записывала изменения
+				for (Order o : orders2) {
+					if(o.getStatus() != 10) {
+						o.setStatus(40);
+						orderService.updateOrder(o);
+					}
+				}						
+			}
+			break;
+
+		default:
+			//вставить обработчик
+			break;
+		}
+    	
+    	if(route.getTime() == null) {
+			route.setTime(LocalTime.parse("00:05"));
+		}
+		routeService.saveOrUpdateRoute(route);
+				
+    	responseMap.put("status", "200");	
+    	responseMap.put("object", new TGTruck());
+    	return responseMap;    	
+    }
+    
+    @GetMapping("/carrier/delivery-shop/get")
+    public Map<String, Object> get(HttpServletRequest request, HttpServletResponse response) {
+    	Map<String, Object> responseMap = new HashMap<String, Object>();	
+    	responseMap.put("status", "200");	
+    	responseMap.put("object", new TGTruck());
+    	return responseMap;    	
+    }
+    
+    /**
+     * Метод отвечает за привязку аккаунта из тг к номрельному юзеру по номеру телефона
+     * @param request
+     * @param response
+     * @param telephone
+     * @return
+     */
+    @GetMapping("/carrier/delivery-shop/link/{telephone}")
+    public Map<String, Object> getLingkTelephone(HttpServletRequest request, HttpServletResponse response, @PathVariable String telephone) {
+    	Map<String, Object> responseMap = new HashMap<String, Object>();
+    	User user = getThisUser();
+    	TGUser tgUser;
+    	try {
+			tgUser = tgUserService.getTGUserByTelephone(telephone);
+		} catch (DAOException e) {
+			responseMap.put("status", "200");	
+	    	responseMap.put("message", "В базе данных несколько номеров телефонов. Пожалуйста введтие полностью номер телефона (напр. 375296856859)");
+	    	responseMap.put("info", "В базе данных несколько номеров телефонов. Пожалуйста введтие полностью номер телефона (напр. 375296856859)");
+	    	return responseMap;  
+		}
+    	user.setChatId(tgUser.getChatId());
+    	user.setTgBotStatus(1);
+    	tgUser.setIdUser(user.getIdUser());
+    	userService.saveOrUpdateUser(user, 0);
+    	tgUserService.saveOrUpdateTGUser(tgUser);
+    	responseMap.put("status", "200");	
+    	responseMap.put("message", "Привязка выполнена");
+    	responseMap.put("info", "Привязка выполнена");
+    	return responseMap;    	
+    }
+    
+    /*
+     * Два поля которые указывают период выборки авто для метода getTrucks
+     * 
+     */
+    private static final Integer dayBefore = 30;
+    private static final Integer dayAfter = 30;
+    /**
+     * Метод возвращает машины по юзеру за месяц вперед и назад
+     * @param request
+     * @param response
+     * @return
+     */
+    @GetMapping("/carrier/delivery-shop/getTrucks")
+    public Map<String, Object> getTrucks(HttpServletRequest request, HttpServletResponse response) {
+    	Map<String, Object> responseMap = new HashMap<String, Object>();
+    	User user = getThisUser();
+    	Date dateStart = Date.valueOf(LocalDate.now().minusDays(dayBefore));
+    	Date dateFinish = Date.valueOf(LocalDate.now().plusDays(dayAfter));
+    	List<TGTruck> tgTrucks = tgTruckService.getTGTruckByidUserPeriod(user.getIdUser(), dateStart, dateFinish);    	
+    	responseMap.put("status", "200");	
+    	responseMap.put("trucks", tgTrucks);
+    	return responseMap;    	
+    }
+    
+    
     /**
      * Метод отдаёт связанные ордеры по текущему ордеру, если они есть
      * @param request
@@ -3782,23 +3988,23 @@ public class MainRestController {
 		//конец проверки на лимит приемки
 		//главная проверка по графику поставок
 		String infoCheck = null;		
-		
-		if(!checkDeepImport(order, request)) {
-			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {			
-				PlanResponce planResponce = readerSchedulePlan.process(order);
-				if(planResponce.getStatus() == 0) {
-					infoCheck = planResponce.getMessage();
-					response.put("status", "105");
-					response.put("info", infoCheck.replace("\n", "<br>"));
-					return response;
-				}else {
-					infoCheck = planResponce.getMessage();
-					response.put("info", infoCheck.replace("\n", "<br>"));
-					response.put("status", "200");
-				}		
-				
-			}
-		}
+		//ТЕСТОВО ОТКЛЮЧИЛ!
+//		if(!checkDeepImport(order, request)) {
+//			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {			
+//				PlanResponce planResponce = readerSchedulePlan.process(order);
+//				if(planResponce.getStatus() == 0) {
+//					infoCheck = planResponce.getMessage();
+//					response.put("status", "105");
+//					response.put("info", infoCheck.replace("\n", "<br>"));
+//					return response;
+//				}else {
+//					infoCheck = planResponce.getMessage();
+//					response.put("info", infoCheck.replace("\n", "<br>"));
+//					response.put("status", "200");
+//				}		
+//				
+//			}
+//		}
 		
 		//конец главная проверка по графику поставок
 		

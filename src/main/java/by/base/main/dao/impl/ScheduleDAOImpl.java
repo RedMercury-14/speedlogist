@@ -16,7 +16,6 @@ import org.springframework.stereotype.Repository;
 import com.dto.CounterpartyDTO;
 
 import by.base.main.dao.ScheduleDAO;
-import by.base.main.model.Order;
 import by.base.main.model.Schedule;
 
 @Repository
@@ -54,6 +53,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	private static final String queryGetListTO = "from Schedule where type='ТО'";
 	@Transactional
 	@Override
+	@Deprecated
 	public List<Schedule> getSchedulesListTO() {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<Schedule> theRole = currentSession.createQuery(queryGetListTO, Schedule.class);
@@ -130,6 +130,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	private static final String queryGetListTOContract = "from Schedule where type='ТО' AND counterpartyContractCode=:counterpartyContractCode";
 	@Transactional
 	@Override
+	@Deprecated
 	public List<Schedule> getSchedulesListTOContract(String contractCode) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<Schedule> theRole = currentSession.createQuery(queryGetListTOContract, Schedule.class);
@@ -270,4 +271,63 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 		int result = query.executeUpdate();
 		return result;
 	}
+
+
+	/**
+	 * @author Ira
+	 * <br>Возвращает список всех графиков на ТО по номеру контракта - и временных, и постоянных</br>
+	 * @param num
+	 * @return
+	 */
+	private static final String queryGetTemporaryObjByNumContract = "from Schedule s where type = 'ТО' AND counterpartyContractCode=:counterpartyContractCode AND ((startDateTemp IS NOT NULL AND endDateTemp IS NOT NULL AND CURRENT_DATE BETWEEN startDateTemp AND endDateTemp) or (startDateTemp IS NULL AND endDateTemp IS NULL))";
+
+	@Transactional
+	@Override
+	public List<Schedule> getSchedulesListTOContractWithTemp(Long num) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Schedule> theObject = currentSession.createQuery(queryGetTemporaryObjByNumContract, Schedule.class);
+		theObject.setParameter("counterpartyContractCode", num);
+
+		List<Schedule> schedules = theObject.getResultList();
+
+		return schedules;
+	}
+
+	/**
+	 * @author Ira
+	 * <br>Возвращает список всех графиков на ТО - и временных, и постоянных</br>
+	 * @return
+	 *
+	 */
+	private static final String queryGetListTOWithTemp = "from Schedule where type='ТО' AND ((startDateTemp IS NOT NULL AND endDateTemp IS NOT NULL AND CURRENT_DATE BETWEEN startDateTemp AND endDateTemp) or (startDateTemp IS NULL AND endDateTemp IS NULL))";
+	@Transactional
+	@Override
+	public List<Schedule> getSchedulesListTOWithTemp() {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Schedule> schedule = currentSession.createQuery(queryGetListTOWithTemp, Schedule.class);
+		List <Schedule> schedules = schedule.getResultList();
+
+		return schedules;
+	}
+
+//	/**
+//	 * @author Ira
+//	 * @param num
+//	 * @return
+//	 */
+//	private static final String queryGetSchedulesByTOTypeWithTemp = "from Schedule where toType=:toType AND ((startDateTemp IS NOT NULL AND endDateTemp IS NOT NULL AND CURRENT_DATE BETWEEN startDateTemp AND endDateTemp) or (startDateTemp IS NULL AND endDateTemp IS NULL))";
+//	@Transactional
+//	@Override
+//	public List<Schedule> getSchedulesByTOTypeWithTemp(String toType) {
+//		Session currentSession = sessionFactory.getCurrentSession();
+//		Query<Schedule> theObject = currentSession.createQuery(queryGetSchedulesByTOTypeWithTemp, Schedule.class);
+//		theObject.setParameter("toType", toType.trim());
+//		List<Schedule> trucks = theObject.getResultList();
+//		if(trucks.isEmpty()) {
+//			return null;
+//		}
+//		return trucks;
+//	}
+
+
 }

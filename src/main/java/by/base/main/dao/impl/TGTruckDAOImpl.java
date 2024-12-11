@@ -167,8 +167,8 @@ public class TGTruckDAOImpl  implements TGTruckDAO {
 	}
 
 	private static final String queryGetTGTruckByChatNumTruckStrict = "from TGTruck tr where tr.numTruck=:numTruck AND tr.dateRequisition=:date AND tr.chatIdUserTruck=:chatIdUserTruck";
-	@Override
 	@Transactional
+	@Override
 	public TGTruck getTGTruckByChatNumTruckStrict(String numTruck, Date date, TGUser tgUser) {
 		Session currentSession = sessionFactory.getCurrentSession();		
 		Query<TGTruck> theObject = currentSession.createQuery(queryGetTGTruckByChatNumTruckStrict, TGTruck.class);
@@ -181,6 +181,23 @@ public class TGTruckDAOImpl  implements TGTruckDAO {
 		}else {
 			TGTruck trucks = tgTrucks.stream().findFirst().get();		
 			return trucks;
+		}
+	}
+
+	private static final String queryGetTGTruckByidUserPeriod = "from TGTruck tr where tr.idUser=:idUser AND tr.dateRequisition BETWEEN :dateStart AND :dateEnd";
+	@Transactional 
+	@Override
+	public List<TGTruck> getTGTruckByidUserPeriod(Integer idUser, Date dateStart, Date dateFinish) {
+		Session currentSession = sessionFactory.getCurrentSession();		
+		Query<TGTruck> theObject = currentSession.createQuery(queryGetTGTruckByidUserPeriod, TGTruck.class);
+		theObject.setParameter("idUser", idUser);		
+		theObject.setParameter("dateStart", dateStart, TemporalType.DATE);		
+		theObject.setParameter("dateEnd", dateFinish, TemporalType.DATE);		
+		List<TGTruck> trucks = theObject.getResultList();			
+		if(trucks.isEmpty()) {
+			return null;
+		}else {
+			return new ArrayList<TGTruck>(theObject.getResultList().stream().collect(Collectors.toSet()));			
 		}
 	}
 }

@@ -63,6 +63,8 @@ import com.itextpdf.text.pdf.PdfGState;
 import com.itextpdf.text.pdf.PdfStructTreeController.returnType;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
+
+import by.base.main.aspect.TimedExecution;
 import by.base.main.controller.ajax.MainRestController;
 import by.base.main.model.Act;
 import by.base.main.model.Address;
@@ -1187,6 +1189,16 @@ public class MainController {
 		
 	}
 	
+	@RequestMapping("/main/carrier/delivery-shop")
+	public String deliveryShopPage(Model model, HttpSession session, HttpServletRequest request) {
+		User user = getThisUser();
+		if(user.getTgBotStatus() == null) {
+			request.setAttribute("isTgLink", false);
+		}else {
+			request.setAttribute("isTgLink", true);
+		}
+		return "deliveryShop";
+	}
 	
 	@RequestMapping("/main/carrier/tender/history")
 	public String tenderHistoryGetPage(Model model, HttpSession session, HttpServletRequest request) {
@@ -2021,8 +2033,9 @@ public class MainController {
 	}
 	
 	@RequestMapping("/main/logistics/shopControl")
+	@TimedExecution
 	public String getShopListLogist(Model model, HttpServletRequest request, HttpSession session) {
-		List<Shop> shops = shopService.getShopList();		
+		List<Shop> shops = shopService.getShopList();				
 		model.addAttribute("shops", shops);
 		return "shopListForLogist";
 	}
@@ -2708,7 +2721,8 @@ public class MainController {
 				route.setStartPrice(target.getStartPrice());
 				route.setTypeTrailer(target.getTypeTrailer());
 				sessionRoute.getRoteHasShop().stream().forEach(s-> s.setRoute(route));
-				sessionRoute.getRoteHasShop().stream().forEach(s-> routeHasShopService.saveOrUpdateRouteHasShop(s));				
+				sessionRoute.getRoteHasShop().stream().forEach(s-> routeHasShopService.saveOrUpdateRouteHasShop(s));	
+				routeService.saveOrUpdateRoute(route);
 				return "redirect:/main/logistics/international";
 			}else {
 				for(int i = 1; i<=count; i++) {
@@ -2734,6 +2748,7 @@ public class MainController {
 					sessionRoute.getRoteHasShop().forEach(s->s.setIdRouteHasShop(null));
 					sessionRoute.getRoteHasShop().stream().forEach(s-> s.setRoute(routeI));
 					sessionRoute.getRoteHasShop().stream().forEach(s-> routeHasShopService.saveOrUpdateRouteHasShop(s));
+					routeService.saveOrUpdateRoute(routeI);
 				}
 				return "redirect:/main/logistics/international";
 			}			

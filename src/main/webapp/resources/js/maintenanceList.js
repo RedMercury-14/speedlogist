@@ -1,15 +1,31 @@
 import { AG_GRID_LOCALE_RU } from "./AG-Grid/ag-grid-locale-RU.js"
 import { ResetStateToolPanel, dateComparator, gridColumnLocalState, gridFilterLocalState } from "./AG-Grid/ag-grid-utils.js"
-import { changeGridTableMarginTop, dateHelper, debounce, getAhoStatusRoute, getData, isCarrier, isObserver, isSlotsObserver } from "./utils.js"
+import {
+	changeGridTableMarginTop,
+	cutToInteger,
+	dateHelper,
+	debounce,
+	disableButton,
+	enableButton,
+	getAhoStatusRoute,
+	getData,
+	isCarrier,
+	isObserver,
+	isSlotsObserver,
+	removeSingleQuotes
+} from "./utils.js"
 import { snackbar } from "./snackbar/snackbar.js"
 import { uiIcons } from "./uiIcons.js"
 import { bootstrap5overlay } from "./bootstrap5overlay/bootstrap5overlay.js"
+import { isInvalidPointForms } from "./procurementFormUtils.js"
+import { ajaxUtils } from "./ajaxUtils.js"
 
 const PAGE_NAME = 'maintenanceList'
 const LOCAL_STORAGE_KEY = `AG_Grid_settings_to_${PAGE_NAME}`
 const DATES_KEY = `searchDates_to_${PAGE_NAME}`
 const ROW_INDEX_KEY = `AG_Grid_rowIndex_to_${PAGE_NAME}`
 
+const token = $("meta[name='_csrf']").attr("content")
 const role = document.querySelector('#role').value
 const methodBase = isCarrier(role) ? 'carrier' : 'logistics'
 const getAhoRouteBaseUrl = `../../api/${methodBase}/getMaintenanceList/`
@@ -20,6 +36,7 @@ const clearMileageBaseUrl = `../../api/${methodBase}/maintenance/clearMileage/`
 const setFinishPriceBaseUrl = `../../api/logistics/maintenance/setCost/`
 const clearFinishPriceBaseUrl = `../../api/logistics/maintenance/clearCost/`
 const closeRouteBaseUrl = `../../api/logistics/maintenance/closeRoute/`
+const editRHSUrl = `../../api/logistics/editRouteHasShop`
 
 const getAllCarrierUrl = `../../api/manager/getAllCarrier`
 const getTrucksByCarrierBaseUrl =`../../api/carrier/getCarByIdUser/`
@@ -39,6 +56,7 @@ let table
 let ahoRouteData
 let allCarriers
 let error
+let pointsCounter = 0
 
 
 const columnDefs = [
@@ -199,6 +217,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 	const addFinishPriceForm = document.querySelector('#addFinishPriceForm')
 	const date_fromInput = document.querySelector('#date_from')
 	const date_toInput = document.querySelector('#date_to')
+	const editPointsForm = document.querySelector('#editPointsForm')
+	const pointList = editPointsForm.querySelector('#pointList')
+	const addNewPointBtn = editPointsForm.querySelector('#addNewPoint')
 
 	// автозаполнение полей дат в форме поиска заявок
 	const { dateStart, dateEnd } = dateHelper.getDatesToRoutesFetch(DATES_KEY)
@@ -207,17 +228,24 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 	// листнер на отправку формы поиска заявок
 	routeSearchForm.addEventListener('submit', searchFormSubmitHandler)
-
 	// обработчик формы назначения перевозчика на маршрут
 	addCarrierForm.addEventListener('submit', addCarrierSubmitHandler)
 	// обработчик формы установки пробега по маршруту
 	addMileageForm.addEventListener('submit', addMileageSubmitHandler)
 	// обработчик формы установки стоимости по маршруту
 	addFinishPriceForm.addEventListener('submit', addFinishPriceSubmitHandler)
+	// обработчик формы редактирования точек маршрута
+	editPointsForm.addEventListener('submit', editPointsSubmitHandler)
+	// обработчик нажатия на кнопку "+ Добавить точку"
+	addNewPointBtn.addEventListener('click', addNewPointHandler)
 	// очистка форм
 	$('#addCarrierModal').on('hide.bs.modal', (e) => resetCarrierForm(e, addCarrierForm))
 	$('#addMileageModal').on('hide.bs.modal', (e) => addMileageForm.reset())
 	$('#addFinishPriceModal').on('hide.bs.modal', (e) => addFinishPriceForm.reset())
+	$('#editPointsModal').on('hide.bs.modal', (e) => resetEditPointsForm(editPointsForm, pointList))
+
+	// делаем контейнер с точками сортируемым с помощью перетаскивания
+	Sortable.create(pointList, { handle: '.dragItem', animation: 150 })
 
 	// добавляем перевозчиков в список
 	const carrierSelect = document.querySelector('#carrier')
@@ -324,6 +352,13 @@ function showAddFinishPriceModal() {
 function hideAddFinishPriceModal() {
 	$('#addFinishPriceModal').modal('hide')
 }
+// отображение модального окна редактирования точек маршрута
+function showEditPointsModal() {
+	$('#editPointsModal').modal('show')
+}
+function hideEditPointsModal() {
+	$('#editPointsModal').modal('hide')
+}
 
 // поиск в списке селекта
 function addSearchInSelectOptions(select) {
@@ -380,13 +415,43 @@ async function addFinishPriceSubmitHandler(e) {
 	const finishPrice = formData.get('finishPrice')
 	await setFinishPrice(idRoute, finishPrice)
 }
-// очищение формы назначения превозчика
+// обработчик формы редактирования точек маршрута
+function editPointsSubmitHandler(e) {
+	e.preventDefault()
+	const form = e.target
+	// проверяем, заполнена ли предыдущая точка
+	if (isInvalidPointForms(form)) return
+	// получаем данные
+	const formData = new FormData(form)
+	const idRoute = formData.get('idRoute')
+	const pointsData = getPointsData(form)
+	// валидация данных о точках
+	if (!isValidPointsData(pointsData)) return
+	// отправляем данные на сервер
+	setEditedRHS(e, {
+		idRoute,
+		routeHasShops: pointsData
+	})
+}
+// обработчик нажатия на кнопку "+ Добавить точку"
+function addNewPointHandler(e) {
+	const pointList = document.querySelector('#pointList')
+	createPoint(pointList, null, pointsCounter)
+	e.target.blur()
+}
+// очистка формы назначения превозчика
 function resetCarrierForm(e, form) {
 	form.reset()
 	const input = e.target.querySelector('#searchInOptions')
 	input.value = ''
 	const inputEvent = new Event('input')
 	input.dispatchEvent(inputEvent)
+}
+// очистка формы редактирования точек маршрута
+function resetEditPointsForm(editPointsForm, pointList) {
+	pointList.innerHTML = ''
+	editPointsForm.reset()
+	pointsCounter = 0
 }
 
 // -------------------------------------------------------------------------------//
@@ -517,6 +582,15 @@ function getContextMenuItems(params) {
 			},
 		},
 		"separator",
+		{
+			name: `Редактировать точки маршрута`,
+			disabled: isObserver(role) || status === '200', // определить доступ к методу
+			icon: uiIcons.pencil,
+			action: () => {
+				editPoints(routeData)
+			},
+		},
+		"separator",
 		"excelExport",
 	]
 
@@ -569,6 +643,17 @@ function addFinishPrice(routeData) {
 	addFinishPriceForm.routeDirection.value = routeData.routeDirection
 	addFinishPriceForm.finishPrice.value = finishPrice
 	showAddFinishPriceModal()
+}
+function editPoints(routeData) {
+	const editPointsForm = document.querySelector('#editPointsForm')
+	const pointList = editPointsForm.querySelector('#pointList')
+	const editPointsModalLabel = document.querySelector('#editPointsModalLabel')
+	const idRoute = routeData.idRoute
+	const points = routeData.roteHasShop
+	editPointsForm.idRoute.value = idRoute
+	editPointsModalLabel.innerText = `Редактирование точек маршрута №${idRoute}`
+	points.forEach((point, i) => createPoint(pointList, point, i))
+	showEditPointsModal()
 }
 
 // функция обновления данных ячейки таблицы
@@ -819,4 +904,176 @@ async function closeRoute(idRoute) {
 		const message = res && res.message ? res.message : 'Неизвестная ошибка'
 		snackbar.show(message)
 	}
+}
+function setEditedRHS(submitEvent, data) {
+	const submitter = submitEvent.submitter
+	bootstrap5overlay.showOverlay()
+	disableButton(submitter)
+
+	ajaxUtils.postJSONdata({
+		url: editRHSUrl,
+		token: token,
+		data: data,
+		successCallback: (res) => {
+			enableButton(submitter)
+			bootstrap5overlay.hideOverlay()
+
+			if (res && res.status === '200') {
+				snackbar.show('Выполнено!')
+				updateTable(gridOptions)
+				hideEditPointsModal()
+			} else {
+				console.log(res)
+				const message = res && res.message ? res.message : 'Неизвестная ошибка'
+				snackbar.show(message)
+			}
+		},
+		errorCallback: () => {
+			enableButton(submitter)
+			bootstrap5overlay.hideOverlay()
+		}
+	})
+}
+
+
+// создание точки маршрута
+function createPoint(pointList, pointsData, index) {
+	const pointElement = getPointElement(pointsData, index)
+	pointList.append(pointElement)
+	pointsCounter++
+}
+// получение HTML точки
+function getPointElement(pointsData, index) {
+	const point = document.createElement('div')
+
+	const idRouteHasShop = pointsData && pointsData.idRouteHasShop ? pointsData.idRouteHasShop : ''
+	const pointIndex = index + 1
+	const cargoInfoHTML = getCargoInfoHTML(pointsData, pointIndex)
+	const addressHTML = getAddressHTML(pointsData, pointIndex)
+
+	point.className = 'card point mb-3 border-secondary'
+	point.innerHTML = `
+		<form class='pointForm' id='pointform_${pointIndex}' name='pointform_${pointIndex}' action=''>
+			<div class='card-header py-2 d-flex justify-content-between dragItem'>
+				<h5 class='d-flex align-items-center mb-0'>Точка маршрута</h5>
+				<span class="h3 m-0 dragText">Зажмите здесь и перетаскивайте</span>
+				<button type="button" class="btn btn-outline-danger deleteBtn" title="Удалить точку маршрута">
+					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+						<path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"></path>
+						<path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"></path>
+					</svg>
+				</button>
+			</div>
+			<input type='hidden' id='idRouteHasShop_${pointIndex}' name='idRouteHasShop' value='${idRouteHasShop}'>
+			<div class='card-body py-2'>
+				${addressHTML}
+				${cargoInfoHTML}
+			</div>
+		</form>`
+
+	// удаление точки
+	const deleteBtn = point.querySelector('.deleteBtn')
+	deleteBtn.addEventListener('click', (e) => deletePoint(e, point))
+
+	return point
+}
+// HTML информации о грузе
+function getCargoInfoHTML(pointsData, pointIndex) {
+	 const pointCargo = pointsData && pointsData.cargo ? pointsData.cargo : ''
+	 const pall = pointsData && pointsData.pall ? pointsData.pall : ''
+	 const weight = pointsData && pointsData.weight ? pointsData.weight : ''
+	 const volume = pointsData && pointsData.volume ? pointsData.volume : ''
+
+	return `
+		<div class='form-row'>
+			<div class='form-group col-md-6'>
+				<label for='pointCargo_${pointIndex}' class='col-form-label text-muted font-weight-bold requiredField'>Наименование груза</label>
+				<input type='text' class='form-control' name='pointCargo' id='pointCargo_${pointIndex}' placeholder='Наименование' value='${pointCargo}' required>
+			</div>
+			<div class='form-group col-md-2'>
+				<label for='pall_${pointIndex}' class='col-form-label text-muted font-weight-bold'>Паллеты, шт</label>
+				<input type='number' class='form-control' name='pall' id='pall_${pointIndex}' placeholder='Паллеты, шт' min='0' max='20' step="1" value='${pall}'>
+			</div>
+			<div class='form-group col-md-2'>
+				<label for='weight_${pointIndex}' class='col-form-label text-muted font-weight-bold'>Масса, кг</label>
+				<input type='number' class='form-control' name='weight' id='weight_${pointIndex}' placeholder='Масса, кг' min='0' max='99999' step="1" value='${weight}'>
+			</div>
+			<div class='form-group col-md-2'>
+				<label for='volume_${pointIndex}' class='col-form-label text-muted font-weight-bold'>Объем, м.куб.</label>
+				<input type='number' class='form-control' name='volume' id='volume_${pointIndex}' placeholder='Объем, м.куб.' min='0' max='99' step='0.1' value='${volume}'>
+			</div>
+		</div>`
+}
+// HTML информации об адресе
+function getAddressHTML(pointsData, pointIndex) {
+	const addressValue = pointsData && pointsData.address ? pointsData.address : ''
+	const pointType = pointsData && pointsData.position ? pointsData.position : ''
+	const country = 'BY Беларусь'
+	const address = addressValue ? addressValue.split('; ')[1] : ''
+	const isLabelSelected = !pointType ? 'selected' : ''
+	const isLoadSelected = pointType === 'Загрузка' ? 'selected' : ''
+	const isUnloadSelected = pointType === 'Выгрузка'  ? 'selected' : ''
+	return `<div class="form-row mb-2">
+				<div class="col col-md-2">
+				<label for="country_${pointIndex}" class="col-form-label text-muted font-weight-bold requiredField">Тип точки</label>
+					<select class='form-control' name='position' id='position_${pointIndex}' value='${pointType}' required>
+						<option ${isLabelSelected} disabled value=''>Выберите тип</option>
+						<option ${isLoadSelected} value='Загрузка'>Загрузка</option>
+						<option ${isUnloadSelected} value='Выгрузка'>Выгрузка</option>
+					</select>
+				</div>
+				<div class="col col-md-2">
+					<label for="country_${pointIndex}" class="col-form-label text-muted font-weight-bold requiredField">Страна</label>
+					<input type="text" class="form-control" name="country" id="country_${pointIndex}" placeholder="Страна" autocomplete="off" value='${country}' readonly>
+				</div>
+				<div class="col">
+					<label for="country_${pointIndex}" class="col-form-label text-muted font-weight-bold requiredField">Адрес</label>
+					<input type="text" class="form-control" name="address" id="address_${pointIndex}" autocomplete="off" placeholder="Город, улица и т.д." value='${address}' required>
+				</div>
+			</div>`
+}
+// удаление точки маршрута
+function deletePoint(e, point) {
+	const res = confirm('Подтвердите удаление точки маршрута')
+	if (res) point.remove()
+	else e.target.blur()
+}
+// получение данных точек маршрута
+function getPointsData(form) {
+	const points = []
+	const pointForms = form.querySelectorAll('.pointForm')
+	pointForms.forEach((pointForm, i) => {
+		const address = `${pointForm.country.value}; ${pointForm.address.value.replace(/;/g, ',')}`
+		points.push({
+			address: removeSingleQuotes(address),
+			cargo: pointForm.pointCargo ? removeSingleQuotes(pointForm.pointCargo.value) : null,
+			idRouteHasShop: pointForm.idRouteHasShop.value ? Number(pointForm.idRouteHasShop.value) : null,
+			order: i + 1,
+			pall: pointForm.pall.value ? pointForm.pall.value : null,
+			position: pointForm.position.value,
+			volume: pointForm.volume.value ? pointForm.volume.value : null,
+			weight: pointForm.weight.value ? cutToInteger(pointForm.weight.value) : null,
+		})
+	})
+
+	return points
+}
+// валидация данных точек маршрута
+function isValidPointsData(pointsData) {
+	if (pointsData.length < 1) {
+		snackbar.show('Необходимо добавить точки загрузки и выгрузки!')
+		return false
+	}
+
+	if (!pointsData.find(point => point.position === 'Загрузка')) {
+		snackbar.show('Необходимо добавить точку загрузки!')
+		return false
+	}
+
+	if (!pointsData.find(point => point.position === 'Выгрузка')) {
+		snackbar.show('Необходимо добавить точку выгрузки!')
+		return false
+	}
+
+	return true
 }

@@ -94,4 +94,20 @@ public interface ScheduleService {
 	 * @return
 	 */
 	List<Schedule> getSchedulesByDateOrder(Date date, Integer numStock);
+
+	/**
+	 * @author Ira
+	 * <br>Возвращает список всех графиков на ТО по номеру контракта - и временных, и постоянных</br>
+	 * @return
+	 */
+	List<Schedule> getSchedulesListTOContractWithTemp(Long contract);
+
+
+	/**
+	 * @author Ira
+	 * <br>Возвращает список только актуальных графиков на ТО - либо временных, либо постоянных</br>
+	 * @return
+	 */
+	List<Schedule> getSchedulesListTOOnlyTemp();
 }
+

@@ -62,5 +62,14 @@ public interface TGTruckService {
 	void deleteTGTruckByNumTruck(String numTruck, Date date);
 	
 	boolean checkListName(String name, Date date);
+	
+	/**
+	 * озвращает список машин по id юзера и периоду
+	 * @param idUser
+	 * @param dateStart
+	 * @param dateFinish
+	 * @return
+	 */
+	List<TGTruck> getTGTruckByidUserPeriod(Integer idUser, Date dateStart, Date dateFinish);
 
 }

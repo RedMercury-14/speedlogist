@@ -545,4 +545,19 @@ public class RouteDAOImpl implements RouteDAO {
 //		}
 		return objects;
 	}
+
+	@Override
+	@Transactional
+	public void saveRoute(Route route) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		currentSession.save(route);
+	}
+
+	@Override
+	@Transactional
+	public void updateRoute(Route route) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		currentSession.update(route);
+		
+	}
 }

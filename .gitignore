@@ -4,3 +4,6 @@
 .project
 .classpath
 /.idea/
+src/main/webapp/resources/js/
+src/main/webapp/WEB-INF/view/
+src/main/webapp/resources/css/

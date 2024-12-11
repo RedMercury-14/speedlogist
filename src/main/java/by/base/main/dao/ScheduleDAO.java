@@ -94,5 +94,22 @@ public interface ScheduleDAO {
 	 * @return
 	 */
 	List<Schedule> getSchedulesByDateOrder(Date date, Integer numStock);
-	
+
+	/**
+	 * @author Ira
+	 * <br>Возвращает список всех графиков на ТО по номеру контракта - и временных, и постоянных</br>
+	 * @param num
+	 * @return
+	 */
+
+	public List<Schedule> getSchedulesListTOContractWithTemp(Long num);
+
+	/**
+	 * @author Ira
+	 * <br>Возвращает список всех графиков на ТО - и временных, и постоянных</br>
+	 * @return
+	 */
+	public List<Schedule> getSchedulesListTOWithTemp();
+
+	//List<Schedule> getSchedulesByTOTypeWithTemp(String toType);
 }

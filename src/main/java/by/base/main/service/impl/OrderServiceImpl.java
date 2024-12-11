@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import com.dto.OrderDTO;
 
+import by.base.main.aspect.TimedExecution;
 import by.base.main.dao.OrderDAO;
 import by.base.main.dto.OrderDTOForSlot;
 import by.base.main.model.Order;
@@ -386,6 +387,7 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
+//	@TimedExecution
 	public List<Order> getOrderByPeriodSlotsAndProduct(Date dateStart, Date dateFinish, Product product) {
 		return orderDAO.getOrderByPeriodSlotsAndProduct(dateStart, dateFinish, product);
 	}

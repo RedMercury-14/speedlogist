@@ -124,6 +124,12 @@ public class Product {
 	@Transient
 	private Double calculatedDayStock1800;
 	
+	/**
+	 * макс. кол-во дней для проверки
+	 */
+	@Transient
+	private Double calculatedDayMax;
+	
 	@OneToMany(fetch=FetchType.LAZY, orphanRemoval = true,
 			   mappedBy="product",
 			   cascade= {CascadeType.ALL})
@@ -606,6 +612,20 @@ public class Product {
 	 */
 	public void setCalculatedDayStock1800(Double calculatedDayStock1800) {
 		this.calculatedDayStock1800 = calculatedDayStock1800;
+	}
+
+	/**
+	 * макс. кол-во дней для проверки
+	 */
+	public Double getCalculatedDayMax() {
+		return calculatedDayMax;
+	}
+
+	/**
+	 * макс. кол-во дней для проверки
+	 */
+	public void setCalculatedDayMax(Double calculatedDayMax) {
+		this.calculatedDayMax = calculatedDayMax;
 	}
 
 	@Override

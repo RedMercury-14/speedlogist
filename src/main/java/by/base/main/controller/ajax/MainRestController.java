@@ -4044,10 +4044,6 @@ public class MainRestController {
 		File file1 = poiExcel.getFileByMultipartTarget(excel, request, "490.xlsx");
 //		String text = poiExcel.testHeaderOrderHasExcel(file1);
 		String text;
-//		if(text != null) {
-//			response.put("150", text);
-//			return response;
-//		}
 		//основной метод загрузки в БД
 		text = poiExcel.loadBalanceStock(file1, request);
 		

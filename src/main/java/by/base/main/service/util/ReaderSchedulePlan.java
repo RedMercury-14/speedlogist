@@ -400,7 +400,6 @@ public class ReaderSchedulePlan {
 			return null;
 		}
 		Map<Long, Double> orderProducts = order.getOrderLinesMap(); //заказанные строки
-//		Map<Integer, Product> stockProducts = productService.getAllProductMap(); // ВСЕ продукты из бд
 		List<Product> productsHasBalance = new ArrayList<Product>(); // результирующий лист с продуктами и балансами
 		
 		/*
@@ -408,14 +407,12 @@ public class ReaderSchedulePlan {
 		 * !Всегда ратгетимся по дефицитному товару!
 		 */
 		for (Entry<Long, Double> entry : orderProducts.entrySet()) {
-//			Product product = stockProducts.get(entry.getKey().intValue());
 			Product product = productService.getProductByCode(entry.getKey().intValue());
 			Double remainderInDay = product.getBalanceStockAndReserves(); // записываем остаток в днях по записи.
 			if(remainderInDay == 9999) {
 				continue;
 			}
 			//далее просматриваем что стоит в слотах (должно приехать) и переводем в дни, для суммирования
-			product.getСalculatedPerDay();
 			Date start = product.getDateUnload();
 			Date finish = Date.valueOf(LocalDate.now().plusDays(30));
 			Double quantityOrderSum = 0.0; // сумма всех заказов товара за заданный период
@@ -427,13 +424,17 @@ public class ReaderSchedulePlan {
 			if(product.getСalculatedPerDay() != 0 ) {
 				expectedDays = (int) roundВouble(quantityOrderSum/product.getСalculatedPerDay(), 0);
 			}
-			System.out.println(product.getCodeProduct() + " -- " + remainderInDay + " + " + expectedDays + " ("+quantityOrderSum + "/" +product.getСalculatedPerDay()+")");
+//			System.out.println(product.getCodeProduct() + " -- " + remainderInDay + " + " + expectedDays + " ("+quantityOrderSum + "/" +product.getСalculatedPerDay()+")");
 			Double finalDays1700 = remainderInDay + expectedDays; // потом разделить на 1700 и 1800
 			Double finalDays1800 = remainderInDay + expectedDays; // потом разделить на 1700 и 1800
 			product.setCalculatedDayStock1700(finalDays1700);
 			product.setCalculatedDayStock1800(finalDays1800);
+			product.setCalculatedDayMax(Double.parseDouble(targetDayForBalance+""));
+			product.setOrderProducts(null);
 			productsHasBalance.add(product);
 		}
+		
+		
 		return productsHasBalance;		
 	}
 	

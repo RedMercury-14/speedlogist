@@ -558,7 +558,16 @@ public class OrderDAOImpl implements OrderDAO{
 		return null;
 	}
 
-	private static final String queryGetOrderByPeriodSlotsAndProduct = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH r.truck t LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH o.addresses a where o.status !=10 AND o.status >= 20 AND o.status !=40 AND ol.goodsId =:goodsId AND o.timeDelivery BETWEEN :dateStart and :dateEnd";
+	private static final String queryGetOrderByPeriodSlotsAndProduct = "from Order o LEFT JOIN FETCH o.orderLines ol "
+			+ "LEFT JOIN FETCH o.routes r "
+			+ "LEFT JOIN FETCH r.roteHasShop rhs "
+			+ "LEFT JOIN FETCH r.user ru "
+			+ "LEFT JOIN FETCH r.truck rt "
+			+ "LEFT JOIN FETCH r.driver rd "
+			+ "LEFT JOIN FETCH r.truck t "
+			+ "LEFT JOIN FETCH r.roteHasShop rhs "
+			+ "LEFT JOIN FETCH o.addresses a "
+			+ "where o.status !=10 AND o.status >= 20 AND o.status !=40 AND ol.goodsId =:goodsId AND o.timeDelivery BETWEEN :dateStart and :dateEnd";
 	@Transactional
 	@Override
 	public List<Order> getOrderByPeriodSlotsAndProduct(Date dateStart, Date dateFinish, Product product) {

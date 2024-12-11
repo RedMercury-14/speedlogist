@@ -319,11 +319,21 @@ form .form-check .form-check-label {
 	color: #495a6e;
 }
 
-.dragItem {
+.point .dragItem,
+.point[draggable="false"] .dragItem {
 	cursor: grab;
+}
+.point[draggable="true"] .dragItem {
+	cursor: grabbing;
 }
 .dragItem .dragText{
 	color: #bebebe;
+}
+
+.requiredField::after {
+	content: " *";
+	position: relative;
+	color: red;
 }
 
 

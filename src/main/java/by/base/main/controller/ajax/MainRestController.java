@@ -2857,7 +2857,7 @@ public class MainRestController {
 	@GetMapping("/order-support/setNewBalance/{code}&{stock}")
 	public Map<String, Object> setNewBalance(HttpServletRequest request, @PathVariable String code, @PathVariable String stock) {
 		Map<String, Object> response = new HashMap<String, Object>();
-		Product product = productService.getProductByCode(Integer.parseInt(code.trim()));
+		Product product = productService.getProductByCodeAndStock(Integer.parseInt(code.trim()), Integer.parseInt(stock));
 		product.setBalanceStockAndReserves(Double.parseDouble(stock));
 		productService.updateProduct(product);
 		response.put("status", "200");
@@ -2871,10 +2871,10 @@ public class MainRestController {
 	 * @param code
 	 * @return
 	 */
-	@GetMapping("/order-support/changeException/{idProduct}")
-	public Map<String, Object> changeException(HttpServletRequest request, @PathVariable String idProduct) {
+	@GetMapping("/order-support/changeException/{idProduct}&{stock}")
+	public Map<String, Object> changeException(HttpServletRequest request, @PathVariable String idProduct, @PathVariable String stock) {
 		Map<String, Object> response = new HashMap<String, Object>();
-		Product product = productService.getProductByCode(Integer.parseInt(idProduct.trim()));
+		Product product = productService.getProductByCodeAndStock(Integer.parseInt(idProduct.trim()), Integer.parseInt(stock));
 		product.setIsException(!product.getIsException());
 		productService.updateProduct(product);
 		response.put("status", "200");
@@ -2888,10 +2888,10 @@ public class MainRestController {
 	 * @param param
 	 * @return
 	 */
-	@GetMapping("/order-support/setMaxDay/{code}&{day}")
-	public Map<String, Object> setMaxDay(HttpServletRequest request, @PathVariable String code, @PathVariable String day) {
+	@GetMapping("/order-support/setMaxDay/{code}&{stock}&{day}")
+	public Map<String, Object> setMaxDay(HttpServletRequest request, @PathVariable String code, @PathVariable String day, @PathVariable String stock) {
 		Map<String, Object> response = new HashMap<String, Object>();
-		Product product = productService.getProductByCode(Integer.parseInt(code.trim()));
+		Product product = productService.getProductByCodeAndStock(Integer.parseInt(code.trim()), Integer.parseInt(stock));
 		product.setDayMax(Integer.parseInt(day));
 		productService.updateProduct(product);
 		response.put("status", "200");

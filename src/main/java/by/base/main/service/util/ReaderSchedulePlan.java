@@ -407,31 +407,34 @@ public class ReaderSchedulePlan {
 		 * !Всегда ратгетимся по дефицитному товару!
 		 */
 		for (Entry<Long, Double> entry : orderProducts.entrySet()) {
-			Product product = productService.getProductByCode(entry.getKey().intValue());
-			Double remainderInDay = product.getBalanceStockAndReserves(); // записываем остаток в днях по записи.
-			if(remainderInDay == 9999) {
-				continue;
+			List<Product> products = productService.getProductByCode(entry.getKey().intValue());
+			for (Product product : products) {
+				Double remainderInDay = product.getBalanceStockAndReserves(); // записываем остаток в днях по записи.
+				if(remainderInDay == 9999) {
+					continue;
+				}
+				//далее просматриваем что стоит в слотах (должно приехать) и переводем в дни, для суммирования
+				Date start = product.getDateUnload();
+				Date finish = Date.valueOf(LocalDate.now().plusDays(30));
+				Double quantityOrderSum = 0.0; // сумма всех заказов товара за заданный период
+				List<Order> orders = orderService.getOrderByPeriodSlotsAndProduct(start, finish, product);
+				for (Order order2 : orders) {
+					quantityOrderSum = quantityOrderSum + order2.getOrderLines().stream().findFirst().get().getQuantityOrder();
+				}
+				Integer expectedDays = 0; // ожидаемый приход в днях
+				if(product.getСalculatedPerDay() != 0 ) {
+					expectedDays = (int) roundВouble(quantityOrderSum/product.getСalculatedPerDay(), 0);
+				}
+//				System.out.println(product.getCodeProduct() + " -- " + remainderInDay + " + " + expectedDays + " ("+quantityOrderSum + "/" +product.getСalculatedPerDay()+")");
+				Double finalDays1700 = remainderInDay + expectedDays; // потом разделить на 1700 и 1800
+				Double finalDays1800 = remainderInDay + expectedDays; // потом разделить на 1700 и 1800
+				product.setCalculatedDayStock1700(finalDays1700);
+				product.setCalculatedDayStock1800(finalDays1800);
+				product.setCalculatedDayMax(Double.parseDouble(targetDayForBalance+""));
+				product.setOrderProducts(null);
+				productsHasBalance.add(product);
 			}
-			//далее просматриваем что стоит в слотах (должно приехать) и переводем в дни, для суммирования
-			Date start = product.getDateUnload();
-			Date finish = Date.valueOf(LocalDate.now().plusDays(30));
-			Double quantityOrderSum = 0.0; // сумма всех заказов товара за заданный период
-			List<Order> orders = orderService.getOrderByPeriodSlotsAndProduct(start, finish, product);
-			for (Order order2 : orders) {
-				quantityOrderSum = quantityOrderSum + order2.getOrderLines().stream().findFirst().get().getQuantityOrder();
-			}
-			Integer expectedDays = 0; // ожидаемый приход в днях
-			if(product.getСalculatedPerDay() != 0 ) {
-				expectedDays = (int) roundВouble(quantityOrderSum/product.getСalculatedPerDay(), 0);
-			}
-//			System.out.println(product.getCodeProduct() + " -- " + remainderInDay + " + " + expectedDays + " ("+quantityOrderSum + "/" +product.getСalculatedPerDay()+")");
-			Double finalDays1700 = remainderInDay + expectedDays; // потом разделить на 1700 и 1800
-			Double finalDays1800 = remainderInDay + expectedDays; // потом разделить на 1700 и 1800
-			product.setCalculatedDayStock1700(finalDays1700);
-			product.setCalculatedDayStock1800(finalDays1800);
-			product.setCalculatedDayMax(Double.parseDouble(targetDayForBalance+""));
-			product.setOrderProducts(null);
-			productsHasBalance.add(product);
+			
 		}
 		
 		
@@ -481,7 +484,7 @@ public class ReaderSchedulePlan {
 		 Date dateNow = Date.valueOf(LocalDate.now());
 		 String infoRow = "Строк в заказе: " + lines.size();
 		 for (OrderLine line : lines) {
-			 Product product = productService.getProductByCode(line.getGoodsId().intValue());
+			 Product product = productService.getProductByCodeAndStock(line.getGoodsId().intValue(), Integer.parseInt(order.getNumStockDelivery()));
 			 if(product != null) {
 				 products.add(product);				 
 			 }
@@ -534,7 +537,7 @@ public class ReaderSchedulePlan {
 			
 			 for (OrderLine orderLine : lines) {
 				Double quantityOrderAll = map.get(orderLine.getGoodsId()).num;
-				Product product = productService.getProductByCode(orderLine.getGoodsId().intValue());
+				Product product = productService.getProductByCodeAndStock(orderLine.getGoodsId().intValue(), Integer.parseInt(order.getNumStockDelivery()));
 				if(product!=null) {
 					List<OrderProduct> quantity = null;
 					if(order.getDateOrderOrl() != null) {
@@ -884,7 +887,7 @@ public class ReaderSchedulePlan {
 			}
 		}else { // реализация проверкиЮ когда нужно проверить все продукты, через цикл, которые указангы в заказе
 			for (String string : numProductMass) {
-				Product productTarget = productService.getProductByCode(Integer.parseInt(string));
+				Product productTarget = productService.getProductByCodeAndStock(Integer.parseInt(string), Integer.parseInt(order.getNumStockDelivery()));
 				
 				if(productTarget != null) {
 					if(productTarget.getBalanceStockAndReserves() == null) {

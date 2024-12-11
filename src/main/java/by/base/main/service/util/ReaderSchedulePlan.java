@@ -179,16 +179,7 @@ public class ReaderSchedulePlan {
 			System.err.println("план расчёта не совпадает с графиком поставок");
 			return null;
 		}
-		
-		
-		//тут определения количество дней от заказа до поставки
-//		String dayString1 = "SUNDAY";
-//		LocalDate datePostav = LocalDate.of(2024, 7, DayOfWeek.valueOf(dayString1).getValue());
-//		LocalDate dateOrder = LocalDate.of(2024, 7, RUSSIAN_DAYS.get("понедельник").getValue());
-//		
-//		int i = datePostav.getDayOfMonth() - dateOrder.getDayOfMonth();
-//		System.out.println(i + " - " + dateOrder + " - " + datePostav);		
-		
+			
 		return new DateRange(Date.valueOf(orderProductTarget.getDateCreate().toLocalDateTime().toLocalDate().plusDays(1)),
 				Date.valueOf(orderProductTarget.getDateCreate().toLocalDateTime().toLocalDate().plusDays(i+1)), i, dayOfPlanOrder, schedule.getCounterpartyContractCode().toString());
 	}
@@ -394,6 +385,56 @@ public class ReaderSchedulePlan {
 		result.sort((o1, o2) -> o2.compareTo(o1));// сортируемся от самой ранней даты
 		
 		return new PlanResponce(200, "Информация о датах заказа", result, schedule);		
+	}
+	
+	
+	private static final int targetDayForBalance = 20;
+	/**
+	 * метод проверки балансов на складах
+	 * где больше товара, где меньше
+	 * @return
+	 */
+	public List<Product> checkBalanceBetweenStock(Order order) {
+		String stock = order.getNumStockDelivery();
+		if(!stock.equals("1800") && !stock.equals("1700")) {
+			return null;
+		}
+		Map<Long, Double> orderProducts = order.getOrderLinesMap(); //заказанные строки
+//		Map<Integer, Product> stockProducts = productService.getAllProductMap(); // ВСЕ продукты из бд
+		List<Product> productsHasBalance = new ArrayList<Product>(); // результирующий лист с продуктами и балансами
+		
+		/*
+		 * Далее по каждому товару проверяем его остаток с учётом установленных слотов.
+		 * !Всегда ратгетимся по дефицитному товару!
+		 */
+		for (Entry<Long, Double> entry : orderProducts.entrySet()) {
+//			Product product = stockProducts.get(entry.getKey().intValue());
+			Product product = productService.getProductByCode(entry.getKey().intValue());
+			Double remainderInDay = product.getBalanceStockAndReserves(); // записываем остаток в днях по записи.
+			if(remainderInDay == 9999) {
+				continue;
+			}
+			//далее просматриваем что стоит в слотах (должно приехать) и переводем в дни, для суммирования
+			product.getСalculatedPerDay();
+			Date start = product.getDateUnload();
+			Date finish = Date.valueOf(LocalDate.now().plusDays(30));
+			Double quantityOrderSum = 0.0; // сумма всех заказов товара за заданный период
+			List<Order> orders = orderService.getOrderByPeriodSlotsAndProduct(start, finish, product);
+			for (Order order2 : orders) {
+				quantityOrderSum = quantityOrderSum + order2.getOrderLines().stream().findFirst().get().getQuantityOrder();
+			}
+			Integer expectedDays = 0; // ожидаемый приход в днях
+			if(product.getСalculatedPerDay() != 0 ) {
+				expectedDays = (int) roundВouble(quantityOrderSum/product.getСalculatedPerDay(), 0);
+			}
+			System.out.println(product.getCodeProduct() + " -- " + remainderInDay + " + " + expectedDays + " ("+quantityOrderSum + "/" +product.getСalculatedPerDay()+")");
+			Double finalDays1700 = remainderInDay + expectedDays; // потом разделить на 1700 и 1800
+			Double finalDays1800 = remainderInDay + expectedDays; // потом разделить на 1700 и 1800
+			product.setCalculatedDayStock1700(finalDays1700);
+			product.setCalculatedDayStock1800(finalDays1800);
+			productsHasBalance.add(product);
+		}
+		return productsHasBalance;		
 	}
 	
 	/**

@@ -8,6 +8,7 @@ import com.dto.OrderDTO;
 
 import by.base.main.dto.OrderDTOForSlot;
 import by.base.main.model.Order;
+import by.base.main.model.Product;
 import by.base.main.model.Route;
 import by.base.main.model.Schedule;
 
@@ -163,6 +164,15 @@ public interface OrderService {
 	 * @return
 	 */
 	List<Order> getOrderByPeriodDeliveryAndListCodeContract(Date dateStart, Date dateEnd, List<Schedule> schedules);
+	
+	/**
+	 * Возвращаем заказы за период, в которые входит таргетный продукт
+	 * @param dateStart
+	 * @param Finish
+	 * @param product
+	 * @return
+	 */
+	List<Order> getOrderByPeriodSlotsAndProduct(Date dateStart, Date dateFinish, Product product);
 	
 	int updateOrderFromStatus (Order order);
 	

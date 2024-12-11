@@ -17,6 +17,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 @Entity
 @Table(name = "product")
@@ -110,6 +111,18 @@ public class Product {
 	
 	@Column(name = "is_exception")
 	private Boolean isException;
+	
+	/**
+	 * расчётный остаток для 1700 слкада в днях
+	 */
+	@Transient
+	private Double calculatedDayStock1700;
+	
+	/**
+	 * расчётный остаток для 1800 слкада в днях
+	 */
+	@Transient
+	private Double calculatedDayStock1800;
 	
 	@OneToMany(fetch=FetchType.LAZY, orphanRemoval = true,
 			   mappedBy="product",
@@ -565,6 +578,35 @@ public class Product {
 		}
 		
     }
+	
+	
+	/**
+	 * расчётный остаток для 1700 слкада в днях
+	 */
+	public Double getCalculatedDayStock1700() {
+		return calculatedDayStock1700;
+	}
+
+	/**
+	 * расчётный остаток для 1700 слкада в днях
+	 */
+	public void setCalculatedDayStock1700(Double calculatedDayStock1700) {
+		this.calculatedDayStock1700 = calculatedDayStock1700;
+	}
+
+	/**
+	 * расчётный остаток для 1800 слкада в днях
+	 */
+	public Double getCalculatedDayStock1800() {
+		return calculatedDayStock1800;
+	}
+
+	/**
+	 * расчётный остаток для 1800 слкада в днях
+	 */
+	public void setCalculatedDayStock1800(Double calculatedDayStock1800) {
+		this.calculatedDayStock1800 = calculatedDayStock1800;
+	}
 
 	@Override
 	public int hashCode() {

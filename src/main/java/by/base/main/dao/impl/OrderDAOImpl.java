@@ -30,6 +30,7 @@ import by.base.main.dao.OrderDAO;
 import by.base.main.dto.OrderDTOForSlot;
 import by.base.main.model.Address;
 import by.base.main.model.Order;
+import by.base.main.model.Product;
 import by.base.main.model.Route;
 import by.base.main.model.Schedule;
 
@@ -552,10 +553,27 @@ public class OrderDAOImpl implements OrderDAO{
 	private static final String queryGetOrderByTimeAfterUnload = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH r.truck t LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH o.addresses a where o.status !=10 AND o.timeDelivery BETWEEN :dateStart and :dateEnd";
 	@Transactional
 	@Override
-	//остановился тут
 	public List<Order> getOrderByTimeAfterUnload(Order order, Time time) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	private static final String queryGetOrderByPeriodSlotsAndProduct = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH r.truck t LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH o.addresses a where o.status !=10 AND o.status >= 20 AND o.status !=40 AND ol.goodsId =:goodsId AND o.timeDelivery BETWEEN :dateStart and :dateEnd";
+	@Transactional
+	@Override
+	public List<Order> getOrderByPeriodSlotsAndProduct(Date dateStart, Date dateFinish, Product product) {
+		Timestamp dateStartFinal = Timestamp.valueOf(LocalDateTime.of(dateStart.toLocalDate(), LocalTime.of(00, 00)));
+	    Timestamp dateEndFinal = Timestamp.valueOf(LocalDateTime.of(dateFinish.toLocalDate(), LocalTime.of(23, 59)));
+	    Session currentSession = sessionFactory.getCurrentSession();
+	    
+	    Query<Order> theObject = currentSession.createQuery(queryGetOrderByPeriodSlotsAndProduct, Order.class);
+	    theObject.setParameter("dateStart", dateStartFinal, TemporalType.TIMESTAMP);
+	    theObject.setParameter("dateEnd", dateEndFinal, TemporalType.TIMESTAMP);
+	    theObject.setParameter("goodsId", product.getCodeProduct().longValue());
+//	    theObject.setParameterList("marketContractTypes", numContracts); // Используем setParameterList для списка
+	    
+	    Set<Order> orders = theObject.getResultList().stream().collect(Collectors.toSet());
+	    return new ArrayList<>(orders); 
 	}
 
 }

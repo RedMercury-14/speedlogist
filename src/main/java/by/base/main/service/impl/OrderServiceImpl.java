@@ -21,6 +21,7 @@ import com.dto.OrderDTO;
 import by.base.main.dao.OrderDAO;
 import by.base.main.dto.OrderDTOForSlot;
 import by.base.main.model.Order;
+import by.base.main.model.Product;
 import by.base.main.model.Route;
 import by.base.main.model.Schedule;
 import by.base.main.service.OrderService;
@@ -382,6 +383,11 @@ public class OrderServiceImpl implements OrderService {
 	@Override
 	public List<Order> getOrderByLink(Integer link) {
 		return orderDAO.getOrderByLink(link);
+	}
+
+	@Override
+	public List<Order> getOrderByPeriodSlotsAndProduct(Date dateStart, Date dateFinish, Product product) {
+		return orderDAO.getOrderByPeriodSlotsAndProduct(dateStart, dateFinish, product);
 	}
 	
 }

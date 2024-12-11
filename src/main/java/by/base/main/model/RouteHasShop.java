@@ -89,7 +89,7 @@ public class RouteHasShop implements Serializable{
 	private Shop shop;
 	
 //	@ManyToOne(fetch = FetchType.LAZY, cascade = { CascadeType.ALL})
-	@ManyToOne(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+	@ManyToOne(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE})
 	@JsonBackReference
 	private Route route;
 

@@ -734,8 +734,8 @@ public class MainRestController {
 							+LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yyy")) 
 							+ " в " 
 							+ LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))+"."
-//							+"\n"+textStatus, "ArtyuhevichO@dobronom.by");	
-					+"\n"+textStatus, "GrushevskiyD@dobronom.by");	
+							+"\n"+textStatus, "ArtyuhevichO@dobronom.by");	
+//					+"\n"+textStatus, "GrushevskiyD@dobronom.by");	
 				}
 				
 			}).start();				

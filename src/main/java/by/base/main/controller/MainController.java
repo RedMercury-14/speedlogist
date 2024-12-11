@@ -2721,7 +2721,8 @@ public class MainController {
 				route.setStartPrice(target.getStartPrice());
 				route.setTypeTrailer(target.getTypeTrailer());
 				sessionRoute.getRoteHasShop().stream().forEach(s-> s.setRoute(route));
-				sessionRoute.getRoteHasShop().stream().forEach(s-> routeHasShopService.saveOrUpdateRouteHasShop(s));				
+				sessionRoute.getRoteHasShop().stream().forEach(s-> routeHasShopService.saveOrUpdateRouteHasShop(s));	
+				routeService.saveOrUpdateRoute(route);
 				return "redirect:/main/logistics/international";
 			}else {
 				for(int i = 1; i<=count; i++) {
@@ -2747,6 +2748,7 @@ public class MainController {
 					sessionRoute.getRoteHasShop().forEach(s->s.setIdRouteHasShop(null));
 					sessionRoute.getRoteHasShop().stream().forEach(s-> s.setRoute(routeI));
 					sessionRoute.getRoteHasShop().stream().forEach(s-> routeHasShopService.saveOrUpdateRouteHasShop(s));
+					routeService.saveOrUpdateRoute(routeI);
 				}
 				return "redirect:/main/logistics/international";
 			}			

@@ -73,7 +73,8 @@ const columnDefs = [
 	{ headerName: 'Контактное лицо контрагента', field: 'contact', wrapText: true, autoHeight: true, },
 	{ headerName: 'Общий вес', field: 'totalCargoWeight', valueFormatter: params => params.value + ' кг' },
 	{ headerName: 'Комментарии', field: 'userComments', wrapText: true, autoHeight: true, minWidth: 240, width: 640, },
-	{ headerName: 'Начальная стоимость перевозки', field: 'startRouteCostInfo', wrapText: true, autoHeight: true, },
+	{ headerName: 'Комментарии', field: 'userComments', wrapText: true, autoHeight: true, },
+	{ headerName: 'Логист', field: 'logistInfo', wrapText: true, autoHeight: true, },
 	{
 		headerName: 'Статус', field: 'statusRoute',
 		cellClass: 'px-2 text-center font-weight-bold',

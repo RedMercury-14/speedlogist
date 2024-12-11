@@ -208,5 +208,16 @@ public class RouteServiceImpl implements RouteService{
 		return routeDAO.getRouteListAsDateDTO(dateStart, dateFinish);
 	}
 
+	@Override
+	public void saveRoute(Route route) {
+		routeDAO.saveRoute(route);
+		
+	}
+
+	@Override
+	public void updateRoute(Route route) {
+		routeDAO.updateRoute(route);
+	}
+
 	
 }

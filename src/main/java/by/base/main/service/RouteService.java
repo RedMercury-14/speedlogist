@@ -17,6 +17,11 @@ public interface RouteService {
 	List<Route> getRouteList();
 
 	void saveOrUpdateRoute(Route route);
+	
+	void saveRoute(Route route);
+	
+	void updateRoute(Route route);
+
 
 	Route getRouteById(int id);
 	

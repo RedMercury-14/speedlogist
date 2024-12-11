@@ -954,7 +954,7 @@ function getPointElement(pointsData, index) {
 	point.className = 'card point mb-3 border-secondary'
 	point.innerHTML = `
 		<form class='pointForm' id='pointform_${pointIndex}' name='pointform_${pointIndex}' action=''>
-			<div class='card-header d-flex justify-content-between dragItem'>
+			<div class='card-header py-2 d-flex justify-content-between dragItem'>
 				<h5 class='d-flex align-items-center mb-0'>Точка маршрута</h5>
 				<span class="h3 m-0 dragText">Зажмите здесь и перетаскивайте</span>
 				<button type="button" class="btn btn-outline-danger deleteBtn" title="Удалить точку маршрута">
@@ -967,9 +967,7 @@ function getPointElement(pointsData, index) {
 			<input type='hidden' id='idRouteHasShop_${pointIndex}' name='idRouteHasShop' value='${idRouteHasShop}'>
 			<div class='card-body py-2'>
 				${addressHTML}
-				<div class='form-row'>
-					${cargoInfoHTML}
-				</div>
+				${cargoInfoHTML}
 			</div>
 		</form>`
 
@@ -986,8 +984,10 @@ function getCargoInfoHTML(pointsData, pointIndex) {
 	 const weight = pointsData && pointsData.weight ? pointsData.weight : ''
 	 const volume = pointsData && pointsData.volume ? pointsData.volume : ''
 
-	return `<div class='form-group col-md-6'>
-				<label for='pointCargo_${pointIndex}' class='col-form-label text-muted font-weight-bold'>Наименование груза</label>
+	return `
+		<div class='form-row'>
+			<div class='form-group col-md-6'>
+				<label for='pointCargo_${pointIndex}' class='col-form-label text-muted font-weight-bold requiredField'>Наименование груза</label>
 				<input type='text' class='form-control' name='pointCargo' id='pointCargo_${pointIndex}' placeholder='Наименование' value='${pointCargo}' required>
 			</div>
 			<div class='form-group col-md-2'>
@@ -1001,7 +1001,8 @@ function getCargoInfoHTML(pointsData, pointIndex) {
 			<div class='form-group col-md-2'>
 				<label for='volume_${pointIndex}' class='col-form-label text-muted font-weight-bold'>Объем, м.куб.</label>
 				<input type='number' class='form-control' name='volume' id='volume_${pointIndex}' placeholder='Объем, м.куб.' min='0' max='99' step='0.1' value='${volume}'>
-			</div>`
+			</div>
+		</div>`
 }
 // HTML информации об адресе
 function getAddressHTML(pointsData, pointIndex) {
@@ -1012,9 +1013,9 @@ function getAddressHTML(pointsData, pointIndex) {
 	const isLabelSelected = !pointType ? 'selected' : ''
 	const isLoadSelected = pointType === 'Загрузка' ? 'selected' : ''
 	const isUnloadSelected = pointType === 'Выгрузка'  ? 'selected' : ''
-	return `<div class="form-row">
+	return `<div class="form-row mb-2">
 				<div class="col col-md-2">
-				<label for="country_${pointIndex}" class="col-form-label text-muted font-weight-bold">Тип точки</label>
+				<label for="country_${pointIndex}" class="col-form-label text-muted font-weight-bold requiredField">Тип точки</label>
 					<select class='form-control' name='position' id='position_${pointIndex}' value='${pointType}' required>
 						<option ${isLabelSelected} disabled value=''>Выберите тип</option>
 						<option ${isLoadSelected} value='Загрузка'>Загрузка</option>
@@ -1022,11 +1023,11 @@ function getAddressHTML(pointsData, pointIndex) {
 					</select>
 				</div>
 				<div class="col col-md-2">
-					<label for="country_${pointIndex}" class="col-form-label text-muted font-weight-bold">Страна</label>
+					<label for="country_${pointIndex}" class="col-form-label text-muted font-weight-bold requiredField">Страна</label>
 					<input type="text" class="form-control" name="country" id="country_${pointIndex}" placeholder="Страна" autocomplete="off" value='${country}' readonly>
 				</div>
 				<div class="col">
-					<label for="country_${pointIndex}" class="col-form-label text-muted font-weight-bold">Адрес</label>
+					<label for="country_${pointIndex}" class="col-form-label text-muted font-weight-bold requiredField">Адрес</label>
 					<input type="text" class="form-control" name="address" id="address_${pointIndex}" autocomplete="off" placeholder="Город, улица и т.д." value='${address}' required>
 				</div>
 			</div>`

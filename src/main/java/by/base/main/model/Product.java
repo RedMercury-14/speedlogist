@@ -130,10 +130,42 @@ public class Product {
 	@Transient
 	private Double calculatedDayMax;
 	
+	/**
+	 * Развертка расчётов
+	 */
+	@Transient
+	private String calculatedHistory;
+	
 	@OneToMany(fetch=FetchType.LAZY, orphanRemoval = true,
 			   mappedBy="product",
 			   cascade= {CascadeType.ALL})
 	private Set<OrderProduct> orderProducts;
+	
+	public Product() {
+		super();
+	}
+
+	public Product(Integer numStock, Double сalculatedPerDay, Double balanceStockAndReserves) {
+		super();
+		this.numStock = numStock;
+		this.сalculatedPerDay = сalculatedPerDay;
+		this.balanceStockAndReserves = balanceStockAndReserves;
+	}
+
+
+
+	/**
+	 * Развертка расчётов
+	 */
+	public String getCalculatedHistory() {
+		return calculatedHistory;
+	}
+	/**
+	 * Развертка расчётов
+	 */
+	public void setCalculatedHistory(String calculatedHistory) {
+		this.calculatedHistory = calculatedHistory;
+	}
 
 	/**
 	 * @return the idProduct
@@ -628,9 +660,11 @@ public class Product {
 		this.calculatedDayMax = calculatedDayMax;
 	}
 
+	
+
 	@Override
 	public int hashCode() {
-		return Objects.hash(codeProduct);
+		return Objects.hash(codeProduct, numStock);
 	}
 
 	@Override
@@ -642,7 +676,7 @@ public class Product {
 		if (getClass() != obj.getClass())
 			return false;
 		Product other = (Product) obj;
-		return Objects.equals(codeProduct, other.codeProduct);
+		return Objects.equals(codeProduct, other.codeProduct) && Objects.equals(numStock, other.numStock);
 	}
 
 	@Override

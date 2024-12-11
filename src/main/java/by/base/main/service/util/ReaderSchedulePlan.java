@@ -399,24 +399,46 @@ public class ReaderSchedulePlan {
 		if(!stock.equals("1800") && !stock.equals("1700")) {
 			return null;
 		}
+		
 		Map<Long, Double> orderProducts = order.getOrderLinesMap(); //заказанные строки
+		List<Long> goodsIds = orderProducts.entrySet().stream()
+			    .map(en -> en.getKey())
+			    .collect(Collectors.toList()); // отдельный лист с кодами товаров заказанных в заказе
+		List<Integer> goodsIdsIntegers = orderProducts.entrySet().stream()
+				.map(en -> en.getKey().intValue())
+				.collect(Collectors.toList()); // отдельный лист с кодами товаров заказанных в заказе
+		Map<String, Product> productsMap = productService.getProductMapHasGroupByCode(goodsIdsIntegers);
 		List<Product> productsHasBalance = new ArrayList<Product>(); // результирующий лист с продуктами и балансами
 
 		List<Order> orders = null;
 
-		
+//		productsMap.forEach((k,v) -> System.out.println(k + " -- " + v));
 		/*
 		 * Далее по каждому товару проверяем его остаток с учётом установленных слотов.
 		 * !Всегда ратгетимся по дефицитному товару!
 		 */
 		for (Entry<Long, Double> entry : orderProducts.entrySet()) {
-			List<Product> products = productService.getProductByCode(entry.getKey().intValue());
+//			List<Product> products = productService.getProductByCode(entry.getKey().intValue());
+			List<Product> products = new ArrayList<Product>();
+			if(productsMap.get(entry.getKey()+"1700") != null) {
+				products.add(productsMap.get(entry.getKey()+"1700"));
+			}else {
+				products.add(new Product(1700, 0.0, 0.0)); // заглушка, чтобы не ломать дальнейшую проверку
+			}
+			if(productsMap.get(entry.getKey()+"1800") != null) {
+				products.add(productsMap.get(entry.getKey()+"1800"));
+			}else {
+				products.add(new Product(1800, 0.0, 0.0)); // заглушка, чтобы не ломать дальнейшую проверку
+			}
+			
+			
 			Product generalProduct = products.get(0);
 			Double remainderInDay1700 = null;// записываем остаток в днях по записи для 1700.
 			Double remainderInDay1800 = null;// записываем остаток в днях по записи для 1800.
 			Double calculatedPerDay1700 = 0.0; 
 			Double calculatedPerDay1800 = 0.0; 
 			for (Product product : products) {
+				
 				if(product.getNumStock() == 1700) {
 					remainderInDay1700 = product.getBalanceStockAndReserves();
 					calculatedPerDay1700 = product.getСalculatedPerDay();
@@ -425,7 +447,7 @@ public class ReaderSchedulePlan {
 					calculatedPerDay1800 = product.getСalculatedPerDay();
 				}
 			}
-			if(remainderInDay1700 == 9999 || remainderInDay1800 == 9999) {
+			if(remainderInDay1700 == null || remainderInDay1800 == null || remainderInDay1700 == 9999 || remainderInDay1800 == 9999) {
 				continue;
 			}
 			//далее просматриваем что стоит в слотах (должно приехать) и переводем в дни, для суммирования
@@ -435,18 +457,18 @@ public class ReaderSchedulePlan {
 			Double quantityOrderSum1800 = 0.0; // сумма всех заказов товара за заданный период
 			
 			if(orders == null) {
-				List<Long> goodsIds = orderProducts.entrySet().stream()
-					    .map(en -> en.getKey())
-					    .collect(Collectors.toList());
-				orders = orderService.getOrderGroupByPeriodSlotsAndProduct(start, finish, goodsIds);
+//				List<Long> goodsIds = orderProducts.entrySet().stream()
+//					    .map(en -> en.getKey())
+//					    .collect(Collectors.toList());
+				orders = orderService.getOrderGroupByPeriodSlotsAndProductNotJOIN(start, finish, goodsIds);
 			}
 			
 			for (Order order2 : orders) {
-				if(order2.getOrderLines().stream().findFirst().get().getGoodsId().intValue() == generalProduct.getCodeProduct()) {
+				if(order2.getOrderLinesMap().get(Long.parseLong(generalProduct.getCodeProduct()+"")) != null) {
 					if(order2.getNumStockDelivery().equals("1700")) {
-						quantityOrderSum1700 = quantityOrderSum1700 + order2.getOrderLines().stream().findFirst().get().getQuantityOrder();
+						quantityOrderSum1700 = quantityOrderSum1700 + order2.getOrderLinesMap().get(Long.parseLong(generalProduct.getCodeProduct()+""));
 					}else {
-						quantityOrderSum1800 = quantityOrderSum1800 + order2.getOrderLines().stream().findFirst().get().getQuantityOrder();
+						quantityOrderSum1800 = quantityOrderSum1800 + order2.getOrderLinesMap().get(Long.parseLong(generalProduct.getCodeProduct()+""));
 					}
 				}
 				
@@ -461,8 +483,9 @@ public class ReaderSchedulePlan {
 			if(calculatedPerDay1800 != 0 ) {
 				expectedDays1800 = (int) roundВouble(quantityOrderSum1800/calculatedPerDay1800, 0);
 			}
-			System.out.println(generalProduct.getCodeProduct() + "1700 -- " + remainderInDay1700 + " + " + expectedDays1700 + " ("+quantityOrderSum1700 + "/" +calculatedPerDay1700+")");
-			System.out.println(generalProduct.getCodeProduct() + "1800 -- " + remainderInDay1800 + " + " + expectedDays1800 + " ("+quantityOrderSum1800 + "/" +calculatedPerDay1800+")");
+//			System.out.println(generalProduct.getCodeProduct() + " 1700 -- " + remainderInDay1700 + " + " + expectedDays1700 + " ("+quantityOrderSum1700 + "/" +calculatedPerDay1700+")");
+//			System.out.println(generalProduct.getCodeProduct() + " 1800 -- " + remainderInDay1800 + " + " + expectedDays1800 + " ("+quantityOrderSum1800 + "/" +calculatedPerDay1800+")");
+			
 			Double finalDays1700 = remainderInDay1700 + expectedDays1700; // потом разделить на 1700 и 1800
 			Double finalDays1800 = remainderInDay1800 + expectedDays1800; // потом разделить на 1700 и 1800
 			
@@ -470,11 +493,13 @@ public class ReaderSchedulePlan {
 			generalProduct.setCalculatedDayStock1800(finalDays1800);
 			generalProduct.setCalculatedDayMax(Double.parseDouble(targetDayForBalance+""));
 			generalProduct.setOrderProducts(null);
+			generalProduct.setCalculatedHistory(generalProduct.getCodeProduct() + " 1700 -- " + remainderInDay1700 + " + " + expectedDays1700 + " ("+quantityOrderSum1700 + "/" +calculatedPerDay1700+")\n"
+					+ generalProduct.getCodeProduct() + " 1800 -- " + remainderInDay1800 + " + " + expectedDays1800 + " ("+quantityOrderSum1800 + "/" +calculatedPerDay1800+")");
 			productsHasBalance.add(generalProduct);
 		}
 		
 		
-		return productsHasBalance;		
+		return productsHasBalance;	
 	}
 	
 	/**

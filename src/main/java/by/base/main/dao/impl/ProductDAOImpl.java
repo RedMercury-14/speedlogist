@@ -1,6 +1,10 @@
 package by.base.main.dao.impl;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.transaction.Transactional;
 
@@ -72,6 +76,28 @@ public class ProductDAOImpl implements ProductDAO{
 		}
 		Product object = trucks.stream().findFirst().get();
 		return object;
+	}
+
+	private static final String queryGetProductMapHasGroupByCode = "from Product p LEFT JOIN FETCH p.orderProducts op where p.codeProduct IN (:codes)";
+	@Transactional
+	@Override
+	public Map<String, Product> getProductMapHasGroupByCode(List<Integer> codes) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Product> theObject = currentSession.createQuery(queryGetProductMapHasGroupByCode, Product.class);
+		theObject.setParameterList("codes", codes);
+//		List<Product> trucks = theObject.getResultList();
+		Set<Product> products = new HashSet<Product>(theObject.getResultList());
+		
+//		products.forEach(p-> System.err.println(p));
+		
+		Map<String, Product> result = new HashMap<String, Product>();
+		products.forEach(p->{
+			result.put(p.getCodeProduct()+""+p.getNumStock(), p);
+		});
+		if(result.isEmpty()) {
+			return null;
+		}
+		return result;
 	}
 
 }

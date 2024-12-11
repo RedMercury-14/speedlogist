@@ -598,6 +598,7 @@ public class OrderDAOImpl implements OrderDAO{
 	        + "where o.status != 10 AND o.status >= 20 AND o.status != 40 "
 	        + "AND ol.goodsId IN (:goodsIds) AND o.timeDelivery BETWEEN :dateStart AND :dateEnd";
 
+
 	@Transactional
 	@Override
 	public List<Order> getOrderGroupByPeriodSlotsAndProduct(Date dateStart, Date dateFinish, List<Long> goodsIds) {
@@ -611,7 +612,42 @@ public class OrderDAOImpl implements OrderDAO{
 	    query.setParameterList("goodsIds", goodsIds); // Указываем список идентификаторов продуктов
 
 	    Set<Order> orders = query.getResultList().stream().collect(Collectors.toSet());
+
 	    return new ArrayList<>(orders);
 	}
+
+	private static final String queryGetOrderBase = "from Order o "
+	        + "where o.status != 10 AND o.status >= 20 AND o.status != 40 "
+	        + "AND o.timeDelivery BETWEEN :dateStart AND :dateEnd "
+	        + "AND o.id IN (SELECT ol.order.id FROM OrderLine ol WHERE ol.goodsId IN (:goodsIds))";
+
+	@Transactional
+	@Override
+	public List<Order> getOrderGroupByPeriodSlotsAndProductNotJOIN(Date dateStart, Date dateFinish,
+			List<Long> goodsIds) {
+		 Timestamp dateStartFinal = Timestamp.valueOf(LocalDateTime.of(dateStart.toLocalDate(), LocalTime.of(0, 0)));
+		    Timestamp dateEndFinal = Timestamp.valueOf(LocalDateTime.of(dateFinish.toLocalDate(), LocalTime.of(23, 59)));
+
+		    Session currentSession = sessionFactory.getCurrentSession();
+
+		    // Шаг 1: Получаем основной набор данных
+		    Query<Order> query = currentSession.createQuery(queryGetOrderBase, Order.class);
+		    query.setParameter("dateStart", dateStartFinal, TemporalType.TIMESTAMP);
+		    query.setParameter("dateEnd", dateEndFinal, TemporalType.TIMESTAMP);
+		    query.setParameterList("goodsIds", goodsIds);
+
+		    List<Order> orders = query.getResultList();
+
+		    // Шаг 2: Ленивая загрузка связанных сущностей
+		    for (Order order : orders) {
+		        Hibernate.initialize(order.getOrderLines());
+//		        Hibernate.initialize(order.getRoutes());
+//		        Hibernate.initialize(order.getAddresses());
+		    }
+
+		    return orders;
+	}
+	
+	
 
 }

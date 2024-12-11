@@ -172,6 +172,7 @@ public interface OrderService {
 	 * @param product
 	 * @return
 	 */
+	@Deprecated
 	List<Order> getOrderByPeriodSlotsAndProduct(Date dateStart, Date dateFinish, Product product);
 	
 	/**
@@ -184,6 +185,19 @@ public interface OrderService {
 	 * @return
 	 */
 	List<Order> getOrderGroupByPeriodSlotsAndProduct(Date dateStart, Date dateFinish, List<Long> goodsIds);
+	
+	/**
+	 * прямой наследний <b>List<Order> getOrderGroupByPeriodSlotsAndProduct(Date dateStart, Date dateFinish, List<Long> goodsIds)</b>
+	 * <br> Возвращаем заказы за период, в которые входит <b>группа</b> таргетных продуктов
+	 * <br> Не подтягивает ненужные связи, а инициирует только <b>OrderLines!</b>
+	 * <br> <b>Не использовать для фронта</b>
+	 * 
+	 * @param dateStart
+	 * @param Finish
+	 * @param product
+	 * @return
+	 */
+	List<Order> getOrderGroupByPeriodSlotsAndProductNotJOIN(Date dateStart, Date dateFinish, List<Long> goodsIds);
 	
 	int updateOrderFromStatus (Order order);
 	

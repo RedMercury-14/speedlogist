@@ -31,7 +31,6 @@ public class ProductServiceImpl implements ProductService{
 	}
 
 	@Override
-	@TimedExecution
 	public List<Product> getProductByCode(Integer id) {
 		return productDAO.getProductByCode(id);
 	}
@@ -55,6 +54,12 @@ public class ProductServiceImpl implements ProductService{
 		     response.put(product.getCodeProduct(), product);
 		 }
 		return response;
+	}
+
+	@Override
+	@TimedExecution
+	public Map<String, Product> getProductMapHasGroupByCode(List<Integer> codes) {
+		return productDAO.getProductMapHasGroupByCode(codes);
 	}
 
 }

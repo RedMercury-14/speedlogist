@@ -392,9 +392,15 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
-	@TimedExecution
 	public List<Order> getOrderGroupByPeriodSlotsAndProduct(Date dateStart, Date dateFinish, List<Long> goodsIds) {
 		return orderDAO.getOrderGroupByPeriodSlotsAndProduct(dateStart, dateFinish, goodsIds);
+	}
+
+	@Override
+	@TimedExecution
+	public List<Order> getOrderGroupByPeriodSlotsAndProductNotJOIN(Date dateStart, Date dateFinish,
+			List<Long> goodsIds) {
+		return orderDAO.getOrderGroupByPeriodSlotsAndProductNotJOIN(dateStart, dateFinish, goodsIds);
 	}
 	
 }

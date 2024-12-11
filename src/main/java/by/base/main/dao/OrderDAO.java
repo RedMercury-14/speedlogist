@@ -160,6 +160,17 @@ public interface OrderDAO {
 	 */
 	List<Order> getOrderByPeriodSlotsAndProduct(Date dateStart, Date dateFinish, Product product);
 	
+	/**
+	 * прямой наследний <b>List<Order> getOrderByPeriodSlotsAndProduct(Date dateStart, Date dateFinish, Product product)</b>
+	 * <br> Возвращаем заказы за период, в которые входит <b>группа</b> таргетных продуктов
+	 * 
+	 * @param dateStart
+	 * @param Finish
+	 * @param product
+	 * @return
+	 */
+	List<Order> getOrderGroupByPeriodSlotsAndProduct(Date dateStart, Date dateFinish, List<Long> goodsIds);
+	
 	Integer saveOrder (Order order);
 	
 	void updateOrder (Order order);

@@ -31,6 +31,7 @@ public class ProductServiceImpl implements ProductService{
 	}
 
 	@Override
+	@TimedExecution
 	public List<Product> getProductByCode(Integer id) {
 		return productDAO.getProductByCode(id);
 	}

@@ -585,4 +585,33 @@ public class OrderDAOImpl implements OrderDAO{
 	    return new ArrayList<>(orders); 
 	}
 
+	
+	private static final String queryGetOrdersByPeriodAndProducts = "from Order o LEFT JOIN FETCH o.orderLines ol "
+	        + "LEFT JOIN FETCH o.routes r "
+	        + "LEFT JOIN FETCH r.roteHasShop rhs "
+	        + "LEFT JOIN FETCH r.user ru "
+	        + "LEFT JOIN FETCH r.truck rt "
+	        + "LEFT JOIN FETCH r.driver rd "
+	        + "LEFT JOIN FETCH r.truck t "
+	        + "LEFT JOIN FETCH r.roteHasShop rhs "
+	        + "LEFT JOIN FETCH o.addresses a "
+	        + "where o.status != 10 AND o.status >= 20 AND o.status != 40 "
+	        + "AND ol.goodsId IN (:goodsIds) AND o.timeDelivery BETWEEN :dateStart AND :dateEnd";
+
+	@Transactional
+	@Override
+	public List<Order> getOrderGroupByPeriodSlotsAndProduct(Date dateStart, Date dateFinish, List<Long> goodsIds) {
+		Timestamp dateStartFinal = Timestamp.valueOf(LocalDateTime.of(dateStart.toLocalDate(), LocalTime.of(0, 0)));
+	    Timestamp dateEndFinal = Timestamp.valueOf(LocalDateTime.of(dateFinish.toLocalDate(), LocalTime.of(23, 59)));
+	    Session currentSession = sessionFactory.getCurrentSession();
+
+	    Query<Order> query = currentSession.createQuery(queryGetOrdersByPeriodAndProducts, Order.class);
+	    query.setParameter("dateStart", dateStartFinal, TemporalType.TIMESTAMP);
+	    query.setParameter("dateEnd", dateEndFinal, TemporalType.TIMESTAMP);
+	    query.setParameterList("goodsIds", goodsIds); // Указываем список идентификаторов продуктов
+
+	    Set<Order> orders = query.getResultList().stream().collect(Collectors.toSet());
+	    return new ArrayList<>(orders);
+	}
+
 }

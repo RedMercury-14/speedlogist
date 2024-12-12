@@ -425,6 +425,9 @@ public class ReaderSchedulePlan {
 		 * !Всегда ратгетимся по дефицитному товару!
 		 */
 		for (Entry<Long, Double> entry : orderProducts.entrySet()) {
+			if(productsMap == null) {
+				break;
+			}
 //			List<Product> products = productService.getProductByCode(entry.getKey().intValue());
 			List<Product> products = new ArrayList<Product>();
 			if(productsMap.get(entry.getKey()+"1700") != null) {

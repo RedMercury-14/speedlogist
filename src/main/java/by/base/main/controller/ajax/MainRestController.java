@@ -1895,11 +1895,21 @@ public class MainRestController {
 //		mapOrderProduct.entrySet().forEach(e-> System.out.println(e.getKey() + "   ---   " + e.getValue()));
 		
 		List<Product> products = productService.getAllProductList();
+		
+		
+		
 		Map<Integer, Product> productsMap = products.stream().collect(Collectors.toMap(
 		        Product::getCodeProduct,
 		        product -> product,
 		        (existing, replacement) -> existing // игнорируем дубликат
 		    ));
+		
+//		Map<String, Product> productsMap = products.stream().collect(Collectors.toMap(
+//			    product -> product.getCodeProduct() + "" + product.getNumStock(),
+//			    product -> product,
+//			    (existing, replacement) -> existing // игнорируем дубликат
+//			));
+
 		
 		for (Map.Entry<Integer, OrderProduct> entry : mapOrderProduct.entrySet()) {
 			Product product = productsMap.get(entry.getKey());

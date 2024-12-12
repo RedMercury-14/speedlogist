@@ -30,6 +30,7 @@ import org.springframework.stereotype.Component;
 
 import com.dto.PlanResponce;
 
+import by.base.main.aspect.TimedExecution;
 import by.base.main.model.Order;
 import by.base.main.model.OrderLine;
 import by.base.main.model.OrderProduct;
@@ -344,6 +345,7 @@ public class ReaderSchedulePlan {
 	 * </ol>
 	 * </p>
 	 */
+    @TimedExecution
 	public PlanResponce getPlanResponce(Order order) {
 		String numContract = order.getMarketContractType();
 		if(numContract == null) {
@@ -352,13 +354,15 @@ public class ReaderSchedulePlan {
 		 }
 		Date dateNow = Date.valueOf(LocalDate.now());
 		Date dateOld2Week = Date.valueOf(LocalDate.now().minusDays(14));
-		List <Order> orders = orderService.getOrderByPeriodDeliveryAndCodeContract(dateNow, dateOld2Week, numContract);
+//		List <Order> orders = orderService.getOrderByPeriodDeliveryAndCodeContract(dateNow, dateOld2Week, numContract);
+		List <Order> orders = orderService.getOrderByPeriodDeliveryAndCodeContractNotJOIN(dateNow, dateOld2Week, numContract); // заменил метод, на метод без join.
+		
 		
 		if(!orders.contains(order)) {
 			orders.add(order);
 		}
 		
-		Schedule schedule = scheduleService.getScheduleByNumContract(Long.parseLong(order.getMarketContractType()));
+//		Schedule schedule = scheduleService.getScheduleByNumContract(Long.parseLong(order.getMarketContractType())); за ненадобностью
 		
 		//берем по первой строке заказа и делаем запрос в бд потребности с выгрузкой пяти заказов с совпадениями		
 		Set<OrderLine> lines = order.getOrderLines(); // каждая первая строка в заказе
@@ -366,15 +370,16 @@ public class ReaderSchedulePlan {
 			lines.add(orderI.getOrderLines().stream().findFirst().get());
 		}
 		
-		List<OrderProduct> orderProducts = new ArrayList<OrderProduct>();
 		Date dateNowOrderProducts = Date.valueOf(order.getTimeDelivery().toLocalDateTime().toLocalDate());
 		Date dateOld3WeekOrderProducts = Date.valueOf(order.getTimeDelivery().toLocalDateTime().toLocalDate().minusDays(30));
-		for (OrderLine orderLine : lines) {
-			List<OrderProduct> orderProductsTarget = orderProductService.getOrderProductListHasCodeProductAndPeriod(orderLine, dateOld3WeekOrderProducts, dateNowOrderProducts);
-			if(orderProductsTarget != null && !orderProductsTarget.isEmpty()) {
-				orderProducts.addAll(orderProductsTarget);				
-			}
-		}		
+		List<OrderProduct> orderProducts = orderProductService.getOrderProductListHasCodeProductGroupAndPeriod(new ArrayList<OrderLine>(lines), dateOld3WeekOrderProducts, dateNowOrderProducts);;
+		
+//		for (OrderLine orderLine : lines) { заменил \тот неэффективный блок на клмплексный запрос getOrderProductListHasCodeProductGroupAndPeriod
+//			List<OrderProduct> orderProductsTarget = orderProductService.getOrderProductListHasCodeProductAndPeriod(orderLine, dateOld3WeekOrderProducts, dateNowOrderProducts);
+//			if(orderProductsTarget != null && !orderProductsTarget.isEmpty()) {
+//				orderProducts.addAll(orderProductsTarget);				
+//			}
+//		}		
 		orderProducts.sort((o1, o2) -> o2.getDateCreate().compareTo(o1.getDateCreate()));// сортируемся от самой ранней даты
 		
 		Set<Date> dates = new HashSet<Date>();
@@ -384,7 +389,7 @@ public class ReaderSchedulePlan {
 		List<Date> result = new ArrayList<Date>(dates);
 		result.sort((o1, o2) -> o2.compareTo(o1));// сортируемся от самой ранней даты
 		
-		return new PlanResponce(200, "Информация о датах заказа", result, schedule);		
+		return new PlanResponce(200, "Информация о датах заказа", result, null);		
 	}
 	
 	

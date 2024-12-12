@@ -206,4 +206,15 @@ public interface OrderService {
 	void deleteOrderById(Integer id);
 	
 	boolean checkOrderHasMarketCode(String code);
+	
+	/**
+	 * Метод который возращает заказы по <b>дате доставки (timeDelivery) и номеру контракта </b>
+	 * <br>Без использования join ов. Подтягивается только <b>OrderLines</b>
+	 * @param dateStart
+	 * @param dateEnd
+	 * @param numContract
+	 * @return
+	 */
+	List<Order> getOrderByPeriodDeliveryAndCodeContractNotJOIN(Date dateStart, Date dateEnd, String numContract);
+	
 }

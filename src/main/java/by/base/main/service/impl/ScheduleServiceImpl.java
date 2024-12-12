@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.dto.CounterpartyDTO;
 
+import by.base.main.aspect.TimedExecution;
 import by.base.main.dao.ScheduleDAO;
 import by.base.main.model.Schedule;
 import by.base.main.service.ScheduleService;
@@ -26,6 +27,7 @@ public class ScheduleServiceImpl implements ScheduleService{
 	}
 
 	@Override
+	@TimedExecution
 	public Schedule getScheduleByNumContract(Long num) {
 		// TODO Auto-generated method stub
 		return scheduleDAO.getScheduleByNumContract(num);

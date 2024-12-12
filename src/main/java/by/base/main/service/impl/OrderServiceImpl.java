@@ -34,6 +34,7 @@ public class OrderServiceImpl implements OrderService {
 	private OrderDAO orderDAO;
 
 	@Override
+	@TimedExecution
 	public Order getOrderById(Integer id) {
 		return orderDAO.getOrderById(id);
 	}
@@ -362,6 +363,7 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
+	@TimedExecution
 	public List<Order> getOrderByPeriodDeliveryAndCodeContract(Date dateStart, Date dateEnd, String numContract) {
 		return orderDAO.getOrderByPeriodDeliveryAndCodeContract(dateStart, dateEnd, numContract);
 	}
@@ -401,6 +403,13 @@ public class OrderServiceImpl implements OrderService {
 	public List<Order> getOrderGroupByPeriodSlotsAndProductNotJOIN(Date dateStart, Date dateFinish,
 			List<Long> goodsIds) {
 		return orderDAO.getOrderGroupByPeriodSlotsAndProductNotJOIN(dateStart, dateFinish, goodsIds);
+	}
+
+	@Override
+	@TimedExecution
+	public List<Order> getOrderByPeriodDeliveryAndCodeContractNotJOIN(Date dateStart, Date dateEnd,
+			String numContract) {
+		return orderDAO.getOrderByPeriodDeliveryAndCodeContractNotJOIN(dateStart, dateEnd, numContract);
 	}
 	
 }

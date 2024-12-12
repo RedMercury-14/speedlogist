@@ -73,6 +73,14 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 			return null;
 		}
 		Schedule object = trucks.stream().findFirst().get();
+		
+		//испытать этот метод!
+//		Session currentSession = sessionFactory.getCurrentSession();
+//	    Query<Schedule> theObject = currentSession.createQuery(queryGetObjByNumContract, Schedule.class);
+//	    theObject.setParameter("counterpartyContractCode", num);
+//	    
+//	    // Используем uniqueResultOptional
+//	    return theObject.uniqueResultOptional().orElse(null);
 		return object;
 	}
 

@@ -18,21 +18,14 @@ import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import com.dto.AddressDTO;
 import com.dto.OrderDTO;
-import com.itextpdf.text.pdf.PdfStructTreeController.returnType;
-
 import by.base.main.dao.OrderDAO;
-import by.base.main.dto.OrderDTOForSlot;
-import by.base.main.model.Address;
 import by.base.main.model.Order;
 import by.base.main.model.Product;
 import by.base.main.model.Route;
-import by.base.main.model.Schedule;
 
 @Repository
 public class OrderDAOImpl implements OrderDAO{
@@ -510,7 +503,17 @@ public class OrderDAOImpl implements OrderDAO{
 		return trucks;
 	}
 
-	private static final String queryGetOrderByPeriodDeliveryAndCodeContract = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH r.truck t LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH o.addresses a where o.status !=10 AND o.marketContractType =:marketContractType AND o.timeDelivery BETWEEN :dateStart and :dateEnd";
+	private static final String queryGetOrderByPeriodDeliveryAndCodeContract = "from Order o "
+			+ "LEFT JOIN FETCH o.orderLines ol "
+			+ "LEFT JOIN FETCH o.routes r "
+			+ "LEFT JOIN FETCH r.roteHasShop rhs "
+			+ "LEFT JOIN FETCH r.user ru "
+			+ "LEFT JOIN FETCH r.truck rt "
+			+ "LEFT JOIN FETCH r.driver rd "
+			+ "LEFT JOIN FETCH r.truck t "
+			+ "LEFT JOIN FETCH r.roteHasShop rhs "
+			+ "LEFT JOIN FETCH o.addresses a "
+			+ "where o.status !=10 AND o.marketContractType =:marketContractType AND o.timeDelivery BETWEEN :dateStart and :dateEnd";
 	@Transactional
 	@Override
 	public List<Order> getOrderByPeriodDeliveryAndCodeContract(Date dateStart, Date dateEnd, String numContract) {
@@ -571,6 +574,7 @@ public class OrderDAOImpl implements OrderDAO{
 	@Transactional
 	@Override
 	public List<Order> getOrderByPeriodSlotsAndProduct(Date dateStart, Date dateFinish, Product product) {
+		
 		Timestamp dateStartFinal = Timestamp.valueOf(LocalDateTime.of(dateStart.toLocalDate(), LocalTime.of(00, 00)));
 	    Timestamp dateEndFinal = Timestamp.valueOf(LocalDateTime.of(dateFinish.toLocalDate(), LocalTime.of(23, 59)));
 	    Session currentSession = sessionFactory.getCurrentSession();
@@ -602,6 +606,7 @@ public class OrderDAOImpl implements OrderDAO{
 	@Transactional
 	@Override
 	public List<Order> getOrderGroupByPeriodSlotsAndProduct(Date dateStart, Date dateFinish, List<Long> goodsIds) {
+		
 		Timestamp dateStartFinal = Timestamp.valueOf(LocalDateTime.of(dateStart.toLocalDate(), LocalTime.of(0, 0)));
 	    Timestamp dateEndFinal = Timestamp.valueOf(LocalDateTime.of(dateFinish.toLocalDate(), LocalTime.of(23, 59)));
 	    Session currentSession = sessionFactory.getCurrentSession();
@@ -646,6 +651,28 @@ public class OrderDAOImpl implements OrderDAO{
 		    }
 
 		    return orders;
+	}
+
+	private static final String queryGetOrderByPeriodDeliveryAndCodeContractNotJOIN = "from Order o "
+			+ "where o.status !=10 AND o.marketContractType =:marketContractType AND o.timeDelivery BETWEEN :dateStart and :dateEnd";
+	@Transactional
+	@Override
+	public List<Order> getOrderByPeriodDeliveryAndCodeContractNotJOIN(Date dateStart, Date dateEnd,
+			String numContract) {
+		Timestamp dateStartFinal = Timestamp.valueOf(LocalDateTime.of(dateStart.toLocalDate(), LocalTime.of(00, 00)));
+		Timestamp dateEndFinal = Timestamp.valueOf(LocalDateTime.of(dateEnd.toLocalDate(), LocalTime.of(23, 59)));
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Order> theObject = currentSession.createQuery(queryGetOrderByPeriodDeliveryAndCodeContractNotJOIN, Order.class);
+		theObject.setParameter("dateStart", dateEndFinal, TemporalType.TIMESTAMP);
+		theObject.setParameter("dateEnd", dateStartFinal, TemporalType.TIMESTAMP);
+		theObject.setParameter("marketContractType", numContract.toString());
+		Set<Order> trucks = theObject.getResultList().stream().collect(Collectors.toSet());
+		 for (Order order : trucks) {
+		        Hibernate.initialize(order.getOrderLines());
+//		        Hibernate.initialize(order.getRoutes());
+//		        Hibernate.initialize(order.getAddresses());
+		    }
+		return trucks.stream().collect(Collectors.toList());
 	}
 	
 	

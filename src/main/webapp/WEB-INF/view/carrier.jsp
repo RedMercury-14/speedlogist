@@ -17,7 +17,7 @@
 <body>
 	<jsp:include page="headerNEW.jsp" />
 
-	<div class="container my-container">
+	<div class="container-fluid my-container">
 		<!-- <h1>Страница перевозчика</h1> -->
 		<c:out value="${errorMessage}" />
 		<div class="card-container">
@@ -28,7 +28,7 @@
 				</figure>
 				<a href="<spring:url value="/main/carrier/tender"/>">
 					<div class="st-caption">
-						<h4>Текущие тендеры</h4>
+						<h5>Текущие тендеры</h5>
 					</div>
 				</a>
 			</div>
@@ -39,7 +39,7 @@
 				</figure>
 				<a href="<spring:url value="/main/carrier/transportation"/>">
 					<div class="st-caption">
-						<h4>Текущие перевозки</h4>
+						<h5>Текущие перевозки</h5>
 					</div>
 				</a>
 			</div>
@@ -50,7 +50,7 @@
 				</figure>
 				<a href="<spring:url value="/main/carrier/controlpark/trucklist"/>">
 					<div class="st-caption">
-						<h4>Управление автопарком</h4>
+						<h5>Управление автопарком</h5>
 					</div>
 				</a>
 			</div>
@@ -61,7 +61,7 @@
 				</figure>
 				<a href="<spring:url value="/main/carrier/controlpark/driverlist"/>">
 					<div class="st-caption">
-						<h4>Управление персоналом</h4>
+						<h5>Управление персоналом</h5>
 					</div>
 				</a>
 			</div>
@@ -72,7 +72,7 @@
 				</figure>
 				<a href="<spring:url value="/main/carrier/transportation/routecontrole"/>">
 					<div class="st-caption">
-						<h4>Акты</h4>
+						<h5>Акты</h5>
 					</div>
 				</a>
 			</div>
@@ -83,10 +83,32 @@
 				</figure>
 				<a href="<spring:url value="/main/carrier/transportation/archive"/>">
 					<div class="st-caption">
-						<h4>Архив перевозок</h4>
+						<h5>Архив перевозок</h5>
 					</div>
 				</a>
 			</div>
+
+			<div class="services-thumb">
+				<figure class="st-feature">
+					<img src="${pageContext.request.contextPath}/resources/img/mainPage/images/archive.jpg" alt="">
+				</figure>
+				<a href="<spring:url value="/main/carrier/tender/history"/>">
+					<div class="st-caption">
+						<h5>История тендеров</h5>
+					</div>
+				</a>
+			</div>
+
+			<!-- <div class="services-thumb">
+				<figure class="st-feature">
+					<img src="${pageContext.request.contextPath}/resources/img/mainPage/images/archive.jpg" alt="">
+				</figure>
+				<a href="<spring:url value="/main/carrier/delivery-shop" />">
+					<div class="st-caption">
+						<h5 class="badge-new">Заявки авто на развоз</h5>
+					</div>
+				</a>
+			</div> -->
 		</div>
 	</div>
 

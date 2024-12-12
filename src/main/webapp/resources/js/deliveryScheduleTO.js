@@ -73,6 +73,15 @@ const columnDefs = [
 		width: 120,
 	},
 	{
+		headerName: 'Время действия (для временных гр-в)', field: 'tempSchedulePeriod',
+		cellClass: 'px-1 py-0 text-center font-weight-bold',
+		cellClassRules: {
+			'bg-warning': (params) => params.value
+		},
+		pinned: 'left', lockPinned: true,
+		width: 160,
+	},
+	{
 		headerName: 'Номер TO', field: 'numStock',
 		cellClass: 'px-1 py-0 text-center font-weight-bold',
 		width: 75,
@@ -209,11 +218,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 	addTempNoteCheckbox && addTempNoteCheckbox.addEventListener('change', onNoteChangeHandler)
 
 	// период действия временного графика
-	const tempScheduleDateRangeFromInput = document.querySelector('#tempScheduleDateRange_from')
-	const tempScheduleDateRangeToInput = document.querySelector('#tempScheduleDateRange_to')
-	const todayDateString = dateHelper.getDateForInput(new Date())
-	tempScheduleDateRangeFromInput.min = todayDateString
-	tempScheduleDateRangeToInput.min = todayDateString
+	const tempScheduleDateRangeFromInput = document.querySelector('#startDateTemp')
+	const tempScheduleDateRangeToInput = document.querySelector('#endDateTemp')
+	const tomorrowDateString = dateHelper.getDateForInput((new Date().getTime()) + dateHelper.DAYS_TO_MILLISECONDS)
+	tempScheduleDateRangeFromInput.min = tomorrowDateString
+	tempScheduleDateRangeToInput.min = tomorrowDateString
 	tempScheduleDateRangeFromInput.addEventListener('change', (e) => {
 		tempScheduleDateRangeToInput.value = ''
 		tempScheduleDateRangeToInput.min = e.target.value
@@ -355,13 +364,25 @@ function getMappingData(data) {
 	return data.map(getMappingScheduleItem)
 }
 function getMappingScheduleItem(scheduleItem) {
+	const nowMs = new Date().getTime()
+	const isTempSchedule = scheduleItem.startDateTemp && scheduleItem.endDateTemp
+	const tempSchedulePeriod = isTempSchedule
+		? `${dateHelper.getFormatDate(scheduleItem.startDateTemp)} - ${dateHelper.getFormatDate(scheduleItem.endDateTemp)}`
+		: ''
+	const isActualSchedule = !isTempSchedule
+		? 'Действует'
+		: isTempSchedule && nowMs >= scheduleItem.startDateTemp && nowMs <= scheduleItem.endDateTemp
+			? 'Действует'
+			: 'Не действует'
+
 	return {
 		...scheduleItem,
 		name: scheduleItem.name.trim(),
 		statusToView: getScheduleStatus(scheduleItem.status),
 		// определение временных графиков
-		isTempSchedule: scheduleItem.comment === 'temp' ? 'Временный' : 'Постоянный',
-		isActualSchedule: scheduleItem.comment === 'temp' ? 'Не действует' : 'Действует',
+		isTempSchedule: isTempSchedule ? 'Временный' : 'Постоянный',
+		tempSchedulePeriod,
+		isActualSchedule,
 	}
 }
 function getContextMenuItems(params) {
@@ -850,38 +871,38 @@ function createTempScheduleItemFormHandler(e) {
 
 	console.log(data)
 
-	// disableButton(e.submitter)
+	disableButton(e.submitter)
 
-	// ajaxUtils.postJSONdata({
-	// 	url: addScheduleItemUrl,
-	// 	token: token,
-	// 	data: data,
-	// 	successCallback: async (res) => {
-	// 		enableButton(e.submitter)
-	// 		if (res.status === '200') {
-	// 			$(`#createTempScheduleItemModal`).modal('hide')
-	// 			snackbar.show(res.message)
-	// 			// получаем обновленные данные и обновляем таблицу
-	// 			await getScheduleData(getScheduleUrl)
-	// 			updateTable(gridOptions, scheduleData)
-	// 			return
-	// 		}
+	ajaxUtils.postJSONdata({
+		url: addScheduleItemUrl,
+		token: token,
+		data: data,
+		successCallback: async (res) => {
+			enableButton(e.submitter)
+			if (res.status === '200') {
+				$(`#createTempScheduleItemModal`).modal('hide')
+				snackbar.show(res.message)
+				// получаем обновленные данные и обновляем таблицу
+				await getScheduleData(getScheduleUrl)
+				updateTable(gridOptions, scheduleData)
+				return
+			}
 
-	// 		if (res.status === '100') {
-	// 			const message = res.message ? res.message : 'Неизвестная ошибка'
-	// 			snackbar.show(message)
-	// 			return
-	// 		}
-	// 		if (res.status === '105') {
-	// 			$(`#createTempScheduleItemModal`).modal('hide')
-	// 			showMessageModal(res.message)
-	// 			return
-	// 		}
-	// 	},
-	// 	errorCallback: () => {
-	// 		enableButton(e.submitter)
-	// 	}
-	// })
+			if (res.status === '100') {
+				const message = res.message ? res.message : 'Неизвестная ошибка'
+				snackbar.show(message)
+				return
+			}
+			if (res.status === '105') {
+				$(`#createTempScheduleItemModal`).modal('hide')
+				showMessageModal(res.message)
+				return
+			}
+		},
+		errorCallback: () => {
+			enableButton(e.submitter)
+		}
+	})
 }
 // обработчик формы установки кодового слова
 function setCodeNameFormHandler(e) {
@@ -1110,10 +1131,10 @@ function scheduleItemDataFormatter(formData) {
 		codeNameOfQuantumCounterparty: null,
 		isDayToDay: false,
 	}
-	// if (data.formType && data.formType === 'createTempSchedule') {
-	// 	res.isTempSchedule = true
-	// 	res.tempScheduleDateRange = [ data.tempScheduleDateRange_from, data.tempScheduleDateRange_to ]
-	// }
+	if (data.formType && data.formType === 'createTempSchedule') {
+		res.status = 20
+		res.isTempSchedule = true
+	}
 	return res
 }
 

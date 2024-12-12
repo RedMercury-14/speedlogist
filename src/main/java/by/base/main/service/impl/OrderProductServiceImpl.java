@@ -1,6 +1,7 @@
 package by.base.main.service.impl;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -82,7 +83,7 @@ public class OrderProductServiceImpl implements OrderProductService{
 			result.sort((o1, o2) -> o2.getDateCreate().compareTo(o1.getDateCreate()));// сортируемся от самой ранней даты
 			return result;
 		}else {
-			return null;
+			return new ArrayList<OrderProduct>();
 		}
 	}
 

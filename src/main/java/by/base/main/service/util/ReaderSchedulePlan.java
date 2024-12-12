@@ -624,7 +624,7 @@ public class ReaderSchedulePlan {
 						quantity = product.getOrderProductsListHasDateTarget(dateNow);
 					}
 
-					if(quantity != null) {
+					if(quantity != null && !quantity.isEmpty()) {
 						//тут происходит построчная оценка заказанного товара и принятие решения
 						int zaq = quantityOrderAll.intValue(); // СУММА заказов по периоду 
 						int orlZaq = quantity.get(0).getQuantity(); // аказ от ОРЛ
@@ -771,7 +771,7 @@ public class ReaderSchedulePlan {
 		 
 		 
 		 if(isMistakeZAQ) {
-			 return new PlanResponce(0, "Действие заблокировано!\n"+result);
+			 return new PlanResponce(0, "<b>Действие заблокировано!</b>\n"+result);
 		 }else {
 			 return new PlanResponce(200, result);
 		 }		 

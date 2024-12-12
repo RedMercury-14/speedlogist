@@ -284,13 +284,13 @@ public class MainController {
 		}
 		
 		//телеграмм бот!
-//		if(telegramBot.isRunning == false) {
-//			new BotInitializer(telegramBot).init();
-//			new BotInitializer(telegramBotRouting).initRoutingBot();
-//		}
+		if(telegramBot.isRunning == false) {
+			new BotInitializer(telegramBot).init();
+			new BotInitializer(telegramBotRouting).initRoutingBot();
+		}
 		
 		
-		System.err.println("ТЕЛЕГРАММ БОТ ОТКЛЮЧЕН!");	
+//		System.err.println("ТЕЛЕГРАММ БОТ ОТКЛЮЧЕН!");	
 //		new BotInitializer(telegramBotRoutingTEST).initRoutingBotTEST();
 		
 		try {

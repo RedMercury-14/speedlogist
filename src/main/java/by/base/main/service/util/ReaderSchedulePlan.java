@@ -427,11 +427,15 @@ public class ReaderSchedulePlan {
 			List<Product> products = new ArrayList<Product>();
 			if(productsMap.get(entry.getKey()+"1700") != null) {
 				products.add(productsMap.get(entry.getKey()+"1700"));
+			}else if (productsMap.get(entry.getKey()+"null") != null){
+				products.add(productsMap.get(entry.getKey()+"null"));
 			}else {
 				products.add(new Product(1700, 0.0, 0.0)); // заглушка, чтобы не ломать дальнейшую проверку
 			}
 			if(productsMap.get(entry.getKey()+"1800") != null) {
 				products.add(productsMap.get(entry.getKey()+"1800"));
+			}else if(productsMap.get(entry.getKey()+"null") != null){
+				products.add(productsMap.get(entry.getKey()+"null"));
 			}else {
 				products.add(new Product(1800, 0.0, 0.0)); // заглушка, чтобы не ломать дальнейшую проверку
 			}
@@ -443,6 +447,10 @@ public class ReaderSchedulePlan {
 			Double calculatedPerDay1700 = 0.0; 
 			Double calculatedPerDay1800 = 0.0; 
 			for (Product product : products) {
+				
+				if(product.getNumStock() == null) {
+					continue;
+				}
 				
 				if(product.getNumStock() == 1700) {
 					remainderInDay1700 = product.getBalanceStockAndReserves();
@@ -456,7 +464,12 @@ public class ReaderSchedulePlan {
 				continue;
 			}
 			//далее просматриваем что стоит в слотах (должно приехать) и переводем в дни, для суммирования
-			Date start = generalProduct.getDateUnload();
+			Date start;
+			if(generalProduct.getDateUnload() == null) {
+				start = Date.valueOf(generalProduct.getDateCreate().toLocalDateTime().toLocalDate());
+			}else {
+				start = generalProduct.getDateUnload();
+			}
 			Date finish = Date.valueOf(LocalDate.now().plusDays(30));
 			Double quantityOrderSum1700 = 0.0; // сумма всех заказов товара за заданный период
 			Double quantityOrderSum1800 = 0.0; // сумма всех заказов товара за заданный период

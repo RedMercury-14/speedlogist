@@ -296,14 +296,14 @@ public class MainRestController {
 	private static String classLog;
 	private static String marketJWT;
 	//в отдельный файл
-//	private static final String marketUrl = "https://api.dobronom.by:10806/Json";
-//	private static final String serviceNumber = "BB7617FD-D103-4724-B634-D655970C7EC0";
-//	private static final String loginMarket = "191178504_SpeedLogist";
-//	private static final String passwordMarket = "SL!2024D@2005";
-	private static final String marketUrl = "https://api.dobronom.by:10896/Json";
-	private static final String serviceNumber = "CD6AE87C-2477-4852-A4E7-8BA5BD01C156";
-	private static final String loginMarket = "SpeedLogist";
-	private static final String passwordMarket = "12345678";
+	private static final String marketUrl = "https://api.dobronom.by:10806/Json";
+	private static final String serviceNumber = "BB7617FD-D103-4724-B634-D655970C7EC0";
+	private static final String loginMarket = "191178504_SpeedLogist";
+	private static final String passwordMarket = "SL!2024D@2005";
+//	private static final String marketUrl = "https://api.dobronom.by:10896/Json";
+//	private static final String serviceNumber = "CD6AE87C-2477-4852-A4E7-8BA5BD01C156";
+//	private static final String loginMarket = "SpeedLogist";
+//	private static final String passwordMarket = "12345678";
 	
 
 

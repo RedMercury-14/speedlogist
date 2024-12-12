@@ -550,7 +550,7 @@ public class ReaderSchedulePlan {
 		 Date dateNow = Date.valueOf(LocalDate.now());
 		 String infoRow = "Строк в заказе: " + lines.size();
 		 for (OrderLine line : lines) {
-			 Product product = productService.getProductByCodeAndStock(line.getGoodsId().intValue(), Integer.parseInt(order.getNumStockDelivery()));
+			 Product product = productService.getProductByCodeAndStock(line.getGoodsId().intValue(), Integer.parseInt(order.getIdRamp().toString().substring(0, 4)));
 			 if(product != null) {
 				 products.add(product);				 
 			 }
@@ -641,14 +641,14 @@ public class ReaderSchedulePlan {
 									+" дн; 1800 = "+ balanceProduct.getCalculatedDayStock1800() +" дн;</span>\n";	
 								if(order.getIdRamp().toString().substring(0, 4).equals("1700")) {
 									if(balanceProduct.getCalculatedDayStock1700() > balanceProduct.getCalculatedDayMax()) {
-										if(balanceProduct.getCalculatedDayStock1800() > balanceProduct.getCalculatedDayMax() && balanceProduct.getCalculatedDayStock1700() > balanceProduct.getCalculatedDayStock1800()) {
+										if(balanceProduct.getCalculatedDayStock1700() > balanceProduct.getCalculatedDayStock1800()) {
 											result = result +"Необходимо доставить товар "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") на <b>1800 склад</b>, т.к. остаток товаров в днях меньше чем на текущем складе;\\n";	
 											isMistakeZAQ = true;											
 										}
 									}
 								}else {
 									if(balanceProduct.getCalculatedDayStock1800() > balanceProduct.getCalculatedDayMax()) {
-										if(balanceProduct.getCalculatedDayStock1700() > balanceProduct.getCalculatedDayMax() && balanceProduct.getCalculatedDayStock1800() > balanceProduct.getCalculatedDayStock1700()) {
+										if(balanceProduct.getCalculatedDayStock1800() > balanceProduct.getCalculatedDayStock1700()) {
 											result = result +"Необходимо доставить товар "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") на <b>1700 склад</b>, т.к. остаток товаров в днях меньше чем на текущем складе;\n";	
 											isMistakeZAQ = true;											
 										}
@@ -673,14 +673,14 @@ public class ReaderSchedulePlan {
 									+" дн; 1800 = "+ balanceProduct.getCalculatedDayStock1800() +" дн;</span>\n";	
 								if(order.getIdRamp().toString().substring(0, 4).equals("1700")) {
 									if(balanceProduct.getCalculatedDayStock1700() > balanceProduct.getCalculatedDayMax()) {
-										if(balanceProduct.getCalculatedDayStock1800() > balanceProduct.getCalculatedDayMax() && balanceProduct.getCalculatedDayStock1700() > balanceProduct.getCalculatedDayStock1800()) {
-											result = result +"Необходимо доставить товар "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") на <b>1800 склад</b>, т.к. остаток товаров в днях меньше чем на текущем складе;\\n";	
+										if(balanceProduct.getCalculatedDayStock1700() > balanceProduct.getCalculatedDayStock1800()) {
+											result = result +"Необходимо доставить товар "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") на <b>1800 склад</b>, т.к. остаток товаров в днях меньше чем на текущем складе;\n";	
 											isMistakeZAQ = true;											
 										}
 									}
 								}else {
 									if(balanceProduct.getCalculatedDayStock1800() > balanceProduct.getCalculatedDayMax()) {
-										if(balanceProduct.getCalculatedDayStock1700() > balanceProduct.getCalculatedDayMax() && balanceProduct.getCalculatedDayStock1800() > balanceProduct.getCalculatedDayStock1700()) {
+										if(balanceProduct.getCalculatedDayStock1800() > balanceProduct.getCalculatedDayStock1700()) {
 											result = result +"Необходимо доставить товар "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") на <b>1700 склад</b>, т.к. остаток товаров в днях меньше чем на текущем складе;\n";	
 											isMistakeZAQ = true;											
 										}
@@ -710,14 +710,14 @@ public class ReaderSchedulePlan {
 							+" дн; 1800 = "+ balanceProduct.getCalculatedDayStock1800() +" дн;</span>\n";	
 						if(order.getIdRamp().toString().substring(0, 4).equals("1700")) {
 							if(balanceProduct.getCalculatedDayStock1700() > balanceProduct.getCalculatedDayMax()) {
-								if(balanceProduct.getCalculatedDayStock1800() > balanceProduct.getCalculatedDayMax() && balanceProduct.getCalculatedDayStock1700() > balanceProduct.getCalculatedDayStock1800()) {
+								if(balanceProduct.getCalculatedDayStock1700() > balanceProduct.getCalculatedDayStock1800()) {
 									result = result +"Необходимо доставить товар "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") на <b>1800 склад</b>, т.к. остаток товаров в днях меньше чем на текущем складе;\\n";	
 									isMistakeZAQ = true;											
 								}
 							}
 						}else {
 							if(balanceProduct.getCalculatedDayStock1800() > balanceProduct.getCalculatedDayMax()) {
-								if(balanceProduct.getCalculatedDayStock1700() > balanceProduct.getCalculatedDayMax() && balanceProduct.getCalculatedDayStock1800() > balanceProduct.getCalculatedDayStock1700()) {
+								if(balanceProduct.getCalculatedDayStock1800() > balanceProduct.getCalculatedDayStock1700()) {
 									result = result +"Необходимо доставить товар "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") на <b>1700 склад</b>, т.к. остаток товаров в днях меньше чем на текущем складе;\n";	
 									isMistakeZAQ = true;											
 								}

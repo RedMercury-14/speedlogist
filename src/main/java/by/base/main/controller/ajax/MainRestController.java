@@ -1995,6 +1995,7 @@ public class MainRestController {
 	 * @return
 	 * @throws IOException 
 	 */
+	@TimedExecution
 	private String chheckScheduleMethodAllInfo (HttpServletRequest request ,String num, String date, String companyName) throws IOException {	
 		
 		//тут отправляем на почту сообщение
@@ -3564,7 +3565,7 @@ public class MainRestController {
 	 * @throws IOException 
 	 */
 	@PostMapping("/slot/update")
-	public Map<String, String> postSlotUpdate(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+	public Map<String, Object> postSlotUpdate(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
 		java.util.Date t1 = new java.util.Date();
 		
 		String appPath = request.getServletContext().getRealPath("");
@@ -3574,7 +3575,7 @@ public class MainRestController {
 		
 		User user = getThisUser();
 		String role = user.getRoles().stream().findFirst().get().getAuthority();
-		Map<String, String> response = new HashMap<String, String>();
+		Map<String, Object> response = new HashMap<String, Object>();
 		JSONParser parser = new JSONParser();
 		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
 		Integer idOrder = jsonMainObject.get("idOrder") != null ? Integer.parseInt(jsonMainObject.get("idOrder").toString()) : null;
@@ -3655,6 +3656,9 @@ public class MainRestController {
 			}
 			//конец главная проверка по графику поставок
 		}
+		
+		//проверка по балансу на складах
+		response.put("balance", readerSchedulePlan.checkBalanceBetweenStock(order));
 		
 		
 		String errorMessage = orderService.updateOrderForSlots(order);//проверка на пересечение со временим других слотов и лимит складов
@@ -3864,22 +3868,24 @@ public class MainRestController {
 		//главная проверка по графику поставок
 		String infoCheck = null;		
 		//ТЕСТОВО ОТКЛЮЧИЛ!
-//		if(!checkDeepImport(order, request)) {
-//			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {			
-//				PlanResponce planResponce = readerSchedulePlan.process(order);
-//				if(planResponce.getStatus() == 0) {
-//					infoCheck = planResponce.getMessage();
-//					response.put("status", "105");
-//					response.put("info", infoCheck.replace("\n", "<br>"));
-//					return response;
-//				}else {
-//					infoCheck = planResponce.getMessage();
-//					response.put("info", infoCheck.replace("\n", "<br>"));
-//					response.put("status", "200");
-//				}		
-//				
-//			}
-//		}
+		if(!checkDeepImport(order, request)) {
+			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {			
+				PlanResponce planResponce = readerSchedulePlan.process(order);
+				if(planResponce.getStatus() == 0) {
+					infoCheck = planResponce.getMessage();
+					response.put("status", "105");
+					response.put("info", infoCheck.replace("\n", "<br>"));
+					return response;
+				}else {
+					infoCheck = planResponce.getMessage();
+					response.put("info", infoCheck.replace("\n", "<br>"));
+					response.put("status", "200");
+					//проверка по балансу на складах
+					response.put("balance", readerSchedulePlan.checkBalanceBetweenStock(order));
+				}	
+				
+			}
+		}
 		
 		//конец главная проверка по графику поставок
 		
@@ -3951,7 +3957,7 @@ public class MainRestController {
 			response.put("info", "Ошибка. Не пришел idOrder");
 			return response;
 		}
-		Order order = orderService.getOrderById(idOrder);
+		Order order = orderService.getOrderById(idOrder); // около 7-10 мс.
 		if(order.getLoginManager() != null) {//обработка одновременного вытягивания объекта из дроп зоны
 			response.put("status", "100");
 			response.put("info", "Ошибка доступа. Заказ не зафиксирован. Данный заказ уже поставлен другим пользователем");

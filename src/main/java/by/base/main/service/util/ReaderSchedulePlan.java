@@ -99,6 +99,8 @@ public class ReaderSchedulePlan {
 		if(schedule == null) {
 			return null;
 		}
+		Integer factStock = Integer.parseInt(order.getIdRamp().toString().substring(0, 4)); //фактическое значение склада взятое из номера рампы 
+		
 		Map<String, String> days = schedule.getDaysMap();
 		Map<String, String> daysStep2 = days.entrySet().stream().filter(m->m.getValue().contains("понедельник")
 				|| m.getValue().contains("вторник")
@@ -558,7 +560,8 @@ public class ReaderSchedulePlan {
 	 */
 	public PlanResponce process(Order order) {
 		 Set<OrderLine> lines = order.getOrderLines(); // строки в заказе
-		 List<Product> products = new ArrayList<Product>(); //
+//		 List<Product> products = new ArrayList<Product>(); 
+		 Map<Integer,Product> products = new HashMap<Integer, Product>(); 
 		 String numContract = order.getMarketContractType();
 		 String result = "";
 		 if(numContract == null) {
@@ -567,10 +570,11 @@ public class ReaderSchedulePlan {
 		 }
 		 Date dateNow = Date.valueOf(LocalDate.now());
 		 String infoRow = "Строк в заказе: " + lines.size();
+		 Integer factStock = Integer.parseInt(order.getIdRamp().toString().substring(0, 4)); //фактическое значение склада взятое из номера рампы
 		 for (OrderLine line : lines) {
-			 Product product = productService.getProductByCodeAndStock(line.getGoodsId().intValue(), Integer.parseInt(order.getIdRamp().toString().substring(0, 4)));
+			 Product product = productService.getProductByCodeAndStock(line.getGoodsId().intValue(), factStock);
 			 if(product != null) {
-				 products.add(product);				 
+				 products.put(product.getCodeProduct(),product);				 
 			 }
          }
 		 
@@ -593,7 +597,7 @@ public class ReaderSchedulePlan {
 		 
 		 
 		 
-		 DateRange dateRange = getDateRange(schedule, products, order); // тут раелизуются пункты 2 и 3
+		 DateRange dateRange = getDateRange(schedule, new ArrayList<>(products.values()), order); // тут раелизуются пункты 2 и 3
 		 
 		 System.out.println("dateRange = " + dateRange);
 		 
@@ -623,7 +627,9 @@ public class ReaderSchedulePlan {
 			
 			 for (OrderLine orderLine : lines) {
 				Double quantityOrderAll = map.get(orderLine.getGoodsId()).num;
-				Product product = productService.getProductByCodeAndStock(orderLine.getGoodsId().intValue(), Integer.parseInt(order.getNumStockDelivery()));
+//				Product product = productService.getProductByCodeAndStock(orderLine.getGoodsId().intValue(), factStock);
+				Product product = products.get(orderLine.getGoodsId().intValue());
+				
 				if(product!=null) {
 					List<OrderProduct> quantity = null;
 					if(order.getDateOrderOrl() != null) {
@@ -631,12 +637,15 @@ public class ReaderSchedulePlan {
 					}else {
 						quantity = product.getOrderProductsListHasDateTarget(dateNow);
 					}
+					
+					
 
 					if(quantity != null && !quantity.isEmpty()) {
 						//тут происходит построчная оценка заказанного товара и принятие решения
 						int zaq = quantityOrderAll.intValue(); // СУММА заказов по периоду 
 						int orlZaq = quantity.get(0).getQuantity(); // аказ от ОРЛ
 						int singleZaq = orderLine.getQuantityOrder().intValue(); //Заказ по ордеру (не суммированный)
+						
 						// реализация специальной логики: если заказ от менеджера больше или равен заказу от ОРЛ - берем только его заказ
 						// если заказ меньше 80% от того что заказал ОРЛ - проверяем другие заказы
 						if (singleZaq < 0.8 * orlZaq) {

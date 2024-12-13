@@ -19,6 +19,10 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
+import by.base.main.service.ProductService;
+
 @Entity
 @Table(name = "product")
 public class Product {
@@ -596,13 +600,14 @@ public class Product {
 		}
 	}
 	
+	
 	/**
 	 * Возвращает остортированный список с заказами <b>(потребностью)</b> продуктов начиная от самой раннего расчёта к targetDate
 	 * <br> Если заказов вообще нет - то возвращает null
 	 * @param targetDate
 	 * @return
 	 */
-	public List<OrderProduct> getOrderProductsListHasDateTarget(Date targetDate) {
+	public List<OrderProduct> getOrderProductsListHasDateTarget(Date targetDate) {		
 		if(orderProducts != null && !orderProducts.isEmpty()) {
 			return orderProducts.stream()
 	                .filter(obj -> obj.getDateCreate().before(targetDate)) // Фильтруем только те, которые позднее targetDate

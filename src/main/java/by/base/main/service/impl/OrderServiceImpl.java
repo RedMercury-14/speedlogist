@@ -311,6 +311,7 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
+	@TimedExecution
 	public Integer getSummPallInStockExternal(Order order) {
 		Timestamp dateTimeStart = order.getTimeDelivery();
 		String numStock = null;

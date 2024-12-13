@@ -18,10 +18,11 @@ body {
     flex-wrap: wrap;
     gap: 30px;
     /* max-width: 1120px; */
+    justify-content: center;
 }
 .services-thumb {
     margin: 25px 0;
-    width: 30%;
+    width: 22%;
 }
 .services-thumb img {
     border: 3px solid #acacac;
@@ -34,8 +35,8 @@ body {
     background-color: #FFF;
     z-index: 1;
     position: relative;
-    margin: -70px 15px auto;
-    padding: 10px;
+    margin: -45px 15px auto;
+    /* padding: 10px; */
     border-bottom: solid 3px var(--secundary-color);
     -webkit-transition: transform 0.3s ease-in-out 0s;
     -moz-transition: transform 0.3s ease-in-out 0s;
@@ -83,9 +84,10 @@ body {
     width: 60px;
     margin: auto;
 }
-.st-caption h4 {
+.st-caption h5 {
     font-weight: 600;
-    margin-top: 10px;
+    padding: 10px 20px;
+    margin: 0;
 }
 img {
     width: 100%;
@@ -93,4 +95,19 @@ img {
 footer.to-bottom {
     margin-top: 51px;
     position: fixed;
+}
+
+.badge-new::before {
+    content: "new";
+    position: relative;
+    padding: .25em .4em;
+    font-size: 50%;
+    font-weight: 700;
+    line-height: 1;
+    color: red;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: top;
+    border-radius: .25rem;
+    transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
 }

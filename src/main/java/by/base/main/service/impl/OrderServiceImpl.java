@@ -18,9 +18,11 @@ import org.springframework.stereotype.Service;
 
 import com.dto.OrderDTO;
 
+import by.base.main.aspect.TimedExecution;
 import by.base.main.dao.OrderDAO;
 import by.base.main.dto.OrderDTOForSlot;
 import by.base.main.model.Order;
+import by.base.main.model.Product;
 import by.base.main.model.Route;
 import by.base.main.model.Schedule;
 import by.base.main.service.OrderService;
@@ -32,6 +34,7 @@ public class OrderServiceImpl implements OrderService {
 	private OrderDAO orderDAO;
 
 	@Override
+	@TimedExecution
 	public Order getOrderById(Integer id) {
 		return orderDAO.getOrderById(id);
 	}
@@ -360,6 +363,7 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
+	@TimedExecution
 	public List<Order> getOrderByPeriodDeliveryAndCodeContract(Date dateStart, Date dateEnd, String numContract) {
 		return orderDAO.getOrderByPeriodDeliveryAndCodeContract(dateStart, dateEnd, numContract);
 	}
@@ -382,6 +386,30 @@ public class OrderServiceImpl implements OrderService {
 	@Override
 	public List<Order> getOrderByLink(Integer link) {
 		return orderDAO.getOrderByLink(link);
+	}
+
+	@Override
+	public List<Order> getOrderByPeriodSlotsAndProduct(Date dateStart, Date dateFinish, Product product) {
+		return orderDAO.getOrderByPeriodSlotsAndProduct(dateStart, dateFinish, product);
+	}
+
+	@Override
+	public List<Order> getOrderGroupByPeriodSlotsAndProduct(Date dateStart, Date dateFinish, List<Long> goodsIds) {
+		return orderDAO.getOrderGroupByPeriodSlotsAndProduct(dateStart, dateFinish, goodsIds);
+	}
+
+	@Override
+	@TimedExecution
+	public List<Order> getOrderGroupByPeriodSlotsAndProductNotJOIN(Date dateStart, Date dateFinish,
+			List<Long> goodsIds) {
+		return orderDAO.getOrderGroupByPeriodSlotsAndProductNotJOIN(dateStart, dateFinish, goodsIds);
+	}
+
+	@Override
+	@TimedExecution
+	public List<Order> getOrderByPeriodDeliveryAndCodeContractNotJOIN(Date dateStart, Date dateEnd,
+			String numContract) {
+		return orderDAO.getOrderByPeriodDeliveryAndCodeContractNotJOIN(dateStart, dateEnd, numContract);
 	}
 	
 }

@@ -65,15 +65,23 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	@Transactional
 	@Override
 	public Schedule getScheduleByNumContract(Long num) {
+//		Session currentSession = sessionFactory.getCurrentSession();
+//		Query<Schedule> theObject = currentSession.createQuery(queryGetObjByNumContract, Schedule.class);
+//		theObject.setParameter("counterpartyContractCode", num);
+//		List<Schedule> trucks = theObject.getResultList();
+//		if(trucks.isEmpty()) {
+//			return null;
+//		}
+//		Schedule object = trucks.stream().findFirst().get();
+//		return object;
+		
+		//испытать этот метод!
 		Session currentSession = sessionFactory.getCurrentSession();
-		Query<Schedule> theObject = currentSession.createQuery(queryGetObjByNumContract, Schedule.class);
-		theObject.setParameter("counterpartyContractCode", num);
-		List<Schedule> trucks = theObject.getResultList();
-		if(trucks.isEmpty()) {
-			return null;
-		}
-		Schedule object = trucks.stream().findFirst().get();
-		return object;
+	    Query<Schedule> theObject = currentSession.createQuery(queryGetObjByNumContract, Schedule.class);
+	    theObject.setParameter("counterpartyContractCode", num);
+	    
+	    // Используем uniqueResultOptional
+	    return theObject.uniqueResultOptional().orElse(null);
 	}
 
 	@Transactional

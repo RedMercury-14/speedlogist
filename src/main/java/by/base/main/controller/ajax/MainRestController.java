@@ -332,180 +332,19 @@ public class MainRestController {
 //		responseMap.put("time", t2.getTime()-t1.getTime() + " ms");
 //		return responseMap;		
 //	}
-
-//	@GetMapping("/test")
-//	@TimedExecution
-//    public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException{
-//		Map<String, Object> responseMap = new HashMap<>();
-//
-//		Schedule testSchedule = new Schedule();
-//
-//		try {
-//			java.util.Date startDate = new SimpleDateFormat("dd MM yyyy").parse("05 11 2024");
-//            java.util.Date endDate = new SimpleDateFormat("dd MM yyyy").parse("09 11 2024");
-//			testSchedule.setStartDateTemp(new java.sql.Date(startDate.getTime()));
-//			testSchedule.setEndDateTemp(new java.sql.Date(endDate.getTime()));
-//        } catch (java.text.ParseException e) {
-//            throw new RuntimeException(e);
-//        }
-//
-//		testSchedule.setCounterpartyCode(98897L);
-//		testSchedule.setName("АИДИЕС БОРЖОМИ БЕЛ");
-//		testSchedule.setCounterpartyContractCode(456L);
-//		testSchedule.setNumStock(230);
-//
-//
-//		List<Schedule> schedules = scheduleService.getScheduleByNumContractAndNUmStockWithTemp(testSchedule.getCounterpartyContractCode(), testSchedule.getNumStock());
-//
-//		boolean isScheduleCorrect = scheduleService.checkScheduleIntersection(schedules, testSchedule);
-//		responseMap.put("result", isScheduleCorrect);
-//
-//		return responseMap;
-//    }
-
 	
-	@GetMapping("/test")
+	
+	
+	@GetMapping("/test/{id}")
 	@TimedExecution
-    public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException{
-
-		//TODO Ira test
+    public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response, @PathVariable String id) throws IOException{
        Map<String, Object> responseMap = new HashMap<>();
 		System.out.println("Start --- sendSchedulesTOHasORL");
-		// Получаем текущую дату для имени файла
-		LocalDate currentTime = LocalDate.now();
-		String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
 
-		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to.ORL");
-		List<String> emailsSupportDepartment = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to.supportDepartment");
-
-		Map<String, List<String>> draftLists = propertiesUtils.getListForDraftFolders(servletContext);
-
-		System.out.println(emailsORL);
-//      emails.addAll(emailsSupport);
-		String appPath = servletContext.getRealPath("/");
-
-
-
-		String fileName1200 = "1200 (----Холодный----).xlsx";
-		String fileName1100 = "1100 График прямой сухой.xlsx";
-		String fileNameSample = "График для шаблоново.xlsx";
-		String draftFolder = appPath + "resources/others/drafts/";
-
-		File draftFolderFile = new File(draftFolder);
-		if (draftFolderFile.exists()) {
-			deleteFolder(draftFolderFile);
-		}
-
-		draftFolderFile.mkdir();
-
-
-		try {
-
-			// начало части теста изменений -  перенести в ScheduledTask
-			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesByTOTypeWithTemp("холодный")
-					.stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList())), appPath + "resources/others/" + fileName1200);
-			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesByTOTypeWithTemp("сухой")
-					.stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList())), appPath + "resources/others/" + fileName1100);
-			poiExcel.exportToExcelSampleListTO(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesByTOTypeWithTemp("холодный")
-					.stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList())), appPath + "resources/others/" + fileNameSample);
-			poiExcel.exportToExcelDrafts(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesListTOWithTemp()
-					.stream().filter(s -> s.getStatus() == 20).collect(Collectors.toList())), draftFolder);
-			// конец части теста изменений
-
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.err.println("Ошибка формирование EXCEL");
-		}
-
-//      response.setHeader("content-disposition", "attachment;filename="+fileName+".xlsx");
-		List<File> files = new ArrayList<File>();
-		files.add(new File(appPath + "resources/others/" + fileName1200));
-		files.add(new File(appPath + "resources/others/" + fileName1100));
-		files.add(new File(appPath + "resources/others/" + fileNameSample));
-
-		File folder = new File(draftFolder);
-		List<File> draftFiles = new ArrayList<File>(); //для теста черновиков
-		List<File> draftFilesORL = new ArrayList<>();
-		List<File> draftFilesSupportDepartment = new ArrayList<>();
-		Map <String, List<File>> draftFilesMap = new HashMap<>();
-
-		File[] drafts = folder.listFiles();
-
-		for (String key: draftLists.keySet()){
-			draftFilesMap.put(key, new ArrayList<>());
-		}
-
-		if (drafts != null) {
-			for (File file: drafts){
-				String fileName = file.getName();
-
-				for (String key: draftLists.keySet()){
-
-					for (String draftNumber: draftLists.get(key)){
-						String regEx = " " + draftNumber + ".";
-
-						if (fileName.contains(regEx)){
-							draftFilesMap.get(key).add(file);
-						}
-					}
-				}
-
-				if (fileName.contains("виртуальный")){
-					draftFilesMap.get("ORL").add(file);
-				}
-
-				draftFiles.add(file); //для теста черновиков
-			}
-
-		}
-
-		//files.add(new File(appPath + "resources/others/drafts"));
-
-		System.out.println(appPath + "resources/others/");
-
-		File zipFile;
-		File zipFileDrafts; //для теста черновиков
-		File zipFilesORL;
-		File zipFilesSupportDepartment;
-		List <File> zipFileDraftsList = new ArrayList<>();
-		List <File> filesZip = new ArrayList<File>();
-		List <File> filesZipORL = new ArrayList<>();
-		List <File> filesZipSupportDepartment = new ArrayList<>();
-
-
-		try {
-			zipFile = createZipFile(files, appPath + "resources/others/TO.zip");
-			zipFileDrafts = createZipFile(draftFiles, appPath + "resources/others/Шаблоны.zip"); //для теста черновиков
-
-			zipFilesORL = createZipFile(draftFilesMap.get("ORL"), appPath + "resources/others/ORL.zip");
-			zipFilesSupportDepartment = createZipFile(draftFilesMap.get("SupportDepartment"), appPath + "resources/others/SupportDepartment.zip");
-
-//			for (String key: draftFilesMap.keySet()){
-//				zipFileDraftsList.add(createZipFile(draftFilesMap.get(key), appPath + "resources/others/" + key + ".zip"));
-//			}
-
-//			filesZip.add(zipFile);
-//			filesZip.add(zipFileDrafts);//для теста черновиков
-//			filesZip.addAll(zipFileDraftsList);
-			filesZipORL.add(zipFile);
-			filesZipORL.add(zipFilesORL);
-
-			filesZipSupportDepartment.add(zipFile);
-			filesZipSupportDepartment.add(zipFilesSupportDepartment);
-
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		//mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO" + currentTimeString, "Автоматическая отправка графиков поставок на ТО\nВерсия с макросом выделений (Ctr+t)", filesZip, emails);
-//		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO" + currentTimeString, "Автоматическая отправка графиков поставок на ТО\nВерсия с макросом выделений (Ctr+t)", filesZipORL, emailsORL);
-//		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO" + currentTimeString, "Автоматическая отправка графиков поставок на ТО\nВерсия с макросом выделений (Ctr+t)", filesZipSupportDepartment, emailsSupportDepartment);
+		responseMap.put("result", readerSchedulePlan.checkBalanceBetweenStock(orderService.getOrderById(Integer.parseInt(id))));
 
 		System.out.println("Finish --- sendSchedulesHasTOORL");
-	    //responseMap.put("sched", scheduleService.getSchedulesTOByNumContractWithTemp(14L));
-
-	   return responseMap;
+	    return responseMap;
     }
 	
 	public static boolean deleteFolder(File folder) {
@@ -2156,7 +1995,7 @@ public class MainRestController {
 	 * @return
 	 * @throws IOException 
 	 */
-	private String chheckScheduleMethodAllInfo (HttpServletRequest request ,String num, String date, String companyName) throws IOException {	
+	private String chheckScheduleMethodAllInfo (HttpServletRequest request ,String num, String date, String companyName) throws IOException {
 		
 		//тут отправляем на почту сообщение
 		String appPath = request.getServletContext().getRealPath("");
@@ -2570,8 +2409,6 @@ public class MainRestController {
 				response.put("body", scheduleOld);
 				return response;
 			}
-
-
 			schedule.setIdSchedule(null);
 			schedule.setNameStock(shop.getAddress());
 			schedule.setNumStock(shop.getNumshop());
@@ -3051,10 +2888,10 @@ public class MainRestController {
 	 * @param param
 	 * @return
 	 */
-	@GetMapping("/order-support/setMaxDay/{code}&{day}")
-	public Map<String, Object> setMaxDay(HttpServletRequest request, @PathVariable String code, @PathVariable String day) {
+	@GetMapping("/order-support/setMaxDay/{code}&{stock}&{day}")
+	public Map<String, Object> setMaxDay(HttpServletRequest request, @PathVariable String code, @PathVariable String day, @PathVariable String stock) {
 		Map<String, Object> response = new HashMap<String, Object>();
-		Product product = productService.getProductByCode(Integer.parseInt(code.trim()));
+		Product product = productService.getProductByCodeAndStock(Integer.parseInt(code.trim()), Integer.parseInt(stock));
 		product.setDayMax(Integer.parseInt(day));
 		productService.updateProduct(product);
 		response.put("status", "200");
@@ -3727,7 +3564,7 @@ public class MainRestController {
 	 * @throws IOException 
 	 */
 	@PostMapping("/slot/update")
-	public Map<String, String> postSlotUpdate(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+	public Map<String, Object> postSlotUpdate(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
 		java.util.Date t1 = new java.util.Date();
 		
 		String appPath = request.getServletContext().getRealPath("");
@@ -3737,7 +3574,7 @@ public class MainRestController {
 		
 		User user = getThisUser();
 		String role = user.getRoles().stream().findFirst().get().getAuthority();
-		Map<String, String> response = new HashMap<String, String>();
+		Map<String, Object> response = new HashMap<String, Object>();
 		JSONParser parser = new JSONParser();
 		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
 		Integer idOrder = jsonMainObject.get("idOrder") != null ? Integer.parseInt(jsonMainObject.get("idOrder").toString()) : null;
@@ -3819,7 +3656,10 @@ public class MainRestController {
 			//конец главная проверка по графику поставок
 		}
 		
-		
+		//проверка по балансу на складах
+		response.put("balance", readerSchedulePlan.checkBalanceBetweenStock(order));
+
+
 		String errorMessage = orderService.updateOrderForSlots(order);//проверка на пересечение со временим других слотов и лимит складов
 		
 		if(errorMessage!=null) {
@@ -4027,22 +3867,24 @@ public class MainRestController {
 		//главная проверка по графику поставок
 		String infoCheck = null;		
 		//ТЕСТОВО ОТКЛЮЧИЛ!
-//		if(!checkDeepImport(order, request)) {
-//			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {			
-//				PlanResponce planResponce = readerSchedulePlan.process(order);
-//				if(planResponce.getStatus() == 0) {
-//					infoCheck = planResponce.getMessage();
-//					response.put("status", "105");
-//					response.put("info", infoCheck.replace("\n", "<br>"));
-//					return response;
-//				}else {
-//					infoCheck = planResponce.getMessage();
-//					response.put("info", infoCheck.replace("\n", "<br>"));
-//					response.put("status", "200");
-//				}		
-//				
-//			}
-//		}
+		if(!checkDeepImport(order, request)) {
+			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {
+				PlanResponce planResponce = readerSchedulePlan.process(order);
+				if(planResponce.getStatus() == 0) {
+					infoCheck = planResponce.getMessage();
+					response.put("status", "105");
+					response.put("info", infoCheck.replace("\n", "<br>"));
+					return response;
+				}else {
+					infoCheck = planResponce.getMessage();
+					response.put("info", infoCheck.replace("\n", "<br>"));
+					response.put("status", "200");
+					//проверка по балансу на складах
+					response.put("balance", readerSchedulePlan.checkBalanceBetweenStock(order));
+				}
+
+			}
+		}
 		
 		//конец главная проверка по графику поставок
 		
@@ -4114,7 +3956,7 @@ public class MainRestController {
 			response.put("info", "Ошибка. Не пришел idOrder");
 			return response;
 		}
-		Order order = orderService.getOrderById(idOrder);
+		Order order = orderService.getOrderById(idOrder); // около 7-10 мс.
 		if(order.getLoginManager() != null) {//обработка одновременного вытягивания объекта из дроп зоны
 			response.put("status", "100");
 			response.put("info", "Ошибка доступа. Заказ не зафиксирован. Данный заказ уже поставлен другим пользователем");
@@ -4207,10 +4049,6 @@ public class MainRestController {
 		File file1 = poiExcel.getFileByMultipartTarget(excel, request, "490.xlsx");
 //		String text = poiExcel.testHeaderOrderHasExcel(file1);
 		String text;
-//		if(text != null) {
-//			response.put("150", text);
-//			return response;
-//		}
 		//основной метод загрузки в БД
 		text = poiExcel.loadBalanceStock(file1, request);
 		

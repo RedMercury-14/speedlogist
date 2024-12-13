@@ -1362,7 +1362,8 @@ public class POIExcel {
 	            cell6.setCellType(CellType.STRING);
 	            
 	            
-	            Product product = productService.getProductByCode(Integer.parseInt(cellCodeProduct.toString()));
+//	            Product product = productService.getProductByCode(Integer.parseInt(cellCodeProduct.toString()));
+	            Product product = productService.getProductByCodeAndStock(Integer.parseInt(cellCodeProduct.toString()), Integer.parseInt(cellNumStock.toString()));
 	            if(product == null) {
 	            	product = new Product();
 	            	product.setRating(Integer.parseInt(cellRating.toString()));

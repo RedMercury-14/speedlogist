@@ -10,6 +10,7 @@ import com.dto.OrderDTO;
 
 import by.base.main.dto.OrderDTOForSlot;
 import by.base.main.model.Order;
+import by.base.main.model.Product;
 import by.base.main.model.Route;
 import by.base.main.model.Schedule;
 
@@ -150,6 +151,39 @@ public interface OrderDAO {
 	 */
 	List<Order> getOrderByPeriodDeliveryAndListCodeContract(Date dateStart, Date dateEnd, List<String> numContracts);
 	
+	/**
+	 * Возвращаем заказы за период, в которые входит таргетный продукт
+	 * @param dateStart
+	 * @param Finish
+	 * @param product
+	 * @return
+	 */
+	List<Order> getOrderByPeriodSlotsAndProduct(Date dateStart, Date dateFinish, Product product);
+	
+	/**
+	 * прямой наследний <b>List<Order> getOrderByPeriodSlotsAndProduct(Date dateStart, Date dateFinish, Product product)</b>
+	 * <br> Возвращаем заказы за период, в которые входит <b>группа</b> таргетных продуктов
+	 * 
+	 * @param dateStart
+	 * @param Finish
+	 * @param product
+	 * @return
+	 */
+	List<Order> getOrderGroupByPeriodSlotsAndProduct(Date dateStart, Date dateFinish, List<Long> goodsIds);
+	
+	/**
+	 * прямой наследний <b>List<Order> getOrderGroupByPeriodSlotsAndProduct(Date dateStart, Date dateFinish, List<Long> goodsIds)</b>
+	 * <br> Возвращаем заказы за период, в которые входит <b>группа</b> таргетных продуктов
+	 * <br> Не подтягивает ненужные связи, а инициирует только <b>OrderLines!</b>
+	 * <br> <b>Не использовать для фронта</b>
+	 * 
+	 * @param dateStart
+	 * @param Finish
+	 * @param product
+	 * @return
+	 */
+	List<Order> getOrderGroupByPeriodSlotsAndProductNotJOIN(Date dateStart, Date dateFinish, List<Long> goodsIds);
+	
 	Integer saveOrder (Order order);
 	
 	void updateOrder (Order order);
@@ -163,5 +197,15 @@ public interface OrderDAO {
 	boolean checkOrderHasMarketCode(String code);
 	
 	Order getOrderHasMarketCode(String code);
+	
+	/**
+	 * Метод который возращает заказы по <b>дате доставки (timeDelivery) и номеру контракта </b>
+	 * <br>Без использования join ов. Подтягивается только <b>OrderLines</b>
+	 * @param dateStart
+	 * @param dateEnd
+	 * @param numContract
+	 * @return
+	 */
+	List<Order> getOrderByPeriodDeliveryAndCodeContractNotJOIN(Date dateStart, Date dateEnd, String numContract);
 	
 }

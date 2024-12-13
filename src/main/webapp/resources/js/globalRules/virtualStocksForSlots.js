@@ -83,7 +83,7 @@ export const stocks = [
 	},
 	{
 		id: '1800',
-		name: 'Склад 1700 (только самовывоз)', // ВРЕМЕННО ДЛЯ 1800
+		name: 'Склад 1800',
 		address: '223065, Беларусь, Минская область, Минский р-н, РАД М-4, 18км, 2А/2, склад W07',
 		contact: '+375293473695',
 		workingHoursStart: '00:00',
@@ -92,15 +92,15 @@ export const stocks = [
 		internaMovementsTimes: ['12:00', '20:00'],
 		internalMovementsRamps: ['180001'],
 		maxPall: {
-			externalMovement: 800, // редактировать ПОСТОЯННУЮ паллетовместимость ЗДЕСЬ
+			externalMovement: 1300, // редактировать ПОСТОЯННУЮ паллетовместимость ЗДЕСЬ
 			internalMovement: 500, // паллетовместимость внутренних перевозок
 		},
 		weekends: [],
 		ramps: [
 			{ id: "180001", title: "Рампа 1", businessHours: { startTime: '00:00', endTime: '24:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
 			{ id: "180002", title: "Рампа 2", businessHours: { startTime: '00:00', endTime: '24:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
-			// { id: "180003", title: "Рампа 3", businessHours: { startTime: '00:00', endTime: '24:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
-			// { id: "180004", title: "Рампа 4", businessHours: { startTime: '00:00', endTime: '24:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
+			{ id: "180003", title: "Рампа 3", businessHours: { startTime: '00:00', endTime: '24:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
+			{ id: "180004", title: "Рампа 4", businessHours: { startTime: '00:00', endTime: '24:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
 			// { id: "180005", title: "Рампа 5", businessHours: { startTime: '00:00', endTime: '24:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
 			// { id: "180006", title: "Рампа 6 (Резерв)", businessHours: { startTime: '00:00', endTime: '24:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
 		],

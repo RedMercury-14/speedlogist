@@ -2095,8 +2095,8 @@ public class POIExcel {
 
                 if (row != null) {
                     Integer code = (int) row.getCell(0).getNumericCellValue();
-                    String nameProduct = row.getCell(1).getStringCellValue();
-                    int quantityInPallet = (int) roundВouble(row.getCell(2).getNumericCellValue(), 0);                    
+                    String nameProduct = row.getCell(1).getStringCellValue();                
+                    int quantityInPallet = (int) roundВouble(Double.parseDouble(getCellValue(row.getCell(2))), 0);                    
                     int quantity = (int) roundВouble(row.getCell(3).getNumericCellValue(), 0);
                     int quantity1800 = (int) roundВouble(row.getCell(4).getNumericCellValue(), 0);
                     int quantity1700Max = (int) roundВouble(row.getCell(5).getNumericCellValue(), 0);

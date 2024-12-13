@@ -611,18 +611,6 @@ public class ReaderSchedulePlan {
 		 
 //		 List<Product> balance = checkBalanceBetweenStock(order); // проерка балансов
 		 
-		 
-//			if(order.getIdRamp().toString().substring(0, 4).equals("1700")) {
-//				Collections.sort(balance, (o1, o2) -> o1.getCalculatedDayStock1700().compareTo(o2.getCalculatedDayStock1700()));
-//				if(balance.get(0).getCalculatedDayStock1700() > balance.get(0).getCalculatedDayMax()) {
-//					if() {
-//						
-//					}
-//				}
-//			}else {
-//				Collections.sort(balance, (o1, o2) -> o1.getCalculatedDayStock1800().compareTo(o2.getCalculatedDayStock1800()));
-//			}
-		 
 		 if(checkHasLog(dateRange, order)) {
 			 //если входит в лог плече, то находим такие же заказы с такими же SKU
 			 List<Order> orders = orderService.getOrderByTimeDelivery(dateRange.start, dateRange.end);

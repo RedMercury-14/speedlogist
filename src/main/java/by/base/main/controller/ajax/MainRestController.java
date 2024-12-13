@@ -1895,12 +1895,22 @@ public class MainRestController {
 //		mapOrderProduct.entrySet().forEach(e-> System.out.println(e.getKey() + "   ---   " + e.getValue()));
 		
 		List<Product> products = productService.getAllProductList();
+
+
+
 		Map<Integer, Product> productsMap = products.stream().collect(Collectors.toMap(
 		        Product::getCodeProduct,
 		        product -> product,
 		        (existing, replacement) -> existing // игнорируем дубликат
 		    ));
 		
+//		Map<String, Product> productsMap = products.stream().collect(Collectors.toMap(
+//			    product -> product.getCodeProduct() + "" + product.getNumStock(),
+//			    product -> product,
+//			    (existing, replacement) -> existing // игнорируем дубликат
+//			));
+
+
 		for (Map.Entry<Integer, OrderProduct> entry : mapOrderProduct.entrySet()) {
 			Product product = productsMap.get(entry.getKey());
 			if(product == null) {
@@ -1995,6 +2005,7 @@ public class MainRestController {
 	 * @return
 	 * @throws IOException 
 	 */
+	@TimedExecution
 	private String chheckScheduleMethodAllInfo (HttpServletRequest request ,String num, String date, String companyName) throws IOException {
 		
 		//тут отправляем на почту сообщение
@@ -2857,7 +2868,7 @@ public class MainRestController {
 	@GetMapping("/order-support/setNewBalance/{code}&{stock}")
 	public Map<String, Object> setNewBalance(HttpServletRequest request, @PathVariable String code, @PathVariable String stock) {
 		Map<String, Object> response = new HashMap<String, Object>();
-		Product product = productService.getProductByCode(Integer.parseInt(code.trim()));
+		Product product = productService.getProductByCodeAndStock(Integer.parseInt(code.trim()), Integer.parseInt(stock));
 		product.setBalanceStockAndReserves(Double.parseDouble(stock));
 		productService.updateProduct(product);
 		response.put("status", "200");
@@ -2871,10 +2882,10 @@ public class MainRestController {
 	 * @param code
 	 * @return
 	 */
-	@GetMapping("/order-support/changeException/{idProduct}")
-	public Map<String, Object> changeException(HttpServletRequest request, @PathVariable String idProduct) {
+	@GetMapping("/order-support/changeException/{idProduct}&{stock}")
+	public Map<String, Object> changeException(HttpServletRequest request, @PathVariable String idProduct, @PathVariable String stock) {
 		Map<String, Object> response = new HashMap<String, Object>();
-		Product product = productService.getProductByCode(Integer.parseInt(idProduct.trim()));
+		Product product = productService.getProductByCodeAndStock(Integer.parseInt(idProduct.trim()), Integer.parseInt(stock));
 		product.setIsException(!product.getIsException());
 		productService.updateProduct(product);
 		response.put("status", "200");
@@ -2936,7 +2947,7 @@ public class MainRestController {
 	 */
 	@GetMapping("/order-support/getStockRemainder")
 	public Set<Product> getStockRemainderSupport(HttpServletRequest request) {
-		Set<Product> targetRoutes = productService.getAllProductList().stream().collect(Collectors.toSet());		
+		Set<Product> targetRoutes = productService.getAllProductList().stream().collect(Collectors.toSet());
 		return targetRoutes;
 	}
 	

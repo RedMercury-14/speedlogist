@@ -2947,7 +2947,7 @@ public class MainRestController {
 	 */
 	@GetMapping("/order-support/getStockRemainder")
 	public Set<Product> getStockRemainderSupport(HttpServletRequest request) {
-		Set<Product> targetRoutes = productService.getAllProductList().stream().collect(Collectors.toSet());		
+		Set<Product> targetRoutes = productService.getAllProductList().stream().collect(Collectors.toSet());
 		return targetRoutes;
 	}
 	

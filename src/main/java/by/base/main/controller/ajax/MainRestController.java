@@ -3668,7 +3668,7 @@ public class MainRestController {
 		}
 		
 		//проверка по балансу на складах
-		response.put("balance", readerSchedulePlan.checkBalanceBetweenStock(order));
+//		response.put("balance", readerSchedulePlan.checkBalanceBetweenStock(order));
 		
 		
 		String errorMessage = orderService.updateOrderForSlots(order);//проверка на пересечение со временим других слотов и лимит складов
@@ -3878,24 +3878,24 @@ public class MainRestController {
 		//главная проверка по графику поставок
 		String infoCheck = null;		
 		//ТЕСТОВО ОТКЛЮЧИЛ!
-		if(!checkDeepImport(order, request)) {
-			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {			
-				PlanResponce planResponce = readerSchedulePlan.process(order);
-				if(planResponce.getStatus() == 0) {
-					infoCheck = planResponce.getMessage();
-					response.put("status", "105");
-					response.put("info", infoCheck.replace("\n", "<br>"));
-					return response;
-				}else {
-					infoCheck = planResponce.getMessage();
-					response.put("info", infoCheck.replace("\n", "<br>"));
-					response.put("status", "200");
-					//проверка по балансу на складах
-					response.put("balance", readerSchedulePlan.checkBalanceBetweenStock(order));
-				}	
-				
-			}
-		}
+//		if(!checkDeepImport(order, request)) {
+//			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {			
+//				PlanResponce planResponce = readerSchedulePlan.process(order);
+//				if(planResponce.getStatus() == 0) {
+//					infoCheck = planResponce.getMessage();
+//					response.put("status", "105");
+//					response.put("info", infoCheck.replace("\n", "<br>"));
+//					return response;
+//				}else {
+//					infoCheck = planResponce.getMessage();
+//					response.put("info", infoCheck.replace("\n", "<br>"));
+//					response.put("status", "200");
+//					//проверка по балансу на складах
+//					response.put("balance", readerSchedulePlan.checkBalanceBetweenStock(order));
+//				}	
+//				
+//			}
+//		}
 		
 		//конец главная проверка по графику поставок
 		

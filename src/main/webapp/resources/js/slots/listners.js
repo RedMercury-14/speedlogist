@@ -1,3 +1,5 @@
+import { createOptions } from "../deliverySchedule/utils.js"
+import { reasonForUpdate } from "../globalRules/slotsRules.js"
 import { addNewStockOption } from "./calendarUtils.js"
 import { addOnClickToMenuItemListner, closeSidebar } from "./sidebar.js"
 
@@ -81,4 +83,32 @@ export function slotSearchFormListner(handler) {
 export function adminActionListner(handler) {
 	const adminActionSelect = document.querySelector('#adminAction')
 	adminActionSelect && adminActionSelect.addEventListener('change', (e) => handler(e))
+}
+
+export function updateSlotReasonFormListner(handler) {
+	const updateSlotReasonForm = document.querySelector('#updateSlotReasonForm')
+	updateSlotReasonForm && updateSlotReasonForm.addEventListener('submit', (e) => handler(e))
+}
+
+export function updateSlotReasonSelectListner() {
+	const updateSlotOtherReasonInput = document.querySelector('#updateSlotOtherReason')
+	const updateSlotReasonSelect = document.querySelector('#updateSlotReason')
+
+	createOptions(reasonForUpdate, updateSlotReasonSelect)
+
+	updateSlotReasonSelect && updateSlotReasonSelect.addEventListener('change', (e) => {
+		if (!updateSlotOtherReasonInput) return
+		if (e.target.value === 'Иное') {
+			updateSlotOtherReasonInput.parentElement.classList.remove('none')
+			updateSlotOtherReasonInput.setAttribute('required', true)
+		} else {
+			updateSlotOtherReasonInput.parentElement.classList.add('none')
+			updateSlotOtherReasonInput.removeAttribute('required')
+		}
+	})
+}
+
+export function updateSlotReasonCancelListner(handler) {
+	const updateSlotReasonCancelBtn = document.querySelector('#updateSlotReasonCancel')
+	updateSlotReasonCancelBtn && updateSlotReasonCancelBtn.addEventListener('click', handler)
 }

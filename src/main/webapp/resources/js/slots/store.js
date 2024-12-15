@@ -13,6 +13,7 @@ export const store = {
 	_state: {
 		needMultiplicity: false,
 		isReady: false,
+		isComplexUpdate: false,
 		token,
 		login,
 		role,
@@ -42,6 +43,13 @@ export const store = {
 	},
 	setReady(isReady) {
 		this._state.isReady = isReady
+	},
+
+	getComplexUpdate() {
+		return this._state.isComplexUpdate
+	},
+	setComplexUpdate(isComplexUpdate) {
+		this._state.isComplexUpdate = isComplexUpdate
 	},
 
 	getState() {
@@ -290,13 +298,29 @@ export const store = {
 
 		// добавление фона для зоны внутренних перемещений
 		this._state.stocks.forEach(stock => {
-			if (stock.id === '1700' || stock.id === '1800') {
+			if (stock.id === '1700') {
 				stock.events.push({
-					id: `background${stock.id}`,
-					resourceId: `${stock.id}01`,
+					id: `background1700`,
+					resourceId: `170001`,
 					display: 'background',
 					startTime: '12:00',
 					endTime: '20:00',
+					eventOverlap: true,
+					title: '',
+					extendedProps: {
+						data: {
+							pall: 0,
+						}
+					},
+				})
+			}
+			if (stock.id === '1800') {
+				stock.events.push({
+					id: `background1800`,
+					resourceId: `180001`,
+					display: 'background',
+					startTime: '00:00',
+					endTime: '24:00',
 					eventOverlap: true,
 					title: '',
 					extendedProps: {

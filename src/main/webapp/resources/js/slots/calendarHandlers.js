@@ -131,7 +131,7 @@ export async function eventDropHandler(info, orderTableGridOption) {
 	const internalMovementsRamps = currentStock.internalMovementsRamps
 	if (isOverlapWithInternalMovementTime(info, internaMovementsTimes, internalMovementsRamps)) {
 		info.revert()
-		alert(userMessages.internalMovementTimeError)
+		alert(userMessages.internalMovementTimeError(currentStock))
 		return
 	}
 
@@ -149,7 +149,14 @@ export async function eventDropHandler(info, orderTableGridOption) {
 	// const scheduleData = await checkSchedule(order, eventDateStr)
 	// if (scheduleData.message) alert (scheduleData.message)
 
-	updateOrder(info, orderTableGridOption, false)
+	// указываем, что это НЕ сложный апдейт
+	store.setComplexUpdate(false)
+	store.setCalendarInfo(info)
+
+	// для логиста просим причину
+	isLogist(role)
+		? $('#updateSlotReasonModal').modal('show')
+		: updateOrder(info, orderTableGridOption)
 }
 export async function eventReceiveHandler(info, orderTableGridOption, orderDateClickHandler) {
 	const role = store.getRole()
@@ -189,7 +196,7 @@ export async function eventReceiveHandler(info, orderTableGridOption, orderDateC
 	const internalMovementsRamps = currentStock.internalMovementsRamps
 	if (isOverlapWithInternalMovementTime(info, internaMovementsTimes, internalMovementsRamps)) {
 		info.revert()
-		alert(userMessages.internalMovementTimeError)
+		alert(userMessages.internalMovementTimeError(currentStock))
 		return
 	}
 
@@ -199,7 +206,14 @@ export async function eventReceiveHandler(info, orderTableGridOption, orderDateC
 
 	// для логиста и админа - сложный апдейт
 	if (isAdmin(role) || isLogist(role)) {
-		updateOrder(info, orderTableGridOption, true)
+		// указываем, что это сложный апдейт
+		store.setComplexUpdate(true)
+		store.setCalendarInfo(info)
+
+		// для логиста просим причину
+		isLogist(role)
+			? $('#updateSlotReasonModal').modal('show')
+			: updateOrder(info, orderTableGridOption)
 		return
 	}
 

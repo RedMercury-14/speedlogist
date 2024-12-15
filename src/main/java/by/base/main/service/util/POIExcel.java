@@ -2461,7 +2461,7 @@ public class POIExcel {
 	 * @throws IOException
 	 * @author Dima Hrushevsky
 	 */
-	private int getColumnCount(File file) throws IOException {
+	public int getColumnCount(File file) throws IOException {
         try (FileInputStream fis = new FileInputStream(file);
              Workbook workbook = WorkbookFactory.create(fis)) {
 

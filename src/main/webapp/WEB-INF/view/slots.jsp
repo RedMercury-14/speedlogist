@@ -230,7 +230,7 @@
 
 	<!-- Модальное окно для отображения текста -->
 	<div class="modal fade" id="displayMessageModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="displayMessageModalLabel" aria-hidden="true">
-		<div class="modal-dialog modal-lg">
+		<div class="modal-dialog modal-xl">
 			<div class="modal-content">
 				<div class="modal-header justify-content-center">
 					<h5 class="modal-title" id="displayMessageModalLabel">Сообщение</h5>
@@ -267,6 +267,36 @@
 						</ul>
 					</div>
 				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Модальное окно выбора даты заказа согласно графику поставок-->
+	<div class="modal fade" id="updateSlotReasonModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="updateSlotReasonModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header justify-content-center">
+					<h4 class="modal-title text-center" id="updateSlotReasonModalLabel">Укажите причину переноса слота</h4>
+				</div>
+				<form id="updateSlotReasonForm" action="">
+					<div class="modal-body">
+						<div class="form-group">
+							<select id="updateSlotReason" name="updateSlotReason" class="form-control" required>
+								<option value="" selected hidden disabled>Выберите один из пунктов</option>
+							</select>
+						</div>
+						<div class="form-group none">
+							<label for="updateSlotOtherReason" class="col-form-label text-muted font-weight-bold">Иная причина</label>
+							<input type="text" class="form-control" name="updateSlotOtherReason" id="updateSlotOtherReason"
+								placeholder="Укажите иную причину (минимум 10 символов)"
+								minlength="10">
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" id="updateSlotReasonCancel" class="btn btn-secondary" data-dismiss="modal">Отменить</button>
+						<button type="submit" class="btn btn-primary">Подтвердить перенос</button>
+					</div>
+				</form>
 			</div>
 		</div>
 	</div>

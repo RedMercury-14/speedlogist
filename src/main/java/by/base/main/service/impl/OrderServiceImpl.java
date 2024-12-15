@@ -412,5 +412,10 @@ public class OrderServiceImpl implements OrderService {
 			String numContract) {
 		return orderDAO.getOrderByPeriodDeliveryAndCodeContractNotJOIN(dateStart, dateEnd, numContract);
 	}
+
+	@Override
+	public List<Order> getOrderByTimeDeliveryAndNumStock(Date dateStart, Date dateEnd, Integer numStock) {
+		return orderDAO.getOrderByTimeDeliveryAndNumStock(dateStart, dateEnd, numStock);
+	}
 	
 }

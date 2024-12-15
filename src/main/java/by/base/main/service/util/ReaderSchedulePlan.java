@@ -571,8 +571,8 @@ public class ReaderSchedulePlan {
 		 Date dateNow = Date.valueOf(LocalDate.now());
 		 String infoRow = "Строк в заказе: " + lines.size();
 		 Integer factStock = Integer.parseInt(order.getIdRamp().toString().substring(0, 4)); //фактическое значение склада взятое из номера рампы
-		 for (OrderLine line : lines) {
-			 Product product = productService.getProductByCodeAndStock(line.getGoodsId().intValue(), factStock);
+		 for (OrderLine line : lines) {// переделать используя список!
+			 Product product = productService.getProductByCode(line.getGoodsId().intValue());
 			 if(product != null) {
 				 products.put(product.getCodeProduct(),product);				 
 			 }
@@ -608,7 +608,8 @@ public class ReaderSchedulePlan {
 		 if(dateRange.start == null && dateRange.days == 0) {
 			 //тут мы говорим что расчёты ОРЛ по товару отсутствуют но есть липовый график поставок и есть сток в днях. Всё равно проверяем по стоку!
 			 
-			 return new PlanResponce(200, "Расчёта заказов по продукту: " + products.get(0).getName() + " ("+products.get(0).getCodeProduct()+") невозможен, т.к. нет в базе данных расчётов потребности");
+//			 return new PlanResponce(200, "Расчёта заказов по продукту: " + products.get(0).getName() + " ("+products.get(0).getCodeProduct()+") невозможен, т.к. нет в базе данных расчётов потребности");
+			 return new PlanResponce(0, "Действие заблокировано!\nРасчёта заказов по продукту: " + products.get(0).getName() + " ("+products.get(0).getCodeProduct()+") невозможен, т.к. нет в базе данных расчётов потребности");
 		 }
 		 
 		 boolean isMistakeZAQ = false;
@@ -617,7 +618,8 @@ public class ReaderSchedulePlan {
 		 
 		 if(checkHasLog(dateRange, order)) {
 			 //если входит в лог плече, то находим такие же заказы с такими же SKU
-			 List<Order> orders = orderService.getOrderByTimeDelivery(dateRange.start, dateRange.end);
+//			 List<Order> orders = orderService.getOrderByTimeDelivery(dateRange.start, dateRange.end); // это сразу по всем складам
+			 List<Order> orders = orderService.getOrderByTimeDeliveryAndNumStock(dateNow, dateNow, factStock); // это по отдельному складу
 			 if(!orders.contains(order)) {
 				 orders.add(order);
 			 }
@@ -641,16 +643,24 @@ public class ReaderSchedulePlan {
 					
 
 					if(quantity != null && !quantity.isEmpty()) {
-						//тут происходит построчная оценка заказанного товара и принятие решения
-						int zaq = quantityOrderAll.intValue(); // СУММА заказов по периоду 
-						int orlZaq = quantity.get(0).getQuantity(); // аказ от ОРЛ
+						//проверяем на какой склад хотят поставить заказ и берем данные именно этого склада
+						int zaq = quantityOrderAll.intValue(); // СУММА заказов по периоду
 						int singleZaq = orderLine.getQuantityOrder().intValue(); //Заказ по ордеру (не суммированный)
+						int orlZaq;
+						if(factStock == 1700) {
+							//тут происходит построчная оценка заказанного товара и принятие решения							 
+							orlZaq = quantity.get(0).getQuantity1700(); // аказ от ОРЛ
+						}else {
+							//тут происходит построчная оценка заказанного товара и принятие решения
+							orlZaq = quantity.get(0).getQuantity1800(); // аказ от ОРЛ
+							
+						}
 						
 						// реализация специальной логики: если заказ от менеджера больше или равен заказу от ОРЛ - берем только его заказ
 						// если заказ меньше 80% от того что заказал ОРЛ - проверяем другие заказы
 						if (singleZaq < 0.8 * orlZaq) {
 							if(zaq > orlZaq*1.1) {
-								result = result +"<span style=\"color: red;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + zaq + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + quantity.get(0).getQuantity() + " шт.</span>\n";	
+								result = result +"<span style=\"color: red;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + zaq + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + orlZaq + " шт.</span>\n";	
 								String dayStockMessage =  checkNumProductHasStock(order, product, dateRange); // проверяем по стокам относительно одного продукта
 								//пошла проверка балансов
 //								Product balanceProduct = balance.stream().filter(b-> b.getCodeProduct().equals(product.getCodeProduct())).findFirst().get();
@@ -678,11 +688,11 @@ public class ReaderSchedulePlan {
 						         }
 //							isMistakeZAQ = true;
 							}else {
-								result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + zaq + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + quantity.get(0).getQuantity() + " шт.\n";													
+								result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + zaq + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + orlZaq + " шт.\n";													
 							}
 						}else {
 							if(singleZaq > orlZaq*1.1) {
-								result = result +"<span style=\"color: red;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + singleZaq + " шт. из " + quantity.get(0).getQuantity() + " шт.</span>\n";	
+								result = result +"<span style=\"color: red;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + singleZaq + " шт. из " + orlZaq + " шт.</span>\n";	
 								String dayStockMessage =  checkNumProductHasStock(order, product, dateRange); // проверяем по стокам относительно одного продукта
 								//пошла проверка балансов
 //								Product balanceProduct = balance.stream().filter(b-> b.getCodeProduct().equals(product.getCodeProduct())).findFirst().get();
@@ -710,7 +720,7 @@ public class ReaderSchedulePlan {
 						         }
 //							isMistakeZAQ = true;
 							}else {
-								result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + singleZaq + " шт. из " + quantity.get(0).getQuantity() + " шт.\n";													
+								result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + singleZaq + " шт. из " + orlZaq + " шт.\n";													
 							}
 						}
 						

@@ -39,7 +39,7 @@ public class Product {
 	private Integer rating;
 	
 	@Column(name = "num_stock")
-	private Integer numStock;
+	private String numStock;
 	
 	@Column(name = "`group`")
 	private String group;
@@ -159,7 +159,7 @@ public class Product {
 	private Double calculatedPerDay1700;
 
 	@Column(name = "balance_stock_1700")
-	private Double balanceStock1700;
+	private Double balanceStockInDay1700;
 
 	@Column(name = "during_assembly_1700")
 	private Double duringAssembly1700;
@@ -246,7 +246,7 @@ public class Product {
 	private Double calculatedPerDay1800;
 
 	@Column(name = "balance_stock_1800")
-	private Double balanceStock1800;
+	private Double balanceStockInDay1800;
 
 	@Column(name = "during_assembly_1800")
 	private Double duringAssembly1800;
@@ -363,7 +363,7 @@ public class Product {
 		super();
 	}
 
-	public Product(Integer numStock, Double сalculatedPerDay, Double balanceStockAndReserves) {
+	public Product(String numStock, Double сalculatedPerDay, Double balanceStockAndReserves) {
 		super();
 		this.numStock = numStock;
 		this.сalculatedPerDay = сalculatedPerDay;
@@ -431,14 +431,14 @@ public class Product {
 	/**
 	 * Номер склада
 	 */
-	public Integer getNumStock() {
+	public String getNumStock() {
 		return numStock;
 	}
 
 	/**
 	 * Номер склада
 	 */
-	public void setNumStock(Integer numStock) {
+	public void setNumStock(String numStock) {
 		this.numStock = numStock;
 	}
 
@@ -993,12 +993,12 @@ public class Product {
 		this.calculatedPerDay1700 = calculatedPerDay1700;
 	}
 
-	public Double getBalanceStock1700() {
-		return balanceStock1700;
+	public Double getBalanceStockInDay1700() {
+		return balanceStockInDay1700;
 	}
 
-	public void setBalanceStock1700(Double balanceStock1700) {
-		this.balanceStock1700 = balanceStock1700;
+	public void setBalanceStockInDay1700(Double balanceStock1700) {
+		this.balanceStockInDay1700 = balanceStock1700;
 	}
 
 	public Double getDuringAssembly1700() {
@@ -1225,12 +1225,12 @@ public class Product {
 		this.calculatedPerDay1800 = calculatedPerDay1800;
 	}
 
-	public Double getBalanceStock1800() {
-		return balanceStock1800;
+	public Double getBalanceStockInDay1800() {
+		return balanceStockInDay1800;
 	}
 
-	public void setBalanceStock1800(Double balanceStock1800) {
-		this.balanceStock1800 = balanceStock1800;
+	public void setBalanceStockInDay1800(Double balanceStock1800) {
+		this.balanceStockInDay1800 = balanceStock1800;
 	}
 
 	public Double getDuringAssembly1800() {
@@ -1449,9 +1449,11 @@ public class Product {
 		this.sumOst1800 = sumOst1800;
 	}
 
+	
+
 	@Override
 	public int hashCode() {
-		return Objects.hash(codeProduct, numStock);
+		return Objects.hash(codeProduct);
 	}
 
 	@Override
@@ -1463,7 +1465,7 @@ public class Product {
 		if (getClass() != obj.getClass())
 			return false;
 		Product other = (Product) obj;
-		return Objects.equals(codeProduct, other.codeProduct) && Objects.equals(numStock, other.numStock);
+		return Objects.equals(codeProduct, other.codeProduct);
 	}
 
 	@Override

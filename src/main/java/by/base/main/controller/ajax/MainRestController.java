@@ -22,6 +22,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -4057,13 +4058,34 @@ public class MainRestController {
 			@RequestParam(value = "excel", required = false) MultipartFile excel)
 			throws InvalidFormatException, IOException, ServiceException {
 		Map<String, String> response = new HashMap<String, String>();	
+		System.out.println();
+		Date dateUnload = null;
+		String filename = excel.getOriginalFilename();
+
+        try {
+            // Извлечение даты из строки
+            String datePart = filename.substring(0, filename.indexOf(".xlsx"));
+            
+            // Формат даты в исходной строке
+            SimpleDateFormat inputFormat = new SimpleDateFormat("dd.MM.yyyy");
+
+            // Преобразование в java.util.Date
+            java.util.Date utilDate = inputFormat.parse(datePart);
+
+            // Преобразование в java.sql.Date
+            dateUnload = new Date(utilDate.getTime());
+
+        } catch (java.text.ParseException e) {
+            System.err.println("Ошибка при разборе даты: " + e.getMessage());
+            response.put("status", "100");
+            response.put("message", "Ошибка при разборе даты: " + filename);
+            return response;
+        }
+		
 		File file1 = poiExcel.getFileByMultipartTarget(excel, request, "490.xlsx");
-//		String text = poiExcel.testHeaderOrderHasExcel(file1);
 		String text;
 		//основной метод загрузки в БД
-		text = poiExcel.loadBalanceStock(file1, request);
-		
-		
+		text = poiExcel.loadBalanceStock2(file1, request, dateUnload);
 		response.put("200", text);
 		return response;
 	}

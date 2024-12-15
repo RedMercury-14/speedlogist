@@ -11,7 +11,7 @@ public interface ProductDAO {
 
 	Integer saveProduct(Product product);
 
-	List<Product> getProductByCode(Integer id);
+	Product getProductByCode(Integer id);
 	
 	Product getProductByCodeAndStock(Integer id, Integer stock);
 

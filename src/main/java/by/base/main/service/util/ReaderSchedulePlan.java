@@ -437,14 +437,14 @@ public class ReaderSchedulePlan {
 			}else if (productsMap.get(entry.getKey()+"null") != null){
 				products.add(productsMap.get(entry.getKey()+"null"));
 			}else {
-				products.add(new Product(1700, 0.0, 0.0)); // заглушка, чтобы не ломать дальнейшую проверку
+				products.add(new Product("1700", 0.0, 0.0)); // заглушка, чтобы не ломать дальнейшую проверку
 			}
 			if(productsMap.get(entry.getKey()+"1800") != null) {
 				products.add(productsMap.get(entry.getKey()+"1800"));
 			}else if(productsMap.get(entry.getKey()+"null") != null){
 				products.add(productsMap.get(entry.getKey()+"null"));
 			}else {
-				products.add(new Product(1800, 0.0, 0.0)); // заглушка, чтобы не ломать дальнейшую проверку
+				products.add(new Product("1800", 0.0, 0.0)); // заглушка, чтобы не ломать дальнейшую проверку
 			}
 			
 			
@@ -459,7 +459,7 @@ public class ReaderSchedulePlan {
 					continue;
 				}
 				
-				if(product.getNumStock() == 1700) {
+				if(product.getNumStock().equals("1700")) {
 					remainderInDay1700 = product.getBalanceStockAndReserves();
 					calculatedPerDay1700 = product.getСalculatedPerDay();
 				}else {

@@ -1312,12 +1312,14 @@ public class POIExcel {
 	
 	/**
 	 * Метод загрузки файла потребностей
+	 * ФАЙЛ ИЗМЕНИЛСЯ! НЕ ИСПОЛЬЗОВАТЬ
 	 * @param file
 	 * @param request
 	 * @return
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
+	@Deprecated
 	public String loadBalanceStock(File file, HttpServletRequest request) throws FileNotFoundException, IOException {
 		 XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
 	     XSSFSheet sheet = wb.getSheetAt(0);
@@ -1367,7 +1369,7 @@ public class POIExcel {
 	            if(product == null) {
 	            	product = new Product();
 	            	product.setRating(Integer.parseInt(cellRating.toString()));
-	            	product.setNumStock(Integer.parseInt(cellNumStock.toString()));
+	            	product.setNumStock(cellNumStock.toString());
 	            	product.setGroup(cell2.toString());
 	            	product.setCodeProduct(Integer.parseInt(cellCodeProduct.toString()));
 	            	product.setName(cell4.toString());	            	
@@ -1396,7 +1398,7 @@ public class POIExcel {
 	            	save++;
 	            }else {	            	
 	            	product.setRating(Integer.parseInt(cellRating.toString()));
-	            	product.setNumStock(Integer.parseInt(cellNumStock.toString()));
+	            	product.setNumStock(cellNumStock.toString());
 	            	product.setGroup(cell2.toString());
 	            	product.setCodeProduct(Integer.parseInt(cellCodeProduct.toString()));
 	            	product.setName(cell4.toString());	            	
@@ -1434,6 +1436,292 @@ public class POIExcel {
 
 	        }
 	     String message = "Добавлено : " + save + " позиций;\nОбновлено : " + upd + " позиций";
+		return message;		
+	}
+	
+	/**
+	 * Метод загрузки файла потребностей
+	 * <br>Прямой наследник прошлого метода.
+	 * <br>dateUnload теперь берется не из названия колонки, а из названия документа еще на этапе контроллера
+	 * @param file
+	 * @param request
+	 * @param dateUnload
+	 * @return
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
+	public String loadBalanceStock2(File file, HttpServletRequest request, Date dateUnload) throws FileNotFoundException, IOException {
+		if(getColumnCount(file)<67) {
+			return "Ошибка! Файл должен содержать 67 столбцов!";
+		}
+		XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
+		XSSFSheet sheet = wb.getSheetAt(0);
+		Set<Product> unicProduct = new HashSet<Product>();
+		int upd = 0;
+		int save = 0;
+		for (int i = 1; i < sheet.getLastRowNum() + 1; i++) {
+			XSSFRow rowI = sheet.getRow(i);
+            
+	        // Первый блок (общий)
+	        XSSFCell cellRating = rowI.getCell(1);
+	        cellRating.setCellType(CellType.STRING);
+	        XSSFCell cellWarehouseNumber = rowI.getCell(2);
+	        cellWarehouseNumber.setCellType(CellType.STRING);
+	        XSSFCell cellGroups = rowI.getCell(3);
+	        XSSFCell cellProductCode = rowI.getCell(4);
+	        cellProductCode.setCellType(CellType.STRING);
+	        XSSFCell cellProductName = rowI.getCell(5);
+	        cellProductName.setCellType(CellType.STRING);
+	        XSSFCell cellCalculatedDailySales = rowI.getCell(6);
+	        XSSFCell cellSumOst = rowI.getCell(7);
+	        XSSFCell cellSumFromOrder = rowI.getCell(8);
+	        XSSFCell cellMaxOtgruzimTwoStages = rowI.getCell(9);
+	        XSSFCell cellMaxOstInNetwork = rowI.getCell(10);
+	        XSSFCell cellOstInPallets = rowI.getCell(11);
+	        XSSFCell cellOstOnRCInDays = rowI.getCell(12);
+	        XSSFCell cellMaxOstNetworkInDays = rowI.getCell(13);
+	        XSSFCell cellCountTOInCalculation = rowI.getCell(14);
+	        XSSFCell cellCountTOLess2Days = rowI.getCell(15);
+	        XSSFCell cellPercentShopsLess2Days = rowI.getCell(16);
+	        XSSFCell cellKol = rowI.getCell(17);
+	        XSSFCell cellSumm = rowI.getCell(18);
+	        XSSFCell cellReport380 = rowI.getCell(19);
+	        XSSFCell cellLastOrder = rowI.getCell(20);
+	        XSSFCell cellReserves= rowI.getCell(21);
+	        XSSFCell cellReserves100And50= rowI.getCell(22);
+	        XSSFCell cellBalanceStockAndReserves = rowI.getCell(23);
+	        XSSFCell cellOstDost = rowI.getCell(24);
+	        XSSFCell cellOneDay = rowI.getCell(25);
+	        XSSFCell cellSumOstField = rowI.getCell(26);
+
+	        // Второй блок - 1700
+	        XSSFCell cellWarehouseNumber1700 = rowI.getCell(27);
+	        XSSFCell cellCalculatedDailySales1700 = rowI.getCell(28);
+	        XSSFCell cellSumOst1700 = rowI.getCell(29);
+	        XSSFCell cellSumFromOrder1700 = rowI.getCell(30);
+	        XSSFCell cellMaxOtgruzimTwoStages1700 = rowI.getCell(31);
+	        XSSFCell cellMaxOstInNetwork1700 = rowI.getCell(32);
+	        XSSFCell cellOstInPallets1700 = rowI.getCell(33);
+	        XSSFCell cellOstOnRCInDays1700 = rowI.getCell(34);
+	        XSSFCell cellMaxOstNetworkInDays1700 = rowI.getCell(35);
+	        XSSFCell cellCountTOInCalculation1700 = rowI.getCell(36);
+	        XSSFCell cellCountTOLess2Days1700 = rowI.getCell(37);
+	        XSSFCell cellPercentShopsLess2Days1700 = rowI.getCell(38);
+	        XSSFCell cellKol1700 = rowI.getCell(39);
+	        XSSFCell cellSumm1700 = rowI.getCell(40);
+	        XSSFCell cellReserves1700 = rowI.getCell(41);
+	        XSSFCell cellReserve11501700 = rowI.getCell(42);
+	        XSSFCell cellOstOnRCPlusReserves1700 = rowI.getCell(43);
+	        XSSFCell cellOstDost1700 = rowI.getCell(44);
+	        XSSFCell cellOneDay1700 = rowI.getCell(45);
+	        XSSFCell cellSumOstField1700 = rowI.getCell(46);
+
+	        // Третий блок - 1800
+	        XSSFCell cellWarehouseNumber1800 = rowI.getCell(47);
+	        XSSFCell cellCalculatedDailySales1800 = rowI.getCell(48);
+	        XSSFCell cellSumOst1800 = rowI.getCell(49);
+	        XSSFCell cellSumFromOrder1800 = rowI.getCell(50);
+	        XSSFCell cellMaxOtgruzimTwoStages1800 = rowI.getCell(51);
+	        XSSFCell cellMaxOstInNetwork1800 = rowI.getCell(52);
+	        XSSFCell cellOstInPallets1800 = rowI.getCell(53);
+	        XSSFCell cellOstOnRCInDays1800 = rowI.getCell(54);
+	        XSSFCell cellMaxOstNetworkInDays1800 = rowI.getCell(55);
+	        XSSFCell cellCountTOInCalculation1800 = rowI.getCell(56);
+	        XSSFCell cellCountTOLess2Days1800 = rowI.getCell(57);
+	        XSSFCell cellPercentShopsLess2Days1800 = rowI.getCell(58);
+	        XSSFCell cellKol1800 = rowI.getCell(59);
+	        XSSFCell cellSumm1800 = rowI.getCell(60);
+	        XSSFCell cellReserves1800 = rowI.getCell(61);
+	        XSSFCell cellReserve11501800 = rowI.getCell(62);
+	        XSSFCell cellOstOnRCPlusReserves1800 = rowI.getCell(63);
+	        XSSFCell cellOstDost1800 = rowI.getCell(64);
+	        XSSFCell cellOneDay1800 = rowI.getCell(65);
+	        XSSFCell cellSumOstField1800 = rowI.getCell(66);
+			
+			
+	        Product product = productService.getProductByCode(Integer.parseInt(getCellValue(cellProductCode)));
+	        if (product == null) {
+	            product = new Product();
+	            product.setRating(getCellValue(cellRating) == null ? null : Integer.parseInt(getCellValue(cellRating)));
+	            product.setNumStock(getCellValue(cellWarehouseNumber));
+	            product.setGroup(getCellValue(cellGroups));
+	            product.setCodeProduct(getCellValue(cellProductCode) == null ? null : Integer.parseInt(getCellValue(cellProductCode)));
+	            product.setName(getCellValue(cellProductName));
+	            product.setDateUnload(dateUnload);
+	            product.setСalculatedPerDay(getCellValue(cellCalculatedDailySales) == null ? null : Double.parseDouble(getCellValue(cellCalculatedDailySales)));
+	            product.setSumFieldOst(getCellValue(cellSumOst) == null ? null : Double.parseDouble(getCellValue(cellSumOst)));
+	            product.setSumFieldFromOrder(getCellValue(cellSumFromOrder) == null ? null : Double.parseDouble(getCellValue(cellSumFromOrder)));
+	            product.setMaxOtgruzimInTwoStages(getCellValue(cellMaxOtgruzimTwoStages) == null ? null : Double.parseDouble(getCellValue(cellMaxOtgruzimTwoStages)));
+	            product.setMaxOstInNetwork(getCellValue(cellMaxOstInNetwork) == null ? null : Double.parseDouble(getCellValue(cellMaxOstInNetwork)));
+	            product.setOstInPallets(getCellValue(cellOstInPallets) == null ? null : Double.parseDouble(getCellValue(cellOstInPallets)));
+	            product.setRemainderStockInDay(getCellValue(cellOstOnRCInDays) == null ? null : Double.parseDouble(getCellValue(cellOstOnRCInDays)));
+	            product.setMaxOstNetworkInDays(getCellValue(cellMaxOstNetworkInDays) == null ? null : Double.parseDouble(getCellValue(cellMaxOstNetworkInDays)));
+	            product.setAmountMaintenance(getCellValue(cellCountTOInCalculation) == null ? null : Double.parseDouble(getCellValue(cellCountTOInCalculation)));
+	            product.setTOWithLeftovers2Days(getCellValue(cellCountTOLess2Days) == null ? null : Double.parseDouble(getCellValue(cellCountTOLess2Days)));
+	            product.setPercent(getCellValue(cellPercentShopsLess2Days) == null ? null : Double.parseDouble(getCellValue(cellPercentShopsLess2Days)));
+	            product.setKol(getCellValue(cellKol) == null ? null : Double.parseDouble(getCellValue(cellKol)));
+	            product.setSumm(getCellValue(cellSumm) == null ? null : Double.parseDouble(getCellValue(cellSumm)));
+	            product.setReport380(getCellValue(cellReport380) == null ? null : Double.parseDouble(getCellValue(cellReport380)));
+	            product.setLastOrder(getCellValue(cellLastOrder) == null ? null : Double.parseDouble(getCellValue(cellLastOrder)));
+	            product.setReserves(getCellValue(cellReserves) == null ? null : Double.parseDouble(getCellValue(cellReserves)));
+	            product.setReserves100And50(getCellValue(cellReserves100And50) == null ? null : Double.parseDouble(getCellValue(cellReserves100And50)));
+	            product.setBalanceStockAndReserves(getCellValue(cellBalanceStockAndReserves) == null ? null : Double.parseDouble(getCellValue(cellBalanceStockAndReserves)));
+	            product.setOstDost(getCellValue(cellOstDost) == null ? null : Double.parseDouble(getCellValue(cellOstDost)));
+	            product.setOneDay(getCellValue(cellOneDay) == null ? null : Double.parseDouble(getCellValue(cellOneDay)));
+	            product.setSumOst(getCellValue(cellSumOstField) == null ? null : Double.parseDouble(getCellValue(cellSumOstField)));
+	            
+	            //1700
+	            product.setCalculatedPerDay1700(getCellValue(cellCalculatedDailySales1700) == null ? null : Double.parseDouble(getCellValue(cellCalculatedDailySales1700)));
+	            product.setSumFieldOst1700(getCellValue(cellSumOst1700) == null ? null : Double.parseDouble(getCellValue(cellSumOst1700)));
+	            product.setSumFieldFromOrder1700(getCellValue(cellSumFromOrder1700) == null ? null : Double.parseDouble(getCellValue(cellSumFromOrder1700)));
+	            product.setMaxOtgruzimInTwoStages1700(getCellValue(cellMaxOtgruzimTwoStages1700) == null ? null : Double.parseDouble(getCellValue(cellMaxOtgruzimTwoStages1700)));
+	            product.setMaxOstInNetwork1700(getCellValue(cellMaxOstInNetwork1700) == null ? null : Double.parseDouble(getCellValue(cellMaxOstInNetwork1700)));
+	            product.setOstInPallets1700(getCellValue(cellOstInPallets1700) == null ? null : Double.parseDouble(getCellValue(cellOstInPallets1700)));
+	            product.setBalanceStockInDay1700(getCellValue(cellOstOnRCInDays1700) == null ? null : Double.parseDouble(getCellValue(cellOstOnRCInDays1700)));
+	            product.setMaxOstNetworkInDays1700(getCellValue(cellMaxOstNetworkInDays1700) == null ? null : Double.parseDouble(getCellValue(cellMaxOstNetworkInDays1700)));
+	            product.setAmountMaintenance1700(getCellValue(cellCountTOInCalculation1700) == null ? null : Double.parseDouble(getCellValue(cellCountTOInCalculation1700)));
+	            product.setToWithLeftovers2Days1700(getCellValue(cellCountTOLess2Days1700) == null ? null : Double.parseDouble(getCellValue(cellCountTOLess2Days1700)));
+	            product.setPercent1700(getCellValue(cellPercentShopsLess2Days1700) == null ? null : Double.parseDouble(getCellValue(cellPercentShopsLess2Days1700)));
+	            product.setKol1700(getCellValue(cellKol1700) == null ? null : Double.parseDouble(getCellValue(cellKol1700)));
+	            product.setSumm1700(getCellValue(cellSumm1700) == null ? null : Double.parseDouble(getCellValue(cellSumm1700)));
+	            product.setReserves1700(getCellValue(cellReserves1700) == null ? null : Double.parseDouble(getCellValue(cellReserves1700)));
+	            product.setReserves10050_1700(getCellValue(cellReserve11501700) == null ? null : Double.parseDouble(getCellValue(cellReserve11501700)));
+	            product.setBalanceStockAndReserves1700(getCellValue(cellOstOnRCPlusReserves1700) == null ? null : Double.parseDouble(getCellValue(cellOstOnRCPlusReserves1700)));
+	            product.setOstDost1700(getCellValue(cellOstDost1700) == null ? null : Double.parseDouble(getCellValue(cellOstDost1700)));
+	            product.setOneDay1700(getCellValue(cellOneDay1700) == null ? null : Double.parseDouble(getCellValue(cellOneDay1700)));
+	            product.setSumOst1700(getCellValue(cellSumOstField1700) == null ? null : Double.parseDouble(getCellValue(cellSumOstField1700)));
+	            
+	            //1800
+	            product.setCalculatedPerDay1800(getCellValue(cellCalculatedDailySales1800) == null ? null : Double.parseDouble(getCellValue(cellCalculatedDailySales1800)));
+	            product.setSumFieldOst1800(getCellValue(cellSumOst1800) == null ? null : Double.parseDouble(getCellValue(cellSumOst1800)));
+	            product.setSumFieldFromOrder1800(getCellValue(cellSumFromOrder1800) == null ? null : Double.parseDouble(getCellValue(cellSumFromOrder1800)));
+	            product.setMaxOtgruzimInTwoStages1800(getCellValue(cellMaxOtgruzimTwoStages1800) == null ? null : Double.parseDouble(getCellValue(cellMaxOtgruzimTwoStages1800)));
+	            product.setMaxOstInNetwork1800(getCellValue(cellMaxOstInNetwork1800) == null ? null : Double.parseDouble(getCellValue(cellMaxOstInNetwork1800)));
+	            product.setOstInPallets1800(getCellValue(cellOstInPallets1800) == null ? null : Double.parseDouble(getCellValue(cellOstInPallets1800)));
+	            product.setBalanceStockInDay1800(getCellValue(cellOstOnRCInDays1800) == null ? null : Double.parseDouble(getCellValue(cellOstOnRCInDays1800)));
+	            product.setMaxOstNetworkInDays1800(getCellValue(cellMaxOstNetworkInDays1800) == null ? null : Double.parseDouble(getCellValue(cellMaxOstNetworkInDays1800)));
+	            product.setAmountMaintenance1800(getCellValue(cellCountTOInCalculation1800) == null ? null : Double.parseDouble(getCellValue(cellCountTOInCalculation1800)));
+	            product.setToWithLeftovers2Days1800(getCellValue(cellCountTOLess2Days1800) == null ? null : Double.parseDouble(getCellValue(cellCountTOLess2Days1800)));
+	            product.setPercent1800(getCellValue(cellPercentShopsLess2Days1800) == null ? null : Double.parseDouble(getCellValue(cellPercentShopsLess2Days1800)));
+	            product.setKol1800(getCellValue(cellKol1800) == null ? null : Double.parseDouble(getCellValue(cellKol1800)));
+	            product.setSumm1800(getCellValue(cellSumm1800) == null ? null : Double.parseDouble(getCellValue(cellSumm1800)));
+	            product.setReserves1800(getCellValue(cellReserves1800) == null ? null : Double.parseDouble(getCellValue(cellReserves1800)));
+	            product.setReserves10050_1800(getCellValue(cellReserve11501800) == null ? null : Double.parseDouble(getCellValue(cellReserve11501800)));
+	            product.setBalanceStockAndReserves1800(getCellValue(cellOstOnRCPlusReserves1800) == null ? null : Double.parseDouble(getCellValue(cellOstOnRCPlusReserves1800)));
+	            product.setOstDost1800(getCellValue(cellOstDost1800) == null ? null : Double.parseDouble(getCellValue(cellOstDost1800)));
+	            product.setOneDay1800(getCellValue(cellOneDay1800) == null ? null : Double.parseDouble(getCellValue(cellOneDay1800)));
+	            product.setSumOst1800(getCellValue(cellSumOstField1800) == null ? null : Double.parseDouble(getCellValue(cellSumOstField1800)));
+
+	            product.setDateCreate(Timestamp.valueOf(LocalDateTime.now()));
+	            product.setDayMax(dayMax);
+	            product.setIsException(false);
+	            productService.saveProduct(product);
+	            save++;
+	        } else {
+	            product.setRating(getCellValue(cellRating) == null ? null : Integer.parseInt(getCellValue(cellRating)));
+	            product.setNumStock(getCellValue(cellWarehouseNumber));
+	            product.setGroup(getCellValue(cellGroups));
+	            product.setCodeProduct(getCellValue(cellProductCode) == null ? null : Integer.parseInt(getCellValue(cellProductCode)));
+	            product.setName(getCellValue(cellProductName));
+	            product.setDateUnload(dateUnload);
+	            product.setСalculatedPerDay(getCellValue(cellCalculatedDailySales) == null ? null : Double.parseDouble(getCellValue(cellCalculatedDailySales)));
+	            product.setSumFieldOst(getCellValue(cellSumOst) == null ? null : Double.parseDouble(getCellValue(cellSumOst)));
+	            product.setSumFieldFromOrder(getCellValue(cellSumFromOrder) == null ? null : Double.parseDouble(getCellValue(cellSumFromOrder)));
+	            product.setMaxOtgruzimInTwoStages(getCellValue(cellMaxOtgruzimTwoStages) == null ? null : Double.parseDouble(getCellValue(cellMaxOtgruzimTwoStages)));
+	            product.setMaxOstInNetwork(getCellValue(cellMaxOstInNetwork) == null ? null : Double.parseDouble(getCellValue(cellMaxOstInNetwork)));
+	            product.setOstInPallets(getCellValue(cellOstInPallets) == null ? null : Double.parseDouble(getCellValue(cellOstInPallets)));
+	            product.setRemainderStockInDay(getCellValue(cellOstOnRCInDays) == null ? null : Double.parseDouble(getCellValue(cellOstOnRCInDays)));
+	            product.setMaxOstNetworkInDays(getCellValue(cellMaxOstNetworkInDays) == null ? null : Double.parseDouble(getCellValue(cellMaxOstNetworkInDays)));
+	            product.setAmountMaintenance(getCellValue(cellCountTOInCalculation) == null ? null : Double.parseDouble(getCellValue(cellCountTOInCalculation)));
+	            product.setTOWithLeftovers2Days(getCellValue(cellCountTOLess2Days) == null ? null : Double.parseDouble(getCellValue(cellCountTOLess2Days)));
+	            product.setPercent(getCellValue(cellPercentShopsLess2Days) == null ? null : Double.parseDouble(getCellValue(cellPercentShopsLess2Days)));
+	            product.setKol(getCellValue(cellKol) == null ? null : Double.parseDouble(getCellValue(cellKol)));
+	            product.setSumm(getCellValue(cellSumm) == null ? null : Double.parseDouble(getCellValue(cellSumm)));
+	            product.setReport380(getCellValue(cellReport380) == null ? null : Double.parseDouble(getCellValue(cellReport380)));
+	            product.setLastOrder(getCellValue(cellLastOrder) == null ? null : Double.parseDouble(getCellValue(cellLastOrder)));
+	            product.setReserves(getCellValue(cellReserves) == null ? null : Double.parseDouble(getCellValue(cellReserves)));
+	            product.setReserves100And50(getCellValue(cellReserves100And50) == null ? null : Double.parseDouble(getCellValue(cellReserves100And50)));
+	            product.setBalanceStockAndReserves(getCellValue(cellBalanceStockAndReserves) == null ? null : Double.parseDouble(getCellValue(cellBalanceStockAndReserves)));
+	            product.setOstDost(getCellValue(cellOstDost) == null ? null : Double.parseDouble(getCellValue(cellOstDost)));
+	            product.setOneDay(getCellValue(cellOneDay) == null ? null : Double.parseDouble(getCellValue(cellOneDay)));
+	            product.setSumOst(getCellValue(cellSumOstField) == null ? null : Double.parseDouble(getCellValue(cellSumOstField)));
+	            
+	            //1700
+	            product.setCalculatedPerDay1700(getCellValue(cellCalculatedDailySales1700) == null ? null : Double.parseDouble(getCellValue(cellCalculatedDailySales1700)));
+	            product.setSumFieldOst1700(getCellValue(cellSumOst1700) == null ? null : Double.parseDouble(getCellValue(cellSumOst1700)));
+	            product.setSumFieldFromOrder1700(getCellValue(cellSumFromOrder1700) == null ? null : Double.parseDouble(getCellValue(cellSumFromOrder1700)));
+	            product.setMaxOtgruzimInTwoStages1700(getCellValue(cellMaxOtgruzimTwoStages1700) == null ? null : Double.parseDouble(getCellValue(cellMaxOtgruzimTwoStages1700)));
+	            product.setMaxOstInNetwork1700(getCellValue(cellMaxOstInNetwork1700) == null ? null : Double.parseDouble(getCellValue(cellMaxOstInNetwork1700)));
+	            product.setOstInPallets1700(getCellValue(cellOstInPallets1700) == null ? null : Double.parseDouble(getCellValue(cellOstInPallets1700)));
+	            product.setBalanceStockInDay1700(getCellValue(cellOstOnRCInDays1700) == null ? null : Double.parseDouble(getCellValue(cellOstOnRCInDays1700)));
+	            product.setMaxOstNetworkInDays1700(getCellValue(cellMaxOstNetworkInDays1700) == null ? null : Double.parseDouble(getCellValue(cellMaxOstNetworkInDays1700)));
+	            product.setAmountMaintenance1700(getCellValue(cellCountTOInCalculation1700) == null ? null : Double.parseDouble(getCellValue(cellCountTOInCalculation1700)));
+	            product.setToWithLeftovers2Days1700(getCellValue(cellCountTOLess2Days1700) == null ? null : Double.parseDouble(getCellValue(cellCountTOLess2Days1700)));
+	            product.setPercent1700(getCellValue(cellPercentShopsLess2Days1700) == null ? null : Double.parseDouble(getCellValue(cellPercentShopsLess2Days1700)));
+	            product.setKol1700(getCellValue(cellKol1700) == null ? null : Double.parseDouble(getCellValue(cellKol1700)));
+	            product.setSumm1700(getCellValue(cellSumm1700) == null ? null : Double.parseDouble(getCellValue(cellSumm1700)));
+	            product.setReserves1700(getCellValue(cellReserves1700) == null ? null : Double.parseDouble(getCellValue(cellReserves1700)));
+	            product.setReserves10050_1700(getCellValue(cellReserve11501700) == null ? null : Double.parseDouble(getCellValue(cellReserve11501700)));
+	            product.setBalanceStockAndReserves1700(getCellValue(cellOstOnRCPlusReserves1700) == null ? null : Double.parseDouble(getCellValue(cellOstOnRCPlusReserves1700)));
+	            product.setOstDost1700(getCellValue(cellOstDost1700) == null ? null : Double.parseDouble(getCellValue(cellOstDost1700)));
+	            product.setOneDay1700(getCellValue(cellOneDay1700) == null ? null : Double.parseDouble(getCellValue(cellOneDay1700)));
+	            product.setSumOst1700(getCellValue(cellSumOstField1700) == null ? null : Double.parseDouble(getCellValue(cellSumOstField1700)));
+	            
+	            //1800
+	            product.setCalculatedPerDay1800(getCellValue(cellCalculatedDailySales1800) == null ? null : Double.parseDouble(getCellValue(cellCalculatedDailySales1800)));
+	            product.setSumFieldOst1800(getCellValue(cellSumOst1800) == null ? null : Double.parseDouble(getCellValue(cellSumOst1800)));
+	            product.setSumFieldFromOrder1800(getCellValue(cellSumFromOrder1800) == null ? null : Double.parseDouble(getCellValue(cellSumFromOrder1800)));
+	            product.setMaxOtgruzimInTwoStages1800(getCellValue(cellMaxOtgruzimTwoStages1800) == null ? null : Double.parseDouble(getCellValue(cellMaxOtgruzimTwoStages1800)));
+	            product.setMaxOstInNetwork1800(getCellValue(cellMaxOstInNetwork1800) == null ? null : Double.parseDouble(getCellValue(cellMaxOstInNetwork1800)));
+	            product.setOstInPallets1800(getCellValue(cellOstInPallets1800) == null ? null : Double.parseDouble(getCellValue(cellOstInPallets1800)));
+	            product.setBalanceStockInDay1800(getCellValue(cellOstOnRCInDays1800) == null ? null : Double.parseDouble(getCellValue(cellOstOnRCInDays1800)));
+	            product.setMaxOstNetworkInDays1800(getCellValue(cellMaxOstNetworkInDays1800) == null ? null : Double.parseDouble(getCellValue(cellMaxOstNetworkInDays1800)));
+	            product.setAmountMaintenance1800(getCellValue(cellCountTOInCalculation1800) == null ? null : Double.parseDouble(getCellValue(cellCountTOInCalculation1800)));
+	            product.setToWithLeftovers2Days1800(getCellValue(cellCountTOLess2Days1800) == null ? null : Double.parseDouble(getCellValue(cellCountTOLess2Days1800)));
+	            product.setPercent1800(getCellValue(cellPercentShopsLess2Days1800) == null ? null : Double.parseDouble(getCellValue(cellPercentShopsLess2Days1800)));
+	            product.setKol1800(getCellValue(cellKol1800) == null ? null : Double.parseDouble(getCellValue(cellKol1800)));
+	            product.setSumm1800(getCellValue(cellSumm1800) == null ? null : Double.parseDouble(getCellValue(cellSumm1800)));
+	            product.setReserves1800(getCellValue(cellReserves1800) == null ? null : Double.parseDouble(getCellValue(cellReserves1800)));
+	            product.setReserves10050_1800(getCellValue(cellReserve11501800) == null ? null : Double.parseDouble(getCellValue(cellReserve11501800)));
+	            product.setBalanceStockAndReserves1800(getCellValue(cellOstOnRCPlusReserves1800) == null ? null : Double.parseDouble(getCellValue(cellOstOnRCPlusReserves1800)));
+	            product.setOstDost1800(getCellValue(cellOstDost1800) == null ? null : Double.parseDouble(getCellValue(cellOstDost1800)));
+	            product.setOneDay1800(getCellValue(cellOneDay1800) == null ? null : Double.parseDouble(getCellValue(cellOneDay1800)));
+	            product.setSumOst1800(getCellValue(cellSumOstField1800) == null ? null : Double.parseDouble(getCellValue(cellSumOstField1800)));
+
+	            product.setDateCreate(Timestamp.valueOf(LocalDateTime.now()));
+	            product.setDayMax(dayMax);
+	            if (unicProduct.add(product)) {
+	                product.setRemainderStockInDay(getCellValue(cellOstOnRCInDays) == null ? null : Double.parseDouble(getCellValue(cellOstOnRCInDays)));
+	                product.setBalanceStockAndReserves(getCellValue(cellBalanceStockAndReserves) == null ? null : Double.parseDouble(getCellValue(cellBalanceStockAndReserves)));
+
+	                product.setBalanceStockInDay1700(getCellValue(cellOstOnRCInDays1700) == null ? null : Double.parseDouble(getCellValue(cellOstOnRCInDays1700)));
+	                product.setBalanceStockAndReserves1700(getCellValue(cellOstOnRCPlusReserves1700) == null ? null : Double.parseDouble(getCellValue(cellOstOnRCPlusReserves1700)));
+
+	                product.setBalanceStockInDay1800(getCellValue(cellOstOnRCInDays1800) == null ? null : Double.parseDouble(getCellValue(cellOstOnRCInDays1800)));
+	                product.setBalanceStockAndReserves1800(getCellValue(cellOstOnRCPlusReserves1800) == null ? null : Double.parseDouble(getCellValue(cellOstOnRCPlusReserves1800)));
+	            } else {
+	                Double stockInDay11 = product.getRemainderStockInDay();
+	                Double balanceStockAndReserves22 = product.getBalanceStockAndReserves();
+	                product.setRemainderStockInDay(getCellValue(cellOstOnRCInDays) == null ? stockInDay11 : Double.parseDouble(getCellValue(cellOstOnRCInDays)) + stockInDay11);
+	                product.setBalanceStockAndReserves(getCellValue(cellBalanceStockAndReserves) == null ? balanceStockAndReserves22 : Double.parseDouble(getCellValue(cellBalanceStockAndReserves)) + balanceStockAndReserves22);
+
+	                Double stockInDay111 = product.getBalanceStockInDay1700();
+	                Double balanceStockAndReserves222 = product.getBalanceStockAndReserves1700();
+	                product.setBalanceStockInDay1700(getCellValue(cellOstOnRCInDays1700) == null ? stockInDay111 : Double.parseDouble(getCellValue(cellOstOnRCInDays1700)) + stockInDay111);
+	                product.setBalanceStockAndReserves1700(getCellValue(cellOstOnRCPlusReserves1700) == null ? balanceStockAndReserves222 : Double.parseDouble(getCellValue(cellOstOnRCPlusReserves1700)) + balanceStockAndReserves222);
+
+	                Double stockInDay1111 = product.getBalanceStockInDay1800();
+	                Double balanceStockAndReserves2222 = product.getBalanceStockAndReserves1800();
+	                product.setBalanceStockInDay1800(getCellValue(cellOstOnRCInDays1800) == null ? stockInDay1111 : Double.parseDouble(getCellValue(cellOstOnRCInDays1800)) + stockInDay1111);
+	                product.setBalanceStockAndReserves1800(getCellValue(cellOstOnRCPlusReserves1800) == null ? balanceStockAndReserves2222 : Double.parseDouble(getCellValue(cellOstOnRCPlusReserves1800)) + balanceStockAndReserves2222);
+	            }
+
+	            productService.updateProduct(product);
+	            upd++;
+	        }
+			
+		}
+		String message = "Добавлено : " + save + " позиций;\nОбновлено : " + upd + " позиций";
 		return message;		
 	}
 	
@@ -2065,13 +2353,18 @@ public class POIExcel {
         }
         switch (cell.getCellType()) {
             case STRING:
+            	if(cell.getStringCellValue().isEmpty() || cell.getStringCellValue().equals("") ) {
+            		return null;
+            	}
                 return cell.getStringCellValue();
             case NUMERIC:
+//            	System.out.println("NUMERIC -> " + cell.getNumericCellValue());
+//            	if(String.valueOf(cell.getNumericCellValue()).isEmpty() || String.valueOf(cell.getNumericCellValue()).isBlank() || String.valueOf(cell.getNumericCellValue()).equals("")) return null;
                 return String.valueOf(cell.getNumericCellValue());
             case BOOLEAN:
                 return String.valueOf(cell.getBooleanCellValue());
             case BLANK:
-            	return ""; // Возвращаем пустую строку для пустой ячейки
+            	return null; // Возвращаем пустую строку для пустой ячейки
             case ERROR:
             	return null; 
             default:

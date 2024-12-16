@@ -417,8 +417,8 @@ public class ReaderSchedulePlan {
 	 * @return
 	 */
 	public List<Product> checkBalanceBetweenStock(Order order) {
-		String stock = order.getNumStockDelivery();
-		if(!stock.equals("1800") && !stock.equals("1700")) {
+		Integer targetStock = Integer.parseInt(getTrueStock(order));
+		if(targetStock != 1700 && targetStock != 1800) {
 			return null;
 		}
 		
@@ -429,7 +429,7 @@ public class ReaderSchedulePlan {
 		List<Integer> goodsIdsIntegers = orderProducts.entrySet().stream()
 				.map(en -> en.getKey().intValue())
 				.collect(Collectors.toList()); // отдельный лист с кодами товаров заказанных в заказе
-		Map<String, Product> productsMap = productService.getProductMapHasGroupByCode(goodsIdsIntegers);
+		Map<Integer, Product> productsMap = productService.getProductMapHasGroupByCode(goodsIdsIntegers);
 		List<Product> productsHasBalance = new ArrayList<Product>(); // результирующий лист с продуктами и балансами
 
 		List<Order> orders = null;
@@ -443,52 +443,28 @@ public class ReaderSchedulePlan {
 			if(productsMap == null) {
 				break;
 			}
-//			List<Product> products = productService.getProductByCode(entry.getKey().intValue());
-			List<Product> products = new ArrayList<Product>();
-			if(productsMap.get(entry.getKey()+"1700") != null) {
-				products.add(productsMap.get(entry.getKey()+"1700"));
-			}else if (productsMap.get(entry.getKey()+"null") != null){
-				products.add(productsMap.get(entry.getKey()+"null"));
-			}else {
-				products.add(new Product("1700", 0.0, 0.0)); // заглушка, чтобы не ломать дальнейшую проверку
-			}
-			if(productsMap.get(entry.getKey()+"1800") != null) {
-				products.add(productsMap.get(entry.getKey()+"1800"));
-			}else if(productsMap.get(entry.getKey()+"null") != null){
-				products.add(productsMap.get(entry.getKey()+"null"));
-			}else {
-				products.add(new Product("1800", 0.0, 0.0)); // заглушка, чтобы не ломать дальнейшую проверку
+//			productsMap.forEach((k,v) -> System.out.println(k + "  -- " + v));
+			
+			Product generalProduct = productsMap.get(entry.getKey().intValue());
+			
+			Double remainderInDay1700 = generalProduct.getBalanceStockAndReserves1700(); // записываем остаток в днях по записи для 1700.
+			Double remainderInDay1800 = generalProduct.getBalanceStockAndReserves1800();// записываем остаток в днях по записи для 1800.
+			Double calculatedPerDay1700 = generalProduct.getCalculatedPerDay1700();  //расчётная реализация в день для 1700 склада
+			Double calculatedPerDay1800 = generalProduct.getCalculatedPerDay1800();  //расчётная реализация в день для 1700 склада
+			
+			if(generalProduct.getNumStock() == null) {
+				continue;
 			}
 			
-			
-			Product generalProduct = products.get(0);
-			Double remainderInDay1700 = null;// записываем остаток в днях по записи для 1700.
-			Double remainderInDay1800 = null;// записываем остаток в днях по записи для 1800.
-			Double calculatedPerDay1700 = 0.0; 
-			Double calculatedPerDay1800 = 0.0; 
-			for (Product product : products) {
-				
-				if(product.getNumStock() == null) {
-					continue;
-				}
-				
-				if(product.getNumStock().equals("1700")) {
-					remainderInDay1700 = product.getBalanceStockAndReserves();
-					calculatedPerDay1700 = product.getСalculatedPerDay();
-				}else {
-					remainderInDay1800 = product.getBalanceStockAndReserves();
-					calculatedPerDay1800 = product.getСalculatedPerDay();
-				}
-			}
 			if(remainderInDay1700 == null || remainderInDay1800 == null || remainderInDay1700 == 9999 || remainderInDay1800 == 9999) {
 				continue;
 			}
 			//далее просматриваем что стоит в слотах (должно приехать) и переводем в дни, для суммирования
 			Date start;
 			if(generalProduct.getDateUnload() == null) {
-				start = Date.valueOf(generalProduct.getDateCreate().toLocalDateTime().toLocalDate());
-			}else {
 				start = generalProduct.getDateUnload();
+			}else {
+				start = Date.valueOf(generalProduct.getDateCreate().toLocalDateTime().toLocalDate());
 			}
 			Date finish = Date.valueOf(LocalDate.now().plusDays(30));
 			Double quantityOrderSum1700 = 0.0; // сумма всех заказов товара за заданный период
@@ -503,7 +479,7 @@ public class ReaderSchedulePlan {
 			
 			for (Order order2 : orders) {
 				if(order2.getOrderLinesMap().get(Long.parseLong(generalProduct.getCodeProduct()+"")) != null) {
-					if(order2.getNumStockDelivery().equals("1700")) {
+					if(getTrueStock(order2).equals("1700")) {
 						quantityOrderSum1700 = quantityOrderSum1700 + order2.getOrderLinesMap().get(Long.parseLong(generalProduct.getCodeProduct()+""));
 					}else {
 						quantityOrderSum1800 = quantityOrderSum1800 + order2.getOrderLinesMap().get(Long.parseLong(generalProduct.getCodeProduct()+""));
@@ -627,7 +603,7 @@ public class ReaderSchedulePlan {
 		 
 		 boolean isMistakeZAQ = false;
 		 
-//		 List<Product> balance = checkBalanceBetweenStock(order); // проерка балансов
+		 List<Product> balance = checkBalanceBetweenStock(order); // проерка балансов
 		 
 		 if(checkHasLog(dateRange, order)) {
 			 //если входит в лог плече, то находим такие же заказы с такими же SKU
@@ -687,24 +663,24 @@ public class ReaderSchedulePlan {
 								result = result +"<span style=\"color: red;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + zaq + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + orlZaq + " шт.</span>\n";	
 								String dayStockMessage =  checkNumProductHasStock(order, product, dateRange); // проверяем по стокам относительно одного продукта
 								//пошла проверка балансов
-//								Product balanceProduct = balance.stream().filter(b-> b.getCodeProduct().equals(product.getCodeProduct())).findFirst().get();
-//								result = result +"<span style=\"color: red;\"> Запасы на складах "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") с учётом слотов : 1700 = "+balanceProduct.getCalculatedDayStock1700() 
-//									+" дн; 1800 = "+ balanceProduct.getCalculatedDayStock1800() +" дн;</span>\n";	
-//								if(order.getIdRamp().toString().substring(0, 4).equals("1700")) {
-//									if(balanceProduct.getCalculatedDayStock1700() > balanceProduct.getCalculatedDayMax()) {
-//										if(balanceProduct.getCalculatedDayStock1700() > balanceProduct.getCalculatedDayStock1800()) {
-//											result = result +"Необходимо доставить товар "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") на <b>1800 склад</b>, т.к. остаток товаров в днях меньше чем на текущем складе;\\n";	
-//											isMistakeZAQ = true;											
-//										}
-//									}
-//								}else {
-//									if(balanceProduct.getCalculatedDayStock1800() > balanceProduct.getCalculatedDayMax()) {
-//										if(balanceProduct.getCalculatedDayStock1800() > balanceProduct.getCalculatedDayStock1700()) {
-//											result = result +"Необходимо доставить товар "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") на <b>1700 склад</b>, т.к. остаток товаров в днях меньше чем на текущем складе;\n";	
-//											isMistakeZAQ = true;											
-//										}
-//									}
-//								}
+								Product balanceProduct = balance.stream().filter(b-> b.getCodeProduct().equals(product.getCodeProduct())).findFirst().get();
+								result = result +"<span style=\"color: red;\"> Запасы на складах "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") с учётом слотов : 1700 = "+balanceProduct.getCalculatedDayStock1700() 
+									+" дн; 1800 = "+ balanceProduct.getCalculatedDayStock1800() +" дн;</span>\n";	
+								if(order.getIdRamp().toString().substring(0, 4).equals("1700")) {
+									if(balanceProduct.getCalculatedDayStock1700() > balanceProduct.getCalculatedDayMax()) {
+										if(balanceProduct.getCalculatedDayStock1700() > balanceProduct.getCalculatedDayStock1800()) {
+											result = result +"Необходимо доставить товар "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") на <b>1800 склад</b>, т.к. остаток товаров в днях меньше чем на текущем складе;\n";	
+											isMistakeZAQ = true;											
+										}
+									}
+								}else {
+									if(balanceProduct.getCalculatedDayStock1800() > balanceProduct.getCalculatedDayMax()) {
+										if(balanceProduct.getCalculatedDayStock1800() > balanceProduct.getCalculatedDayStock1700()) {
+											result = result +"Необходимо доставить товар "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") на <b>1700 склад</b>, т.к. остаток товаров в днях меньше чем на текущем складе;\n";	
+											isMistakeZAQ = true;											
+										}
+									}
+								}
 								//закончилась проверка балансов
 								 if(dayStockMessage!= null) {
 						             result = dayStockMessage+"\n" + result;
@@ -719,24 +695,24 @@ public class ReaderSchedulePlan {
 								result = result +"<span style=\"color: red;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + singleZaq + " шт. из " + orlZaq + " шт.</span>\n";	
 								String dayStockMessage =  checkNumProductHasStock(order, product, dateRange); // проверяем по стокам относительно одного продукта
 								//пошла проверка балансов
-//								Product balanceProduct = balance.stream().filter(b-> b.getCodeProduct().equals(product.getCodeProduct())).findFirst().get();
-//								result = result +"<span style=\"color: red;\"> Запасы на складах "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") с учётом слотов : 1700 = "+balanceProduct.getCalculatedDayStock1700() 
-//									+" дн; 1800 = "+ balanceProduct.getCalculatedDayStock1800() +" дн;</span>\n";	
-//								if(order.getIdRamp().toString().substring(0, 4).equals("1700")) {
-//									if(balanceProduct.getCalculatedDayStock1700() > balanceProduct.getCalculatedDayMax()) {
-//										if(balanceProduct.getCalculatedDayStock1700() > balanceProduct.getCalculatedDayStock1800()) {
-//											result = result +"Необходимо доставить товар "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") на <b>1800 склад</b>, т.к. остаток товаров в днях меньше чем на текущем складе;\n";	
-//											isMistakeZAQ = true;											
-//										}
-//									}
-//								}else {
-//									if(balanceProduct.getCalculatedDayStock1800() > balanceProduct.getCalculatedDayMax()) {
-//										if(balanceProduct.getCalculatedDayStock1800() > balanceProduct.getCalculatedDayStock1700()) {
-//											result = result +"Необходимо доставить товар "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") на <b>1700 склад</b>, т.к. остаток товаров в днях меньше чем на текущем складе;\n";	
-//											isMistakeZAQ = true;											
-//										}
-//									}
-//								}
+								Product balanceProduct = balance.stream().filter(b-> b.getCodeProduct().equals(product.getCodeProduct())).findFirst().get();
+								result = result +"<span style=\"color: red;\"> Запасы на складах "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") с учётом слотов : 1700 = "+balanceProduct.getCalculatedDayStock1700() 
+									+" дн; 1800 = "+ balanceProduct.getCalculatedDayStock1800() +" дн;</span>\n";	
+								if(order.getIdRamp().toString().substring(0, 4).equals("1700")) {
+									if(balanceProduct.getCalculatedDayStock1700() > balanceProduct.getCalculatedDayMax()) {
+										if(balanceProduct.getCalculatedDayStock1700() > balanceProduct.getCalculatedDayStock1800()) {
+											result = result +"Необходимо доставить товар "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") на <b>1800 склад</b>, т.к. остаток товаров в днях меньше чем на текущем складе;\n";	
+											isMistakeZAQ = true;											
+										}
+									}
+								}else {
+									if(balanceProduct.getCalculatedDayStock1800() > balanceProduct.getCalculatedDayMax()) {
+										if(balanceProduct.getCalculatedDayStock1800() > balanceProduct.getCalculatedDayStock1700()) {
+											result = result +"Необходимо доставить товар "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") на <b>1700 склад</b>, т.к. остаток товаров в днях меньше чем на текущем складе;\n";	
+											isMistakeZAQ = true;											
+										}
+									}
+								}
 								//закончилась проверка балансов
 								 if(dayStockMessage!= null) {
 						             result = dayStockMessage+"\n" + result;
@@ -756,24 +732,24 @@ public class ReaderSchedulePlan {
 				         }
 						result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - отсутствует в плане заказа (Заказы поставщика от ОРЛ)\n";
 						//пошла проверка балансов
-//						Product balanceProduct = balance.stream().filter(b-> b.getCodeProduct().equals(product.getCodeProduct())).findFirst().get();
-//						result = result +"<span style=\"color: red;\"> Запасы на складах "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") с учётом слотов : 1700 = "+balanceProduct.getCalculatedDayStock1700() 
-//							+" дн; 1800 = "+ balanceProduct.getCalculatedDayStock1800() +" дн;</span>\n";	
-//						if(order.getIdRamp().toString().substring(0, 4).equals("1700")) {
-//							if(balanceProduct.getCalculatedDayStock1700() > balanceProduct.getCalculatedDayMax()) {
-//								if(balanceProduct.getCalculatedDayStock1700() > balanceProduct.getCalculatedDayStock1800()) {
-//									result = result +"Необходимо доставить товар "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") на <b>1800 склад</b>, т.к. остаток товаров в днях меньше чем на текущем складе;\\n";	
-//									isMistakeZAQ = true;											
-//								}
-//							}
-//						}else {
-//							if(balanceProduct.getCalculatedDayStock1800() > balanceProduct.getCalculatedDayMax()) {
-//								if(balanceProduct.getCalculatedDayStock1800() > balanceProduct.getCalculatedDayStock1700()) {
-//									result = result +"Необходимо доставить товар "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") на <b>1700 склад</b>, т.к. остаток товаров в днях меньше чем на текущем складе;\n";	
-//									isMistakeZAQ = true;											
-//								}
-//							}
-//						}
+						Product balanceProduct = balance.stream().filter(b-> b.getCodeProduct().equals(product.getCodeProduct())).findFirst().get();
+						result = result +"<span style=\"color: red;\"> Запасы на складах "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") с учётом слотов : 1700 = "+balanceProduct.getCalculatedDayStock1700() 
+							+" дн; 1800 = "+ balanceProduct.getCalculatedDayStock1800() +" дн;</span>\n";	
+						if(order.getIdRamp().toString().substring(0, 4).equals("1700")) {
+							if(balanceProduct.getCalculatedDayStock1700() > balanceProduct.getCalculatedDayMax()) {
+								if(balanceProduct.getCalculatedDayStock1700() > balanceProduct.getCalculatedDayStock1800()) {
+									result = result +"Необходимо доставить товар "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") на <b>1800 склад</b>, т.к. остаток товаров в днях меньше чем на текущем складе;\n";	
+									isMistakeZAQ = true;											
+								}
+							}
+						}else {
+							if(balanceProduct.getCalculatedDayStock1800() > balanceProduct.getCalculatedDayMax()) {
+								if(balanceProduct.getCalculatedDayStock1800() > balanceProduct.getCalculatedDayStock1700()) {
+									result = result +"Необходимо доставить товар "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") на <b>1700 склад</b>, т.к. остаток товаров в днях меньше чем на текущем складе;\n";	
+									isMistakeZAQ = true;											
+								}
+							}
+						}
 						//закончилась проверка балансов
 					}
 				}

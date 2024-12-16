@@ -81,7 +81,7 @@ public class ProductDAOImpl implements ProductDAO{
 	private static final String queryGetProductMapHasGroupByCode = "from Product p LEFT JOIN FETCH p.orderProducts op where p.codeProduct IN (:codes)";
 	@Transactional
 	@Override
-	public Map<String, Product> getProductMapHasGroupByCode(List<Integer> codes) {
+	public Map<Integer, Product> getProductMapHasGroupByCode(List<Integer> codes) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<Product> theObject = currentSession.createQuery(queryGetProductMapHasGroupByCode, Product.class);
 		theObject.setParameterList("codes", codes);
@@ -90,9 +90,9 @@ public class ProductDAOImpl implements ProductDAO{
 		
 //		products.forEach(p-> System.err.println(p));
 		
-		Map<String, Product> result = new HashMap<String, Product>();
+		Map<Integer, Product> result = new HashMap<Integer, Product>();
 		products.forEach(p->{
-			result.put(p.getCodeProduct()+""+p.getNumStock(), p);
+			result.put(p.getCodeProduct(), p);
 		});
 		if(result.isEmpty()) {
 			return null;

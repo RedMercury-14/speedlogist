@@ -336,7 +336,16 @@ public class MainRestController {
 	
 	
 	
-	@GetMapping("/test/{id}")
+	/**
+	 * Тестовый метод для проверки баланса по каждому продуку входящему в ордер
+	 * Принимает id заказа
+	 * @param request
+	 * @param response
+	 * @param id
+	 * @return
+	 * @throws IOException
+	 */
+	@GetMapping("/balance/{id}")
 	@TimedExecution
     public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response, @PathVariable String id) throws IOException{
        Map<String, Object> responseMap = new HashMap<>();

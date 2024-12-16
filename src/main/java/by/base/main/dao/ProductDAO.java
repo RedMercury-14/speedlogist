@@ -18,10 +18,10 @@ public interface ProductDAO {
 	void updateProduct(Product product);
 	
 	/**
-	 * Отдаёт мапу где ключ-это конкатинация из кода продуката и склада. (5645645<b>1700</b>)
+	 * Отдаёт мапу где ключ-это кода продуката, значение - Product.
 	 * <br>Значение - это Product
 	 * @param codes
 	 * @return
 	 */
-	Map<String, Product> getProductMapHasGroupByCode (List<Integer> codes);
+	Map<Integer, Product> getProductMapHasGroupByCode (List<Integer> codes);
 }

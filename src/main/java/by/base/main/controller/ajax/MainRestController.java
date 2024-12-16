@@ -3898,7 +3898,7 @@ public class MainRestController {
 					response.put("info", infoCheck.replace("\n", "<br>"));
 					response.put("status", "200");
 					//проверка по балансу на складах
-					response.put("balance", readerSchedulePlan.checkBalanceBetweenStock(order));
+//					response.put("balance", readerSchedulePlan.checkBalanceBetweenStock(order));
 				}	
 				
 			}

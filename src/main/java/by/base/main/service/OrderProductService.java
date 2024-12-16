@@ -43,7 +43,18 @@ public interface OrderProductService {
 	 * @param finish конец выборки
 	 * @return <b>отсортирован от самой ранней даты</b>
 	 */
+	@Deprecated
 	List<OrderProduct> getOrderProductListHasCodeProductAndPeriod(OrderLine orderLine, Date start, Date finish);
+	
+	/**
+	 * Метод принимает лист с кодами продуктов и по заданному периоду возвращает заказы по этим продуктам (где они есть)
+	 * <br>Метод исключает дубликаты (Set<>)
+	 * @param codeProduct
+	 * @param start
+	 * @param finish
+	 * @return
+	 */	
+	List<OrderProduct> getOrderProductListHasCodeProductGroupAndPeriod(List<OrderLine> orderLines , Date start, Date finish);
 
 	void updateOrderProduct(OrderProduct orderProduct);
 }

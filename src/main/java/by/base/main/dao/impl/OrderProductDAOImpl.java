@@ -98,4 +98,21 @@ public class OrderProductDAOImpl implements OrderProductDAO{
 		return new ArrayList<OrderProduct>(trucks);
 	}
 
+	private static final String queryGetOrderProductListHasCodeProductGroupAndPeriod = "from OrderProduct where codeProduct IN (:codeProducts) AND dateCreate BETWEEN :dateStart and :dateEnd";
+	@Transactional
+	@Override
+	public List<OrderProduct> getOrderProductListHasCodeProductGroupAndPeriod(List<Integer> codeProducts, Date start,
+			Date finish) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Timestamp startTime = Timestamp.valueOf(LocalDateTime.of(LocalDate.parse(start.toString()), LocalTime.of(00, 00)));
+		Timestamp endTime = Timestamp.valueOf(LocalDateTime.of(LocalDate.parse(finish.toString()), LocalTime.of(23, 59)));
+		Query<OrderProduct> theObject = currentSession.createQuery(queryGetOrderProductListHasCodeProductGroupAndPeriod, OrderProduct.class);
+		theObject.setParameter("dateStart", startTime, TemporalType.TIMESTAMP);
+		theObject.setParameter("dateEnd", endTime, TemporalType.TIMESTAMP);
+		theObject.setParameterList("codeProducts", codeProducts);
+		Set<OrderProduct> trucks = new HashSet<OrderProduct>(theObject.getResultList());
+//		System.out.println(codeProducts);
+		return new ArrayList<OrderProduct>(trucks);
+	}
+
 }

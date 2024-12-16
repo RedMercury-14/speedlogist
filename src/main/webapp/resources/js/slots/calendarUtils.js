@@ -237,18 +237,16 @@ function createEventInfoHTML(fcEvent) {
 	const dateDeliveryView = convertToDDMMYYYY(dateDelivery)
 	const eventStartDate = convertToDayMonthTime(fcEvent.startStr)
 
-	// ВРЕМЕННО ДЛЯ 1800
-	// <div class="event-info__ramp">
-	// 		Склад: ${stock}
-	// 		Рампа: ${ramp}
-	// 	</div>
 
 	return `
 		<div class="event-info__status">
 			<p class="mb-1 font-weight-bold">Статус заказа: ${statusToView}</p>
 		</div>
 		${slotInfo && `<div class="event-info__slotInfo font-weight-bold">${slotInfo}</div>`}
-		
+		<div class="event-info__ramp">
+			Склад: ${stock}
+			Рампа: ${ramp}
+		</div>
 		<div class="event-info__start">Начало выгрузки: ${eventStartDate}</div>
 		<div class="event-info__duration">Длительность выгрузки: ${h} ч ${m} мин</div>
 		<div class="event-info__id">ID заявки: ${idOrder}</div>

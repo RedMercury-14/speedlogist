@@ -8,6 +8,7 @@ import com.dto.OrderDTO;
 
 import by.base.main.dto.OrderDTOForSlot;
 import by.base.main.model.Order;
+import by.base.main.model.Product;
 import by.base.main.model.Route;
 import by.base.main.model.Schedule;
 
@@ -60,6 +61,14 @@ public interface OrderService {
 	 * @return
 	 */
 	List<Order> getOrderByTimeDelivery(Date dateStart, Date dateEnd);
+	
+	/**
+	 * отдаёт ордеры по дате доставки (без учёта времени) и номеру склада
+	 * @param dateStart
+	 * @param dateEnd
+	 * @return
+	 */
+	List<Order> getOrderByTimeDeliveryAndNumStock(Date dateStart, Date dateEnd, Integer numStock);
 	
 	/**
 	 * Общий метод сохранения.
@@ -164,6 +173,40 @@ public interface OrderService {
 	 */
 	List<Order> getOrderByPeriodDeliveryAndListCodeContract(Date dateStart, Date dateEnd, List<Schedule> schedules);
 	
+	/**
+	 * Возвращаем заказы за период, в которые входит таргетный продукт
+	 * @param dateStart
+	 * @param Finish
+	 * @param product
+	 * @return
+	 */
+	@Deprecated
+	List<Order> getOrderByPeriodSlotsAndProduct(Date dateStart, Date dateFinish, Product product);
+	
+	/**
+	 * прямой наследний <b>List<Order> getOrderByPeriodSlotsAndProduct(Date dateStart, Date dateFinish, Product product)</b>
+	 * <br> Возвращаем заказы за период, в которые входит <b>группа</b> таргетных продуктов
+	 * 
+	 * @param dateStart
+	 * @param Finish
+	 * @param product
+	 * @return
+	 */
+	List<Order> getOrderGroupByPeriodSlotsAndProduct(Date dateStart, Date dateFinish, List<Long> goodsIds);
+	
+	/**
+	 * прямой наследний <b>List<Order> getOrderGroupByPeriodSlotsAndProduct(Date dateStart, Date dateFinish, List<Long> goodsIds)</b>
+	 * <br> Возвращаем заказы за период, в которые входит <b>группа</b> таргетных продуктов
+	 * <br> Не подтягивает ненужные связи, а инициирует только <b>OrderLines!</b>
+	 * <br> <b>Не использовать для фронта</b>
+	 * 
+	 * @param dateStart
+	 * @param Finish
+	 * @param product
+	 * @return
+	 */
+	List<Order> getOrderGroupByPeriodSlotsAndProductNotJOIN(Date dateStart, Date dateFinish, List<Long> goodsIds);
+	
 	int updateOrderFromStatus (Order order);
 	
 	List<Order> getOrderByPeriodCreateAndCounterparty(Date dateStart, Date dateEnd, String counterparty);
@@ -171,4 +214,15 @@ public interface OrderService {
 	void deleteOrderById(Integer id);
 	
 	boolean checkOrderHasMarketCode(String code);
+	
+	/**
+	 * Метод который возращает заказы по <b>дате доставки (timeDelivery) и номеру контракта </b>
+	 * <br>Без использования join ов. Подтягивается только <b>OrderLines</b>
+	 * @param dateStart
+	 * @param dateEnd
+	 * @param numContract
+	 * @return
+	 */
+	List<Order> getOrderByPeriodDeliveryAndCodeContractNotJOIN(Date dateStart, Date dateEnd, String numContract);
+	
 }

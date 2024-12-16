@@ -750,7 +750,7 @@
 
 							<div class="form-row mx-0 my-2">
 								<div class="mr-2">
-									<label class="sr-only" for="tempScheduleDateRange_from">С</label>
+									<label class="sr-only" for="startDateTemp">С</label>
 									<div class="input-group">
 										<div class="input-group-prepend">
 											<div class="input-group-text custom-tooltip mr-2">
@@ -764,16 +764,16 @@
 												С
 											</div>
 										</div>
-										<input type="date" class="form-control" name="tempScheduleDateRange_from" id="tempScheduleDateRange_from" required>
+										<input type="date" class="form-control" name="startDateTemp" id="startDateTemp" required>
 									</div>
 								</div>
 								<div class="">
-									<label class="sr-only" for="tempScheduleDateRange_to">По</label>
+									<label class="sr-only" for="endDateTemp">По</label>
 									<div class="input-group">
 										<div class="input-group-prepend">
 											<div class="input-group-text">По</div>
 										</div>
-										<input type="date" class="form-control" name="tempScheduleDateRange_to" id="tempScheduleDateRange_to" required>
+										<input type="date" class="form-control" name="endDateTemp" id="endDateTemp" required>
 									</div>
 								</div>
 							</div>

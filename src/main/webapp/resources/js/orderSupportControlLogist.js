@@ -264,14 +264,16 @@ function editBalanceStockAndReserves(agGridParams) {
 	})
 }
 function editDayMax(agGridParams) {
-	const codeProduct = agGridParams.data.codeProduct
+	const data = agGridParams.data
+	const codeProduct = data.codeProduct
+	const numStock = data.numStock
 	const newValue = agGridParams.newValue ? agGridParams.newValue : ''
 	const oldValue = agGridParams.oldValue ? agGridParams.oldValue : ''
 
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
 
 	ajaxUtils.get({
-		url: `${setMaxDayBaseUrl}${codeProduct}&${newValue}`,
+		url: `${setMaxDayBaseUrl}${codeProduct}&${numStock}&${newValue}`,
 		successCallback: (data) => {
 			clearTimeout(timeoutId)
 			bootstrap5overlay.hideOverlay()
@@ -293,13 +295,15 @@ function editDayMax(agGridParams) {
 	})
 }
 function editIsExeption(agGridParams) {
-	const codeProduct = agGridParams.data.codeProduct
+	const data = agGridParams.data
+	const codeProduct = data.codeProduct
+	const numStock = data.numStock
 	const oldValue = !agGridParams.newValue
 
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
 
 	ajaxUtils.get({
-		url: `${changeExceptionBaseUrl}${codeProduct}`,
+		url: `${changeExceptionBaseUrl}${codeProduct}&${numStock}`,
 		successCallback: (data) => {
 			clearTimeout(timeoutId)
 			bootstrap5overlay.hideOverlay()

@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import by.base.main.aspect.TimedExecution;
 import by.base.main.dao.ProductDAO;
 import by.base.main.model.OrderProduct;
 import by.base.main.model.Product;
@@ -53,6 +54,12 @@ public class ProductServiceImpl implements ProductService{
 		     response.put(product.getCodeProduct(), product);
 		 }
 		return response;
+	}
+
+	@Override
+	@TimedExecution
+	public Map<String, Product> getProductMapHasGroupByCode(List<Integer> codes) {
+		return productDAO.getProductMapHasGroupByCode(codes);
 	}
 
 }

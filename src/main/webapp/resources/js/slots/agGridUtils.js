@@ -14,8 +14,7 @@ const columnDefs = [
 	},
 	{ headerName: "Дата доставки", field: "dateDeliveryToView", width: 80, comparator: dateComparator, },
 	{ headerName: "Дата начала выгрузки", field: "timeDeliveryStartDate", width: 80, comparator: dateComparator, cellClass: 'px-1 text-center font-weight-bold',},
-	// ВРЕМЕННО ДЛЯ 1800
-	// { headerName: "Склад доставки (из Маркета)", field: "numStockDelivery", width: 120, },
+	{ headerName: "Склад доставки (из Маркета)", field: "numStockDelivery", width: 120, },
 	{ headerName: "ID", field: "idOrder", width: 100, cellRenderer: idOrderRenderer},
 	{ headerName: "Номер из Маркета", field: "marketNumber", width: 100, },
 	{ headerName: "Статус", field: 'status', width: 60, },
@@ -24,8 +23,7 @@ const columnDefs = [
 	{ headerName: "Паллеты", field: 'pall', width: 60, },
 	{ headerName: "Груз", field: 'cargo', },
 	{ headerName: "Длительность", field: 'timeUnload', width: 60, },
-	// ВРЕМЕННО ДЛЯ 1800
-	// { headerName: "Рампа", field: "idRamp", width: 60, },
+	{ headerName: "Рампа", field: "idRamp", width: 60, },
 	{
 		headerName: "Время выгрузки",
 		field: "timeDeliveryInfo",

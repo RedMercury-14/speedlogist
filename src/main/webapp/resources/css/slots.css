@@ -872,6 +872,9 @@ svg:not(:root) {
 }
 
 /* ------- календарь заказов и поставок ------- */
+#updateSlotReasonModal .modal-header {
+	background-color: cadetblue;
+}
 #orderCalendarModal .modal-header {
 	background-color: cadetblue;
 }

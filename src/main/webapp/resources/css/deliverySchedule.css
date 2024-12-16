@@ -305,6 +305,20 @@ form .form-check .form-check-label {
 #myGrid .red-row {
 	background-color: rgba(255, 0, 0, 0.3);
 }
+#myGrid .inactive-overlay {
+	font-style: oblique;
+	opacity: 0.8;
+	background-image: repeating-linear-gradient(
+		45deg,
+		rgba(110, 110, 110, 0.15),
+		rgba(110, 110, 110, 0.15) 10px,
+		transparent 10px,
+		transparent 20px
+	);
+}
+#myGrid .tempScheduleCell {
+	background-color: rgb(0, 188, 212) !important;
+}
 
 /* мигание кнопки Помощь */
 @keyframes softGreenBlink {

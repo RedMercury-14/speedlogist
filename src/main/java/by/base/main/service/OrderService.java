@@ -63,6 +63,14 @@ public interface OrderService {
 	List<Order> getOrderByTimeDelivery(Date dateStart, Date dateEnd);
 	
 	/**
+	 * отдаёт ордеры по дате доставки (без учёта времени) и номеру склада
+	 * @param dateStart
+	 * @param dateEnd
+	 * @return
+	 */
+	List<Order> getOrderByTimeDeliveryAndNumStock(Date dateStart, Date dateEnd, Integer numStock);
+	
+	/**
 	 * Общий метод сохранения.
 	 * НЕ ИСПОЛЬЗОВАТЬ ДЛЯ 5 СТАТУСОВ
 	 * @param order

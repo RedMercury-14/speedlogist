@@ -22,6 +22,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -1883,6 +1884,12 @@ public class MainRestController {
 		
 		File file1 = poiExcel.getFileByMultipartTarget(excel, request, "need.xlsx");
 		
+		if(poiExcel.getColumnCount(file1) <= 3) {
+			response.put("status", "100");
+			response.put("message", "Файл безнадёжно устарел! Обратитесь в ОРЛ для предоставления новго файла (с расчётом на каждый склад)");
+			return response;
+		}
+
 		Map<Integer, OrderProduct> mapOrderProduct = new HashMap<Integer, OrderProduct>();
 		try {
 			mapOrderProduct = poiExcel.loadNeedExcel(file1, dateStr);
@@ -2006,7 +2013,7 @@ public class MainRestController {
 	 * @throws IOException 
 	 */
 	@TimedExecution
-	private String chheckScheduleMethodAllInfo (HttpServletRequest request ,String num, String date, String companyName) throws IOException {
+	private String chheckScheduleMethodAllInfo (HttpServletRequest request ,String num, String date, String companyName) throws IOException {	
 		
 		//тут отправляем на почту сообщение
 		String appPath = request.getServletContext().getRealPath("");
@@ -3668,9 +3675,9 @@ public class MainRestController {
 		}
 		
 		//проверка по балансу на складах
-		response.put("balance", readerSchedulePlan.checkBalanceBetweenStock(order));
-
-
+//		response.put("balance", readerSchedulePlan.checkBalanceBetweenStock(order));
+		
+		
 		String errorMessage = orderService.updateOrderForSlots(order);//проверка на пересечение со временим других слотов и лимит складов
 		
 		if(errorMessage!=null) {
@@ -3879,7 +3886,7 @@ public class MainRestController {
 		String infoCheck = null;		
 		//ТЕСТОВО ОТКЛЮЧИЛ!
 		if(!checkDeepImport(order, request)) {
-			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {
+			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {			
 				PlanResponce planResponce = readerSchedulePlan.process(order);
 				if(planResponce.getStatus() == 0) {
 					infoCheck = planResponce.getMessage();
@@ -3891,9 +3898,9 @@ public class MainRestController {
 					response.put("info", infoCheck.replace("\n", "<br>"));
 					response.put("status", "200");
 					//проверка по балансу на складах
-					response.put("balance", readerSchedulePlan.checkBalanceBetweenStock(order));
-				}
-
+//					response.put("balance", readerSchedulePlan.checkBalanceBetweenStock(order));
+				}	
+				
 			}
 		}
 		
@@ -4057,13 +4064,34 @@ public class MainRestController {
 			@RequestParam(value = "excel", required = false) MultipartFile excel)
 			throws InvalidFormatException, IOException, ServiceException {
 		Map<String, String> response = new HashMap<String, String>();	
+		System.out.println();
+		Date dateUnload = null;
+		String filename = excel.getOriginalFilename();
+
+        try {
+            // Извлечение даты из строки
+            String datePart = filename.substring(0, filename.indexOf(".xlsx"));
+
+            // Формат даты в исходной строке
+            SimpleDateFormat inputFormat = new SimpleDateFormat("dd.MM.yyyy");
+
+            // Преобразование в java.util.Date
+            java.util.Date utilDate = inputFormat.parse(datePart);
+
+            // Преобразование в java.sql.Date
+            dateUnload = new Date(utilDate.getTime());
+
+        } catch (java.text.ParseException e) {
+            System.err.println("Ошибка при разборе даты: " + e.getMessage());
+            response.put("status", "100");
+            response.put("message", "Ошибка при разборе даты: " + filename);
+            return response;
+        }
+
 		File file1 = poiExcel.getFileByMultipartTarget(excel, request, "490.xlsx");
-//		String text = poiExcel.testHeaderOrderHasExcel(file1);
 		String text;
 		//основной метод загрузки в БД
-		text = poiExcel.loadBalanceStock(file1, request);
-		
-		
+		text = poiExcel.loadBalanceStock2(file1, request, dateUnload);
 		response.put("200", text);
 		return response;
 	}

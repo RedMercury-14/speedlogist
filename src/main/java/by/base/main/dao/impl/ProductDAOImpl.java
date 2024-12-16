@@ -44,7 +44,7 @@ public class ProductDAOImpl implements ProductDAO{
 	private static final String queryGetObjByCode = "from Product p LEFT JOIN FETCH p.orderProducts op where p.codeProduct=:codeProduct";
 	@Transactional
 	@Override
-	public List<Product> getProductByCode(Integer id) {
+	public Product getProductByCode(Integer id) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<Product> theObject = currentSession.createQuery(queryGetObjByCode, Product.class);
 		theObject.setParameter("codeProduct", id);
@@ -52,7 +52,7 @@ public class ProductDAOImpl implements ProductDAO{
 		if(trucks.isEmpty()) {
 			return null;
 		}
-		return trucks;
+		return trucks.get(0);
 	}
 
 	@Override

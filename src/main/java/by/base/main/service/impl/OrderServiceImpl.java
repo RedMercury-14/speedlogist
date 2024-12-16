@@ -311,6 +311,7 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
+	@TimedExecution
 	public Integer getSummPallInStockExternal(Order order) {
 		Timestamp dateTimeStart = order.getTimeDelivery();
 		String numStock = null;
@@ -410,6 +411,11 @@ public class OrderServiceImpl implements OrderService {
 	public List<Order> getOrderByPeriodDeliveryAndCodeContractNotJOIN(Date dateStart, Date dateEnd,
 			String numContract) {
 		return orderDAO.getOrderByPeriodDeliveryAndCodeContractNotJOIN(dateStart, dateEnd, numContract);
+	}
+
+	@Override
+	public List<Order> getOrderByTimeDeliveryAndNumStock(Date dateStart, Date dateEnd, Integer numStock) {
+		return orderDAO.getOrderByTimeDeliveryAndNumStock(dateStart, dateEnd, numStock);
 	}
 	
 }

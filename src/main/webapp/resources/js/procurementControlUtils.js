@@ -251,6 +251,15 @@ export function checkCombineOrders(orders) {
 	}
 
 	const firstOrder = orders[0]
+
+	const isVerifyOrderWay = orders.every(order =>
+		order.way === firstOrder.way
+		&& order.isInternalMovement === firstOrder.isInternalMovement
+	)
+	if (!isVerifyOrderWay) {
+		return 'Нельзя объединить заявки с разным типом маршрута!'
+	}
+
 	const isValidStatuses = orders.every(order => order.status === firstOrder.status)
 	if (!isValidStatuses) {
 		return 'Объединять можно только те заказы, у которых одинаковый статус!'

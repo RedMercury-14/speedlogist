@@ -50,6 +50,9 @@ import {
 	slotSearchFormListner,
 	statusInfoLabelLIstners,
 	stockSelectListner,
+	updateSlotReasonCancelListner,
+	updateSlotReasonFormListner,
+	updateSlotReasonSelectListner,
 } from "./slots/listners.js"
 import { MAX_PALL_RESTRICTIONS } from "./globalRules/maxPallRestrictions.js"
 import {
@@ -59,6 +62,7 @@ import {
 	getOrderFromMarket,
 	loadOrder,
 	setOrderLinking,
+	updateOrder,
 } from "./slots/api.js"
 import {
 	dateSetHandler,
@@ -258,6 +262,12 @@ document.addEventListener('DOMContentLoaded', async function() {
 	eventInfoModalClosedListner()
 	// обработка действия для админа
 	adminActionListner(doAdminAction)
+	// указание причины переноса слота
+	updateSlotReasonFormListner(gettingReasonForUpdateSlot)
+	// обработчик выбора причины переноса слота
+	updateSlotReasonSelectListner()
+	// отмена указания причины переноса слота
+	updateSlotReasonCancelListner(cancelReasonForUpdateSlot)
 
 	// отображение стартовых данных
 	if (window.initData) {
@@ -274,6 +284,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 	$('#orderCalendarModal').on('hide.bs.modal', blurActiveElem)
 	$('#displayMessageModal').on('hide.bs.modal', blurActiveElem)
 	$('#pallChartModal').on('hide.bs.modal', blurActiveElem)
+	$('#updateSlotReasonModal').on('hide.bs.modal', blurActiveElem)
 })
 
 
@@ -542,6 +553,32 @@ async function doAdminAction(e) {
 		await checkEventsForBooking(events)
 		return
 	}
+}
+
+// указание причины обновления слота
+function gettingReasonForUpdateSlot(e) {
+	e.preventDefault()
+	const formData = new FormData(e.target)
+	const data = Object.fromEntries(formData)
+	const reason = data.updateSlotReason === 'Иное'
+		? data.updateSlotOtherReason
+		: data.updateSlotReason
+
+	const info = store.getCalendarInfo()
+	if (!reason) {
+		info.revert()
+		return
+	}
+
+	updateOrder(info, orderTableGridOption, reason)
+	$("#updateSlotReasonModal").modal('hide')
+}
+
+// отмена пуказания причины переноса слота
+function cancelReasonForUpdateSlot(e) {
+	const info = store.getCalendarInfo()
+	info.revert()
+	$("#updateSlotReasonModal").modal('hide')
 }
 
 // объединение заказов с указанием номеров из Маркета

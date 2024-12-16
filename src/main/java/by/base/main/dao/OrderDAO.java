@@ -58,6 +58,14 @@ public interface OrderDAO {
 	List<Order> getOrderByTimeDelivery(Date dateStart, Date dateEnd);
 	
 	/**
+	 * отдаёт ордеры по дате доставки (без учёта времени) и номеру склада
+	 * @param dateStart
+	 * @param dateEnd
+	 * @return
+	 */
+	List<Order> getOrderByTimeDeliveryAndNumStock(Date dateStart, Date dateEnd, Integer numStock);
+	
+	/**
 	 * отдаёт ордеры по дате доставки и времени, где время это time начиная от окончания выгрузки таргетного заказа
 	 * @param dateStart
 	 * @param dateEnd

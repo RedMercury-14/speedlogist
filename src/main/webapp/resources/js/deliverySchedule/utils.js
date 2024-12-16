@@ -193,6 +193,7 @@ export const weekOptions = [
 export const deliveryScheduleRowClassRules = {
 	'grey-row': params => params.node.data.status === 10,
 	'red-row': params => params.node.data.status === 0,
+	'inactive-overlay': params => params.node.data.isActualSchedule && params.node.data.isActualSchedule === 'Не действует'
 }
 export const deliveryScheduleColumnDefs = [
 	{
@@ -384,30 +385,30 @@ export function editScheduleItem(rowNode, setDataToForm) {
 }
 
 // подтверждение графика поставки
-export function confirmScheduleItem(rowNode) {
+export async function confirmScheduleItem(rowNode) {
 	const scheduleItem = rowNode.data
 	const idSchedule = scheduleItem.idSchedule
 	if (!idSchedule) return
 	const confirmStatus = 20
-	changeScheduleStatus({ idSchedule, status: confirmStatus, rowNode })
+	await changeScheduleStatus({ idSchedule, status: confirmStatus, rowNode })
 }
 
 // снятие подтверждения графика поставки
-export function unconfirmScheduleItem(rowNode) {
+export async function unconfirmScheduleItem(rowNode) {
 	const scheduleItem = rowNode.data
 	const idSchedule = scheduleItem.idSchedule
 	if (!idSchedule) return
 	const unconfirmStatus = 10
-	changeScheduleStatus({ idSchedule, status: unconfirmStatus, rowNode })
+	await changeScheduleStatus({ idSchedule, status: unconfirmStatus, rowNode })
 }
 
 // удаление графика поставок
-export function deleteScheduleItem(rowNode) {
+export async function deleteScheduleItem(rowNode) {
 	const scheduleItem = rowNode.data
 	const idSchedule = scheduleItem.idSchedule
 	if (!idSchedule) return
 	const deleteStatus = 0
-	changeScheduleStatus({ idSchedule, status: deleteStatus, rowNode })
+	await changeScheduleStatus({ idSchedule, status: deleteStatus, rowNode })
 }
 
 

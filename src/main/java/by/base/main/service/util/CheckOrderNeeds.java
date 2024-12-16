@@ -49,7 +49,7 @@ public class CheckOrderNeeds {
 		String result = "";
 		
 		for (Entry<Long, Double> entry : productHasOrder.entrySet()) {
-			Product product = productService.getProductByCodeAndStock(entry.getKey().intValue(), Integer.parseInt(order.getNumStockDelivery()));
+			Product product = productService.getProductByCode(entry.getKey().intValue());
 			if(product == null) {
 				result = result + "Отсутствует код товар в базе данных " +entry.getKey()+";\n";
 				continue;

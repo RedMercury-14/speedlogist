@@ -662,10 +662,21 @@ public class ReaderSchedulePlan {
 						int orlZaq;
 						if(factStock == 1700) {
 							//тут происходит построчная оценка заказанного товара и принятие решения							 
-							orlZaq = quantity.get(0).getQuantity1700(); // аказ от ОРЛ
+							
+							if(quantity.get(0).getQuantity1700() == null) {
+								orlZaq = 0;
+							}else {
+								orlZaq = quantity.get(0).getQuantity1700(); // аказ от ОРЛ
+							}
 						}else {
 							//тут происходит построчная оценка заказанного товара и принятие решения
-							orlZaq = quantity.get(0).getQuantity1800(); // аказ от ОРЛ
+							if(quantity.get(0).getQuantity1800() == null) {
+								orlZaq = 0;
+							}else {
+								orlZaq = quantity.get(0).getQuantity1800(); // аказ от ОРЛ
+							}
+							
+							
 							
 						}
 						
@@ -1100,8 +1111,6 @@ public class ReaderSchedulePlan {
 				break;
 				
 			case 1800:
-				System.err.println("getOstInPallets1800 = " + product.getOstInPallets1800());
-				System.err.println("getBalanceStockAndReserves1800 = " + product.getBalanceStockAndReserves1800());
 				if(product.getOstInPallets1800() == null || product.getBalanceStockAndReserves1800() == null) {
 					return null;
 				}

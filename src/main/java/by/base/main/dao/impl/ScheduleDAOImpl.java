@@ -308,7 +308,9 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	 * @return
 	 *
 	 */
-	private static final String queryGetListTOWithTemp = "from Schedule where type='ТО' AND ((startDateTemp IS NOT NULL AND endDateTemp IS NOT NULL AND CURRENT_DATE BETWEEN startDateTemp AND endDateTemp) or (startDateTemp IS NULL AND endDateTemp IS NULL))";
+	//private static final String queryGetListTOWithTemp = "from Schedule where type='ТО' AND ((startDateTemp IS NOT NULL AND endDateTemp IS NOT NULL AND CURRENT_DATE BETWEEN startDateTemp AND endDateTemp) or (startDateTemp IS NULL AND endDateTemp IS NULL))";
+	private static final String queryGetListTOWithTemp = "from Schedule where type='ТО'";
+
 	@Transactional
 	@Override
 	public List<Schedule> getSchedulesListTOWithTemp() {
@@ -316,7 +318,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 		Query<Schedule> schedule = currentSession.createQuery(queryGetListTOWithTemp, Schedule.class);
 		List <Schedule> schedules = schedule.getResultList();
 
-		return schedules;
+        return schedule.getResultList();
 	}
 
 	/**

@@ -333,28 +333,72 @@ public class MainRestController {
 //		responseMap.put("time", t2.getTime()-t1.getTime() + " ms");
 //		return responseMap;		
 //	}
-	
-	
-	
-	/**
-	 * Тестовый метод для проверки баланса по каждому продуку входящему в ордер
-	 * Принимает id заказа
-	 * @param request
-	 * @param response
-	 * @param id
-	 * @return
-	 * @throws IOException
-	 */
-	@GetMapping("/balance/{id}")
+
+//	@GetMapping("/test")
+//	@TimedExecution
+//    public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException{
+//		Map<String, Object> responseMap = new HashMap<>();
+//
+//		Schedule testSchedule = new Schedule();
+//
+//		try {
+//			java.util.Date startDate = new SimpleDateFormat("dd MM yyyy").parse("05 11 2024");
+//            java.util.Date endDate = new SimpleDateFormat("dd MM yyyy").parse("09 11 2024");
+//			testSchedule.setStartDateTemp(new java.sql.Date(startDate.getTime()));
+//			testSchedule.setEndDateTemp(new java.sql.Date(endDate.getTime()));
+//        } catch (java.text.ParseException e) {
+//            throw new RuntimeException(e);
+//        }
+//
+//		testSchedule.setCounterpartyCode(98897L);
+//		testSchedule.setName("АИДИЕС БОРЖОМИ БЕЛ");
+//		testSchedule.setCounterpartyContractCode(456L);
+//		testSchedule.setNumStock(230);
+//
+//
+//		List<Schedule> schedules = scheduleService.getScheduleByNumContractAndNUmStockWithTemp(testSchedule.getCounterpartyContractCode(), testSchedule.getNumStock());
+//
+//		boolean isScheduleCorrect = scheduleService.checkScheduleIntersection(schedules, testSchedule);
+//		responseMap.put("result", isScheduleCorrect);
+//
+//		return responseMap;
+//    }
+
+
+	private static final Integer dayBef = 30;
+	private static final Integer dayAft = 30;
+
+	@GetMapping("/test")
 	@TimedExecution
-    public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response, @PathVariable String id) throws IOException{
-       Map<String, Object> responseMap = new HashMap<>();
-		System.out.println("Start --- sendSchedulesTOHasORL");
+    public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException{
 
-		responseMap.put("result", readerSchedulePlan.checkBalanceBetweenStock(orderService.getOrderById(Integer.parseInt(id))));
+		//TODO Ira test
+		Map<String, Object> responseMap = new HashMap<>();
 
-		System.out.println("Finish --- sendSchedulesHasTOORL");
-	    return responseMap;
+		LocalDate currentTime = LocalDate.now().minusDays(2);
+		String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+		String fileName = "Несоответствия потребностей и слотов за " + currentTimeString + ".xlsx";
+		String appPath = servletContext.getRealPath("/");
+
+		List<OrderProduct> products = orderProductService.getOrderProductListHasDate(Date.valueOf(currentTime))
+				.stream().filter(p -> p.getQuantity1700() != 0 || p.getQuantity1800() != 0).collect(Collectors.toList());
+
+
+		poiExcel.fillExcelAboutNeeds(appPath + "resources/others/" + fileName);
+
+		List<File> files = new ArrayList<File>();
+		files.add(new File(appPath + "resources/others/" + fileName));
+
+		File zipFile;
+		zipFile = createZipFile(files, appPath + "resources/others/Незакрытые потребности.zip");
+
+		List <File> filesZip = new ArrayList<File>();
+		filesZip.add(zipFile);
+
+//		mailService.sendEmailWithFilesToUsers(servletContext, "Незакрытые потребности " + currentTimeString, "По данным потребностям не были созданы слоты", filesZip, emailsORL);
+
+		responseMap.put("Done", "Done");
+		return responseMap;
     }
 	
 	public static boolean deleteFolder(File folder) {
@@ -2292,7 +2336,7 @@ public class MainRestController {
 //		schedule.setCodeNameOfQuantumCounterparty(jsonMainObject.get("codeNameOfQuantumCounterparty") == null || jsonMainObject.get("codeNameOfQuantumCounterparty").toString().isEmpty() ? null : jsonMainObject.get("codeNameOfQuantumCounterparty").toString());
 //		schedule.setQuantumMeasurements(jsonMainObject.get("quantumMeasurements") == null || jsonMainObject.get("quantumMeasurements").toString().isEmpty() ? null : jsonMainObject.get("quantumMeasurements").toString());
 //		schedule.setQuantum(jsonMainObject.get("quantum") == null || jsonMainObject.get("quantum").toString().isEmpty() ? null : Double.parseDouble(jsonMainObject.get("quantum").toString()));
-		
+
 		User user = getThisUser();
 		String history = user.getSurname() + " " + user.getName() + ";" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")) + ";create\n"; 
 		
@@ -2360,7 +2404,7 @@ public class MainRestController {
 				
 			}else {
 				response.put("status", "100");
-				response.put("message", "В базе данных остуствует магазин " + numShop + ". Обратитесь в отдел транспортной лгистики");
+				response.put("message", "В базе данных остуствует магазин " + numShop + ". Обратитесь в отдел транспортной логистики");
 				return response;
 			}
 		}
@@ -2426,23 +2470,74 @@ public class MainRestController {
 		String history = user.getSurname() + " " + user.getName() + ";" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")) + ";create\n"; 
 		
 		schedule.setHistory((schedule.getHistory() != null ? schedule.getHistory() : "") + history);
-		
+
+		//boolean isScheduleTemp = jsonMainObject.get("isTempSchedule") == null ? false : Boolean.parseBoolean(jsonMainObject.get("isTempSchedule").toString()); //изменение
+
+		//начало изменений
+
+		boolean isScheduleTemp = jsonMainObject.get("isTempSchedule") == null ? false : Boolean.parseBoolean(jsonMainObject.get("isTempSchedule").toString()); //изменение
+
 		for (Map.Entry<Integer, Shop> object : targetShopMap.entrySet()) {
 			Shop shop = object.getValue();
-			Schedule scheduleOld = scheduleService.getScheduleByNumContractAndNUmStock(Long.parseLong(jsonMainObject.get("counterpartyContractCode").toString()), shop.getNumshop());
-			if(scheduleOld != null) {
-				response.put("status", "100");
-				response.put("message", "Данный контракт уже имеется в базе данных");
-				response.put("body", scheduleOld);
-				return response;
-			}
-			schedule.setIdSchedule(null);
 			schedule.setNameStock(shop.getAddress());
 			schedule.setNumStock(shop.getNumshop());
-			scheduleService.saveSchedule(schedule);
+
+			List<Schedule> existingSchedules = scheduleService.getScheduleByNumContractAndNUmStockWithTemp(Long.parseLong(jsonMainObject.get("counterpartyContractCode").toString()), shop.getNumshop());
+			long constSchedulesCount = existingSchedules.stream().filter(s -> s.getStartDateTemp() == null).count();
+			long tempSchedulesCount = existingSchedules.stream().filter(s -> s.getStartDateTemp() != null).count();
+			if (isScheduleTemp) {
+				SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
+				try {
+					schedule.setStartDateTemp(jsonMainObject.get("startDateTemp") == null || jsonMainObject.get("startDateTemp").toString().isEmpty() ? null : new Date(dateFormatter.parse(jsonMainObject.get("startDateTemp").toString()).getTime()));
+					schedule.setEndDateTemp(jsonMainObject.get("endDateTemp") == null || jsonMainObject.get("endDateTemp").toString().isEmpty() ? null : new Date(dateFormatter.parse(jsonMainObject.get("endDateTemp").toString()).getTime()));
+				} catch (java.text.ParseException e) {
+					throw new RuntimeException(e);
+				}
+				if (constSchedulesCount == 0) {
+					response.put("status", "100");
+					response.put("message", "Для магазина " + schedule.getNumStock() + " не существует постоянного графика");
+					return response;
+
+				} else if (tempSchedulesCount != 0) {
+					for (Schedule sch : existingSchedules) {
+						if (sch.getEndDateTemp() != null) {
+							schedule.setIdSchedule(sch.getIdSchedule());
+							scheduleService.updateSchedule(schedule);
+						}
+					}
+				} else {
+					schedule.setIdSchedule(null);
+					scheduleService.saveSchedule(schedule);
+				}
+			} else {
+				if (constSchedulesCount != 0) {
+					response.put("status", "100");
+					response.put("message", "Данный контракт уже имеется в базе данных");
+					return response;
+				} else {
+					schedule.setIdSchedule(null);
+					scheduleService.saveSchedule(schedule);
+				}
+
+//			Schedule scheduleOld = scheduleService.getScheduleByNumContractAndNUmStock(Long.parseLong(jsonMainObject.get("counterpartyContractCode").toString()), shop.getNumshop());
+//			if(scheduleOld != null) {
+//				response.put("status", "100");
+//				response.put("message", "Данный контракт уже имеется в базе данных");
+//				response.put("body", scheduleOld);
+//				return response;
+//			}
+
+				//конец изменений
+
+
+//			schedule.setIdSchedule(null);
+//			schedule.setNameStock(shop.getAddress());
+//			schedule.setNumStock(shop.getNumshop());
+//			scheduleService.saveSchedule(schedule);
+			}
 		}
-		
-//		Integer id = scheduleService.saveSchedule(schedule);		
+
+//		Integer id = scheduleService.saveSchedule(schedule);
 		
 		//тут отправляем на почту сообщение
 		if(isNeedEMail) {
@@ -2541,16 +2636,28 @@ public class MainRestController {
 				return response;
 			}
 		}
-		
-		for (Entry<Integer, Shop> entry: targetShopMap.entrySet()) {
-			Schedule schedule = scheduleService.getScheduleByNumContractAndNumStock(Long.parseLong(jsonMainObject.get("counterpartyContractCode").toString()), entry.getKey());
-			if(schedule == null) {
+
+		for (Entry<Integer, Shop> entry: targetShopMap.entrySet()) { //тут
+			List<Schedule> schedules = scheduleService.getScheduleByNumContractAndNUmStockWithTemp(Long.parseLong(jsonMainObject.get("counterpartyContractCode").toString()), entry.getKey());
+			if(schedules.isEmpty()) {
 				response.put("status", "100");
 				response.put("message", "Для магазина " + entry.getValue().getNumshop() + " отсутствует график поставок с кодом контракта " + jsonMainObject.get("counterpartyContractCode").toString());
 				return response;
 			}
-			schedule.setDateLastChanging(Date.valueOf(LocalDate.now()));
-			scheduleService.updateSchedule(editScheduleByRequestForRC(schedule, jsonMainObject));
+			for (Schedule sch: schedules) {
+				if (sch.getStartDateTemp() == null) {
+					sch.setDateLastChanging(Date.valueOf(LocalDate.now()));
+					scheduleService.updateSchedule(editScheduleByRequestForRC(sch, jsonMainObject));
+				}
+			}
+//			Schedule schedule = scheduleService.getScheduleByNumContractAndNumStock(Long.parseLong(jsonMainObject.get("counterpartyContractCode").toString()), entry.getKey());
+//			if(schedule == null) {
+//				response.put("status", "100");
+//				response.put("message", "Для магазина " + entry.getValue().getNumshop() + " отсутствует график поставок с кодом контракта " + jsonMainObject.get("counterpartyContractCode").toString());
+//				return response;
+//			}
+//			schedule.setDateLastChanging(Date.valueOf(LocalDate.now()));
+//			scheduleService.updateSchedule(editScheduleByRequestForRC(schedule, jsonMainObject));
 		}
 		response.put("status", "200");
 		response.put("message", "Графики поставок отредактированы");
@@ -2744,10 +2851,12 @@ public class MainRestController {
 	 * @return
 	 */
 	@GetMapping("/slots/delivery-schedule/getListTO")
+	@TimedExecution
 	public Map<String, Object> getListDeliveryScheduleTO(HttpServletRequest request) {
-		Map<String, Object> response = new HashMap<String, Object>();		
+		Map<String, Object> response = new HashMap<String, Object>();
 		response.put("status", "200");
-		response.put("body", scheduleService.getSchedulesListTO());
+//		response.put("body", scheduleService.getSchedulesListTO());
+		response.put("body", scheduleService.getSchedulesListTOWithTemp()); //изменение
 		return response;		
 	}
 	
@@ -4098,6 +4207,10 @@ public class MainRestController {
 
 		File file1 = poiExcel.getFileByMultipartTarget(excel, request, "490.xlsx");
 		String text;
+//		if(text != null) {
+//			response.put("150", text);
+//			return response;
+//		}
 		//основной метод загрузки в БД
 		text = poiExcel.loadBalanceStock2(file1, request, dateUnload);
 		response.put("200", text);

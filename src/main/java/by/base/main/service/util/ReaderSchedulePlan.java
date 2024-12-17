@@ -640,25 +640,40 @@ public class ReaderSchedulePlan {
 						int zaq = quantityOrderAll.intValue(); // СУММА заказов по периоду
 						int singleZaq = orderLine.getQuantityOrder().intValue(); //Заказ по ордеру (не суммированный)
 						int orlZaq;
-						if(factStock == 1700) {
-							//тут происходит построчная оценка заказанного товара и принятие решения							 
-							
-							if(quantity.get(0).getQuantity1700() == null) {
-								orlZaq = 0;
-							}else {
-								orlZaq = quantity.get(0).getQuantity1700(); // аказ от ОРЛ
-							}
-						}else {
-							//тут происходит построчная оценка заказанного товара и принятие решения
-							if(quantity.get(0).getQuantity1800() == null) {
-								orlZaq = 0;
-							}else {
-								orlZaq = quantity.get(0).getQuantity1800(); // аказ от ОРЛ
-							}
-							
-							
-							
-						}
+//						if(factStock == 1700) {
+//							//тут происходит построчная оценка заказанного товара и принятие решения							 
+//							
+//							if(quantity.get(0).getQuantity1700() == null) {
+//								orlZaq = 0;
+//							}else {
+//								orlZaq = quantity.get(0).getQuantity1700(); // аказ от ОРЛ
+//							}
+//						}else if(factStock == 1800) {
+//							//тут происходит построчная оценка заказанного товара и принятие решения
+//							if(quantity.get(0).getQuantity1800() == null) {
+//								orlZaq = 0;
+//							}else {
+//								orlZaq = quantity.get(0).getQuantity1800(); // аказ от ОРЛ
+//							}							
+//						}else {
+//							if(quantity.get(0).getQuantity() == null) {
+//								orlZaq = 0;
+//							}else {
+//								orlZaq = quantity.get(0).getQuantity(); // аказ от ОРЛ
+//							}
+//						}
+						switch (factStock) {
+					    case 1700:
+					        orlZaq = quantity.get(0).getQuantity1700() != null ? quantity.get(0).getQuantity1700() : 0;
+					        break;
+					    case 1800:
+					        orlZaq = quantity.get(0).getQuantity1800() != null ? quantity.get(0).getQuantity1800() : 0;
+					        break;
+					    default:
+					        orlZaq = quantity.get(0).getQuantity() != null ? quantity.get(0).getQuantity() : 0;
+					        break;
+					}
+
 						
 						// реализация специальной логики: если заказ от менеджера больше или равен заказу от ОРЛ - берем только его заказ
 						// если заказ меньше 80% от того что заказал ОРЛ - проверяем другие заказы

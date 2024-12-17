@@ -50,7 +50,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 		return roles;
 	}
 	
-	private static final String queryGetListTO = "from Schedule where type='ТО'";
+	private static final String queryGetListTO = "from Schedule where type='ТО' AND status=20";
 	@Transactional
 	@Override
 	@Deprecated
@@ -308,8 +308,9 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	 * @return
 	 *
 	 */
-	//private static final String queryGetListTOWithTemp = "from Schedule where type='ТО' AND ((startDateTemp IS NOT NULL AND endDateTemp IS NOT NULL AND CURRENT_DATE BETWEEN startDateTemp AND endDateTemp) or (startDateTemp IS NULL AND endDateTemp IS NULL))";
-	private static final String queryGetListTOWithTemp = "from Schedule where type='ТО'";
+	private static final String queryGetListTOWithTemp = "from Schedule where type='ТО' AND status = 20 " +
+			"AND ((startDateTemp IS NOT NULL AND endDateTemp IS NOT NULL AND CURRENT_DATE BETWEEN startDateTemp AND endDateTemp) or (startDateTemp IS NULL AND endDateTemp IS NULL))";
+	//private static final String queryGetListTOWithTemp = "from Schedule where type='ТО'";
 
 	@Transactional
 	@Override

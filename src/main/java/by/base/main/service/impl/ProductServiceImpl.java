@@ -58,7 +58,7 @@ public class ProductServiceImpl implements ProductService{
 
 	@Override
 	@TimedExecution
-	public Map<String, Product> getProductMapHasGroupByCode(List<Integer> codes) {
+	public Map<Integer, Product> getProductMapHasGroupByCode(List<Integer> codes) {
 		return productDAO.getProductMapHasGroupByCode(codes);
 	}
 

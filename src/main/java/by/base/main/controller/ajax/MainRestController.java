@@ -50,6 +50,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import by.base.main.model.*;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -376,15 +377,21 @@ public class MainRestController {
 		Map<String, Object> responseMap = new HashMap<>();
 
 		LocalDate currentTime = LocalDate.now().minusDays(2);
+		Date dateForSearch = Date.valueOf(currentTime);
 		String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
 		String fileName = "Несоответствия потребностей и слотов за " + currentTimeString + ".xlsx";
 		String appPath = servletContext.getRealPath("/");
 
-		List<OrderProduct> products = orderProductService.getOrderProductListHasDate(Date.valueOf(currentTime))
+		List<OrderProduct> products = orderProductService.getOrderProductListHasDate(dateForSearch)
 				.stream().filter(p -> p.getQuantity1700() != 0 || p.getQuantity1800() != 0).collect(Collectors.toList());
+
+		List<Integer> productCodes = products.stream().map(OrderProduct::getCodeProduct).collect(Collectors.toList());
 
 
 //		poiExcel.fillExcelAboutNeeds(appPath + "resources/others/" + fileName);
+
+		List<Long> orderLines = orderService.getOrderBySlotDateAndGoodId(dateForSearch, productCodes).stream().map(OrderLine::getGoodsId).collect(Collectors.toList());
+		//products.removeIf(orderLines -> orderLines.getCodeProduct())
 
 		List<File> files = new ArrayList<File>();
 		files.add(new File(appPath + "resources/others/" + fileName));
@@ -1714,8 +1721,9 @@ public class MainRestController {
 		LocalDate currentTime = LocalDate.now();
 		String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
 
-		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to.ORL");
-		List<String> emailsSupportDepartment = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to.supportDepartment");
+//		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to.ORL");
+//		List<String> emailsSupportDepartment = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to.supportDepartment");
+		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
 
 		Map<String, List<String>> draftLists = propertiesUtils.getListForDraftFolders(servletContext);
 
@@ -1725,8 +1733,8 @@ public class MainRestController {
 
 
 
-		String fileName1200 = "1200 (----Холодный----).xlsm";
-		String fileName1100 = "1100 График прямой сухой.xlsm";
+		String fileName1200 = "1200 (----Холодный----).xlsx";
+		String fileName1100 = "1100 График прямой сухой.xlsx";
 		String fileNameSample = "График для шаблоново.xlsx";
 		String draftFolder = appPath + "resources/others/drafts/";
 
@@ -1738,9 +1746,9 @@ public class MainRestController {
 		draftFolderFile.mkdir();
 
 		try {
-			poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesByTOTypeWithTemp("холодный")),
+			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesByTOTypeWithTemp("холодный")),
 					appPath + "resources/others/" + fileName1200);
-			poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesByTOTypeWithTemp("сухой")),
+			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesByTOTypeWithTemp("сухой")),
 					appPath + "resources/others/" + fileName1100);
 			poiExcel.exportToExcelSampleListTO(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesByTOTypeWithTemp("холодный")),
 					appPath + "resources/others/" + fileNameSample);
@@ -2862,7 +2870,6 @@ public class MainRestController {
 		Map<String, Object> response = new HashMap<String, Object>();
 		response.put("status", "200");
 		response.put("body", scheduleService.getSchedulesListTO());
-//		response.put("body", scheduleService.getSchedulesListTOWithTemp()); //изменение
 		return response;		
 	}
 	

@@ -110,6 +110,7 @@ public interface ScheduleDAO {
 	/**
 	 * @author Ira
 	 * <br>Возвращает список всех графиков на ТО - и временных, и постоянных</br>
+	 * <br><b>Возвращает только графики с 20 статусом</b>
 	 * @return
 	 */
 	public List<Schedule> getSchedulesListTOWithTemp();

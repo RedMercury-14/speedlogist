@@ -50,7 +50,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 		return roles;
 	}
 	
-	private static final String queryGetListTO = "from Schedule where type='ТО' AND status=20";
+	private static final String queryGetListTO = "from Schedule where type='ТО' AND status = 20";
 	@Transactional
 	@Override
 	@Deprecated

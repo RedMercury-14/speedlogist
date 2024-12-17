@@ -129,9 +129,9 @@ public class ScheduledTask {
 		draftFolderFile.mkdir();
 
 		try {
-			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesByTOTypeWithTemp("холодный")),
+			poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesByTOTypeWithTemp("холодный")),
 					appPath + "resources/others/" + fileName1200);
-			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesByTOTypeWithTemp("сухой")),
+			poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesByTOTypeWithTemp("сухой")),
 					appPath + "resources/others/" + fileName1100);
 			poiExcel.exportToExcelSampleListTO(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesByTOTypeWithTemp("холодный")),
 					appPath + "resources/others/" + fileNameSample);

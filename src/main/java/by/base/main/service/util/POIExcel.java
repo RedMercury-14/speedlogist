@@ -245,7 +245,7 @@ public class POIExcel {
 	
 	
     // Метод заполнения данных
-    private void fillExcelData(Sheet sheet, List<Schedule> schedules) {
+    private void fillExcelData(Sheet sheet, Sheet checkSheet, List<Schedule> schedules) {
         String[] headers = {
                 "Код контрагента", "Наименование контрагента", "График формирования заказа четная неделя ставим метка  --ч-- , нечетная --- н ---",
                 "Номер контракта", "Номер ТО", "Пометка сроки / неделя", "пн", "вт", "ср", "чт", "пт", "сб", "вс",
@@ -254,6 +254,7 @@ public class POIExcel {
 
         // Создаем строку заголовков
         Row headerRow = sheet.createRow(0);
+//        Row headerRowCheck = checkSheet.createRow(0);
         for (int i = 0; i < headers.length; i++) {
             Cell cell = headerRow.createCell(i);
             cell.setCellValue(headers[i]);
@@ -276,13 +277,20 @@ public class POIExcel {
             }
 
             Row row = sheet.createRow(rowNum++);
-
-            row.createCell(0).setCellValue(schedule.getCounterpartyCode());
+            Row rowcheck = checkSheet.createRow(rowNum);
+            
+            //тут для проверки
+            rowcheck.createCell(0).setCellValue(schedule.getCounterpartyCode());
+            rowcheck.createCell(1).setCellValue(schedule.getNumStock());
+            rowcheck.createCell(2).setCellValue(schedule.getStatus());
+            rowcheck.createCell(3).setCellValue(schedule.getStartDateTemp() != null ? schedule.getStartDateTemp()+" - " + schedule.getEndDateTemp() : null);
+            
+            row.createCell(0).setCellValue(schedule.getCounterpartyCode());            
             row.createCell(1).setCellValue(schedule.getName());
             row.createCell(2).setCellValue(schedule.getOrderFormationSchedule());
             row.createCell(3).setCellValue(schedule.getCounterpartyContractCode());
-            row.createCell(4).setCellValue(schedule.getNumStock());
-            row.createCell(5).setCellValue(schedule.getIsDayToDay() ? "сегодня" : schedule.getNote());
+            row.createCell(4).setCellValue(schedule.getNumStock());            
+            row.createCell(5).setCellValue(schedule.getIsDayToDay() ? "сегодня" : schedule.getNote());            
             row.createCell(6).setCellValue(schedule.getMonday());
             row.createCell(7).setCellValue(schedule.getTuesday());
             row.createCell(8).setCellValue(schedule.getWednesday());
@@ -725,9 +733,10 @@ public class POIExcel {
             return null;
         }
         Sheet sheet = workbook.createSheet(schedules.get(0).getNumStock() + "");
+        Sheet sheet2 = workbook.createSheet("Проверка данных");
 
         // Заполнение данными
-        fillExcelData(sheet, schedules);
+        fillExcelData(sheet, sheet2, schedules);
 
         // Сохраняем файл
         try (FileOutputStream fileOut = new FileOutputStream(filePath)) {
@@ -747,9 +756,10 @@ public class POIExcel {
              Workbook workbook = WorkbookFactory.create(fis)) {
 
             Sheet sheet = workbook.getSheetAt(0);
+            Sheet sheet2 = workbook.createSheet("Проверка данных");
 
             // Заполнение данными
-            fillExcelData(sheet, schedules);
+            fillExcelData(sheet, sheet2, schedules);
 
             // Сохраняем файл
             try (FileOutputStream fos = new FileOutputStream(filePath)) {
@@ -875,6 +885,7 @@ public class POIExcel {
 			return null;
 		}
         Sheet sheet = workbook.createSheet(schedules.get(0).getNumStock() + "");
+        Sheet checkSheet = workbook.createSheet("Проверка данных");
 
         // Заголовки колонок
         String[] headers = {
@@ -904,6 +915,14 @@ public class POIExcel {
         	}
         	
             Row row = sheet.createRow(rowNum++);
+            Row rowcheck = checkSheet.createRow(rowNum);
+            
+            
+            //тут для проверки
+            rowcheck.createCell(0).setCellValue(schedule.getCounterpartyCode());
+            rowcheck.createCell(1).setCellValue(schedule.getNumStock());
+            rowcheck.createCell(2).setCellValue(schedule.getStatus());
+            rowcheck.createCell(3).setCellValue(schedule.getStartDateTemp() != null ? schedule.getStartDateTemp()+" - " + schedule.getEndDateTemp() : null);
 
             row.createCell(0).setCellValue(schedule.getCounterpartyCode());
             row.createCell(1).setCellValue(schedule.getName());

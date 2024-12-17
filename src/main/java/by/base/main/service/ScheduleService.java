@@ -65,6 +65,7 @@ public interface ScheduleService {
 	
 	/**
 	 * Возвращает лист Schedule по toType (сухой, холодный)
+	 * <br><b>Возвращает только графики с 20 статусом</b>
 	 * @param numStock
 	 * @return
 	 */
@@ -125,10 +126,11 @@ public interface ScheduleService {
 	boolean checkScheduleIntersection(List<Schedule> schedules, Schedule schedule);
 
 	/**
-	 * @author Ira
 	 * <br>Возвращает список графиков по типу ТО - и временных, и постоянных</br>
+	 * <br><b>Возвращает только графики с 20 статусом</b>
 	 * @param toType
 	 * @return
+	 * @author Ira
 	 */
 	List<Schedule> getSchedulesByTOTypeWithTemp(String toType);
 

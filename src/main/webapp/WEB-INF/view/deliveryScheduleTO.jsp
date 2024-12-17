@@ -597,6 +597,8 @@
 							<input type="hidden" name="supplies" id="supplies">
 							<input type="hidden" name="type" id="type" value="ТО">
 							<input type="hidden" name="formType" id="formType" value="createTempSchedule">
+							<input type="hidden" name="isDayToDay" id="isDayToDay">
+							<input type="hidden" name="codeNameOfQuantumCounterparty" id="codeNameOfQuantumCounterparty">
 
 							<div class="mb-3">
 								<label class="sr-only" for="toType">Холодный или Сухой</label>

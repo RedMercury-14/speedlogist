@@ -223,6 +223,7 @@
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/orl/delivery-schedule" />">Графики поставок на РЦ</a></li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/orl/delivery-schedule-to" />">Графики поставок на ТО</a></li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/orl/need" />">Потребности</a></li>
+								<li><a class="nav-item nav-link" href="<spring:url value="/main/procurement/ordersBalance" />">Остаток товара</a></li>
 							</c:when>
 							<c:when test="${roles == '[ROLE_SLOTOBSERVER]'}">
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/logistics/maintenance " />">Менеджер маршрутов АХО/СГИ</a></li>

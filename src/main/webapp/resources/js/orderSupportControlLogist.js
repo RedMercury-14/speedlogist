@@ -20,10 +20,17 @@ const setMaxDayBaseUrl = '../../api/order-support/setMaxDay/'
 const changeExceptionBaseUrl = '../../api/order-support/changeException/'
 
 const cellClassRules = {
-	"productSurplus": params => params.data.balanceStockAndReserves >= params.data.dayMax
-					&& params.data.balanceStockAndReserves !== 9999,
-	"productShortage": params => params.data.balanceStockAndReserves < params.data.dayMax / 2
-					&& params.data.balanceStockAndReserves !== 9999,
+	"productSurplus": params => params.value
+					&& params.value !== 0
+					&& params.value >= params.data.dayMax
+					&& params.value !== 9999,
+	"productShortage": params => (params.value || params.value === 0)
+					&& (params.value < params.data.dayMax / 2)
+					&& params.value !== 9999,
+	"normalDayCount": params => params.value
+					&& params.value !== 0
+					&& params.value > params.data.dayMax / 2
+					|| params.value === 9999,
 }
 
 const role = document.querySelector('#role').value
@@ -46,12 +53,33 @@ const columnDefs = [
 	{ headerName: "Группа товара", field: "group", flex: 3, minWidth: 300, tooltipField: 'group' },
 	{ headerName: "Рейтинг", field: "rating", },
 	{
-		headerName: "Остаток (дней)", field: "balanceStockAndReserves",
-		cellClass: 'px-2 text-center normalDayCount',
+		headerName: "Остаток РЦ+запасники (дней)", field: "balanceStockAndReserves",
+		cellClass: 'px-2 text-center',
 		cellClassRules: cellClassRules,
-		editable: isAdmin(role) || isOrderSupport(role),
-		onCellValueChanged: editBalanceStockAndReserves,
+		valueGetter: (params) => 
+			(params.data.balanceStockAndReserves1700 || params.data.balanceStockAndReserves1700 === 0)
+			&& (params.data.balanceStockAndReserves1800 || params.data.balanceStockAndReserves1800 === 0)
+				? ''
+				: params.data.balanceStockAndReserves,
+		// editable: isAdmin(role) || isOrderSupport(role),
+		// onCellValueChanged: editBalanceStockAndReserves,
 	},
+	{
+		headerName: "Остаток РЦ+запасники для 1700 (дней)", field: "balanceStockAndReserves1700",
+		cellClass: 'px-2 text-center',
+		cellClassRules: cellClassRules,
+		// editable: isAdmin(role) || isOrderSupport(role),
+		// onCellValueChanged: editBalanceStockAndReserves,
+	},
+	{
+		headerName: "Остаток РЦ+запасники для 1800 (дней)", field: "balanceStockAndReserves1800",
+		cellClass: 'px-2 text-center',
+		cellClassRules: cellClassRules,
+		// editable: isAdmin(role) || isOrderSupport(role),
+		// onCellValueChanged: editBalanceStockAndReserves,
+	},
+	{ headerName: "Реализация расчётная в день для 1700", field: "calculatedPerDay1700", },
+	{ headerName: "Реализация расчётная в день для 1800", field: "calculatedPerDay1800", },
 	{
 		headerName: "Мин. кол-во дней", field: "dayMax",
 		cellClass: "px-1 text-center font-weight-bold",

@@ -4,7 +4,7 @@ import { ajaxUtils } from './ajaxUtils.js'
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 import { showScheduleItem } from './deliverySchedule/showScheduleItem.js'
 import {
-	changeScheduleOptions, confirmScheduleItem,
+	changeScheduleOptions, changeScheduleStatus, confirmScheduleItem,
 	createCounterpartyDatalist, createOptions,
 	deleteScheduleItem, deliveryScheduleColumnDefs,
 	deliveryScheduleColumnDefsForAdmin,
@@ -48,9 +48,11 @@ const debouncedSaveFilterState = debounce(saveFilterState, 300)
 let error = false
 let table
 let scheduleData
+let schedulePairs
 let getScheduleUrl
 let counterpartyList
 let counterpartyContractCodeList
+let NOW_MS = new Date().getTime()
 
 const columnDefs = [
 	...deliveryScheduleColumnDefs,
@@ -58,7 +60,7 @@ const columnDefs = [
 		headerName: 'Пост-й/Врем-й график', field: 'isTempSchedule',
 		cellClass: 'px-1 py-0 text-center font-weight-bold',
 		cellClassRules: {
-			'bg-warning': (params) => params.value === 'Временный'
+			'tempScheduleCell': (params) => params.value === 'Временный'
 		},
 		pinned: 'left', lockPinned: true,
 		width: 100,
@@ -76,7 +78,7 @@ const columnDefs = [
 		headerName: 'Время действия (для временных гр-в)', field: 'tempSchedulePeriod',
 		cellClass: 'px-1 py-0 text-center font-weight-bold',
 		cellClassRules: {
-			'bg-warning': (params) => params.value
+			'tempScheduleCell': (params) => params.value
 		},
 		pinned: 'left', lockPinned: true,
 		width: 160,
@@ -311,15 +313,12 @@ async function initStartData() {
 // загрузка и установка данных графиков
 async function loadScheduleData(url) {
 	await getScheduleData(url)
+	NOW_MS = new Date().getTime()
 	updateTable(gridOptions, scheduleData)
 
 	// получение настроек таблицы из localstorage
 	restoreColumnState()
 	restoreFilterState()
-	// if (url === getAllScheduleUrl) {
-	// 	restoreColumnState()
-	// 	restoreFilterState()
-	// }
 
 	// проверка, правильно ли заполнены графики
 	if (isAdmin(role) || isORL(role)) {
@@ -343,6 +342,17 @@ function getCounterpartyList(scheduleData) {
 		return acc
 	}, [])
 }
+// получение пар графиков по коду контракта и номеру ТО
+function getSchedulePairsByContractCodeAndNumStock(data) {
+	return data.reduce((groups, item) => {
+		const key = `${item.numStock}-${item.counterpartyContractCode}`
+		if (!groups[key]) {
+			groups[key] = []
+		}
+		groups[key].push(item)
+		return groups
+	}, {})
+}
 
 function renderTable(gridDiv, gridOptions) {
 	new agGrid.Grid(gridDiv, gridOptions)
@@ -364,16 +374,10 @@ function getMappingData(data) {
 	return data.map(getMappingScheduleItem)
 }
 function getMappingScheduleItem(scheduleItem) {
-	const nowMs = new Date().getTime()
 	const isTempSchedule = scheduleItem.startDateTemp && scheduleItem.endDateTemp
 	const tempSchedulePeriod = isTempSchedule
 		? `${dateHelper.getFormatDate(scheduleItem.startDateTemp)} - ${dateHelper.getFormatDate(scheduleItem.endDateTemp)}`
 		: ''
-	const isActualSchedule = !isTempSchedule
-		? 'Действует'
-		: isTempSchedule && nowMs >= scheduleItem.startDateTemp && nowMs <= scheduleItem.endDateTemp
-			? 'Действует'
-			: 'Не действует'
 
 	return {
 		...scheduleItem,
@@ -382,7 +386,7 @@ function getMappingScheduleItem(scheduleItem) {
 		// определение временных графиков
 		isTempSchedule: isTempSchedule ? 'Временный' : 'Постоянный',
 		tempSchedulePeriod,
-		isActualSchedule,
+		isActualSchedule: isActualSchedule(scheduleItem) ? 'Действует' : 'Не действует',
 	}
 }
 function getContextMenuItems(params) {
@@ -403,7 +407,10 @@ function getContextMenuItems(params) {
 				subMenu: [
 					{
 						name: `Подтвердить текущий график`,
-						action: () => confirmScheduleItem(rowNode),
+						action: async () => {
+							await confirmScheduleItem(rowNode)
+							await confirmTempScheduleItem(rowNode)
+						},
 					},
 					{
 						name: `Подтвердить графики по текущему коду контракта (с указанием кодового слова)`,
@@ -422,7 +429,11 @@ function getContextMenuItems(params) {
 				subMenu: [
 					{
 						name: `Снять подтверждение с текущего графика`,
-						action: () => unconfirmScheduleItem(rowNode),
+						action: async () => {
+							await unconfirmScheduleItem(rowNode)
+							await unconfirmTempScheduleItem(rowNode)
+
+						},
 					},
 					{
 						name: `Снять подтверждение с графиков по текущему коду контракта`,
@@ -460,14 +471,14 @@ function getContextMenuItems(params) {
 			},
 			icon: uiIcons.pencil,
 		},
-		// {
-		// 	name: `Создать временный график по текущему коду контракта`,
-		// 	disabled: isObserver(role) || isTempSchedule,
-		// 	action: () => {
-		// 		createTempSchedule(rowNode, setDataToCreateTempForm)
-		// 	},
-		// 	icon: uiIcons.addTempElem,
-		// },
+		{
+			name: `Создать временный график по текущему коду контракта`,
+			disabled: isObserver(role) || isTempSchedule || status !== 20,
+			action: () => {
+				createTempSchedule(rowNode, setDataToCreateTempForm)
+			},
+			icon: uiIcons.addTempElem,
+		},
 		{
 			name: `Изменить значение "Сегодня на сегодня" по текущему коду контракта`,
 			disabled: (!isAdmin(role) && !isORL(role) && !isOrderSupport(role))
@@ -479,14 +490,15 @@ function getContextMenuItems(params) {
 		},
 		{
 			name: `Удаление графиков`,
-			disabled: isObserver(role) || isTempSchedule,
+			disabled: isObserver(role) || isTempSchedule || status === 0,
 			icon: uiIcons.trash,
 			subMenu: [
 				{
 					name: `Удалить текущий график`,
 					// disabled: (!isAdmin(role) && !isORL(role) && !isOrderSupport(role)) || status === 0,
-					action: () => {
-						deleteScheduleItem(rowNode)
+					action: async () => {
+						await deleteScheduleItem(rowNode)
+						await deleteTempScheduleItem(rowNode)
 					},
 				},
 				{
@@ -562,6 +574,75 @@ async function deleteScheduleItemsByContract(role, rowNode) {
 		status
 	})
 }
+// добавление нового ТО по номеру контракта
+async function addShopsByContract(rowNode) {
+	if (isObserver(role)) {
+		snackbar.show('Недостаточно прав!')
+		return
+	}
+
+	const scheduleItem = rowNode.data
+	const counterpartyContractCode = scheduleItem.counterpartyContractCode
+	if (!counterpartyContractCode) return
+
+	// номера магазинов от 2 до 5 цифр через запятую
+	const regex = /^(?!.*\b0\d{1,4}\b)\b[1-9]\d{1,4}\b(?:,\b[1-9]\d{1,4}\b)*$/
+	const value = prompt(
+		`Введите номер нового ТО по коду контракта ${counterpartyContractCode}. `
+		+ `Для указания нескольких ТО введите их номера через ЗАПЯТУЮ:`
+	)
+
+	if (!value) return
+	if (!regex.test(value)) {
+		snackbar.show('Некорректный ввод. Введите корректные номера ТО через запятую (без пробела).')
+		return
+	}
+
+	const newShops = value.split(',').map(Number)
+	const numStocks = getNumStocksByContract(scheduleItem.counterpartyContractCode)
+	const existShops = newShops.reduce((acc, shop) => {
+		if (numStocks.includes(shop)) {
+			acc.push(shop)
+		}
+		return acc
+	}, [])
+
+	if (existShops.length !== 0) {
+		alert(
+			`Новые ТО не добавлены!`
+			+ `\nТО с номерами ${existShops.join(', ')} и кодом контракта ${counterpartyContractCode} уже существуют.`
+			+ `\nПроверьте введенные данные!`
+		)
+		return
+	}
+
+	const data = {
+		supplies: scheduleItem.supplies,
+		type: scheduleItem.type,
+		toType: scheduleItem.toType,
+		counterpartyCode: scheduleItem.counterpartyCode,
+		name: scheduleItem.name,
+		counterpartyContractCode,
+		numStock: newShops,
+		comment: scheduleItem.comment ? scheduleItem.comment : null,
+		note: scheduleItem.note ? scheduleItem.note : null,
+		monday: scheduleItem.monday ? scheduleItem.monday : null,
+		tuesday: scheduleItem.tuesday ? scheduleItem.tuesday : null,
+		wednesday: scheduleItem.wednesday ? scheduleItem.wednesday : null,
+		thursday: scheduleItem.thursday ? scheduleItem.thursday : null,
+		friday: scheduleItem.friday ? scheduleItem.friday : null,
+		saturday: scheduleItem.saturday ? scheduleItem.saturday : null,
+		sunday: scheduleItem.sunday ? scheduleItem.sunday : null,
+		orderFormationSchedule: scheduleItem.orderFormationSchedule ? scheduleItem.orderFormationSchedule : null,
+		// orderShipmentSchedule: scheduleItem.orderShipmentSchedule ? scheduleItem.orderShipmentSchedule : null,
+		isDayToDay: scheduleItem.isDayToDay ? scheduleItem.isDayToDay : false,
+		quantum: scheduleItem.quantum ? scheduleItem.quantum : null,
+		quantumMeasurements: scheduleItem.quantumMeasurements ? scheduleItem.quantumMeasurements : null,
+		codeNameOfQuantumCounterparty: scheduleItem.codeNameOfQuantumCounterparty ? scheduleItem.codeNameOfQuantumCounterparty : null,
+		status: scheduleItem.status ? scheduleItem.status : 10,
+	}
+	addScheduleByContractAndShops(data)
+}
 // создание временного графика
 function createTempSchedule(rowNode, setDataToForm) {
 	const scheduleItem = rowNode.data
@@ -582,6 +663,40 @@ function changeIsDayToDayByContract(role, rowNode) {
 		counterpartyContractCode,
 		isDayToDay
 	})
+}
+
+// подтверждение временного графика при подтверждении постоянного
+async function confirmTempScheduleItem(parentScheduleRowNode) {
+	const scheduleItem = parentScheduleRowNode.data
+	if (!scheduleItem) return
+	const tempScheduleItem = getTempScheduleByConstSchedule(scheduleItem)
+	if (!tempScheduleItem) return
+	const tempIdSchedule = tempScheduleItem.idSchedule
+	const rowNode = gridOptions.api.getRowNode(tempIdSchedule)
+	const confirmStatus = 20
+	await changeScheduleStatus({ idSchedule: tempIdSchedule, status: confirmStatus, rowNode })
+}
+// снятие подтверждения с временного графика при снятии подтверждения с постоянного
+async function unconfirmTempScheduleItem(parentScheduleRowNode) {
+	const scheduleItem = parentScheduleRowNode.data
+	if (!scheduleItem) return
+	const tempScheduleItem = getTempScheduleByConstSchedule(scheduleItem)
+	if (!tempScheduleItem) return
+	const tempIdSchedule = tempScheduleItem.idSchedule
+	const rowNode = gridOptions.api.getRowNode(tempIdSchedule)
+	const unconfirmStatus = 10
+	await changeScheduleStatus({ idSchedule: tempIdSchedule, status: unconfirmStatus, rowNode })
+}
+// удаление временного графика при удалении постоянного
+async function deleteTempScheduleItem(parentScheduleRowNode) {
+	const scheduleItem = parentScheduleRowNode.data
+	if (!scheduleItem) return
+	const tempScheduleItem = getTempScheduleByConstSchedule(scheduleItem)
+	if (!tempScheduleItem) return
+	const tempIdSchedule = tempScheduleItem.idSchedule
+	const rowNode = gridOptions.api.getRowNode(tempIdSchedule)
+	const deleteStatus = 0
+	await changeScheduleStatus({ idSchedule: tempIdSchedule, status: deleteStatus, rowNode })
 }
 
 // обработчик изменения поля "Квант"
@@ -655,6 +770,7 @@ async function getScheduleData(url) {
 		return []
 	}
 	scheduleData = res.body
+	schedulePairs = getSchedulePairsByContractCodeAndNumStock(res.body)
 	return res.body
 }
 // отправка данных на почту
@@ -744,6 +860,7 @@ async function addScheduleItemFormHandler(e) {
 		data.status = 20
 	}
 
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 500)
 	disableButton(e.submitter)
 
 	ajaxUtils.postJSONdata({
@@ -752,6 +869,9 @@ async function addScheduleItemFormHandler(e) {
 		data: data,
 		successCallback: async (res) => {
 			enableButton(e.submitter)
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+
 			if (res.status === '200') {
 				$(`#addScheduleItemModal`).modal('hide')
 				snackbar.show(res.message)
@@ -777,6 +897,8 @@ async function addScheduleItemFormHandler(e) {
 		},
 		errorCallback: () => {
 			enableButton(e.submitter)
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
 		}
 	})
 }
@@ -808,6 +930,7 @@ function editScheduleItemFormHandler(e) {
 		return
 	}
 
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 500)
 	disableButton(e.submitter)
 
 	ajaxUtils.postJSONdata({
@@ -816,6 +939,9 @@ function editScheduleItemFormHandler(e) {
 		data: data,
 		successCallback: async (res) => {
 			enableButton(e.submitter)
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+
 			if (res.status === '200') {
 				$(`#editScheduleItemModal`).modal('hide')
 				snackbar.show(res.message)
@@ -838,6 +964,8 @@ function editScheduleItemFormHandler(e) {
 		},
 		errorCallback: () => {
 			enableButton(e.submitter)
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
 		}
 	})
 }
@@ -869,8 +997,7 @@ function createTempScheduleItemFormHandler(e) {
 		return
 	}
 
-	console.log(data)
-
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 500)
 	disableButton(e.submitter)
 
 	ajaxUtils.postJSONdata({
@@ -879,6 +1006,9 @@ function createTempScheduleItemFormHandler(e) {
 		data: data,
 		successCallback: async (res) => {
 			enableButton(e.submitter)
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+
 			if (res.status === '200') {
 				$(`#createTempScheduleItemModal`).modal('hide')
 				snackbar.show(res.message)
@@ -901,6 +1031,8 @@ function createTempScheduleItemFormHandler(e) {
 		},
 		errorCallback: () => {
 			enableButton(e.submitter)
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
 		}
 	})
 }
@@ -991,75 +1123,9 @@ function editTOByCounterpartyContractCodeOnly(data) {
 		}
 	})
 }
-// добавление нового ТО по номеру
-async function addShopsByContract(rowNode) {
-	if (isObserver(role)) {
-		snackbar.show('Недостаточно прав!')
-		return
-	}
-
-	const scheduleItem = rowNode.data
-	const counterpartyContractCode = scheduleItem.counterpartyContractCode
-	if (!counterpartyContractCode) return
-
-	// номера магазинов от 2 до 5 цифр через пробел
-	const regex = /^(?!.*\b0\d{1,4}\b)\b[1-9]\d{1,4}\b(?:\s+\b[1-9]\d{1,4}\b)*$/
-	const value = prompt(
-		`Введите номер нового ТО по коду контракта ${counterpartyContractCode}. `
-		+ `Для указания нескольких ТО введите их номера через ПРОБЕЛ:`
-	)
-
-	if (!value && !regex.test(value)) {
-		snackbar.show('Некорректный ввод. Введите корректные номера ТО через пробел.')
-		return
-	}
-
-	const newShops = value.split(' ').map(Number)
-	const numStocks = getNumStocksByContract(scheduleItem.counterpartyContractCode)
-	const existShops = newShops.reduce((acc, shop) => {
-		if (numStocks.includes(shop)) {
-			acc.push(shop)
-		}
-		return acc
-	}, [])
-
-	if (existShops.length !== 0) {
-		alert(
-			`Новые ТО не добавлены!`
-			+ `\nТО с номерами ${existShops.join(', ')} и кодом контракта ${counterpartyContractCode} уже существуют.`
-			+ `\nПроверьте введенные данные!`
-		)
-		return
-	}
-
-	const data = {
-		supplies: scheduleItem.supplies,
-		type: scheduleItem.type,
-		toType: scheduleItem.toType,
-		counterpartyCode: scheduleItem.counterpartyCode,
-		name: scheduleItem.name,
-		counterpartyContractCode,
-		numStock: newShops,
-		comment: scheduleItem.comment ? scheduleItem.comment : null,
-		note: scheduleItem.note ? scheduleItem.note : null,
-		monday: scheduleItem.monday ? scheduleItem.monday : null,
-		tuesday: scheduleItem.tuesday ? scheduleItem.tuesday : null,
-		wednesday: scheduleItem.wednesday ? scheduleItem.wednesday : null,
-		thursday: scheduleItem.thursday ? scheduleItem.thursday : null,
-		friday: scheduleItem.friday ? scheduleItem.friday : null,
-		saturday: scheduleItem.saturday ? scheduleItem.saturday : null,
-		sunday: scheduleItem.sunday ? scheduleItem.sunday : null,
-		orderFormationSchedule: scheduleItem.orderFormationSchedule ? scheduleItem.orderFormationSchedule : null,
-		// orderShipmentSchedule: scheduleItem.orderShipmentSchedule ? scheduleItem.orderShipmentSchedule : null,
-		isDayToDay: scheduleItem.isDayToDay ? scheduleItem.isDayToDay : false,
-		quantum: scheduleItem.quantum ? scheduleItem.quantum : null,
-		quantumMeasurements: scheduleItem.quantumMeasurements ? scheduleItem.quantumMeasurements : null,
-		codeNameOfQuantumCounterparty: scheduleItem.codeNameOfQuantumCounterparty ? scheduleItem.codeNameOfQuantumCounterparty : null,
-		status: scheduleItem.status ? scheduleItem.status : 10,
-	}
-
+// создание копии графика для новых ТО по номеру контракта
+function addScheduleByContractAndShops(data) {
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
-
 	ajaxUtils.postJSONdata({
 		url: addScheduleItemUrl,
 		token: token,
@@ -1095,7 +1161,6 @@ async function addShopsByContract(rowNode) {
 	})
 }
 
-
 // форматирование данных графика поставки для отправки на сервер
 function scheduleItemDataFormatter(formData) {
 	const data = Object.fromEntries(formData)
@@ -1126,7 +1191,6 @@ function scheduleItemDataFormatter(formData) {
 		orderFormationSchedule,
 		// orderShipmentSchedule,
 		quantum,
-		codeNameOfQuantumCounterparty,
 		status: 10,
 		codeNameOfQuantumCounterparty: null,
 		isDayToDay: false,
@@ -1134,6 +1198,8 @@ function scheduleItemDataFormatter(formData) {
 	if (data.formType && data.formType === 'createTempSchedule') {
 		res.status = 20
 		res.isTempSchedule = true
+		res.isDayToDay = data.isDayToDay === 'true'
+		res.codeNameOfQuantumCounterparty = data.codeNameOfQuantumCounterparty
 	}
 	return res
 }
@@ -1159,6 +1225,8 @@ function setDataToForm(formId, scheduleItem) {
 	// заполняем скрытые поля
 	form.supplies.value = scheduleItem.supplies ? scheduleItem.supplies : ''
 	form.type.value = scheduleItem.type ? scheduleItem.type : ''
+	form.isDayToDay && (form.isDayToDay.value = scheduleItem.isDayToDay ? scheduleItem.isDayToDay : '')
+	form.codeNameOfQuantumCounterparty && (form.codeNameOfQuantumCounterparty.value = scheduleItem.codeNameOfQuantumCounterparty ? scheduleItem.codeNameOfQuantumCounterparty : '')
 
 	// заполняем видимые поля
 	form.toType.value = scheduleItem.toType ? scheduleItem.toType : ''
@@ -1191,6 +1259,28 @@ function getNumStocksByContract(counterpartyContractCode) {
 		.filter(item => item.counterpartyContractCode === counterpartyContractCode)
 		.map(item => item.numStock)
 }
+// получение временного графика по постоянному
+function getTempScheduleByConstSchedule(scheduleItem) {
+	const schedulePairsKey = `${scheduleItem.numStock}-${scheduleItem.counterpartyContractCode}`
+	const schedulePair = schedulePairs[schedulePairsKey]
+	if (!schedulePair) return null
+	return schedulePair.find(item => item.startDateTemp && item.endDateTemp)
+}
+// получение актуальности графика
+function isActualSchedule(scheduleItem) {
+	const isTempSchedule = scheduleItem.startDateTemp && scheduleItem.endDateTemp
+	if (isTempSchedule) {
+		return isActualTempSchedule(scheduleItem)
+	}
+	const tempScheduleByConst = getTempScheduleByConstSchedule(scheduleItem)
+	return !tempScheduleByConst || !isActualTempSchedule(tempScheduleByConst)
+}
+// получение актуальности временного графика
+function isActualTempSchedule(scheduleItem) {
+	const endDateMs = scheduleItem.endDateTemp + dateHelper.DAYS_TO_MILLISECONDS - 1
+	return NOW_MS >= scheduleItem.startDateTemp && NOW_MS <= endDateMs
+}
+
 
 // функция автозаполнения полей с инфой о контрагенте при изменении значения этих полей
 function autocompleteCounterpartyInfo(e, autocompleteInput, contractCodeList) {

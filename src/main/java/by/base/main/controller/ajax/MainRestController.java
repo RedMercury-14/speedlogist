@@ -384,7 +384,7 @@ public class MainRestController {
 				.stream().filter(p -> p.getQuantity1700() != 0 || p.getQuantity1800() != 0).collect(Collectors.toList());
 
 
-		poiExcel.fillExcelAboutNeeds(appPath + "resources/others/" + fileName);
+//		poiExcel.fillExcelAboutNeeds(appPath + "resources/others/" + fileName);
 
 		List<File> files = new ArrayList<File>();
 		files.add(new File(appPath + "resources/others/" + fileName));
@@ -1701,6 +1701,11 @@ public class MainRestController {
 		return response;		
 	}
 	
+	/**
+	 * Ручная отправка сообщения с графиками на ТО
+	 * @param request
+	 * @return
+	 */
 	@GetMapping("/orl/sendEmailTO")
 	public Map<String, Object> getSendEmailTO(HttpServletRequest request) {
 		Map<String, Object> response = new HashMap<String, Object>();
@@ -1733,11 +1738,11 @@ public class MainRestController {
 		draftFolderFile.mkdir();
 
 		try {
-			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()),
+			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOTypeWithTemp("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()),
 					appPath + "resources/others/" + fileName1200);
-			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOType("сухой").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()),
+			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOTypeWithTemp("сухой").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()),
 					appPath + "resources/others/" + fileName1100);
-			poiExcel.exportToExcelSampleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()),
+			poiExcel.exportToExcelSampleListTO(scheduleService.getSchedulesByTOTypeWithTemp("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()),
 					appPath + "resources/others/" + fileNameSample);
 			poiExcel.exportToExcelDrafts(scheduleService.getSchedulesListTO().stream().filter(s -> s.getStatus() == 20).collect(Collectors.toList()), draftFolder);
 

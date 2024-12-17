@@ -67,6 +67,7 @@ public interface ScheduleDAO {
 	
 	/**
 	 * Возвращает лист Schedule по toType (сухой, холодный)
+	 * <br><b>Возвращает только графики с 20 статусом</b>
 	 * @param numStock
 	 * @return
 	 */
@@ -121,10 +122,11 @@ public interface ScheduleDAO {
 	List<Schedule> getScheduleByNumContractAndNUmStockWithTemp(Long num, Integer numStock);
 
 	/**
-	 * @author Ira
-	 * <br>Возвращает список графиков по типу ТО - и временных, и постоянных</br>
+	 * <br>Возвращает список графиков по типу ТО - и временных, и постоянных
+	 * <br><b>Возвращает только графики с 20 статусом</b>
 	 * @param toType
 	 * @return
+	 * @author Ira
 	 */
 	List<Schedule> getSchedulesByTOTypeWithTemp(String toType);
 

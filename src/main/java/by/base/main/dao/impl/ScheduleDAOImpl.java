@@ -157,7 +157,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 		return roles;
 	}
 
-	private static final String queryGetSchedulesByTOType = "from Schedule where toType=:toType";
+	private static final String queryGetSchedulesByTOType = "from Schedule where toType=:toType AND status=20";
 	@Transactional
 	@Override
 	public List<Schedule> getSchedulesByTOType(String toType) {
@@ -345,7 +345,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	 * @param toType
 	 * @return
 	 */
-	private static final String queryGetSchedulesByTOTypeWithTemp = "from Schedule where toType=:toType AND ((startDateTemp IS NOT NULL AND endDateTemp IS NOT NULL AND CURRENT_DATE BETWEEN startDateTemp AND endDateTemp) or (startDateTemp IS NULL AND endDateTemp IS NULL))";
+	private static final String queryGetSchedulesByTOTypeWithTemp = "from Schedule where toType=:toType AND status=20 AND ((startDateTemp IS NOT NULL AND endDateTemp IS NOT NULL AND CURRENT_DATE BETWEEN startDateTemp AND endDateTemp) or (startDateTemp IS NULL AND endDateTemp IS NULL))";
 	@Transactional
 	@Override
 	public List<Schedule> getSchedulesByTOTypeWithTemp(String toType) {

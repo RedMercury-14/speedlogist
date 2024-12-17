@@ -1451,7 +1451,8 @@ public class POIExcel {
 	 * @throws IOException
 	 */
 	public String loadBalanceStock2(File file, HttpServletRequest request, Date dateUnload) throws FileNotFoundException, IOException {
-		if(getColumnCount(file)<67) {
+		System.err.println(getColumnCount(file,0));
+		if(getColumnCount(file,0)<67) {
 			return "Ошибка! Файл должен содержать 67 столбцов!";
 		}
 		XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
@@ -2377,12 +2378,12 @@ public class POIExcel {
 	 */
 	public Map<Integer, OrderProduct> loadNeedExcel(File file, String date) throws ServiceException, InvalidFormatException, IOException, ParseException {
 		
-		System.out.println("КОл-во колонок = " + getColumnCount(file));
+		System.out.println("КОл-во колонок = " + getColumnCount(file,2));
 		Map<Integer, OrderProduct> orderMap = new HashMap<>();
         XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
         XSSFSheet sheet = wb.getSheetAt(0);
         //тут мы проверяем по кол-ву столбцов: если больше 3-х то это новый файл.
-        if(getColumnCount(file) > 3) { // Это реализация новго файла excel с доп колонками
+        if(getColumnCount(file,2) > 3) { // Это реализация новго файла excel с доп колонками
         	for (int i = 3; i <= sheet.getLastRowNum(); i++) { // Начинаем с 3, чтобы пропустить заголовок
                 Row row = sheet.getRow(i);
 
@@ -2465,7 +2466,7 @@ public class POIExcel {
 	 * @throws IOException
 	 * @author Dima Hrushevsky
 	 */
-	public int getColumnCount(File file) throws IOException {
+	public int getColumnCount(File file, Integer targetRow) throws IOException {
         try (FileInputStream fis = new FileInputStream(file);
              Workbook workbook = WorkbookFactory.create(fis)) {
 
@@ -2474,7 +2475,7 @@ public class POIExcel {
 
             // Берём первую строку с данными
 //            Row firstRow = sheet.getRow(sheet.getFirstRowNum());
-            Row firstRow = sheet.getRow(2);
+            Row firstRow = sheet.getRow(targetRow);
             if (firstRow != null) {
                 return firstRow.getPhysicalNumberOfCells();
             }

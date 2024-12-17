@@ -1893,7 +1893,7 @@ public class MainRestController {
 		
 		File file1 = poiExcel.getFileByMultipartTarget(excel, request, "need.xlsx");
 		
-		if(poiExcel.getColumnCount(file1) <= 3) {
+		if(poiExcel.getColumnCount(file1,2) <= 3) {
 			response.put("status", "100");
 			response.put("message", "Файл безнадёжно устарел! Обратитесь в ОРЛ для предоставления новго файла (с расчётом на каждый склад)");
 			return response;
@@ -4073,7 +4073,6 @@ public class MainRestController {
 			@RequestParam(value = "excel", required = false) MultipartFile excel)
 			throws InvalidFormatException, IOException, ServiceException {
 		Map<String, String> response = new HashMap<String, String>();	
-		System.out.println();
 		Date dateUnload = null;
 		String filename = excel.getOriginalFilename();
 

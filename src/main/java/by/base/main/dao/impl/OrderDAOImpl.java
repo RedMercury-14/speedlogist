@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 import javax.persistence.TemporalType;
 import javax.transaction.Transactional;
 
+import by.base.main.model.OrderLine;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -700,7 +701,26 @@ public class OrderDAOImpl implements OrderDAO{
 		Set<Order> trucks = theObject.getResultList().stream().collect(Collectors.toSet());
 		return trucks.stream().collect(Collectors.toList());
 	}
-	
-	
 
+	/**
+	 * @author Ira
+	 * <br>Возвращает список Order по дате создания слота и номеру товара</br>
+	 * @param dateCreate
+	 * @param goodsId
+	 * @return
+	 */
+	private static final String queryGetOrdersBySlotDateAndGoodId = "from OrderLine ol LEFT JOIN FETCH Order o "
+			+ "where o.dateCreate = :dateCreate AND ol.goodsId = :goodsId";
+	@Transactional
+	@Override
+	public List<OrderLine> getOrderBySlotDateAndGoodId(Date dateCreate, List<Integer> goodsId) {
+		Session currentSession = sessionFactory.getCurrentSession();
+
+		Query<OrderLine> theObject = currentSession.createQuery(queryGetOrdersBySlotDateAndGoodId, OrderLine.class);
+		theObject.setParameter("dateCreate", dateCreate);
+		theObject.setParameter("goodsId", goodsId);
+
+		List<OrderLine> orders = theObject.getResultList();
+		return orders;
+	}
 }

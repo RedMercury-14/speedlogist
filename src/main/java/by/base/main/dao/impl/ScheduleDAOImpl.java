@@ -50,7 +50,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 		return roles;
 	}
 	
-	private static final String queryGetListTO = "from Schedule where type='ТО'";
+	private static final String queryGetListTO = "from Schedule where type='ТО' AND status = 20";
 	@Transactional
 	@Override
 	@Deprecated
@@ -157,7 +157,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 		return roles;
 	}
 
-	private static final String queryGetSchedulesByTOType = "from Schedule where toType=:toType";
+	private static final String queryGetSchedulesByTOType = "from Schedule where toType=:toType AND status=20";
 	@Transactional
 	@Override
 	public List<Schedule> getSchedulesByTOType(String toType) {
@@ -174,6 +174,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	private static final String queryGetObjByNumContractAndStock = "from Schedule where counterpartyContractCode=:counterpartyContractCode AND numStock=:numStock";
 	@Transactional
 	@Override
+	@Deprecated
 	public Schedule getScheduleByNumContractAndNUmStock(Long num, Integer numStock) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<Schedule> theObject = currentSession.createQuery(queryGetObjByNumContractAndStock, Schedule.class);
@@ -307,7 +308,10 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	 * @return
 	 *
 	 */
-	private static final String queryGetListTOWithTemp = "from Schedule where type='ТО' AND ((startDateTemp IS NOT NULL AND endDateTemp IS NOT NULL AND CURRENT_DATE BETWEEN startDateTemp AND endDateTemp) or (startDateTemp IS NULL AND endDateTemp IS NULL))";
+	private static final String queryGetListTOWithTemp = "from Schedule where type='ТО' AND status = 20 " +
+			"AND ((startDateTemp IS NOT NULL AND endDateTemp IS NOT NULL AND CURRENT_DATE BETWEEN startDateTemp AND endDateTemp) or (startDateTemp IS NULL AND endDateTemp IS NULL))";
+	//private static final String queryGetListTOWithTemp = "from Schedule where type='ТО'";
+
 	@Transactional
 	@Override
 	public List<Schedule> getSchedulesListTOWithTemp() {
@@ -315,27 +319,46 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 		Query<Schedule> schedule = currentSession.createQuery(queryGetListTOWithTemp, Schedule.class);
 		List <Schedule> schedules = schedule.getResultList();
 
+        return schedule.getResultList();
+	}
+
+	/**
+	 * @author Ira
+	 * <br>Возвращает список графиков на ТО по номеру контракта и номеру ТО - и временных, и постоянных</br>
+	 * @return
+	 */
+	private static final String queryGetObjByNumContractAndNumStockWithTemp = "from Schedule where counterpartyContractCode=:counterpartyContractCode AND numStock=:numStock";
+	@Transactional
+	@Override
+	public List<Schedule> getScheduleByNumContractAndNUmStockWithTemp(Long num, Integer numStock) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Schedule> theObject = currentSession.createQuery(queryGetObjByNumContractAndNumStockWithTemp, Schedule.class);
+		theObject.setParameter("counterpartyContractCode", num);
+		theObject.setParameter("numStock", numStock);
+		List<Schedule> schedules = theObject.getResultList();
 		return schedules;
 	}
 
-//	/**
-//	 * @author Ira
-//	 * @param num
-//	 * @return
-//	 */
-//	private static final String queryGetSchedulesByTOTypeWithTemp = "from Schedule where toType=:toType AND ((startDateTemp IS NOT NULL AND endDateTemp IS NOT NULL AND CURRENT_DATE BETWEEN startDateTemp AND endDateTemp) or (startDateTemp IS NULL AND endDateTemp IS NULL))";
-//	@Transactional
-//	@Override
-//	public List<Schedule> getSchedulesByTOTypeWithTemp(String toType) {
-//		Session currentSession = sessionFactory.getCurrentSession();
-//		Query<Schedule> theObject = currentSession.createQuery(queryGetSchedulesByTOTypeWithTemp, Schedule.class);
-//		theObject.setParameter("toType", toType.trim());
-//		List<Schedule> trucks = theObject.getResultList();
-//		if(trucks.isEmpty()) {
-//			return null;
-//		}
-//		return trucks;
-//	}
 
+	/**
+	 * @author Ira
+	 * <br>Возвращает список графиков по типу ТО - и временных, и постоянных</br>
+	 * @param toType
+	 * @return
+	 */
+	private static final String queryGetSchedulesByTOTypeWithTemp = "from Schedule where toType=:toType AND status=20 AND ((startDateTemp IS NOT NULL AND endDateTemp IS NOT NULL AND CURRENT_DATE BETWEEN startDateTemp AND endDateTemp) or (startDateTemp IS NULL AND endDateTemp IS NULL))";
+	@Transactional
+	@Override
+	public List<Schedule> getSchedulesByTOTypeWithTemp(String toType) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Schedule> theObject = currentSession.createQuery(queryGetSchedulesByTOTypeWithTemp, Schedule.class);
+		theObject.setParameter("toType", toType.trim());
+		List<Schedule> schedules = theObject.getResultList();
+
+		if(schedules.isEmpty()) {
+			return null;
+		}
+		return schedules;
+	}
 
 }

@@ -65,6 +65,7 @@ public interface ScheduleService {
 	
 	/**
 	 * Возвращает лист Schedule по toType (сухой, холодный)
+	 * <br><b>Возвращает только графики с 20 статусом</b>
 	 * @param numStock
 	 * @return
 	 */
@@ -108,6 +109,37 @@ public interface ScheduleService {
 	 * <br>Возвращает список только актуальных графиков на ТО - либо временных, либо постоянных</br>
 	 * @return
 	 */
-	List<Schedule> getSchedulesListTOOnlyTemp();
+	List<Schedule> getSchedulesListTOWithTemp();
+
+	/**
+	 * @author Ira
+	 * <br>Возвращает список графиков на ТО по номеру контракта и номеру ТО - и временных, и постоянных</br>
+	 * @return
+	 */
+	List<Schedule> getScheduleByNumContractAndNUmStockWithTemp(Long num, Integer numStock);
+
+	/**
+	 * @author Ira
+	 * <br>Проверяет создаваемый график на пересечение временных границ с существующими графиками</br>
+	 * @return
+	 */
+	boolean checkScheduleIntersection(List<Schedule> schedules, Schedule schedule);
+
+	/**
+	 * <br>Возвращает список графиков по типу ТО - и временных, и постоянных</br>
+	 * <br><b>Возвращает только графики с 20 статусом</b>
+	 * @param toType
+	 * @return
+	 * @author Ira
+	 */
+	List<Schedule> getSchedulesByTOTypeWithTemp(String toType);
+
+	/**
+	 * @author Ira
+	 * <br>Получает на вход лист графиков, фильтрует, возвращает лист графиков, действующих на текущий момент</br>
+	 * @param allSchedules
+	 * @return
+	 */
+	List<Schedule> getSchedulesListTOOnlyActual(List<Schedule> allSchedules);
 }
 

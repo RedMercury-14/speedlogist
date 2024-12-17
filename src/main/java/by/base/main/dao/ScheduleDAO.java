@@ -7,6 +7,8 @@ import com.dto.CounterpartyDTO;
 
 import by.base.main.model.Schedule;
 
+import javax.transaction.Transactional;
+
 public interface ScheduleDAO {
 
 	Schedule getScheduleById(Integer id);
@@ -65,6 +67,7 @@ public interface ScheduleDAO {
 	
 	/**
 	 * Возвращает лист Schedule по toType (сухой, холодный)
+	 * <br><b>Возвращает только графики с 20 статусом</b>
 	 * @param numStock
 	 * @return
 	 */
@@ -107,9 +110,25 @@ public interface ScheduleDAO {
 	/**
 	 * @author Ira
 	 * <br>Возвращает список всех графиков на ТО - и временных, и постоянных</br>
+	 * <br><b>Возвращает только графики с 20 статусом</b>
 	 * @return
 	 */
 	public List<Schedule> getSchedulesListTOWithTemp();
 
-	//List<Schedule> getSchedulesByTOTypeWithTemp(String toType);
+	/**
+	 * @author Ira
+	 * <br>Возвращает список графиков на ТО по номеру контракта и номеру ТО - и временных, и постоянных</br>
+	 * @return
+	 */
+	List<Schedule> getScheduleByNumContractAndNUmStockWithTemp(Long num, Integer numStock);
+
+	/**
+	 * <br>Возвращает список графиков по типу ТО - и временных, и постоянных
+	 * <br><b>Возвращает только графики с 20 статусом</b>
+	 * @param toType
+	 * @return
+	 * @author Ira
+	 */
+	List<Schedule> getSchedulesByTOTypeWithTemp(String toType);
+
 }

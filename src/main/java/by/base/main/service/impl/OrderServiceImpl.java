@@ -1,18 +1,13 @@
 package by.base.main.service.impl;
 
 import java.sql.Date;
-import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.BeanUtils;
+import by.base.main.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,11 +15,6 @@ import com.dto.OrderDTO;
 
 import by.base.main.aspect.TimedExecution;
 import by.base.main.dao.OrderDAO;
-import by.base.main.dto.OrderDTOForSlot;
-import by.base.main.model.Order;
-import by.base.main.model.Product;
-import by.base.main.model.Route;
-import by.base.main.model.Schedule;
 import by.base.main.service.OrderService;
 
 @Service
@@ -416,6 +406,18 @@ public class OrderServiceImpl implements OrderService {
 	@Override
 	public List<Order> getOrderByTimeDeliveryAndNumStock(Date dateStart, Date dateEnd, Integer numStock) {
 		return orderDAO.getOrderByTimeDeliveryAndNumStock(dateStart, dateEnd, numStock);
+	}
+
+	@Override
+	/**
+	 * @author Ira
+	 * <br>Возвращает список Order по дате создания слота и номеру товара</br>
+	 * @param dateCreate
+	 * @param goodsId
+	 * @return
+	 */
+	public List<OrderLine> getOrderBySlotDateAndGoodId(Date dateCreate, List<Integer> goodsId) {
+		return orderDAO.getOrderBySlotDateAndGoodId(dateCreate, goodsId);
 	}
 	
 }

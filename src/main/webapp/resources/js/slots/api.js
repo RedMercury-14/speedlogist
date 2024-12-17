@@ -188,26 +188,13 @@ export function loadOrder(info, orderTableGridOption, dateOrderOrl) {
 		}
 	})
 }
-export function updateOrder(info, orderTableGridOption, isComplexUpdate) {
+export function updateOrder(info, orderTableGridOption, reasonText) {
 	const method = 'update'
 	const currentStock = store.getCurrentStock()
 	const currentLogin = store.getLogin()
 	const currentRole = store.getRole()
+	const isComplexUpdate = store.getComplexUpdate()
 	const orderData = getOrderDataForAjax(info, currentStock, currentLogin, currentRole, method)
-
-	// ВРЕМЕННО ДЛЯ 1800
-	// Фильтр для самовывоза
-	// if (currentStock.id === '1800'
-	// 	&& (
-	// 		orderData.status === 5
-	// 		|| orderData.status === 8
-	// 		|| orderData.status === 100
-	// 	)
-	// ) {
-	// 	alert('Только для самовывоза!')
-	// 	info.revert()
-	// 	return
-	// }
 
 	// проверка доступа к методу
 	if (!methodAccessRules(method, orderData, currentLogin, currentRole)) {
@@ -217,20 +204,8 @@ export function updateOrder(info, orderTableGridOption, isComplexUpdate) {
 	}
 
 	// просьба указать причину переноса слота для логистов
-	if (isLogist(currentRole)) {
-		const messageLogist = prompt(
-			`Укажите причину переноса (минимум ${slotsSettings.LOGIST_MESSAGE_MIN_LENGHT} символов): `
-		)
-		if (!messageLogist) {
-			info.revert()
-			return
-		}
-		if (messageLogist.length < slotsSettings.LOGIST_MESSAGE_MIN_LENGHT) {
-			info.revert()
-			snackbar.show(userMessages.messageLogistIsShort)
-			return
-		}
-		orderData.messageLogist = messageLogist
+	if (isLogist(currentRole) && reasonText) {
+		orderData.messageLogist = reasonText
 	}
 
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)

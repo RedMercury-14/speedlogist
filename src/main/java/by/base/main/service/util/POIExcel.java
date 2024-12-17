@@ -245,7 +245,7 @@ public class POIExcel {
 	
 	
     // Метод заполнения данных
-    private void fillExcelData(Sheet sheet, List<Schedule> schedules) {
+    private void fillExcelData(Sheet sheet, Sheet checkSheet, List<Schedule> schedules) {
         String[] headers = {
                 "Код контрагента", "Наименование контрагента", "График формирования заказа четная неделя ставим метка  --ч-- , нечетная --- н ---",
                 "Номер контракта", "Номер ТО", "Пометка сроки / неделя", "пн", "вт", "ср", "чт", "пт", "сб", "вс",
@@ -254,6 +254,7 @@ public class POIExcel {
 
         // Создаем строку заголовков
         Row headerRow = sheet.createRow(0);
+//        Row headerRowCheck = checkSheet.createRow(0);
         for (int i = 0; i < headers.length; i++) {
             Cell cell = headerRow.createCell(i);
             cell.setCellValue(headers[i]);
@@ -276,13 +277,20 @@ public class POIExcel {
             }
 
             Row row = sheet.createRow(rowNum++);
-
-            row.createCell(0).setCellValue(schedule.getCounterpartyCode());
+            Row rowcheck = checkSheet.createRow(rowNum);
+            
+            //тут для проверки
+            rowcheck.createCell(0).setCellValue(schedule.getCounterpartyCode());
+            rowcheck.createCell(1).setCellValue(schedule.getNumStock());
+            rowcheck.createCell(2).setCellValue(schedule.getStatus());
+            rowcheck.createCell(3).setCellValue(schedule.getStartDateTemp() != null ? schedule.getStartDateTemp()+" - " + schedule.getEndDateTemp() : null);
+            
+            row.createCell(0).setCellValue(schedule.getCounterpartyCode());            
             row.createCell(1).setCellValue(schedule.getName());
             row.createCell(2).setCellValue(schedule.getOrderFormationSchedule());
             row.createCell(3).setCellValue(schedule.getCounterpartyContractCode());
-            row.createCell(4).setCellValue(schedule.getNumStock());
-            row.createCell(5).setCellValue(schedule.getIsDayToDay() ? "сегодня" : schedule.getNote());
+            row.createCell(4).setCellValue(schedule.getNumStock());            
+            row.createCell(5).setCellValue(schedule.getIsDayToDay() ? "сегодня" : schedule.getNote());            
             row.createCell(6).setCellValue(schedule.getMonday());
             row.createCell(7).setCellValue(schedule.getTuesday());
             row.createCell(8).setCellValue(schedule.getWednesday());
@@ -354,6 +362,10 @@ public class POIExcel {
 
 		};
 
+		String[] checkHeaders = {
+				"Номер контракта", "Номер ТО", "Статус", "Время действия"
+		};
+
 		for (Long counterpartyContractCode: currentSchedules.keySet()) {
 
 			if(schedules.isEmpty()) {
@@ -362,6 +374,7 @@ public class POIExcel {
 
 			Workbook workbook = new XSSFWorkbook();
 			Sheet sheet = workbook.createSheet("Лист 1");
+			Sheet checkSheet = workbook.createSheet("Проверочный");
 
 			// Создаем строку заголовков
 			Row headerRow = sheet.createRow(2);
@@ -370,10 +383,18 @@ public class POIExcel {
 				cell.setCellValue(headers[i]);
 			}
 
+			// Создаем строку заголовков
+			Row checkHeaderRow = checkSheet.createRow(0);
+			for (int i = 0; i < checkHeaders.length; i++) {
+				Cell cell = checkHeaderRow.createCell(i);
+				cell.setCellValue(checkHeaders[i]);
+			}
+
 			boolean isSheetEmpty = true;
 			// Заполняем данные
 
 			int rowNum = 3;
+			int checkRowNum = 1;
 
 			List<Schedule> s = currentSchedules.get(counterpartyContractCode);
 			//List<Schedule> currentSchedules = schedules.stream().filter(sch -> sch.getCounterpartyContractCode().equals(counterpartyContractCode)).collect(Collectors.toList());
@@ -389,6 +410,12 @@ public class POIExcel {
 					isSheetEmpty = false;
 					rowNum = fillRow(sheet, supplyDates, today, schedule.getCounterpartyContractCode(), schedule.getNumStock(), rowNum);
 
+					Row checkRow = checkSheet.createRow(checkRowNum++);
+
+					checkRow.createCell(0).setCellValue(schedule.getCounterpartyContractCode());
+					checkRow.createCell(1).setCellValue(schedule.getNumStock());
+					checkRow.createCell(2).setCellValue(schedule.getStatus());
+					checkRow.createCell(3).setCellValue(schedule.getStartDateTemp() == null ? null : schedule.getStartDateTemp().toString());
 				}
 			}
 			String fullFilePath = filePath + "Шаблон(МС) Прямые на ТО " + counterpartyContractCode + ".xlsx";
@@ -725,9 +752,10 @@ public class POIExcel {
             return null;
         }
         Sheet sheet = workbook.createSheet(schedules.get(0).getNumStock() + "");
+        Sheet sheet2 = workbook.createSheet("Проверка данных");
 
         // Заполнение данными
-        fillExcelData(sheet, schedules);
+        fillExcelData(sheet, sheet2, schedules);
 
         // Сохраняем файл
         try (FileOutputStream fileOut = new FileOutputStream(filePath)) {
@@ -747,9 +775,10 @@ public class POIExcel {
              Workbook workbook = WorkbookFactory.create(fis)) {
 
             Sheet sheet = workbook.getSheetAt(0);
+            Sheet sheet2 = workbook.createSheet("Проверка данных");
 
             // Заполнение данными
-            fillExcelData(sheet, schedules);
+            fillExcelData(sheet, sheet2, schedules);
 
             // Сохраняем файл
             try (FileOutputStream fos = new FileOutputStream(filePath)) {
@@ -875,6 +904,7 @@ public class POIExcel {
 			return null;
 		}
         Sheet sheet = workbook.createSheet(schedules.get(0).getNumStock() + "");
+        Sheet checkSheet = workbook.createSheet("Проверка данных");
 
         // Заголовки колонок
         String[] headers = {
@@ -904,6 +934,14 @@ public class POIExcel {
         	}
         	
             Row row = sheet.createRow(rowNum++);
+            Row rowcheck = checkSheet.createRow(rowNum);
+            
+            
+            //тут для проверки
+            rowcheck.createCell(0).setCellValue(schedule.getCounterpartyCode());
+            rowcheck.createCell(1).setCellValue(schedule.getNumStock());
+            rowcheck.createCell(2).setCellValue(schedule.getStatus());
+            rowcheck.createCell(3).setCellValue(schedule.getStartDateTemp() != null ? schedule.getStartDateTemp()+" - " + schedule.getEndDateTemp() : null);
 
             row.createCell(0).setCellValue(schedule.getCounterpartyCode());
             row.createCell(1).setCellValue(schedule.getName());
@@ -2375,7 +2413,9 @@ public class POIExcel {
 	
 	/**
 	 * Метод считывает ексель с потребностью и отдаёт мапу, где ключ - это код товара
+	 * Устарел. Использовать 
 	 */
+    @Deprecated
 	public Map<Integer, OrderProduct> loadNeedExcel(File file, String date) throws ServiceException, InvalidFormatException, IOException, ParseException {
 		
 		System.out.println("КОл-во колонок = " + getColumnCount(file,2));
@@ -2454,6 +2494,69 @@ public class POIExcel {
 
             wb.close();
         }
+        
+        
+        return orderMap;
+    }
+    
+    /**
+	 * Метод считывает ексель с потребностью и отдаёт мапу, где ключ - это код товара
+	 * Устарел. Использовать 
+	 */
+    public Map<Integer, OrderProduct> loadNeedExcel2(File file, String date) throws ServiceException, InvalidFormatException, IOException, ParseException {
+		
+		System.out.println("КОл-во колонок = " + getColumnCount(file,2));
+		Map<Integer, OrderProduct> orderMap = new HashMap<>();
+        XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
+        XSSFSheet sheet = wb.getSheetAt(0);
+        //по сути 
+        for (int i = 3; i <= sheet.getLastRowNum(); i++) { // Начинаем с 3, чтобы пропустить заголовок
+            Row row = sheet.getRow(i);
+
+            if (row != null) {
+            	Integer numStock = (int) row.getCell(0).getNumericCellValue();
+                Integer code = (int) row.getCell(1).getNumericCellValue();
+                String nameProduct = row.getCell(2).getStringCellValue();
+                int quantity = (int) roundВouble(row.getCell(3).getNumericCellValue(), 0);
+
+                OrderProduct orderProduct = null;
+                if(orderMap.containsKey(code)) {
+                	orderProduct = orderMap.get(code);
+                }else {
+                	orderProduct = new OrderProduct();
+                }
+                
+                switch (numStock) {
+				case 1700:
+					orderProduct.setQuantity1700(quantity);
+					break;
+					
+				case 1800:
+					orderProduct.setQuantity1800(quantity);
+					break;
+
+				default:
+					orderProduct.setQuantity(quantity);
+					break;
+				}    
+                orderProduct.setNameProduct(nameProduct);
+                orderProduct.setCodeProduct(code);
+
+                if(date != null) {
+                	Timestamp timestamp = Timestamp.valueOf(LocalDateTime.of(LocalDate.parse(date), LocalTime.now()));
+                	orderProduct.setDateCreate(timestamp);
+                }else {
+                    orderProduct.setDateCreate(new Timestamp(System.currentTimeMillis()));
+//                  orderProduct.setDateCreate(Timestamp.valueOf(LocalDateTime.now()));
+                }
+
+
+                // Привязываем код как ключ и объект OrderProduct как значение
+                orderMap.put(code, orderProduct);
+            }
+        }
+
+        wb.close();
         
         
         return orderMap;
@@ -4083,6 +4186,80 @@ public class POIExcel {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	/**
+	 * @author Ira
+	 * <br>Заполняет таблицу в excel данными о потребностях без слотов</br>
+	 * @return
+	 */
+	public void fillExcelAboutNeeds(String filePath) throws FileNotFoundException {
+
+		XSSFWorkbook book = new XSSFWorkbook();
+		XSSFSheet sheet = (XSSFSheet) book.createSheet("Несоответствия");
+		String[] headers = {
+				"Код товара", "Наименование товара", "Количество в поддоне", "Заказ 1700", "Заказ 1800",
+				"Увеличенный заказ 1700", "Увеличенный заказ 1800", "Комментарий"
+		};
+
+		// Создаем строку заголовков
+		Row headerRow = sheet.createRow(0);
+		for (int i = 0; i < headers.length; i++) {
+			Cell cell = headerRow.createCell(i);
+			cell.setCellValue(headers[i]);
+		}
+
+		// Создаем стиль для окрашивания
+		CellStyle coloredStyle = sheet.getWorkbook().createCellStyle();
+		coloredStyle.setFillForegroundColor(IndexedColors.LIGHT_YELLOW.getIndex());
+		coloredStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+//		// Диапазон колонок для окрашивания
+//		int startColumn = 2; // Индекс "График формирования заказа"
+//		int endColumn = 12;  // Индекс "вс"
+
+		boolean isSheetEmpty = true;
+		// Заполняем данные
+		int rowNum = 1;
+		for (int j = 0; j < 1; j++) {
+			
+			isSheetEmpty = false;
+			
+			Row row = sheet.createRow(rowNum++);
+
+			row.createCell(0).setCellValue(1);
+			row.createCell(1).setCellValue(2);
+			row.createCell(2).setCellValue(3);
+			row.createCell(3).setCellValue(4);
+			row.createCell(4).setCellValue(5);
+			row.createCell(5).setCellValue(6);
+			row.createCell(6).setCellValue(7);
+			row.createCell(7).setCellValue(8);
+
+
+			// Окрашиваем колонки в указанном диапазоне
+//			for (int i = startColumn; i <= endColumn; i++) {
+//				Cell cell = row.getCell(i);
+//				if (cell == null) {
+//					cell = row.createCell(i); // Если ячейка еще не создана
+//				}
+//				cell.setCellStyle(coloredStyle);
+//			}
+		}
+
+		// Устанавливаем фильтры на все столбцы
+		sheet.setAutoFilter(new CellRangeAddress(0, 0, 0, headers.length - 1));
+
+		//String fullFilePath = filePath + "Шаблон(МС) Прямые на ТО " + counterpartyContractCode + ".xlsx";
+
+		if(!isSheetEmpty) {
+			try (FileOutputStream fileOut = new FileOutputStream(filePath)) {
+				book.write(fileOut);
+			}// Сохраняем файл
+            catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
 	}
 
 }

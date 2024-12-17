@@ -1714,8 +1714,9 @@ public class MainRestController {
 		LocalDate currentTime = LocalDate.now();
 		String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
 
-		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to.ORL");
-		List<String> emailsSupportDepartment = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to.supportDepartment");
+//		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to.ORL");
+//		List<String> emailsSupportDepartment = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to.supportDepartment");
+		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
 
 		Map<String, List<String>> draftLists = propertiesUtils.getListForDraftFolders(servletContext);
 
@@ -1738,13 +1739,13 @@ public class MainRestController {
 		draftFolderFile.mkdir();
 
 		try {
-			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOTypeWithTemp("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()),
+			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesByTOTypeWithTemp("холодный")),
 					appPath + "resources/others/" + fileName1200);
-			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesByTOTypeWithTemp("сухой").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()),
+			poiExcel.exportToExcelScheduleListTO(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesByTOTypeWithTemp("сухой")),
 					appPath + "resources/others/" + fileName1100);
-			poiExcel.exportToExcelSampleListTO(scheduleService.getSchedulesByTOTypeWithTemp("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()),
+			poiExcel.exportToExcelSampleListTO(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesByTOTypeWithTemp("холодный")),
 					appPath + "resources/others/" + fileNameSample);
-			poiExcel.exportToExcelDrafts(scheduleService.getSchedulesListTO().stream().filter(s -> s.getStatus() == 20).collect(Collectors.toList()), draftFolder);
+			poiExcel.exportToExcelDrafts(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesListTO()), draftFolder);
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -1823,7 +1824,7 @@ public class MainRestController {
 		}
 
 		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO" + currentTimeString, "Автоматическая отправка графиков поставок на ТО\nВерсия с макросом выделений (Ctr+t)", filesZipORL, emailsORL);
-		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO" + currentTimeString, "Автоматическая отправка графиков поставок на ТО\nВерсия с макросом выделений (Ctr+t)", filesZipSupportDepartment, emailsSupportDepartment);
+//		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO" + currentTimeString, "Автоматическая отправка графиков поставок на ТО\nВерсия с макросом выделений (Ctr+t)", filesZipSupportDepartment, emailsSupportDepartment);
 
 		System.out.println("Finish --- sendSchedulesHasTOORL");
     	response.put("status", "200");

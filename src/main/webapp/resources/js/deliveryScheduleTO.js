@@ -401,18 +401,18 @@ function getContextMenuItems(params) {
 			{
 				name: `Подтверждение графиков`,
 				disabled: (!isAdmin(role) && !isORL(role) && !isOrderSupport(role))
-					|| (status !== 10 && status !== 0)
-					|| isTempSchedule,
+					|| (status !== 10 && status !== 0),
 				icon: uiIcons.check,
 				subMenu: [
 					{
 						name: `Подтвердить текущий график`,
 						action: async () => {
 							await confirmScheduleItem(rowNode)
-							await confirmTempScheduleItem(rowNode)
+							!isTempSchedule && await confirmTempScheduleItem(rowNode)
 						},
 					},
 					{
+						disabled: isTempSchedule,
 						name: `Подтвердить графики по текущему коду контракта (с указанием кодового слова)`,
 						action: () => confirmScheduleItemsByContract(role, rowNode),
 					}
@@ -431,8 +431,7 @@ function getContextMenuItems(params) {
 						name: `Снять подтверждение с текущего графика`,
 						action: async () => {
 							await unconfirmScheduleItem(rowNode)
-							await unconfirmTempScheduleItem(rowNode)
-
+							!isTempSchedule && await unconfirmTempScheduleItem(rowNode)
 						},
 					},
 					{
@@ -490,7 +489,7 @@ function getContextMenuItems(params) {
 		},
 		{
 			name: `Удаление графиков`,
-			disabled: isObserver(role) || isTempSchedule || status === 0,
+			disabled: isObserver(role) || status === 0,
 			icon: uiIcons.trash,
 			subMenu: [
 				{
@@ -498,12 +497,12 @@ function getContextMenuItems(params) {
 					// disabled: (!isAdmin(role) && !isORL(role) && !isOrderSupport(role)) || status === 0,
 					action: async () => {
 						await deleteScheduleItem(rowNode)
-						await deleteTempScheduleItem(rowNode)
+						!isTempSchedule && await deleteTempScheduleItem(rowNode)
 					},
 				},
 				{
 					name: `Удалить все графики по текущему коду контракта`,
-					disabled: !isAdmin(role) && !isORL(role) && !isOrderSupport(role),
+					disabled: !isAdmin(role) && !isORL(role) && !isOrderSupport(role) || isTempSchedule ,
 					action: () => {
 						deleteScheduleItemsByContract(role, rowNode)
 					},
@@ -1278,7 +1277,7 @@ function isActualSchedule(scheduleItem) {
 // получение актуальности временного графика
 function isActualTempSchedule(scheduleItem) {
 	const endDateMs = scheduleItem.endDateTemp + dateHelper.DAYS_TO_MILLISECONDS - 1
-	return NOW_MS >= scheduleItem.startDateTemp && NOW_MS <= endDateMs
+	return NOW_MS >= scheduleItem.startDateTemp && NOW_MS <= endDateMs && scheduleItem.status === 20
 }
 
 

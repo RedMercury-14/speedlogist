@@ -2394,7 +2394,9 @@ public class POIExcel {
 	
 	/**
 	 * Метод считывает ексель с потребностью и отдаёт мапу, где ключ - это код товара
+	 * Устарел. Использовать 
 	 */
+    @Deprecated
 	public Map<Integer, OrderProduct> loadNeedExcel(File file, String date) throws ServiceException, InvalidFormatException, IOException, ParseException {
 		
 		System.out.println("КОл-во колонок = " + getColumnCount(file,2));
@@ -2473,6 +2475,69 @@ public class POIExcel {
 
             wb.close();
         }
+        
+        
+        return orderMap;
+    }
+    
+    /**
+	 * Метод считывает ексель с потребностью и отдаёт мапу, где ключ - это код товара
+	 * Устарел. Использовать 
+	 */
+    public Map<Integer, OrderProduct> loadNeedExcel2(File file, String date) throws ServiceException, InvalidFormatException, IOException, ParseException {
+		
+		System.out.println("КОл-во колонок = " + getColumnCount(file,2));
+		Map<Integer, OrderProduct> orderMap = new HashMap<>();
+        XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
+        XSSFSheet sheet = wb.getSheetAt(0);
+        //по сути 
+        for (int i = 3; i <= sheet.getLastRowNum(); i++) { // Начинаем с 3, чтобы пропустить заголовок
+            Row row = sheet.getRow(i);
+
+            if (row != null) {
+            	Integer numStock = Integer.parseInt(getCellValue(row.getCell(0)));
+                Integer code = (int) row.getCell(1).getNumericCellValue();
+                String nameProduct = row.getCell(2).getStringCellValue();
+                int quantity = (int) roundВouble(row.getCell(3).getNumericCellValue(), 0);
+
+                OrderProduct orderProduct = null;
+                if(orderMap.containsKey(code)) {
+                	orderProduct = orderMap.get(code);
+                }else {
+                	orderProduct = new OrderProduct();
+                }
+                
+                switch (numStock) {
+				case 1700:
+					orderProduct.setQuantity1700(quantity);
+					break;
+					
+				case 1800:
+					orderProduct.setQuantity1800(quantity);
+					break;
+
+				default:
+					orderProduct.setQuantity(quantity);
+					break;
+				}    
+                orderProduct.setNameProduct(nameProduct);
+                orderProduct.setCodeProduct(code);
+
+                if(date != null) {
+                	Timestamp timestamp = Timestamp.valueOf(LocalDateTime.of(LocalDate.parse(date), LocalTime.now()));
+                	orderProduct.setDateCreate(timestamp);
+                }else {
+                    orderProduct.setDateCreate(new Timestamp(System.currentTimeMillis()));
+//                  orderProduct.setDateCreate(Timestamp.valueOf(LocalDateTime.now()));
+                }
+
+
+                // Привязываем код как ключ и объект OrderProduct как значение
+                orderMap.put(code, orderProduct);
+            }
+        }
+
+        wb.close();
         
         
         return orderMap;

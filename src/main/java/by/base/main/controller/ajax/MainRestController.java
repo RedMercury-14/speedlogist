@@ -1943,15 +1943,15 @@ public class MainRestController {
 		
 		File file1 = poiExcel.getFileByMultipartTarget(excel, request, "need.xlsx");
 		
-		if(poiExcel.getColumnCount(file1,2) <= 3) {
-			response.put("status", "100");
-			response.put("message", "Файл безнадёжно устарел! Обратитесь в ОРЛ для предоставления новго файла (с расчётом на каждый склад)");
-			return response;
-		}
+//		if(poiExcel.getColumnCount(file1,2) <= 3) {
+//			response.put("status", "100");
+//			response.put("message", "Файл безнадёжно устарел! Обратитесь в ОРЛ для предоставления новго файла (с расчётом на каждый склад)");
+//			return response;
+//		}
 
 		Map<Integer, OrderProduct> mapOrderProduct = new HashMap<Integer, OrderProduct>();
 		try {
-			mapOrderProduct = poiExcel.loadNeedExcel(file1, dateStr);
+			mapOrderProduct = poiExcel.loadNeedExcel2(file1, dateStr);
 		} catch (InvalidFormatException | IOException | java.text.ParseException | ServiceException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -1969,12 +1969,6 @@ public class MainRestController {
 		        product -> product,
 		        (existing, replacement) -> existing // игнорируем дубликат
 		    ));
-		
-//		Map<String, Product> productsMap = products.stream().collect(Collectors.toMap(
-//			    product -> product.getCodeProduct() + "" + product.getNumStock(),
-//			    product -> product,
-//			    (existing, replacement) -> existing // игнорируем дубликат
-//			));
 
 
 		for (Map.Entry<Integer, OrderProduct> entry : mapOrderProduct.entrySet()) {
@@ -4007,8 +4001,7 @@ public class MainRestController {
 						
 		//конец проверки на лимит приемки
 		//главная проверка по графику поставок
-		String infoCheck = null;		
-		//ТЕСТОВО ОТКЛЮЧИЛ!
+		String infoCheck = null;	
 		if(!checkDeepImport(order, request)) {
 			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {			
 				PlanResponce planResponce = readerSchedulePlan.process(order);

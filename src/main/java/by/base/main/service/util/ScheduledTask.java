@@ -116,8 +116,8 @@ public class ScheduledTask {
 
 
 
-		String fileName1200 = "1200 (----Холодный----).xlsx";
-		String fileName1100 = "1100 График прямой сухой.xlsx";
+		String fileName1200 = "1200 (----Холодный----).xlsm";
+		String fileName1100 = "1100 График прямой сухой.xlsm";
 		String fileNameSample = "График для шаблоново.xlsx";
 		String draftFolder = appPath + "resources/others/drafts/";
 

@@ -362,6 +362,10 @@ public class POIExcel {
 
 		};
 
+		String[] checkHeaders = {
+				"Номер контракта", "Номер ТО", "Статус", "Время действия"
+		};
+
 		for (Long counterpartyContractCode: currentSchedules.keySet()) {
 
 			if(schedules.isEmpty()) {
@@ -370,6 +374,7 @@ public class POIExcel {
 
 			Workbook workbook = new XSSFWorkbook();
 			Sheet sheet = workbook.createSheet("Лист 1");
+			Sheet checkSheet = workbook.createSheet("Проверочный");
 
 			// Создаем строку заголовков
 			Row headerRow = sheet.createRow(2);
@@ -378,10 +383,18 @@ public class POIExcel {
 				cell.setCellValue(headers[i]);
 			}
 
+			// Создаем строку заголовков
+			Row checkHeaderRow = checkSheet.createRow(0);
+			for (int i = 0; i < checkHeaders.length; i++) {
+				Cell cell = checkHeaderRow.createCell(i);
+				cell.setCellValue(checkHeaders[i]);
+			}
+
 			boolean isSheetEmpty = true;
 			// Заполняем данные
 
 			int rowNum = 3;
+			int checkRowNum = 1;
 
 			List<Schedule> s = currentSchedules.get(counterpartyContractCode);
 			//List<Schedule> currentSchedules = schedules.stream().filter(sch -> sch.getCounterpartyContractCode().equals(counterpartyContractCode)).collect(Collectors.toList());
@@ -397,6 +410,12 @@ public class POIExcel {
 					isSheetEmpty = false;
 					rowNum = fillRow(sheet, supplyDates, today, schedule.getCounterpartyContractCode(), schedule.getNumStock(), rowNum);
 
+					Row checkRow = checkSheet.createRow(checkRowNum++);
+
+					checkRow.createCell(0).setCellValue(schedule.getCounterpartyContractCode());
+					checkRow.createCell(1).setCellValue(schedule.getNumStock());
+					checkRow.createCell(2).setCellValue(schedule.getStatus());
+					checkRow.createCell(3).setCellValue(schedule.getStartDateTemp() == null ? null : schedule.getStartDateTemp().toString());
 				}
 			}
 			String fullFilePath = filePath + "Шаблон(МС) Прямые на ТО " + counterpartyContractCode + ".xlsx";
@@ -4167,6 +4186,80 @@ public class POIExcel {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	/**
+	 * @author Ira
+	 * <br>Заполняет таблицу в excel данными о потребностях без слотов</br>
+	 * @return
+	 */
+	public void fillExcelAboutNeeds(String filePath) throws FileNotFoundException {
+
+		XSSFWorkbook book = new XSSFWorkbook();
+		XSSFSheet sheet = (XSSFSheet) book.createSheet("Несоответствия");
+		String[] headers = {
+				"Код товара", "Наименование товара", "Количество в поддоне", "Заказ 1700", "Заказ 1800",
+				"Увеличенный заказ 1700", "Увеличенный заказ 1800", "Комментарий"
+		};
+
+		// Создаем строку заголовков
+		Row headerRow = sheet.createRow(0);
+		for (int i = 0; i < headers.length; i++) {
+			Cell cell = headerRow.createCell(i);
+			cell.setCellValue(headers[i]);
+		}
+
+		// Создаем стиль для окрашивания
+		CellStyle coloredStyle = sheet.getWorkbook().createCellStyle();
+		coloredStyle.setFillForegroundColor(IndexedColors.LIGHT_YELLOW.getIndex());
+		coloredStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+//		// Диапазон колонок для окрашивания
+//		int startColumn = 2; // Индекс "График формирования заказа"
+//		int endColumn = 12;  // Индекс "вс"
+
+		boolean isSheetEmpty = true;
+		// Заполняем данные
+		int rowNum = 1;
+		for (int j = 0; j < 1; j++) {
+			
+			isSheetEmpty = false;
+			
+			Row row = sheet.createRow(rowNum++);
+
+			row.createCell(0).setCellValue(1);
+			row.createCell(1).setCellValue(2);
+			row.createCell(2).setCellValue(3);
+			row.createCell(3).setCellValue(4);
+			row.createCell(4).setCellValue(5);
+			row.createCell(5).setCellValue(6);
+			row.createCell(6).setCellValue(7);
+			row.createCell(7).setCellValue(8);
+
+
+			// Окрашиваем колонки в указанном диапазоне
+//			for (int i = startColumn; i <= endColumn; i++) {
+//				Cell cell = row.getCell(i);
+//				if (cell == null) {
+//					cell = row.createCell(i); // Если ячейка еще не создана
+//				}
+//				cell.setCellStyle(coloredStyle);
+//			}
+		}
+
+		// Устанавливаем фильтры на все столбцы
+		sheet.setAutoFilter(new CellRangeAddress(0, 0, 0, headers.length - 1));
+
+		//String fullFilePath = filePath + "Шаблон(МС) Прямые на ТО " + counterpartyContractCode + ".xlsx";
+
+		if(!isSheetEmpty) {
+			try (FileOutputStream fileOut = new FileOutputStream(filePath)) {
+				book.write(fileOut);
+			}// Сохраняем файл
+            catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
 	}
 
 }

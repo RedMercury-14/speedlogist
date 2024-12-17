@@ -2,17 +2,11 @@ package by.base.main.dao;
 
 import java.sql.Date;
 import java.sql.Time;
-import java.sql.Timestamp;
 import java.util.List;
 import java.util.Set;
 
+import by.base.main.model.*;
 import com.dto.OrderDTO;
-
-import by.base.main.dto.OrderDTOForSlot;
-import by.base.main.model.Order;
-import by.base.main.model.Product;
-import by.base.main.model.Route;
-import by.base.main.model.Schedule;
 
 public interface OrderDAO {
 	
@@ -215,5 +209,13 @@ public interface OrderDAO {
 	 * @return
 	 */
 	List<Order> getOrderByPeriodDeliveryAndCodeContractNotJOIN(Date dateStart, Date dateEnd, String numContract);
-	
+
+	/**
+	 * @param dateCreate
+	 * @param goodsId
+	 * @return
+	 * @author Ira
+	 * <br>Возвращает список Order по дате создания слота и номеру товара</br>
+	 */
+	List<OrderLine> getOrderBySlotDateAndGoodId(Date dateCreate, List<Integer> goodsId);
 }

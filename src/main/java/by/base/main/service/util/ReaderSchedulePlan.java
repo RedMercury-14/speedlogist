@@ -447,6 +447,10 @@ public class ReaderSchedulePlan {
 			
 			Product generalProduct = productsMap.get(entry.getKey().intValue());
 			
+			if(generalProduct == null) {
+				continue;
+			}
+			
 			Double remainderInDay1700 = generalProduct.getBalanceStockAndReserves1700(); // записываем остаток в днях по записи для 1700.
 			Double remainderInDay1800 = generalProduct.getBalanceStockAndReserves1800();// записываем остаток в днях по записи для 1800.
 			Double calculatedPerDay1700 = generalProduct.getCalculatedPerDay1700();  //расчётная реализация в день для 1700 склада

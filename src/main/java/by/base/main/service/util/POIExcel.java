@@ -2387,7 +2387,11 @@ public class POIExcel {
                 Row row = sheet.getRow(i);
 
                 if (row != null) {
+                	if(getCellValue(row.getCell(0)).equals("Код")) {
+                		continue;
+                	}
                     Integer code = (int) row.getCell(0).getNumericCellValue();
+//                    Integer code = Integer.parseInt(getCellValue(row.getCell(0)));
                     String nameProduct = row.getCell(1).getStringCellValue();                
                     int quantityInPallet = (int) roundВouble(Double.parseDouble(getCellValue(row.getCell(2))), 0);                    
                     int quantity = (int) roundВouble(row.getCell(3).getNumericCellValue(), 0);

@@ -26,6 +26,19 @@ public class CheckOrderNeeds {
 	@Autowired
 	private ProductService productService;
 	
+	 private String getTrueStock(Order order) {
+			String numStock = null;
+			if(order.getIdRamp().toString().length() < 5) {
+				System.err.println("Ошибка в названии склада. Склад не может быть двухзначным");
+			}
+			if(order.getIdRamp().toString().length() < 6) { // проверка на будующее если будет учавстовать склад с трехзначным индексом
+				numStock = order.getIdRamp().toString().substring(0, 3);
+			}else {
+				numStock = order.getIdRamp().toString().substring(0, 4);
+			}
+			return numStock;		
+		}
+	
 	/**
 	 * <b>Note:</b>
 	 * @param order
@@ -63,23 +76,70 @@ public class CheckOrderNeeds {
 			
 			OrderProduct orderProduct = orderProducts.get(orderProducts.size()-1);
 			
-			if(codeContract == null) {
-				if(entry.getValue() < orderProduct.getQuantity()) {
-					result = result + "Заказанного товара ("+entry.getKey()+" - "+orderProduct.getNameProduct()+") в заказе " + order.getCounterparty() + " ("+order.getMarketNumber()+") меньше, чем потребности. Код контракта отсутствует \n";
+			switch (order.getNumStockDelivery()) {
+			case "1700":
+				if(codeContract == null) {
+					if(entry.getValue() < orderProduct.getQuantity1700()) {
+						result = result + "Заказанного товара ("+entry.getKey()+" - "+orderProduct.getNameProduct()+") в заказе " + order.getCounterparty() + " ("+order.getMarketNumber()+") меньше, чем потребности. Код контракта отсутствует \n";
+					}
+					
+					if(entry.getValue() > orderProduct.getQuantity1700()) {
+						result = result + "Заказанного товара ("+entry.getKey()+" - "+orderProduct.getNameProduct()+") в заказе " + order.getCounterparty() + " ("+order.getMarketNumber()+") больше, чем потребности; Код контракта отсутствует\n";
+					}
+				}else {
+					if(entry.getValue() < orderProduct.getQuantity1700()) {
+						result = result + "Заказанного товара ("+entry.getKey()+" - "+orderProduct.getNameProduct()+"), по контракту "+codeContract+", в заказе " + order.getCounterparty() + " ("+order.getMarketNumber()+") меньше, чем потребности; \n";
+					}
+					
+					if(entry.getValue() > orderProduct.getQuantity1700()) {
+						result = result + "Заказанного товара ("+entry.getKey()+" - "+orderProduct.getNameProduct()+"), по контракту "+codeContract+", в заказе " + order.getCounterparty() + " ("+order.getMarketNumber()+") больше, чем потребности; \n";
+					}
+				}
+				break;
+				
+			case "1800":
+				if(codeContract == null) {
+					if(entry.getValue() < orderProduct.getQuantity1800()) {
+						result = result + "Заказанного товара ("+entry.getKey()+" - "+orderProduct.getNameProduct()+") в заказе " + order.getCounterparty() + " ("+order.getMarketNumber()+") меньше, чем потребности. Код контракта отсутствует \n";
+					}
+					
+					if(entry.getValue() > orderProduct.getQuantity1800()) {
+						result = result + "Заказанного товара ("+entry.getKey()+" - "+orderProduct.getNameProduct()+") в заказе " + order.getCounterparty() + " ("+order.getMarketNumber()+") больше, чем потребности; Код контракта отсутствует\n";
+					}
+				}else {
+					if(entry.getValue() < orderProduct.getQuantity1800()) {
+						result = result + "Заказанного товара ("+entry.getKey()+" - "+orderProduct.getNameProduct()+"), по контракту "+codeContract+", в заказе " + order.getCounterparty() + " ("+order.getMarketNumber()+") меньше, чем потребности; \n";
+					}
+					
+					if(entry.getValue() > orderProduct.getQuantity1800()) {
+						result = result + "Заказанного товара ("+entry.getKey()+" - "+orderProduct.getNameProduct()+"), по контракту "+codeContract+", в заказе " + order.getCounterparty() + " ("+order.getMarketNumber()+") больше, чем потребности; \n";
+					}
 				}
 				
-				if(entry.getValue() > orderProduct.getQuantity()) {
-					result = result + "Заказанного товара ("+entry.getKey()+" - "+orderProduct.getNameProduct()+") в заказе " + order.getCounterparty() + " ("+order.getMarketNumber()+") больше, чем потребности; Код контракта отсутствует\n";
+				break;
+
+			default:
+				if(codeContract == null) {
+					if(entry.getValue() < orderProduct.getQuantity()) {
+						result = result + "Заказанного товара ("+entry.getKey()+" - "+orderProduct.getNameProduct()+") в заказе " + order.getCounterparty() + " ("+order.getMarketNumber()+") меньше, чем потребности. Код контракта отсутствует \n";
+					}
+					
+					if(entry.getValue() > orderProduct.getQuantity()) {
+						result = result + "Заказанного товара ("+entry.getKey()+" - "+orderProduct.getNameProduct()+") в заказе " + order.getCounterparty() + " ("+order.getMarketNumber()+") больше, чем потребности; Код контракта отсутствует\n";
+					}
+				}else {
+					if(entry.getValue() < orderProduct.getQuantity()) {
+						result = result + "Заказанного товара ("+entry.getKey()+" - "+orderProduct.getNameProduct()+"), по контракту "+codeContract+", в заказе " + order.getCounterparty() + " ("+order.getMarketNumber()+") меньше, чем потребности; \n";
+					}
+					
+					if(entry.getValue() > orderProduct.getQuantity()) {
+						result = result + "Заказанного товара ("+entry.getKey()+" - "+orderProduct.getNameProduct()+"), по контракту "+codeContract+", в заказе " + order.getCounterparty() + " ("+order.getMarketNumber()+") больше, чем потребности; \n";
+					}
 				}
-			}else {
-				if(entry.getValue() < orderProduct.getQuantity()) {
-					result = result + "Заказанного товара ("+entry.getKey()+" - "+orderProduct.getNameProduct()+"), по контракту "+codeContract+", в заказе " + order.getCounterparty() + " ("+order.getMarketNumber()+") меньше, чем потребности; \n";
-				}
-				
-				if(entry.getValue() > orderProduct.getQuantity()) {
-					result = result + "Заказанного товара ("+entry.getKey()+" - "+orderProduct.getNameProduct()+"), по контракту "+codeContract+", в заказе " + order.getCounterparty() + " ("+order.getMarketNumber()+") больше, чем потребности; \n";
-				}
+				break;
 			}
+			
+			
 		}
 		
 		

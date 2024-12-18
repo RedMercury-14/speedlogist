@@ -3280,7 +3280,6 @@ public class MainRestController {
 				response.put("message", order.getMessage());
 				response.put("info", order.getMessage());
 				response.put("order", order);
-				System.out.println(checkOrderNeeds.check(order)); // тестовая проверка 
 				return response;
 			}
 		}		

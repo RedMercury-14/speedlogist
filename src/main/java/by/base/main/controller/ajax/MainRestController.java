@@ -22,6 +22,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -362,7 +363,8 @@ public class MainRestController {
 				rowNum++;
 			}
 		}
-		int percentOfcoverage = (rowNum - 1) / products.size();
+		double percentOfcoverage = ((double) rowNum - 1) / (double) products.size() * 100;
+		String result = String.format("%.2f",percentOfcoverage);
 
 		if (!isSheetEmpty) {
 			try {
@@ -373,12 +375,13 @@ public class MainRestController {
 				e.printStackTrace();
 			}
 
+			String str = "По данным потребностям не были созданы слоты в установленное время. Процент не поставленных заказов относительно заказ ОРЛ - " + result +"%.";
 			List<File> files = new ArrayList<File>();
 			files.add(new File(appPath + "resources/others/" + fileName));
 
 			List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
 			mailService.sendEmailWithFilesToUsers(servletContext, "Незакрытые потребности " + currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")),
-        		  "По данным потребностям не были созданы слоты в установленное время. Процент не поставленных заказов относительно заказ ОРЛ " + percentOfcoverage, files, emails);
+        		  "По данным потребностям не были созданы слоты в установленное время. Процент не поставленных заказов относительно заказ ОРЛ " + result, files, emails);
 
 		}
 

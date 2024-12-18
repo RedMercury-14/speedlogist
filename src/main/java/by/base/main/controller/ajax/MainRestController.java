@@ -28,6 +28,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -554,6 +555,33 @@ public class MainRestController {
 //		System.out.println(t2.getTime()-t1.getTime() + " ms - preloadTEST" );
 //		return responseMap;		
 //	}
+    
+    /**
+     * Метод для сводной таблицы.
+     * принимает даты с по того, что стоит в слотах и код продукта
+     * @param request
+     * @param response
+     * @param dateStart
+     * @param dateFinish
+     * @param productCode
+     * @return
+     * @throws IOException
+     */
+    @GetMapping("/procurement/getOrderStat/paramTimeDeliveryAndOL/{dateStart}&{dateFinish}&{productCode}")
+    public Map<String, Object> getOrderStatParamOL(HttpServletRequest request, HttpServletResponse response,
+    		@PathVariable String dateStart,
+    		@PathVariable String dateFinish,
+    		@PathVariable String productCode) throws IOException{
+
+		Map<String, Object> responseMap = new HashMap<>();		
+		Date dateStartTarget = Date.valueOf(dateStart);
+		Date dateFinishTarget = Date.valueOf(dateFinish);
+		List<Long> productCodeTarget = Arrays.asList(Long.parseLong(productCode));
+		List<Order> orders = orderService.getOrderGroupByPeriodSlotsAndProduct(dateStartTarget, dateFinishTarget, productCodeTarget);
+		
+		responseMap.put("orders", orders);
+		return responseMap;
+    }
     
     @GetMapping("/balance/{idOrder}")
     public Map<String, Object> balanceMethod(HttpServletRequest request, HttpServletResponse response,

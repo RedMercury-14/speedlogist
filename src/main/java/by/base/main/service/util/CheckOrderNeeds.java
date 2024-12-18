@@ -76,7 +76,7 @@ public class CheckOrderNeeds {
 			
 			OrderProduct orderProduct = orderProducts.get(orderProducts.size()-1);
 			
-			switch (getTrueStock(order)+"") {
+			switch (order.getNumStockDelivery()) {
 			case "1700":
 				if(codeContract == null) {
 					if(entry.getValue() < orderProduct.getQuantity1700()) {

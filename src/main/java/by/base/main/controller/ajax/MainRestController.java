@@ -312,7 +312,7 @@ public class MainRestController {
 		XSSFSheet sheet = book.createSheet("Несоответствия");
 		String[] headers = {
 				"Код товара", "Наименование товара", "Количество в поддоне", "Заказ (остальные склады)", "Заказ 1700", "Заказ 1800",
-				"Увеличенный заказ 1700", "Увеличенный заказ 1800", "Комментарий", "Количество для заказа", "Заказано"
+				"Увеличенный заказ 1700", "Увеличенный заказ 1800", "Комментарий", "Количество для заказа", "ФАКТИЧЕСКИ заказано"
 		};
 
 		// Создаем строку заголовков
@@ -381,7 +381,9 @@ public class MainRestController {
 			List <File> filesZip = new ArrayList<File>();
 			filesZip.add(zipFile);
 
-//          mailService.sendEmailWithFilesToUsers(servletContext, "Незакрытые потребности " + currentTimeString, "По данным потребностям не были созданы слоты", filesZip, emailsORL);
+			List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+          mailService.sendEmailWithFilesToUsers(servletContext, "Незакрытые потребности " + currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")), 
+        		  "По данным потребностям не были созданы слоты в установленное время", filesZip, emails);
 
 		}
 
@@ -391,78 +393,11 @@ public class MainRestController {
 	}
 
 
-//	@GetMapping("/test")
-//	public Map<String, Object> testNewMethod(HttpServletRequest request) throws IOException, ParseException{
-//		
-//		java.util.Date t1 = new java.util.Date();
-//		Map<String, Object> responseMap = new HashMap<>();
-//		
-//		responseMap.put("list", scheduleService.getUnicCodeContractTO());
-//		java.util.Date t2 = new java.util.Date();
-//		System.out.println(t2.getTime()-t1.getTime() + " ms - testNewMethod" );
-//		responseMap.put("time", t2.getTime()-t1.getTime() + " ms");
-//		return responseMap;		
-//	}
-
-//	@GetMapping("/test")
-//	@TimedExecution
-//    public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException{
-//		Map<String, Object> responseMap = new HashMap<>();
-//
-//		Schedule testSchedule = new Schedule();
-//
-//		try {
-//			java.util.Date startDate = new SimpleDateFormat("dd MM yyyy").parse("05 11 2024");
-//            java.util.Date endDate = new SimpleDateFormat("dd MM yyyy").parse("09 11 2024");
-//			testSchedule.setStartDateTemp(new java.sql.Date(startDate.getTime()));
-//			testSchedule.setEndDateTemp(new java.sql.Date(endDate.getTime()));
-//        } catch (java.text.ParseException e) {
-//            throw new RuntimeException(e);
-//        }
-//
-//		testSchedule.setCounterpartyCode(98897L);
-//		testSchedule.setName("АИДИЕС БОРЖОМИ БЕЛ");
-//		testSchedule.setCounterpartyContractCode(456L);
-//		testSchedule.setNumStock(230);
-//
-//
-//		List<Schedule> schedules = scheduleService.getScheduleByNumContractAndNUmStockWithTemp(testSchedule.getCounterpartyContractCode(), testSchedule.getNumStock());
-//
-//		boolean isScheduleCorrect = scheduleService.checkScheduleIntersection(schedules, testSchedule);
-//		responseMap.put("result", isScheduleCorrect);
-//
-//		return responseMap;
-//    }
-
-
 	private static final Integer dayBef = 30;
 	private static final Integer dayAft = 30;
 
 
 
-//	@GetMapping("/test")
-//	public Map<String, Object> test(HttpServletRequest request, HttpServletResponse response){
-//		java.util.Date t1 = new java.util.Date();
-//		Map<String, Object> responseMap = new HashMap<>();
-//
-//		LocalDate currentTime = LocalDate.now().minusDays(7);
-//		System.out.println("ищем за "+currentTime);
-//		String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-//		Date dateForSearch = Date.valueOf(currentTime);
-//
-//		List<OrderProduct> products = orderProductService.getOrderProductListHasDate(Date.valueOf(currentTime.minusDays(1)));
-//
-//		System.out.println(products.get(0).getDateCreate());
-//
-//		List<Long> orderProductsIds = products.stream().map(p -> p.getCodeProduct().longValue()).collect(Collectors.toList());
-//
-//		List<Order> orders2 = orderService.getOrderGroupByPeriodSlotsAndProduct(dateForSearch, dateForSearch, orderProductsIds);
-//
-//
-//		orders2.forEach(o-> System.out.println(o));
-//
-//		return responseMap;
-//	}
 	
 	public static boolean deleteFolder(File folder) {
 	    if (folder.isDirectory()) {
@@ -586,45 +521,7 @@ public class MainRestController {
 //            zos.closeEntry();
 //        }
 //    }
-	
-	
-//	
-//	@GetMapping("/test")
-//	public Map<String, Object> test(HttpServletRequest request, HttpServletResponse response){
-//		java.util.Date t1 = new java.util.Date();
-//		Map<String, Object> responseMap = new HashMap<>();
-//		
-//		File pdfFile = new File("C:/Program Files/10-27-38.pdf");
-//
-//        // Настройка Tesseract
-//        ITesseract tesseract = new Tesseract();
-//        tesseract.setDatapath("C:/Program Files/Tesseract-OCR/tessdata"); // Укажите путь к Tesseract
-//        tesseract.setLanguage("rus"); // Задайте язык
-//
-//        try (PDDocument document = PDDocument.load(pdfFile)) {
-//            PDFRenderer pdfRenderer = new PDFRenderer(document);
-//            StringBuilder fullText = new StringBuilder();
-//
-//            // Обрабатываем каждую страницу PDF
-//            for (int page = 0; page < document.getNumberOfPages(); page++) {
-//                BufferedImage image = pdfRenderer.renderImageWithDPI(page, 300); // Извлечение изображения
-//
-//                // Применяем OCR для распознавания текста на изображении
-//                String text = tesseract.doOCR(image);
-//                fullText.append(text).append("\n");
-//            }
-//
-//            System.out.println("Распознанный текст из PDF:");
-//            System.out.println(fullText);
-//
-//        } catch (IOException | TesseractException e) {
-//            e.printStackTrace();
-//        }
-//        
-//		java.util.Date t2 = new java.util.Date();
-//		System.out.println(t2.getTime()-t1.getTime() + " ms - preloadTEST" );
-//		return responseMap;		
-//	}
+
     
     /**
      * Метод для сводной таблицы.

@@ -4193,73 +4193,30 @@ public class POIExcel {
 	 * <br>Заполняет таблицу в excel данными о потребностях без слотов</br>
 	 * @return
 	 */
-	public void fillExcelAboutNeeds(String filePath) throws FileNotFoundException {
+	public void fillExcelAboutNeeds(OrderProduct product, Sheet sheet, int rowNum, int summary, double ordered) throws FileNotFoundException {
 
-		XSSFWorkbook book = new XSSFWorkbook();
-		XSSFSheet sheet = (XSSFSheet) book.createSheet("Несоответствия");
-		String[] headers = {
-				"Код товара", "Наименование товара", "Количество в поддоне", "Заказ 1700", "Заказ 1800",
-				"Увеличенный заказ 1700", "Увеличенный заказ 1800", "Комментарий"
-		};
+		Row row = sheet.createRow(rowNum);
 
-		// Создаем строку заголовков
-		Row headerRow = sheet.createRow(0);
-		for (int i = 0; i < headers.length; i++) {
-			Cell cell = headerRow.createCell(i);
-			cell.setCellValue(headers[i]);
-		}
-
-		// Создаем стиль для окрашивания
-		CellStyle coloredStyle = sheet.getWorkbook().createCellStyle();
-		coloredStyle.setFillForegroundColor(IndexedColors.LIGHT_YELLOW.getIndex());
-		coloredStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-
-//		// Диапазон колонок для окрашивания
-//		int startColumn = 2; // Индекс "График формирования заказа"
-//		int endColumn = 12;  // Индекс "вс"
-
-		boolean isSheetEmpty = true;
-		// Заполняем данные
-		int rowNum = 1;
-		for (int j = 0; j < 1; j++) {
-			
-			isSheetEmpty = false;
-			
-			Row row = sheet.createRow(rowNum++);
-
-			row.createCell(0).setCellValue(1);
-			row.createCell(1).setCellValue(2);
-			row.createCell(2).setCellValue(3);
-			row.createCell(3).setCellValue(4);
-			row.createCell(4).setCellValue(5);
-			row.createCell(5).setCellValue(6);
-			row.createCell(6).setCellValue(7);
-			row.createCell(7).setCellValue(8);
+		String quantityInPallet = product.getQuantityInPallet() == null ? "" : product.getQuantityInPallet().toString();
+		String quantity = product.getQuantity() == null ? "" : product.getQuantity().toString();
+		String quantity1700 = product.getQuantity1700() == null ? "" : product.getQuantity1700().toString();
+		String quantity1800 = product.getQuantity1800() == null ? "" : product.getQuantity1800().toString();
+		String maxQuantity1700 = product.getQuantity1700Max() == null ? "" : product.getQuantity1700Max().toString();
+		String maxQuantity1800 = product.getQuantity1800Max() == null ? "" : product.getQuantity1800Max().toString();
 
 
-			// Окрашиваем колонки в указанном диапазоне
-//			for (int i = startColumn; i <= endColumn; i++) {
-//				Cell cell = row.getCell(i);
-//				if (cell == null) {
-//					cell = row.createCell(i); // Если ячейка еще не создана
-//				}
-//				cell.setCellStyle(coloredStyle);
-//			}
-		}
+		row.createCell(0).setCellValue(product.getCodeProduct());
+		row.createCell(1).setCellValue(product.getNameProduct());
+		row.createCell(2).setCellValue(quantityInPallet);
+		row.createCell(3).setCellValue(quantity);
+		row.createCell(4).setCellValue(quantity1700);
+		row.createCell(5).setCellValue(quantity1800);
+		row.createCell(6).setCellValue(maxQuantity1700);
+		row.createCell(7).setCellValue(maxQuantity1800);
+		row.createCell(8).setCellValue(product.getComment());
+		row.createCell(9).setCellValue(summary);
+		row.createCell(10).setCellValue(ordered);
 
-		// Устанавливаем фильтры на все столбцы
-		sheet.setAutoFilter(new CellRangeAddress(0, 0, 0, headers.length - 1));
-
-		//String fullFilePath = filePath + "Шаблон(МС) Прямые на ТО " + counterpartyContractCode + ".xlsx";
-
-		if(!isSheetEmpty) {
-			try (FileOutputStream fileOut = new FileOutputStream(filePath)) {
-				book.write(fileOut);
-			}// Сохраняем файл
-            catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
 	}
 
 }

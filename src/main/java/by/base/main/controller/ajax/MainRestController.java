@@ -51,11 +51,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import by.base.main.model.*;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -113,25 +115,6 @@ import by.base.main.dto.MarketPacketDto;
 import by.base.main.dto.MarketRequestDto;
 import by.base.main.dto.MarketTableDto;
 import by.base.main.dto.OrderBuyGroupDTO;
-import by.base.main.model.Address;
-import by.base.main.model.GeometryResponse;
-import by.base.main.model.JsonResponsePolygon;
-import by.base.main.model.MapResponse;
-import by.base.main.model.Message;
-import by.base.main.model.Order;
-import by.base.main.model.OrderProduct;
-import by.base.main.model.Product;
-import by.base.main.model.Rates;
-import by.base.main.model.Role;
-import by.base.main.model.Route;
-import by.base.main.model.RouteHasShop;
-import by.base.main.model.Schedule;
-import by.base.main.model.Shop;
-import by.base.main.model.SimpleRoute;
-import by.base.main.model.TGTruck;
-import by.base.main.model.TGUser;
-import by.base.main.model.Truck;
-import by.base.main.model.User;
 import by.base.main.service.AddressService;
 import by.base.main.service.MessageService;
 import by.base.main.service.OrderProductService;
@@ -320,8 +303,95 @@ public class MainRestController {
 	
 	@Autowired
     private ServletContext servletContext;
-	
-	
+
+	@GetMapping("/test")
+	@TimedExecution
+	public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		Map<String, Object> responseMap = new HashMap<>();
+
+		XSSFWorkbook book = new XSSFWorkbook();
+		XSSFSheet sheet = book.createSheet("Несоответствия");
+		String[] headers = {
+				"Код товара", "Наименование товара", "Количество в поддоне", "Заказ (остальные склады)", "Заказ 1700", "Заказ 1800",
+				"Увеличенный заказ 1700", "Увеличенный заказ 1800", "Комментарий", "Количество для заказа", "Заказано"
+		};
+
+		// Создаем строку заголовков
+		Row headerRow = sheet.createRow(0);
+		for (int i = 0; i < headers.length; i++) {
+			Cell cell = headerRow.createCell(i);
+			cell.setCellValue(headers[i]);
+		}
+
+		boolean isSheetEmpty = true;
+		int rowNum = 1;
+		//TODO Ira test
+
+		LocalDate currentTime = LocalDate.now().minusDays(1);
+		LocalDate currentTimeDayBefore = currentTime.minusDays(1);
+		String currentTimeDayBeforeString = currentTimeDayBefore.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+		Date dateForSearch = Date.valueOf(currentTime);
+		Date dateForSearchBefore = Date.valueOf(currentTime.minusDays(1));
+
+
+		String fileName = "Несоответствия потребностей и слотов за " + currentTimeDayBeforeString + ".xlsx";
+		String appPath = servletContext.getRealPath("/");
+
+		List<OrderProduct> products = orderProductService.getOrderProductListHasDate(dateForSearchBefore);
+
+		List<Long> orderProductsIds = products.stream().map(p -> p.getCodeProduct().longValue()).collect(Collectors.toList());
+
+		List<Order> orders = orderService.getOrderByTimeDeliveryAndGoodsId(dateForSearchBefore, dateForSearch, orderProductsIds, dateForSearchBefore);
+
+		for (OrderProduct orderProduct : products) {
+			double quantityFromOrders = 0;
+
+			for (Order order : orders) {
+				for (OrderLine orderLine : order.getOrderLines()) {
+					if (orderProduct.getCodeProduct().longValue() == orderLine.getGoodsId()) {
+						double quantity = orderLine.getQuantityOrder() == null ? 0 : orderLine.getQuantityOrder();
+						quantityFromOrders += quantity;
+					}
+				}
+			}
+			int summaryQuantity = (orderProduct.getQuantity1800() == null ? 0 : orderProduct.getQuantity1800())
+					+ (orderProduct.getQuantity1700() == null ? 0 : orderProduct.getQuantity1700())
+					+ (orderProduct.getQuantity() == null ? 0 : orderProduct.getQuantity());
+			if (quantityFromOrders < summaryQuantity) {
+				isSheetEmpty = false;
+				poiExcel.fillExcelAboutNeeds(orderProduct, sheet, rowNum, summaryQuantity, quantityFromOrders);
+				rowNum++;
+			}
+		}
+
+		if (!isSheetEmpty) {
+			try {
+				File file = new File(appPath + "resources/others/" + fileName);
+				book.write(new FileOutputStream(file));
+				book.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+			List<File> files = new ArrayList<File>();
+			files.add(new File(appPath + "resources/others/" + fileName));
+
+			File zipFile;
+			zipFile = createZipFile(files, appPath + "resources/others/Незакрытые потребности.zip");
+
+			List <File> filesZip = new ArrayList<File>();
+			filesZip.add(zipFile);
+
+//          mailService.sendEmailWithFilesToUsers(servletContext, "Незакрытые потребности " + currentTimeString, "По данным потребностям не были созданы слоты", filesZip, emailsORL);
+
+		}
+
+	    responseMap.put("Done", "Done");
+		return responseMap;
+
+	}
+
+
 //	@GetMapping("/test")
 //	public Map<String, Object> testNewMethod(HttpServletRequest request) throws IOException, ParseException{
 //		
@@ -369,30 +439,31 @@ public class MainRestController {
 	private static final Integer dayBef = 30;
 	private static final Integer dayAft = 30;
 
-	
-	@GetMapping("/test")
-	public Map<String, Object> test(HttpServletRequest request, HttpServletResponse response){
-		java.util.Date t1 = new java.util.Date();
-		Map<String, Object> responseMap = new HashMap<>();
-		
-		LocalDate currentTime = LocalDate.now().minusDays(7);
-		System.out.println("ищем за "+currentTime);
-		String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-		Date dateForSearch = Date.valueOf(currentTime);
 
-		List<OrderProduct> products = orderProductService.getOrderProductListHasDate(Date.valueOf(currentTime.minusDays(1)));
-		
-		System.out.println(products.get(0).getDateCreate());
 
-		List<Long> orderProductsIds = products.stream().map(p -> p.getCodeProduct().longValue()).collect(Collectors.toList());
-
-		List<Order> orders2 = orderService.getOrderGroupByPeriodSlotsAndProduct(dateForSearch, dateForSearch, orderProductsIds);
-		
-		
-		orders2.forEach(o-> System.out.println(o));
-		
-		return responseMap;		
-	}
+//	@GetMapping("/test")
+//	public Map<String, Object> test(HttpServletRequest request, HttpServletResponse response){
+//		java.util.Date t1 = new java.util.Date();
+//		Map<String, Object> responseMap = new HashMap<>();
+//
+//		LocalDate currentTime = LocalDate.now().minusDays(7);
+//		System.out.println("ищем за "+currentTime);
+//		String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+//		Date dateForSearch = Date.valueOf(currentTime);
+//
+//		List<OrderProduct> products = orderProductService.getOrderProductListHasDate(Date.valueOf(currentTime.minusDays(1)));
+//
+//		System.out.println(products.get(0).getDateCreate());
+//
+//		List<Long> orderProductsIds = products.stream().map(p -> p.getCodeProduct().longValue()).collect(Collectors.toList());
+//
+//		List<Order> orders2 = orderService.getOrderGroupByPeriodSlotsAndProduct(dateForSearch, dateForSearch, orderProductsIds);
+//
+//
+//		orders2.forEach(o-> System.out.println(o));
+//
+//		return responseMap;
+//	}
 	
 	public static boolean deleteFolder(File folder) {
 	    if (folder.isDirectory()) {

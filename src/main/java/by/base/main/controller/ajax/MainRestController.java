@@ -362,6 +362,7 @@ public class MainRestController {
 				rowNum++;
 			}
 		}
+		int percentOfcoverage = (rowNum - 1) / products.size();
 
 		if (!isSheetEmpty) {
 			try {
@@ -375,15 +376,9 @@ public class MainRestController {
 			List<File> files = new ArrayList<File>();
 			files.add(new File(appPath + "resources/others/" + fileName));
 
-			File zipFile;
-			zipFile = createZipFile(files, appPath + "resources/others/Незакрытые потребности.zip");
-
-			List <File> filesZip = new ArrayList<File>();
-			filesZip.add(zipFile);
-
 			List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
-          mailService.sendEmailWithFilesToUsers(servletContext, "Незакрытые потребности " + currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")), 
-        		  "По данным потребностям не были созданы слоты в установленное время", filesZip, emails);
+			mailService.sendEmailWithFilesToUsers(servletContext, "Незакрытые потребности " + currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")),
+        		  "По данным потребностям не были созданы слоты в установленное время. Процент не поставленных заказов относительно заказ ОРЛ " + percentOfcoverage, files, emails);
 
 		}
 

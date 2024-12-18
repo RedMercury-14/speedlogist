@@ -2514,7 +2514,7 @@ public class POIExcel {
             Row row = sheet.getRow(i);
 
             if (row != null) {
-            	Integer numStock = Integer.parseInt(getCellValue(row.getCell(0)));
+            	Integer numStock = (int) row.getCell(0).getNumericCellValue();
                 Integer code = (int) row.getCell(1).getNumericCellValue();
                 String nameProduct = row.getCell(2).getStringCellValue();
                 int quantity = (int) roundВouble(row.getCell(3).getNumericCellValue(), 0);

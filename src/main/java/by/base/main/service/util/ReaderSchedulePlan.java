@@ -797,25 +797,30 @@ public class ReaderSchedulePlan {
 			//пошла проверка балансов Тут мы проверяем по дефицитному товару
 				if(getTrueStock(order).equals("1700") || getTrueStock(order).equals("1800")) {
 					if(getTrueStock(order).equals("1700")) {
-						Collections.sort(balance, (o1, o2) -> o1.getCalculatedDayStock1700().compareTo(o2.getCalculatedDayStock1700()));
-						result = result +" Запасы на складах "+balance.get(0).getName()+"("+balance.get(0).getCodeProduct()+") с учётом слотов : 1700 = "+balance.get(0).getCalculatedDayStock1700()
-						+" дн; 1800 = "+ balance.get(0).getCalculatedDayStock1800() +" дн;\n";
-						if(balance.get(0).getCalculatedDayStock1700() > balance.get(0).getCalculatedDayMax()) {
-							if(balance.get(0).getCalculatedDayStock1800() > balance.get(0).getCalculatedDayMax() && balance.get(0).getCalculatedDayStock1700() > balance.get(0).getCalculatedDayStock1800()) {
-								result = result +"<span style=\"color: red;\"> Необходимо доставить товар "+balance.get(0).getName()+"("+balance.get(0).getCodeProduct()+") на <b>1800 склад</b>, т.к. остаток товаров в днях меньше чем на текущем складе;</span>\n";
-								isMistakeZAQ = true;
+						if(balance!=null && !balance.isEmpty()) {
+							Collections.sort(balance, (o1, o2) -> o1.getCalculatedDayStock1700().compareTo(o2.getCalculatedDayStock1700()));
+							result = result +" Запасы на складах "+balance.get(0).getName()+"("+balance.get(0).getCodeProduct()+") с учётом слотов : 1700 = "+balance.get(0).getCalculatedDayStock1700()
+							+" дн; 1800 = "+ balance.get(0).getCalculatedDayStock1800() +" дн;\n";
+							if(balance.get(0).getCalculatedDayStock1700() > balance.get(0).getCalculatedDayMax()) {
+								if(balance.get(0).getCalculatedDayStock1800() > balance.get(0).getCalculatedDayMax() && balance.get(0).getCalculatedDayStock1700() > balance.get(0).getCalculatedDayStock1800()) {
+									result = result +"<span style=\"color: red;\"> Необходимо доставить товар "+balance.get(0).getName()+"("+balance.get(0).getCodeProduct()+") на <b>1800 склад</b>, т.к. остаток товаров в днях меньше чем на текущем складе;</span>\n";
+									isMistakeZAQ = true;
+								}
 							}
 						}
 					}else {
-						Collections.sort(balance, (o1, o2) -> o1.getCalculatedDayStock1800().compareTo(o2.getCalculatedDayStock1800()));
-						result = result +"Запасы на складах "+balance.get(0).getName()+"("+balance.get(0).getCodeProduct()+") с учётом слотов : 1700 = "+balance.get(0).getCalculatedDayStock1700()
-						+" дн; 1800 = "+ balance.get(0).getCalculatedDayStock1800() +" дн;\n";
-						if(balance.get(0).getCalculatedDayStock1800() > balance.get(0).getCalculatedDayMax()) {
-							if(balance.get(0).getCalculatedDayStock1700() > balance.get(0).getCalculatedDayMax() && balance.get(0).getCalculatedDayStock1800() > balance.get(0).getCalculatedDayStock1700()) {
-								result = result +"<span style=\"color: red;\">Необходимо доставить товар "+balance.get(0).getName()+"("+balance.get(0).getCodeProduct()+") на <b>1700 склад</b>, т.к. остаток товаров в днях меньше чем на текущем складе;</span>\n";
-								isMistakeZAQ = true;
+						if(balance!=null && !balance.isEmpty()) {
+							Collections.sort(balance, (o1, o2) -> o1.getCalculatedDayStock1800().compareTo(o2.getCalculatedDayStock1800()));
+							result = result +"Запасы на складах "+balance.get(0).getName()+"("+balance.get(0).getCodeProduct()+") с учётом слотов : 1700 = "+balance.get(0).getCalculatedDayStock1700()
+							+" дн; 1800 = "+ balance.get(0).getCalculatedDayStock1800() +" дн;\n";
+							if(balance.get(0).getCalculatedDayStock1800() > balance.get(0).getCalculatedDayMax()) {
+								if(balance.get(0).getCalculatedDayStock1700() > balance.get(0).getCalculatedDayMax() && balance.get(0).getCalculatedDayStock1800() > balance.get(0).getCalculatedDayStock1700()) {
+									result = result +"<span style=\"color: red;\">Необходимо доставить товар "+balance.get(0).getName()+"("+balance.get(0).getCodeProduct()+") на <b>1700 склад</b>, т.к. остаток товаров в днях меньше чем на текущем складе;</span>\n";
+									isMistakeZAQ = true;
+								}
 							}
 						}
+						
 					}
 				}
 				//закончилась проверка балансов

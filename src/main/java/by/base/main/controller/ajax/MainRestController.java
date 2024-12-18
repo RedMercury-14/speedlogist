@@ -368,38 +368,30 @@ public class MainRestController {
 	private static final Integer dayBef = 30;
 	private static final Integer dayAft = 30;
 
+	
 	@GetMapping("/test")
-	@TimedExecution
-    public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException{
-
-		//TODO Ira test
+	public Map<String, Object> test(HttpServletRequest request, HttpServletResponse response){
+		java.util.Date t1 = new java.util.Date();
 		Map<String, Object> responseMap = new HashMap<>();
-
-		LocalDate currentTime = LocalDate.now().minusDays(2);
+		
+		LocalDate currentTime = LocalDate.now().minusDays(7);
+		System.out.println("ищем за "+currentTime);
 		String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-		String fileName = "Несоответствия потребностей и слотов за " + currentTimeString + ".xlsx";
-		String appPath = servletContext.getRealPath("/");
+		Date dateForSearch = Date.valueOf(currentTime);
 
-		List<OrderProduct> products = orderProductService.getOrderProductListHasDate(Date.valueOf(currentTime))
-				.stream().filter(p -> p.getQuantity1700() != 0 || p.getQuantity1800() != 0).collect(Collectors.toList());
+		List<OrderProduct> products = orderProductService.getOrderProductListHasDate(Date.valueOf(currentTime.minusDays(1)));
+		
+		System.out.println(products.get(0).getDateCreate());
 
+		List<Long> orderProductsIds = products.stream().map(p -> p.getCodeProduct().longValue()).collect(Collectors.toList());
 
-//		poiExcel.fillExcelAboutNeeds(appPath + "resources/others/" + fileName);
-
-		List<File> files = new ArrayList<File>();
-		files.add(new File(appPath + "resources/others/" + fileName));
-
-		File zipFile;
-		zipFile = createZipFile(files, appPath + "resources/others/Незакрытые потребности.zip");
-
-		List <File> filesZip = new ArrayList<File>();
-		filesZip.add(zipFile);
-
-//		mailService.sendEmailWithFilesToUsers(servletContext, "Незакрытые потребности " + currentTimeString, "По данным потребностям не были созданы слоты", filesZip, emailsORL);
-
-		responseMap.put("Done", "Done");
-		return responseMap;
-    }
+		List<Order> orders2 = orderService.getOrderGroupByPeriodSlotsAndProduct(dateForSearch, dateForSearch, orderProductsIds);
+		
+		
+		orders2.forEach(o-> System.out.println(o));
+		
+		return responseMap;		
+	}
 	
 	public static boolean deleteFolder(File folder) {
 	    if (folder.isDirectory()) {
@@ -562,6 +554,82 @@ public class MainRestController {
 //		System.out.println(t2.getTime()-t1.getTime() + " ms - preloadTEST" );
 //		return responseMap;		
 //	}
+    
+    @GetMapping("/balance/{idOrder}")
+    public Map<String, Object> balanceMethod(HttpServletRequest request, HttpServletResponse response,
+    		@PathVariable String idOrder) throws IOException{
+
+		Map<String, Object> responseMap = new HashMap<>();
+		
+		Order order = orderService.getOrderById(Integer.parseInt(idOrder));
+		List<Product> products = readerSchedulePlan.checkBalanceBetweenStock(order);
+		
+		responseMap.put("products", products);
+		return responseMap;
+    }
+    
+    /**
+	 * Метод который проверяет будующие заказы на предмет балансов относительно склада, который задан в параметре.
+	 * @param request
+	 * @param response
+	 * @param dateStartTarget в формате 2024-12-18
+	 * @param dateFinishTarget в формате 2024-12-20
+	 * @param stockTarget относительно какого склада смотрим 1700 или 1800
+	 * @return
+	 * @throws IOException
+	 */
+	@GetMapping("/balance2/{dateStartTarget}&{dateFinishTarget}&{stockTarget}")
+	@TimedExecution
+    public Map<String, Object> balance2Method(HttpServletRequest request, HttpServletResponse response,
+    		@PathVariable String dateStartTarget,
+    		@PathVariable String dateFinishTarget,
+    		@PathVariable String stockTarget) throws IOException{
+
+		Map<String, Object> responseMap = new HashMap<>();
+		Date dateStart = Date.valueOf(dateStartTarget);
+		Date dateEnd = Date.valueOf(dateFinishTarget);
+		
+		responseMap.put("dateStart", dateStart.toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
+		responseMap.put("dateFinish", dateEnd.toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
+		
+		List<Order> orders = orderService.getOrderByTimeDeliveryAndNumStock(dateStart, dateEnd, 1700);
+		int summpall = 0;
+		for (Order order : orders) {
+			Map<String, Object> responseOrder = new HashMap<>();
+			List<Product> products = readerSchedulePlan.checkBalanceBetweenStock(order);
+			int i=1;
+			
+			for (Product product : products) {
+				if(Integer.parseInt(stockTarget) == 1700) {
+					if(product.getCalculatedDayStock1700() > 20 && product.getCalculatedDayStock1700()>product.getCalculatedDayStock1800()) {
+						responseOrder.put("Код товара -- товар -- остаток 1700 -- остаток 1800 -- логин менеджера "+i+" : ", product.getCodeProduct() + "  --  " + product.getName() + "  --  " + product.getCalculatedDayStock1700()+ "  --  " + product.getCalculatedDayStock1800() + "  --  " + order.getLoginManager().split("%")[0]);
+						i++;
+					}
+				}else {
+					if(product.getCalculatedDayStock1800() > 20 && product.getCalculatedDayStock1800()>product.getCalculatedDayStock1700()) {
+						responseOrder.put("Код товара -- товар -- остаток 1700 -- остаток 1800 -- логин менеджера "+i+" : ", product.getCodeProduct() + "  --  " + product.getName() + "  --  " + product.getCalculatedDayStock1700()+ "  --  " + product.getCalculatedDayStock1800() + "  --  " + order.getLoginManager().split("%")[0]);
+						i++;
+					}
+				}
+				
+			}
+			if(responseOrder.isEmpty()) {
+				continue;
+			}
+			if(order.getOrderLines().size() == i-1) {
+				summpall = summpall + Integer.parseInt(order.getPall());
+				responseOrder.put("Номер заказа: ", order.getIdOrder());
+				responseOrder.put("Номер из маркета: ", order.getMarketNumber());
+				responseOrder.put("Контрагент ", order.getCounterparty());
+				responseOrder.put("Всего SKU ", order.getOrderLines().size());
+				responseOrder.put("Info ", order.getMarketNumber() + "  --  " + order.getLoginManager().split("%")[0]);
+				responseMap.put(order.getIdOrder()+"", responseOrder);
+			}
+			
+		}
+		responseMap.put("Всего паллет для перемещения", summpall);
+		return responseMap;
+    }
 	
     /**
      * Метод отвечает за редактирования и перезаписть всех точкек в маршруте.
@@ -3212,7 +3280,6 @@ public class MainRestController {
 				response.put("message", order.getMessage());
 				response.put("info", order.getMessage());
 				response.put("order", order);
-				System.out.println(checkOrderNeeds.check(order)); // тестовая проверка 
 				return response;
 			}
 		}		

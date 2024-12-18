@@ -27,13 +27,13 @@ const columnDefs = [
 		cellClass: 'px-1 py-0 text-center',
 		flex: 5,
 	},
-	// {
-	// 	headerName: 'Количество заказанного товара', field: 'quantity',
-	// 	cellClass: 'px-1 py-0 text-center',
-	// 	flex: 2,
-	// },
 	{
 		headerName: 'Колличество в поддоне', field: 'quantityInPallet',
+		cellClass: 'px-1 py-0 text-center',
+		flex: 2,
+	},
+	{
+		headerName: 'Количество заказанного товара', field: 'quantity',
 		cellClass: 'px-1 py-0 text-center',
 		flex: 2,
 	},
@@ -165,10 +165,8 @@ function getMappingData(data) {
 	return data.map(getMappingScheduleItem)
 }
 function getMappingScheduleItem(item) {
-	const quantity1700 = item.quantity1700 ? item.quantity1700 : item.quantity
 	return {
 		...item,
-		quantity1700,
 	}
 }
 

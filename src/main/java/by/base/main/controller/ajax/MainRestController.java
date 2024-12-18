@@ -369,7 +369,29 @@ public class MainRestController {
 	private static final Integer dayAft = 30;
 
 	
-	
+	@GetMapping("/test")
+	public Map<String, Object> test(HttpServletRequest request, HttpServletResponse response){
+		java.util.Date t1 = new java.util.Date();
+		Map<String, Object> responseMap = new HashMap<>();
+		
+		LocalDate currentTime = LocalDate.now().minusDays(7);
+		System.out.println("ищем за "+currentTime);
+		String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+		Date dateForSearch = Date.valueOf(currentTime);
+
+		List<OrderProduct> products = orderProductService.getOrderProductListHasDate(Date.valueOf(currentTime.minusDays(1)));
+		
+		System.out.println(products.get(0).getDateCreate());
+
+		List<Long> orderProductsIds = products.stream().map(p -> p.getCodeProduct().longValue()).collect(Collectors.toList());
+
+		List<Order> orders2 = orderService.getOrderGroupByPeriodSlotsAndProduct(dateForSearch, dateForSearch, orderProductsIds);
+		
+		
+		orders2.forEach(o-> System.out.println(o));
+		
+		return responseMap;		
+	}
 	
 	public static boolean deleteFolder(File folder) {
 	    if (folder.isDirectory()) {

@@ -219,5 +219,5 @@ public interface OrderDAO {
 	 * <br>Возвращает список Order по дате создания слота, номерам товара и дате заказа ОРЛ</br>
 	 * @author Ira
 	 */
-	List<Order> getOrderByTimeDeliveryAndGoodsId(Date dateStart, Date dateEnd, List<Long> goodsIds, Date dateOrderOrl);
+	List<Order> getOrderByFirstLoadSlotAndDateOrderOrlAndGoodsId(Date dateStart, Date dateEnd, List<Long> goodsIds, Date dateOrderOrl);
 }

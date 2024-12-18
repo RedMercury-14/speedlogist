@@ -703,15 +703,15 @@ public class OrderDAOImpl implements OrderDAO{
 		return trucks.stream().collect(Collectors.toList());
 	}
 
-	private static final String queryGetOrderByTimeDeliveryAndGoodsIds = "from Order o LEFT JOIN FETCH o.orderLines ol "
+	private static final String queryGetOrderByFirstLoadSlotAndDateOrderOrlAndGoodsId = "from Order o LEFT JOIN FETCH o.orderLines ol "
 			+ "where o.firstLoadSlot BETWEEN :dateStart and :dateEnd and o.dateOrderOrl =: dateOrderOrl and ol.goodsId IN (:goodsIds)";
 	@Transactional
 	@Override
-	public List<Order> getOrderByTimeDeliveryAndGoodsId(Date dateStart, Date dateEnd, List<Long> goodsIds, Date dateOrderOrl) {
+	public List<Order> getOrderByFirstLoadSlotAndDateOrderOrlAndGoodsId(Date dateStart, Date dateEnd, List<Long> goodsIds, Date dateOrderOrl) {
 		Timestamp dateStartFinal = Timestamp.valueOf(LocalDateTime.of(dateStart.toLocalDate(), LocalTime.of(00, 00)));
 		Timestamp dateEndFinal = Timestamp.valueOf(LocalDateTime.of(dateEnd.toLocalDate(), LocalTime.of(23, 59)));
 		Session currentSession = sessionFactory.getCurrentSession();
-		Query<Order> theObject = currentSession.createQuery(queryGetOrderByTimeDeliveryAndGoodsIds, Order.class);
+		Query<Order> theObject = currentSession.createQuery(queryGetOrderByFirstLoadSlotAndDateOrderOrlAndGoodsId, Order.class);
 		theObject.setParameter("dateStart", dateStartFinal, TemporalType.TIMESTAMP);
 		theObject.setParameter("dateEnd", dateEndFinal, TemporalType.TIMESTAMP);
 		theObject.setParameterList("goodsIds", goodsIds);

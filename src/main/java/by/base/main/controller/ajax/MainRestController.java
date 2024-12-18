@@ -155,7 +155,6 @@ import by.base.main.util.hcolossus.pojo.Solution;
 import by.base.main.util.hcolossus.pojo.VehicleWay;
 import by.base.main.util.hcolossus.service.LogicAnalyzer;
 import by.base.main.util.hcolossus.service.MatrixMachine;
-import scala.annotation.meta.field;
 
 @RestController
 @RequestMapping(path = "api", produces = "application/json")
@@ -341,7 +340,7 @@ public class MainRestController {
 
 		List<Long> orderProductsIds = products.stream().map(p -> p.getCodeProduct().longValue()).collect(Collectors.toList());
 
-		List<Order> orders = orderService.getOrderByTimeDeliveryAndGoodsId(dateForSearchBefore, dateForSearch, orderProductsIds, dateForSearchBefore);
+		List<Order> orders = orderService.getOrderByFirstLoadSlotAndDateOrderOrlAndGoodsId(dateForSearchBefore, dateForSearch, orderProductsIds, dateForSearchBefore);
 
 		for (OrderProduct orderProduct : products) {
 			double quantityFromOrders = 0;

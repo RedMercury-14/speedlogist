@@ -409,7 +409,7 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
-	public List<Order> getOrderByTimeDeliveryAndGoodsId(Date dateStart, Date dateEnd, List<Long> goodsIds, Date dateOrderOrl) {
-		return orderDAO.getOrderByTimeDeliveryAndGoodsId(dateStart, dateEnd, goodsIds, dateOrderOrl);
+	public List<Order> getOrderByFirstLoadSlotAndDateOrderOrlAndGoodsId(Date dateStart, Date dateEnd, List<Long> goodsIds, Date dateOrderOrl) {
+		return orderDAO.getOrderByFirstLoadSlotAndDateOrderOrlAndGoodsId(dateStart, dateEnd, goodsIds, dateOrderOrl);
 	}
 }

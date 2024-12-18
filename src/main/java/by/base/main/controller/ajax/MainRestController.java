@@ -378,10 +378,12 @@ public class MainRestController {
 			String str = "По данным потребностям не были созданы слоты в установленное время. Процент не поставленных заказов относительно заказ ОРЛ - " + result +"%.";
 			List<File> files = new ArrayList<File>();
 			files.add(new File(appPath + "resources/others/" + fileName));
+			
+			System.out.println(appPath + "resources/others/" + fileName);
 
 			List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
 			mailService.sendEmailWithFilesToUsers(servletContext, "Незакрытые потребности " + currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")),
-        		  "По данным потребностям не были созданы слоты в установленное время. Процент не поставленных заказов относительно заказ ОРЛ " + result, files, emails);
+					str, files, emails);
 
 		}
 

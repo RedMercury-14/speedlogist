@@ -34,6 +34,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -567,6 +568,7 @@ public class MainRestController {
 		Map<String, Object> responseMap = new HashMap<>();
 		
 		Order order = orderService.getOrderById(Integer.parseInt(idOrder));
+		order.getOrderLines().forEach(o-> System.out.println(o));
 		List<Product> products = readerSchedulePlan.checkBalanceBetweenStock(order);
 		
 		responseMap.put("products", products);
@@ -585,12 +587,13 @@ public class MainRestController {
 	 */
 	@GetMapping("/balance2/{dateStartTarget}&{dateFinishTarget}&{stockTarget}")
 	@TimedExecution
-    public Map<String, Object> balance2Method(HttpServletRequest request, HttpServletResponse response,
+    public void balance2Method(HttpServletRequest request, HttpServletResponse response,
     		@PathVariable String dateStartTarget,
     		@PathVariable String dateFinishTarget,
     		@PathVariable String stockTarget) throws IOException{
 
 		Map<String, Object> responseMap = new HashMap<>();
+		List<Order> ordersForExcel = new ArrayList<Order>();
 		Date dateStart = Date.valueOf(dateStartTarget);
 		Date dateEnd = Date.valueOf(dateFinishTarget);
 		
@@ -603,16 +606,29 @@ public class MainRestController {
 			Map<String, Object> responseOrder = new HashMap<>();
 			List<Product> products = readerSchedulePlan.checkBalanceBetweenStock(order);
 			int i=1;
+			order.setSlotInfo(null);
 			
 			for (Product product : products) {
 				if(Integer.parseInt(stockTarget) == 1700) {
 					if(product.getCalculatedDayStock1700() > 20 && product.getCalculatedDayStock1700()>product.getCalculatedDayStock1800()) {
 						responseOrder.put("Код товара -- товар -- остаток 1700 -- остаток 1800 -- логин менеджера "+i+" : ", product.getCodeProduct() + "  --  " + product.getName() + "  --  " + product.getCalculatedDayStock1700()+ "  --  " + product.getCalculatedDayStock1800() + "  --  " + order.getLoginManager().split("%")[0]);
+//						System.err.println(product.getCalculatedDayStock1700()+ "  --  " + product.getCalculatedDayStock1800());
+						if(order.getSlotInfo() == null)  {
+							order.setSlotInfo(product.getCodeProduct() + "  --  " + product.getName() + "  --  " +product.getCalculatedDayStock1700()+ "  --  " + product.getCalculatedDayStock1800());
+						}else {
+							order.setSlotInfo(order.getSlotInfo() + "\n" + product.getCodeProduct() + "  --  " + product.getName() + "  --  " + product.getCalculatedDayStock1700()+ "  --  " + product.getCalculatedDayStock1800());
+						}
 						i++;
 					}
 				}else {
 					if(product.getCalculatedDayStock1800() > 20 && product.getCalculatedDayStock1800()>product.getCalculatedDayStock1700()) {
 						responseOrder.put("Код товара -- товар -- остаток 1700 -- остаток 1800 -- логин менеджера "+i+" : ", product.getCodeProduct() + "  --  " + product.getName() + "  --  " + product.getCalculatedDayStock1700()+ "  --  " + product.getCalculatedDayStock1800() + "  --  " + order.getLoginManager().split("%")[0]);
+//						System.out.println(product.getCalculatedDayStock1700()+ "  --  " + product.getCalculatedDayStock1800());
+						if(order.getSlotInfo() == null)  {
+							order.setSlotInfo(product.getCodeProduct() + "  --  " + product.getName() + "  --  " + product.getCalculatedDayStock1700()+ "  --  " + product.getCalculatedDayStock1800());
+						}else {
+							order.setSlotInfo(order.getSlotInfo() + "\n" + product.getCodeProduct() + "  --  " + product.getName() + "  --  " + product.getCalculatedDayStock1700()+ "  --  " + product.getCalculatedDayStock1800());
+						}
 						i++;
 					}
 				}
@@ -622,18 +638,47 @@ public class MainRestController {
 				continue;
 			}
 			if(order.getOrderLines().size() == i-1) {
-				summpall = summpall + Integer.parseInt(order.getPall());
-				responseOrder.put("Номер заказа: ", order.getIdOrder());
-				responseOrder.put("Номер из маркета: ", order.getMarketNumber());
-				responseOrder.put("Контрагент ", order.getCounterparty());
-				responseOrder.put("Всего SKU ", order.getOrderLines().size());
-				responseOrder.put("Info ", order.getMarketNumber() + "  --  " + order.getLoginManager().split("%")[0]);
-				responseMap.put(order.getIdOrder()+"", responseOrder);
+//				summpall = summpall + Integer.parseInt(order.getPall());
+//				responseOrder.put("Номер заказа: ", order.getIdOrder());
+//				responseOrder.put("Номер из маркета: ", order.getMarketNumber());
+//				responseOrder.put("Контрагент ", order.getCounterparty());
+//				responseOrder.put("Всего SKU ", order.getOrderLines().size());
+//				responseOrder.put("Info ", order.getMarketNumber() + "  --  " + order.getLoginManager().split("%")[0]);
+//				responseMap.put(order.getIdOrder()+"", responseOrder);
+				ordersForExcel.add(order);
 			}
 			
 		}
 		responseMap.put("Всего паллет для перемещения", summpall);
-		return responseMap;
+		String appPath = request.getServletContext().getRealPath("");
+        String folderPath = appPath + "resources/others/moveOrders.xlsx";
+		serviceLevel.orderBalanceHasDates(ordersForExcel, dateStart, dateEnd, folderPath);
+		
+		response.setHeader("content-disposition", "attachment;filename=moveOrders.xlsx");
+		response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+		FileInputStream in = null;
+		OutputStream out = null;
+		try {
+			// Прочтите файл, который нужно загрузить, и сохраните его во входном потоке файла
+			in = new FileInputStream(folderPath);
+			//  Создать выходной поток
+			out = response.getOutputStream();
+			//  Создать буфер
+			byte buffer[] = new byte[1024];
+			int len = 0;
+			//  Прочитать содержимое входного потока в буфер в цикле
+			while ((len = in.read(buffer)) > 0) {
+				out.write(buffer, 0, len);
+			}
+			in.close();
+			out.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}finally {
+			in.close();
+			out.close();
+		}
+//		return responseMap;
     }
 	
     /**

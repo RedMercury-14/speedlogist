@@ -32,9 +32,11 @@ import java.util.stream.Collectors;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 
+import by.base.main.model.*;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.poi.hssf.usermodel.HSSFPrintSetup;
+import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.BorderExtent;
 import org.apache.poi.ss.usermodel.BorderStyle;
@@ -86,16 +88,6 @@ import com.itextpdf.text.pdf.PdfWriter;
 import by.base.main.dao.RouteDAO;
 import by.base.main.dao.RouteHasShopDAO;
 import by.base.main.dao.ShopDAO;
-import by.base.main.model.Act;
-import by.base.main.model.MapResponse;
-import by.base.main.model.Message;
-import by.base.main.model.Order;
-import by.base.main.model.OrderProduct;
-import by.base.main.model.Product;
-import by.base.main.model.Route;
-import by.base.main.model.RouteHasShop;
-import by.base.main.model.Schedule;
-import by.base.main.model.Shop;
 import by.base.main.service.ActService;
 import by.base.main.service.MessageService;
 import by.base.main.service.OrderService;
@@ -1488,16 +1480,23 @@ public class POIExcel {
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-	public String loadBalanceStock2(File file, HttpServletRequest request, Date dateUnload) throws FileNotFoundException, IOException {
-		System.err.println(getColumnCount(file,0));
-		if(getColumnCount(file,0)<67) {
-			return "Ошибка! Файл должен содержать 67 столбцов!";
+	public String loadBalanceStock2(File file, HttpServletRequest request) throws FileNotFoundException, IOException {
+		/*
+		 * Последняя итерация! 19.12.2024
+		 */
+		if(getColumnCount(file,0)<61) {
+			return "Ошибка! Файл должен содержать 61 столбцов!";
 		}
+		
+		
+		
 		XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
 		XSSFSheet sheet = wb.getSheetAt(0);
 		Set<Product> unicProduct = new HashSet<Product>();
 		int upd = 0;
 		int save = 0;
+		Date dateUnload =  new Date(sheet.getRow(0).getCell(5).getDateCellValue().getTime());
+		
 		for (int i = 1; i < sheet.getLastRowNum() + 1; i++) {
 			XSSFRow rowI = sheet.getRow(i);
             
@@ -1548,34 +1547,28 @@ public class POIExcel {
 	        XSSFCell cellPercentShopsLess2Days1700 = rowI.getCell(38);
 	        XSSFCell cellKol1700 = rowI.getCell(39);
 	        XSSFCell cellSumm1700 = rowI.getCell(40);
-	        XSSFCell cellReserves1700 = rowI.getCell(41);
-	        XSSFCell cellReserve11501700 = rowI.getCell(42);
-	        XSSFCell cellOstOnRCPlusReserves1700 = rowI.getCell(43);
-	        XSSFCell cellOstDost1700 = rowI.getCell(44);
-	        XSSFCell cellOneDay1700 = rowI.getCell(45);
-	        XSSFCell cellSumOstField1700 = rowI.getCell(46);
+	        XSSFCell cell380_1700 = rowI.getCell(41);
+	        XSSFCell cellExpectedArrival1700 = rowI.getCell(42);
+	        XSSFCell movedFrom1700To1800 = rowI.getCell(43);
 
 	        // Третий блок - 1800
-	        XSSFCell cellWarehouseNumber1800 = rowI.getCell(47);
-	        XSSFCell cellCalculatedDailySales1800 = rowI.getCell(48);
-	        XSSFCell cellSumOst1800 = rowI.getCell(49);
-	        XSSFCell cellSumFromOrder1800 = rowI.getCell(50);
-	        XSSFCell cellMaxOtgruzimTwoStages1800 = rowI.getCell(51);
-	        XSSFCell cellMaxOstInNetwork1800 = rowI.getCell(52);
-	        XSSFCell cellOstInPallets1800 = rowI.getCell(53);
-	        XSSFCell cellOstOnRCInDays1800 = rowI.getCell(54);
-	        XSSFCell cellMaxOstNetworkInDays1800 = rowI.getCell(55);
-	        XSSFCell cellCountTOInCalculation1800 = rowI.getCell(56);
-	        XSSFCell cellCountTOLess2Days1800 = rowI.getCell(57);
-	        XSSFCell cellPercentShopsLess2Days1800 = rowI.getCell(58);
-	        XSSFCell cellKol1800 = rowI.getCell(59);
-	        XSSFCell cellSumm1800 = rowI.getCell(60);
-	        XSSFCell cellReserves1800 = rowI.getCell(61);
-	        XSSFCell cellReserve11501800 = rowI.getCell(62);
-	        XSSFCell cellOstOnRCPlusReserves1800 = rowI.getCell(63);
-	        XSSFCell cellOstDost1800 = rowI.getCell(64);
-	        XSSFCell cellOneDay1800 = rowI.getCell(65);
-	        XSSFCell cellSumOstField1800 = rowI.getCell(66);
+	        XSSFCell cellWarehouseNumber1800 = rowI.getCell(44);
+	        XSSFCell cellCalculatedDailySales1800 = rowI.getCell(45);
+	        XSSFCell cellSumOst1800 = rowI.getCell(46);
+	        XSSFCell cellSumFromOrder1800 = rowI.getCell(47);
+	        XSSFCell cellMaxOtgruzimTwoStages1800 = rowI.getCell(48);
+	        XSSFCell cellMaxOstInNetwork1800 = rowI.getCell(49);
+	        XSSFCell cellOstInPallets1800 = rowI.getCell(50);
+	        XSSFCell cellOstOnRCInDays1800 = rowI.getCell(51);
+	        XSSFCell cellMaxOstNetworkInDays1800 = rowI.getCell(52);
+	        XSSFCell cellCountTOInCalculation1800 = rowI.getCell(53);
+	        XSSFCell cellCountTOLess2Days1800 = rowI.getCell(54);
+	        XSSFCell cellPercentShopsLess2Days1800 = rowI.getCell(55);
+	        XSSFCell cellKol1800 = rowI.getCell(56);
+	        XSSFCell cellSumm1800 = rowI.getCell(57);
+	        XSSFCell cell380_1800 = rowI.getCell(58);
+	        XSSFCell cellExpectedArrival1800 = rowI.getCell(59);
+	        XSSFCell movedFrom1800To1700 = rowI.getCell(60);
 			
 			
 	        Product product = productService.getProductByCode(Integer.parseInt(getCellValue(cellProductCode)));
@@ -1623,12 +1616,10 @@ public class POIExcel {
 	            product.setPercent1700(getCellValue(cellPercentShopsLess2Days1700) == null ? null : Double.parseDouble(getCellValue(cellPercentShopsLess2Days1700)));
 	            product.setKol1700(getCellValue(cellKol1700) == null ? null : Double.parseDouble(getCellValue(cellKol1700)));
 	            product.setSumm1700(getCellValue(cellSumm1700) == null ? null : Double.parseDouble(getCellValue(cellSumm1700)));
-	            product.setReserves1700(getCellValue(cellReserves1700) == null ? null : Double.parseDouble(getCellValue(cellReserves1700)));
-	            product.setReserves10050_1700(getCellValue(cellReserve11501700) == null ? null : Double.parseDouble(getCellValue(cellReserve11501700)));
-	            product.setBalanceStockAndReserves1700(getCellValue(cellOstOnRCPlusReserves1700) == null ? null : Double.parseDouble(getCellValue(cellOstOnRCPlusReserves1700)));
-	            product.setOstDost1700(getCellValue(cellOstDost1700) == null ? null : Double.parseDouble(getCellValue(cellOstDost1700)));
-	            product.setOneDay1700(getCellValue(cellOneDay1700) == null ? null : Double.parseDouble(getCellValue(cellOneDay1700)));
-	            product.setSumOst1700(getCellValue(cellSumOstField1700) == null ? null : Double.parseDouble(getCellValue(cellSumOstField1700)));
+	            product.setReport380_1700(getCellValue(cell380_1700) == null ? null : Double.parseDouble(getCellValue(cell380_1700)));
+	            product.setExpectedArrival1700(getCellValue(cellExpectedArrival1700) == null ? null : Double.parseDouble(getCellValue(cellExpectedArrival1700)));
+	            product.setMovedFrom1800To1700(getCellValue(movedFrom1700To1800) == null ? null : Double.parseDouble(getCellValue(movedFrom1700To1800)));
+	            product.setBalanceStockAndReserves1700(getCellValue(cellOstOnRCInDays1700) == null ? null : Double.parseDouble(getCellValue(cellOstOnRCInDays1700)));
 	            
 	            //1800
 	            product.setCalculatedPerDay1800(getCellValue(cellCalculatedDailySales1800) == null ? null : Double.parseDouble(getCellValue(cellCalculatedDailySales1800)));
@@ -1644,12 +1635,10 @@ public class POIExcel {
 	            product.setPercent1800(getCellValue(cellPercentShopsLess2Days1800) == null ? null : Double.parseDouble(getCellValue(cellPercentShopsLess2Days1800)));
 	            product.setKol1800(getCellValue(cellKol1800) == null ? null : Double.parseDouble(getCellValue(cellKol1800)));
 	            product.setSumm1800(getCellValue(cellSumm1800) == null ? null : Double.parseDouble(getCellValue(cellSumm1800)));
-	            product.setReserves1800(getCellValue(cellReserves1800) == null ? null : Double.parseDouble(getCellValue(cellReserves1800)));
-	            product.setReserves10050_1800(getCellValue(cellReserve11501800) == null ? null : Double.parseDouble(getCellValue(cellReserve11501800)));
-	            product.setBalanceStockAndReserves1800(getCellValue(cellOstOnRCPlusReserves1800) == null ? null : Double.parseDouble(getCellValue(cellOstOnRCPlusReserves1800)));
-	            product.setOstDost1800(getCellValue(cellOstDost1800) == null ? null : Double.parseDouble(getCellValue(cellOstDost1800)));
-	            product.setOneDay1800(getCellValue(cellOneDay1800) == null ? null : Double.parseDouble(getCellValue(cellOneDay1800)));
-	            product.setSumOst1800(getCellValue(cellSumOstField1800) == null ? null : Double.parseDouble(getCellValue(cellSumOstField1800)));
+	            product.setReport380_1800(getCellValue(cell380_1800) == null ? null : Double.parseDouble(getCellValue(cell380_1800)));
+	            product.setExpectedArrival1800(getCellValue(cellExpectedArrival1800) == null ? null : Double.parseDouble(getCellValue(cellExpectedArrival1800)));
+	            product.setMovedFrom1800To1700(getCellValue(movedFrom1800To1700) == null ? null : Double.parseDouble(getCellValue(movedFrom1800To1700)));
+	            product.setBalanceStockAndReserves1800(getCellValue(cellOstOnRCInDays1800) == null ? null : Double.parseDouble(getCellValue(cellOstOnRCInDays1800)));
 
 	            product.setDateCreate(Timestamp.valueOf(LocalDateTime.now()));
 	            product.setDayMax(dayMax);
@@ -1699,12 +1688,10 @@ public class POIExcel {
 	            product.setPercent1700(getCellValue(cellPercentShopsLess2Days1700) == null ? null : Double.parseDouble(getCellValue(cellPercentShopsLess2Days1700)));
 	            product.setKol1700(getCellValue(cellKol1700) == null ? null : Double.parseDouble(getCellValue(cellKol1700)));
 	            product.setSumm1700(getCellValue(cellSumm1700) == null ? null : Double.parseDouble(getCellValue(cellSumm1700)));
-	            product.setReserves1700(getCellValue(cellReserves1700) == null ? null : Double.parseDouble(getCellValue(cellReserves1700)));
-	            product.setReserves10050_1700(getCellValue(cellReserve11501700) == null ? null : Double.parseDouble(getCellValue(cellReserve11501700)));
-	            product.setBalanceStockAndReserves1700(getCellValue(cellOstOnRCPlusReserves1700) == null ? null : Double.parseDouble(getCellValue(cellOstOnRCPlusReserves1700)));
-	            product.setOstDost1700(getCellValue(cellOstDost1700) == null ? null : Double.parseDouble(getCellValue(cellOstDost1700)));
-	            product.setOneDay1700(getCellValue(cellOneDay1700) == null ? null : Double.parseDouble(getCellValue(cellOneDay1700)));
-	            product.setSumOst1700(getCellValue(cellSumOstField1700) == null ? null : Double.parseDouble(getCellValue(cellSumOstField1700)));
+	            product.setReport380_1700(getCellValue(cell380_1700) == null ? null : Double.parseDouble(getCellValue(cell380_1700)));
+	            product.setExpectedArrival1700(getCellValue(cellExpectedArrival1700) == null ? null : Double.parseDouble(getCellValue(cellExpectedArrival1700)));
+	            product.setMovedFrom1800To1700(getCellValue(movedFrom1700To1800) == null ? null : Double.parseDouble(getCellValue(movedFrom1700To1800)));
+	            product.setBalanceStockAndReserves1700(getCellValue(cellOstOnRCInDays1700) == null ? null : Double.parseDouble(getCellValue(cellOstOnRCInDays1700)));
 	            
 	            //1800
 	            product.setCalculatedPerDay1800(getCellValue(cellCalculatedDailySales1800) == null ? null : Double.parseDouble(getCellValue(cellCalculatedDailySales1800)));
@@ -1720,12 +1707,10 @@ public class POIExcel {
 	            product.setPercent1800(getCellValue(cellPercentShopsLess2Days1800) == null ? null : Double.parseDouble(getCellValue(cellPercentShopsLess2Days1800)));
 	            product.setKol1800(getCellValue(cellKol1800) == null ? null : Double.parseDouble(getCellValue(cellKol1800)));
 	            product.setSumm1800(getCellValue(cellSumm1800) == null ? null : Double.parseDouble(getCellValue(cellSumm1800)));
-	            product.setReserves1800(getCellValue(cellReserves1800) == null ? null : Double.parseDouble(getCellValue(cellReserves1800)));
-	            product.setReserves10050_1800(getCellValue(cellReserve11501800) == null ? null : Double.parseDouble(getCellValue(cellReserve11501800)));
-	            product.setBalanceStockAndReserves1800(getCellValue(cellOstOnRCPlusReserves1800) == null ? null : Double.parseDouble(getCellValue(cellOstOnRCPlusReserves1800)));
-	            product.setOstDost1800(getCellValue(cellOstDost1800) == null ? null : Double.parseDouble(getCellValue(cellOstDost1800)));
-	            product.setOneDay1800(getCellValue(cellOneDay1800) == null ? null : Double.parseDouble(getCellValue(cellOneDay1800)));
-	            product.setSumOst1800(getCellValue(cellSumOstField1800) == null ? null : Double.parseDouble(getCellValue(cellSumOstField1800)));
+	            product.setReport380_1800(getCellValue(cell380_1800) == null ? null : Double.parseDouble(getCellValue(cell380_1800)));
+	            product.setExpectedArrival1800(getCellValue(cellExpectedArrival1800) == null ? null : Double.parseDouble(getCellValue(cellExpectedArrival1800)));
+	            product.setMovedFrom1800To1700(getCellValue(movedFrom1800To1700) == null ? null : Double.parseDouble(getCellValue(movedFrom1800To1700)));
+	            product.setBalanceStockAndReserves1800(getCellValue(cellOstOnRCInDays1800) == null ? null : Double.parseDouble(getCellValue(cellOstOnRCInDays1800)));
 
 	            product.setDateCreate(Timestamp.valueOf(LocalDateTime.now()));
 	            product.setDayMax(dayMax);
@@ -1734,10 +1719,10 @@ public class POIExcel {
 	                product.setBalanceStockAndReserves(getCellValue(cellBalanceStockAndReserves) == null ? null : Double.parseDouble(getCellValue(cellBalanceStockAndReserves)));
 
 	                product.setBalanceStockInDay1700(getCellValue(cellOstOnRCInDays1700) == null ? null : Double.parseDouble(getCellValue(cellOstOnRCInDays1700)));
-	                product.setBalanceStockAndReserves1700(getCellValue(cellOstOnRCPlusReserves1700) == null ? null : Double.parseDouble(getCellValue(cellOstOnRCPlusReserves1700)));
+	                product.setBalanceStockAndReserves1700(getCellValue(cellOstOnRCInDays1700) == null ? null : Double.parseDouble(getCellValue(cellOstOnRCInDays1700)));
 
 	                product.setBalanceStockInDay1800(getCellValue(cellOstOnRCInDays1800) == null ? null : Double.parseDouble(getCellValue(cellOstOnRCInDays1800)));
-	                product.setBalanceStockAndReserves1800(getCellValue(cellOstOnRCPlusReserves1800) == null ? null : Double.parseDouble(getCellValue(cellOstOnRCPlusReserves1800)));
+	                product.setBalanceStockAndReserves1800(getCellValue(cellOstOnRCInDays1800) == null ? null : Double.parseDouble(getCellValue(cellOstOnRCInDays1800)));
 	            } else {
 	                Double stockInDay11 = product.getRemainderStockInDay();
 	                Double balanceStockAndReserves22 = product.getBalanceStockAndReserves();
@@ -1747,12 +1732,12 @@ public class POIExcel {
 	                Double stockInDay111 = product.getBalanceStockInDay1700();
 	                Double balanceStockAndReserves222 = product.getBalanceStockAndReserves1700();
 	                product.setBalanceStockInDay1700(getCellValue(cellOstOnRCInDays1700) == null ? stockInDay111 : Double.parseDouble(getCellValue(cellOstOnRCInDays1700)) + stockInDay111);
-	                product.setBalanceStockAndReserves1700(getCellValue(cellOstOnRCPlusReserves1700) == null ? balanceStockAndReserves222 : Double.parseDouble(getCellValue(cellOstOnRCPlusReserves1700)) + balanceStockAndReserves222);
+	                product.setBalanceStockAndReserves1700(getCellValue(cellOstOnRCInDays1700) == null ? balanceStockAndReserves222 : Double.parseDouble(getCellValue(cellOstOnRCInDays1700)) + balanceStockAndReserves222);
 
 	                Double stockInDay1111 = product.getBalanceStockInDay1800();
 	                Double balanceStockAndReserves2222 = product.getBalanceStockAndReserves1800();
 	                product.setBalanceStockInDay1800(getCellValue(cellOstOnRCInDays1800) == null ? stockInDay1111 : Double.parseDouble(getCellValue(cellOstOnRCInDays1800)) + stockInDay1111);
-	                product.setBalanceStockAndReserves1800(getCellValue(cellOstOnRCPlusReserves1800) == null ? balanceStockAndReserves2222 : Double.parseDouble(getCellValue(cellOstOnRCPlusReserves1800)) + balanceStockAndReserves2222);
+	                product.setBalanceStockAndReserves1800(getCellValue(cellOstOnRCInDays1800) == null ? balanceStockAndReserves2222 : Double.parseDouble(getCellValue(cellOstOnRCInDays1800)) + balanceStockAndReserves2222);
 	            }
 
 	            productService.updateProduct(product);
@@ -4189,78 +4174,92 @@ public class POIExcel {
 	}
 
 	/**
-	 * @author Ira
 	 * <br>Заполняет таблицу в excel данными о потребностях без слотов</br>
 	 * @return
+	 * @author Ira
 	 */
-	public void fillExcelAboutNeeds(String filePath) throws FileNotFoundException {
+	public void fillExcelAboutNeeds(OrderProduct product, double quantityFromOrders, double quantityFromOrders1700, double quantityFromOrders1800, Sheet sheet, int rowNum) {
 
-		XSSFWorkbook book = new XSSFWorkbook();
-		XSSFSheet sheet = (XSSFSheet) book.createSheet("Несоответствия");
-		String[] headers = {
-				"Код товара", "Наименование товара", "Количество в поддоне", "Заказ 1700", "Заказ 1800",
-				"Увеличенный заказ 1700", "Увеличенный заказ 1800", "Комментарий"
-		};
+		Row row = sheet.createRow(rowNum);
 
-		// Создаем строку заголовков
-		Row headerRow = sheet.createRow(0);
-		for (int i = 0; i < headers.length; i++) {
-			Cell cell = headerRow.createCell(i);
-			cell.setCellValue(headers[i]);
+		Font redFont = sheet.getWorkbook().createFont();
+		redFont.setColor(HSSFColor.HSSFColorPredefined.RED.getIndex());
+		CellStyle redCellStyle = sheet.getWorkbook().createCellStyle();
+		redCellStyle.setFont(redFont);
+
+		Font yellowFont = sheet.getWorkbook().createFont();
+		yellowFont.setColor(HSSFColor.HSSFColorPredefined.BLUE.getIndex());
+		CellStyle yellowCellStyle = sheet.getWorkbook().createCellStyle();
+		yellowCellStyle.setFont(yellowFont);
+
+		Font grenFont = sheet.getWorkbook().createFont();
+		grenFont.setColor(HSSFColor.HSSFColorPredefined.GREEN.getIndex());
+		CellStyle greenCellStyle = sheet.getWorkbook().createCellStyle();
+		greenCellStyle.setFont(grenFont);
+
+		int quantity = product.getQuantity() == null ? 0 : product.getQuantity();
+		int quantity1700 = product.getQuantity1700() == null ? 0 : product.getQuantity1700();
+		int quantity1800 = product.getQuantity1800() == null ? 0 : product.getQuantity1800();
+		int maxQuantity1700 = product.getQuantity1700Max() == null ? 0 : product.getQuantity1700Max();
+		int maxQuantity1800 = product.getQuantity1800Max() == null ? 0 : product.getQuantity1800Max();
+
+		row.createCell(0).setCellValue(product.getCodeProduct());
+		row.createCell(1).setCellValue(product.getNameProduct());
+		row.createCell(2).setCellValue(quantity);
+		Cell cell3 = row.createCell(3);
+		if (quantityFromOrders > quantity) {
+			cell3.setCellStyle(yellowCellStyle);
+		} else if (quantityFromOrders < quantity) {
+			cell3.setCellStyle(redCellStyle);
+		} else {
+			cell3.setCellStyle(greenCellStyle);
 		}
+		cell3.setCellValue(quantityFromOrders);//заказано для quantity
 
-		// Создаем стиль для окрашивания
-		CellStyle coloredStyle = sheet.getWorkbook().createCellStyle();
-		coloredStyle.setFillForegroundColor(IndexedColors.LIGHT_YELLOW.getIndex());
-		coloredStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-
-//		// Диапазон колонок для окрашивания
-//		int startColumn = 2; // Индекс "График формирования заказа"
-//		int endColumn = 12;  // Индекс "вс"
-
-		boolean isSheetEmpty = true;
-		// Заполняем данные
-		int rowNum = 1;
-		for (int j = 0; j < 1; j++) {
-			
-			isSheetEmpty = false;
-			
-			Row row = sheet.createRow(rowNum++);
-
-			row.createCell(0).setCellValue(1);
-			row.createCell(1).setCellValue(2);
-			row.createCell(2).setCellValue(3);
-			row.createCell(3).setCellValue(4);
-			row.createCell(4).setCellValue(5);
-			row.createCell(5).setCellValue(6);
-			row.createCell(6).setCellValue(7);
-			row.createCell(7).setCellValue(8);
-
-
-			// Окрашиваем колонки в указанном диапазоне
-//			for (int i = startColumn; i <= endColumn; i++) {
-//				Cell cell = row.getCell(i);
-//				if (cell == null) {
-//					cell = row.createCell(i); // Если ячейка еще не создана
-//				}
-//				cell.setCellStyle(coloredStyle);
-//			}
+		row.createCell(4).setCellValue(quantity1700);
+		Cell cell5 = row.createCell(5);
+		if (quantityFromOrders1700 > quantity1700) {
+			cell5.setCellStyle(yellowCellStyle);
+		} else if (quantityFromOrders1700 < quantity1700) {
+			cell5.setCellStyle(redCellStyle);
+		} else {
+			cell5.setCellStyle(greenCellStyle);
 		}
+		cell5.setCellValue(quantityFromOrders1700); //заказано для quantity1700
 
-		// Устанавливаем фильтры на все столбцы
-		sheet.setAutoFilter(new CellRangeAddress(0, 0, 0, headers.length - 1));
+		row.createCell(6).setCellValue(quantity1800);
+		Cell cell7 = row.createCell(7);
+		if (quantityFromOrders1800 > quantity1800) {
+			cell7.setCellStyle(yellowCellStyle);
+		} else if (quantityFromOrders1800 < quantity1800) {
+			cell7.setCellStyle(redCellStyle);
+		} else {
+			cell7.setCellStyle(greenCellStyle);
+		}
+		cell7.setCellValue(quantityFromOrders1800); //заказано для quantity1800
 
-		//String fullFilePath = filePath + "Шаблон(МС) Прямые на ТО " + counterpartyContractCode + ".xlsx";
+		row.createCell(8).setCellValue(maxQuantity1700);
+		row.createCell(9).setCellValue(maxQuantity1800);
 
-		if(!isSheetEmpty) {
-			try (FileOutputStream fileOut = new FileOutputStream(filePath)) {
-				book.write(fileOut);
-			}// Сохраняем файл
-            catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
 	}
+
+	/**
+	 * <br>Заполняет проверочный лист в экселе с потребностями без слотов</br>
+	 * @return
+	 * @author Ira
+	 */
+	public void fillExcelToCheckNeeds(Sheet sheet, int rowNum, String date, OrderLine orderLine) {
+
+		Row row = sheet.createRow(rowNum);
+
+		row.createCell(0).setCellValue(orderLine.getGoodsId());
+		row.createCell(1).setCellValue(orderLine.getGoodsName());
+		row.createCell(2).setCellValue(date);
+		row.createCell(3).setCellValue(orderLine.getQuantityOrder());
+
+	}
+
+
 
 }
 

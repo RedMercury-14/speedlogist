@@ -22,16 +22,19 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -50,11 +53,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import by.base.main.model.*;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -112,25 +118,6 @@ import by.base.main.dto.MarketPacketDto;
 import by.base.main.dto.MarketRequestDto;
 import by.base.main.dto.MarketTableDto;
 import by.base.main.dto.OrderBuyGroupDTO;
-import by.base.main.model.Address;
-import by.base.main.model.GeometryResponse;
-import by.base.main.model.JsonResponsePolygon;
-import by.base.main.model.MapResponse;
-import by.base.main.model.Message;
-import by.base.main.model.Order;
-import by.base.main.model.OrderProduct;
-import by.base.main.model.Product;
-import by.base.main.model.Rates;
-import by.base.main.model.Role;
-import by.base.main.model.Route;
-import by.base.main.model.RouteHasShop;
-import by.base.main.model.Schedule;
-import by.base.main.model.Shop;
-import by.base.main.model.SimpleRoute;
-import by.base.main.model.TGTruck;
-import by.base.main.model.TGUser;
-import by.base.main.model.Truck;
-import by.base.main.model.User;
 import by.base.main.service.AddressService;
 import by.base.main.service.MessageService;
 import by.base.main.service.OrderProductService;
@@ -171,7 +158,6 @@ import by.base.main.util.hcolossus.pojo.Solution;
 import by.base.main.util.hcolossus.pojo.VehicleWay;
 import by.base.main.util.hcolossus.service.LogicAnalyzer;
 import by.base.main.util.hcolossus.service.MatrixMachine;
-import scala.annotation.meta.field;
 
 @RestController
 @RequestMapping(path = "api", produces = "application/json")
@@ -319,79 +305,202 @@ public class MainRestController {
 	
 	@Autowired
     private ServletContext servletContext;
-	
-	
-//	@GetMapping("/test")
-//	public Map<String, Object> testNewMethod(HttpServletRequest request) throws IOException, ParseException{
-//		
-//		java.util.Date t1 = new java.util.Date();
-//		Map<String, Object> responseMap = new HashMap<>();
-//		
-//		responseMap.put("list", scheduleService.getUnicCodeContractTO());
-//		java.util.Date t2 = new java.util.Date();
-//		System.out.println(t2.getTime()-t1.getTime() + " ms - testNewMethod" );
-//		responseMap.put("time", t2.getTime()-t1.getTime() + " ms");
-//		return responseMap;		
-//	}
 
-//	@GetMapping("/test")
-//	@TimedExecution
-//    public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException{
-//		Map<String, Object> responseMap = new HashMap<>();
-//
-//		Schedule testSchedule = new Schedule();
-//
-//		try {
-//			java.util.Date startDate = new SimpleDateFormat("dd MM yyyy").parse("05 11 2024");
-//            java.util.Date endDate = new SimpleDateFormat("dd MM yyyy").parse("09 11 2024");
-//			testSchedule.setStartDateTemp(new java.sql.Date(startDate.getTime()));
-//			testSchedule.setEndDateTemp(new java.sql.Date(endDate.getTime()));
-//        } catch (java.text.ParseException e) {
-//            throw new RuntimeException(e);
-//        }
-//
-//		testSchedule.setCounterpartyCode(98897L);
-//		testSchedule.setName("АИДИЕС БОРЖОМИ БЕЛ");
-//		testSchedule.setCounterpartyContractCode(456L);
-//		testSchedule.setNumStock(230);
-//
-//
-//		List<Schedule> schedules = scheduleService.getScheduleByNumContractAndNUmStockWithTemp(testSchedule.getCounterpartyContractCode(), testSchedule.getNumStock());
-//
-//		boolean isScheduleCorrect = scheduleService.checkScheduleIntersection(schedules, testSchedule);
-//		responseMap.put("result", isScheduleCorrect);
-//
-//		return responseMap;
-//    }
+	@GetMapping("/test")
+	@TimedExecution
+	public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		Map<String, Object> responseMap = new HashMap<>();
+
+		XSSFWorkbook book = new XSSFWorkbook();
+		XSSFSheet sheet = book.createSheet("Несоответствия");
+		XSSFSheet checkSheet = book.createSheet("Проверка");
+		XSSFCellStyle cellStyle = book.createCellStyle();
+
+		String[] headers = {
+				"Код товара", "Наименование товара", "Заказ (остальные склады)", "Заказано (остальные склады)", "Заказ 1700", "Заказано для 1700",
+				"Заказ 1800", "Заказано для 1800", "Увеличенный заказ 1700", "Увеличенный заказ 1800"
+		};
+
+
+		String[] checkHeaders = {
+				"Код товара", "название товара", "дата", "Количество"
+		};
+
+
+
+		// Создаем строку заголовков
+		Row headerRow = sheet.createRow(0);
+		for (int i = 0; i < headers.length; i++) {
+			Cell cell = headerRow.createCell(i);
+			cell.setCellValue(headers[i]);
+		}
+
+		Row checkHeaderRow = checkSheet.createRow(0);
+		for (int i = 0; i < checkHeaders.length; i++) {
+			Cell cell = checkHeaderRow.createCell(i);
+			cell.setCellValue(checkHeaders[i]);
+		}
+
+		boolean isSheetEmpty = true;
+		int rowNum = 1;
+		//TODO Ira test
+
+		LocalDate currentTime = LocalDate.now().minusDays(1);
+		LocalDate currentTimeDayBefore = currentTime.minusDays(1);
+		String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+		String currentTimeDayBeforeString = currentTimeDayBefore.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+		Date dateForSearch = Date.valueOf(currentTime);
+		Date dateForSearchBefore = Date.valueOf(currentTime.minusDays(1));
+
+		String fileName = "Несоответствия потребностей и слотов за " + currentTimeString + ".xlsx";
+		String appPath = servletContext.getRealPath("/");
+
+		List<OrderProduct> products = orderProductService.getOrderProductListHasDate(dateForSearchBefore);
+
+		List<Long> orderProductsIds = products.stream().map(p -> p.getCodeProduct().longValue()).collect(Collectors.toList());
+
+		long amount1700 = products.stream().filter(p -> p.getQuantity1700() != null).count();
+		long amount1800 = products.stream().filter(p -> p.getQuantity1800() != null).count();
+		long amountOthers = products.stream().filter(p -> p.getQuantity() != null).count();
+
+		List<Order> orders = orderService.getOrderByFirstLoadSlotAndDateOrderOrl(dateForSearchBefore, dateForSearch, dateForSearch);
+
+		int amountOrdered1700 = 0;
+		int amountOrdered1800 = 0;
+		int amountOrderedOthers = 0;
+
+		for (OrderProduct orderProduct : products) {
+			double quantityFromOrders = 0;
+			double quantityFromOrders1700 = 0;
+			double quantityFromOrders1800 = 0;
+			for (Order order : orders) {
+				String numStock = getTrueStockWithNullCheck(order);
+				for (OrderLine orderLine : order.getOrderLines()) {
+
+					if (orderProduct.getCodeProduct().longValue() == orderLine.getGoodsId()) {
+						double quantity = orderLine.getQuantityOrder() == null ? 0 : orderLine.getQuantityOrder();
+						if (numStock.equals("1700")) {
+							quantityFromOrders1700 += quantity;
+						} else if (numStock.equals("1800")) {
+							quantityFromOrders1800 += quantity;
+
+						} else if (numStock.equals("1200") || numStock.equals("1250") || numStock.equals("1100")) {
+							quantityFromOrders += quantity;
+						}
+					}
+
+				}
+			}
+			int summaryQuantityOtherStocks = orderProduct.getQuantity() == null ? 0 : orderProduct.getQuantity();
+			int summaryQuantityOther1700 = orderProduct.getQuantity1700() == null ? 0 : orderProduct.getQuantity1700();
+			int summaryQuantityOther1800 = orderProduct.getQuantity1800() == null ? 0 : orderProduct.getQuantity1800();
+
+			if (quantityFromOrders < summaryQuantityOtherStocks || quantityFromOrders1700 < summaryQuantityOther1700 || quantityFromOrders1800 < summaryQuantityOther1800) {
+				isSheetEmpty = false;
+				poiExcel.fillExcelAboutNeeds(orderProduct, quantityFromOrders, quantityFromOrders1700, quantityFromOrders1800, sheet, rowNum);
+				rowNum++;
+			}
+
+
+			if (quantityFromOrders < summaryQuantityOtherStocks) {
+				amountOrderedOthers++;
+			}
+			if (quantityFromOrders1700 < summaryQuantityOther1700) {
+				amountOrdered1700++;
+			}
+			if (quantityFromOrders1800 < summaryQuantityOther1800){
+				amountOrdered1800++;
+			}
+		}
+
+		double percent1700 = (double) amountOrdered1700 / (double) amount1700 * 100;
+		double percent1800 = (double)  amountOrdered1800/ (double) amount1800 * 100;
+		double percentOthers = (double)  amountOrderedOthers/ (double) amountOthers * 100;
+		double percentOfcoverage = ((double) rowNum - 1) / (double) products.size() * 100;
+
+		String percent1700str = String.format("%.2f",percent1700);
+		String percent1800str = String.format("%.2f",percent1800);
+		String percentOthersStr = String.format("%.2f",percentOthers);
+
+		String result = String.format("%.2f",percentOfcoverage);
+
+
+		int checkRowNum = 1;
+
+		for (Order order : orders) {
+			for (OrderLine orderLine : order.getOrderLines()) {
+				int goodId = orderLine.getGoodsId().intValue();
+
+				Product pr = productService.getProductByCode(goodId);
+
+				if (pr == null) {
+					poiExcel.fillExcelToCheckNeeds(checkSheet, checkRowNum, "нет заказа ОРЛ", orderLine);
+				} else {
+
+					List <OrderProduct> listOP  = pr.getOrderProductsListHasDateTarget(order.getDateOrderOrl());
+					if (listOP == null) {
+						poiExcel.fillExcelToCheckNeeds(checkSheet, checkRowNum, "нет заказа ОРЛ", orderLine);
+					} else {
+						OrderProduct item = listOP.get(0);
+						poiExcel.fillExcelToCheckNeeds(checkSheet, checkRowNum, item.getDateCreate().toString(), orderLine);
+
+					}
+				}
+
+				checkRowNum++;
+			}
+		}
+		for (int i = 0; i < headers.length; i++) {
+			sheet.autoSizeColumn(i);
+		}
+		for (int i = 0; i < checkHeaders.length; i++) {
+			checkSheet.autoSizeColumn(i);
+		}
+
+       /*
+       1. по ордерам получить все продукты
+       2 по продуктам методом product.getOrderProductsListHasDateTarget(order.getDateOrderOrl()) получить лист заказов по каждому продукту от орл
+       3 product.getOrderProductsListHasDateTarget(order.getDateOrderOrl()).get(0) получить последний заказ ор по фактически заказанному продукту и записать в эксель
+       взять дату
+        */
+
+		if (!isSheetEmpty) {
+			try {
+				File file = new File(appPath + "resources/others/" + fileName);
+				book.write(new FileOutputStream(file));
+				book.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+			String str = "По данным потребностям не были созданы слоты в установленное время. " +
+					"Процент не поставленных заказов на " + currentTimeString + " относительно заказ ОРЛ - " + result +"%." +
+					"\nПроцент для 1700 склада - " + percent1700str + "%." +
+					"\nПроцент для 1800 склада - " + percent1800str + "%." +
+					"\nПроцент для остальных складов - " + percentOthersStr + "%.";
+
+			List<File> files = new ArrayList<File>();
+			files.add(new File(appPath + "resources/others/" + fileName));
+
+			System.out.println(appPath + "resources/others/" + fileName);
+
+			List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+        mailService.sendEmailWithFilesToUsers(servletContext, "Незакрытые потребности " + currentTimeDayBeforeString, str, files, emails);
+
+		}
+
+		responseMap.put("Done", "Done");
+		return responseMap;
+
+	}
+
 
 
 	private static final Integer dayBef = 30;
 	private static final Integer dayAft = 30;
 
-	
-	@GetMapping("/test")
-	public Map<String, Object> test(HttpServletRequest request, HttpServletResponse response){
-		java.util.Date t1 = new java.util.Date();
-		Map<String, Object> responseMap = new HashMap<>();
-		
-		LocalDate currentTime = LocalDate.now().minusDays(7);
-		System.out.println("ищем за "+currentTime);
-		String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-		Date dateForSearch = Date.valueOf(currentTime);
 
-		List<OrderProduct> products = orderProductService.getOrderProductListHasDate(Date.valueOf(currentTime.minusDays(1)));
-		
-		System.out.println(products.get(0).getDateCreate());
 
-		List<Long> orderProductsIds = products.stream().map(p -> p.getCodeProduct().longValue()).collect(Collectors.toList());
-
-		List<Order> orders2 = orderService.getOrderGroupByPeriodSlotsAndProduct(dateForSearch, dateForSearch, orderProductsIds);
-		
-		
-		orders2.forEach(o-> System.out.println(o));
-		
-		return responseMap;		
-	}
 	
 	public static boolean deleteFolder(File folder) {
 	    if (folder.isDirectory()) {
@@ -515,45 +624,34 @@ public class MainRestController {
 //            zos.closeEntry();
 //        }
 //    }
-	
-	
-//	
-//	@GetMapping("/test")
-//	public Map<String, Object> test(HttpServletRequest request, HttpServletResponse response){
-//		java.util.Date t1 = new java.util.Date();
-//		Map<String, Object> responseMap = new HashMap<>();
-//		
-//		File pdfFile = new File("C:/Program Files/10-27-38.pdf");
-//
-//        // Настройка Tesseract
-//        ITesseract tesseract = new Tesseract();
-//        tesseract.setDatapath("C:/Program Files/Tesseract-OCR/tessdata"); // Укажите путь к Tesseract
-//        tesseract.setLanguage("rus"); // Задайте язык
-//
-//        try (PDDocument document = PDDocument.load(pdfFile)) {
-//            PDFRenderer pdfRenderer = new PDFRenderer(document);
-//            StringBuilder fullText = new StringBuilder();
-//
-//            // Обрабатываем каждую страницу PDF
-//            for (int page = 0; page < document.getNumberOfPages(); page++) {
-//                BufferedImage image = pdfRenderer.renderImageWithDPI(page, 300); // Извлечение изображения
-//
-//                // Применяем OCR для распознавания текста на изображении
-//                String text = tesseract.doOCR(image);
-//                fullText.append(text).append("\n");
-//            }
-//
-//            System.out.println("Распознанный текст из PDF:");
-//            System.out.println(fullText);
-//
-//        } catch (IOException | TesseractException e) {
-//            e.printStackTrace();
-//        }
-//        
-//		java.util.Date t2 = new java.util.Date();
-//		System.out.println(t2.getTime()-t1.getTime() + " ms - preloadTEST" );
-//		return responseMap;		
-//	}
+
+    
+    /**
+     * Метод для сводной таблицы.
+     * принимает даты с по того, что стоит в слотах и код продукта
+     * @param request
+     * @param response
+     * @param dateStart
+     * @param dateFinish
+     * @param productCode
+     * @return
+     * @throws IOException
+     */
+    @GetMapping("/procurement/getOrderStat/paramTimeDeliveryAndOL/{dateStart}&{dateFinish}&{productCode}")
+    public Map<String, Object> getOrderStatParamOL(HttpServletRequest request, HttpServletResponse response,
+    		@PathVariable String dateStart,
+    		@PathVariable String dateFinish,
+    		@PathVariable String productCode) throws IOException{
+
+		Map<String, Object> responseMap = new HashMap<>();		
+		Date dateStartTarget = Date.valueOf(dateStart);
+		Date dateFinishTarget = Date.valueOf(dateFinish);
+		List<Long> productCodeTarget = Arrays.asList(Long.parseLong(productCode));
+		List<Order> orders = orderService.getOrderGroupByPeriodSlotsAndProduct(dateStartTarget, dateFinishTarget, productCodeTarget);
+		
+		responseMap.put("orders", orders);
+		return responseMap;
+    }
     
     @GetMapping("/balance/{idOrder}")
     public Map<String, Object> balanceMethod(HttpServletRequest request, HttpServletResponse response,
@@ -562,6 +660,7 @@ public class MainRestController {
 		Map<String, Object> responseMap = new HashMap<>();
 		
 		Order order = orderService.getOrderById(Integer.parseInt(idOrder));
+		order.getOrderLines().forEach(o-> System.out.println(o));
 		List<Product> products = readerSchedulePlan.checkBalanceBetweenStock(order);
 		
 		responseMap.put("products", products);
@@ -580,12 +679,13 @@ public class MainRestController {
 	 */
 	@GetMapping("/balance2/{dateStartTarget}&{dateFinishTarget}&{stockTarget}")
 	@TimedExecution
-    public Map<String, Object> balance2Method(HttpServletRequest request, HttpServletResponse response,
+    public void balance2Method(HttpServletRequest request, HttpServletResponse response,
     		@PathVariable String dateStartTarget,
     		@PathVariable String dateFinishTarget,
     		@PathVariable String stockTarget) throws IOException{
 
 		Map<String, Object> responseMap = new HashMap<>();
+		List<Order> ordersForExcel = new ArrayList<Order>();
 		Date dateStart = Date.valueOf(dateStartTarget);
 		Date dateEnd = Date.valueOf(dateFinishTarget);
 		
@@ -598,16 +698,29 @@ public class MainRestController {
 			Map<String, Object> responseOrder = new HashMap<>();
 			List<Product> products = readerSchedulePlan.checkBalanceBetweenStock(order);
 			int i=1;
+			order.setSlotInfo(null);
 			
 			for (Product product : products) {
 				if(Integer.parseInt(stockTarget) == 1700) {
 					if(product.getCalculatedDayStock1700() > 20 && product.getCalculatedDayStock1700()>product.getCalculatedDayStock1800()) {
 						responseOrder.put("Код товара -- товар -- остаток 1700 -- остаток 1800 -- логин менеджера "+i+" : ", product.getCodeProduct() + "  --  " + product.getName() + "  --  " + product.getCalculatedDayStock1700()+ "  --  " + product.getCalculatedDayStock1800() + "  --  " + order.getLoginManager().split("%")[0]);
+//						System.err.println(product.getCalculatedDayStock1700()+ "  --  " + product.getCalculatedDayStock1800());
+						if(order.getSlotInfo() == null)  {
+							order.setSlotInfo(product.getCodeProduct() + "  --  " + product.getName() + "  --  " +product.getCalculatedDayStock1700()+ "  --  " + product.getCalculatedDayStock1800());
+						}else {
+							order.setSlotInfo(order.getSlotInfo() + "\n" + product.getCodeProduct() + "  --  " + product.getName() + "  --  " + product.getCalculatedDayStock1700()+ "  --  " + product.getCalculatedDayStock1800());
+						}
 						i++;
 					}
 				}else {
 					if(product.getCalculatedDayStock1800() > 20 && product.getCalculatedDayStock1800()>product.getCalculatedDayStock1700()) {
 						responseOrder.put("Код товара -- товар -- остаток 1700 -- остаток 1800 -- логин менеджера "+i+" : ", product.getCodeProduct() + "  --  " + product.getName() + "  --  " + product.getCalculatedDayStock1700()+ "  --  " + product.getCalculatedDayStock1800() + "  --  " + order.getLoginManager().split("%")[0]);
+//						System.out.println(product.getCalculatedDayStock1700()+ "  --  " + product.getCalculatedDayStock1800());
+						if(order.getSlotInfo() == null)  {
+							order.setSlotInfo(product.getCodeProduct() + "  --  " + product.getName() + "  --  " + product.getCalculatedDayStock1700()+ "  --  " + product.getCalculatedDayStock1800());
+						}else {
+							order.setSlotInfo(order.getSlotInfo() + "\n" + product.getCodeProduct() + "  --  " + product.getName() + "  --  " + product.getCalculatedDayStock1700()+ "  --  " + product.getCalculatedDayStock1800());
+						}
 						i++;
 					}
 				}
@@ -617,18 +730,47 @@ public class MainRestController {
 				continue;
 			}
 			if(order.getOrderLines().size() == i-1) {
-				summpall = summpall + Integer.parseInt(order.getPall());
-				responseOrder.put("Номер заказа: ", order.getIdOrder());
-				responseOrder.put("Номер из маркета: ", order.getMarketNumber());
-				responseOrder.put("Контрагент ", order.getCounterparty());
-				responseOrder.put("Всего SKU ", order.getOrderLines().size());
-				responseOrder.put("Info ", order.getMarketNumber() + "  --  " + order.getLoginManager().split("%")[0]);
-				responseMap.put(order.getIdOrder()+"", responseOrder);
+//				summpall = summpall + Integer.parseInt(order.getPall());
+//				responseOrder.put("Номер заказа: ", order.getIdOrder());
+//				responseOrder.put("Номер из маркета: ", order.getMarketNumber());
+//				responseOrder.put("Контрагент ", order.getCounterparty());
+//				responseOrder.put("Всего SKU ", order.getOrderLines().size());
+//				responseOrder.put("Info ", order.getMarketNumber() + "  --  " + order.getLoginManager().split("%")[0]);
+//				responseMap.put(order.getIdOrder()+"", responseOrder);
+				ordersForExcel.add(order);
 			}
 			
 		}
 		responseMap.put("Всего паллет для перемещения", summpall);
-		return responseMap;
+		String appPath = request.getServletContext().getRealPath("");
+        String folderPath = appPath + "resources/others/moveOrders.xlsx";
+		serviceLevel.orderBalanceHasDates(ordersForExcel, dateStart, dateEnd, folderPath);
+		
+		response.setHeader("content-disposition", "attachment;filename=moveOrders.xlsx");
+		response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+		FileInputStream in = null;
+		OutputStream out = null;
+		try {
+			// Прочтите файл, который нужно загрузить, и сохраните его во входном потоке файла
+			in = new FileInputStream(folderPath);
+			//  Создать выходной поток
+			out = response.getOutputStream();
+			//  Создать буфер
+			byte buffer[] = new byte[1024];
+			int len = 0;
+			//  Прочитать содержимое входного потока в буфер в цикле
+			while ((len = in.read(buffer)) > 0) {
+				out.write(buffer, 0, len);
+			}
+			in.close();
+			out.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}finally {
+			in.close();
+			out.close();
+		}
+//		return responseMap;
     }
 	
     /**
@@ -3981,7 +4123,32 @@ public class MainRestController {
 		}
 		return numStock;		
 	}
-	
+
+	/**
+	 * Метод возвращает номер склада из idRump
+	 * @param order
+	 * @return
+	 * @author Ira
+	 */
+	private String getTrueStockWithNullCheck(Order order) {
+		String numStock = null;
+		if (order.getIdRamp() == null) {
+			numStock = order.getNumStockDelivery();
+		} else {
+			if(order.getIdRamp().toString().length() < 5) {
+				System.err.println("Ошибка в названии склада. Склад не может быть двухзначным");
+			}
+			if(order.getIdRamp().toString().length() < 6) { // проверка на будующее если будет учавстовать склад с трехзначным индексом
+				numStock = order.getIdRamp().toString().substring(0, 3);
+			}else {
+				numStock = order.getIdRamp().toString().substring(0, 4);
+			}
+		}
+
+		return numStock;
+	}
+
+
 	/**
 	 * Метод добавления ивента / слота на рампу
 	 * @param request
@@ -4248,28 +4415,6 @@ public class MainRestController {
 			@RequestParam(value = "excel", required = false) MultipartFile excel)
 			throws InvalidFormatException, IOException, ServiceException {
 		Map<String, String> response = new HashMap<String, String>();	
-		Date dateUnload = null;
-		String filename = excel.getOriginalFilename();
-
-        try {
-            // Извлечение даты из строки
-            String datePart = filename.substring(0, filename.indexOf(".xlsx"));
-
-            // Формат даты в исходной строке
-            SimpleDateFormat inputFormat = new SimpleDateFormat("dd.MM.yyyy");
-
-            // Преобразование в java.util.Date
-            java.util.Date utilDate = inputFormat.parse(datePart);
-
-            // Преобразование в java.sql.Date
-            dateUnload = new Date(utilDate.getTime());
-
-        } catch (java.text.ParseException e) {
-            System.err.println("Ошибка при разборе даты: " + e.getMessage());
-            response.put("status", "100");
-            response.put("message", "Ошибка при разборе даты: " + filename);
-            return response;
-        }
 
 		File file1 = poiExcel.getFileByMultipartTarget(excel, request, "490.xlsx");
 		String text;
@@ -4278,7 +4423,7 @@ public class MainRestController {
 //			return response;
 //		}
 		//основной метод загрузки в БД
-		text = poiExcel.loadBalanceStock2(file1, request, dateUnload);
+		text = poiExcel.loadBalanceStock2(file1, request);
 		response.put("200", text);
 		return response;
 	}

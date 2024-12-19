@@ -20,6 +20,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
@@ -64,7 +65,9 @@ public class ServiceLevel {
 		orders.sort(Comparator.comparing(Order::getMarketContractType)); // групируем номера контрактов
 		int sizeOrders = orders.size();
 		int sizeVoidOrder = 0;
+		System.out.println(Date.valueOf(dateOrder.toLocalDate().minusDays(1)));
 		Map <Integer, Integer> orderProductsORL = orderProductService.getOrderProductMapHasDate(Date.valueOf(dateOrder.toLocalDate().minusDays(1))); // что заказали ОРЛ
+		System.out.println(orderProductsORL);
 		List<DataOrderHasNumContract> dataOrderHasNumContracts = new ArrayList<DataOrderHasNumContract>(); // лист с результатами сложений заказов относительно кода контракта
 
 		//формируем список с объектом data для удобного формирования екселя по номерам контактор
@@ -113,6 +116,69 @@ public class ServiceLevel {
 		
 		
 		return exportToExcel(dataOrderHasNumContracts, orderProductsORL, appPath + "resources/others/" + fileName);		
+	}
+	
+	/**
+	 * 
+	 * @param orders
+	 * @param dateOrder
+	 * @param appPath
+	 * @return
+	 * @throws IOException
+	 */
+	public File orderBalanceHasDates(List<Order> orders, Date dateStart, Date dateFinish, String filePath) throws IOException {
+	    Workbook workbook = new XSSFWorkbook();
+	    Sheet sheet = workbook.createSheet("Отчёт по перемещению");
+
+	    // Создание заголовков
+	    Row headerRow = sheet.createRow(0);
+	    headerRow.createCell(0).setCellValue("idOrder");
+	    headerRow.createCell(1).setCellValue("Код маркета");
+	    headerRow.createCell(2).setCellValue("Контрагент");
+	    headerRow.createCell(3).setCellValue("Дата в слотах");
+	    headerRow.createCell(4).setCellValue("Склад/рампа");
+	    headerRow.createCell(5).setCellValue("Менеджер");
+	    headerRow.createCell(6).setCellValue("Информация по остаткам");
+	    headerRow.createCell(7).setCellValue("Паллет в заказе");
+	    
+
+	    // Применение фильтров
+	    sheet.setAutoFilter(new CellRangeAddress(0, 0, 0, 6));
+	    
+	    //фиксируем верхнюю строку при скроле
+	    sheet.createFreezePane(0, 1);
+
+	    int rowNum = 1;
+
+	    // Заполнение данными 1 страницы
+	    for (Order order : orders) {
+
+	    	Row row = sheet.createRow(rowNum++);
+	    	row.createCell(0).setCellValue(order.getIdOrder());
+            row.createCell(1).setCellValue(order.getMarketNumber());
+            row.createCell(2).setCellValue(order.getCounterparty());
+            row.createCell(3).setCellValue(order.getTimeUnload() != null ? order.getTimeUnload()+"" : "Oтсутствует в слотах");
+            row.createCell(4).setCellValue(order.getIdRamp() != null ? order.getIdRamp()+"" : "Oтсутствует в слотах");
+            row.createCell(5).setCellValue(order.getLoginManager());
+            row.createCell(6).setCellValue(order.getSlotInfo());
+            row.createCell(7).setCellValue(Integer.parseInt(order.getPall()));
+            
+            
+	    }
+
+	    // Установка автоширины для всех столбцов
+	    for (int i = 0; i < 8; i++) {
+	        sheet.autoSizeColumn(i);
+	    }
+
+	    // Запись в файл
+	    File excelFile = new File(filePath);
+	    try (FileOutputStream fileOut = new FileOutputStream(excelFile)) {
+	        workbook.write(fileOut);
+	    }
+
+	    workbook.close();
+	    return excelFile; // Возвращаем созданный файл
 	}
 	
 	public File exportToExcel(List<DataOrderHasNumContract> dataOrderHasNumContracts, Map<Integer, Integer> orderProductsORL, String filePath) throws IOException {
@@ -209,6 +275,8 @@ public class ServiceLevel {
 	    workbook.close();
 	    return excelFile; // Возвращаем созданный файл
 	}
+	
+	
 
 	
 	class DataOrderHasNumContract {

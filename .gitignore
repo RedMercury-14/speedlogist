@@ -4,7 +4,7 @@
 .project
 .classpath
 /.idea/
-/src/main/webapp/WEB-INF/config/applicationContext.xml
+src/main/webapp/WEB-INF/config/applicationContext.xml
 /src/main/webapp/WEB-INF/view/
 /src/main/webapp/resources/css/
 /src/main/webapp/resources/js/

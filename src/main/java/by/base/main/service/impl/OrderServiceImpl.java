@@ -409,15 +409,12 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
-	/**
-	 * @author Ira
-	 * <br>Возвращает список Order по дате создания слота и номеру товара</br>
-	 * @param dateCreate
-	 * @param goodsId
-	 * @return
-	 */
-	public List<OrderLine> getOrderBySlotDateAndGoodId(Date dateCreate, List<Integer> goodsId) {
-		return orderDAO.getOrderBySlotDateAndGoodId(dateCreate, goodsId);
+	public List<Order> getOrderByFirstLoadSlotAndDateOrderOrlAndGoodsId(Date dateStart, Date dateEnd, List<Long> goodsIds, Date dateOrderOrl) {
+		return orderDAO.getOrderByFirstLoadSlotAndDateOrderOrlAndGoodsId(dateStart, dateEnd, goodsIds, dateOrderOrl);
 	}
-	
+
+	@Override
+	public List<Order> getOrderByFirstLoadSlotAndDateOrderOrl(Date dateStart, Date dateEnd, Date dateOrderOrl) {
+		return orderDAO.getOrderByFirstLoadSlotAndDateOrderOrl(dateStart, dateEnd, dateOrderOrl);
+	}
 }

@@ -633,6 +633,7 @@ public class ReaderSchedulePlan {
 						quantity = product.getOrderProductsListHasDateTarget(dateNow);
 					}
 					
+//						System.err.println(quantity.get(0));		
 					
 
 					if(quantity != null && !quantity.isEmpty()) {

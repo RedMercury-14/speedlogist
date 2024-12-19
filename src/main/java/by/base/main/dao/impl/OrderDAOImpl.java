@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 import javax.persistence.TemporalType;
 import javax.transaction.Transactional;
 
-import by.base.main.model.OrderLine;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -315,7 +314,9 @@ public class OrderDAOImpl implements OrderDAO{
 		return trucks;
 	}
 
-	private static final String queryGetOrderByTimeDelivery = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH r.truck t LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH o.addresses a where o.status !=10 AND o.status !=40 AND o.timeDelivery BETWEEN :dateStart and :dateEnd";
+	private static final String queryGetOrderByTimeDelivery = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH r.truck t LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH o.addresses a " +
+			"where o.status !=10 AND o.status !=40 " +
+			"AND o.timeDelivery BETWEEN :dateStart and :dateEnd";
 	@Transactional
 	@Override
 	public List<Order> getOrderByTimeDelivery(Date dateStart, Date dateEnd) {
@@ -702,25 +703,38 @@ public class OrderDAOImpl implements OrderDAO{
 		return trucks.stream().collect(Collectors.toList());
 	}
 
-	/**
-	 * @author Ira
-	 * <br>Возвращает список Order по дате создания слота и номеру товара</br>
-	 * @param dateCreate
-	 * @param goodsId
-	 * @return
-	 */
-	private static final String queryGetOrdersBySlotDateAndGoodId = "from OrderLine ol LEFT JOIN FETCH Order o "
-			+ "where o.dateCreate = :dateCreate AND ol.goodsId = :goodsId";
+	private static final String queryGetOrderByFirstLoadSlotAndDateOrderOrlAndGoodsId = "from Order o LEFT JOIN FETCH o.orderLines ol "
+			+ "where o.firstLoadSlot BETWEEN :dateStart and :dateEnd and o.dateOrderOrl =: dateOrderOrl and ol.goodsId IN (:goodsIds)";
 	@Transactional
 	@Override
-	public List<OrderLine> getOrderBySlotDateAndGoodId(Date dateCreate, List<Integer> goodsId) {
+	public List<Order> getOrderByFirstLoadSlotAndDateOrderOrlAndGoodsId(Date dateStart, Date dateEnd, List<Long> goodsIds, Date dateOrderOrl) {
+		Timestamp dateStartFinal = Timestamp.valueOf(LocalDateTime.of(dateStart.toLocalDate(), LocalTime.of(00, 00)));
+		Timestamp dateEndFinal = Timestamp.valueOf(LocalDateTime.of(dateEnd.toLocalDate(), LocalTime.of(23, 59)));
 		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Order> theObject = currentSession.createQuery(queryGetOrderByFirstLoadSlotAndDateOrderOrlAndGoodsId, Order.class);
+		theObject.setParameter("dateStart", dateStartFinal, TemporalType.TIMESTAMP);
+		theObject.setParameter("dateEnd", dateEndFinal, TemporalType.TIMESTAMP);
+		theObject.setParameterList("goodsIds", goodsIds);
+		theObject.setParameter("dateOrderOrl", dateOrderOrl);
+		Set<Order> trucks = theObject.getResultList().stream().collect(Collectors.toSet());
+		return trucks.stream().collect(Collectors.toList());
+	}
 
-		Query<OrderLine> theObject = currentSession.createQuery(queryGetOrdersBySlotDateAndGoodId, OrderLine.class);
-		theObject.setParameter("dateCreate", dateCreate);
-		theObject.setParameter("goodsId", goodsId);
-
-		List<OrderLine> orders = theObject.getResultList();
-		return orders;
+	private static final String queryGetOrderByFirstLoadSlotAndDateOrderOrl = "from Order o LEFT JOIN FETCH o.orderLines ol "
+			+ "where o.firstLoadSlot BETWEEN :dateStart and :dateEnd and o.dateOrderOrl =: dateOrderOrl";
+	@Transactional
+	@Override
+	public List<Order> getOrderByFirstLoadSlotAndDateOrderOrl(Date dateStart, Date dateEnd, Date dateOrderOrl) {
+		Timestamp dateStartFinal = Timestamp.valueOf(LocalDateTime.of(dateStart.toLocalDate(), LocalTime.of(00, 00)));
+		Timestamp dateEndFinal = Timestamp.valueOf(LocalDateTime.of(dateEnd.toLocalDate(), LocalTime.of(23, 59)));
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Order> theObject = currentSession.createQuery(queryGetOrderByFirstLoadSlotAndDateOrderOrl, Order.class);
+		theObject.setParameter("dateStart", dateStartFinal, TemporalType.TIMESTAMP);
+		theObject.setParameter("dateEnd", dateEndFinal, TemporalType.TIMESTAMP);
+		theObject.setParameter("dateOrderOrl", dateOrderOrl);
+		Set<Order> trucks = theObject.getResultList().stream().collect(Collectors.toSet());
+		return trucks.stream().collect(Collectors.toList());
 	}
 }
+
+

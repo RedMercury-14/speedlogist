@@ -221,12 +221,23 @@ public interface OrderService {
 	List<Order> getOrderByPeriodDeliveryAndCodeContractNotJOIN(Date dateStart, Date dateEnd, String numContract);
 
 	/**
-	 * @param dateCreate
-	 * @param goodsId
+	 * @param dateStart
+	 * @param dateEnd
+	 * @param goodsIds
+	 * @param dateOrderOrl
 	 * @return
+	 * <br>Возвращает список Order по дате создания слота, номерам товара и дате заказа ОРЛ</br>
 	 * @author Ira
-	 * <br>Возвращает список Order по дате создания слота и номеру товара</br>
 	 */
-	List<OrderLine> getOrderBySlotDateAndGoodId(Date dateCreate, List<Integer> goodsId);
+	List<Order> getOrderByFirstLoadSlotAndDateOrderOrlAndGoodsId(Date dateStart, Date dateEnd, List<Long> goodsIds, Date dateOrderOrl);
 	
+	/**
+	 * Возвращает список Order по дате создания слота и дате заказа ОРЛ
+	 * @param dateStart
+	 * @param dateEnd
+	 * @param goodsIds
+	 * @param dateOrderOrl
+	 * @return
+	 */
+	List<Order> getOrderByFirstLoadSlotAndDateOrderOrl(Date dateStart, Date dateEnd, Date dateOrderOrl);
 }

@@ -328,6 +328,18 @@ public class Product {
 
 	@Column(name = "sum_ost_1800")
 	private Double sumOst1800;
+	
+	@Column(name = "report_380_1700")
+	private Double report380_1700;
+	
+	@Column(name = "report_380_1800")
+	private Double report380_1800;
+	
+	@Column(name = "moved_from_1800_to_1700")
+	private Double movedFrom1800To1700;
+	
+	@Column(name = "moved_from_1700_to_1800")
+	private Double movedFrom1700To1800;
 
 	
 	/**
@@ -1450,6 +1462,38 @@ public class Product {
 	}
 
 	
+
+	public Double getReport380_1700() {
+		return report380_1700;
+	}
+
+	public void setReport380_1700(Double report380_1700) {
+		this.report380_1700 = report380_1700;
+	}
+
+	public Double getReport380_1800() {
+		return report380_1800;
+	}
+
+	public void setReport380_1800(Double report380_1800) {
+		this.report380_1800 = report380_1800;
+	}
+
+	public Double getMovedFrom1800To1700() {
+		return movedFrom1800To1700;
+	}
+
+	public void setMovedFrom1800To1700(Double movedFrom1800To1700) {
+		this.movedFrom1800To1700 = movedFrom1800To1700;
+	}
+
+	public Double getMovedFrom1700To1800() {
+		return movedFrom1700To1800;
+	}
+
+	public void setMovedFrom1700To1800(Double movedFrom1700To1800) {
+		this.movedFrom1700To1800 = movedFrom1700To1800;
+	}
 
 	@Override
 	public int hashCode() {

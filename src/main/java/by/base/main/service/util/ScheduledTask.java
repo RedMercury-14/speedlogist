@@ -107,91 +107,91 @@ public class ScheduledTask {
 		System.out.println("Finish --- sendSchedulesHasORL");
     }
     
-//    @Scheduled(cron = "0 00 05 * * ?") // каждый день в 05:00
-//    public void sendProblemsWithOrders() {
-//    	XSSFWorkbook book = new XSSFWorkbook();
-//		XSSFSheet sheet = book.createSheet("Несоответствия");
-//		String[] headers = {
-//				"Код товара", "Наименование товара", "Количество в поддоне", "Заказ (остальные склады)", "Заказ 1700", "Заказ 1800",
-//				"Увеличенный заказ 1700", "Увеличенный заказ 1800", "Комментарий", "Количество для заказа", "ФАКТИЧЕСКИ заказано"
-//		};
-//
-//		// Создаем строку заголовков
-//		Row headerRow = sheet.createRow(0);
-//		for (int i = 0; i < headers.length; i++) {
-//			Cell cell = headerRow.createCell(i);
-//			cell.setCellValue(headers[i]);
-//		}
-//
-//		boolean isSheetEmpty = true;
-//		int rowNum = 1;
-//		//TODO Ira test
-//
-//		LocalDate currentTime = LocalDate.now().minusDays(1);
-//		LocalDate currentTimeDayBefore = currentTime.minusDays(1);
-//		String currentTimeDayBeforeString = currentTimeDayBefore.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-//		Date dateForSearch = Date.valueOf(currentTime);
-//		Date dateForSearchBefore = Date.valueOf(currentTime.minusDays(1));
-//
-//
-//		String fileName = "Несоответствия потребностей и слотов за " + currentTimeDayBeforeString + ".xlsx";
-//		String appPath = servletContext.getRealPath("/");
-//
-//		List<OrderProduct> products = orderProductService.getOrderProductListHasDate(dateForSearchBefore);
-//
-//		List<Long> orderProductsIds = products.stream().map(p -> p.getCodeProduct().longValue()).collect(Collectors.toList());
-//
-//		List<Order> orders = orderService.getOrderByFirstLoadSlotAndDateOrderOrlAndGoodsId(dateForSearchBefore, dateForSearch, orderProductsIds, dateForSearchBefore);
-//
-//		for (OrderProduct orderProduct : products) {
-//			double quantityFromOrders = 0;
-//
-//			for (Order order : orders) {
-//				for (OrderLine orderLine : order.getOrderLines()) {
-//					if (orderProduct.getCodeProduct().longValue() == orderLine.getGoodsId()) {
-//						double quantity = orderLine.getQuantityOrder() == null ? 0 : orderLine.getQuantityOrder();
-//						quantityFromOrders += quantity;
-//					}
-//				}
-//			}
-//			int summaryQuantity = (orderProduct.getQuantity1800() == null ? 0 : orderProduct.getQuantity1800())
-//					+ (orderProduct.getQuantity1700() == null ? 0 : orderProduct.getQuantity1700())
-//					+ (orderProduct.getQuantity() == null ? 0 : orderProduct.getQuantity());
-//			if (quantityFromOrders < summaryQuantity) {
-//				isSheetEmpty = false;
-//				try {
-//					poiExcel.fillExcelAboutNeeds(orderProduct, sheet, rowNum, summaryQuantity, quantityFromOrders);
-//				} catch (FileNotFoundException e) {
-//					// TODO Auto-generated catch block
-//					e.printStackTrace();
-//				}
-//				rowNum++;
-//			}
-//		}
-//		double percentOfcoverage = ((double) rowNum - 1) / (double) products.size() * 100;
-//		String result = String.format("%.2f",percentOfcoverage);
-//
-//		if (!isSheetEmpty) {
-//			try {
-//				File file = new File(appPath + "resources/others/" + fileName);
-//				book.write(new FileOutputStream(file));
-//				book.close();
-//			} catch (IOException e) {
-//				e.printStackTrace();
-//			}
-//
-//			String str = "По данным потребностям не были созданы слоты в установленное время. Процент не поставленных заказов относительно заказ ОРЛ - " + result +"%.";
-//			List<File> files = new ArrayList<File>();
-//			files.add(new File(appPath + "resources/others/" + fileName));
-//
-//			System.out.println(appPath + "resources/others/" + fileName);
-//
-//			List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.problemsWithOrders");
-//			mailService.sendEmailWithFilesToUsers(servletContext, "Незакрытые потребности " + currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")),
-//					str, files, emails);
-//
-//		}
-//    }
+    @Scheduled(cron = "0 00 05 * * ?") // каждый день в 05:00
+    public void sendProblemsWithOrders() {
+    	XSSFWorkbook book = new XSSFWorkbook();
+		XSSFSheet sheet = book.createSheet("Несоответствия");
+		String[] headers = {
+				"Код товара", "Наименование товара", "Количество в поддоне", "Заказ (остальные склады)", "Заказ 1700", "Заказ 1800",
+				"Увеличенный заказ 1700", "Увеличенный заказ 1800", "Комментарий", "Количество для заказа", "ФАКТИЧЕСКИ заказано"
+		};
+
+		// Создаем строку заголовков
+		Row headerRow = sheet.createRow(0);
+		for (int i = 0; i < headers.length; i++) {
+			Cell cell = headerRow.createCell(i);
+			cell.setCellValue(headers[i]);
+		}
+
+		boolean isSheetEmpty = true;
+		int rowNum = 1;
+		//TODO Ira test
+
+		LocalDate currentTime = LocalDate.now().minusDays(1);
+		LocalDate currentTimeDayBefore = currentTime.minusDays(1);
+		String currentTimeDayBeforeString = currentTimeDayBefore.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+		Date dateForSearch = Date.valueOf(currentTime);
+		Date dateForSearchBefore = Date.valueOf(currentTime.minusDays(1));
+
+
+		String fileName = "Несоответствия потребностей и слотов за " + currentTimeDayBeforeString + ".xlsx";
+		String appPath = servletContext.getRealPath("/");
+
+		List<OrderProduct> products = orderProductService.getOrderProductListHasDate(dateForSearchBefore);
+
+		List<Long> orderProductsIds = products.stream().map(p -> p.getCodeProduct().longValue()).collect(Collectors.toList());
+
+		List<Order> orders = orderService.getOrderByFirstLoadSlotAndDateOrderOrlAndGoodsId(dateForSearchBefore, dateForSearch, orderProductsIds, dateForSearchBefore);
+
+		for (OrderProduct orderProduct : products) {
+			double quantityFromOrders = 0;
+
+			for (Order order : orders) {
+				for (OrderLine orderLine : order.getOrderLines()) {
+					if (orderProduct.getCodeProduct().longValue() == orderLine.getGoodsId()) {
+						double quantity = orderLine.getQuantityOrder() == null ? 0 : orderLine.getQuantityOrder();
+						quantityFromOrders += quantity;
+					}
+				}
+			}
+			int summaryQuantity = (orderProduct.getQuantity1800() == null ? 0 : orderProduct.getQuantity1800())
+					+ (orderProduct.getQuantity1700() == null ? 0 : orderProduct.getQuantity1700())
+					+ (orderProduct.getQuantity() == null ? 0 : orderProduct.getQuantity());
+			if (quantityFromOrders < summaryQuantity) {
+				isSheetEmpty = false;
+				try {
+					poiExcel.fillExcelAboutNeeds(orderProduct, sheet, rowNum, summaryQuantity, quantityFromOrders);
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				rowNum++;
+			}
+		}
+		double percentOfcoverage = ((double) rowNum - 1) / (double) products.size() * 100;
+		String result = String.format("%.2f",percentOfcoverage);
+
+		if (!isSheetEmpty) {
+			try {
+				File file = new File(appPath + "resources/others/" + fileName);
+				book.write(new FileOutputStream(file));
+				book.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+			String str = "По данным потребностям не были созданы слоты в установленное время. Процент не поставленных заказов относительно заказ ОРЛ - " + result +"%.";
+			List<File> files = new ArrayList<File>();
+			files.add(new File(appPath + "resources/others/" + fileName));
+			
+			System.out.println(appPath + "resources/others/" + fileName);
+
+			List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.problemsWithOrders");
+			mailService.sendEmailWithFilesToUsers(servletContext, "Незакрытые потребности " + currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")),
+					str, files, emails);
+
+		}
+    }
     
     @Scheduled(cron = "0 00 04 * * ?") // каждый день в 04:00
     public void sendSchedulesTOHasORL() {

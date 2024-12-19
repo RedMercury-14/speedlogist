@@ -365,14 +365,6 @@ public class MainRestController {
 
 		List<Order> orders = orderService.getOrderByFirstLoadSlotAndDateOrderOrl(dateForSearchBefore, dateForSearch, dateForSearch);
 
-		System.out.println("dateTarget = " + currentTime);
-		System.out.println("dateOrderTarget = " + currentTimeDayBefore);
-		System.out.println("dateStart = " + dateForSearchBefore);
-		System.out.println("dateEnd = " + dateForSearch);
-		System.out.println("dateOrderORL = " + dateForSearchBefore);
-//     System.out.println("orders old = " + orders2.size());
-		System.out.println("orders new = " + orders.size());
-
 		int amountOrdered1700 = 0;
 		int amountOrdered1800 = 0;
 		int amountOrderedOthers = 0;
@@ -493,7 +485,7 @@ public class MainRestController {
 			System.out.println(appPath + "resources/others/" + fileName);
 
 			List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
-//        mailService.sendEmailWithFilesToUsers(servletContext, "Незакрытые потребности " + currentTimeDayBeforeString, str, files, emails);
+        mailService.sendEmailWithFilesToUsers(servletContext, "Незакрытые потребности " + currentTimeDayBeforeString, str, files, emails);
 
 		}
 

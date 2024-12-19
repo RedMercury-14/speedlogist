@@ -1,6 +1,5 @@
 package by.base.main.service.util;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -10,7 +9,6 @@ import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -24,7 +22,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -32,9 +29,10 @@ import java.util.stream.Collectors;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 
+import by.base.main.model.*;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
-import org.apache.poi.hssf.usermodel.HSSFPrintSetup;
+import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.BorderExtent;
 import org.apache.poi.ss.usermodel.BorderStyle;
@@ -54,48 +52,16 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.PropertyTemplate;
-import org.apache.poi.xssf.usermodel.XSSFCell;
-import org.apache.poi.xssf.usermodel.XSSFCreationHelper;
-import org.apache.poi.xssf.usermodel.XSSFRow;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.hibernate.internal.build.AllowSysOut;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
+import org.apache.poi.xssf.usermodel.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.ibm.icu.text.RuleBasedNumberFormat;
-import com.ibm.icu.text.SimpleDateFormat;
-import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
-import com.itextpdf.text.Element;
-import com.itextpdf.text.ElementListener;
-import com.itextpdf.text.FontFactory;
-import com.itextpdf.text.PageSize;
-import com.itextpdf.text.Paragraph;
-import com.itextpdf.text.Phrase;
-import com.itextpdf.text.pdf.BaseFont;
-import com.itextpdf.text.pdf.PdfPCell;
-import com.itextpdf.text.pdf.PdfPTable;
-import com.itextpdf.text.pdf.PdfStructTreeController.returnType;
-import com.itextpdf.text.pdf.PdfWriter;
 
 import by.base.main.dao.RouteDAO;
 import by.base.main.dao.RouteHasShopDAO;
 import by.base.main.dao.ShopDAO;
-import by.base.main.model.Act;
-import by.base.main.model.MapResponse;
-import by.base.main.model.Message;
-import by.base.main.model.Order;
-import by.base.main.model.OrderProduct;
-import by.base.main.model.Product;
-import by.base.main.model.Route;
-import by.base.main.model.RouteHasShop;
-import by.base.main.model.Schedule;
-import by.base.main.model.Shop;
 import by.base.main.service.ActService;
 import by.base.main.service.MessageService;
 import by.base.main.service.OrderService;
@@ -4182,33 +4148,88 @@ public class POIExcel {
 	}
 
 	/**
-	 * @author Ira
 	 * <br>Заполняет таблицу в excel данными о потребностях без слотов</br>
 	 * @return
+	 * @author Ira
 	 */
-	public void fillExcelAboutNeeds(OrderProduct product, Sheet sheet, int rowNum, int summary, double ordered) throws FileNotFoundException {
+	public void fillExcelAboutNeeds(OrderProduct product, double quantityFromOrders, double quantityFromOrders1700, double quantityFromOrders1800, Sheet sheet, int rowNum) {
 
 		Row row = sheet.createRow(rowNum);
 
-		String quantityInPallet = product.getQuantityInPallet() == null ? "" : product.getQuantityInPallet().toString();
-		String quantity = product.getQuantity() == null ? "" : product.getQuantity().toString();
-		String quantity1700 = product.getQuantity1700() == null ? "" : product.getQuantity1700().toString();
-		String quantity1800 = product.getQuantity1800() == null ? "" : product.getQuantity1800().toString();
-		String maxQuantity1700 = product.getQuantity1700Max() == null ? "" : product.getQuantity1700Max().toString();
-		String maxQuantity1800 = product.getQuantity1800Max() == null ? "" : product.getQuantity1800Max().toString();
+		Font redFont = sheet.getWorkbook().createFont();
+		redFont.setColor(HSSFColor.HSSFColorPredefined.RED.getIndex());
+		CellStyle redCellStyle = sheet.getWorkbook().createCellStyle();
+		redCellStyle.setFont(redFont);
 
+		Font yellowFont = sheet.getWorkbook().createFont();
+		yellowFont.setColor(HSSFColor.HSSFColorPredefined.BLUE.getIndex());
+		CellStyle yellowCellStyle = sheet.getWorkbook().createCellStyle();
+		yellowCellStyle.setFont(yellowFont);
+
+		Font grenFont = sheet.getWorkbook().createFont();
+		grenFont.setColor(HSSFColor.HSSFColorPredefined.GREEN.getIndex());
+		CellStyle greenCellStyle = sheet.getWorkbook().createCellStyle();
+		greenCellStyle.setFont(grenFont);
+
+		int quantity = product.getQuantity() == null ? 0 : product.getQuantity();
+		int quantity1700 = product.getQuantity1700() == null ? 0 : product.getQuantity1700();
+		int quantity1800 = product.getQuantity1800() == null ? 0 : product.getQuantity1800();
+		int maxQuantity1700 = product.getQuantity1700Max() == null ? 0 : product.getQuantity1700Max();
+		int maxQuantity1800 = product.getQuantity1800Max() == null ? 0 : product.getQuantity1800Max();
 
 		row.createCell(0).setCellValue(product.getCodeProduct());
 		row.createCell(1).setCellValue(product.getNameProduct());
-		row.createCell(2).setCellValue(quantityInPallet);
-		row.createCell(3).setCellValue(quantity);
+		row.createCell(2).setCellValue(quantity);
+		Cell cell3 = row.createCell(3);
+		if (quantityFromOrders > quantity) {
+			cell3.setCellStyle(yellowCellStyle);
+		} else if (quantityFromOrders < quantity) {
+			cell3.setCellStyle(redCellStyle);
+		} else {
+			cell3.setCellStyle(greenCellStyle);
+		}
+		cell3.setCellValue(quantityFromOrders);//заказано для quantity
+
 		row.createCell(4).setCellValue(quantity1700);
-		row.createCell(5).setCellValue(quantity1800);
-		row.createCell(6).setCellValue(maxQuantity1700);
-		row.createCell(7).setCellValue(maxQuantity1800);
-		row.createCell(8).setCellValue(product.getComment());
-		row.createCell(9).setCellValue(summary);
-		row.createCell(10).setCellValue(ordered);
+		Cell cell5 = row.createCell(5);
+		if (quantityFromOrders1700 > quantity1700) {
+			cell5.setCellStyle(yellowCellStyle);
+		} else if (quantityFromOrders1700 < quantity1700) {
+			cell5.setCellStyle(redCellStyle);
+		} else {
+			cell5.setCellStyle(greenCellStyle);
+		}
+		cell5.setCellValue(quantityFromOrders1700); //заказано для quantity1700
+
+		row.createCell(6).setCellValue(quantity1800);
+		Cell cell7 = row.createCell(7);
+		if (quantityFromOrders1800 > quantity1800) {
+			cell7.setCellStyle(yellowCellStyle);
+		} else if (quantityFromOrders1800 < quantity1800) {
+			cell7.setCellStyle(redCellStyle);
+		} else {
+			cell7.setCellStyle(greenCellStyle);
+		}
+		cell7.setCellValue(quantityFromOrders1800); //заказано для quantity1800
+
+		row.createCell(8).setCellValue(maxQuantity1700);
+		row.createCell(9).setCellValue(maxQuantity1800);
+
+	}
+
+	/**
+	 * <br>Заполняет проверочный лист в экселе с потребностями без слотов</br>
+	 * @return
+	 * @author Ira
+	 */
+	public void fillExcelToCheckNeeds(Sheet sheet, int rowNum, String date, OrderLine orderLine) {
+
+		Row row = sheet.createRow(rowNum);
+
+		row.createCell(0).setCellValue(orderLine.getGoodsId());
+		row.createCell(1).setCellValue(orderLine.getGoodsName());
+		row.createCell(2).setCellValue(date);
+		row.createCell(3).setCellValue(orderLine.getQuantityOrder());
 
 	}
 

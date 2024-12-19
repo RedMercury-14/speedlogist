@@ -22,7 +22,6 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -59,6 +58,8 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.json.simple.JSONArray;
@@ -312,10 +313,20 @@ public class MainRestController {
 
 		XSSFWorkbook book = new XSSFWorkbook();
 		XSSFSheet sheet = book.createSheet("Несоответствия");
+		XSSFSheet checkSheet = book.createSheet("Проверка");
+		XSSFCellStyle cellStyle = book.createCellStyle();
+
 		String[] headers = {
-				"Код товара", "Наименование товара", "Количество в поддоне", "Заказ (остальные склады)", "Заказ 1700", "Заказ 1800",
-				"Увеличенный заказ 1700", "Увеличенный заказ 1800", "Комментарий", "Количество для заказа", "ФАКТИЧЕСКИ заказано"
+				"Код товара", "Наименование товара", "Заказ (остальные склады)", "Заказано (остальные склады)", "Заказ 1700", "Заказано для 1700",
+				"Заказ 1800", "Заказано для 1800", "Увеличенный заказ 1700", "Увеличенный заказ 1800"
 		};
+
+
+		String[] checkHeaders = {
+				"Код товара", "название товара", "дата", "Количество"
+		};
+
+
 
 		// Создаем строку заголовков
 		Row headerRow = sheet.createRow(0);
@@ -324,58 +335,142 @@ public class MainRestController {
 			cell.setCellValue(headers[i]);
 		}
 
+		Row checkHeaderRow = checkSheet.createRow(0);
+		for (int i = 0; i < checkHeaders.length; i++) {
+			Cell cell = checkHeaderRow.createCell(i);
+			cell.setCellValue(checkHeaders[i]);
+		}
+
 		boolean isSheetEmpty = true;
 		int rowNum = 1;
 		//TODO Ira test
 
 		LocalDate currentTime = LocalDate.now().minusDays(1);
 		LocalDate currentTimeDayBefore = currentTime.minusDays(1);
+		String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
 		String currentTimeDayBeforeString = currentTimeDayBefore.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
 		Date dateForSearch = Date.valueOf(currentTime);
 		Date dateForSearchBefore = Date.valueOf(currentTime.minusDays(1));
 
-
-		String fileName = "Несоответствия потребностей и слотов за " + currentTimeDayBeforeString + ".xlsx";
+		String fileName = "Несоответствия потребностей и слотов за " + currentTimeString + ".xlsx";
 		String appPath = servletContext.getRealPath("/");
 
 		List<OrderProduct> products = orderProductService.getOrderProductListHasDate(dateForSearchBefore);
 
 		List<Long> orderProductsIds = products.stream().map(p -> p.getCodeProduct().longValue()).collect(Collectors.toList());
 
-		List<Order> orders2 = orderService.getOrderByFirstLoadSlotAndDateOrderOrlAndGoodsId(dateForSearchBefore, dateForSearch, orderProductsIds, dateForSearchBefore);
+		long amount1700 = products.stream().filter(p -> p.getQuantity1700() != null).count();
+		long amount1800 = products.stream().filter(p -> p.getQuantity1800() != null).count();
+		long amountOthers = products.stream().filter(p -> p.getQuantity() != null).count();
+
 		List<Order> orders = orderService.getOrderByFirstLoadSlotAndDateOrderOrl(dateForSearchBefore, dateForSearch, dateForSearch);
-		
-		
+
 		System.out.println("dateTarget = " + currentTime);
 		System.out.println("dateOrderTarget = " + currentTimeDayBefore);
 		System.out.println("dateStart = " + dateForSearchBefore);
 		System.out.println("dateEnd = " + dateForSearch);
 		System.out.println("dateOrderORL = " + dateForSearchBefore);
-		System.out.println("orders old = " + orders2.size());
+//		System.out.println("orders old = " + orders2.size());
 		System.out.println("orders new = " + orders.size());
+
+		int amountOrdered1700 = 0;
+		int amountOrdered1800 = 0;
+		int amountOrderedOthers = 0;
 
 		for (OrderProduct orderProduct : products) {
 			double quantityFromOrders = 0;
-
+			double quantityFromOrders1700 = 0;
+			double quantityFromOrders1800 = 0;
 			for (Order order : orders) {
+				String numStock = getTrueStockWithNullCheck(order);
 				for (OrderLine orderLine : order.getOrderLines()) {
+
 					if (orderProduct.getCodeProduct().longValue() == orderLine.getGoodsId()) {
 						double quantity = orderLine.getQuantityOrder() == null ? 0 : orderLine.getQuantityOrder();
-						quantityFromOrders += quantity;
+						if (numStock.equals("1700")) {
+							quantityFromOrders1700 += quantity;
+						} else if (numStock.equals("1800")) {
+							quantityFromOrders1800 += quantity;
+
+						} else if (numStock.equals("1200") || numStock.equals("1250") || numStock.equals("1100")) {
+							quantityFromOrders += quantity;
+						}
 					}
+
 				}
 			}
-			int summaryQuantity = (orderProduct.getQuantity1800() == null ? 0 : orderProduct.getQuantity1800())
-					+ (orderProduct.getQuantity1700() == null ? 0 : orderProduct.getQuantity1700())
-					+ (orderProduct.getQuantity() == null ? 0 : orderProduct.getQuantity());
-			if (quantityFromOrders < summaryQuantity) {
+			int summaryQuantityOtherStocks = orderProduct.getQuantity() == null ? 0 : orderProduct.getQuantity();
+			int summaryQuantityOther1700 = orderProduct.getQuantity1700() == null ? 0 : orderProduct.getQuantity1700();
+			int summaryQuantityOther1800 = orderProduct.getQuantity1800() == null ? 0 : orderProduct.getQuantity1800();
+
+			if (quantityFromOrders < summaryQuantityOtherStocks || quantityFromOrders1700 < summaryQuantityOther1700 || quantityFromOrders1800 < summaryQuantityOther1800) {
 				isSheetEmpty = false;
-				poiExcel.fillExcelAboutNeeds(orderProduct, sheet, rowNum, summaryQuantity, quantityFromOrders);
+				poiExcel.fillExcelAboutNeeds(orderProduct, quantityFromOrders, quantityFromOrders1700, quantityFromOrders1800, sheet, rowNum);
 				rowNum++;
 			}
+
+
+			if (quantityFromOrders < summaryQuantityOtherStocks) {
+				amountOrderedOthers++;
+			}
+			if (quantityFromOrders1700 < summaryQuantityOther1700) {
+				amountOrdered1700++;
+			}
+			if (quantityFromOrders1800 < summaryQuantityOther1800){
+				amountOrdered1800++;
+			}
 		}
+
+		double percent1700 = (double) amountOrdered1700 / (double) amount1700 * 100;
+		double percent1800 = (double)  amountOrdered1800/ (double) amount1800 * 100;
+		double percentOthers = (double)  amountOrderedOthers/ (double) amountOthers * 100;
 		double percentOfcoverage = ((double) rowNum - 1) / (double) products.size() * 100;
+
+		String percent1700str = String.format("%.2f",percent1700);
+		String percent1800str = String.format("%.2f",percent1800);
+		String percentOthersStr = String.format("%.2f",percentOthers);
+
 		String result = String.format("%.2f",percentOfcoverage);
+
+
+		int checkRowNum = 1;
+
+		for (Order order : orders) {
+			for (OrderLine orderLine : order.getOrderLines()) {
+				int goodId = orderLine.getGoodsId().intValue();
+
+				Product pr = productService.getProductByCode(goodId);
+
+				if (pr == null) {
+					poiExcel.fillExcelToCheckNeeds(checkSheet, checkRowNum, "нет заказа ОРЛ", orderLine);
+				} else {
+
+					List <OrderProduct> listOP  = pr.getOrderProductsListHasDateTarget(order.getDateOrderOrl());
+					if (listOP == null) {
+						poiExcel.fillExcelToCheckNeeds(checkSheet, checkRowNum, "нет заказа ОРЛ", orderLine);
+					} else {
+						OrderProduct item = listOP.get(0);
+						poiExcel.fillExcelToCheckNeeds(checkSheet, checkRowNum, item.getDateCreate().toString(), orderLine);
+
+					}
+				}
+
+				checkRowNum++;
+			}
+		}
+		for (int i = 0; i < headers.length; i++) {
+			sheet.autoSizeColumn(i);
+		}
+		for (int i = 0; i < checkHeaders.length; i++) {
+			checkSheet.autoSizeColumn(i);
+		}
+
+		/*
+		1. по ордерам получить все продукты
+		2 по продуктам методом product.getOrderProductsListHasDateTarget(order.getDateOrderOrl()) получить лист заказов по каждому продукту от орл
+		3 product.getOrderProductsListHasDateTarget(order.getDateOrderOrl()).get(0) получить последний заказ ор по фактически заказанному продукту и записать в эксель
+		взять дату
+		 */
 
 		if (!isSheetEmpty) {
 			try {
@@ -386,15 +481,19 @@ public class MainRestController {
 				e.printStackTrace();
 			}
 
-			String str = "По данным потребностям не были созданы слоты в установленное время. Процент не поставленных заказов относительно заказ ОРЛ - " + result +"%.";
+			String str = "По данным потребностям не были созданы слоты в установленное время. " +
+					"Процент не поставленных заказов на " + currentTimeString + " относительно заказ ОРЛ - " + result +"%." +
+					"\nПроцент для 1700 склада - " + percent1700str + "%." +
+					"\nПроцент для 1800 склада - " + percent1800str + "%." +
+					"\nПроцент для остальных складов - " + percentOthersStr + "%.";
+
 			List<File> files = new ArrayList<File>();
 			files.add(new File(appPath + "resources/others/" + fileName));
 			
 			System.out.println(appPath + "resources/others/" + fileName);
 
 			List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
-			mailService.sendEmailWithFilesToUsers(servletContext, "Незакрытые потребности " + currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")),
-					str, files, emails);
+//			mailService.sendEmailWithFilesToUsers(servletContext, "Незакрытые потребности " + currentTimeDayBeforeString, str, files, emails);
 
 		}
 
@@ -4031,7 +4130,31 @@ public class MainRestController {
 		}
 		return numStock;		
 	}
-	
+
+	/**
+	 * Метод возвращает номер склада из idRump
+	 * @param order
+	 * @return
+	 * @author Ira
+	 */
+	private String getTrueStockWithNullCheck(Order order) {
+		String numStock = null;
+		if (order.getIdRamp() == null) {
+			numStock = order.getNumStockDelivery();
+		} else {
+			if(order.getIdRamp().toString().length() < 5) {
+				System.err.println("Ошибка в названии склада. Склад не может быть двухзначным");
+			}
+			if(order.getIdRamp().toString().length() < 6) { // проверка на будующее если будет учавстовать склад с трехзначным индексом
+				numStock = order.getIdRamp().toString().substring(0, 3);
+			}else {
+				numStock = order.getIdRamp().toString().substring(0, 4);
+			}
+		}
+
+		return numStock;
+	}
+
 	/**
 	 * Метод добавления ивента / слота на рампу
 	 * @param request
@@ -4298,6 +4421,28 @@ public class MainRestController {
 			@RequestParam(value = "excel", required = false) MultipartFile excel)
 			throws InvalidFormatException, IOException, ServiceException {
 		Map<String, String> response = new HashMap<String, String>();	
+		Date dateUnload = null;
+		String filename = excel.getOriginalFilename();
+
+        try {
+            // Извлечение даты из строки
+            String datePart = filename.substring(0, filename.indexOf(".xlsx"));
+
+            // Формат даты в исходной строке
+            SimpleDateFormat inputFormat = new SimpleDateFormat("dd.MM.yyyy");
+
+            // Преобразование в java.util.Date
+            java.util.Date utilDate = inputFormat.parse(datePart);
+
+            // Преобразование в java.sql.Date
+            dateUnload = new Date(utilDate.getTime());
+
+        } catch (java.text.ParseException e) {
+            System.err.println("Ошибка при разборе даты: " + e.getMessage());
+            response.put("status", "100");
+            response.put("message", "Ошибка при разборе даты: " + filename);
+            return response;
+        }
 
 		File file1 = poiExcel.getFileByMultipartTarget(excel, request, "490.xlsx");
 		String text;

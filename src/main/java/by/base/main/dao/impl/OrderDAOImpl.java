@@ -719,6 +719,22 @@ public class OrderDAOImpl implements OrderDAO{
 		Set<Order> trucks = theObject.getResultList().stream().collect(Collectors.toSet());
 		return trucks.stream().collect(Collectors.toList());
 	}
+
+	private static final String queryGetOrderByFirstLoadSlotAndDateOrderOrl = "from Order o LEFT JOIN FETCH o.orderLines ol "
+			+ "where o.firstLoadSlot BETWEEN :dateStart and :dateEnd and o.dateOrderOrl =: dateOrderOrl";
+	@Transactional
+	@Override
+	public List<Order> getOrderByFirstLoadSlotAndDateOrderOrl(Date dateStart, Date dateEnd, Date dateOrderOrl) {
+		Timestamp dateStartFinal = Timestamp.valueOf(LocalDateTime.of(dateStart.toLocalDate(), LocalTime.of(00, 00)));
+		Timestamp dateEndFinal = Timestamp.valueOf(LocalDateTime.of(dateEnd.toLocalDate(), LocalTime.of(23, 59)));
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Order> theObject = currentSession.createQuery(queryGetOrderByFirstLoadSlotAndDateOrderOrl, Order.class);
+		theObject.setParameter("dateStart", dateStartFinal, TemporalType.TIMESTAMP);
+		theObject.setParameter("dateEnd", dateEndFinal, TemporalType.TIMESTAMP);
+		theObject.setParameter("dateOrderOrl", dateOrderOrl);
+		Set<Order> trucks = theObject.getResultList().stream().collect(Collectors.toSet());
+		return trucks.stream().collect(Collectors.toList());
+	}
 }
 
 

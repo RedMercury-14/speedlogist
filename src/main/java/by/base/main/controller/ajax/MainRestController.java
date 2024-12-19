@@ -341,7 +341,17 @@ public class MainRestController {
 
 		List<Long> orderProductsIds = products.stream().map(p -> p.getCodeProduct().longValue()).collect(Collectors.toList());
 
-		List<Order> orders = orderService.getOrderByFirstLoadSlotAndDateOrderOrlAndGoodsId(dateForSearchBefore, dateForSearch, orderProductsIds, dateForSearchBefore);
+		List<Order> orders2 = orderService.getOrderByFirstLoadSlotAndDateOrderOrlAndGoodsId(dateForSearchBefore, dateForSearch, orderProductsIds, dateForSearchBefore);
+		List<Order> orders = orderService.getOrderByFirstLoadSlotAndDateOrderOrl(dateForSearchBefore, dateForSearch, dateForSearchBefore);
+		
+		
+		System.out.println("dateTarget = " + currentTime);
+		System.out.println("dateOrderTarget = " + currentTimeDayBefore);
+		System.out.println("dateStart = " + dateForSearchBefore);
+		System.out.println("dateEnd = " + dateForSearch);
+		System.out.println("dateOrderORL = " + dateForSearchBefore);
+		System.out.println("orders old = " + orders2.size());
+		System.out.println("orders new = " + orders.size());
 
 		for (OrderProduct orderProduct : products) {
 			double quantityFromOrders = 0;

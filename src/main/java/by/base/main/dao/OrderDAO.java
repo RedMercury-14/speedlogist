@@ -220,4 +220,15 @@ public interface OrderDAO {
 	 * @author Ira
 	 */
 	List<Order> getOrderByFirstLoadSlotAndDateOrderOrlAndGoodsId(Date dateStart, Date dateEnd, List<Long> goodsIds, Date dateOrderOrl);
+	
+
+	/**
+	 * Возвращает список Order по дате создания слота и дате заказа ОРЛ
+	 * @param dateStart
+	 * @param dateEnd
+	 * @param goodsIds
+	 * @param dateOrderOrl
+	 * @return
+	 */
+	List<Order> getOrderByFirstLoadSlotAndDateOrderOrl(Date dateStart, Date dateEnd, Date dateOrderOrl);
 }

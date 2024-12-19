@@ -64,7 +64,9 @@ public class ServiceLevel {
 		orders.sort(Comparator.comparing(Order::getMarketContractType)); // групируем номера контрактов
 		int sizeOrders = orders.size();
 		int sizeVoidOrder = 0;
+		System.out.println(Date.valueOf(dateOrder.toLocalDate().minusDays(1)));
 		Map <Integer, Integer> orderProductsORL = orderProductService.getOrderProductMapHasDate(Date.valueOf(dateOrder.toLocalDate().minusDays(1))); // что заказали ОРЛ
+		System.out.println(orderProductsORL);
 		List<DataOrderHasNumContract> dataOrderHasNumContracts = new ArrayList<DataOrderHasNumContract>(); // лист с результатами сложений заказов относительно кода контракта
 
 		//формируем список с объектом data для удобного формирования екселя по номерам контактор

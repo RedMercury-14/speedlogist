@@ -342,7 +342,7 @@ public class MainRestController {
 		List<Long> orderProductsIds = products.stream().map(p -> p.getCodeProduct().longValue()).collect(Collectors.toList());
 
 		List<Order> orders2 = orderService.getOrderByFirstLoadSlotAndDateOrderOrlAndGoodsId(dateForSearchBefore, dateForSearch, orderProductsIds, dateForSearchBefore);
-		List<Order> orders = orderService.getOrderByFirstLoadSlotAndDateOrderOrl(dateForSearchBefore, dateForSearch, dateForSearchBefore);
+		List<Order> orders = orderService.getOrderByFirstLoadSlotAndDateOrderOrl(dateForSearchBefore, dateForSearch, dateForSearch);
 		
 		
 		System.out.println("dateTarget = " + currentTime);
@@ -4253,28 +4253,6 @@ public class MainRestController {
 			@RequestParam(value = "excel", required = false) MultipartFile excel)
 			throws InvalidFormatException, IOException, ServiceException {
 		Map<String, String> response = new HashMap<String, String>();	
-		Date dateUnload = null;
-		String filename = excel.getOriginalFilename();
-
-        try {
-            // Извлечение даты из строки
-            String datePart = filename.substring(0, filename.indexOf(".xlsx"));
-
-            // Формат даты в исходной строке
-            SimpleDateFormat inputFormat = new SimpleDateFormat("dd.MM.yyyy");
-
-            // Преобразование в java.util.Date
-            java.util.Date utilDate = inputFormat.parse(datePart);
-
-            // Преобразование в java.sql.Date
-            dateUnload = new Date(utilDate.getTime());
-
-        } catch (java.text.ParseException e) {
-            System.err.println("Ошибка при разборе даты: " + e.getMessage());
-            response.put("status", "100");
-            response.put("message", "Ошибка при разборе даты: " + filename);
-            return response;
-        }
 
 		File file1 = poiExcel.getFileByMultipartTarget(excel, request, "490.xlsx");
 		String text;
@@ -4283,7 +4261,7 @@ public class MainRestController {
 //			return response;
 //		}
 		//основной метод загрузки в БД
-		text = poiExcel.loadBalanceStock2(file1, request, dateUnload);
+		text = poiExcel.loadBalanceStock2(file1, request);
 		response.put("200", text);
 		return response;
 	}

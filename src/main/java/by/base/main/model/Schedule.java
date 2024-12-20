@@ -1,5 +1,6 @@
 package by.base.main.model;
 import java.sql.Date;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -117,6 +118,9 @@ public class Schedule{
 
 	@Column(name = "end_date_temp")
 	private Date endDateTemp;
+	
+	@Column(name = "date_load_excel")
+	private Timestamp dateLoadExcel;
 
 	public Date getStartDateTemp() {
 		return startDateTemp;
@@ -424,6 +428,21 @@ public class Schedule{
 	}
 
 
+	/**
+	 * Дата и время прогрузки из файла ексель
+	 * @return
+	 */
+	public Timestamp getDateLoadExcel() {
+		return dateLoadExcel;
+	}
+
+	/**
+	 * Дата и время прогрузки из файла ексель
+	 * @return
+	 */
+	public void setDateLoadExcel(Timestamp dateLoadExcel) {
+		this.dateLoadExcel = dateLoadExcel;
+	}
 
 	/**
      * Метод отдаёт лист с днями, которые не равны null

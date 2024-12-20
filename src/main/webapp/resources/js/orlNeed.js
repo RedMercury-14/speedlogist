@@ -33,7 +33,7 @@ const columnDefs = [
 		flex: 2,
 	},
 	{
-		headerName: 'Количество заказанного товара', field: 'quantity',
+		headerName: 'Заказ (остальные склады)', field: 'quantity',
 		cellClass: 'px-1 py-0 text-center',
 		flex: 2,
 	},
@@ -140,6 +140,8 @@ function renderTable(gridDiv, gridOptions) {
 	gridOptions.api.showLoadingOverlay()
 }
 async function updateTable(gridOptions, filterDate, data) {
+	gridOptions.api.showLoadingOverlay()
+
 	if (!filterDate) {
 		filterDate = dateHelper.getDateForInput(new Date())
 	}

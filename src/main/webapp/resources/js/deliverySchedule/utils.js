@@ -191,9 +191,9 @@ export const weekOptions = [
 ]
 
 export const deliveryScheduleRowClassRules = {
-	'grey-row': params => params.node.data.status === 10,
-	'red-row': params => params.node.data.status === 0,
-	'inactive-overlay': params => params.node.data.isActualSchedule && params.node.data.isActualSchedule === 'Не действует'
+	'grey-row': params => params.data && params.data.status === 10,
+	'red-row': params => params.data && params.data.status === 0,
+	'inactive-overlay': params => params.data && params.data.isActualSchedule && params.data.isActualSchedule === 'Не действует'
 }
 export const deliveryScheduleColumnDefs = [
 	{

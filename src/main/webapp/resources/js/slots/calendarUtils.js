@@ -59,7 +59,7 @@ export function createDraggableElement(container, order, login, currentStock) {
 		textColor: 'black',
 	}
 
-	if (stockId !== '1700') event.constraint = 'businessHours'
+	if (stockId !== '1700' || stockId != '1800') event.constraint = 'businessHours'
 
 	new FullCalendar.Draggable(
 		singleSlotElem,

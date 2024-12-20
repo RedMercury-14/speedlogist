@@ -3,7 +3,8 @@ import { hideLoadingSpinner, showLoadingSpinner } from "./utils.js"
 
 const send487ReportUrl = `../../api/order-support/control/487`
 const send490ReportUrl = `../../api/order-support/control/490`
-const sendPromotionsReportUrl = `../../api/order-support/control/promotions`
+// const sendPromotionsReportUrl = `../../api/order-support/control/promotions`
+const sendTempSchedulesReportUrl = `../../api/order-support/control/loadSchedules`
 const token = $("meta[name='_csrf']").attr("content")
 
 window.addEventListener('load', () => {
@@ -20,7 +21,7 @@ function reportFormSubmitHandler(e) {
 	let url
 	if (submitButton.dataset.type === '487') url = send487ReportUrl
 	if (submitButton.dataset.type === 'stockBalance') url = send490ReportUrl
-	if (submitButton.dataset.type === 'promotions') url = sendPromotionsReportUrl
+	if (submitButton.dataset.type === 'tempSchedules') url = sendTempSchedulesReportUrl
 
 	const submitButtonText = submitButton.innerText
 	const file = new FormData(e.target)

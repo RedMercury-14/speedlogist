@@ -127,6 +127,24 @@ export const dateHelper = {
 		return `${day}.${month}.${year}`
 	},
 
+	/**
+	 * Метод `getFormatDateTime` принимает дату в миллисекундах и возвращает
+	 * отформатированную строку даты и времени в формате "DD.MM.YYYY HH:MM"
+	 * @param { number } dateInMs - это число, представляющее дату в миллисекундах.
+	 * @returns { string } возвращает отформатированную строку даты и времени в
+	 * формате "DD.MM.YYYY HH:MM".
+	 */
+	getFormatDateTime(dateInMs) {
+		if (!dateInMs) return ''
+		const date = new Date(dateInMs)
+		const day = this.pad(date.getDate())
+		const month = this.pad(date.getMonth() + 1)
+		const year = date.getFullYear()
+		const hours = this.pad(date.getHours())
+		const minutes = this.pad(date.getMinutes())
+		return `${day}.${month}.${year} ${hours}:${minutes}`
+	},
+
 
 	/**
 	 * Метод `getDateForInput` принимает дату в миллисекундах либо
@@ -382,6 +400,20 @@ export const dateHelper = {
 		}
 
 		return null
+	},
+
+	/**
+	 * Метод `getDiffTime` принимает два объекта `Date` и возвращает
+	 * строку, представляющую разницу между ними в формате "HH:MM".
+	 * @param {Date} date1 - первый объект `Date`.
+	 * @param {Date} date2 - второй объект `Date`.
+	 * @returns {string} строку, представляющую разницу между двумя объектами `Date` в формате "HH:MM".
+	 */
+	getDiffTime(date1, date2) {
+		const diff = date1 - date2
+		const hours = Math.floor(diff / (1000 * 60 * 60))
+		const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+		return `${hours}:${minutes < 10 ? '0' + minutes : minutes}`
 	},
 
 	getDateStrsArray(startDateStr, numDays) {
@@ -654,16 +686,16 @@ export function getAhoStatusRoute(status) {
 }
 
 export const rowClassRules = {
-	'orange-row': params => params.node.data.status === 6,
-	'turquoise-row': params => params.node.data.status === 7,
-	'light-purple-row': params => params.node.data.status === 8,
-	'grey-row': params => params.node.data.status === 10,
-	'yellow-row': params => params.node.data.status === 30,
-	'red-row': params => params.node.data.status === 40,
-	'light-green-row': params => params.node.data.status === 50,
-	'dark-green-row': params => params.node.data.status === 60,
-	'blue-row': params => params.node.data.status === 70,
-	'purple-row': params => params.node.data.status === 100,
+	'orange-row': params => params.data && params.data.status === 6,
+	'turquoise-row': params => params.data && params.data.status === 7,
+	'light-purple-row': params => params.data && params.data.status === 8,
+	'grey-row': params => params.data && params.data.status === 10,
+	'yellow-row': params => params.data && params.data.status === 30,
+	'red-row': params => params.data && params.data.status === 40,
+	'light-green-row': params => params.data && params.data.status === 50,
+	'dark-green-row': params => params.data && params.data.status === 60,
+	'blue-row': params => params.data && params.data.status === 70,
+	'purple-row': params => params.data && params.data.status === 100,
 }
 
 // изменение положения таблицы в зависимости от размера хэдера

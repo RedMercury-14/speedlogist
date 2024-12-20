@@ -59,7 +59,7 @@ public class PDFWriter {
 	@Autowired
 	private ActService actService;
 	
-	public int getProposal(HttpServletRequest request, Route route) throws FileNotFoundException, DocumentException {
+	public int getProposal(HttpServletRequest request, Route route, User user) throws FileNotFoundException, DocumentException {
 	    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 	    DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
 	    DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
@@ -67,7 +67,9 @@ public class PDFWriter {
 	    com.itextpdf.text.Font fontMainHeader = FontFactory.getFont(path + "resources/others/fonts/DejaVuSans-Bold.ttf", "cp1251", BaseFont.EMBEDDED, 14);
 	    com.itextpdf.text.Font fontMainText = FontFactory.getFont(path + "resources/others/fonts/DejaVuSans.ttf", "cp1251", BaseFont.EMBEDDED, 10);
 	    com.itextpdf.text.Font fontForRequisitesBolt = FontFactory.getFont(path + "resources/others/fonts/DejaVuSans-Bold.ttf", "cp1251", BaseFont.EMBEDDED, 8);
-	    com.itextpdf.text.Font fontMainTextBold = FontFactory.getFont(path + "resources/others/fonts/DejaVuSans-Bold.ttf", "cp1251", BaseFont.EMBEDDED, 10);
+	    com.itextpdf.text.Font fontMainTextBold = FontFactory.getFont(path + "resources/others/fonts/DejaVuSans-Bold.ttf", "cp1251", BaseFont.EMBEDDED, 9);
+	    com.itextpdf.text.Font fontMainTextBoldForDetails = FontFactory.getFont(path + "resources/others/fonts/DejaVuSans-Bold.ttf", "cp1251", BaseFont.EMBEDDED, 10); // только для реквизитов
+	    com.itextpdf.text.Font fontMainTextBoldImportant = FontFactory.getFont(path + "resources/others/fonts/DejaVuSans-Bold.ttf", "cp1251", BaseFont.EMBEDDED, 13);
 
 	    Document document = new Document();
 	    String fileName = "proposal";
@@ -87,6 +89,9 @@ public class PDFWriter {
 	    PdfPTable table = new PdfPTable(2);
 	    table.setWidthPercentage(100); // Ширина таблицы на 100% страницы
 	    table.setSpacingBefore(20f); // Отступ сверху таблицы
+	    
+	    float[] columnWidths = {1f, 2f}; // Первая колонка будет в 2 раза уже второй
+	    table.setWidths(columnWidths);
 
 	    table.addCell(new Paragraph("Перевозчик", fontMainTextBold));
 	    table.addCell(new Paragraph(route.getUser() != null ? route.getUser().getCompanyName() : "", fontMainText));
@@ -141,7 +146,7 @@ public class PDFWriter {
 		        addRowToTable(table, "Тип кузова:", order.getTypeTruck(), fontMainTextBold, fontMainText, false, false, true);
 		        addRowToTable(table, "Штабелирование:", order.getStacking() ? "Да" : "Нет", fontMainTextBold, fontMainText, false, false, true);
 		        addRowToTable(table, "Температура:", order.getTemperature(), fontMainTextBold, fontMainText, false, false, true); 
-		        if(order.getControl() != null) addRowToTable(table, "Сверка УКЗ: ", order.getControl() ? "Да, сверять УКЗ" : "Нет, не сверять УКЗ", fontMainTextBold, fontMainText, false, false, true);
+		        if(order.getControl() != null) addRowToTable(table, "Сверка УКЗ: ", order.getControl() ? "Да, сверять УКЗ" : "Нет, не сверять УКЗ", fontMainTextBold, fontMainText, false, false, true); 
 	        }
 	        
 	        
@@ -156,13 +161,40 @@ public class PDFWriter {
 	    // Добавляем таблицу в документ
 	    document.add(table);
 	    
-	    Paragraph paragraph = new Paragraph("Перевозчик:", fontMainTextBold);
+	    Paragraph importantInfo0 = new Paragraph("1. На  загрузке получить не менее  6 оригинальных  экземпляров каждого комплекта CMR;", fontMainTextBold);
+	    importantInfo0.setSpacingBefore(5f); // Отступ перед параграфом
+        document.add(importantInfo0); // Добавляем параграф в документ
+	    
+	    Paragraph importantInfo1 = new Paragraph("2. Проверять заполнение в транспортной накладной, в графе «подпись печать отправителя»(в CMR графа 22) – время, печать, подпись;", fontMainTextBold);
+	    importantInfo1.setSpacingBefore(1f); // Отступ перед параграфом
+        document.add(importantInfo1); // Добавляем параграф в документ
+        
+        Paragraph importantInfo2 = new Paragraph("3. В случае любых проблем незамедлительно сообщать, с места погрузки не уезжать;", fontMainTextBold);
+	    importantInfo2.setSpacingBefore(1f); // Отступ перед параграфом
+        document.add(importantInfo2); // Добавляем параграф в документ
+        
+        Paragraph importantInfo3 = new Paragraph("4. Заявка считается принятой к исполнению, если от перевозчика/экспедитора не поступил  письменный  отказ в течение двух часов с момента получения заявки;", fontMainTextBold);
+	    importantInfo3.setSpacingBefore(1f); // Отступ перед параграфом
+        document.add(importantInfo3); // Добавляем параграф в документ
+        
+        if(order.getControl() != null) {
+        	Paragraph importantInfo4 = new Paragraph("Не уезжать без отправки фото УКЗ ответственному логисту!", fontMainTextBoldImportant);
+        	importantInfo4.setSpacingBefore(5f); // Отступ перед параграфом
+        	document.add(importantInfo4); // Добавляем параграф в документ   
+        	
+        	String logistInfo = user.getSurname() + " " +user.getName() + " <" + user.geteMail() + ">; тел: " + user.getTelephone();
+        	Paragraph importantInfo5 = new Paragraph("Отв. : " + logistInfo, fontForRequisitesBolt);
+        	importantInfo5.setSpacingBefore(1f); // Отступ перед параграфом
+        	document.add(importantInfo5); // Добавляем параграф в документ 
+        }
+	    
+	    Paragraph paragraph = new Paragraph("Перевозчик:", fontMainTextBoldForDetails);
 	    paragraph.setAlignment(Element.ALIGN_RIGHT); // Устанавливаем выравнивание по правой стороне
 	    paragraph.setSpacingBefore(20f); // Отступ перед параграфом
         document.add(paragraph); // Добавляем параграф в документ
 	    
         
-	    Paragraph paragraph123 = new Paragraph(route.getUser() != null ? route.getUser().getCompanyName() : "", fontMainTextBold);
+	    Paragraph paragraph123 = new Paragraph(route.getUser() != null ? route.getUser().getCompanyName() : "", fontMainTextBoldForDetails);
 	    paragraph123.setAlignment(Element.ALIGN_RIGHT); // Устанавливаем выравнивание по правой стороне
 //	    paragraph123.setSpacingBefore(20f); // Отступ перед параграфом
         document.add(paragraph123); // Добавляем параграф в документ
@@ -179,6 +211,17 @@ public class PDFWriter {
 //	    table.addCell(new PdfPCell(new Paragraph(label, labelFont)));
 //	    table.addCell(new PdfPCell(new Paragraph(value, valueFont)));
 //	}
+	/**
+	 * 
+	 * @param table
+	 * @param label
+	 * @param value
+	 * @param labelFont
+	 * @param valueFont
+	 * @param thickTopBorder true - верхняя граница жирная
+	 * @param thickBottomBorder true - нижнаяя граница жирная
+	 * @param thickSideBorders true - боковые границы жирные
+	 */
 	private void addRowToTable(PdfPTable table, String label, String value, 
             com.itextpdf.text.Font labelFont, com.itextpdf.text.Font valueFont, 
             boolean thickTopBorder, boolean thickBottomBorder, boolean thickSideBorders) {

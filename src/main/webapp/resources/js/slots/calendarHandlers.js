@@ -22,6 +22,7 @@ import {
 	hasOrderInYard,
 	isBackgroundEvent,
 	isInvalidEventDate,
+	isLogistEditableStatuses,
 	isOldSupplierOrder,
 	isOverlapWithInternalMovementTime,
 	isOverlapWithShiftChange
@@ -62,11 +63,15 @@ export function eventContentHandler(info) {
 	const login = store.getLogin()
 	const role = store.getRole()
 	const eventElem = createEventElement(info)
+	const order = info.event.extendedProps.data
 
 	// если ивент - подложка
 	if (isBackgroundEvent(info.event)) return eventElem
 
-	const showBtn = isOldSupplierOrder(info, login) && !hasOrderInYard(info.event.extendedProps.data)
+	// иные случаеи отображения кнопки удаления слота (х)
+	const showBtn = (isOldSupplierOrder(info, login) && !hasOrderInYard(order))     // для старых заказов от поставщика
+				// || (isLogist(role) && isLogistEditableStatuses(order.status) && !hasOrderInYard(order))     // для заказов на самовывоз для логистов
+
 	const closeBtn = info.isDraggable || showBtn ? createCloseEventButton(info, showBtn) : ''
 	const popupBtn = createPopupButton(info, login)
 	const checkSlotBtn = createCheckSlotBtn(info)
@@ -139,7 +144,7 @@ export async function eventDropHandler(info, orderTableGridOption) {
 	const eventDateStr = fcEvent.startStr.split('T')[0]
 	const pallCount = store.getPallCount(currentStock, eventDateStr)
 	const maxPall = store.getMaxPallByDate(currentStock.id, eventDateStr)
-	if (!checkPallCountForComingDates(info, pallCount, maxPall)) {
+	if (!checkPallCountForComingDates(info, pallCount, maxPall, currentStock)) {
 		info.revert()
 		snackbar.show(userMessages.pallDropError)
 		return
@@ -177,7 +182,7 @@ export async function eventReceiveHandler(info, orderTableGridOption, orderDateC
 	const currentStock = store.getCurrentStock()
 	const pallCount = store.getPallCount(currentStock, eventDateStr)
 	const maxPall = store.getMaxPallByDate(currentStock.id, eventDateStr)
-	if (!checkPallCount(info, pallCount, maxPall)) {
+	if (!checkPallCount(info, pallCount, maxPall, currentStock)) {
 		info.revert()
 		snackbar.show(userMessages.pallDropError)
 		return

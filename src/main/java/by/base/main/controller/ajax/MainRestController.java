@@ -1046,7 +1046,7 @@ public class MainRestController {
     @TimedExecution
 	@GetMapping("/logistics/getProposal/{idRoute}")
 	public void getProposal(HttpServletRequest request, HttpServletResponse response, @PathVariable String idRoute) throws NumberFormatException, DocumentException, IOException {		
-		pdfWriter.getProposal(request, routeService.getRouteById(Integer.parseInt(idRoute)));
+		pdfWriter.getProposal(request, routeService.getRouteById(Integer.parseInt(idRoute)), getThisUser());
 		String appPath = request.getServletContext().getRealPath("");
         String folderPath = appPath + "resources/others/proposal.pdf";
 
@@ -1924,6 +1924,7 @@ public class MainRestController {
 		LocalDate currentTime = LocalDate.now();
 		String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
 
+//		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
 		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to.ORL");
 		List<String> emailsSupportDepartment = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to.supportDepartment");
 
@@ -4424,6 +4425,21 @@ public class MainRestController {
 //		}
 		//основной метод загрузки в БД
 		text = poiExcel.loadBalanceStock2(file1, request);
+		response.put("200", text);
+		return response;
+	}
+	
+	@RequestMapping(value = "/order-support/control/loadSchedules", method = RequestMethod.POST, consumes = {
+			MediaType.MULTIPART_FORM_DATA_VALUE })
+	public Map<String, String> postLoadSchedulesHasTime(Model model, HttpServletRequest request, HttpSession session,
+			@RequestParam(value = "excel", required = false) MultipartFile excel)
+			throws InvalidFormatException, IOException, ServiceException {
+		Map<String, String> response = new HashMap<String, String>();	
+
+		File file1 = poiExcel.getFileByMultipartTarget(excel, request, "666.xlsx");
+		String text;
+		//основной метод загрузки в БД
+		text = poiExcel.loadScheduleExcel(file1, request);
 		response.put("200", text);
 		return response;
 	}

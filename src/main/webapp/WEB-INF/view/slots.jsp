@@ -25,6 +25,7 @@
 
 	<sec:authorize access="isAuthenticated()">
 		<sec:authentication property="principal.authorities" var="roles" />
+		<sec:authentication property="name" var="login"/>
 	</sec:authorize>
 
 	<div id="overlay" class="">
@@ -75,11 +76,13 @@
 		</div>
 
 		<c:choose>
-			<c:when test="${roles == '[ROLE_ADMIN]'}">
+			<c:when test="${roles == '[ROLE_ADMIN]' || login == 'romashkok%!dobronom.by'}">
 				<div class="adminAction-container">
 					<select name="adminAction" id="adminAction" class="px-1 form-control font-weight-bold">
 						<option selected disabled value="">Для админа</option>
 						<option value="checkBookingForCurrentDate">Брони на текущую дату</option>
+						<option value="1700to1800">Рекомендации по перемещениям с 1700 на 1800</option>
+						<option value="1800to1700">Рекомендации по перемещениям с 1800 на 1700</option>
 					</select>
 				</div>
 			</c:when>
@@ -297,6 +300,43 @@
 						<button type="submit" class="btn btn-primary">Подтвердить перенос</button>
 					</div>
 				</form>
+			</div>
+		</div>
+	</div>
+
+	<!-- Модальное окно отображения изменений в слотах -->
+	<div class="modal fade" id="slotNewsModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="slotNewsModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header justify-content-center">
+					<h3 class="modal-title text-center" id="slotNewsModalLabel">Что нового</h3>
+				</div>
+				<div class="modal-body">
+					<h5 class="text-center text-muted font-weight-bold">Изменения в проверке паллетовместимости 1800 склада</h5>
+					<p class="text-justify">
+						Для <strong>1800</strong> склада временно отключена проверка ёмкости склада
+						при установке слота в период с <strong>00:00</strong> до <strong>07:00</strong>. Эта зона выделена голубым цветом. 
+						Это означает, что даже при превышении емкости склада можно будет поставить поставку в указанный временной интервал. 
+					</p>
+					<div class="text-center px-5">
+						<img src="${pageContext.request.contextPath}/resources/img/slotNews/1.png"
+							alt="Обозначение голубой зоны"
+							class="img-fluid mb-3" style="max-width: 100%; height: auto;">
+					</div>
+					<br>
+					<p class="text-justify">
+						Однако для таких поставок действует одно ограничение: <strong>при наличии превышения ёмкости склада,
+						перемещение поставок возможно только в пределах указанной зоны.</strong>
+					</p>
+					<div class="text-center px-5">
+						<img src="${pageContext.request.contextPath}/resources/img/slotNews/extraPallErr.gif"
+							alt="Демонстрация функционала"
+							class="img-fluid" style="max-width: 100%; height: auto;">
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Ок, понятно</button>
+				</div>
 			</div>
 		</div>
 	</div>

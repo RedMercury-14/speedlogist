@@ -1,7 +1,6 @@
 import { ajaxUtils } from "../ajaxUtils.js"
 import { bootstrap5overlay } from "../bootstrap5overlay/bootstrap5overlay.js"
 import { slotStocks } from "../globalRules/ordersRules.js"
-import { slotsSettings } from "../globalRules/slotsRules.js"
 import { snackbar } from "../snackbar/snackbar.js"
 import { getData, isLogist } from "../utils.js"
 import { updateTableData } from "./agGridUtils.js"
@@ -19,7 +18,7 @@ import {
 	updateOrderUrl,
 	userMessages
 } from "./constants.js"
-import { getOrderDataForAjax } from "./dataUtils.js"
+import { getMoveOrdersReportDates, getOrderDataForAjax } from "./dataUtils.js"
 import { renderOrderCalendar } from "./deliveryCalendar.js"
 import { addCalendarEvent, deleteCalendarEvent, updateCalendarEvent, updateOrderAndEvent } from "./eventControlMethods.js"
 import { methodAccessRules } from "./rules.js"
@@ -606,4 +605,12 @@ export function setOrderLinking(idOrderArray, gridOptions) {
 			bootstrap5overlay.hideOverlay()
 		}
 	})
+}
+
+// получение отчета по перемещениям слотов между 1700 и 1800
+export function getMoveOrdersReport(action) {
+	const todayMs = new Date().setHours(0, 0, 0, 0)
+	const { date1, date2 } = getMoveOrdersReportDates(todayMs)
+	const stoctId = action === '1700to1800' ? '1700' : '1800'
+	window.open(`../api/balance2/${date1}&${date2}&${stoctId}`, '_blank')
 }

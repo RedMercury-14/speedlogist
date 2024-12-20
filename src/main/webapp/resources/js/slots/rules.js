@@ -313,11 +313,21 @@ export function isOverlapWithInternalMovementTime(info, internalMovementTimes, i
 }
 
 // проверка паллетовместимости склада
-export function checkPallCount(info, pallCount, maxPall) {
+export function checkPallCount(info, pallCount, maxPall, currentStock) {
 	const { event: fcEvent } = info
 	const order = fcEvent.extendedProps.data
-	const numberOfPalls = Number(order.pall)
 	const orderType = getOrderType(order)
+
+	//---------------------------------------------------------
+	// ДЛЯ 1700 И 1800 не проверять паллетовместимость в период с 00:00 по 07:00
+	if (orderType === 'externalMovement' && currentStock.id === '1800') {
+		const startHours = fcEvent.start.getUTCHours()
+		const endHours = fcEvent.end.getUTCHours()
+		if (startHours < 7 && endHours < 7) return true
+	}
+	//---------------------------------------------------------
+
+	const numberOfPalls = Number(order.pall)
 	const pallCountValue = pallCount[orderType]
 	const maxPallValue = maxPall[orderType]
 	const newPallCount = pallCountValue + numberOfPalls
@@ -326,18 +336,42 @@ export function checkPallCount(info, pallCount, maxPall) {
 }
 
 // проверка паллетовместимости склада на соседние даты
-export function checkPallCountForComingDates(info, pallCount, maxPall) {
+export function checkPallCountForComingDates(info, pallCount, maxPall, currentStock) {
 	const { event: fcEvent } = info
 	const oldEvent = info.oldEvent
 	const order = fcEvent.extendedProps.data
+	const orderType = getOrderType(order)
+
+	//---------------------------------------------------------
+	// ДЛЯ 1700 И 1800 не разрешать переносить слот с периода с 00:00 по 07:00 при перелимите
+	if (orderType === 'externalMovement' && currentStock.id === '1800') {
+		const endHours = fcEvent.end.getUTCHours()
+		const oldEventStartHours = oldEvent.start.getUTCHours()
+		const oldEventSndHours = oldEvent.end.getUTCHours()
+		if (oldEventStartHours < 7 && oldEventSndHours < 7
+			&& endHours >= 7
+			&& pallCount.externalMovement > maxPall.externalMovement
+		) return false
+	}
+	//---------------------------------------------------------
+
 	const eventDateStr = fcEvent.startStr.split('T')[0]
 	const oldEventDateStr = oldEvent.startStr.split('T')[0]
 	const numberOfPalls = Number(order.pall)
-	const orderType = getOrderType(order)
 	const pallCountValue = pallCount[orderType]
 	const maxPallValue = maxPall[orderType]
 	
 	if (oldEventDateStr !== eventDateStr) {
+
+		//---------------------------------------------------------
+		// ДЛЯ 1700 И 1800 не проверять паллетовместимость в период с 00:00 по 07:00
+		if (orderType === 'externalMovement' && currentStock.id === '1800') {
+			const startHours = fcEvent.start.getUTCHours()
+			const endHours = fcEvent.end.getUTCHours()
+			if (startHours < 7 && endHours < 7) return true
+		}
+		//---------------------------------------------------------
+
 		return pallCountValue + numberOfPalls <= maxPallValue
 	}
 	return true

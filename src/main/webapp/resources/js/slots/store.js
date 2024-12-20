@@ -290,46 +290,19 @@ export const store = {
 				// constraint: stockId === '1700' ? null : 'businessHours',
 			}
 
-			// костыль для внутренних перемещений на 1700 и 1800 складах
 			if (stockId !== '1700' && stockId !== '1800') event.constraint = 'businessHours'
 
 			stock.events.push(event)
 		})
+	},
 
-		// добавление фона для зоны внутренних перемещений
-		this._state.stocks.forEach(stock => {
-			if (stock.id === '1700') {
-				stock.events.push({
-					id: `background1700`,
-					resourceId: `170001`,
-					display: 'background',
-					startTime: '12:00',
-					endTime: '20:00',
-					eventOverlap: true,
-					title: '',
-					extendedProps: {
-						data: {
-							pall: 0,
-						}
-					},
-				})
-			}
-			if (stock.id === '1800') {
-				stock.events.push({
-					id: `background1800`,
-					resourceId: `180001`,
-					display: 'background',
-					startTime: '00:00',
-					endTime: '24:00',
-					eventOverlap: true,
-					title: '',
-					extendedProps: {
-						data: {
-							pall: 0,
-						}
-					},
-				})
-			}
+	// добавление фона для зоны внутренних перемещений
+	setBGEvents(events) {
+		events.forEach(bgEvent => {
+			const stockId = bgEvent.resourceId.slice(0, -2)
+			this._state.stocks.forEach(stock => {
+				if (stock.id === stockId) stock.events.push(bgEvent)
+			})
 		})
 	},
 

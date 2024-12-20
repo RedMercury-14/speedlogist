@@ -312,3 +312,18 @@ export function getSlotInfoToCopy(fcEvent, currentStock) {
 	`
 	return text
 }
+
+// получение дат джля формирования отчета по перемещениям слотов между 1700 и 1800
+export function getMoveOrdersReportDates(todayMs) {
+	const date1 = dateHelper.getDateForInput(
+		todayMs
+		+ dateHelper.DAYS_TO_MILLISECONDS
+		* slotsSettings.MOVE_ORDERS_DATE_START_FACTOR
+	)
+	const date2 = dateHelper.getDateForInput(
+		todayMs
+		+ dateHelper.DAYS_TO_MILLISECONDS
+		* slotsSettings.MOVE_ORDERS_DATE_END_FACTOR
+	)
+	return { date1, date2 }
+}

@@ -15,7 +15,7 @@ import {
 	searchSlot,
 } from "./slots/calendarUtils.js"
 import {
-	blurActiveElem, debounce, isAdmin, isLogist, isObserver,
+	blurActiveElem, cookieHelper, debounce, isAdmin, isLogist, isObserver,
 	isOrderSupport, isProcurement, isSlotsObserver, isStockProcurement
 } from "./utils.js"
 import { uiIcons } from "./uiIcons.js"
@@ -59,6 +59,7 @@ import {
 	checkEventsForBooking,
 	confirmSlot,
 	editMarketInfo,
+	getMoveOrdersReport,
 	getOrderFromMarket,
 	loadOrder,
 	setOrderLinking,
@@ -78,7 +79,7 @@ import {
 	resourcesHandler
 } from "./slots/calendarHandlers.js"
 import { checkCombineOrders } from "./procurementControlUtils.js"
-import { slotsSettings } from "./globalRules/slotsRules.js"
+import { backgroundEvents, slotsSettings } from "./globalRules/slotsRules.js"
 
 
 const LOCAL_STORAGE_KEY = 'AG_Grid_column_settings_to_Slots'
@@ -285,6 +286,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 	$('#displayMessageModal').on('hide.bs.modal', blurActiveElem)
 	$('#pallChartModal').on('hide.bs.modal', blurActiveElem)
 	$('#updateSlotReasonModal').on('hide.bs.modal', blurActiveElem)
+
+	showSlotNewsModal()
 })
 
 
@@ -296,6 +299,8 @@ async function initStartData() {
 	store.setOrders(ordersWithoutAHO)
 	// добавляем ивенты на виртуальные склады
 	store.setStockEvents()
+	// добавляем фоновые зоны
+	store.setBGEvents(backgroundEvents)
 	// сохраняем ограничения паллет
 	store.setMaxPallRestrictions(MAX_PALL_RESTRICTIONS)
 	const stocks = store.getStocks()
@@ -314,8 +319,11 @@ async function initStartData() {
 
 // контекстное меню таблицы заказов
 function getContextMenuItemsForOrderTable(params) {
+	const rowNode = params.node
+	if(!rowNode) return
 	const role = store.getRole()
-	const order = params.node.data
+	const login = store.getLogin()
+	const order = rowNode.data
 	const idOrder = order.idOrder
 	const marketNumber = order.marketNumber
 	const idRamp = order.idRamp
@@ -553,12 +561,21 @@ async function doAdminAction(e) {
 		await checkEventsForBooking(events)
 		return
 	}
+
+	// рекомендации по перемещениям
+	if (action === '1700to1800' || action === '1800to1700') {
+		select.value = ''
+		select.blur()
+		getMoveOrdersReport(action)
+		return
+	}
 }
 
 // указание причины обновления слота
 function gettingReasonForUpdateSlot(e) {
 	e.preventDefault()
-	const formData = new FormData(e.target)
+	const form = e.target
+	const formData = new FormData(form)
 	const data = Object.fromEntries(formData)
 	const reason = data.updateSlotReason === 'Иное'
 		? data.updateSlotOtherReason
@@ -571,6 +588,7 @@ function gettingReasonForUpdateSlot(e) {
 	}
 
 	updateOrder(info, orderTableGridOption, reason)
+	form.reset()
 	$("#updateSlotReasonModal").modal('hide')
 }
 
@@ -578,6 +596,8 @@ function gettingReasonForUpdateSlot(e) {
 function cancelReasonForUpdateSlot(e) {
 	const info = store.getCalendarInfo()
 	info.revert()
+	const updateSlotReasonForm = document.querySelector('#updateSlotReasonForm')
+	updateSlotReasonForm && updateSlotReasonForm.reset()
 	$("#updateSlotReasonModal").modal('hide')
 }
 
@@ -677,4 +697,17 @@ function setOldMarketInfo(order, oldValue, gridOption) {
 	const updatedOrder = store.updateOrder(order)
 	// вернуть старое значение в таблицу
 	updateTableRow(gridOption, updatedOrder)
+}
+
+// функции для модального окна обновлений в слотах
+function showSlotNewsModal() {
+	const value = cookieHelper.getCookie('_slotNews1')
+	if (value) return 
+	setSlotNewsCookie('ок')
+	$('#slotNewsModal').modal('show')
+}
+function setSlotNewsCookie(value) {
+	let date = new Date(Date.now() + 31562e7)
+	date = date.toUTCString()
+	cookieHelper.setCookie('_slotNews1', value, { expires: date, })
 }

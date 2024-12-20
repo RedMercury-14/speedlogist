@@ -848,6 +848,23 @@ public class Product {
 		
     }
 	
+	/**
+	 * Возвращает заказ продукта, за таргетную дату
+	 * @param targetDate
+	 * @return
+	 */
+	public OrderProduct getOrderProductsHasDateTarget(Date targetDate) {		
+		if(orderProducts != null && !orderProducts.isEmpty()) {
+			return orderProducts.stream()
+	                .filter(obj -> obj.getDateCreate().toLocalDateTime().toLocalDate().equals(targetDate.toLocalDate()))
+	                .findFirst()
+	                .orElse(null);
+		}else {
+			return null;
+		}
+		
+    }
+	
 	
 	/**
 	 * расчётный остаток для 1700 слкада в днях

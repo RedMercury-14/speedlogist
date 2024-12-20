@@ -1754,8 +1754,8 @@ public class POIExcel {
 		XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
 		XSSFSheet sheet = wb.getSheetAt(0);
 		
-		Date dateStart = Date.valueOf(LocalDate.now());
-		Date dateEnd = Date.valueOf(LocalDate.now().plusDays(1));
+		Date dateStart = Date.valueOf("2024-12-22");
+		Date dateEnd = Date.valueOf("2024-12-26");
 		
 		for (int i = 1; i < sheet.getLastRowNum() + 1; i++) {
 			XSSFRow rowI = sheet.getRow(i);
@@ -1808,7 +1808,7 @@ public class POIExcel {
 	            schedule.setEndDateTemp(dateEnd);			
 	            schedule.setDateLoadExcel(Timestamp.valueOf(LocalDateTime.now()));
 	            schedule.setIsNotCalc(false);
-	            schedule.setType("TO");
+	            schedule.setType("ТО"); //кирилица
 	            schedule.setNameStock(getCellValue(cellAddressStock));
 				scheduleService.saveSchedule(schedule);
 	        }else {
@@ -1839,7 +1839,7 @@ public class POIExcel {
 			            schedule.setEndDateTemp(dateEnd);			
 			            schedule.setDateLoadExcel(Timestamp.valueOf(LocalDateTime.now()));
 			            schedule.setIsNotCalc(false);
-			            schedule.setType("TO");
+			            schedule.setType("ТО"); //кирилица
 			            schedule.setNameStock(getCellValue(cellAddressStock));
 						scheduleService.updateSchedule(schedule);
 					}

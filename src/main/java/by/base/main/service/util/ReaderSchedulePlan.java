@@ -718,7 +718,12 @@ public class ReaderSchedulePlan {
 								String dayStockMessage =  checkNumProductHasStock(order, product, dateRange); // проверяем по стокам относительно одного продукта
 								//пошла проверка балансов
 								if(getTrueStock(order).equals("1700") || getTrueStock(order).equals("1800")) {
-									Product balanceProduct = balance.stream().filter(b-> b.getCodeProduct().equals(product.getCodeProduct())).findFirst().orElse(null);
+									Product balanceProduct;
+									if(balance == null || balance.isEmpty()) {
+										balanceProduct = null;
+									}else {
+										balanceProduct = balance.stream().filter(b-> b.getCodeProduct().equals(product.getCodeProduct())).findFirst().orElse(null);
+									}
 									if(balanceProduct != null) {
 										result = result +"<span style=\"color: red;\"> Запасы на складах "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") с учётом слотов : 1700 = "+balanceProduct.getCalculatedDayStock1700()
 											+" дн; 1800 = "+ balanceProduct.getCalculatedDayStock1800() +" дн;</span>\n";

@@ -1754,6 +1754,9 @@ public class POIExcel {
 		XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
 		XSSFSheet sheet = wb.getSheetAt(0);
 		
+		Date dateStart = Date.valueOf(LocalDate.now());
+		Date dateEnd = Date.valueOf(LocalDate.now().plusDays(1));
+		
 		for (int i = 1; i < sheet.getLastRowNum() + 1; i++) {
 			XSSFRow rowI = sheet.getRow(i);
             
@@ -1801,8 +1804,8 @@ public class POIExcel {
 	            schedule.setQuantumMeasurements(getCellValue(cellValueQuant));
 	            schedule.setToType(getCellValue(cellStockType));
 	            schedule.setIsDayToDay(getCellValue(cellDayToDay) != null ? getCellValue(cellDayToDay).equals("true") : null);
-	            schedule.setStartDateTemp(Date.valueOf(LocalDate.now()));
-	            schedule.setEndDateTemp(Date.valueOf(LocalDate.now().plusDays(1)));			
+	            schedule.setStartDateTemp(dateStart);
+	            schedule.setEndDateTemp(dateEnd);			
 	            schedule.setDateLoadExcel(Timestamp.valueOf(LocalDateTime.now()));
 	            schedule.setIsNotCalc(false);
 	            schedule.setType("TO");
@@ -1832,8 +1835,8 @@ public class POIExcel {
 			            schedule.setQuantumMeasurements(getCellValue(cellValueQuant));
 			            schedule.setToType(getCellValue(cellStockType));
 			            schedule.setIsDayToDay(getCellValue(cellDayToDay) != null ? getCellValue(cellDayToDay).equals("true") : null);
-			            schedule.setStartDateTemp(Date.valueOf(LocalDate.now()));
-			            schedule.setEndDateTemp(Date.valueOf(LocalDate.now().plusDays(1)));			
+			            schedule.setStartDateTemp(dateStart);
+			            schedule.setEndDateTemp(dateEnd);			
 			            schedule.setDateLoadExcel(Timestamp.valueOf(LocalDateTime.now()));
 			            schedule.setIsNotCalc(false);
 			            schedule.setType("TO");

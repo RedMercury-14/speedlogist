@@ -641,10 +641,8 @@ public class ReaderSchedulePlan {
 					if(order.getDateOrderOrl() != null) {
 						quantity.add(product.getOrderProductsHasDateTarget(Date.valueOf(order.getDateOrderOrl().toLocalDate().minusDays(1))));						
 					}
-	
-					
 
-					if(quantity != null && !quantity.isEmpty()) {
+					if(quantity != null && !quantity.isEmpty() && quantity.get(0) !=null) {
 						//проверяем на какой склад хотят поставить заказ и берем данные именно этого склада
 						int zaq = quantityOrderAll.intValue(); // СУММА заказов по периоду
 						int singleZaq = orderLine.getQuantityOrder().intValue(); //Заказ по ордеру (не суммированный)

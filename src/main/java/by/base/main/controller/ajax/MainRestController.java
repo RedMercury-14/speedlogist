@@ -2248,7 +2248,33 @@ public class MainRestController {
 		}		
 	}
 	
-	
+	/**
+	 * Важный метод, который удаляет ВРЕМЕННЫЕ графики поставок по коду контракта
+	 * @param request
+	 * @param num
+	 * @return
+	 */
+	@GetMapping("/slots/delivery-schedule/delScheduleByNumContract/{num}")
+	public Map<String, Object> delScheduleByNumContract(HttpServletRequest request, @PathVariable String num) {
+		Map<String, Object> response = new HashMap<String, Object>();	
+		List<Schedule> schedules = scheduleService.getSchedulesListTOContractOnlyTemp(Long.parseLong(num));
+		if(schedules == null || schedules.isEmpty()) {
+			response.put("status", "200");
+			response.put("message", "Временных графиков по коду контракта " + num + " нет");
+			response.put("info", "Временных графиков по коду контракта " + num + " нет");
+			return response;
+		}
+		String numContract = num;
+		int count = 0;
+		for (Schedule schedule : schedules) {
+			scheduleService.deleteOrderById(schedule.getIdSchedule());  // на оптимизацию.
+			count++;
+		}
+		response.put("status", "200");
+		response.put("numContract", numContract);
+		response.put("deleteRows", count);
+		return response;		
+	}
 	
 	@GetMapping("/slots/delivery-schedule/getScheduleNumContract/{num}")
 	public Map<String, Object> getScheduleNumContract(HttpServletRequest request, @PathVariable String num) {

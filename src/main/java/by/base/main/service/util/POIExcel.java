@@ -358,6 +358,11 @@ public class POIExcel {
 				"Номер контракта", "Номер ТО", "Статус", "Время действия"
 		};
 
+		String[] duplicateHeaders = {
+				"Номер контракта", "Наименование контрагента", "Номер ТО"
+		};
+
+
 		for (Long counterpartyContractCode: currentSchedules.keySet()) {
 
 			if(schedules.isEmpty()) {
@@ -367,6 +372,7 @@ public class POIExcel {
 			Workbook workbook = new XSSFWorkbook();
 			Sheet sheet = workbook.createSheet("Лист 1");
 			Sheet checkSheet = workbook.createSheet("Проверочный");
+			Sheet duplicatesSheet = workbook.createSheet("Дубликаты");
 
 			// Создаем строку заголовков
 			Row headerRow = sheet.createRow(2);
@@ -382,14 +388,34 @@ public class POIExcel {
 				cell.setCellValue(checkHeaders[i]);
 			}
 
+			Row duplicatesHeaderRow = duplicatesSheet.createRow(0);
+			for (int i = 0; i < duplicateHeaders.length; i++) {
+				Cell cell = duplicatesHeaderRow.createCell(i);
+				cell.setCellValue(duplicateHeaders[i]);
+			}
+
+			for (int i = 0; i < headers.length; i++) {
+				sheet.autoSizeColumn(i);
+			}
+
+			for (int i = 0; i < checkHeaders.length; i++) {
+				checkSheet.autoSizeColumn(i);
+			}
+
+			for (int i = 0; i < duplicateHeaders.length; i++) {
+				duplicatesSheet.autoSizeColumn(i);
+			}
+
 			boolean isSheetEmpty = true;
 			// Заполняем данные
 
 			int rowNum = 3;
 			int checkRowNum = 1;
-
+			int duplicatesRowNum = 1;
 			List<Schedule> s = currentSchedules.get(counterpartyContractCode);
 			//List<Schedule> currentSchedules = schedules.stream().filter(sch -> sch.getCounterpartyContractCode().equals(counterpartyContractCode)).collect(Collectors.toList());
+
+			Map <String, Schedule> map = new HashMap<>();
 
 			for (Schedule schedule : s) {
 				if(schedule.getIsNotCalc() != null && schedule.getIsNotCalc()) {
@@ -409,6 +435,19 @@ public class POIExcel {
 					checkRow.createCell(2).setCellValue(schedule.getStatus());
 					checkRow.createCell(3).setCellValue(schedule.getStartDateTemp() == null ? null : schedule.getStartDateTemp().toString());
 				}
+
+				String key = schedule.getNumStock().toString() + schedule.getCounterpartyContractCode().toString();
+				if (map.containsKey(key)){
+					Row duplicatesRow = duplicatesSheet.createRow(duplicatesRowNum++);
+					duplicatesRow.createCell(0).setCellValue(schedule.getCounterpartyContractCode());
+					duplicatesRow.createCell(1).setCellValue(schedule.getName());
+					duplicatesRow.createCell(2).setCellValue(schedule.getNumStock());
+
+				} else {
+					map.put(key, schedule);
+				}
+
+
 			}
 			String fullFilePath = filePath + "Шаблон(МС) Прямые на ТО " + counterpartyContractCode + ".xlsx";
 

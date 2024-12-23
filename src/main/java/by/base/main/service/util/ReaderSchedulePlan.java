@@ -446,6 +446,8 @@ public class ReaderSchedulePlan {
 //			productsMap.forEach((k,v) -> System.out.println(k + "  -- " + v));
 			
 			Product generalProduct = productsMap.get(entry.getKey().intValue());
+			
+//			System.out.println("--> "+generalProduct);
 
 			if(generalProduct == null) {
 				continue;
@@ -626,17 +628,21 @@ public class ReaderSchedulePlan {
 				Product product = products.get(orderLine.getGoodsId().intValue());
 				
 				if(product!=null) {
-					List<OrderProduct> quantity = null;
+					//старый метод
+					List<OrderProduct> quantity = new ArrayList<OrderProduct>();
+//					if(order.getDateOrderOrl() != null) {
+//						quantity = product.getOrderProductsListHasDateTarget(order.getDateOrderOrl());
+//					}else {
+//						quantity = product.getOrderProductsListHasDateTarget(dateNow);
+//					}
+					
+					//новый метод
+					//берем только за день, который укажут в ОРЛ
 					if(order.getDateOrderOrl() != null) {
-						quantity = product.getOrderProductsListHasDateTarget(order.getDateOrderOrl());
-					}else {
-						quantity = product.getOrderProductsListHasDateTarget(dateNow);
+						quantity.add(product.getOrderProductsHasDateTarget(Date.valueOf(order.getDateOrderOrl().toLocalDate().minusDays(1))));						
 					}
-					
-//						System.err.println(quantity.get(0));		
-					
 
-					if(quantity != null && !quantity.isEmpty()) {
+					if(quantity != null && !quantity.isEmpty() && quantity.get(0) !=null) {
 						//проверяем на какой склад хотят поставить заказ и берем данные именно этого склада
 						int zaq = quantityOrderAll.intValue(); // СУММА заказов по периоду
 						int singleZaq = orderLine.getQuantityOrder().intValue(); //Заказ по ордеру (не суммированный)
@@ -812,7 +818,7 @@ public class ReaderSchedulePlan {
 	         }
 			// КОНЕЦ проверка по стокам отностительно графика поставок
 			 //если не входит, то сообщаем, в виде ошибки
-			 System.err.println("false"); //остановился тут
+			 System.err.println(order.getIdOrder() + " заказ установлен не по графику"); //остановился тут
 			//пошла проверка балансов Тут мы проверяем по дефицитному товару
 				if(getTrueStock(order).equals("1700") || getTrueStock(order).equals("1800")) {
 					if(getTrueStock(order).equals("1700")) {

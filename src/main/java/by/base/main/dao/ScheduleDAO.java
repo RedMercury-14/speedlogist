@@ -130,5 +130,13 @@ public interface ScheduleDAO {
 	 * @author Ira
 	 */
 	List<Schedule> getSchedulesByTOTypeWithTemp(String toType);
+	
+	/**
+	 * @author Dima
+	 * <br>Возвращает список всех графиков на ТО по номеру контракта - <b>только временных!</b> </br>
+	 * @param num
+	 * @return
+	 */
+	public List<Schedule> getSchedulesListTOContractOnlyTemp(Long num);
 
 }

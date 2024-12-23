@@ -2,8 +2,11 @@ package by.base.main.dao.impl;
 
 import java.sql.Date;
 import java.time.DayOfWeek;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import javax.transaction.Transactional;
 
@@ -99,10 +102,16 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 		currentSession.update(schedule);
 	}
 
+	private static final String queryDeleteById = "delete from Schedule where idSchedule=:idSchedule";
 	@Transactional
 	@Override
 	public void deleteOrderById(Integer id) {
-		System.err.println("В разработке");
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query theQuery = 
+				currentSession.createQuery(queryDeleteById);
+		theQuery.setParameter("idSchedule", id);
+		theQuery.executeUpdate();
+
 	}
 
 	private static final String queryGetSchedulesByStock = "from Schedule where numStock=:numStock";
@@ -359,6 +368,25 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 			return null;
 		}
 		return schedules;
+	}
+
+	private static final String queryGetSchedulesListTOContractOnlyTemp = "from Schedule "
+			+ "where counterpartyContractCode=:counterpartyContractCode "
+			+ "AND status=20 "
+			+ "AND startDateTemp IS NOT NULL AND endDateTemp IS NOT NULL";
+	@Transactional
+	@Override
+	public List<Schedule> getSchedulesListTOContractOnlyTemp(Long num) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Schedule> theObject = currentSession.createQuery(queryGetSchedulesListTOContractOnlyTemp, Schedule.class);
+		theObject.setParameter("counterpartyContractCode", num);
+		Set<Schedule> schedules = new HashSet<Schedule>(theObject.getResultList());
+		for (Schedule schedule : schedules) {
+			if(schedule.getStartDateTemp() == null || schedule.getEndDateTemp() == null) {
+				throw new DTOException("Ошибка запроса. Вернулся постоянный график");
+			}
+		}
+		return new ArrayList<Schedule>(schedules);
 	}
 
 }

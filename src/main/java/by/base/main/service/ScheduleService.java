@@ -141,5 +141,13 @@ public interface ScheduleService {
 	 * @return
 	 */
 	List<Schedule> getSchedulesListTOOnlyActual(List<Schedule> allSchedules);
+	
+	/**
+	 * @author Dima
+	 * <br>Возвращает список всех графиков на ТО по номеру контракта - <b>только временных!</b> </br>
+	 * @param num
+	 * @return
+	 */
+	public List<Schedule> getSchedulesListTOContractOnlyTemp(Long num);
 }
 

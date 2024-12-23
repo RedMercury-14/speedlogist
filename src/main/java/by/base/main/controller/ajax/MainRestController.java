@@ -311,183 +311,123 @@ public class MainRestController {
 	public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		Map<String, Object> responseMap = new HashMap<>();
 
-		XSSFWorkbook book = new XSSFWorkbook();
-		XSSFSheet sheet = book.createSheet("Несоответствия");
-		XSSFSheet checkSheet = book.createSheet("Проверка");
-		XSSFCellStyle cellStyle = book.createCellStyle();
-
-		String[] headers = {
-				"Код товара", "Наименование товара", "Заказ (остальные склады)", "Заказано (остальные склады)", "Заказ 1700", "Заказано для 1700",
-				"Заказ 1800", "Заказано для 1800", "Увеличенный заказ 1700", "Увеличенный заказ 1800"
-		};
-
-
-		String[] checkHeaders = {
-				"Код товара", "название товара", "дата", "Количество"
-		};
-
-
-
-		// Создаем строку заголовков
-		Row headerRow = sheet.createRow(0);
-		for (int i = 0; i < headers.length; i++) {
-			Cell cell = headerRow.createCell(i);
-			cell.setCellValue(headers[i]);
-		}
-
-		Row checkHeaderRow = checkSheet.createRow(0);
-		for (int i = 0; i < checkHeaders.length; i++) {
-			Cell cell = checkHeaderRow.createCell(i);
-			cell.setCellValue(checkHeaders[i]);
-		}
-
-		boolean isSheetEmpty = true;
-		int rowNum = 1;
-		//TODO Ira test
-
-		LocalDate currentTime = LocalDate.now().minusDays(1);
-		LocalDate currentTimeDayBefore = currentTime.minusDays(1);
+		System.out.println("Start --- sendSchedulesTOHasORL");
+		// Получаем текущую дату для имени файла
+		LocalDate currentTime = LocalDate.now();
 		String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-		String currentTimeDayBeforeString = currentTimeDayBefore.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-		Date dateForSearch = Date.valueOf(currentTime);
-		Date dateForSearchBefore = Date.valueOf(currentTime.minusDays(1));
 
-		String fileName = "Несоответствия потребностей и слотов за " + currentTimeString + ".xlsx";
+		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to.ORL");
+		List<String> emailsSupportDepartment = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to.supportDepartment");
+
+		Map<String, List<String>> draftLists = propertiesUtils.getListForDraftFolders(servletContext);
+
+		System.out.println(emailsORL);
+//      emails.addAll(emailsSupport);
 		String appPath = servletContext.getRealPath("/");
 
-		List<OrderProduct> products = orderProductService.getOrderProductListHasDate(dateForSearchBefore);
 
-		List<Long> orderProductsIds = products.stream().map(p -> p.getCodeProduct().longValue()).collect(Collectors.toList());
 
-		long amount1700 = products.stream().filter(p -> p.getQuantity1700() != null).count();
-		long amount1800 = products.stream().filter(p -> p.getQuantity1800() != null).count();
-		long amountOthers = products.stream().filter(p -> p.getQuantity() != null).count();
+		String fileName1200 = "1200 (----Холодный----).xlsm";
+		String fileName1100 = "1100 График прямой сухой.xlsm";
+		String fileNameSample = "График для шаблоново.xlsx";
+		String draftFolder = appPath + "resources/others/drafts/";
 
-		List<Order> orders = orderService.getOrderByFirstLoadSlotAndDateOrderOrl(dateForSearchBefore, dateForSearch, dateForSearch);
+		File draftFolderFile = new File(draftFolder);
+		if (draftFolderFile.exists()) {
+			deleteFolder(draftFolderFile);
+		}
 
-		int amountOrdered1700 = 0;
-		int amountOrdered1800 = 0;
-		int amountOrderedOthers = 0;
+		draftFolderFile.mkdir();
 
-		for (OrderProduct orderProduct : products) {
-			double quantityFromOrders = 0;
-			double quantityFromOrders1700 = 0;
-			double quantityFromOrders1800 = 0;
-			for (Order order : orders) {
-				String numStock = getTrueStockWithNullCheck(order);
-				for (OrderLine orderLine : order.getOrderLines()) {
+		try {
+			poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesByTOTypeWithTemp("холодный")),
+					appPath + "resources/others/" + fileName1200);
+			poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesByTOTypeWithTemp("сухой")),
+					appPath + "resources/others/" + fileName1100);
+			poiExcel.exportToExcelSampleListTO(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesByTOTypeWithTemp("холодный")),
+					appPath + "resources/others/" + fileNameSample);
+			poiExcel.exportToExcelDrafts(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesListTO()), draftFolder);
 
-					if (orderProduct.getCodeProduct().longValue() == orderLine.getGoodsId()) {
-						double quantity = orderLine.getQuantityOrder() == null ? 0 : orderLine.getQuantityOrder();
-						if (numStock.equals("1700")) {
-							quantityFromOrders1700 += quantity;
-						} else if (numStock.equals("1800")) {
-							quantityFromOrders1800 += quantity;
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.err.println("Ошибка формирование EXCEL");
+		}
 
-						} else if (numStock.equals("1200") || numStock.equals("1250") || numStock.equals("1100")) {
-							quantityFromOrders += quantity;
+//      response.setHeader("content-disposition", "attachment;filename="+fileName+".xlsx");
+		List<File> files = new ArrayList<File>();
+		files.add(new File(appPath + "resources/others/" + fileName1200));
+		files.add(new File(appPath + "resources/others/" + fileName1100));
+		files.add(new File(appPath + "resources/others/" + fileNameSample));
+
+		File folder = new File(draftFolder);
+		List<File> draftFiles = new ArrayList<File>(); //для теста черновиков
+		Map <String, List<File>> draftFilesMap = new HashMap<>();
+
+		File[] drafts = folder.listFiles();
+
+		for (String key: draftLists.keySet()){
+			draftFilesMap.put(key, new ArrayList<>());
+		}
+
+		if (drafts != null) {
+			for (File file: drafts){
+				String fileName = file.getName();
+
+				for (String key: draftLists.keySet()){
+
+					for (String draftNumber: draftLists.get(key)){
+						String regEx = " " + draftNumber + ".";
+
+						if (fileName.contains(regEx)){
+							draftFilesMap.get(key).add(file);
 						}
 					}
-
-				}
-			}
-			int summaryQuantityOtherStocks = orderProduct.getQuantity() == null ? 0 : orderProduct.getQuantity();
-			int summaryQuantityOther1700 = orderProduct.getQuantity1700() == null ? 0 : orderProduct.getQuantity1700();
-			int summaryQuantityOther1800 = orderProduct.getQuantity1800() == null ? 0 : orderProduct.getQuantity1800();
-
-			if (quantityFromOrders < summaryQuantityOtherStocks || quantityFromOrders1700 < summaryQuantityOther1700 || quantityFromOrders1800 < summaryQuantityOther1800) {
-				isSheetEmpty = false;
-				poiExcel.fillExcelAboutNeeds(orderProduct, quantityFromOrders, quantityFromOrders1700, quantityFromOrders1800, sheet, rowNum);
-				rowNum++;
-			}
-
-
-			if (quantityFromOrders < summaryQuantityOtherStocks) {
-				amountOrderedOthers++;
-			}
-			if (quantityFromOrders1700 < summaryQuantityOther1700) {
-				amountOrdered1700++;
-			}
-			if (quantityFromOrders1800 < summaryQuantityOther1800){
-				amountOrdered1800++;
-			}
-		}
-
-		double percent1700 = (double) amountOrdered1700 / (double) amount1700 * 100;
-		double percent1800 = (double)  amountOrdered1800/ (double) amount1800 * 100;
-		double percentOthers = (double)  amountOrderedOthers/ (double) amountOthers * 100;
-		double percentOfcoverage = ((double) rowNum - 1) / (double) products.size() * 100;
-
-		String percent1700str = String.format("%.2f",percent1700);
-		String percent1800str = String.format("%.2f",percent1800);
-		String percentOthersStr = String.format("%.2f",percentOthers);
-
-		String result = String.format("%.2f",percentOfcoverage);
-
-
-		int checkRowNum = 1;
-
-		for (Order order : orders) {
-			for (OrderLine orderLine : order.getOrderLines()) {
-				int goodId = orderLine.getGoodsId().intValue();
-
-				Product pr = productService.getProductByCode(goodId);
-
-				if (pr == null) {
-					poiExcel.fillExcelToCheckNeeds(checkSheet, checkRowNum, "нет заказа ОРЛ", orderLine);
-				} else {
-
-					List <OrderProduct> listOP  = pr.getOrderProductsListHasDateTarget(order.getDateOrderOrl());
-					if (listOP == null) {
-						poiExcel.fillExcelToCheckNeeds(checkSheet, checkRowNum, "нет заказа ОРЛ", orderLine);
-					} else {
-						OrderProduct item = listOP.get(0);
-						poiExcel.fillExcelToCheckNeeds(checkSheet, checkRowNum, item.getDateCreate().toString(), orderLine);
-
-					}
 				}
 
-				checkRowNum++;
-			}
-		}
-		for (int i = 0; i < headers.length; i++) {
-			sheet.autoSizeColumn(i);
-		}
-		for (int i = 0; i < checkHeaders.length; i++) {
-			checkSheet.autoSizeColumn(i);
-		}
+				if (fileName.contains("виртуальный")){
+					draftFilesMap.get("ORL").add(file);
+				}
 
-       /*
-       1. по ордерам получить все продукты
-       2 по продуктам методом product.getOrderProductsListHasDateTarget(order.getDateOrderOrl()) получить лист заказов по каждому продукту от орл
-       3 product.getOrderProductsListHasDateTarget(order.getDateOrderOrl()).get(0) получить последний заказ ор по фактически заказанному продукту и записать в эксель
-       взять дату
-        */
-
-		if (!isSheetEmpty) {
-			try {
-				File file = new File(appPath + "resources/others/" + fileName);
-				book.write(new FileOutputStream(file));
-				book.close();
-			} catch (IOException e) {
-				e.printStackTrace();
+				draftFiles.add(file); //для теста черновиков
 			}
 
-			String str = "По данным потребностям не были созданы слоты в установленное время. " +
-					"Процент не поставленных заказов на " + currentTimeString + " относительно заказ ОРЛ - " + result +"%." +
-					"\nПроцент для 1700 склада - " + percent1700str + "%." +
-					"\nПроцент для 1800 склада - " + percent1800str + "%." +
-					"\nПроцент для остальных складов - " + percentOthersStr + "%.";
-
-			List<File> files = new ArrayList<File>();
-			files.add(new File(appPath + "resources/others/" + fileName));
-
-			System.out.println(appPath + "resources/others/" + fileName);
-
-			List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
-        mailService.sendEmailWithFilesToUsers(servletContext, "Незакрытые потребности " + currentTimeDayBeforeString, str, files, emails);
-
 		}
+
+		//files.add(new File(appPath + "resources/others/drafts"));
+
+		System.out.println(appPath + "resources/others/");
+
+		File zipFile;
+		File zipFileDrafts; //для теста черновиков
+		File zipFileDraftsListORL;
+		File zipFileDraftsListSupportDepartment;
+
+		List <File> filesZipORL = new ArrayList<File>();
+		List <File> filesZipSupportDepartment = new ArrayList<File>();
+
+
+		try {
+			zipFile = createZipFile(files, appPath + "resources/others/TO.zip");
+			zipFileDrafts = createZipFile(draftFiles, appPath + "resources/others/Шаблоны.zip"); //для теста черновиков
+
+			zipFileDraftsListORL = createZipFile(draftFilesMap.get("ORL"), appPath + "resources/others/ORL.zip");
+			zipFileDraftsListSupportDepartment = createZipFile(draftFilesMap.get("SupportDepartment"), appPath + "resources/others/SupportDepartment.zip");
+
+			filesZipORL.add(zipFile);
+			filesZipSupportDepartment.add(zipFile);
+
+			filesZipORL.add(zipFileDraftsListORL);
+			filesZipSupportDepartment.add(zipFileDraftsListSupportDepartment);
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+//		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO " + currentTimeString, "Автоматическая отправка графиков поставок на ТО\nВерсия с макросом выделений (Ctr+t)", filesZipORL, emailsORL);
+//		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO " + currentTimeString, "Автоматическая отправка графиков поставок на ТО\nВерсия с макросом выделений (Ctr+t)", filesZipSupportDepartment, emailsSupportDepartment);
+
+		System.out.println("Finish --- sendSchedulesHasTOORL");
 
 		responseMap.put("Done", "Done");
 		return responseMap;
@@ -2308,7 +2248,41 @@ public class MainRestController {
 		}		
 	}
 	
-	
+	/**
+	 * Важный метод, который удаляет ВРЕМЕННЫЕ графики поставок по коду контракта
+	 * @param request
+	 * @param num
+	 * @return
+	 */
+	@GetMapping("/slots/delivery-schedule/delScheduleByNumContract/{num}")
+	public Map<String, Object> delScheduleByNumContract(HttpServletRequest request, @PathVariable String num) {
+		Map<String, Object> response = new HashMap<String, Object>();	
+		List<Schedule> schedules = scheduleService.getSchedulesListTOContractOnlyTemp(Long.parseLong(num));
+		if(schedules == null || schedules.isEmpty()) {
+			response.put("status", "100");
+			response.put("message", "Временных графиков по коду контракта " + num + " нет");
+			response.put("info", "Временных графиков по коду контракта " + num + " нет");
+			return response;
+		}
+		String numContract = num;
+		int count = 0;
+		for (Schedule schedule : schedules) {
+			scheduleService.deleteOrderById(schedule.getIdSchedule());  // на оптимизацию.
+			count++;
+		}
+		response.put("status", "200");
+		response.put("numContract", numContract);
+		response.put("deleteRows", count);
+		
+		User user = getThisUser();
+		
+		String text = "Удалено временных графиков поставок по контракту " + numContract + ". Количество удаленных графиков: " + count + ""
+				+ "\nПользователь: " + user.getSurname() + " " + user.getName();
+		
+		List<String> emails = propertiesUtils.getValuesByPartialKey(request.getServletContext(), "email.orl.to.ORL");
+		mailService.sendEmailToUsers(request, "Удаление временных графиков поставо", text, emails);		
+		return response;		
+	}
 	
 	@GetMapping("/slots/delivery-schedule/getScheduleNumContract/{num}")
 	public Map<String, Object> getScheduleNumContract(HttpServletRequest request, @PathVariable String num) {
@@ -3221,7 +3195,7 @@ public class MainRestController {
 	@GetMapping("/order-support/changeException/{idProduct}&{stock}")
 	public Map<String, Object> changeException(HttpServletRequest request, @PathVariable String idProduct, @PathVariable String stock) {
 		Map<String, Object> response = new HashMap<String, Object>();
-		Product product = productService.getProductByCodeAndStock(Integer.parseInt(idProduct.trim()), Integer.parseInt(stock));
+		Product product = productService.getProductByCode(Integer.parseInt(idProduct.trim()));
 		product.setIsException(!product.getIsException());
 		productService.updateProduct(product);
 		response.put("status", "200");

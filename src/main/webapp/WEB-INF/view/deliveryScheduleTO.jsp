@@ -80,7 +80,7 @@
 	</div>
 
 	<!-- модальное окно создание графика поставки -->
-	<div class="modal fade" id="addScheduleItemModal" tabindex="-1" aria-labelledby="addScheduleItemModalLabel" aria-hidden="true">
+	<div class="modal fade" id="addScheduleItemModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="addScheduleItemModalLabel" aria-hidden="true">
 		<div class="modal-dialog modal-lg">
 			<div class="modal-content">
 				<div class="modal-header">
@@ -332,7 +332,7 @@
 
 
 	<!-- модальное окно редактирования графика поставки -->
-	<div class="modal fade" id="editScheduleItemModal" tabindex="-1" aria-labelledby="editScheduleItemModalLabel" aria-hidden="true">
+	<div class="modal fade" id="editScheduleItemModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="editScheduleItemModalLabel" aria-hidden="true">
 		<div class="modal-dialog modal-lg">
 			<div class="modal-content">
 				<div class="modal-header">
@@ -580,7 +580,7 @@
 
 
 	<!-- модальное окно создания временного графика поставки -->
-	<div class="modal fade" id="createTempScheduleItemModal" tabindex="-1" aria-labelledby="createTempScheduleItemModalLabel" aria-hidden="true">
+	<div class="modal fade" id="createTempScheduleItemModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="createTempScheduleItemModalLabel" aria-hidden="true">
 		<div class="modal-dialog modal-lg">
 			<div class="modal-content">
 				<div class="modal-header">
@@ -965,6 +965,36 @@
 				</div>
 				<div class="modal-body">
 					<div id="messageContainer"></div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Ок, понятно</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Модальное окно отображения изменений -->
+	<div class="modal fade" id="newsModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="newsModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header justify-content-center">
+					<h3 class="modal-title text-center" id="newsModalLabel">Что нового</h3>
+				</div>
+				<div class="modal-body">
+					<h5 class="text-center text-muted font-weight-bold">Массовое удаление временных графиков поставок!</h5>
+					<p class="text-justify">
+						Добавлена возможноусть массового удаления всех временных графиков для текущего кода контракта.
+						Для того, чтобы удалить все временные графики по коду контракта необходимо сделать следующее:
+						<br>
+						В таблице найдите ЛЮБУЮ строку с необходимым КОДОМ КОНТРАКТА, нажмите по строке правой кнопкой мыши и в 
+						открывшемся контекстном меню выберите опцию <strong>Удаление графиков → Удалить ВСЕ ВРЕМЕННЫЕ графики по текущему коду контракта</strong>. 
+						Выбор данной опции удалит все временные графики с текущим кодом контракта.
+					</p>
+					<div class="text-center px-5">
+						<img src="${pageContext.request.contextPath}/resources/img/news/deleteTempSchedules.gif"
+							alt="Демонстрация функционала"
+							class="img-fluid" style="max-width: 100%; height: auto;">
+					</div>
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-secondary" data-dismiss="modal">Ок, понятно</button>

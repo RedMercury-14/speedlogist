@@ -102,10 +102,16 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 		currentSession.update(schedule);
 	}
 
+	private static final String queryDeleteById = "delete from Schedule where idSchedule=:idSchedule";
 	@Transactional
 	@Override
 	public void deleteOrderById(Integer id) {
-		System.err.println("В разработке");
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query theQuery = 
+				currentSession.createQuery(queryDeleteById);
+		theQuery.setParameter("idSchedule", id);
+		theQuery.executeUpdate();
+
 	}
 
 	private static final String queryGetSchedulesByStock = "from Schedule where numStock=:numStock";

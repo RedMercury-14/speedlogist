@@ -2259,7 +2259,7 @@ public class MainRestController {
 		Map<String, Object> response = new HashMap<String, Object>();	
 		List<Schedule> schedules = scheduleService.getSchedulesListTOContractOnlyTemp(Long.parseLong(num));
 		if(schedules == null || schedules.isEmpty()) {
-			response.put("status", "200");
+			response.put("status", "100");
 			response.put("message", "Временных графиков по коду контракта " + num + " нет");
 			response.put("info", "Временных графиков по коду контракта " + num + " нет");
 			return response;
@@ -3187,7 +3187,7 @@ public class MainRestController {
 	@GetMapping("/order-support/changeException/{idProduct}&{stock}")
 	public Map<String, Object> changeException(HttpServletRequest request, @PathVariable String idProduct, @PathVariable String stock) {
 		Map<String, Object> response = new HashMap<String, Object>();
-		Product product = productService.getProductByCodeAndStock(Integer.parseInt(idProduct.trim()), Integer.parseInt(stock));
+		Product product = productService.getProductByCode(Integer.parseInt(idProduct.trim()));
 		product.setIsException(!product.getIsException());
 		productService.updateProduct(product);
 		response.put("status", "200");

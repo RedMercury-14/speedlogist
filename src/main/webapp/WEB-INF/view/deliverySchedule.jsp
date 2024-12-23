@@ -64,7 +64,7 @@
 	</div>
 
 	<!-- модальное окно создание графика поставки -->
-	<div class="modal fade" id="addScheduleItemModal" tabindex="-1" aria-labelledby="addScheduleItemModalLabel" aria-hidden="true">
+	<div class="modal fade" id="addScheduleItemModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="addScheduleItemModalLabel" aria-hidden="true">
 		<div class="modal-dialog modal-lg">
 			<div class="modal-content">
 				<div class="modal-header">
@@ -262,7 +262,7 @@
 
 
 	<!-- модальное окно редактирования графика поставки -->
-	<div class="modal fade" id="editScheduleItemModal" tabindex="-1" aria-labelledby="editScheduleItemModalLabel" aria-hidden="true">
+	<div class="modal fade" id="editScheduleItemModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="editScheduleItemModalLabel" aria-hidden="true">
 		<div class="modal-dialog modal-lg">
 			<div class="modal-content">
 				<div class="modal-header">

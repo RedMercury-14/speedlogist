@@ -17,7 +17,7 @@ import { snackbar } from "./snackbar/snackbar.js"
 import { uiIcons } from './uiIcons.js'
 import {
 	blurActiveElem,
-	changeGridTableMarginTop, dateHelper, debounce, disableButton, enableButton,
+	changeGridTableMarginTop, cookieHelper, dateHelper, debounce, disableButton, enableButton,
 	getData, getScheduleStatus, hideLoadingSpinner, isAdmin,
 	isObserver, isOrderSupport, isORL, showLoadingSpinner
 } from './utils.js'
@@ -31,6 +31,7 @@ const addScheduleItemUrl = '../../api/slots/delivery-schedule/createTO'
 const editScheduleItemUrl = '../../api/slots/delivery-schedule/editTOByCounterpartyAndShop'
 const changeIsDayToDayBaseUrl = '../../api/slots/delivery-schedule/changeDayToDay/'
 const editTOByCounterpartyContractCodeOnlyUrl = '../../api/slots/delivery-schedule/editTOByCounterpartyContractCodeOnly'
+const deleteAllTempSchedulesBaseUrl = '../../api/slots/delivery-schedule/delScheduleByNumContract/'
 const setCodeNameBaseUrl = '../../api/slots/delivery-schedule/changeNameOfQuantum/'
 const downloadFaqUrl = '../../file/delivery-schedule-to/downdoad/instruction-trading-objects'
 const sendScheduleDataToMailUrl = '../../api/orl/sendEmailTO'
@@ -284,6 +285,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 		blurActiveElem(e)
 	})
 
+	showNewsModal()
+
 	// отображение стартовых данных
 	if (window.initData) {
 		await initStartData()
@@ -494,10 +497,15 @@ function getContextMenuItems(params) {
 			subMenu: [
 				{
 					name: `Удалить текущий график`,
-					// disabled: (!isAdmin(role) && !isORL(role) && !isOrderSupport(role)) || status === 0,
 					action: async () => {
 						await deleteScheduleItem(rowNode)
 						!isTempSchedule && await deleteTempScheduleItem(rowNode)
+					},
+				},
+				{
+					name: `Удалить ВСЕ ВРЕМЕННЫЕ графики по текущему коду контракта`,
+					action: () => {
+						deleteTempScheduleItemsByContract(rowNode)
 					},
 				},
 				{
@@ -572,6 +580,16 @@ async function deleteScheduleItemsByContract(role, rowNode) {
 		counterpartyContractCode,
 		status
 	})
+}
+// удаление временных графиков поставок по номеру контракта
+function deleteTempScheduleItemsByContract(rowNode) {
+	const scheduleItem = rowNode.data
+	const counterpartyContractCode = scheduleItem.counterpartyContractCode
+	if (!counterpartyContractCode) return
+	if (!confirm(
+		`Вы действительно хотите удалить ВСЕ ВРЕМЕННЫЕ графики по коду контракта ${counterpartyContractCode}?`
+	)) return
+	deleteAllTempSchedules(counterpartyContractCode)
 }
 // добавление нового ТО по номеру контракта
 async function addShopsByContract(rowNode) {
@@ -822,8 +840,11 @@ function sendExcelFormHandler(e) {
 async function addScheduleItemFormHandler(e) {
 	e.preventDefault()
 
+	disableButton(e.submitter)
+
 	if (isObserver(role)) {
 		snackbar.show('Недостаточно прав!')
+		enableButton(e.submitter)
 		return
 	}
 
@@ -836,6 +857,7 @@ async function addScheduleItemFormHandler(e) {
 			'Обнаружены ошибки в значения дней заказа или поставки.\n'
 			+ 'Проверьте данные графика!'
 		)
+		enableButton(e.submitter)
 		return
 	}
 
@@ -843,6 +865,7 @@ async function addScheduleItemFormHandler(e) {
 	const errorMessage = getFormErrorMessage(data, error)
 	if (errorMessage) {
 		snackbar.show(errorMessage)
+		enableButton(e.submitter)
 		return
 	}
 
@@ -860,7 +883,6 @@ async function addScheduleItemFormHandler(e) {
 	}
 
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 500)
-	disableButton(e.submitter)
 
 	ajaxUtils.postJSONdata({
 		url: addScheduleItemUrl,
@@ -905,8 +927,11 @@ async function addScheduleItemFormHandler(e) {
 function editScheduleItemFormHandler(e) {
 	e.preventDefault()
 
+	disableButton(e.submitter)
+
 	if (isObserver(role)) {
 		snackbar.show('Недостаточно прав!')
+		enableButton(e.submitter)
 		return
 	}
 
@@ -919,6 +944,7 @@ function editScheduleItemFormHandler(e) {
 			'Обнаружены ошибки в значения дней заказа или поставки.\n'
 			+ 'Проверьте данные графика!'
 		)
+		enableButton(e.submitter)
 		return
 	}
 
@@ -926,11 +952,11 @@ function editScheduleItemFormHandler(e) {
 	const errorMessage = getFormErrorMessage(data, error)
 	if (errorMessage) {
 		snackbar.show(errorMessage)
+		enableButton(e.submitter)
 		return
 	}
 
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 500)
-	disableButton(e.submitter)
 
 	ajaxUtils.postJSONdata({
 		url: editScheduleItemUrl,
@@ -972,8 +998,11 @@ function editScheduleItemFormHandler(e) {
 function createTempScheduleItemFormHandler(e) {
 	e.preventDefault()
 
+	disableButton(e.submitter)
+
 	if (isObserver(role)) {
 		snackbar.show('Недостаточно прав!')
+		enableButton(e.submitter)
 		return
 	}
 
@@ -986,6 +1015,7 @@ function createTempScheduleItemFormHandler(e) {
 			'Обнаружены ошибки в значения дней заказа или поставки.\n'
 			+ 'Проверьте данные графика!'
 		)
+		enableButton(e.submitter)
 		return
 	}
 
@@ -993,11 +1023,11 @@ function createTempScheduleItemFormHandler(e) {
 	const errorMessage = getFormErrorMessage(data, error)
 	if (errorMessage) {
 		snackbar.show(errorMessage)
+		enableButton(e.submitter)
 		return
 	}
 
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 500)
-	disableButton(e.submitter)
 
 	ajaxUtils.postJSONdata({
 		url: addScheduleItemUrl,
@@ -1151,6 +1181,31 @@ function addScheduleByContractAndShops(data) {
 			if (res.status === '105') {
 				showMessageModal(res.message)
 				return
+			}
+		},
+		errorCallback: () => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+		}
+	})
+}
+// метод удаления всех графиков по коду контракта
+function deleteAllTempSchedules(counterpartyContractCode) {
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
+	ajaxUtils.get({
+		url: `${deleteAllTempSchedulesBaseUrl}${counterpartyContractCode}`,
+		successCallback: async (res) => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+			if (res && res.status === '200') {
+				// получаем обновленные данные и обновляем таблицу
+				await getScheduleData(getScheduleUrl)
+				updateTable(gridOptions, scheduleData)
+				res.message ? snackbar.show(res.message) : snackbar.show('Удаление завершено')
+			} else {
+				console.log(res)
+				const message = res && res.message ? res.message : 'Неизвестная ошибка'
+				snackbar.show(message)
 			}
 		},
 		errorCallback: () => {
@@ -1319,4 +1374,17 @@ function saveFilterState() {
 }
 function restoreFilterState() {
 	gridFilterLocalState.restoreState(gridOptions, LOCAL_STORAGE_KEY)
+}
+
+// функции для модального окна обновлений в слотах
+function showNewsModal() {
+	const value = cookieHelper.getCookie('_SchedulesTONews1')
+	if (value) return 
+	setSchedulesTONewsCookie('ок')
+	$('#newsModal').modal('show')
+}
+function setSchedulesTONewsCookie(value) {
+	let date = new Date(Date.now() + 31562e7)
+	date = date.toUTCString()
+	cookieHelper.setCookie('_SchedulesTONews1', value, { expires: date, })
 }

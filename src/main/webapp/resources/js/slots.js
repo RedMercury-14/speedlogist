@@ -287,7 +287,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 	$('#pallChartModal').on('hide.bs.modal', blurActiveElem)
 	$('#updateSlotReasonModal').on('hide.bs.modal', blurActiveElem)
 
-	showSlotNewsModal()
+	// showSlotNewsModal()
 })
 
 

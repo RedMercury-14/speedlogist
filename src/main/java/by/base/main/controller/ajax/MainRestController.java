@@ -2273,6 +2273,14 @@ public class MainRestController {
 		response.put("status", "200");
 		response.put("numContract", numContract);
 		response.put("deleteRows", count);
+		
+		User user = getThisUser();
+		
+		String text = "Удалено временных графиков поставок по контракту " + numContract + ". Количество удаленных графиков: " + count + ""
+				+ "\nПользователь: " + user.getSurname() + " " + user.getName();
+		
+		List<String> emails = propertiesUtils.getValuesByPartialKey(request.getServletContext(), "email.orl.to.ORL");
+		mailService.sendEmailToUsers(request, "Удаление временных графиков поставо", text, emails);		
 		return response;		
 	}
 	

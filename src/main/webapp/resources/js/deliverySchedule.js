@@ -442,6 +442,8 @@ function sendExcelFormHandler(e) {
 function addScheduleItemFormHandler(e) {
 	e.preventDefault()
 
+	disableButton(e.submitter)
+
 	const formData = new FormData(e.target)
 	const data = scheduleItemDataFormatter(formData)
 	
@@ -451,6 +453,7 @@ function addScheduleItemFormHandler(e) {
 			'Обнаружены ошибки в значения дней заказа или поставки.\n'
 			+ 'Проверьте данные графика!'
 		)
+		enableButton(e.submitter)
 		return
 	}
 
@@ -458,10 +461,9 @@ function addScheduleItemFormHandler(e) {
 	const errorMessage = getFormErrorMessage(data, error)
 	if (errorMessage) {
 		snackbar.show(errorMessage)
+		enableButton(e.submitter)
 		return
 	}
-
-	disableButton(e.submitter)
 
 	ajaxUtils.postJSONdata({
 		url: addScheduleItemUrl,
@@ -497,7 +499,13 @@ function addScheduleItemFormHandler(e) {
 function editScheduleItemFormHandler(e) {
 	e.preventDefault()
 
-	if (!isAdmin(role) && !isOrderSupport(role)) return
+	disableButton(e.submitter)
+
+	if (!isAdmin(role) && !isOrderSupport(role)) {
+		snackbar.show('Недостаточно прав!')
+		enableButton(e.submitter)
+		return
+	}
 
 	const formData = new FormData(e.target)
 	const data = scheduleItemDataFormatter(formData)
@@ -508,6 +516,7 @@ function editScheduleItemFormHandler(e) {
 			'Обнаружены ошибки в значения дней заказа или поставки.\n'
 			+ 'Проверьте данные графика!'
 		)
+		enableButton(e.submitter)
 		return
 	}
 
@@ -515,10 +524,9 @@ function editScheduleItemFormHandler(e) {
 	const errorMessage = getFormErrorMessage(data, error)
 	if (errorMessage) {
 		snackbar.show(errorMessage)
+		enableButton(e.submitter)
 		return
 	}
-
-	disableButton(e.submitter)
 
 	ajaxUtils.postJSONdata({
 		url: editScheduleItemUrl,

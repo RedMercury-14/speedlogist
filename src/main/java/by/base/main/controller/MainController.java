@@ -335,6 +335,10 @@ public class MainController {
 		return "main";		
 	}
 	
+	@GetMapping("/main/admin/reports/mainReports")
+	public String getMainReportsPage(Model model, HttpServletRequest request) {
+		return "mainReports";
+	}
 	@GetMapping("/main/logistics-delivery/route-handler")
 	public String getlogisticsDeliveryRouteHandlerPage(Model model, HttpServletRequest request) {
 		return "logisticsDeliveryRouteHandler";

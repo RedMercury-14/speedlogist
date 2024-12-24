@@ -159,13 +159,13 @@ public class ScheduledTask {
 		String fileName = "Несоответствия потребностей и слотов за " + currentTimeString + ".xlsx";
 		String appPath = servletContext.getRealPath("/");
 
-		List<OrderProduct> products = orderProductService.getOrderProductListHasDate(dateForSearchBefore);
+		List<OrderProduct> orderProducts = orderProductService.getOrderProductListHasDate(dateForSearchBefore);
 
-		List<Long> orderProductsIds = products.stream().map(p -> p.getCodeProduct().longValue()).collect(Collectors.toList());
+		List<Long> orderProductsIds = orderProducts.stream().map(p -> p.getCodeProduct().longValue()).collect(Collectors.toList());
 
-		long amount1700 = products.stream().filter(p -> p.getQuantity1700() != null).count();
-		long amount1800 = products.stream().filter(p -> p.getQuantity1800() != null).count();
-		long amountOthers = products.stream().filter(p -> p.getQuantity() != null).count();
+		long amount1700 = orderProducts.stream().filter(p -> p.getQuantity1700() != null).count();
+		long amount1800 = orderProducts.stream().filter(p -> p.getQuantity1800() != null).count();
+		long amountOthers = orderProducts.stream().filter(p -> p.getQuantity() != null).count();
 
 		List<Order> orders = orderService.getOrderByFirstLoadSlotAndDateOrderOrl(dateForSearchBefore, dateForSearch, dateForSearch);
 
@@ -173,7 +173,7 @@ public class ScheduledTask {
 		int amountOrdered1800 = 0;
 		int amountOrderedOthers = 0;
 
-		for (OrderProduct orderProduct : products) {
+		for (OrderProduct orderProduct : orderProducts) {
 			double quantityFromOrders = 0;
 			double quantityFromOrders1700 = 0;
 			double quantityFromOrders1800 = 0;
@@ -220,7 +220,7 @@ public class ScheduledTask {
 		double percent1700 = (double) amountOrdered1700 / (double) amount1700 * 100;
 		double percent1800 = (double)  amountOrdered1800/ (double) amount1800 * 100;
 		double percentOthers = (double)  amountOrderedOthers/ (double) amountOthers * 100;
-		double percentOfcoverage = ((double) rowNum - 1) / (double) products.size() * 100;
+		double percentOfcoverage = ((double) rowNum - 1) / (double) orderProducts.size() * 100;
 
 		String percent1700str = String.format("%.2f",percent1700);
 		String percent1800str = String.format("%.2f",percent1800);

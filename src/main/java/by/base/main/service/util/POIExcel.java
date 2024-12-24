@@ -1793,8 +1793,8 @@ public class POIExcel {
 		XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
 		XSSFSheet sheet = wb.getSheetAt(0);
 		
-		Date dateStart = Date.valueOf("2024-12-22");
-		Date dateEnd = Date.valueOf("2024-12-26");
+		Date dateStart = Date.valueOf("2024-12-27");
+		Date dateEnd = Date.valueOf("2025-01-02");
 		
 		for (int i = 1; i < sheet.getLastRowNum() + 1; i++) {
 			XSSFRow rowI = sheet.getRow(i);

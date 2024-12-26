@@ -804,12 +804,13 @@ public class MainRestController {
 				orderMailStatus = "Маршрут создан без заказа.";
 			}
 			String textStatus = orderMailStatus;
+			String appPath = request.getServletContext().getRealPath("");
 			//отправляем письмо, запускаем его в отдельном потоке, т.к. отправка проходит в среднем 2 секунды
 			new Thread(new Runnable() {					
 				@Override
 				public void run() {
 					telegramBot.sendMessageHasSubscription("Маршрут " +route.getRouteDirection() + " с загрузкой от " +route.getDateLoadPreviously()+ " стал доступен для торгов!");
-					mailService.sendSimpleEmail(request, "Статус маршрута", "Маршрут "+route.getRouteDirection() + " стал доступен для торгов "
+					mailService.sendSimpleEmail(appPath, "Статус маршрута", "Маршрут "+route.getRouteDirection() + " стал доступен для торгов "
 							+LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yyy")) 
 							+ " в " 
 							+ LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))+"."
@@ -2236,7 +2237,7 @@ public class MainRestController {
 		if(schedule == null) {
 			//тут
 			String text = "Уведомление SpeedLogist: \nПоставщик  " + companyName + " с номером контракта " + num + " не найден в графике поставк. \nНеобходимо добавить график поставок данного контрагента.";
-			mailService.sendSimpleEmail(request, "Отсутствует график поставок", text, user.geteMail());
+			mailService.sendSimpleEmail(appPath, "Отсутствует график поставок", text, user.geteMail());
 			return "НГП"; // нет графика поставок в бд
 		}
 		
@@ -5444,7 +5445,7 @@ public class MainRestController {
 			managerEmail = managerEmail.split(".by")[0];
 			managerEmail = managerEmail+".by";
 			final String finalManagerEmail = managerEmail;
-			mailService.sendSimpleEmail(request, "Изменение заявки ОСиУЗ", text, finalManagerEmail);
+			mailService.sendSimpleEmail(appPath, "Изменение заявки ОСиУЗ", text, finalManagerEmail);
 			response.put("status", "200");
 			response.put("message", "Данные обновлены");
 		} catch (Exception e) {
@@ -5487,8 +5488,8 @@ public class MainRestController {
 			String managerEmail = order.getManager().split("; ")[1];
 			managerEmail = managerEmail.split(".by")[0];
 			managerEmail = managerEmail+".by";
-			final String finalManagerEmail = managerEmail;
-			mailService.sendSimpleEmail(request, "Отмена заявки ОСиУЗ", text, finalManagerEmail);
+			final String finalManagerEmail = managerEmail;			
+			mailService.sendSimpleEmail(appPath, "Отмена заявки ОСиУЗ", text, finalManagerEmail);
 			response.put("status", "200");
 			response.put("message", "Данные обновлены");
 		} catch (Exception e) {
@@ -5635,10 +5636,11 @@ public class MainRestController {
 		final String message = text;
 		String mailInfo = "Сообщение было отправлено " + LocalDateTime.now() + ". Водитель: " + driverStr;
 		order.setMailInfo(mailInfo);
+		String appPath = request.getServletContext().getRealPath("");
 		new Thread(new Runnable() {			
 			@Override
 			public void run() {
-				mailService.sendSimpleEmail(request, "Данные по заявке №"+order.getIdOrder(), message, finalManagerEmail);				
+				mailService.sendSimpleEmail(appPath, "Данные по заявке №"+order.getIdOrder(), message, finalManagerEmail);				
 			}
 		}).start();
 		response.put("status", "200");
@@ -8520,6 +8522,7 @@ public class MainRestController {
 	@PostMapping("/user/registration")
 	public Map<String, String> postRegistration(@RequestBody String str, HttpSession session,
 			HttpServletRequest request) throws ParseException {
+		String appPath = request.getServletContext().getRealPath("");
 		HashMap<String, String> map = new HashMap<String, String>();
 		str = stripXSS(str);
 		JSONParser parser = new JSONParser();
@@ -8572,7 +8575,7 @@ public class MainRestController {
 		if (user.getCheck() != null && user.getCheck().split("&")[0].equals("international")) {
 			userService.saveOrUpdateUser(user, 7); // международник
 			session.setAttribute("check", "international&new");
-			mailService.sendSimpleEmail(request, "Регистрация в SpeedLogist",
+			mailService.sendSimpleEmail(appPath, "Регистрация в SpeedLogist",
 					"Спасибо что зарегистрировались на товарно-транспортной бирже компании ЗАО \"Доброном\"\n"
 							+ "Для того чтобы принять участие в торгах на бирже, необходимо прислать подписанный договор по адресу: 220073, г.Минск, пер.Загородный 1-й, 20-23;\n"
 							+ "Логин для входа: " + user.getLogin(),
@@ -8587,7 +8590,7 @@ public class MainRestController {
 		if (user.getCheck() != null && user.getCheck().split("&")[0].equals("regional")) {
 			userService.saveOrUpdateUser(user, 7);
 			session.setAttribute("check", "regional&new");
-			mailService.sendSimpleEmail(request, "Регистрация в SpeedLogist",
+			mailService.sendSimpleEmail(appPath, "Регистрация в SpeedLogist",
 					"Спасибо что зарегистрировались на товарно-транспортной бирже компании ЗАО \"Доброном\"\n"
 							+ "Для того чтобы принять участие в торгах на бирже, необходимо прислать подписанный договор по адресу: 220073, г.Минск, пер.Загородный 1-й, 20-23;\n"
 							+ "Логин для входа: " + user.getLogin(),

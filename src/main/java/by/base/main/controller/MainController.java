@@ -789,6 +789,7 @@ public class MainController {
 			@RequestParam(value = "file", required = false) MultipartFile file,
 			@RequestParam(value = "dateContract" , required = false) Date dateContract,
 			@RequestParam(value = "requisites" , required = false) String requisites) {
+		String appPath = request.getServletContext().getRealPath("");
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 		if(!userService.getUserByYNP(user.getNumYNP()).isEmpty()) {
 			request.setAttribute("errorMessage", "В регистрации отказано! Пользователь с таким УНП существует");
@@ -813,7 +814,7 @@ public class MainController {
 			user.setBlock(false);
 			userService.saveOrUpdateUser(user, 7); // международник
 			session.setAttribute("check", "international&new");
-			mailService.sendSimpleEmail(request, "Регистрация в SpeedLogist", "Спасибо что зарегистрировались на товарно-транспортной бирже компании ЗАО \"Доброном\"\n"
+			mailService.sendSimpleEmail(appPath, "Регистрация в SpeedLogist", "Спасибо что зарегистрировались на товарно-транспортной бирже компании ЗАО \"Доброном\"\n"
 					+ "Для того чтобы принять участие в торгах на бирже, необходимо прислать подписанный договор по адресу: 220073, г. Минск, пер. Загородный 1-й, 20-23\n"
 					+ "Логин для входа: " + user.getLogin(), user.geteMail());
 			//mailService.sendEmailWhithFile(request, "Договор " + user.getCompanyName(), "Регистрация нового международного перевозчика", file);// тут косяк ОСТАНОВИЛСЯ ТУТ, слишком долго отправляет
@@ -964,7 +965,7 @@ public class MainController {
 			@RequestParam(value = "statRoute", required = false) String statRoute,
 			@RequestParam(value = "comment", required = false) String comment)	throws ServiceException {
 		Route route = routeService.getRouteById(id);
-		
+		String appPath = request.getServletContext().getRealPath("");
 		if (numStock != null) {
 			route.setNumStock(Integer.parseInt(numStock.trim()));
 		}		
@@ -1004,7 +1005,7 @@ public class MainController {
 					new Thread(new Runnable() {					
 						@Override
 						public void run() {
-							mailService.sendSimpleEmail(request, "Статус маршрута", "Маршрут "+route.getRouteDirection() + " стал доступен для торгов "
+							mailService.sendSimpleEmail(appPath, "Статус маршрута", "Маршрут "+route.getRouteDirection() + " стал доступен для торгов "
 									+LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yyy")) 
 									+ " в " 
 									+ LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))+"."
@@ -2938,6 +2939,7 @@ public class MainController {
 			@RequestParam("idRoute") Integer idRoute,
 			@RequestParam("currency") String currency,
 			@RequestParam(name = "status", required = false) String status) {
+		String appPath = request.getServletContext().getRealPath("");
 		User user = userService.getUserByLogin(login);
 		//обработка, если удалось нажать на кнопку
 		Order order = orderService.getOrderByIdRoute(idRoute);
@@ -2956,7 +2958,7 @@ public class MainController {
 			User userHasCarrier = userService.getUserByLogin(login);
 			String message = "На маршрут "+route.getRouteDirection()+" принят единственный заявившийся перевозчик: " + userHasCarrier.getCompanyName() 
 					+ ". Заявленная стоимость перевозки составляет "+ route.getFinishPrice() + " "+ route.getStartCurrency() + ". \nОптимальная стоимость составляет " + route.getOptimalCost()+" BYN";
-			mailService.sendSimpleEmail(request, "Подтверждение единственного перевозчика", message, "YakubovE@dobronom.by");
+			mailService.sendSimpleEmail(appPath, "Подтверждение единственного перевозчика", message, "YakubovE@dobronom.by");
 		}
 		List<Message> messages = new ArrayList<Message>();		
 		chatEnpoint.internationalMessegeList.stream()
@@ -3005,6 +3007,7 @@ public class MainController {
 				@RequestParam("idRoute") Integer idRoute,
 				@RequestParam("currency") String currency,
 				@RequestParam(name = "status", required = false) String status) {
+			String appPath = request.getServletContext().getRealPath("");
 			//обработка, если удалось нажать на кнопку
 			Order order = orderService.getOrderByIdRoute(idRoute);
 			if(order != null && order.getStatus() == 10) {			
@@ -3021,7 +3024,7 @@ public class MainController {
 				java.util.Date t2 = new java.util.Date();
 				String message = "На маршрут "+route.getRouteDirection()+" принят единственный заявившийся перевозчик: " + userHasCarrier.getCompanyName() 
 						+ ". Заявленная стоимость перевозки составляет "+ route.getFinishPrice() + " "+ route.getStartCurrency() + ". \nОптимальная стоимость составляет " + route.getOptimalCost()+" BYN";
-				mailService.sendSimpleEmail(request, "Подтверждение единственного перевозчика", message, "YakubovE@dobronom.by");
+				mailService.sendSimpleEmail(appPath, "Подтверждение единственного перевозчика", message, "YakubovE@dobronom.by");
 			}
 			List<Message> messages = new ArrayList<Message>();		
 			chatEnpoint.internationalMessegeList.stream()

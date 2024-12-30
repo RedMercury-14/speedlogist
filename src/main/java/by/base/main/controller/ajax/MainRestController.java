@@ -486,86 +486,6 @@ public class MainRestController {
         }
     }
 	
-	
-	/*
-	 * мой старый метод
-	 */
-//	@GetMapping("/test")
-//	public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException{
-//		java.util.Date t1 = new java.util.Date();
-//		Map<String, Object> responseMap = new HashMap<>();
-//		// Получаем текущую дату для имени файла
-//        LocalDate currentTime = LocalDate.now();
-//        String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-//        
-//		List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
-////		List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to");
-////		List<String> emailsSupport = propertiesUtils.getValuesByPartialKey(servletContext, "email.orderSupport");
-////		emails.addAll(emailsSupport);
-//		String appPath = servletContext.getRealPath("/");
-//		
-//		String fileName1200 = "1200 (----Холодный----).xlsm";
-//		String fileName1100 = "1100 График прямой сухой.xlsm";
-//		String fileNameSample = "График для шаблоново.xlsx";
-//		
-//		try {
-//			poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
-//					appPath + "resources/others/" + fileName1200);
-//			poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesByTOType("сухой").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
-//					appPath + "resources/others/" + fileName1100);
-//			poiExcel.exportToExcelSampleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
-//					appPath + "resources/others/" + fileNameSample);
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//			System.err.println("Ошибка формирование EXCEL");
-//		}
-//		
-////		response.setHeader("content-disposition", "attachment;filename="+fileName+".xlsx");
-//		List<File> files = new ArrayList<File>();
-//		files.add(new File(appPath + "resources/others/" + fileName1200));
-//		files.add(new File(appPath + "resources/others/" + fileName1100));
-//		files.add(new File(appPath + "resources/others/" + fileNameSample));
-//		
-//		 File zipFile = createZipFile(files, appPath + "resources/others/TO.zip");
-//		 List<File> filesZip = new ArrayList<File>();
-//		 filesZip.add(zipFile);
-//		
-////		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от TEST" + currentTimeString, "Тестовая отправка сообщения.\nНе обращайте внимания / игнорируте это сообщение", files, emails);
-//		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от TEST" + currentTimeString, "Тестовая отправка сообщения.\nНе обращайте внимания / игнорируте это сообщение \nВерсия с макросом выделений (Ctr+t)", filesZip, emails);
-//		java.util.Date t2 = new java.util.Date();
-//		System.out.println(t2.getTime()-t1.getTime() + " ms - testNewMethod" );
-//		return responseMap;		
-//	}
-//	
-//    public static File createZipFile(List<File> files, String zipFilePath) throws IOException {
-//        File zipFile = new File(zipFilePath);
-//        try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile))) {
-//            for (File file : files) {
-//                if (file.exists() && !file.isDirectory()) {
-//                    addFileToZip(file, zos);
-//                } else {
-//                    System.err.println("File not found or is a directory: " + file.getAbsolutePath());
-//                }
-//            }
-//        }
-//        return zipFile; // Возвращаем объект File архива
-//    }
-//
-//    private static void addFileToZip(File file, ZipOutputStream zos) throws IOException {
-//        try (FileInputStream fis = new FileInputStream(file)) {
-//            ZipEntry zipEntry = new ZipEntry(file.getName());
-//            zos.putNextEntry(zipEntry);
-//
-//            byte[] buffer = new byte[1024];
-//            int length;
-//            while ((length = fis.read(buffer)) > 0) {
-//                zos.write(buffer, 0, length);
-//            }
-//
-//            zos.closeEntry();
-//        }
-//    }
-
     
     /**
      * Метод для сводной таблицы.
@@ -1025,40 +945,7 @@ public class MainRestController {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
-	
-//	@GetMapping("/logistics/getProposal/{idRoute}")
-//	public void getProposal(HttpServletRequest request, HttpServletResponse response, @PathVariable String idRoute) throws NumberFormatException, DocumentException, IOException {
-//		java.util.Date t1 = new java.util.Date();
-//		Map<String, Object> responseMap = new HashMap<>();
-//		
-//		pdfWriter.getProposal(request, routeService.getRouteById(Integer.parseInt(idRoute)));
-//		
-//		String appPath = request.getServletContext().getRealPath("");
-//		//File file = new File(appPath + "resources/others/Speedlogist.apk");
-//		response.setHeader("content-disposition", "attachment;filename="+"proposal.pdf");
-////		response.setHeader("Content-Disposition", "attachment; filename=\"proposal.pdf\"");
-//		
-//		response.setContentType("application/pdf");
-//		try (FileInputStream in = new FileInputStream(appPath + "resources/others/proposal.pdf");
-//				OutputStream out = response.getOutputStream()) {
-//			byte[] buffer = new byte[1024];
-//			int len;
-//			while ((len = in.read(buffer)) > 0) {
-//				out.write(buffer, 0, len);
-//			}
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-//		
-//		
-//		responseMap.put("status", "200");
-//		responseMap.put("idRoute", idRoute);
-//		responseMap.put("message", "Метод в разработке");
-//		
-//		java.util.Date t2 = new java.util.Date();
-//		System.out.println("getProposal :" + (t2.getTime() - t1.getTime()) + " ms");
-////		return responseMap;
-//	}
+
 	
 	/**
 	 * отдаёт все маршруты для новой страницы менеджер международных маршрутов
@@ -1188,8 +1075,8 @@ public class MainRestController {
 //			}
 //		}	
 		response.put("status", "200");
-		response.put("payload", marketOrder2);
-		response.put("json", requestDto);
+		response.put("payload request", marketOrder2);
+		response.put("json responce", requestDto);
 		return response;
 				
 	}
@@ -3040,8 +2927,7 @@ public class MainRestController {
 	public Map<String, Object> getListDeliveryScheduleTO(HttpServletRequest request) {
 		Map<String, Object> response = new HashMap<String, Object>();
 		response.put("status", "200");
-		response.put("body", scheduleService.getSchedulesListTO());
-//		response.put("body", scheduleService.getSchedulesListTOWithTemp()); //изменение
+		response.put("body", scheduleService.getSchedulesListTOAll());
 		return response;		
 	}
 	
@@ -3530,6 +3416,8 @@ public class MainRestController {
 			String str = postRequest(url, gson.toJson(requestDto));
 			MarketTableDto marketRequestDto = gson.fromJson(str, MarketTableDto.class);
 			marketJWT = marketRequestDto.getTable()[0].toString().split("=")[1].split("}")[0];
+			System.err.println("Пришел такой JWT (marketRequestDto): " + marketRequestDto);
+			System.err.println("Пришел такой JWT (распарсил): " + marketJWT);
 		}
 	}
 	
@@ -7994,7 +7882,7 @@ public class MainRestController {
 		order.setIncoterms(jsonMainObject.get("incoterms") == null ? null : jsonMainObject.get("incoterms").toString());
 		order.setIsInternalMovement(jsonMainObject.get("isInternalMovement") == null ? null : jsonMainObject.get("isInternalMovement").toString());
 		if(jsonMainObject.get("numStockDelivery") != null) {
-			order.setNumStockDelivery(jsonMainObject.get("numStockDelivery").toString());
+			order.setNumStockDelivery(jsonMainObject.get("numStockDelivery").toString()); // зачем?
 		}
 		
 		if(jsonMainObject.get("status") != null) {
@@ -8201,7 +8089,7 @@ public class MainRestController {
 		}
 		
 		if(jsonMainObject.get("numStockDelivery") != null) {
-			order.setNumStockDelivery(jsonMainObject.get("numStockDelivery").toString());
+			order.setNumStockDelivery(jsonMainObject.get("numStockDelivery").toString()); // зачем?
 		}
 		if(jsonMainObject.get("status") != null) {
 			order.setStatus(Integer.parseInt(jsonMainObject.get("status").toString()));

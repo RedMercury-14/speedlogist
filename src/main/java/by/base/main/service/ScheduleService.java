@@ -16,6 +16,12 @@ public interface ScheduleService {
 	List<Schedule> getSchedulesListTO();
 	
 	/**
+	 * Метод возвращает все графики поставок и временные и удалённые и т.д.
+	 * @return
+	 */
+	List<Schedule> getSchedulesListTOAll();
+	
+	/**
 	 * Метод изменяет название кванта по коду контрагента.
 	 * Возвращает кол-во измененных строк.
 	 * @param counterpartyCode

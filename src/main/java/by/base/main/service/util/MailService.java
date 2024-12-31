@@ -354,13 +354,12 @@ public class MailService {
 	
 	/**
 	 * Отправляет e-main сообщение на почту к юзеру
-	 * @param request
+	 * @param <b>String appPath = request.getServletContext().getRealPath("");</b>
 	 * @param subject ТЕма сообщения
 	 * @param text тело сообщения
 	 * @param emailToUser - EMail
 	 */
-	public void sendSimpleEmail(HttpServletRequest request, String subject, String text, String emailToUser) {
-		String appPath = request.getServletContext().getRealPath("");
+	public void sendSimpleEmail(String appPath, String subject, String text, String emailToUser) {
 		try {
 			if(properties == null) {
 				FileInputStream fileInputStream = new FileInputStream(appPath + "resources/properties/mail.properties");

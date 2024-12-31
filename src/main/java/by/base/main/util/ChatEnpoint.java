@@ -69,6 +69,15 @@ public class ChatEnpoint {
 	@OnError
 	public void onError(Session session, Throwable throwable) {
 		throwable.printStackTrace();
+		
+	    if (session != null) {
+	        sessionList.remove(session); // Удаляем ошибочную сессию из списка
+	        try {
+	            session.close(); // Закрываем сессию, если она ещё не закрыта
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	        }
+	    }
 	}
 	
 	@OnMessage
@@ -88,9 +97,10 @@ public class ChatEnpoint {
 //			System.out.println(messageSet.size());
 //			internationalMessegeList.forEach(m->System.out.println(m));
 			internationalMessegeList.remove(messageSet.stream().findFirst().get());
+//			sessionList.removeIf(s -> !s.isOpen()); // удаляем закрытые сессии. 
 			sessionList.forEach(s->{	
 				try {
-					if(s != null) {						
+					if(s != null && s.isOpen()) {						
 						s.getBasicRemote().sendObject(message);
 					}					
 				} catch (IOException | EncodeException e) {
@@ -116,7 +126,8 @@ public class ChatEnpoint {
 				if (message.getFromUser() == null) {
 					message.setFromUser(this.session.getUserPrincipal().getName());
 				}			
-			}		
+			}	
+//			sessionList.removeIf(s -> !s.isOpen());
 			sessionList.forEach(s->{
 				if(s == this.session) {
 					if (message.getFromUser().equals("system")) {
@@ -142,7 +153,7 @@ public class ChatEnpoint {
 					//return;
 					}
 				try {	
-					if(s != null) {
+					if(s != null && s.isOpen()) {
 						s.getBasicRemote().sendObject(message);
 					}					
 				} catch (IOException | EncodeException e) {
@@ -170,10 +181,11 @@ public class ChatEnpoint {
 //			System.out.println(messageSet.size());
 //			internationalMessegeList.forEach(m->System.out.println(m));
 			internationalMessegeList.remove(messageSet.stream().findFirst().get());
+//			sessionList.removeIf(s -> !s.isOpen());
 			sessionList.forEach(s->{	
 //				UsernamePasswordAuthenticationToken upat = (UsernamePasswordAuthenticationToken) s.getUserPrincipal();
 				try {
-					if(s != null) {
+					if(s != null && s.isOpen()) {
 						s.getBasicRemote().sendObject(message);
 					}					
 				} catch (IOException | EncodeException e) {
@@ -226,13 +238,13 @@ public class ChatEnpoint {
 				}
 				
 			}
-			
+//			sessionList.removeIf(s -> !s.isOpen());
 			sessionList.forEach(s->{
 //				UsernamePasswordAuthenticationToken upat = (UsernamePasswordAuthenticationToken) s.getUserPrincipal();
 					//тут была проверка и записи 
 					//return;
 				try {	
-					if(s != null) {
+					if(s != null && s.isOpen()) {
 						s.getBasicRemote().sendObject(message);
 					}					
 				} catch (IOException | EncodeException e) {
@@ -242,9 +254,12 @@ public class ChatEnpoint {
 		}
 	}
 	public void setMessageByTimer(Message message) {
+//		sessionList.removeIf(s -> !s.isOpen());
 		sessionList.forEach(s->{
-			try {	
-				s.getBasicRemote().sendObject(message);
+			try {
+				if(s.isOpen()) {
+					s.getBasicRemote().sendObject(message);					
+				}
 			} catch (IOException | EncodeException e) {
 				e.printStackTrace();
 			}

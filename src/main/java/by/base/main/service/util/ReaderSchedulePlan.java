@@ -626,7 +626,7 @@ public class ReaderSchedulePlan {
 				Double quantityOrderAll = map.get(orderLine.getGoodsId()).num;
 //				Product product = productService.getProductByCodeAndStock(orderLine.getGoodsId().intValue(), factStock);
 				Product product = products.get(orderLine.getGoodsId().intValue());
-				
+								
 				if(product!=null) {
 					//старый метод
 					List<OrderProduct> quantity = new ArrayList<OrderProduct>();

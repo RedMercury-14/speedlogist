@@ -63,6 +63,16 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 		List <Schedule> roles = theRole.getResultList();
 		return roles;
 	}
+	
+	private static final String queryGetListTOAll = "from Schedule where type='ТО'";
+	@Transactional
+	@Override
+	public List<Schedule> getSchedulesListTOAll() {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Schedule> theRole = currentSession.createQuery(queryGetListTOAll, Schedule.class);
+		List <Schedule> roles = theRole.getResultList();
+		return roles;
+	}
 
 	private static final String queryGetObjByNumContract = "from Schedule where counterpartyContractCode=:counterpartyContractCode";
 	@Transactional
@@ -388,5 +398,4 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 		}
 		return new ArrayList<Schedule>(schedules);
 	}
-
 }

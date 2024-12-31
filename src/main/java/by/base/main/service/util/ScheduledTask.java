@@ -159,13 +159,13 @@ public class ScheduledTask {
 		String fileName = "Несоответствия потребностей и слотов за " + currentTimeString + ".xlsx";
 		String appPath = servletContext.getRealPath("/");
 
-		List<OrderProduct> products = orderProductService.getOrderProductListHasDate(dateForSearchBefore);
+		List<OrderProduct> orderProducts = orderProductService.getOrderProductListHasDate(dateForSearchBefore);
 
-		List<Long> orderProductsIds = products.stream().map(p -> p.getCodeProduct().longValue()).collect(Collectors.toList());
+		List<Long> orderProductsIds = orderProducts.stream().map(p -> p.getCodeProduct().longValue()).collect(Collectors.toList());
 
-		long amount1700 = products.stream().filter(p -> p.getQuantity1700() != null).count();
-		long amount1800 = products.stream().filter(p -> p.getQuantity1800() != null).count();
-		long amountOthers = products.stream().filter(p -> p.getQuantity() != null).count();
+		long amount1700 = orderProducts.stream().filter(p -> p.getQuantity1700() != null).count();
+		long amount1800 = orderProducts.stream().filter(p -> p.getQuantity1800() != null).count();
+		long amountOthers = orderProducts.stream().filter(p -> p.getQuantity() != null).count();
 
 		List<Order> orders = orderService.getOrderByFirstLoadSlotAndDateOrderOrl(dateForSearchBefore, dateForSearch, dateForSearch);
 
@@ -173,7 +173,7 @@ public class ScheduledTask {
 		int amountOrdered1800 = 0;
 		int amountOrderedOthers = 0;
 
-		for (OrderProduct orderProduct : products) {
+		for (OrderProduct orderProduct : orderProducts) {
 			double quantityFromOrders = 0;
 			double quantityFromOrders1700 = 0;
 			double quantityFromOrders1800 = 0;
@@ -220,7 +220,7 @@ public class ScheduledTask {
 		double percent1700 = (double) amountOrdered1700 / (double) amount1700 * 100;
 		double percent1800 = (double)  amountOrdered1800/ (double) amount1800 * 100;
 		double percentOthers = (double)  amountOrderedOthers/ (double) amountOthers * 100;
-		double percentOfcoverage = ((double) rowNum - 1) / (double) products.size() * 100;
+		double percentOfcoverage = ((double) rowNum - 1) / (double) orderProducts.size() * 100;
 
 		String percent1700str = String.format("%.2f",percent1700);
 		String percent1800str = String.format("%.2f",percent1800);
@@ -337,101 +337,98 @@ public class ScheduledTask {
 
 
 		String fileName1200 = "1200 (----Холодный----).xlsm";
-		String fileName1100 = "1100 График прямой сухой.xlsm";
-		String fileNameSample = "График для шаблоново.xlsx";
-		String draftFolder = appPath + "resources/others/drafts/";
+	       String fileName1100 = "1100 График прямой сухой.xlsm";
+	       String fileNameSample = "График для шаблоново.xlsx";
+	       String draftFolder = appPath + "resources/others/drafts/";
 
-		File draftFolderFile = new File(draftFolder);
-		if (draftFolderFile.exists()) {
-			deleteFolder(draftFolderFile);
-		}
+	       File draftFolderFile = new File(draftFolder);
+	       if (draftFolderFile.exists()) {
+	          deleteFolder(draftFolderFile);
+	       }
 
-		draftFolderFile.mkdir();
+	       draftFolderFile.mkdir();
 
-		try {
-			poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesByTOTypeWithTemp("холодный")),
-					appPath + "resources/others/" + fileName1200);
-			poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesByTOTypeWithTemp("сухой")),
-					appPath + "resources/others/" + fileName1100);
-			poiExcel.exportToExcelSampleListTO(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesByTOTypeWithTemp("холодный")),
-					appPath + "resources/others/" + fileNameSample);
-			poiExcel.exportToExcelDrafts(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesListTO()), draftFolder);
+	       try {
+	          poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesByTOTypeWithTemp("холодный")),
+	                appPath + "resources/others/" + fileName1200);
+	          poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesByTOTypeWithTemp("сухой")),
+	                appPath + "resources/others/" + fileName1100);
+	          poiExcel.exportToExcelSampleListTO(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesByTOTypeWithTemp("холодный")),
+	                appPath + "resources/others/" + fileNameSample);
+	          poiExcel.exportToExcelDrafts(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesListTOWithTemp()), draftFolder);
 
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.err.println("Ошибка формирование EXCEL");
-		}
+	       } catch (IOException e) {
+	          e.printStackTrace();
+	          System.err.println("Ошибка формирование EXCEL");
+	       }
 
-//      response.setHeader("content-disposition", "attachment;filename="+fileName+".xlsx");
-		List<File> files = new ArrayList<File>();
-		files.add(new File(appPath + "resources/others/" + fileName1200));
-		files.add(new File(appPath + "resources/others/" + fileName1100));
-		files.add(new File(appPath + "resources/others/" + fileNameSample));
+	       List<File> files = new ArrayList<File>();
+	       files.add(new File(appPath + "resources/others/" + fileName1200));
+	       files.add(new File(appPath + "resources/others/" + fileName1100));
+	       files.add(new File(appPath + "resources/others/" + fileNameSample));
 
-		File folder = new File(draftFolder);
-		List<File> draftFiles = new ArrayList<File>(); //для теста черновиков
-		Map <String, List<File>> draftFilesMap = new HashMap<>();
+	       File folder = new File(draftFolder);
+	       List<File> draftFiles = new ArrayList<File>(); //для теста черновиков
+	       Map <String, List<File>> draftFilesMap = new HashMap<>();
 
-		File[] drafts = folder.listFiles();
+	       File[] drafts = folder.listFiles();
 
-		for (String key: draftLists.keySet()){
-			draftFilesMap.put(key, new ArrayList<>());
-		}
+	       for (String key: draftLists.keySet()){
+	          draftFilesMap.put(key, new ArrayList<>());
+	       }
 
-		if (drafts != null) {
-			for (File file: drafts){
-				String fileName = file.getName();
+	       if (drafts != null) {
+	          for (File file: drafts){
+	             String fileName = file.getName();
 
-				for (String key: draftLists.keySet()){
+	             for (String key: draftLists.keySet()){
 
-					for (String draftNumber: draftLists.get(key)){
-						String regEx = " " + draftNumber + ".";
+	                for (String draftNumber: draftLists.get(key)){
+	                   String regEx = " " + draftNumber + ".";
 
-						if (fileName.contains(regEx)){
-							draftFilesMap.get(key).add(file);
-						}
-					}
-				}
+	                   if (fileName.contains(regEx)){
+	                      draftFilesMap.get(key).add(file);
+	                   }
+	                }
+	             }
 
-				if (fileName.contains("виртуальный")){
-					draftFilesMap.get("ORL").add(file);
-				}
+	             if (fileName.contains("виртуальный")){
+	                draftFilesMap.get("ORL").add(file);
+	             }
 
-				draftFiles.add(file); //для теста черновиков
-			}
+	             draftFiles.add(file); //для теста черновиков
+	          }
 
-		}
+	       }
 
-		//files.add(new File(appPath + "resources/others/drafts"));
+	       //files.add(new File(appPath + "resources/others/drafts"));
 
-		System.out.println(appPath + "resources/others/");
+	       System.out.println(appPath + "resources/others/");
 
-		File zipFile;
-		File zipFileDrafts; //для теста черновиков
-		File zipFileDraftsListORL;
-		File zipFileDraftsListSupportDepartment;
+	       File zipFile;
+	       File zipFileDrafts; //для теста черновиков
+	       File zipFileDraftsListORL;
+	       File zipFileDraftsListSupportDepartment;
 
-		List <File> filesZipORL = new ArrayList<File>();
-		List <File> filesZipSupportDepartment = new ArrayList<File>();
+	       List <File> filesZipORL = new ArrayList<File>();
+	       List <File> filesZipSupportDepartment = new ArrayList<File>();
 
+	       try {
+	          zipFile = createZipFile(files, appPath + "resources/others/TO.zip");
+	          zipFileDrafts = createZipFile(draftFiles, appPath + "resources/others/Шаблоны.zip"); //для теста черновиков
 
-		try {
-			zipFile = createZipFile(files, appPath + "resources/others/TO.zip");
-			zipFileDrafts = createZipFile(draftFiles, appPath + "resources/others/Шаблоны.zip"); //для теста черновиков
+	          zipFileDraftsListORL = createZipFile(draftFilesMap.get("ORL"), appPath + "resources/others/ORL.zip");
+	          zipFileDraftsListSupportDepartment = createZipFile(draftFilesMap.get("SupportDepartment"), appPath + "resources/others/SupportDepartment.zip");
 
-			zipFileDraftsListORL = createZipFile(draftFilesMap.get("ORL"), appPath + "resources/others/ORL.zip");
-			zipFileDraftsListSupportDepartment = createZipFile(draftFilesMap.get("SupportDepartment"), appPath + "resources/others/SupportDepartment.zip");
+	          filesZipORL.add(zipFile);
+	          filesZipSupportDepartment.add(zipFile);
 
-			filesZipORL.add(zipFile);
-			filesZipSupportDepartment.add(zipFile);
+	          filesZipORL.add(zipFileDraftsListORL);
+	          filesZipSupportDepartment.add(zipFileDraftsListSupportDepartment);
 
-			filesZipORL.add(zipFileDraftsListORL);
-			filesZipSupportDepartment.add(zipFileDraftsListSupportDepartment);
-
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	       } catch (IOException e) {
+	          e.printStackTrace();
+	       }
 
 		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO " + currentTimeString, "Автоматическая отправка графиков поставок на ТО\nВерсия с макросом выделений (Ctr+t)", filesZipORL, emailsORL);
 		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO " + currentTimeString, "Автоматическая отправка графиков поставок на ТО\nВерсия с макросом выделений (Ctr+t)", filesZipSupportDepartment, emailsSupportDepartment);

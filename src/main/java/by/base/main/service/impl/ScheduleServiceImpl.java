@@ -213,4 +213,9 @@ public class ScheduleServiceImpl implements ScheduleService{
 	public List<Schedule> getSchedulesListTOContractOnlyTemp(Long num) {
 		return scheduleDAO.getSchedulesListTOContractOnlyTemp(num);
 	}
+
+	@Override
+	public List<Schedule> getSchedulesListTOAll() {
+		return scheduleDAO.getSchedulesListTOAll();
+	}
 }

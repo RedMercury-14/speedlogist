@@ -142,6 +142,7 @@ import by.base.main.service.util.PDFWriter;
 import by.base.main.service.util.POIExcel;
 import by.base.main.service.util.PropertiesUtils;
 import by.base.main.service.util.ReaderSchedulePlan;
+import by.base.main.service.util.ScheduledTask;
 import by.base.main.service.util.ServiceLevel;
 import by.base.main.util.ChatEnpoint;
 import by.base.main.util.MainChat;
@@ -485,86 +486,6 @@ public class MainRestController {
         }
     }
 	
-	
-	/*
-	 * мой старый метод
-	 */
-//	@GetMapping("/test")
-//	public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException{
-//		java.util.Date t1 = new java.util.Date();
-//		Map<String, Object> responseMap = new HashMap<>();
-//		// Получаем текущую дату для имени файла
-//        LocalDate currentTime = LocalDate.now();
-//        String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-//        
-//		List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
-////		List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to");
-////		List<String> emailsSupport = propertiesUtils.getValuesByPartialKey(servletContext, "email.orderSupport");
-////		emails.addAll(emailsSupport);
-//		String appPath = servletContext.getRealPath("/");
-//		
-//		String fileName1200 = "1200 (----Холодный----).xlsm";
-//		String fileName1100 = "1100 График прямой сухой.xlsm";
-//		String fileNameSample = "График для шаблоново.xlsx";
-//		
-//		try {
-//			poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
-//					appPath + "resources/others/" + fileName1200);
-//			poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesByTOType("сухой").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
-//					appPath + "resources/others/" + fileName1100);
-//			poiExcel.exportToExcelSampleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
-//					appPath + "resources/others/" + fileNameSample);
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//			System.err.println("Ошибка формирование EXCEL");
-//		}
-//		
-////		response.setHeader("content-disposition", "attachment;filename="+fileName+".xlsx");
-//		List<File> files = new ArrayList<File>();
-//		files.add(new File(appPath + "resources/others/" + fileName1200));
-//		files.add(new File(appPath + "resources/others/" + fileName1100));
-//		files.add(new File(appPath + "resources/others/" + fileNameSample));
-//		
-//		 File zipFile = createZipFile(files, appPath + "resources/others/TO.zip");
-//		 List<File> filesZip = new ArrayList<File>();
-//		 filesZip.add(zipFile);
-//		
-////		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от TEST" + currentTimeString, "Тестовая отправка сообщения.\nНе обращайте внимания / игнорируте это сообщение", files, emails);
-//		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от TEST" + currentTimeString, "Тестовая отправка сообщения.\nНе обращайте внимания / игнорируте это сообщение \nВерсия с макросом выделений (Ctr+t)", filesZip, emails);
-//		java.util.Date t2 = new java.util.Date();
-//		System.out.println(t2.getTime()-t1.getTime() + " ms - testNewMethod" );
-//		return responseMap;		
-//	}
-//	
-//    public static File createZipFile(List<File> files, String zipFilePath) throws IOException {
-//        File zipFile = new File(zipFilePath);
-//        try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile))) {
-//            for (File file : files) {
-//                if (file.exists() && !file.isDirectory()) {
-//                    addFileToZip(file, zos);
-//                } else {
-//                    System.err.println("File not found or is a directory: " + file.getAbsolutePath());
-//                }
-//            }
-//        }
-//        return zipFile; // Возвращаем объект File архива
-//    }
-//
-//    private static void addFileToZip(File file, ZipOutputStream zos) throws IOException {
-//        try (FileInputStream fis = new FileInputStream(file)) {
-//            ZipEntry zipEntry = new ZipEntry(file.getName());
-//            zos.putNextEntry(zipEntry);
-//
-//            byte[] buffer = new byte[1024];
-//            int length;
-//            while ((length = fis.read(buffer)) > 0) {
-//                zos.write(buffer, 0, length);
-//            }
-//
-//            zos.closeEntry();
-//        }
-//    }
-
     
     /**
      * Метод для сводной таблицы.
@@ -804,12 +725,13 @@ public class MainRestController {
 				orderMailStatus = "Маршрут создан без заказа.";
 			}
 			String textStatus = orderMailStatus;
+			String appPath = request.getServletContext().getRealPath("");
 			//отправляем письмо, запускаем его в отдельном потоке, т.к. отправка проходит в среднем 2 секунды
 			new Thread(new Runnable() {					
 				@Override
 				public void run() {
 					telegramBot.sendMessageHasSubscription("Маршрут " +route.getRouteDirection() + " с загрузкой от " +route.getDateLoadPreviously()+ " стал доступен для торгов!");
-					mailService.sendSimpleEmail(request, "Статус маршрута", "Маршрут "+route.getRouteDirection() + " стал доступен для торгов "
+					mailService.sendSimpleEmail(appPath, "Статус маршрута", "Маршрут "+route.getRouteDirection() + " стал доступен для торгов "
 							+LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yyy")) 
 							+ " в " 
 							+ LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))+"."
@@ -1023,40 +945,7 @@ public class MainRestController {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
-	
-//	@GetMapping("/logistics/getProposal/{idRoute}")
-//	public void getProposal(HttpServletRequest request, HttpServletResponse response, @PathVariable String idRoute) throws NumberFormatException, DocumentException, IOException {
-//		java.util.Date t1 = new java.util.Date();
-//		Map<String, Object> responseMap = new HashMap<>();
-//		
-//		pdfWriter.getProposal(request, routeService.getRouteById(Integer.parseInt(idRoute)));
-//		
-//		String appPath = request.getServletContext().getRealPath("");
-//		//File file = new File(appPath + "resources/others/Speedlogist.apk");
-//		response.setHeader("content-disposition", "attachment;filename="+"proposal.pdf");
-////		response.setHeader("Content-Disposition", "attachment; filename=\"proposal.pdf\"");
-//		
-//		response.setContentType("application/pdf");
-//		try (FileInputStream in = new FileInputStream(appPath + "resources/others/proposal.pdf");
-//				OutputStream out = response.getOutputStream()) {
-//			byte[] buffer = new byte[1024];
-//			int len;
-//			while ((len = in.read(buffer)) > 0) {
-//				out.write(buffer, 0, len);
-//			}
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-//		
-//		
-//		responseMap.put("status", "200");
-//		responseMap.put("idRoute", idRoute);
-//		responseMap.put("message", "Метод в разработке");
-//		
-//		java.util.Date t2 = new java.util.Date();
-//		System.out.println("getProposal :" + (t2.getTime() - t1.getTime()) + " ms");
-////		return responseMap;
-//	}
+
 	
 	/**
 	 * отдаёт все маршруты для новой страницы менеджер международных маршрутов
@@ -1186,8 +1075,8 @@ public class MainRestController {
 //			}
 //		}	
 		response.put("status", "200");
-		response.put("payload", marketOrder2);
-		response.put("json", requestDto);
+		response.put("payload request", marketOrder2);
+		response.put("json responce", requestDto);
 		return response;
 				
 	}
@@ -1850,6 +1739,7 @@ public class MainRestController {
 		response.put("route", route);
 		return response;		
 	}
+
 	
 	/**
 	 * Ручная отправка сообщения с графиками на ТО
@@ -1859,12 +1749,12 @@ public class MainRestController {
 	@GetMapping("/orl/sendEmailTO")
 	public Map<String, Object> getSendEmailTO(HttpServletRequest request) {
 		Map<String, Object> response = new HashMap<String, Object>();
+		
 		System.out.println("Start --- sendSchedulesTOHasORL");
 		// Получаем текущую дату для имени файла
 		LocalDate currentTime = LocalDate.now();
 		String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
 
-//		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
 		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to.ORL");
 		List<String> emailsSupportDepartment = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to.supportDepartment");
 
@@ -1877,107 +1767,104 @@ public class MainRestController {
 
 
 		String fileName1200 = "1200 (----Холодный----).xlsm";
-		String fileName1100 = "1100 График прямой сухой.xlsm";
-		String fileNameSample = "График для шаблоново.xlsx";
-		String draftFolder = appPath + "resources/others/drafts/";
+	       String fileName1100 = "1100 График прямой сухой.xlsm";
+	       String fileNameSample = "График для шаблоново.xlsx";
+	       String draftFolder = appPath + "resources/others/drafts/";
 
-		File draftFolderFile = new File(draftFolder);
-		if (draftFolderFile.exists()) {
-			deleteFolder(draftFolderFile);
-		}
+	       File draftFolderFile = new File(draftFolder);
+	       if (draftFolderFile.exists()) {
+	          deleteFolder(draftFolderFile);
+	       }
 
-		draftFolderFile.mkdir();
+	       draftFolderFile.mkdir();
 
-		try {
-			poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesByTOTypeWithTemp("холодный")),
-					appPath + "resources/others/" + fileName1200);
-			poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesByTOTypeWithTemp("сухой")),
-					appPath + "resources/others/" + fileName1100);
-			poiExcel.exportToExcelSampleListTO(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesByTOTypeWithTemp("холодный")),
-					appPath + "resources/others/" + fileNameSample);
-			poiExcel.exportToExcelDrafts(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesListTO()), draftFolder);
+	       try {
+	          poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesByTOTypeWithTemp("холодный")),
+	                appPath + "resources/others/" + fileName1200);
+	          poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesByTOTypeWithTemp("сухой")),
+	                appPath + "resources/others/" + fileName1100);
+	          poiExcel.exportToExcelSampleListTO(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesByTOTypeWithTemp("холодный")),
+	                appPath + "resources/others/" + fileNameSample);
+	          poiExcel.exportToExcelDrafts(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesListTOWithTemp()), draftFolder);
 
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.err.println("Ошибка формирование EXCEL");
-		}
+	       } catch (IOException e) {
+	          e.printStackTrace();
+	          System.err.println("Ошибка формирование EXCEL");
+	       }
 
-//      response.setHeader("content-disposition", "attachment;filename="+fileName+".xlsx");
-		List<File> files = new ArrayList<File>();
-		files.add(new File(appPath + "resources/others/" + fileName1200));
-		files.add(new File(appPath + "resources/others/" + fileName1100));
-		files.add(new File(appPath + "resources/others/" + fileNameSample));
+	       List<File> files = new ArrayList<File>();
+	       files.add(new File(appPath + "resources/others/" + fileName1200));
+	       files.add(new File(appPath + "resources/others/" + fileName1100));
+	       files.add(new File(appPath + "resources/others/" + fileNameSample));
 
-		File folder = new File(draftFolder);
-		List<File> draftFiles = new ArrayList<File>(); //для теста черновиков
-		Map <String, List<File>> draftFilesMap = new HashMap<>();
+	       File folder = new File(draftFolder);
+	       List<File> draftFiles = new ArrayList<File>(); //для теста черновиков
+	       Map <String, List<File>> draftFilesMap = new HashMap<>();
 
-		File[] drafts = folder.listFiles();
+	       File[] drafts = folder.listFiles();
 
-		for (String key: draftLists.keySet()){
-			draftFilesMap.put(key, new ArrayList<>());
-		}
+	       for (String key: draftLists.keySet()){
+	          draftFilesMap.put(key, new ArrayList<>());
+	       }
 
-		if (drafts != null) {
-			for (File file: drafts){
-				String fileName = file.getName();
+	       if (drafts != null) {
+	          for (File file: drafts){
+	             String fileName = file.getName();
 
-				for (String key: draftLists.keySet()){
+	             for (String key: draftLists.keySet()){
 
-					for (String draftNumber: draftLists.get(key)){
-						String regEx = " " + draftNumber + ".";
+	                for (String draftNumber: draftLists.get(key)){
+	                   String regEx = " " + draftNumber + ".";
 
-						if (fileName.contains(regEx)){
-							draftFilesMap.get(key).add(file);
-						}
-					}
-				}
+	                   if (fileName.contains(regEx)){
+	                      draftFilesMap.get(key).add(file);
+	                   }
+	                }
+	             }
 
-				if (fileName.contains("виртуальный")){
-					draftFilesMap.get("ORL").add(file);
-				}
+	             if (fileName.contains("виртуальный")){
+	                draftFilesMap.get("ORL").add(file);
+	             }
 
-				draftFiles.add(file); //для теста черновиков
-			}
+	             draftFiles.add(file); //для теста черновиков
+	          }
 
-		}
+	       }
 
-		//files.add(new File(appPath + "resources/others/drafts"));
+	       //files.add(new File(appPath + "resources/others/drafts"));
 
-		System.out.println(appPath + "resources/others/");
+	       System.out.println(appPath + "resources/others/");
 
-		File zipFile;
-		File zipFileDrafts; //для теста черновиков
-		File zipFileDraftsListORL;
-		File zipFileDraftsListSupportDepartment;
+	       File zipFile;
+	       File zipFileDrafts; //для теста черновиков
+	       File zipFileDraftsListORL;
+	       File zipFileDraftsListSupportDepartment;
 
-		List <File> filesZipORL = new ArrayList<File>();
-		List <File> filesZipSupportDepartment = new ArrayList<File>();
+	       List <File> filesZipORL = new ArrayList<File>();
+	       List <File> filesZipSupportDepartment = new ArrayList<File>();
 
+	       try {
+	          zipFile = createZipFile(files, appPath + "resources/others/TO.zip");
+	          zipFileDrafts = createZipFile(draftFiles, appPath + "resources/others/Шаблоны.zip"); //для теста черновиков
 
-		try {
-			zipFile = createZipFile(files, appPath + "resources/others/TO.zip");
-			zipFileDrafts = createZipFile(draftFiles, appPath + "resources/others/Шаблоны.zip"); //для теста черновиков
+	          zipFileDraftsListORL = createZipFile(draftFilesMap.get("ORL"), appPath + "resources/others/ORL.zip");
+	          zipFileDraftsListSupportDepartment = createZipFile(draftFilesMap.get("SupportDepartment"), appPath + "resources/others/SupportDepartment.zip");
 
-			zipFileDraftsListORL = createZipFile(draftFilesMap.get("ORL"), appPath + "resources/others/ORL.zip");
-			zipFileDraftsListSupportDepartment = createZipFile(draftFilesMap.get("SupportDepartment"), appPath + "resources/others/SupportDepartment.zip");
+	          filesZipORL.add(zipFile);
+	          filesZipSupportDepartment.add(zipFile);
 
-			filesZipORL.add(zipFile);
-			filesZipSupportDepartment.add(zipFile);
+	          filesZipORL.add(zipFileDraftsListORL);
+	          filesZipSupportDepartment.add(zipFileDraftsListSupportDepartment);
 
-			filesZipORL.add(zipFileDraftsListORL);
-			filesZipSupportDepartment.add(zipFileDraftsListSupportDepartment);
+	       } catch (IOException e) {
+	          e.printStackTrace();
+	       }
 
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		User user = getThisUser();
-		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO" + currentTimeString, "Ручная отправка ("+user.getSurname() + " " + user.getName()+") графиков поставок на ТО\nВерсия с макросом выделений (Ctr+t)", filesZipORL, emailsORL);
-		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO" + currentTimeString, "Ручная отправка ("+user.getSurname() + " " + user.getName()+") графиков поставок на ТО\nВерсия с макросом выделений (Ctr+t)", filesZipSupportDepartment, emailsSupportDepartment);
+		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO " + currentTimeString, "Ручная отправка графиков поставок на ТО\nВерсия с макросом выделений (Ctr+t)", filesZipORL, emailsORL);
+		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO " + currentTimeString, "Ручная отправка отправка графиков поставок на ТО\nВерсия с макросом выделений (Ctr+t)", filesZipSupportDepartment, emailsSupportDepartment);
 
 		System.out.println("Finish --- sendSchedulesHasTOORL");
+		
     	response.put("status", "200");
 		response.put("message", "Сообщение отправлено");
 		
@@ -2236,7 +2123,7 @@ public class MainRestController {
 		if(schedule == null) {
 			//тут
 			String text = "Уведомление SpeedLogist: \nПоставщик  " + companyName + " с номером контракта " + num + " не найден в графике поставк. \nНеобходимо добавить график поставок данного контрагента.";
-			mailService.sendSimpleEmail(request, "Отсутствует график поставок", text, user.geteMail());
+			mailService.sendSimpleEmail(appPath, "Отсутствует график поставок", text, user.geteMail());
 			return "НГП"; // нет графика поставок в бд
 		}
 		
@@ -3040,8 +2927,7 @@ public class MainRestController {
 	public Map<String, Object> getListDeliveryScheduleTO(HttpServletRequest request) {
 		Map<String, Object> response = new HashMap<String, Object>();
 		response.put("status", "200");
-		response.put("body", scheduleService.getSchedulesListTO());
-//		response.put("body", scheduleService.getSchedulesListTOWithTemp()); //изменение
+		response.put("body", scheduleService.getSchedulesListTOAll());
 		return response;		
 	}
 	
@@ -3530,6 +3416,8 @@ public class MainRestController {
 			String str = postRequest(url, gson.toJson(requestDto));
 			MarketTableDto marketRequestDto = gson.fromJson(str, MarketTableDto.class);
 			marketJWT = marketRequestDto.getTable()[0].toString().split("=")[1].split("}")[0];
+			System.err.println("Пришел такой JWT (marketRequestDto): " + marketRequestDto);
+			System.err.println("Пришел такой JWT (распарсил): " + marketJWT);
 		}
 	}
 	
@@ -5444,7 +5332,7 @@ public class MainRestController {
 			managerEmail = managerEmail.split(".by")[0];
 			managerEmail = managerEmail+".by";
 			final String finalManagerEmail = managerEmail;
-			mailService.sendSimpleEmail(request, "Изменение заявки ОСиУЗ", text, finalManagerEmail);
+			mailService.sendSimpleEmail(appPath, "Изменение заявки ОСиУЗ", text, finalManagerEmail);
 			response.put("status", "200");
 			response.put("message", "Данные обновлены");
 		} catch (Exception e) {
@@ -5487,8 +5375,8 @@ public class MainRestController {
 			String managerEmail = order.getManager().split("; ")[1];
 			managerEmail = managerEmail.split(".by")[0];
 			managerEmail = managerEmail+".by";
-			final String finalManagerEmail = managerEmail;
-			mailService.sendSimpleEmail(request, "Отмена заявки ОСиУЗ", text, finalManagerEmail);
+			final String finalManagerEmail = managerEmail;			
+			mailService.sendSimpleEmail(appPath, "Отмена заявки ОСиУЗ", text, finalManagerEmail);
 			response.put("status", "200");
 			response.put("message", "Данные обновлены");
 		} catch (Exception e) {
@@ -5635,10 +5523,11 @@ public class MainRestController {
 		final String message = text;
 		String mailInfo = "Сообщение было отправлено " + LocalDateTime.now() + ". Водитель: " + driverStr;
 		order.setMailInfo(mailInfo);
+		String appPath = request.getServletContext().getRealPath("");
 		new Thread(new Runnable() {			
 			@Override
 			public void run() {
-				mailService.sendSimpleEmail(request, "Данные по заявке №"+order.getIdOrder(), message, finalManagerEmail);				
+				mailService.sendSimpleEmail(appPath, "Данные по заявке №"+order.getIdOrder(), message, finalManagerEmail);				
 			}
 		}).start();
 		response.put("status", "200");
@@ -7993,7 +7882,7 @@ public class MainRestController {
 		order.setIncoterms(jsonMainObject.get("incoterms") == null ? null : jsonMainObject.get("incoterms").toString());
 		order.setIsInternalMovement(jsonMainObject.get("isInternalMovement") == null ? null : jsonMainObject.get("isInternalMovement").toString());
 		if(jsonMainObject.get("numStockDelivery") != null) {
-			order.setNumStockDelivery(jsonMainObject.get("numStockDelivery").toString());
+			order.setNumStockDelivery(jsonMainObject.get("numStockDelivery").toString()); // зачем?
 		}
 		
 		if(jsonMainObject.get("status") != null) {
@@ -8200,7 +8089,7 @@ public class MainRestController {
 		}
 		
 		if(jsonMainObject.get("numStockDelivery") != null) {
-			order.setNumStockDelivery(jsonMainObject.get("numStockDelivery").toString());
+			order.setNumStockDelivery(jsonMainObject.get("numStockDelivery").toString()); // зачем?
 		}
 		if(jsonMainObject.get("status") != null) {
 			order.setStatus(Integer.parseInt(jsonMainObject.get("status").toString()));
@@ -8520,6 +8409,7 @@ public class MainRestController {
 	@PostMapping("/user/registration")
 	public Map<String, String> postRegistration(@RequestBody String str, HttpSession session,
 			HttpServletRequest request) throws ParseException {
+		String appPath = request.getServletContext().getRealPath("");
 		HashMap<String, String> map = new HashMap<String, String>();
 		str = stripXSS(str);
 		JSONParser parser = new JSONParser();
@@ -8572,7 +8462,7 @@ public class MainRestController {
 		if (user.getCheck() != null && user.getCheck().split("&")[0].equals("international")) {
 			userService.saveOrUpdateUser(user, 7); // международник
 			session.setAttribute("check", "international&new");
-			mailService.sendSimpleEmail(request, "Регистрация в SpeedLogist",
+			mailService.sendSimpleEmail(appPath, "Регистрация в SpeedLogist",
 					"Спасибо что зарегистрировались на товарно-транспортной бирже компании ЗАО \"Доброном\"\n"
 							+ "Для того чтобы принять участие в торгах на бирже, необходимо прислать подписанный договор по адресу: 220073, г.Минск, пер.Загородный 1-й, 20-23;\n"
 							+ "Логин для входа: " + user.getLogin(),
@@ -8587,7 +8477,7 @@ public class MainRestController {
 		if (user.getCheck() != null && user.getCheck().split("&")[0].equals("regional")) {
 			userService.saveOrUpdateUser(user, 7);
 			session.setAttribute("check", "regional&new");
-			mailService.sendSimpleEmail(request, "Регистрация в SpeedLogist",
+			mailService.sendSimpleEmail(appPath, "Регистрация в SpeedLogist",
 					"Спасибо что зарегистрировались на товарно-транспортной бирже компании ЗАО \"Доброном\"\n"
 							+ "Для того чтобы принять участие в торгах на бирже, необходимо прислать подписанный договор по адресу: 220073, г.Минск, пер.Загородный 1-й, 20-23;\n"
 							+ "Логин для входа: " + user.getLogin(),

@@ -625,72 +625,72 @@ public class POIExcel {
 
 		List<LocalDate> supplyDates = new ArrayList<>();
 
-		String orderFormation = schedule.getOrderFormationSchedule();
-		int weekNumberParity = day.get(ChronoField.ALIGNED_WEEK_OF_YEAR)%2;
+	    String orderFormation = schedule.getOrderFormationSchedule();
+	    int weekNumberParity = day.get(ChronoField.ALIGNED_WEEK_OF_YEAR)%2;
 
-        if ((orderFormation == null)
-				|| (orderFormation.isEmpty())
-				|| (weekNumberParity == 0 && orderFormation.equals("ч"))
-				|| (weekNumberParity == 1 && orderFormation.equals("н"))) {
+	       if ((orderFormation == null)
+	          || (orderFormation.isEmpty())
+	          || (weekNumberParity == 0 && orderFormation.equals("ч"))
+	          || (weekNumberParity == 1 && orderFormation.equals("н"))) {
 
-			if ((day.equals(LocalDate.now()) && schedule.getIsDayToDay()) || (day.equals(LocalDate.now().plusDays(1))) && !schedule.getIsDayToDay()){
+	       if ((day.equals(LocalDate.now()) && schedule.getIsDayToDay()) || (day.equals(LocalDate.now().plusDays(1))) && !schedule.getIsDayToDay()){
 
-				LocalDate supplyDate;
+	          LocalDate supplyDate;
 
-				List<Integer> daysOfSupplies = new ArrayList<>();
+	          List<Integer> daysOfSupplies = new ArrayList<>();
 
-				int addWeeks = 0;
+	          int addWeeks = 0;
 
-				if (schedule.getCounterpartyContractCode() == 1837){
-					int d = 0;
-				}
+	          if (schedule.getCounterpartyContractCode() == 1837){
+	             int d = 0;
+	          }
 
-				if (resultOfTheDay.contains("з") || resultOfTheDay.contains("н0")){
-					if (schedule.getMonday() != null && schedule.getMonday().contains(forSearch)){
-						daysOfSupplies.add(1);
-						addWeeks = checkN(schedule.getMonday(), resultOfTheDay, forSearch);
-					}
-					if (schedule.getTuesday() != null && schedule.getTuesday().contains(forSearch)){
-						daysOfSupplies.add(2);
-						addWeeks = checkN(schedule.getTuesday(), resultOfTheDay, forSearch);
-					}
-					if (schedule.getWednesday() != null && schedule.getWednesday().contains(forSearch)){
-						daysOfSupplies.add(3);
-						addWeeks = checkN(schedule.getWednesday(), resultOfTheDay, forSearch);
-					}
-					if (schedule.getThursday() != null && schedule.getThursday().contains(forSearch)){
-						daysOfSupplies.add(4);
-						addWeeks = checkN(schedule.getThursday(), resultOfTheDay, forSearch);
-					}
-					if (schedule.getFriday() != null && schedule.getFriday().contains(forSearch)){
-						daysOfSupplies.add(5);
-						addWeeks = checkN(schedule.getFriday(), resultOfTheDay, forSearch);
-					}
-					if (schedule.getSaturday() != null && schedule.getSaturday().contains(forSearch)){
-						daysOfSupplies.add(6);
-						addWeeks = checkN(schedule.getSaturday(), resultOfTheDay, forSearch);
-					}
-					if (schedule.getSunday() != null && schedule.getSunday().contains(forSearch)){
-						daysOfSupplies.add(7);
-						addWeeks = checkN(schedule.getSunday(), resultOfTheDay, forSearch);
-					}
+	          if (resultOfTheDay.contains("з") || resultOfTheDay.contains("н0")){
+	             if (schedule.getMonday() != null && schedule.getMonday().contains(forSearch)){
+	                daysOfSupplies.add(1);
+	                addWeeks = checkN(schedule.getMonday(), resultOfTheDay, forSearch);
+	             }
+	             if (schedule.getTuesday() != null && schedule.getTuesday().contains(forSearch)){
+	                daysOfSupplies.add(2);
+	                addWeeks = checkN(schedule.getTuesday(), resultOfTheDay, forSearch);
+	             }
+	             if (schedule.getWednesday() != null && schedule.getWednesday().contains(forSearch)){
+	                daysOfSupplies.add(3);
+	                addWeeks = checkN(schedule.getWednesday(), resultOfTheDay, forSearch);
+	             }
+	             if (schedule.getThursday() != null && schedule.getThursday().contains(forSearch)){
+	                daysOfSupplies.add(4);
+	                addWeeks = checkN(schedule.getThursday(), resultOfTheDay, forSearch);
+	             }
+	             if (schedule.getFriday() != null && schedule.getFriday().contains(forSearch)){
+	                daysOfSupplies.add(5);
+	                addWeeks = checkN(schedule.getFriday(), resultOfTheDay, forSearch);
+	             }
+	             if (schedule.getSaturday() != null && schedule.getSaturday().contains(forSearch)){
+	                daysOfSupplies.add(6);
+	                addWeeks = checkN(schedule.getSaturday(), resultOfTheDay, forSearch);
+	             }
+	             if (schedule.getSunday() != null && schedule.getSunday().contains(forSearch)){
+	                daysOfSupplies.add(7);
+	                addWeeks = checkN(schedule.getSunday(), resultOfTheDay, forSearch);
+	             }
 
-					for (Integer daysOfSupply : daysOfSupplies) {
+	             for (Integer daysOfSupply : daysOfSupplies) {
 
-					    if (dayNumber > daysOfSupply) {
-					       if (addWeeks != 0) {
-					          addWeeks -= 7;
-					       }
-					       supplyDate = day.plusDays(7 - dayNumber + daysOfSupply + addWeeks);
-					    } else {
-					       supplyDate = day.plusDays(daysOfSupply - dayNumber + addWeeks);
-					    }
+	                 if (dayNumber > daysOfSupply ) {
+	                    if (addWeeks != 0 && dayNumber != 8) {
+	                       addWeeks -= 7;
+	                    }
+	                    supplyDate = day.plusDays(7 - dayNumber + daysOfSupply + addWeeks);
+	                 } else {
+	                    supplyDate = day.plusDays(daysOfSupply - dayNumber + addWeeks);
+	                 }
 
-					    supplyDates.add(supplyDate);
-					}
-				}
-			}
-		}
+	                 supplyDates.add(supplyDate);
+	             }
+	          }
+	       }
+	    }
 
 		return supplyDates;
 
@@ -1793,8 +1793,8 @@ public class POIExcel {
 		XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
 		XSSFSheet sheet = wb.getSheetAt(0);
 		
-		Date dateStart = Date.valueOf("2024-12-27");
-		Date dateEnd = Date.valueOf("2025-01-02");
+		Date dateStart = Date.valueOf("2025-01-03");
+		Date dateEnd = Date.valueOf("2025-01-08");
 		
 		for (int i = 1; i < sheet.getLastRowNum() + 1; i++) {
 			XSSFRow rowI = sheet.getRow(i);

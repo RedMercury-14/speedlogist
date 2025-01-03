@@ -60,6 +60,8 @@ public class OrderProduct {
     @JoinColumn(name = "product_idproduct", nullable = false)
     @JsonBackReference
     private Product product;
+    
+    
 
 	public Integer getIdOrderProduct() {
 		return idOrderProduct;

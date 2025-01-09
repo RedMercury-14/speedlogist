@@ -18,6 +18,14 @@
 
 	<dependencies>
 		
+		<!-- https://mvnrepository.com/artifact/com.github.jai-imageio/jai-imageio-core -->
+<dependency>
+    <groupId>com.github.jai-imageio</groupId>
+    <artifactId>jai-imageio-core</artifactId>
+    <version>1.4.0</version>
+</dependency>
+
+		
 		
 		<!-- https://mvnrepository.com/artifact/org.springframework/spring-aspects -->
 <dependency>

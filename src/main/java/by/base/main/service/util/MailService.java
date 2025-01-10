@@ -306,6 +306,58 @@ public class MailService {
 	}
 	
 	/**
+	 * Отправляет email нескольким пользователям
+	 * <br> Основной метод для отправки сообщения нескольким юзерам
+	 * @param servletContext
+	 * @param subject
+	 * @param text
+	 * @param files
+	 * @param emailsToUsers
+	 */
+	public void sendEmailToUsers(ServletContext servletContext, String subject, String text, List<String> emailsToUsers) {
+		String appPath = servletContext.getRealPath("/");
+	    try {
+	        if (properties == null) {
+	            FileInputStream fileInputStream = new FileInputStream(appPath + "resources/properties/mail.properties");
+	            properties = new Properties();
+	            properties.load(fileInputStream);
+	        }
+	        Session mailSession = Session.getDefaultInstance(properties);
+	        Transport transport = mailSession.getTransport();
+	        transport.connect(properties.getProperty("mail.smtps.user"), properties.getProperty("mail.smtps.password"));
+
+	        MimeMessage message = new MimeMessage(mailSession);
+	        message.setSubject(subject);
+	        
+	        // Добавляем всех получателей
+	        for (String emailToUser : emailsToUsers) {
+	            InternetAddress internetAddress = new InternetAddress(emailToUser);
+	            message.addRecipient(Message.RecipientType.TO, internetAddress);
+	        }
+	        
+	        message.setSentDate(new Date());
+
+	        // Создаем контент письма
+	        Multipart multipart = new MimeMultipart();
+	        
+	        // Добавляем текст письма
+	        MimeBodyPart mailBody = new MimeBodyPart();
+	        mailBody.setText(text);
+	        multipart.addBodyPart(mailBody);
+
+	        // Устанавливаем контент в сообщение
+	        message.setContent(multipart);
+
+	        // Отправляем сообщение
+	        transport.sendMessage(message, message.getAllRecipients());
+
+	        transport.close();
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	}
+	
+	/**
 	 * Отправляет e-main сообщение с файлом на почту к нескольким юзерам
 	 * @param request
 	 * @param subject

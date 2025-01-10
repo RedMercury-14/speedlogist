@@ -11,6 +11,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -28,6 +30,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import by.base.main.model.Route;
@@ -38,7 +41,8 @@ import by.base.main.service.TruckService;
 import by.base.main.service.util.MailService;
 import by.base.main.service.util.POIExcel;
 
-@Controller
+//@Controller
+@RestController
 @RequestMapping(path = "file")
 public class MainFileController {
 	
@@ -89,7 +93,7 @@ public class MainFileController {
 	 * @throws IOException
 	 */
 	@RequestMapping("/delivery-schedule-to/downdoad/instruction-trading-objects")
-	public String downdoadIncotermsInsuranceGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+	public void downdoadIncotermsInsuranceGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		String appPath = request.getServletContext().getRealPath("");
 		//File file = new File(appPath + "resources/others/Speedlogist.apk");
 		response.setHeader("content-disposition", "attachment;filename="+"instruction-trading-objects.docx");
@@ -116,8 +120,68 @@ public class MainFileController {
 			in.close();
 			out.close();
 		}
-		return "complited";
 	}
+	
+	@RequestMapping("/orl/download/zip398")
+	public void downloadInstructionArchive(HttpServletRequest request, HttpServletResponse response) throws IOException {
+	    String appPath = request.getServletContext().getRealPath("");
+	    String targetDirectoryPath = appPath + "resources/others/398/";
+	    String archivePath = targetDirectoryPath + "398.zip";
+
+	    File targetDirectory = new File(targetDirectoryPath);
+	    File archiveFile = new File(archivePath);
+
+	    // Если архив не существует, создаем его
+	    if (!archiveFile.exists()) {
+	        try (FileOutputStream fos = new FileOutputStream(archiveFile);
+	             ZipOutputStream zos = new ZipOutputStream(fos)) {
+
+	            // Получаем все файлы из целевой директории
+	            File[] filesToInclude = targetDirectory.listFiles();
+	            if (filesToInclude != null) {
+	                for (File file : filesToInclude) {
+	                    if (file.isFile() && !file.getName().equals("398.zip")) { // Исключаем сам архив
+	                        try (FileInputStream fis = new FileInputStream(file)) {
+	                            // Добавляем файл в архив
+	                            ZipEntry zipEntry = new ZipEntry(file.getName());
+	                            zos.putNextEntry(zipEntry);
+
+	                            byte[] buffer = new byte[1024];
+	                            int len;
+	                            while ((len = fis.read(buffer)) > 0) {
+	                                zos.write(buffer, 0, len);
+	                            }
+	                            zos.closeEntry();
+	                        }
+	                    }
+	                }
+	            }
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	            throw new IOException("Error creating the archive file");
+	        }
+	    }
+
+	    // Устанавливаем заголовки для скачивания
+	    response.setHeader("content-disposition", "attachment;filename=398.zip");
+	    response.setContentType("application/zip");
+
+	    // Передаем архив в поток
+	    try (FileInputStream in = new FileInputStream(archiveFile);
+	         OutputStream out = response.getOutputStream()) {
+
+	        byte[] buffer = new byte[1024];
+	        int len;
+	        while ((len = in.read(buffer)) > 0) {
+	            out.write(buffer, 0, len);
+	        }
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        throw new IOException("Error downloading the archive file");
+	    }
+	}
+
+
 	
 	private File convertMultiPartToFile(MultipartFile file, HttpServletRequest request ) throws IOException {
 		String appPath = request.getServletContext().getRealPath("");

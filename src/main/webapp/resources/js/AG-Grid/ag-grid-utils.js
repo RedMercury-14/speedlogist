@@ -308,7 +308,7 @@ export class BtnCellRenderer {
 		this.eGui = document.createElement("button")
 		this.eGui.className = this.params.className || ''
 		this.eGui.id = this.params.id || ''
-		this.eGui.innerText = this.params.label || ''
+		this.eGui.innerText = this.params.label || this.params.dynamicLabel(this.params) || ''
 
 		this.btnClickedHandler = this.btnClickedHandler.bind(this)
 		this.eGui.addEventListener("click", this.btnClickedHandler)

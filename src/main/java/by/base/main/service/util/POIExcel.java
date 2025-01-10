@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Paths;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -56,6 +57,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.PropertyTemplate;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFCreationHelper;
 import org.apache.poi.xssf.usermodel.XSSFRow;
@@ -69,6 +71,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ibm.icu.text.RuleBasedNumberFormat;
 import com.ibm.icu.text.SimpleDateFormat;
 import com.itextpdf.text.Document;
@@ -162,6 +166,113 @@ public class POIExcel {
 
 		return convFile;
 	}
+	
+	/**
+	 * Новый метод для создания файла 398 отчёта
+	 * @param jsonArray
+	 * @param outputPath
+	 * @throws IOException
+	 */
+	public static void createExcel398(String jsonArray, String folderPath, int i, String shops, String dateFrom, String dateTo) throws IOException {
+	    // Название файла
+	    String fileName1 = "398";
+	    String fileName2 = " " + i;
+	    String fileName3 = ".xlsx";
+	    String fileName = fileName1 + fileName2 + fileName3;
+	    
+	    // Полный путь к файлу
+	    File outputFile = Paths.get(folderPath, fileName).toFile();
+
+	    // Проверяем, существует ли папка
+	    File folder = new File(folderPath);
+	    if (!folder.exists()) {
+	        System.out.println("Папка не существует. Создаем: " + folderPath);
+	        folder.mkdirs();
+	    }
+
+	    // Проверяем, существует ли файл
+	    if (!outputFile.exists()) {
+	        System.out.println("Файл "+fileName+" не существует. Создаем новый файл: " + outputFile.getAbsolutePath());
+	        outputFile.createNewFile();
+	    } else {
+	        System.out.println("Файл "+fileName+" уже существует. Перезаписываем: " + outputFile.getAbsolutePath());
+	    }
+
+	    // Парсинг JSON
+	    ObjectMapper objectMapper = new ObjectMapper();
+	    JsonNode rootNode = objectMapper.readTree(jsonArray);
+
+	    // Создаем новый Excel файл
+//	    Workbook workbook = new XSSFWorkbook();
+	    Workbook workbook = new SXSSFWorkbook(); // Используем SXSSFWorkbook вместо XSSFWorkbook
+	    Sheet sheet = workbook.createSheet("Data");
+	    
+	    /*
+	     * Тут блок тестовых параметров: какие магазины
+	     * Даты
+	     */
+	    Sheet sheetParam = workbook.createSheet("Parameters");
+	    Row row1 = sheetParam.createRow(0);
+	    Cell cell0 = row1.createCell(0);
+	    cell0.setCellValue("Магазины: ");
+	    Cell cell1 = row1.createCell(1);
+	    cell1.setCellValue(shops);
+	    
+	    Row row2 = sheetParam.createRow(1);
+	    Cell cell00 = row2.createCell(0);
+	    cell00.setCellValue("Даты: ");
+	    Cell cell11 = row2.createCell(1);
+	    cell11.setCellValue("С " + dateFrom + " по " + dateTo);
+
+	    // Создаем заголовки
+	    Row headerRow = sheet.createRow(0);
+	    if (rootNode.isArray() && rootNode.size() > 0) {
+	        JsonNode firstElement = rootNode.get(0);
+	        int colIndex = 0;
+	        Iterator<String> fieldNames = firstElement.fieldNames();
+	        while (fieldNames.hasNext()) {
+	            String fieldName = fieldNames.next();
+	            Cell cell = headerRow.createCell(colIndex++);
+	            cell.setCellValue(fieldName);
+	        }
+	    }
+
+	    // Заполняем строки данными
+	    int rowIndex = 1;
+	    for (JsonNode jsonNode : rootNode) {
+	        Row row = sheet.createRow(rowIndex++);
+	        int colIndex = 0;
+	        Iterator<String> fieldNames = jsonNode.fieldNames();
+	        while (fieldNames.hasNext()) {
+	            String fieldName = fieldNames.next();
+
+	            Cell cell = row.createCell(colIndex++);
+	            JsonNode value = jsonNode.get(fieldName);
+
+	            if (value.isNumber()) {
+                    cell.setCellValue(value.asDouble());
+                } else if (value.isTextual()) {
+                    cell.setCellValue(value.asText());
+                } else if (value.isBoolean()) {
+                    cell.setCellValue(value.asBoolean());
+                } else {
+                    cell.setCellValue(value.toString());
+                }
+	        }
+	        if (rowIndex % 100000 == 0) {
+	            System.out.println(rowIndex);
+	        }
+	    }
+
+	    // Сохраняем Excel файл
+	    try (FileOutputStream fileOut = new FileOutputStream(outputFile)) {
+	        workbook.write(fileOut);
+	    }
+	    workbook.close();
+
+	    System.out.println("Excel файл успешно создан: " + outputFile.getAbsolutePath());
+	}
+
 	
 	/**
 	 * Метод для создания графика поставок в excel НА РЦ

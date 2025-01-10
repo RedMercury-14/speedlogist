@@ -285,7 +285,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 		blurActiveElem(e)
 	})
 
-	showNewsModal()
+	// showNewsModal()
 
 	// отображение стартовых данных
 	if (window.initData) {

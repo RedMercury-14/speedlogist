@@ -21,13 +21,14 @@ const getRouteMessageBaseUrl = `../../api/info/message/numroute/`
 const getProposalBaseUrl = `../../api/logistics/getProposal/`
 
 export const rowClassRules = {
-	'finishRow': params => params.node.data.statusRoute === '4',
-	'attentionRow': params => params.node.data.statusRoute === '0',
-	'cancelRow': params => params.node.data.statusRoute === '5',
-	'endRow': params => params.node.data.statusRoute === '6',
-	'oncePersonRoute': params => params.node.data.statusRoute === '8',
-	'activRow': params => params.node.data.offerCount !== 0,
-	'savedRow': params => params.node.data.isSavedRow === true,
+	'finishRow': params => params.data && params.data.statusRoute === '4',
+	'attentionRow': params => params.data && params.data.statusRoute === '0',
+	'cancelRow': params => params.data && params.data.statusRoute === '5',
+	'endRow': params => params.data && params.data.statusRoute === '6',
+	'oncePersonRoute': params => params.data && params.data.statusRoute === '8',
+	'carrierDataSent': params => params.data && params.data.statusRoute === '9',
+	'activRow': params => params.data && params.data.offerCount !== 0,
+	'savedRow': params => params.data && params.data.isSavedRow === true,
 }
 
 const debouncedSaveColumnState = debounce(saveColumnState, 300)
@@ -73,7 +74,6 @@ const columnDefs = [
 	{ headerName: 'Контактное лицо контрагента', field: 'contact', wrapText: true, autoHeight: true, },
 	{ headerName: 'Общий вес', field: 'totalCargoWeight', valueFormatter: params => params.value + ' кг' },
 	{ headerName: 'Комментарии', field: 'userComments', wrapText: true, autoHeight: true, minWidth: 240, width: 640, },
-	{ headerName: 'Комментарии', field: 'userComments', wrapText: true, autoHeight: true, },
 	{ headerName: 'Логист', field: 'logistInfo', wrapText: true, autoHeight: true, },
 	{
 		headerName: 'Статус', field: 'statusRoute',
@@ -657,9 +657,9 @@ function displayTenderOffer(idRoute, status) {
 	window.location.href = url
 }
 function sendTender(idRoute, routeDirection) {
-	const url = `../../api/logistics/routeUpdate/${idRoute}&1`
+	const newStatus = '1'
+	const url = `../../api/logistics/routeUpdate/${idRoute}&${newStatus}`
 	const columnName = 'statusRoute'
-	const newValue = '1'
 
 	const headMessage = {
 		fromUser: "logist",
@@ -667,17 +667,19 @@ function sendTender(idRoute, routeDirection) {
 		text: 'Маршрут ' + routeDirection + ' доступен для торгов.',
 		url: `/speedlogist/main/carrier/tender/tenderpage?routeId=${idRoute}`,
 		idRoute: idRoute,
-		status: "1"
+		status: newStatus
 	}
 
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 500)
 
 	ajaxUtils.get({
 		url: url,
-		successCallback: () => {
-			updateCellData(idRoute, columnName, newValue)
-			snackbar.show('Тендер отправлен на биржу')
-			sendHeadMessage(headMessage)
+		successCallback: (res) => {
+			if (res && res.status && res.status === '200') {
+				updateCellData(idRoute, columnName, newStatus)
+				snackbar.show('Тендер отправлен на биржу')
+				sendHeadMessage(headMessage)
+			}
 			clearTimeout(timeoutId)
 			bootstrap5overlay.hideOverlay()
 		},
@@ -727,17 +729,19 @@ async function completeRoute(idRoute) {
 	}
 }
 function cancelTender(idRoute) {
-	const url = `../../api/logistics/routeUpdate/${idRoute}&5`
+	const newStatus = '5'
+	const url = `../../api/logistics/routeUpdate/${idRoute}&${newStatus}`
 	const columnName = 'statusRoute'
-	const newValue = '5'
 
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 500)
 
 	ajaxUtils.get({
 		url: url,
-		successCallback: () => {
-			updateCellData(idRoute, columnName, newValue)
-			snackbar.show('Маршрут отменен')
+		successCallback: (res) => {
+			if (res && res.status && res.status === '200') {
+				updateCellData(idRoute, columnName, newStatus)
+				snackbar.show('Маршрут отменен')
+			}
 			clearTimeout(timeoutId)
 			bootstrap5overlay.hideOverlay()
 		},

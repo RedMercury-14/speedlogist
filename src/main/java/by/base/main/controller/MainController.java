@@ -393,6 +393,19 @@ public class MainController {
 		return "orlNeed";
 	}
 	
+	@GetMapping("/main/orl/calculated")
+	public String getCalculated(Model model, HttpServletRequest request) {
+		return "orlCalculated";
+	}
+	@GetMapping("/main/procurement/calculated")
+	public String getProcurementCalculated(Model model, HttpServletRequest request) {
+		return "orlCalculated";
+	}
+	@GetMapping("/main/orl/report/398")
+	public String getReport398(Model model, HttpServletRequest request) {
+		return "orlReport398";
+	}
+	
 	@GetMapping("/main/orl/delivery-schedule-to")
 	public String getDeliveryScheduleTOPageForORL(Model model, HttpServletRequest request) {
 		return "deliveryScheduleTO";
@@ -1767,7 +1780,8 @@ public class MainController {
 			@RequestParam(value = "costWay", required = false) String[] costWay,
 			@RequestParam(value = "dateUnload", required = false) String[] dateUnload,
 			@RequestParam(value = "сargoWeight", required = false) String[] сargoWeight,
-			@RequestParam(value = "dateOfAct", required = false) String dateOfAct )throws IOException, DocumentException {
+			@RequestParam(value = "dateOfAct", required = false) String dateOfAct,
+			@RequestParam(value = "documentType", required = false) String documentType)throws IOException, DocumentException {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 		User user = getThisUser();
 		List<Route> routes = new ArrayList<Route>();

@@ -82,7 +82,8 @@ function createSingleSlotHTML(order) {
 	return `
 		<div class="single-slot">
 			<div class="single-slot__id">ID: ${order.idOrder}</div>
-			<div class="single-slot__marketNumber">Номер из Маркета: ${order.marketNumber}</div>
+			<div class="single-slot__marketNumber">№: ${order.marketNumber}</div>
+			<div class="single-slot__marketNumber">Склад: ${order.numStockDelivery}</div>
 			<div class="single-slot__dateDelivery">Дата доставки: ${dateDelivery}</div>
 			<div class="single-slot__counterparty">Контрагент: ${order.counterparty}</div>
 			<div class="single-slot__info">${order.cargo} ● ${order.pall} палл ● ${h} ч ${m} мин</div>

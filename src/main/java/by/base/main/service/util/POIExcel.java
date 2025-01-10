@@ -173,7 +173,7 @@ public class POIExcel {
 	 * @param outputPath
 	 * @throws IOException
 	 */
-	public static void createExcel398(String jsonArray, String folderPath, int i) throws IOException {
+	public static void createExcel398(String jsonArray, String folderPath, int i, String shops, String dateFrom, String dateTo) throws IOException {
 	    // Название файла
 	    String fileName1 = "398";
 	    String fileName2 = " " + i;
@@ -206,6 +206,23 @@ public class POIExcel {
 //	    Workbook workbook = new XSSFWorkbook();
 	    Workbook workbook = new SXSSFWorkbook(); // Используем SXSSFWorkbook вместо XSSFWorkbook
 	    Sheet sheet = workbook.createSheet("Data");
+	    
+	    /*
+	     * Тут блок тестовых параметров: какие магазины
+	     * Даты
+	     */
+	    Sheet sheetParam = workbook.createSheet("Parameters");
+	    Row row1 = sheetParam.createRow(0);
+	    Cell cell0 = row1.createCell(0);
+	    cell0.setCellValue("Магазины: ");
+	    Cell cell1 = row1.createCell(1);
+	    cell1.setCellValue(shops);
+	    
+	    Row row2 = sheetParam.createRow(1);
+	    Cell cell00 = row2.createCell(0);
+	    cell00.setCellValue("Даты: ");
+	    Cell cell11 = row2.createCell(1);
+	    cell11.setCellValue("С " + dateFrom + " по " + dateTo);
 
 	    // Создаем заголовки
 	    Row headerRow = sheet.createRow(0);
@@ -232,27 +249,15 @@ public class POIExcel {
 	            Cell cell = row.createCell(colIndex++);
 	            JsonNode value = jsonNode.get(fieldName);
 
-	            if (colIndex == 4) {
-	                if (value.isNumber()) {
-	                    cell.setCellValue(value.asDouble());
-	                } else if (value.isTextual()) {
-	                    cell.setCellValue(value.asText().split("T")[0]);
-	                } else if (value.isBoolean()) {
-	                    cell.setCellValue(value.asBoolean());
-	                } else {
-	                    cell.setCellValue(value.toString().split("T")[0]);
-	                }
-	            } else {
-	                if (value.isNumber()) {
-	                    cell.setCellValue(value.asDouble());
-	                } else if (value.isTextual()) {
-	                    cell.setCellValue(value.asText());
-	                } else if (value.isBoolean()) {
-	                    cell.setCellValue(value.asBoolean());
-	                } else {
-	                    cell.setCellValue(value.toString());
-	                }
-	            }
+	            if (value.isNumber()) {
+                    cell.setCellValue(value.asDouble());
+                } else if (value.isTextual()) {
+                    cell.setCellValue(value.asText());
+                } else if (value.isBoolean()) {
+                    cell.setCellValue(value.asBoolean());
+                } else {
+                    cell.setCellValue(value.toString());
+                }
 	        }
 	        if (rowIndex % 100000 == 0) {
 	            System.out.println(rowIndex);

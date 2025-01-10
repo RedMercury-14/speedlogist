@@ -89,10 +89,10 @@
 			</div>
 			<div>
 				Мы, нижеподписавшиеся: представитель Перевозчика ${user.companyName},
-				в лице директора ${user.director} действующего на основании Устава
+				в лице ${user.director} действующего на основании Устава
 				<!-- <select name="documentType" id="documentType">
 					<option value="Устава">Устава</option>
-					<option value="Свидетельства">Свидетельства</option>
+					<option value="свидетельства о регистрации">свидетельства о регистриции</option>
 				</select> -->
 				одной стороны, и представитель Заказчика ЗАО «Доброном» в лице
 				заместителя генерального директора Якубова Евгения Владимировича,
@@ -103,9 +103,9 @@
 					<option value="${user.numContract}">${user.numContract}</option>
 					<option value="0000000 от 01.01.1999">0000000 от 01.01.1999</option>
 				</select> -->
-				<input type="text" name="numContract" required readonly> 
+				<input type="text" name="numContract" required > 
 				от
-				<input type="text" name="dateContract" required readonly> 
+				<input type="text" name="dateContract" required > 
 				выполнены в полном объеме и стороны	претензий друг к другу не имеют.
 			</div>
 			<input type="hidden" value="<sec:authentication property="principal.username" />"id="login">

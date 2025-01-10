@@ -19,13 +19,16 @@ import { deleteCalendarEvent } from "./eventControlMethods.js"
 import {
 	checkPallCount,
 	checkPallCountForComingDates,
+	customRestrictions,
 	hasOrderInYard,
 	isBackgroundEvent,
 	isInvalidEventDate,
 	isLogistEditableStatuses,
+	isMatchNumStockDelivery,
 	isOldSupplierOrder,
 	isOverlapWithInternalMovementTime,
-	isOverlapWithShiftChange
+	isOverlapWithShiftChange,
+	newYearRestrictions
 } from "./rules.js"
 import { store } from "./store.js"
 
@@ -131,7 +134,22 @@ export async function eventDropHandler(info, orderTableGridOption) {
 		return
 	}
 
+	// запрет установки слота с 09:00 10.01.2025 по 11:00 10.01.2025
+	const restrictionProps = {
+		startDateTimeStr: '2025-01-10T09:00:00',
+		endDateTimeStr: '2025-01-10T11:00:00',
+		stockId: '1700'
+	}
+	if (customRestrictions(fcEvent, currentStock, restrictionProps)) {
+		info.revert()
+		snackbar.show(
+			'Запрещено устанавливать слоты с 09:00 10.01.2025 по 11:00 10.01.2025'
+		)
+		return
+	}
+
 	// проверка пересечения со временем для внутренних перемещений
+	const eventDateStr = fcEvent.startStr.split('T')[0]
 	const internaMovementsTimes = currentStock.internaMovementsTimes
 	const internalMovementsRamps = currentStock.internalMovementsRamps
 	if (isOverlapWithInternalMovementTime(info, internaMovementsTimes, internalMovementsRamps)) {
@@ -141,7 +159,6 @@ export async function eventDropHandler(info, orderTableGridOption) {
 	}
 
 	// проверка паллетовместимости склада на соседние даты
-	const eventDateStr = fcEvent.startStr.split('T')[0]
 	const pallCount = store.getPallCount(currentStock, eventDateStr)
 	const maxPall = store.getMaxPallByDate(currentStock.id, eventDateStr)
 	if (!checkPallCountForComingDates(info, pallCount, maxPall, currentStock)) {
@@ -163,6 +180,7 @@ export async function eventDropHandler(info, orderTableGridOption) {
 		? $('#updateSlotReasonModal').modal('show')
 		: updateOrder(info, orderTableGridOption)
 }
+
 export async function eventReceiveHandler(info, orderTableGridOption, orderDateClickHandler) {
 	const role = store.getRole()
 	const { event: fcEvent } = info
@@ -185,6 +203,27 @@ export async function eventReceiveHandler(info, orderTableGridOption, orderDateC
 	if (!checkPallCount(info, pallCount, maxPall, currentStock)) {
 		info.revert()
 		snackbar.show(userMessages.pallDropError)
+		return
+	}
+
+	// запрет установки слота с 09:00 10.01.2025 по 11:00 10.01.2025
+	const restrictionProps = {
+		startDateTimeStr: '2025-01-10T09:00:00',
+		endDateTimeStr: '2025-01-10T11:00:00',
+		stockId: '1700'
+	}
+	if (customRestrictions(fcEvent, currentStock, restrictionProps)) {
+		info.revert()
+		snackbar.show(
+			'Запрещено устанавливать слоты с 09:00 10.01.2025 по 11:00 10.01.2025'
+		)
+		return
+	}
+
+	// проверка совпадения склада из Маркета и текущего склада
+	const numStockDelivery = order.numStockDelivery
+	if (!isMatchNumStockDelivery(numStockDelivery, currentStock)) {
+		info.revert()
 		return
 	}
 

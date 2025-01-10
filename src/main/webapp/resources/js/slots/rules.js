@@ -448,3 +448,55 @@ export async function checkSchedule(order, eventDateStr) {
 
 	return scheduleData
 }
+
+// ограничения по постановке слота в новогодний период
+export function newYearRestrictions(fcEvent) {
+	const startRestrictionDate = new Date('2024-12-31T12:00:00').getTime()
+	const endRestrictionDate = new Date('2025-01-02T09:00:00').getTime()
+	const startEvent = fcEvent.startStr.split('+')[0]
+	const endEvent = fcEvent.endStr.split('+')[0]
+	const start = new Date(startEvent).getTime()
+	const end = new Date(endEvent).getTime()
+	return end >= startRestrictionDate && start <= endRestrictionDate - 1
+}
+
+
+/**
+ * Проверяет, попадает ли событие в пользовательские ограничения по времени и складу
+ * @param {Object} fcEvent - объект календарного события, содержащий время начала/окончания
+ * @param {Object} currentStock - объект текущего склада
+ * @param {Object} restrictionsProps - объект, содержащий свойства ограничений:
+* -    `startDateTimeStr`: дата/время начала периода ограничения в формате yyyy-mm-ddThh:mm:ss
+* -    `endDateTimeStr`: дата/время окончания периода ограничения в формате yyyy-mm-ddThh:mm:ss
+* -    `stockId`: необязательный идентификатор склада для ограничения по определенному складу
+ * @returns {boolean} находится ли слот в пределах ограничений
+ */
+export function customRestrictions(fcEvent, currentStock, restrictionsProps) {
+	const startRestrictionDate = new Date(restrictionsProps.startDateTimeStr).getTime()
+	const endRestrictionDate = new Date(restrictionsProps.endDateTimeStr).getTime() 
+
+	const startEvent = fcEvent.startStr.split('+')[0]
+	const endEvent = fcEvent.endStr.split('+')[0]
+	const start = new Date(startEvent).getTime()
+	const end = new Date(endEvent).getTime()
+	const stockId = currentStock.id
+
+	const stockRestrictions = restrictionsProps.stockId ? stockId === restrictionsProps.stockId : true
+
+	return end >= startRestrictionDate
+		&& start <= endRestrictionDate - 1
+		&& stockRestrictions
+}
+
+// проверка совпадения склада их Маркета и текущего склада
+export function isMatchNumStockDelivery(numStockDelivery, currentStock) {
+	if (!numStockDelivery || !currentStock) return true
+	if (numStockDelivery !== currentStock.id) {
+		const res = confirm(
+			`Данный заказ предназначается для ${numStockDelivery} склада. `
+			+ `Вы уверены, что хотите установить его на ${currentStock.id} склад?`
+		)
+		return res
+	}
+	return true
+}

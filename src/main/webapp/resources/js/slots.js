@@ -558,7 +558,10 @@ async function doAdminAction(e) {
 			snackbar.show('На текущую дату нет заказов')
 			return
 		}
-		await checkEventsForBooking(events)
+		const externalMovementEvents = events.filter(event =>
+			event.extendedProps.data.isInternalMovement !== 'true'
+		)
+		await checkEventsForBooking(externalMovementEvents)
 		return
 	}
 

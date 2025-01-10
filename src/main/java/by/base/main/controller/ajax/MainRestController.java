@@ -548,8 +548,7 @@ public class MainRestController {
      * @throws IOException
      */
     @GetMapping("/orl/task/getlist")
-    public Map<String, Object> getTastList(HttpServletRequest request, HttpServletResponse response,
-    		@PathVariable String idOrder) throws IOException{
+    public Map<String, Object> getTastList(HttpServletRequest request, HttpServletResponse response) throws IOException{
 		Map<String, Object> responseMap = new HashMap<>();
 		responseMap.put("status", "200");
 		responseMap.put("list", taskService.getTaskList());
@@ -1149,69 +1148,15 @@ public class MainRestController {
 	}
 	
 	@TimedExecution
-	@GetMapping("/old398/{stock}&{from}&{to}")
-	public Map<String, Object> get398AndStock(HttpServletRequest request, @PathVariable String stock,
-			 @PathVariable String from,
-			 @PathVariable String to) throws ParseException {
-//		String str = "{\"CRC\": \"\", \"Packet\": {\"MethodName\": \"SpeedLogist.GetReport398\", \"Data\": {\"DateFrom\": \"2024-09-05\", \"DateTo\": \"2024-09-05\", \"WarehouseId\": [700], \"WhatBase\": [11]}}}";
-//		String str = "{\"CRC\": \"\", \"Packet\": {\"MethodName\": \"SpeedLogist.GetReport398\", \"Data\": {\"DateFrom\": \"2024-10-07\", \"DateTo\": \"2024-10-08\", \"WarehouseId\": [434,522,523,452,649,761,762,772,784,884,821,445,455,835,843,850,856,869,870,871,882,883,890,905,906,907,909,873,429,432,428,482,485,463,401,410,608,612,615,404,405,458,617,620,621,631,632,633,640,641,646,648,653,656,660,665,669,706,443,886,717,720,721,448], \"WhatBase\": [11,12]}}}";
-		String str = "{\"CRC\": \"\", \"Packet\": {\"MethodName\": \"SpeedLogist.GetReport398\", \"Data\": {\"DateFrom\": \""+from+"\", \"DateTo\": \""+to+"\", \"WarehouseId\": "
-				+ "["+stock+"],"
-				+ " \"WhatBase\": [11,12]}}}";
-		Map<String, Object> response = new HashMap<>();
-		try {			
-			checkJWT(marketUrl);			
-		} catch (Exception e) {
-			System.err.println("Ошибка получения jwt токена");
-		}
-		JSONParser parser = new JSONParser();
-		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
-		String marketPacketDtoStr = jsonMainObject.get("Packet") != null ? jsonMainObject.get("Packet").toString() : null;
-		JSONObject jsonMainObject2 = (JSONObject) parser.parse(marketPacketDtoStr);
-		String marketDataFor398RequestStr = jsonMainObject2.get("Data") != null ? jsonMainObject2.get("Data").toString() : null;
-		JSONObject jsonMainObjectTarget = (JSONObject) parser.parse(marketDataFor398RequestStr);
+	@GetMapping("/398/get")
+	public Map<String, Object> get398AndStock(HttpServletRequest request) throws ParseException {
 		
-		JSONArray warehouseIdArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("WarehouseId").toString());
-		JSONArray whatBaseArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("WhatBase").toString());
+		Task task = taskService.getLastTaskFor398();
+		String stock = task.getStocks();
+		String from = task.getFromDate().toString();
+		String to = task.getToDate().toString();
 		
-		String dateForm = jsonMainObjectTarget.get("DateFrom") == null ? null : jsonMainObjectTarget.get("DateFrom").toString();
-		String dateTo = jsonMainObjectTarget.get("DateTo") == null ? null : jsonMainObjectTarget.get("DateTo").toString();
-		Object[] warehouseId = warehouseIdArray.toArray();
-		Object[] whatBase = whatBaseArray.toArray();
-//		String warehouseId = jsonMainObjectTarget.get("WarehouseId") == null ? null : jsonMainObjectTarget.get("WarehouseId").toString();
-//		String whatBase = jsonMainObjectTarget.get("WhatBase") == null ? null : jsonMainObjectTarget.get("WhatBase").toString();
-		
-		MarketDataFor398Request for398Request = new MarketDataFor398Request(dateForm, dateTo, warehouseId, whatBase);		
-		MarketPacketDto marketPacketDto = new MarketPacketDto(marketJWT, "SpeedLogist.GetReport398", serviceNumber, for398Request);		
-		MarketRequestDto requestDto = new MarketRequestDto("", marketPacketDto);
-		
-		String marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto));
-//		System.out.println(gson.toJson(requestDto));
-		System.out.println("Размер: " + getStringSizeInMegabytes(marketOrder2) + " мб");
-		
-		String appPath = servletContext.getRealPath("/");
-		String pathFolder = appPath + "resources/others/398/";
-		
-		
-		JSONObject jsonTable = (JSONObject) parser.parse(marketOrder2);		
-		try {
-			poiExcel.createExcel398(jsonTable.get("Table").toString(), pathFolder, 1);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		response.put("status", "200");
-		response.put("payload responce", marketOrder2);
-		response.put("json request", requestDto);
-		return response;
-	}
-	
-	@TimedExecution
-	@GetMapping("/398/{stock}&{from}&{to}")
-	public Map<String, Object> get398AndMoreStock(HttpServletRequest request, @PathVariable String stock,
-			 @PathVariable String from,
-			 @PathVariable String to) throws ParseException {
+		java.util.Date t1 = new java.util.Date();
 		Integer maxShopCoint = 40; // максимальное кол-во магазинов в запросе
 		Map<String, Object> response = new HashMap<>();
 		
@@ -1316,7 +1261,7 @@ public class MainRestController {
 					@Override
 					public void run() {
 						try {
-							poiExcel.createExcel398(jsonTable.get("Table").toString(), pathFolder, finalJ);
+							poiExcel.createExcel398(jsonTable.get("Table").toString(), pathFolder, finalJ, stockStr, from, to);
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
@@ -1325,6 +1270,157 @@ public class MainRestController {
 				}).start();
 				
 		}
+		java.util.Date t2 = new java.util.Date();
+//		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to.ORL");
+		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+		
+		long time = t2.getTime()-t1.getTime();
+		
+		String text = "Принято магазинов: " + mass.length + "\n"
+				+ "С " + from + " по " + to + "\n"
+				+ "Вид расходов : 11,12" + "\n"
+				+ "Всего файлов: " + j + "\n"
+				+ "Время работы: " + time + " мс";
+		
+		mailService.sendEmailToUsers(request, "Автоматическая выгрузка : 398", text, emailsORL);
+				
+		response.put("status", "200");
+		
+		return response;
+	}
+	
+	@TimedExecution
+	@GetMapping("/398/{stock}&{from}&{to}")
+	public Map<String, Object> get398AndMoreStock(HttpServletRequest request, @PathVariable String stock,
+			 @PathVariable String from,
+			 @PathVariable String to) throws ParseException {
+		java.util.Date t1 = new java.util.Date();
+		Integer maxShopCoint = 40; // максимальное кол-во магазинов в запросе
+		Map<String, Object> response = new HashMap<>();
+		
+		//сначала определяыем кол-во магазов и делим их на массивы запросов
+		 String [] mass = stock.split(",");
+		 Integer shopAllCoint = mass.length;
+		 
+		 System.out.println("Всего магазинов: " + shopAllCoint);
+		 
+		 List<String> shopsList = new ArrayList<String>();
+		 
+		 if(shopAllCoint > maxShopCoint) {
+			 int i = 1;
+			 String row = null;
+			 for (String string : mass) {
+				 if(i % maxShopCoint == 0) {
+					 shopsList.add(row); 
+					 row = null;
+					 System.out.println("записываем строку");
+				 }
+				if(row == null) {
+					row = string;
+				}else {
+					row = row + "," + string;
+				}
+				i++;
+			}
+			 if (row != null) {
+				    shopsList.add(row);
+				    System.out.println("Записываем последнюю строку");
+				}
+		 }else {
+			 shopsList.add(stock);
+		 }
+		 System.out.println("Запросов будет : " + shopsList.size());
+		 /*
+		  * Основной метод: проходимсмя по листу и формируем сексели по всем запросам
+		  */
+		 String appPath = servletContext.getRealPath("/");
+		String pathFolder = appPath + "resources/others/398/";
+		//сначала удаляем мусор что есть в этой папке
+		
+		// Проверяем, существует ли папка
+	    File folder = new File(pathFolder);
+	    if (!folder.exists()) {
+	        System.out.println("Папка не существует. Создаем: " + pathFolder);
+	        folder.mkdirs();
+	    } else {
+	        // Если папка существует, удаляем все файлы внутри нее
+	        File[] files = folder.listFiles();
+	        if (files != null) {
+	            for (File file : files) {
+	                if (file.isFile()) {
+	                    System.out.println("Удаляем файл: " + file.getName());
+	                    file.delete();
+	                }
+	            }
+	        }
+	    }
+		 
+		 
+		 Integer j = 0;
+		 for (String stockStr : shopsList) {
+			 j++;
+			 String str = "{\"CRC\": \"\", \"Packet\": {\"MethodName\": \"SpeedLogist.GetReport398\", \"Data\": {\"DateFrom\": \""+from+"\", \"DateTo\": \""+to+"\", \"WarehouseId\": "
+						+ "["+stockStr+"],"
+						+ " \"WhatBase\": [11,12]}}}";
+				try {			
+					checkJWT(marketUrl);			
+				} catch (Exception e) {
+					System.err.println("Ошибка получения jwt токена");
+				}
+				Integer finalJ = j;
+				JSONParser parser = new JSONParser();
+				JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+				String marketPacketDtoStr = jsonMainObject.get("Packet") != null ? jsonMainObject.get("Packet").toString() : null;
+				JSONObject jsonMainObject2 = (JSONObject) parser.parse(marketPacketDtoStr);
+				String marketDataFor398RequestStr = jsonMainObject2.get("Data") != null ? jsonMainObject2.get("Data").toString() : null;
+				JSONObject jsonMainObjectTarget = (JSONObject) parser.parse(marketDataFor398RequestStr);
+				
+				JSONArray warehouseIdArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("WarehouseId").toString());
+				JSONArray whatBaseArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("WhatBase").toString());
+				
+				String dateForm = jsonMainObjectTarget.get("DateFrom") == null ? null : jsonMainObjectTarget.get("DateFrom").toString();
+				String dateTo = jsonMainObjectTarget.get("DateTo") == null ? null : jsonMainObjectTarget.get("DateTo").toString();
+				Object[] warehouseId = warehouseIdArray.toArray();
+				Object[] whatBase = whatBaseArray.toArray();
+//				String warehouseId = jsonMainObjectTarget.get("WarehouseId") == null ? null : jsonMainObjectTarget.get("WarehouseId").toString();
+//				String whatBase = jsonMainObjectTarget.get("WhatBase") == null ? null : jsonMainObjectTarget.get("WhatBase").toString();
+				
+				MarketDataFor398Request for398Request = new MarketDataFor398Request(dateForm, dateTo, warehouseId, whatBase);		
+				MarketPacketDto marketPacketDto = new MarketPacketDto(marketJWT, "SpeedLogist.GetReport398", serviceNumber, for398Request);		
+				MarketRequestDto requestDto = new MarketRequestDto("", marketPacketDto);
+				
+				String marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto));
+//				System.out.println(gson.toJson(requestDto));
+				System.out.println("Размер: " + getStringSizeInMegabytes(marketOrder2) + " мб");
+								
+				JSONObject jsonTable = (JSONObject) parser.parse(marketOrder2);	
+				
+				new Thread(new Runnable() {			
+					@Override
+					public void run() {
+						try {
+							poiExcel.createExcel398(jsonTable.get("Table").toString(), pathFolder, finalJ, stockStr, from, to);
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}				
+					}
+				}).start();
+				
+		}
+		java.util.Date t2 = new java.util.Date();
+//		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to.ORL");
+		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+		
+		long time = t2.getTime()-t1.getTime();
+		
+		String text = "Принято магазинов: " + mass.length + "\n"
+				+ "С " + from + " по " + to + "\n"
+				+ "Вид расходов : 11,12" + "\n"
+				+ "Всего файлов: " + j + "\n"
+				+ "Время работы: " + time + " мс";
+		
+		mailService.sendEmailToUsers(request, "Автоматическая выгрузка : 398", text, emailsORL);
 				
 		response.put("status", "200");
 //		response.put("payload responce", marketOrder2);

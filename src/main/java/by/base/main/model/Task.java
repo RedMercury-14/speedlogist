@@ -6,6 +6,8 @@ import java.util.Objects;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
@@ -20,7 +22,8 @@ public class Task {
 	
     // Уникальный идентификатор задачи
     @Id
-    @Column(name = "idtask", nullable = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "idtask")
     private int idTask;
 
     // Дата и время создания задачи

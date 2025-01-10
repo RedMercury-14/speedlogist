@@ -1,5 +1,6 @@
 import { AG_GRID_LOCALE_RU } from "./AG-Grid/ag-grid-locale-RU.js"
 import { ajaxUtils } from "./ajaxUtils.js"
+import { bootstrap5overlay } from "./bootstrap5overlay/bootstrap5overlay.js"
 import { snackbar } from "./snackbar/snackbar.js"
 import { changeGridTableMarginTop, dateHelper, getData, hideLoadingSpinner, isObserver, showLoadingSpinner } from "./utils.js"
 
@@ -187,14 +188,14 @@ function sendExcelFormHandler(e) {
 
 	const date = formData.get('date')
 
-	showLoadingSpinner(submitButton)
+	bootstrap5overlay.showOverlay()
 
 	ajaxUtils.postMultipartFformData({
 		url: excelUrl,
 		token: token,
 		data: formData,
 		successCallback: (res) => {
-			hideLoadingSpinner(submitButton, submitButtonText)
+			bootstrap5overlay.hideOverlay()
 
 			if (res.status === '200') {
 				snackbar.show(res.message)
@@ -208,7 +209,7 @@ function sendExcelFormHandler(e) {
 				return
 			}
 		},
-		errorCallback: () => hideLoadingSpinner(submitButton, submitButtonText)
+		errorCallback: () => bootstrap5overlay.hideOverlay()
 	})
 }
 

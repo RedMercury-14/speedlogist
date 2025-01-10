@@ -184,6 +184,15 @@ footer.to-bottom {
 #myGrid .oncePersonRoute{
 	background-color: #ca44e366;
 }
+#myGrid .carrierDataSent {
+	background-image: repeating-linear-gradient(
+		45deg,
+		#9ee9ffdb,
+		#9ee9ffdb 10px,
+		#c4ffe1db 10px,
+		#c4ffe1db 20px
+	);
+}
 #myGrid .cancelRow {
 	background-color: #e3444466;
 }

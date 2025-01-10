@@ -1780,7 +1780,8 @@ public class MainController {
 			@RequestParam(value = "costWay", required = false) String[] costWay,
 			@RequestParam(value = "dateUnload", required = false) String[] dateUnload,
 			@RequestParam(value = "сargoWeight", required = false) String[] сargoWeight,
-			@RequestParam(value = "dateOfAct", required = false) String dateOfAct )throws IOException, DocumentException {
+			@RequestParam(value = "dateOfAct", required = false) String dateOfAct,
+			@RequestParam(value = "documentType", required = false) String documentType)throws IOException, DocumentException {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 		User user = getThisUser();
 		List<Route> routes = new ArrayList<Route>();

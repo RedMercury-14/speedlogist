@@ -286,7 +286,7 @@ export const dateHelper = {
 	 * localStorage, если они не старые, либо возвращает объект со свойствами dateStart
 	 * и dateEnd, представляющими диапазон дат для выборки. Формат дат YYYY-MM-DD
 	 */
-	getDatesToFetch(datesKey, dayNumber = 7, ) {
+	getDatesToFetch(datesKey, daysAgo = 7, daysAhead = 0 ) {
 		const savedDatesStr = localStorage.getItem(datesKey)
 		const now = Date.now()
 
@@ -303,16 +303,10 @@ export const dateHelper = {
 			}
 		}
 
-		const currentDate = new Date(now)
-		const currentDateMonth = this.pad(currentDate.getMonth() + 1)
-		const currentDateDay = this.pad(currentDate.getDate())
-		const oldDate = new Date(now - this.DAYS_TO_MILLISECONDS * dayNumber)
-		const oldDateMonth = this.pad(oldDate.getMonth() + 1)
-		const oldDateDay = this.pad(oldDate.getDate())
-		const dateStart = `${oldDate.getFullYear()}-${oldDateMonth}-${oldDateDay}`
-		const dateEnd = `${currentDate.getFullYear()}-${currentDateMonth}-${currentDateDay}`
+		const dateStart = this.getDateForInput(now - this.DAYS_TO_MILLISECONDS * daysAgo)
+		const dateEnd = this.getDateForInput(now + this.DAYS_TO_MILLISECONDS * daysAhead)
 		return { dateStart, dateEnd }
-	},
+	}, 
 
 
 	getDatesToRoutesFetch(datesKey, dayNumber = 5, ) {
@@ -649,6 +643,8 @@ export function getRouteStatus(status) {
 			return 'Маршрут завершен';
 		case '8':
 			return 'Контроль цены';
+		case '9':
+			return 'Данные перевозчика отправлены';
 		default:
 			return 'Неизвестный статус';
 	}

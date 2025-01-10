@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import by.base.main.dao.TaskDAO;
+import by.base.main.model.Shop;
 import by.base.main.model.Task;
 
 @Repository
@@ -53,6 +54,16 @@ public class TaskDAOImpl implements TaskDAO{
 	public void updateTask(Task task) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		currentSession.update(task);	
+	}
+
+	private static final String queryGetTaskList = "from Task t order by t.idTask DESC";
+	@Override
+	@Transactional
+	public List<Task> getTaskList() {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Task> theObject = currentSession.createQuery(queryGetTaskList, Task.class);
+		List <Task> objects = theObject.getResultList();
+		return objects;
 	}
 	
 

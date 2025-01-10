@@ -1,8 +1,12 @@
 package by.base.main.dao;
 
+import java.util.List;
+
 import by.base.main.model.Task;
 
 public interface TaskDAO {
+	
+	List<Task> getTaskList();
 	
 	Task getTaskById(Integer id);
 	

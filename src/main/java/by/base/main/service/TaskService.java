@@ -1,8 +1,12 @@
 package by.base.main.service;
 
+import java.util.List;
+
 import by.base.main.model.Task;
 
 public interface TaskService {
+	
+	List<Task> getTaskList();
 
 	Task getTaskById(Integer id);
 	

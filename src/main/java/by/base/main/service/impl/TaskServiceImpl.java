@@ -1,5 +1,7 @@
 package by.base.main.service.impl;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -32,6 +34,11 @@ public class TaskServiceImpl implements TaskService{
 	public void updateTask(Task task) {
 		taskDAO.updateTask(task);
 		
+	}
+
+	@Override
+	public List<Task> getTaskList() {
+		return taskDAO.getTaskList();
 	}
 
 }

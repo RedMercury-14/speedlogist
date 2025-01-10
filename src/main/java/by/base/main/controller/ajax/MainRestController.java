@@ -139,6 +139,7 @@ import by.base.main.service.ServiceException;
 import by.base.main.service.ShopService;
 import by.base.main.service.TGTruckService;
 import by.base.main.service.TGUserService;
+import by.base.main.service.TaskService;
 import by.base.main.service.TruckService;
 import by.base.main.service.UserService;
 import by.base.main.service.util.CheckOrderNeeds;
@@ -287,6 +288,9 @@ public class MainRestController {
 	
 	@Autowired
 	private PDFWriter pdfWriter;
+	
+	@Autowired
+	private TaskService taskService;
 	
 	private static String classLog;
 	private static String marketJWT;
@@ -533,6 +537,59 @@ public class MainRestController {
 		
 		responseMap.put("products", products);
 		return responseMap;
+    }
+    
+    /**
+     * Метод для страницы ОРЛ, который возвращает все таски в обратном порядке 
+     * @param request
+     * @param response
+     * @param idOrder
+     * @return
+     * @throws IOException
+     */
+    @GetMapping("/orl/task/getlist")
+    public Map<String, Object> getTastList(HttpServletRequest request, HttpServletResponse response,
+    		@PathVariable String idOrder) throws IOException{
+		Map<String, Object> responseMap = new HashMap<>();
+		responseMap.put("status", "200");
+		responseMap.put("list", taskService.getTaskList());
+		return responseMap;
+    }
+    
+    /**
+     * Метод сохраняет новое задание для 398 отчёта
+     * @param request
+     * @param str
+     * @return
+     * @throws ParseException
+     * @throws IOException
+     */
+    @PostMapping("/orl/task/addTask398")
+    public Map<String, Object> postAddTask(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+        Map<String, Object> response = new HashMap<>();
+        JSONParser parser = new JSONParser();
+        JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+        Date dateFrom = jsonMainObject.get("dateFrom") != null ? Date.valueOf(jsonMainObject.get("dateFrom").toString()) : null;
+        Date dateTo = jsonMainObject.get("dateTo") != null ? Date.valueOf(jsonMainObject.get("dateTo").toString()) : null;
+        String shops = jsonMainObject.get("shops") != null ? jsonMainObject.get("shops").toString() : null;
+        String whatBase = jsonMainObject.get("whatBase") != null ? jsonMainObject.get("whatBase").toString() : null;
+        String comment = "398";
+        User user = getThisUser();
+        Task task = new Task();
+        task.setDateCreate(Timestamp.valueOf(LocalDateTime.now()));
+        task.setUserCreate(user.getSurname() + " " + user.getName());
+        task.setBases(whatBase);
+        task.setComment(comment);
+        task.setFromDate(dateFrom);
+        task.setStocks(shops);
+        task.setToDate(dateTo);
+        
+        int id = taskService.saveTask(task);        
+        task.setIdTask(id);
+       
+        response.put("status", "200");
+        response.put("task", task);
+        return response;
     }
     
     /**

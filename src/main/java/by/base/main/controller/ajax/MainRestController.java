@@ -1271,8 +1271,8 @@ public class MainRestController {
 				
 		}
 		java.util.Date t2 = new java.util.Date();
-//		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to.ORL");
-		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.398");
+//		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
 		
 		long time = t2.getTime()-t1.getTime();
 		
@@ -1409,8 +1409,8 @@ public class MainRestController {
 				
 		}
 		java.util.Date t2 = new java.util.Date();
-//		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to.ORL");
-		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.398");
+//		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
 		
 		long time = t2.getTime()-t1.getTime();
 		
@@ -1423,8 +1423,6 @@ public class MainRestController {
 		mailService.sendEmailToUsers(request, "Автоматическая выгрузка : 398", text, emailsORL);
 				
 		response.put("status", "200");
-//		response.put("payload responce", marketOrder2);
-//		response.put("json request", requestDto);
 		return response;
 	}
 	

@@ -89,10 +89,10 @@
 			</div>
 			<div>
 				Мы, нижеподписавшиеся: представитель Перевозчика ${user.companyName},
-				в лице ${user.director} действующего на основании Устава
+				в лице директора ${user.director} действующего на основании Устава
 				<!-- <select name="documentType" id="documentType">
 					<option value="Устава">Устава</option>
-					<option value="свидетельства о регистрации">свидетельства о регистриции</option>
+					<option value="Свидетельства">Свидетельства</option>
 				</select> -->
 				одной стороны, и представитель Заказчика ЗАО «Доброном» в лице
 				заместителя генерального директора Якубова Евгения Владимировича,
@@ -103,9 +103,9 @@
 					<option value="${user.numContract}">${user.numContract}</option>
 					<option value="0000000 от 01.01.1999">0000000 от 01.01.1999</option>
 				</select> -->
-				<input type="text" name="numContract" required > 
+				<input type="text" name="numContract" required> 
 				от
-				<input type="text" name="dateContract" required > 
+				<input type="text" name="dateContract" required> 
 				выполнены в полном объеме и стороны	претензий друг к другу не имеют.
 			</div>
 			<input type="hidden" value="<sec:authentication property="principal.username" />"id="login">
@@ -300,7 +300,7 @@
 				р/с BY91 ALFA 3012 2365 1000 3027 0000 (RUB.)
 			</div>
 			<div class="requisites" style="float: right;">
-				<p class="mb-0">Перевозчик:</p>
+				<p class="mb-0">Исполнитель:</p>
 				<textarea name="requisitesCarrier" style="height:250px; width: 320px" required
 					readonly>${user.requisites}
 				</textarea>

@@ -1774,6 +1774,12 @@ public class MainController {
 	}
 	
 	
+	/**
+	 * Основной метод формирования Акта выполненных работ акта
+	 * @return
+	 * @throws IOException
+	 * @throws DocumentException
+	 */
 	@PostMapping("/main/carrier/transportation/routecontrole/getformact")
 	@ResponseBody
 	public String postActForm(Model model, HttpServletRequest request, HttpServletResponse response, HttpSession session,
@@ -1791,7 +1797,11 @@ public class MainController {
 			@RequestParam(value = "dateUnload", required = false) String[] dateUnload,
 			@RequestParam(value = "сargoWeight", required = false) String[] сargoWeight,
 			@RequestParam(value = "dateOfAct", required = false) String dateOfAct,
-			@RequestParam(value = "documentType", required = false) String documentType)throws IOException, DocumentException {
+			@RequestParam(value = "documentType", required = false) String documentType,
+			@RequestParam(value = "numOfIP", required = false) String numOfIP,
+			@RequestParam(value = "dateOfIP", required = false) String dateOfIP,
+			@RequestParam(value = "directOfOOO", required = false) String directOfOOO,
+			@RequestParam(value = "docOfOOO", required = false) String docOfOOO)throws IOException, DocumentException {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 		User user = getThisUser();
 		List<Route> routes = new ArrayList<Route>();
@@ -1817,14 +1827,14 @@ public class MainController {
 		//test остановился тут, тут залочены акты
 		int numPage = 0;
 		if(routesForOrders.get(0).getExpeditionCost() != null) {
-			numPage = pdfWriter.getActOfRouteExpedition(routesForOrders, request, isNDS, dateContract, numContractTarget, user.getDirector(), city, requisitesCarrier, dateOfAct, 0);
+			numPage = pdfWriter.getActOfRouteExpedition(routesForOrders, request, isNDS, dateContract, numContractTarget, user.getDirector(), city, requisitesCarrier, dateOfAct, 0, documentType, numOfIP, dateOfIP, directOfOOO, docOfOOO);
 			if(numPage != 1) {
-				numPage = pdfWriter.getActOfRouteExpedition(routesForOrders, request, isNDS, dateContract, numContractTarget, user.getDirector(), city, requisitesCarrier, dateOfAct, numPage);
+				numPage = pdfWriter.getActOfRouteExpedition(routesForOrders, request, isNDS, dateContract, numContractTarget, user.getDirector(), city, requisitesCarrier, dateOfAct, numPage, documentType, numOfIP, dateOfIP, directOfOOO, docOfOOO);
 			}
 		}else {
-			numPage = pdfWriter.getActOfRoute(routesForOrders, request, isNDS, dateContract, numContractTarget, user.getDirector(), city, requisitesCarrier, dateOfAct, 0);
+			numPage = pdfWriter.getActOfRoute(routesForOrders, request, isNDS, dateContract, numContractTarget, user.getDirector(), city, requisitesCarrier, dateOfAct, 0, documentType, numOfIP, dateOfIP, directOfOOO, docOfOOO);
 			if(numPage != 1) {
-				numPage = pdfWriter.getActOfRoute(routesForOrders, request, isNDS, dateContract, numContractTarget, user.getDirector(), city, requisitesCarrier, dateOfAct, numPage);
+				numPage = pdfWriter.getActOfRoute(routesForOrders, request, isNDS, dateContract, numContractTarget, user.getDirector(), city, requisitesCarrier, dateOfAct, numPage, documentType, numOfIP, dateOfIP, directOfOOO, docOfOOO);
 			}
 		}
 		
@@ -1850,8 +1860,7 @@ public class MainController {
 		mailService.sendEmailWhithFileToUser(request, "Акт от перевозчика "+user.getCompanyName(), "", file, "apanaschiko@dobronom.by");
 		FileInputStream in = null;
 		OutputStream out = null;	
-		try {
-			
+		try {			
 			// Прочтите файл, который нужно загрузить, и сохраните его во входном потоке файла
 //			in = new FileInputStream(appPath + "resources/others/act.xlsx");
 			in = new FileInputStream(appPath + "resources/others/" + fileNameForRead);

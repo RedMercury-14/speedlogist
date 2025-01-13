@@ -124,6 +124,9 @@ public class Shop implements Serializable{
 	@Column(name = "type")
 	private String type;
 	
+	@Column(name = "name")
+	private String name;
+	
 	@Column(name = "length")
 	private Double length;
 	
@@ -235,6 +238,12 @@ public class Shop implements Serializable{
 		return workStart;
 	}
 
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
 	public Boolean getSpecialWeightDistribution() {
 		if(specialWeightDistribution!=null) {
 			return specialWeightDistribution;			

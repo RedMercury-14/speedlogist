@@ -6731,6 +6731,7 @@ public class MainRestController {
 		shop.setWidth(!jsonMainObject.get("width").toString().isEmpty() ? Double.parseDouble(jsonMainObject.get("width").toString()) : null);
 		shop.setHeight(!jsonMainObject.get("height").toString().isEmpty() ? Double.parseDouble(jsonMainObject.get("height").toString()) : null);
 		shop.setMaxPall(!jsonMainObject.get("maxPall").toString().isEmpty() ? Integer.parseInt(jsonMainObject.get("maxPall").toString()) : null);
+		shop.setName(jsonMainObject.get("name") != null && !jsonMainObject.get("name").toString().isEmpty() ? jsonMainObject.get("name").toString() : null);
 		if(jsonMainObject.get("isTailLift") != null) {
 			shop.setIsTailLift(jsonMainObject.get("isTailLift").toString().equals("true") ? true : false);
 		}else {
@@ -6767,7 +6768,8 @@ public class MainRestController {
 		shop.setLength(!jsonMainObject.get("length").toString().isEmpty() ? Double.parseDouble(jsonMainObject.get("length").toString()) : null);
 		shop.setWidth(!jsonMainObject.get("width").toString().isEmpty() ? Double.parseDouble(jsonMainObject.get("width").toString()) : null);
 		shop.setHeight(!jsonMainObject.get("height").toString().isEmpty() ? Double.parseDouble(jsonMainObject.get("height").toString()) : null);
-		shop.setMaxPall(!jsonMainObject.get("maxPall").toString().isEmpty() ? Integer.parseInt(jsonMainObject.get("maxPall").toString()) : null);		
+		shop.setMaxPall(!jsonMainObject.get("maxPall").toString().isEmpty() ? Integer.parseInt(jsonMainObject.get("maxPall").toString()) : null);	
+		shop.setName(jsonMainObject.get("name") != null && !jsonMainObject.get("name").toString().isEmpty() ? jsonMainObject.get("name").toString() : null);
 		if(jsonMainObject.get("isTailLift") != null) {
 			shop.setIsTailLift(jsonMainObject.get("isTailLift").toString().equals("true") ? true : false);
 		}else {

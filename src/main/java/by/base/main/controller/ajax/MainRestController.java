@@ -496,6 +496,20 @@ public class MainRestController {
             zos.closeEntry();
         }
     }
+    
+    @GetMapping("/balance/{idOrder}")
+    public Map<String, Object> balanceMethod(HttpServletRequest request, HttpServletResponse response,
+    		@PathVariable String idOrder) throws IOException{
+
+		Map<String, Object> responseMap = new HashMap<>();
+		
+		Order order = orderService.getOrderById(Integer.parseInt(idOrder));
+		order.getOrderLines().forEach(o-> System.out.println(o));
+		List<Product> products = readerSchedulePlan.checkBalanceBetweenStock(order);
+		
+		responseMap.put("products", products);
+		return responseMap;
+    }
 	
     
     /**
@@ -525,17 +539,13 @@ public class MainRestController {
 		return responseMap;
     }
     
-    @GetMapping("/balance/{idOrder}")
-    public Map<String, Object> balanceMethod(HttpServletRequest request, HttpServletResponse response,
-    		@PathVariable String idOrder) throws IOException{
+    @GetMapping("/logistics/getCounterpartiesList")
+    public Map<String, Object> getCounterpartiesList(HttpServletRequest request, HttpServletResponse response) throws IOException{
 
-		Map<String, Object> responseMap = new HashMap<>();
+		Map<String, Object> responseMap = new HashMap<>();		
 		
-		Order order = orderService.getOrderById(Integer.parseInt(idOrder));
-		order.getOrderLines().forEach(o-> System.out.println(o));
-		List<Product> products = readerSchedulePlan.checkBalanceBetweenStock(order);
-		
-		responseMap.put("products", products);
+		responseMap.put("list", scheduleService.getСounterpartyListRCNameOnly());
+		responseMap.put("status", "200");
 		return responseMap;
     }
     

@@ -335,6 +335,16 @@ public class MainController {
 		return "main";		
 	}
 	
+	@GetMapping("/main/logistics/counterpartiesListInDB")
+	public String getcounterpartiesListInDB(Model model, HttpServletRequest request) {
+		return "counterpartiesListInDB";
+	}
+	
+	@GetMapping("/main/logistics/counterpartiesList")
+	public String getCounterpartiesList(Model model, HttpServletRequest request) {
+		return "counterpartiesList";
+	}
+	
 	@GetMapping("/main/admin/reports/mainReports")
 	public String getMainReportsPage(Model model, HttpServletRequest request) {
 		return "mainReports";

@@ -367,7 +367,7 @@ public class PDFWriter {
 	        
 	        String textMain;
 	        if(documentType.equals("свидетельства")) {
-	        	textMain = "       Мы, нижеподписавшиеся: Исполнитель Индивидуальный предприниматель " 
+	        	textMain = "       Мы, нижеподписавшиеся: Исполнитель " 
         		+ routes.get(0).getUser().getCompanyName()
         		+ ", в лице " + sheffName
         		+ " действующего на основании"
@@ -600,7 +600,7 @@ public class PDFWriter {
 			        
 			        String textMain;
 			        if(documentType.equals("свидетельства")) {
-			        	textMain = "       Мы, нижеподписавшиеся: Исполнитель Индивидуальный предприниматель " 
+			        	textMain = "       Мы, нижеподписавшиеся: Исполнитель " 
 		        		+ routes.get(0).getUser().getCompanyName()
 		        		+ ", в лице " + sheffName
 		        		+ " действующего на основании"
@@ -812,7 +812,7 @@ public class PDFWriter {
 			        
 			        String textMain;
 			        if(documentType.equals("свидетельства")) {
-			        	textMain = "       Мы, нижеподписавшиеся: Исполнитель Индивидуальный предприниматель " 
+			        	textMain = "       Мы, нижеподписавшиеся: Исполнитель " 
 		        		+ routes.get(0).getUser().getCompanyName()
 		        		+ ", в лице " + sheffName
 		        		+ " действующего на основании"
@@ -1080,7 +1080,7 @@ public class PDFWriter {
         
         String textMain;
         if(documentType.equals("свидетельства")) {
-        	textMain = "       Мы, нижеподписавшиеся: Исполнитель Индивидуальный предприниматель " 
+        	textMain = "       Мы, нижеподписавшиеся: Исполнитель " 
     		+ routes.get(0).getUser().getCompanyName()
     		+ ", в лице " + sheffName
     		+ " действующего на основании"

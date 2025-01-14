@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
+import java.time.temporal.WeekFields;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -730,14 +731,20 @@ public class POIExcel {
 	 * @param resultOfTheDay
 	 * @param forSearch
 	 * @param dayNumber
+	 * Исправлено 13.01.2025
 	 * @return
 	 */
 	private List<LocalDate> getDates(Schedule schedule, LocalDate day, String resultOfTheDay, String forSearch, int dayNumber){
 
-		List<LocalDate> supplyDates = new ArrayList<>();
+	    List<LocalDate> supplyDates = new ArrayList<>();
 
 	    String orderFormation = schedule.getOrderFormationSchedule();
-	    int weekNumberParity = day.get(ChronoField.ALIGNED_WEEK_OF_YEAR)%2;
+	    int weekNumberParity;
+	    if (schedule.getIsDayToDay()){
+	       weekNumberParity = day.get(WeekFields.of(Locale.getDefault()).weekOfYear())%2;
+	    } else {
+	       weekNumberParity = day.plusDays(1).get(WeekFields.of(Locale.getDefault()).weekOfYear())%2;
+	    }
 
 	       if ((orderFormation == null)
 	          || (orderFormation.isEmpty())
@@ -786,6 +793,7 @@ public class POIExcel {
 	                addWeeks = checkN(schedule.getSunday(), resultOfTheDay, forSearch);
 	             }
 
+
 	             for (Integer daysOfSupply : daysOfSupplies) {
 
 	                 if (dayNumber > daysOfSupply ) {
@@ -803,7 +811,7 @@ public class POIExcel {
 	       }
 	    }
 
-		return supplyDates;
+	    return supplyDates;
 
 	}
 

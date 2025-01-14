@@ -15,6 +15,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import com.dto.CounterpartyDTO;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
@@ -690,6 +691,15 @@ public class Schedule{
     public void setDateLastCalculation(Date dateLastCalculation) {
         this.dateLastCalculation = dateLastCalculation;
     }
+    
+    /**
+     * 
+     * @return Возвращает объект CounterpartyDTO в котором только код контрагента и название
+     * @author DIma
+     */
+    public CounterpartyDTO getCounterpartyDTO() {
+		return new CounterpartyDTO(counterpartyCode, name);		
+	}
 
 	@Override
 	public int hashCode() {

@@ -496,6 +496,20 @@ public class MainRestController {
             zos.closeEntry();
         }
     }
+    
+    @GetMapping("/balance/{idOrder}")
+    public Map<String, Object> balanceMethod(HttpServletRequest request, HttpServletResponse response,
+    		@PathVariable String idOrder) throws IOException{
+
+		Map<String, Object> responseMap = new HashMap<>();
+		
+		Order order = orderService.getOrderById(Integer.parseInt(idOrder));
+		order.getOrderLines().forEach(o-> System.out.println(o));
+		List<Product> products = readerSchedulePlan.checkBalanceBetweenStock(order);
+		
+		responseMap.put("products", products);
+		return responseMap;
+    }
 	
     
     /**
@@ -525,17 +539,13 @@ public class MainRestController {
 		return responseMap;
     }
     
-    @GetMapping("/balance/{idOrder}")
-    public Map<String, Object> balanceMethod(HttpServletRequest request, HttpServletResponse response,
-    		@PathVariable String idOrder) throws IOException{
+    @GetMapping("/logistics/getCounterpartiesList")
+    public Map<String, Object> getCounterpartiesList(HttpServletRequest request, HttpServletResponse response) throws IOException{
 
-		Map<String, Object> responseMap = new HashMap<>();
+		Map<String, Object> responseMap = new HashMap<>();		
 		
-		Order order = orderService.getOrderById(Integer.parseInt(idOrder));
-		order.getOrderLines().forEach(o-> System.out.println(o));
-		List<Product> products = readerSchedulePlan.checkBalanceBetweenStock(order);
-		
-		responseMap.put("products", products);
+		responseMap.put("list", scheduleService.getСounterpartyListRCNameOnly());
+		responseMap.put("status", "200");
 		return responseMap;
     }
     
@@ -6721,6 +6731,7 @@ public class MainRestController {
 		shop.setWidth(!jsonMainObject.get("width").toString().isEmpty() ? Double.parseDouble(jsonMainObject.get("width").toString()) : null);
 		shop.setHeight(!jsonMainObject.get("height").toString().isEmpty() ? Double.parseDouble(jsonMainObject.get("height").toString()) : null);
 		shop.setMaxPall(!jsonMainObject.get("maxPall").toString().isEmpty() ? Integer.parseInt(jsonMainObject.get("maxPall").toString()) : null);
+		shop.setName(jsonMainObject.get("name") != null && !jsonMainObject.get("name").toString().isEmpty() ? jsonMainObject.get("name").toString() : null);
 		if(jsonMainObject.get("isTailLift") != null) {
 			shop.setIsTailLift(jsonMainObject.get("isTailLift").toString().equals("true") ? true : false);
 		}else {
@@ -6757,7 +6768,8 @@ public class MainRestController {
 		shop.setLength(!jsonMainObject.get("length").toString().isEmpty() ? Double.parseDouble(jsonMainObject.get("length").toString()) : null);
 		shop.setWidth(!jsonMainObject.get("width").toString().isEmpty() ? Double.parseDouble(jsonMainObject.get("width").toString()) : null);
 		shop.setHeight(!jsonMainObject.get("height").toString().isEmpty() ? Double.parseDouble(jsonMainObject.get("height").toString()) : null);
-		shop.setMaxPall(!jsonMainObject.get("maxPall").toString().isEmpty() ? Integer.parseInt(jsonMainObject.get("maxPall").toString()) : null);		
+		shop.setMaxPall(!jsonMainObject.get("maxPall").toString().isEmpty() ? Integer.parseInt(jsonMainObject.get("maxPall").toString()) : null);	
+		shop.setName(jsonMainObject.get("name") != null && !jsonMainObject.get("name").toString().isEmpty() ? jsonMainObject.get("name").toString() : null);
 		if(jsonMainObject.get("isTailLift") != null) {
 			shop.setIsTailLift(jsonMainObject.get("isTailLift").toString().equals("true") ? true : false);
 		}else {

@@ -206,7 +206,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 		Schedule object = trucks.stream().findFirst().get();
 		return object;
 	}
-
+	
 
 	private static final String counterpartyConstruct = "SELECT new com.dto.CounterpartyDTO(" +
 	        "s.counterpartyCode, " +
@@ -222,14 +222,26 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<CounterpartyDTO> theRole = currentSession.createQuery(queryGetcounterpartyListRC, CounterpartyDTO.class);
 		List <CounterpartyDTO> roles = theRole.getResultList();
+		/*
+		 * из за этого цикла метод ужасно медленный
+		 */
 		for (CounterpartyDTO dto : roles) {
 		    List<Long> contractCodes = currentSession.createQuery(
-		        "SELECT c.counterpartyContractCode FROM Schedule c WHERE c.counterpartyCode = :code", Long.class)
+		        "SELECT c.counterpartyContractCode FROM Schedule c WHERE c.type ='РЦ' AND c.counterpartyCode = :code", Long.class) //тут обнаружена проблема. Добавил c.type ='РЦ' т.е. подтягивало коды из графиков поставок на ТО
 		        .setParameter("code", dto.getCounterpartyCode())
 		        .getResultList();
 		    
 		    dto.setCounterpartyContractCode(contractCodes); // Устанавливаем список в DTO
 		}
+		return roles;
+	}
+	
+	@Override
+	@Transactional
+	public List<CounterpartyDTO> getСounterpartyListRCNameOnly() {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<CounterpartyDTO> theRole = currentSession.createQuery(queryGetcounterpartyListRC, CounterpartyDTO.class);
+		List <CounterpartyDTO> roles = theRole.getResultList();
 		return roles;
 	}
 
@@ -398,4 +410,5 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 		}
 		return new ArrayList<Schedule>(schedules);
 	}
+
 }

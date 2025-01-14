@@ -6,7 +6,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<meta charset="UTF-8">
+	<meta name="${_csrf.parameterName}" content="${_csrf.token}" />
 	<style type="text/css">
 		.none {
 			display: none;
@@ -16,8 +16,9 @@
 		}
 		.my-container {
 			margin-top: 83px;
-			font-family: var(--font-family-sans-serif);
 			margin-bottom: 80px;
+			padding: 0 20px;
+			font-family: var(--font-family-sans-serif);
 		}
 		.my-container .table td {
 			padding: 0.25rem;
@@ -29,9 +30,6 @@
 			color: red;
 		}
 		:-moz-placeholder {
-			color: red;
-		}
-		::-moz-placeholder {
 			color: red;
 		}
 		:-ms-input-placeholder {
@@ -67,10 +65,18 @@
 	</style>
 	<title>Редактор актов</title>
 	<link rel="icon" href="${pageContext.request.contextPath}/resources/img/favicon.ico">
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/bootstrap5overlay.css">
 </head>
 <body>
 	<jsp:include page="headerNEW.jsp" />
-	<div class="container-fluid my-container">
+
+	<div id="overlay" class="none">
+		<div class="spinner-border text-primary" role="status">
+			<span class="sr-only">Загрузка...</span>
+		</div>
+	</div>
+
+	<div class="my-container">
 		<input type="hidden" value="${user.numContract}" id="numContractFromServer">
 		<!-- <h1>Редактор акта выполненных работ</h1> -->
 		<div align="center">
@@ -87,25 +93,42 @@
 					<input type="text" name="city" placeholder="Город заполнения акта" required>
 				</div>
 			</div>
-			<div>
-				Мы, нижеподписавшиеся: представитель Перевозчика ${user.companyName},
-				в лице директора ${user.director} действующего на основании Устава
-				<!-- <select name="documentType" id="documentType">
-					<option value="Устава">Устава</option>
-					<option value="Свидетельства">Свидетельства</option>
-				</select> -->
+			<div class="text-justify">
+				Мы, нижеподписавшиеся: Исполнитель 
+				<select name="documentType" id="documentType">
+					<option value="устава">Юр. лицо</option>
+					<option value="свидетельства">Индивидуальный предприниматель</option>
+				</select>
+				${user.companyName},
+				в лице  
+				<span id="hiddenBlock1">
+					<input type="text" id="directOfOOO" name="directOfOOO" placeholder="ФИО полностью" />
+				</span>
+				<span id="hiddenBlock2" style="display: none;">
+					${user.director} 
+				</span>
+				действующего на основании 
+				<span id="hiddenBlock1-doc">
+				    <input type="text" id="docOfOOO" name="docOfOOO" placeholder="Устава, доверенности" />
+				</span>
+				<span id="hiddenBlock2-doc" style="display: none;">
+				    Свидетельства о государственной регистрации индивидуального предпринимателя
+				    № <input type="text" id="numOfIP" name="numOfIP" placeholder="Введите номер документа" />
+				    от <input type="text" id="dateOfIP" name="dateOfIP" placeholder="Введите дату документа" />
+				</span>
 				одной стороны, и представитель Заказчика ЗАО «Доброном» в лице
 				заместителя генерального директора Якубова Евгения Владимировича,
 				действующего на основании доверенности №3 от 31.12.2022 года,
 				с другой стороны, составили настоящий акт о том, что услуги,
 				оказанные на основании договора перевозки №
+
 				<!-- <select name="" id="">
 					<option value="${user.numContract}">${user.numContract}</option>
 					<option value="0000000 от 01.01.1999">0000000 от 01.01.1999</option>
 				</select> -->
-				<input type="text" name="numContract" required> 
+				<input type="text" name="numContract" required style="color: red;"> 
 				от
-				<input type="text" name="dateContract" required> 
+				<input type="text" name="dateContract" required style="color: red;"> 
 				выполнены в полном объеме и стороны	претензий друг к другу не имеют.
 			</div>
 			<input type="hidden" value="<sec:authentication property="principal.username" />"id="login">

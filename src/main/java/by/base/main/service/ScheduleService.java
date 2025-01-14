@@ -155,5 +155,12 @@ public interface ScheduleService {
 	 * @return
 	 */
 	public List<Schedule> getSchedulesListTOContractOnlyTemp(Long num);
+	
+	/**
+	 * Возвращает лист с контрагентами РЦ <b>DTO класс</b>
+	 * <br><b>Важно то что он не подтягивает коды контрактов, что ускоряет работу</b>
+	 * @return
+	 */
+	List<CounterpartyDTO> getСounterpartyListRCNameOnly();
 }
 

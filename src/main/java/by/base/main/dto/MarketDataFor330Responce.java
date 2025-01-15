@@ -36,7 +36,7 @@ public class MarketDataFor330Responce {
     private LocalDateTime date3;
 
     /** 
-     * Идентификатор документа заказа поставщику (bigint).
+     * Идентификатор документа заказа поставщику (bigint). ОН КОД ЗАКАЗА ИЗ МАРКЕТА
      */
     private Long orderBuyGroupId;
 
@@ -295,10 +295,18 @@ public class MarketDataFor330Responce {
 		this.date3 = date3;
 	}
 
+	/**
+	 * номер из маркета
+	 * @return
+	 */
 	public Long getOrderBuyGroupId() {
 		return orderBuyGroupId;
 	}
 
+	/**
+	 * номер из маркета
+	 * @param orderBuyGroupId
+	 */
 	public void setOrderBuyGroupId(Long orderBuyGroupId) {
 		this.orderBuyGroupId = orderBuyGroupId;
 	}

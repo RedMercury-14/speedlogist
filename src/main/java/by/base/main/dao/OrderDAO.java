@@ -251,4 +251,11 @@ public interface OrderDAO {
 	 * @return
 	 */
 	Map<Long, Order> getSpecialOrdersByListGoodId(List<Long> goodsIds);
+	
+	/**
+	 * Возвращает список Order со всеми связями по списку номеров контрактов
+	 * @param marketNumber
+	 * @return
+	 */
+	Map<String, Order> getOrdersByListMarketNumber(List<String> marketNumber);
 }

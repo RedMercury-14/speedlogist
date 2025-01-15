@@ -93,6 +93,7 @@ import com.itextpdf.text.pdf.PdfWriter;
 import by.base.main.dao.RouteDAO;
 import by.base.main.dao.RouteHasShopDAO;
 import by.base.main.dao.ShopDAO;
+import by.base.main.dto.ReportRow;
 import by.base.main.service.ActService;
 import by.base.main.service.MessageService;
 import by.base.main.service.OrderService;
@@ -167,6 +168,98 @@ public class POIExcel {
 
 		return convFile;
 	}
+	
+	/**
+	 * Главный метод создания екселя ReportRow или сервис левел по приходу
+	 * @param reportRows
+	 * @param filePath
+	 * @throws IOException
+	 */
+	public static void generateExcelReport(List<ReportRow> reportRows, String filePath) throws IOException {
+        // Создаем рабочую книгу и лист
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Отчет");
+
+        // Первая строка заголовка (объединенные ячейки)
+        Row headerRow1 = sheet.createRow(0);
+        headerRow1.createCell(0).setCellValue("Все поставщики из ЦЗ");
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 4)); // Объединение первых 5 ячеек
+        headerRow1.createCell(5).setCellValue("56 404 524");
+        headerRow1.createCell(6).setCellValue("36 083 729");
+        headerRow1.createCell(7).setCellValue("64%");
+        headerRow1.createCell(8).setCellValue("20 320 796");
+        headerRow1.createCell(9).setCellValue("114 250 588");
+        headerRow1.createCell(10).setCellValue("66 694 280");
+        headerRow1.createCell(11).setCellValue("58%");
+        headerRow1.createCell(12).setCellValue("47 556 309");
+
+        // Вторая строка заголовка
+        Row headerRow2 = sheet.createRow(1);
+        String[] headers = {
+                "Наименование поставщика",
+                "Номер заказа из маркета",
+                "Период Поставки заказа (неделя)",
+                "Группа товаров",
+                "Наименование товара",
+                "Код товара",
+                "Заказано ед",
+                "Принято ед",
+                "Выполнения заказа, ед%",
+                "Расхождение кол-во",
+                "Заказано руб",
+                "Принято руб",
+                "% выполнения заказа руб без НДС",
+                "Расхождение (БЕЗ НДС)"
+        };
+
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow2.createCell(i);
+            cell.setCellValue(headers[i]);
+
+            // Стиль для заголовков
+            CellStyle headerStyle = workbook.createCellStyle();
+            Font font = workbook.createFont();
+            font.setBold(true);
+            headerStyle.setFont(font);
+            cell.setCellStyle(headerStyle);
+        }
+
+        // Заполняем данные
+        int rowNum = 2; // Данные начинаются со строки 3
+        for (ReportRow row : reportRows) {
+            Row excelRow = sheet.createRow(rowNum++);
+
+            excelRow.createCell(0).setCellValue(row.getCounterpartyName());
+            excelRow.createCell(1).setCellValue(row.getMarketNumber()); // Номер заказа из маркета
+            excelRow.createCell(2).setCellValue(row.getPeriodOrderDelivery());
+            excelRow.createCell(3).setCellValue(row.getProductGroup());
+            excelRow.createCell(4).setCellValue(row.getProductName());
+            excelRow.createCell(5).setCellValue(row.getProductCode() != null ? row.getProductCode() : 0);
+            excelRow.createCell(6).setCellValue(row.getOrderedUnitsORL() != null ? row.getOrderedUnitsORL() : 0);
+            excelRow.createCell(7).setCellValue(row.getAcceptedUnits() != null ? row.getAcceptedUnits() : 0);
+            excelRow.createCell(8).setCellValue(row.getPrecentOrderFulfillment() != null ? row.getPrecentOrderFulfillment() : 0.0);
+            excelRow.createCell(9).setCellValue(row.getDiscrepancyQuantity() != null ? row.getDiscrepancyQuantity() : 0);
+            excelRow.createCell(10).setCellValue(row.getOrderedRUB() != null ? row.getOrderedRUB() : 0.0);
+            excelRow.createCell(11).setCellValue(row.getAcceptedRUB() != null ? row.getAcceptedRUB() : 0.0);
+            excelRow.createCell(12).setCellValue(row.getPrecentOrderCompletionNotNDS() != null ? row.getPrecentOrderCompletionNotNDS() : 0.0);
+            excelRow.createCell(13).setCellValue(row.getDiscrepancyNotNDS() != null ? row.getDiscrepancyNotNDS() : 0.0);
+        }
+
+        // Автоматическая настройка ширины столбцов
+        for (int i = 0; i < headers.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+        // Сохраняем файл
+        try (FileOutputStream fileOut = new FileOutputStream(filePath)) {
+            workbook.write(fileOut);
+        }
+
+        // Закрываем рабочую книгу
+        workbook.close();
+
+        System.out.println("Excel файл успешно создан: " + filePath);
+    }
 	
 	/**
 	 * Новый метод для создания файла 398 отчёта

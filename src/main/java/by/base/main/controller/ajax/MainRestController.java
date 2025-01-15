@@ -3793,7 +3793,7 @@ public class MainRestController {
 	 * Метод проверки наличия jwt токена. Должен находится перед каждём запросом в маркет. 
 	 * @return
 	 */
-	private void checkJWT(String url) {
+	public void checkJWT(String url) {
 		MarketDataForLoginDto dataDto = new MarketDataForLoginDto(loginMarket, passwordMarket, "101");
 //		MarketDataForLoginDtoTEST dataDto = new MarketDataForLoginDtoTEST("SpeedLogist", "12345678", 101);
 		MarketPacketDto packetDto = new MarketPacketDto("null", "GetJWT", serviceNumber, dataDto);
@@ -9750,7 +9750,7 @@ public class MainRestController {
 	 * @return
 	 */
 	@TimedExecution
-	private String postRequest(String url, String payload) {
+	public String postRequest(String url, String payload) {
         try {
             URL urlForPost = new URL(url);
             HttpURLConnection connection = (HttpURLConnection) urlForPost.openConnection();

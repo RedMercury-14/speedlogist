@@ -428,4 +428,11 @@ public class OrderServiceImpl implements OrderService {
 	public Map<Long, Order> getSpecialOrdersByListGoodId(List<Long> goodsIds) {
 		return orderDAO.getSpecialOrdersByListGoodId(goodsIds);
 	}
+
+	@Override
+	public Map<String, Order> getOrdersByListMarketNumber(List<String> marketNumber) {
+		return orderDAO.getOrdersByListMarketNumber(marketNumber);
+	}
+	
+	
 }

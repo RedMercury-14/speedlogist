@@ -7,7 +7,9 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -735,6 +737,68 @@ public class OrderDAOImpl implements OrderDAO{
 		Set<Order> trucks = theObject.getResultList().stream().collect(Collectors.toSet());
 		return trucks.stream().collect(Collectors.toList());
 	}
+	
+	private static final String queryGetOrdersByGoodId = "from Order o left join fetch o.orderLines ol where ol.goodsId =: goodsId ORDER BY o.dateDelivery DESC";
+	@Transactional
+	@Override
+	public List<Order> getOrdersByGoodId(Long goodsId) {
+
+	    Session currentSession = sessionFactory.getCurrentSession();
+	    Query<Order> theObject = currentSession.createQuery(queryGetOrdersByGoodId, Order.class);
+
+	    theObject.setParameter("goodsId", goodsId);
+	    Set<Order> trucks = theObject.getResultList().stream().collect(Collectors.toSet());
+	    return trucks.stream().collect(Collectors.toList());
+	}
+
+//	private static final String queryGetSpecialOrdersByListGoodId = "FROM Order o "
+//			+ "WHERE o.idOrder IN ("
+//			+ "    SELECT ol.order.idOrder"
+//			+ "    FROM OrderLine ol"
+//			+ "    WHERE ol.goodsId IN (:goodsIds)"
+//			+ ")"
+//			+ "ORDER BY o.dateDelivery DESC";
+	
+	private static final String queryGetSpecialOrdersByListGoodId = "from Order o LEFT JOIN FETCH o.orderLines ol "
+	        + "where ol.goodsId IN (:goodsIds)"
+	        + "ORDER BY o.dateDelivery DESC";
+
+	@Transactional
+	@Override
+	public Map<Long, Order> getSpecialOrdersByListGoodId(List<Long> goodsIds) {
+		  Session currentSession = sessionFactory.getCurrentSession();
+		  Map<Long, Order> resMap = new HashMap<Long, Order>();
+		    // Шаг 1: Получаем основной набор данных
+		    Query<Order> query = currentSession.createQuery(queryGetSpecialOrdersByListGoodId, Order.class);
+		    query.setParameterList("goodsIds", goodsIds);
+
+		    List<Order> orders = query.getResultList();		    
+		    
+		    orders.forEach(o-> System.out.println(o.getOrderLinesMap() + "  ---  " +o.getDateDelivery()));
+		    
+		    int i = 0;
+		    for (Order order : orders) {
+		    	if(i>goodsIds.size()-1) {
+		    		break;
+		    	}
+		    	if(order.getOrderLinesMap().containsKey(goodsIds.get(i))) {
+		    		if(!resMap.containsKey(goodsIds.get(i)) ) {
+						resMap.put(goodsIds.get(i), order);
+						i++;
+					}else {
+						continue;
+					}
+		    	}else{
+		    		continue;
+		    	}
+				
+			}
+		    resMap.forEach((k,v) -> System.err.println(k + ": " + v));
+
+		return null;
+	}
+	
+	
 }
 
 

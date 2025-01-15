@@ -3,6 +3,7 @@ package by.base.main.dao;
 import java.sql.Date;
 import java.sql.Time;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import by.base.main.model.*;
@@ -231,4 +232,23 @@ public interface OrderDAO {
 	 * @return
 	 */
 	List<Order> getOrderByFirstLoadSlotAndDateOrderOrl(Date dateStart, Date dateEnd, Date dateOrderOrl);
+	
+	/**
+	 * Возващает список ордеров по коду товара.
+	 * <br> <b>Не для фронта</b>
+	 * <br> <b>используется только join orderLines</b>
+	 * @author Ira
+	 * @param goodsId
+	 * @return
+	 */
+	List<Order> getOrdersByGoodId(Long goodsId);
+	
+	/**
+	 * Специальный метод выгрузки который выгружает Order который был последним поставленным в слоты (по dateDelivery)
+	 * <br> в который входит товар из List<Long> goodsIds.
+	 * <br> Возвращает <b>МАР где ключ - это код товара по которому проходил поиск</b>
+	 * @param goodsIds
+	 * @return
+	 */
+	Map<Long, Order> getSpecialOrdersByListGoodId(List<Long> goodsIds);
 }

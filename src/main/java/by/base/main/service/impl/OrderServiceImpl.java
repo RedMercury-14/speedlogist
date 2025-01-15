@@ -4,6 +4,7 @@ import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -416,5 +417,15 @@ public class OrderServiceImpl implements OrderService {
 	@Override
 	public List<Order> getOrderByFirstLoadSlotAndDateOrderOrl(Date dateStart, Date dateEnd, Date dateOrderOrl) {
 		return orderDAO.getOrderByFirstLoadSlotAndDateOrderOrl(dateStart, dateEnd, dateOrderOrl);
+	}
+
+	@Override
+	public List<Order> getOrdersByGoodId(Long goodsId) {
+		return orderDAO.getOrdersByGoodId(goodsId);
+	}
+
+	@Override
+	public Map<Long, Order> getSpecialOrdersByListGoodId(List<Long> goodsIds) {
+		return orderDAO.getSpecialOrdersByListGoodId(goodsIds);
 	}
 }

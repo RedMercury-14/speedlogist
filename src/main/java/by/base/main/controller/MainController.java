@@ -1802,7 +1802,7 @@ public class MainController {
 			@RequestParam(value = "dateOfIP", required = false) String dateOfIP,
 			@RequestParam(value = "directOfOOO", required = false) String directOfOOO,
 			@RequestParam(value = "docOfOOO", required = false) String docOfOOO)throws IOException, DocumentException {
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");		
 		User user = getThisUser();
 		List<Route> routes = new ArrayList<Route>();
 		

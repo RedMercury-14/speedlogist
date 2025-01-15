@@ -31,12 +31,14 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -323,125 +325,17 @@ public class MainRestController {
 	public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		Map<String, Object> responseMap = new HashMap<>();
 
-		System.out.println("Start --- sendSchedulesTOHasORL");
-		// Получаем текущую дату для имени файла
-		LocalDate currentTime = LocalDate.now();
-		String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-
-		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to.ORL");
-		List<String> emailsSupportDepartment = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to.supportDepartment");
-
-		Map<String, List<String>> draftLists = propertiesUtils.getListForDraftFolders(servletContext);
-
-		System.out.println(emailsORL);
-//      emails.addAll(emailsSupport);
-		String appPath = servletContext.getRealPath("/");
-
-
-
-		String fileName1200 = "1200 (----Холодный----).xlsm";
-		String fileName1100 = "1100 График прямой сухой.xlsm";
-		String fileNameSample = "График для шаблоново.xlsx";
-		String draftFolder = appPath + "resources/others/drafts/";
-
-		File draftFolderFile = new File(draftFolder);
-		if (draftFolderFile.exists()) {
-			deleteFolder(draftFolderFile);
-		}
-
-		draftFolderFile.mkdir();
-
-		try {
-			poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesByTOTypeWithTemp("холодный")),
-					appPath + "resources/others/" + fileName1200);
-			poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesByTOTypeWithTemp("сухой")),
-					appPath + "resources/others/" + fileName1100);
-			poiExcel.exportToExcelSampleListTO(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesByTOTypeWithTemp("холодный")),
-					appPath + "resources/others/" + fileNameSample);
-			poiExcel.exportToExcelDrafts(scheduleService.getSchedulesListTOOnlyActual(scheduleService.getSchedulesListTO()), draftFolder);
-
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.err.println("Ошибка формирование EXCEL");
-		}
-
-//      response.setHeader("content-disposition", "attachment;filename="+fileName+".xlsx");
-		List<File> files = new ArrayList<File>();
-		files.add(new File(appPath + "resources/others/" + fileName1200));
-		files.add(new File(appPath + "resources/others/" + fileName1100));
-		files.add(new File(appPath + "resources/others/" + fileNameSample));
-
-		File folder = new File(draftFolder);
-		List<File> draftFiles = new ArrayList<File>(); //для теста черновиков
-		Map <String, List<File>> draftFilesMap = new HashMap<>();
-
-		File[] drafts = folder.listFiles();
-
-		for (String key: draftLists.keySet()){
-			draftFilesMap.put(key, new ArrayList<>());
-		}
-
-		if (drafts != null) {
-			for (File file: drafts){
-				String fileName = file.getName();
-
-				for (String key: draftLists.keySet()){
-
-					for (String draftNumber: draftLists.get(key)){
-						String regEx = " " + draftNumber + ".";
-
-						if (fileName.contains(regEx)){
-							draftFilesMap.get(key).add(file);
-						}
-					}
-				}
-
-				if (fileName.contains("виртуальный")){
-					draftFilesMap.get("ORL").add(file);
-				}
-
-				draftFiles.add(file); //для теста черновиков
-			}
-
-		}
-
-		//files.add(new File(appPath + "resources/others/drafts"));
-
-		System.out.println(appPath + "resources/others/");
-
-		File zipFile;
-		File zipFileDrafts; //для теста черновиков
-		File zipFileDraftsListORL;
-		File zipFileDraftsListSupportDepartment;
-
-		List <File> filesZipORL = new ArrayList<File>();
-		List <File> filesZipSupportDepartment = new ArrayList<File>();
-
-
-		try {
-			zipFile = createZipFile(files, appPath + "resources/others/TO.zip");
-			zipFileDrafts = createZipFile(draftFiles, appPath + "resources/others/Шаблоны.zip"); //для теста черновиков
-
-			zipFileDraftsListORL = createZipFile(draftFilesMap.get("ORL"), appPath + "resources/others/ORL.zip");
-			zipFileDraftsListSupportDepartment = createZipFile(draftFilesMap.get("SupportDepartment"), appPath + "resources/others/SupportDepartment.zip");
-
-			filesZipORL.add(zipFile);
-			filesZipSupportDepartment.add(zipFile);
-
-			filesZipORL.add(zipFileDraftsListORL);
-			filesZipSupportDepartment.add(zipFileDraftsListSupportDepartment);
-
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-//		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO " + currentTimeString, "Автоматическая отправка графиков поставок на ТО\nВерсия с макросом выделений (Ctr+t)", filesZipORL, emailsORL);
-//		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO " + currentTimeString, "Автоматическая отправка графиков поставок на ТО\nВерсия с макросом выделений (Ctr+t)", filesZipSupportDepartment, emailsSupportDepartment);
-
+		List<Order> orders = orderService.getOrdersByGoodId(1773101L);
+		
+		orderService.getSpecialOrdersByListGoodId(Arrays.asList(1773101L, 871528L));
+		
+		
+		
 		System.out.println("Finish --- sendSchedulesHasTOORL");
 
 		responseMap.put("Done", "Done");
+		responseMap.put("size", orders.size());
+//		responseMap.put("orders", orders);
 		return responseMap;
 
 	}

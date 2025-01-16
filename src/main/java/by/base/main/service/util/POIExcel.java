@@ -2858,6 +2858,14 @@ public class POIExcel {
                 Integer code = (int) row.getCell(1).getNumericCellValue();
                 String nameProduct = row.getCell(2).getStringCellValue();
                 int quantity = (int) roundВouble(row.getCell(3).getNumericCellValue(), 0);
+                String codeContract; 
+                
+                if(row.getCell(1) != null) {
+                	Double cell = row.getCell(4).getNumericCellValue();
+                	codeContract = cell.intValue() + "";
+                }else {
+                	codeContract = null;
+                }
 
                 OrderProduct orderProduct = null;
                 if(orderMap.containsKey(code)) {
@@ -2881,6 +2889,7 @@ public class POIExcel {
 				}    
                 orderProduct.setNameProduct(nameProduct);
                 orderProduct.setCodeProduct(code);
+                orderProduct.setMarketContractType(codeContract);;
 
                 if(date != null) {
                 	Timestamp timestamp = Timestamp.valueOf(LocalDateTime.of(LocalDate.parse(date), LocalTime.now()));

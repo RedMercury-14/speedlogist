@@ -2382,13 +2382,7 @@ public class MainRestController {
 			e.printStackTrace();
 		}
 		
-		
-//		mapOrderProduct.entrySet().forEach(e-> System.out.println(e.getKey() + "   ---   " + e.getValue()));
-		
 		List<Product> products = productService.getAllProductList();
-
-
-
 		Map<Integer, Product> productsMap = products.stream().collect(Collectors.toMap(
 		        Product::getCodeProduct,
 		        product -> product,

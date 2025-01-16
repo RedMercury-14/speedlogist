@@ -55,6 +55,9 @@ public class OrderProduct {
     
     @Column(name = "quantity_in_pallet")
     private Integer quantityInPallet;
+    
+    @Column(name = "market_contract_type")
+    private String marketContractType;
 
     @ManyToOne
     @JoinColumn(name = "product_idproduct", nullable = false)
@@ -62,6 +65,14 @@ public class OrderProduct {
     private Product product;
     
     
+
+	public String getMarketContractType() {
+		return marketContractType;
+	}
+
+	public void setMarketContractType(String marketContractType) {
+		this.marketContractType = marketContractType;
+	}
 
 	public Integer getIdOrderProduct() {
 		return idOrderProduct;

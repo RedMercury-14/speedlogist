@@ -2860,7 +2860,7 @@ public class POIExcel {
                 int quantity = (int) roundВouble(row.getCell(3).getNumericCellValue(), 0);
                 String codeContract; 
                 
-                if(row.getCell(1) != null) {
+                if(row.getCell(4) != null) {
                 	Double cell = row.getCell(4).getNumericCellValue();
                 	codeContract = cell.intValue() + "";
                 }else {

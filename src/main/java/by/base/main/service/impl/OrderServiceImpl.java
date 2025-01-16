@@ -433,6 +433,11 @@ public class OrderServiceImpl implements OrderService {
 	public Map<String, Order> getOrdersByListMarketNumber(List<String> marketNumber) {
 		return orderDAO.getOrdersByListMarketNumber(marketNumber);
 	}
+
+	@Override
+	public List<Order> getOrderByDateOrderORLAndNumStock(Date dateOrderORL, Integer numStock) {
+		return orderDAO.getOrderByDateOrderORLAndNumStock(dateOrderORL, numStock);
+	}
 	
 	
 }

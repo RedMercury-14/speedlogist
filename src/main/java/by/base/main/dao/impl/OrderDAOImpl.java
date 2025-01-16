@@ -821,6 +821,29 @@ public class OrderDAOImpl implements OrderDAO{
 		}
 		return resMap;
 	}
+
+	
+	@Transactional
+	@Override
+	public List<Order> getOrderByDateOrderORLAndNumStock(Date dateOrderORL, Integer numStock) {
+		final String querygetOrderByDateOrderORLAndNumStock = "from Order o "
+				+ "LEFT JOIN FETCH o.orderLines ol "
+				+ "LEFT JOIN FETCH o.routes r "
+				+ "LEFT JOIN FETCH r.roteHasShop rhs "
+				+ "LEFT JOIN FETCH r.user ru "
+				+ "LEFT JOIN FETCH r.truck rt "
+				+ "LEFT JOIN FETCH r.driver rd "
+				+ "LEFT JOIN FETCH r.truck t "
+				+ "LEFT JOIN FETCH r.roteHasShop rhs "
+				+ "LEFT JOIN FETCH o.addresses a "
+				+ "where o.status !=10 AND o.status !=40 AND o.idRamp LIKE '%"+numStock+"%' AND o.dateOrderOrl =:dateOrderORL";
+
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Order> theObject = currentSession.createQuery(querygetOrderByDateOrderORLAndNumStock, Order.class);
+		theObject.setParameter("dateOrderORL", dateOrderORL, TemporalType.TIMESTAMP);
+		Set<Order> trucks = theObject.getResultList().stream().collect(Collectors.toSet());
+		return new ArrayList<Order>(trucks);
+	}
 	
 	
 }

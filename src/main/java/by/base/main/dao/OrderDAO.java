@@ -258,4 +258,12 @@ public interface OrderDAO {
 	 * @return
 	 */
 	Map<String, Order> getOrdersByListMarketNumber(List<String> marketNumber);
+	
+	/**
+	 * Метод отдаёт ордеты по дате заказа ОРЛ и складу
+	 * @param dateOrderORL
+	 * @param numStock
+	 * @return
+	 */
+	List<Order> getOrderByDateOrderORLAndNumStock(Date dateOrderORL, Integer numStock);
 }

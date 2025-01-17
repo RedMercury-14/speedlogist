@@ -198,10 +198,19 @@ public class ScheduledTask {
 			int summaryQuantityOtherStocks = orderProduct.getQuantity() == null ? 0 : orderProduct.getQuantity();
 			int summaryQuantityOther1700 = orderProduct.getQuantity1700() == null ? 0 : orderProduct.getQuantity1700();
 			int summaryQuantityOther1800 = orderProduct.getQuantity1800() == null ? 0 : orderProduct.getQuantity1800();
+			List<Order> ordersForInfo = orderService.getOrdersByGoodId(orderProduct.getCodeProduct().longValue()); //.stream().filter(o -> !o.getOrderLines().isEmpty()).collect(Collectors.toList());
+
+			String counterpartyName = "";
+			String category = "";
+
+			if (!ordersForInfo.isEmpty()){
+				counterpartyName = ordersForInfo.get(0).getCounterparty();
+				category = ordersForInfo.get(0).getOrderLines().stream().findFirst().get().getGoodsGroupName();
+			}
 
 			if (quantityFromOrders < summaryQuantityOtherStocks || quantityFromOrders1700 < summaryQuantityOther1700 || quantityFromOrders1800 < summaryQuantityOther1800) {
 				isSheetEmpty = false;
-				poiExcel.fillExcelAboutNeeds(orderProduct, quantityFromOrders, quantityFromOrders1700, quantityFromOrders1800, sheet, rowNum);
+				poiExcel.fillExcelAboutNeeds(orderProduct, quantityFromOrders, quantityFromOrders1700, quantityFromOrders1800, counterpartyName, category,  sheet, rowNum);
 				rowNum++;
 			}
 
@@ -278,7 +287,7 @@ public class ScheduledTask {
 			}
 
 			String str = "По данным потребностям не были созданы слоты в установленное время. " +
-					"Процент не поставленных заказов на " + currentTimeString + " относительно заказ ОРЛ - " + result +"%." +
+					"Процент не поставленных заказов на " + currentTimeString + " относительно заказа ОРЛ - " + result +"%." +
 					"\nПроцент для 1700 склада - " + percent1700str + "%." +
 					"\nПроцент для 1800 склада - " + percent1800str + "%." +
 					"\nПроцент для остальных складов - " + percentOthersStr + "%.";

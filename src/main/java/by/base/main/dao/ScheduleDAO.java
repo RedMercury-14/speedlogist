@@ -139,4 +139,12 @@ public interface ScheduleDAO {
 	 */
 	public List<Schedule> getSchedulesListTOContractOnlyTemp(Long num);
 
+	/**
+	 * <br>Возвращает список графиков по номеру контракта и номеру склада
+	 * @param num
+	 * @param shock
+	 * @return
+	 * @author Ira
+	 */
+	List<Schedule> getAllSchedulesByNumContractAndNumStock(Long num, Integer shock);
 }

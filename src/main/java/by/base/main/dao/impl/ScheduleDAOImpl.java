@@ -389,4 +389,17 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 		return new ArrayList<Schedule>(schedules);
 	}
 
+	private static final String queryAllGetObjByNumContractAndNumStock = "from Schedule where counterpartyContractCode=:counterpartyContractCode AND numStock=:numStock";
+	@Transactional
+	@Override
+	public List<Schedule> getAllSchedulesByNumContractAndNumStock(Long num, Integer shock) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Schedule> theObject = currentSession.createQuery(queryAllGetObjByNumContractAndNumStock, Schedule.class);
+		theObject.setParameter("counterpartyContractCode", num);
+		theObject.setParameter("numStock", shock);
+		List<Schedule> schedules = theObject.getResultList();
+
+		return schedules;
+	}
+
 }

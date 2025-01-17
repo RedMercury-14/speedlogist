@@ -47,7 +47,9 @@ public class OrderProductDAOImpl implements OrderProductDAO{
 	}
 
 	
-	private static final String queryGetObjByCode = "from OrderProduct where idOrderProduct=:idOrderProduct";
+//	private static final String queryGetObjByCode = "from OrderProduct where idOrderProduct=:idOrderProduct";
+private static final String queryGetObjByCode = "from OrderProduct o left join fetch o.orderCalculation where o.idOrderProduct=:idOrderProduct";
+
 	@Transactional
 	@Override
 	public OrderProduct getOrderProductById(Integer id) {

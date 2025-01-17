@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
+import java.time.temporal.WeekFields;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -56,6 +57,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.PropertyTemplate;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFCreationHelper;
 import org.apache.poi.xssf.usermodel.XSSFRow;
@@ -523,7 +525,7 @@ public class POIExcel {
 	 * @param today
 	 * @return
 	 */
-	private List<LocalDate> checkSchedule(Schedule schedule, LocalDate today){
+	public List<LocalDate> checkSchedule(Schedule schedule, LocalDate today){
 
 		List<LocalDate> supplyDates = new ArrayList<>();
 
@@ -626,7 +628,12 @@ public class POIExcel {
 		List<LocalDate> supplyDates = new ArrayList<>();
 
 		String orderFormation = schedule.getOrderFormationSchedule();
-		int weekNumberParity = day.get(ChronoField.ALIGNED_WEEK_OF_YEAR)%2;
+		int weekNumberParity;
+		if (schedule.getIsDayToDay()){
+			weekNumberParity = day.get(WeekFields.of(Locale.getDefault()).weekOfYear())%2;
+		} else {
+			weekNumberParity = day.plusDays(1).get(WeekFields.of(Locale.getDefault()).weekOfYear())%2;
+		}
 
         if ((orderFormation == null)
 				|| (orderFormation.isEmpty())
@@ -640,10 +647,6 @@ public class POIExcel {
 				List<Integer> daysOfSupplies = new ArrayList<>();
 
 				int addWeeks = 0;
-
-				if (schedule.getCounterpartyContractCode() == 1837){
-					int d = 0;
-				}
 
 				if (resultOfTheDay.contains("з") || resultOfTheDay.contains("н0")){
 					if (schedule.getMonday() != null && schedule.getMonday().contains(forSearch)){
@@ -675,10 +678,11 @@ public class POIExcel {
 						addWeeks = checkN(schedule.getSunday(), resultOfTheDay, forSearch);
 					}
 
+
 					for (Integer daysOfSupply : daysOfSupplies) {
 
-					    if (dayNumber > daysOfSupply) {
-					       if (addWeeks != 0) {
+					    if (dayNumber > daysOfSupply ) {
+					       if (addWeeks != 0 && dayNumber != 8) {
 					          addWeeks -= 7;
 					       }
 					       supplyDate = day.plusDays(7 - dayNumber + daysOfSupply + addWeeks);
@@ -696,7 +700,7 @@ public class POIExcel {
 
 	}
 
-	private int checkN (String daySearch, String resultOfTheDay, String forSearch) {
+	public int checkN (String daySearch, String resultOfTheDay, String forSearch) {
 		int week = 0;
 
 		if (daySearch.contains("н10")) {
@@ -763,11 +767,79 @@ public class POIExcel {
 		}
 		return rowNum;
 	}
-    
-    
-    /*
-     * КОНЕЦ Ира
-     */
+
+	/**
+	 * @param contractsWithoutSchedules
+	 * @param goodsWithoutContracts
+	 * @param fullFilePath
+	 * @throws IOException
+	 * <br>Метод создаёт эксель с контрактами и товарами, для которых не удалось создать расчёт<br>
+	 * @author Ira
+	 */
+	public boolean fillTableForProblemGoods (Map<List<String>, Double> contractsWithoutSchedules, List<Long> goodsWithoutContracts, String fullFilePath) throws IOException {
+
+		String[] noSchedulesHeaders = {
+				"Код контракта", "Количество паллет", "Склад", "Комментарий"
+		};
+
+		String[] noContractsHeaders = {
+				"Код товара", "Комментарий"
+		};
+
+		Workbook workbook = new SXSSFWorkbook();
+		Sheet noSchedulesSheet = workbook.createSheet("Нет графиков");
+		Sheet noContractsSheet = workbook.createSheet("Нет кодов контракта");
+
+		boolean isBookEmpty = true;
+
+		Row noSchedulesRow = noSchedulesSheet.createRow(0);
+		for (int i = 0; i < noSchedulesHeaders.length; i++) {
+			Cell cell = noSchedulesRow.createCell(i);
+			cell.setCellValue(noSchedulesHeaders[i]);
+		}
+
+		Row noContractsRow = noContractsSheet.createRow(0);
+		for (int i = 0; i < noContractsHeaders.length; i++) {
+			Cell cell = noContractsRow.createCell(i);
+			cell.setCellValue(noContractsHeaders[i]);
+		}
+
+		int noSchedulesRowNum = 1;
+		for (Map.Entry<List<String>, Double> object : contractsWithoutSchedules.entrySet()) {
+			isBookEmpty = false;
+			Row row = noSchedulesSheet.createRow(noSchedulesRowNum++);
+
+			row.createCell(0).setCellValue(object.getKey().get(0));
+			row.createCell(1).setCellValue(object.getValue());
+			row.createCell(2).setCellValue(object.getKey().get(1));
+			row.createCell(3).setCellValue("Графики не найдены или некорректны");
+
+
+		}
+
+		int noContractsRowNum = 1;
+		for (Long goodId: goodsWithoutContracts) {
+			isBookEmpty = false;
+
+			Row row = noContractsSheet.createRow(noContractsRowNum++);
+			row.createCell(0).setCellValue(goodId);
+			row.createCell(1).setCellValue("Нет заказов для данного товара");
+
+		}
+
+		if(!isBookEmpty) {
+			try (FileOutputStream fileOut = new FileOutputStream(fullFilePath)) {
+				workbook.write(fileOut);
+			}// Сохраняем файл
+            catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+		workbook.close();
+
+		return !isBookEmpty;
+	}
 
     // Оригинальный метод
     /**
@@ -2631,64 +2703,71 @@ public class POIExcel {
 	 * Метод считывает ексель с потребностью и отдаёт мапу, где ключ - это код товара
 	 * Устарел. Использовать 
 	 */
-    public Map<Integer, OrderProduct> loadNeedExcel2(File file, String date) throws ServiceException, InvalidFormatException, IOException, ParseException {
-		
+	public Map<Integer, OrderProduct> loadNeedExcel2(File file, String date) throws ServiceException, InvalidFormatException, IOException, ParseException {
 		System.out.println("КОл-во колонок = " + getColumnCount(file,2));
 		Map<Integer, OrderProduct> orderMap = new HashMap<>();
-        XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
-        XSSFSheet sheet = wb.getSheetAt(0);
-        //по сути 
-        for (int i = 3; i <= sheet.getLastRowNum(); i++) { // Начинаем с 3, чтобы пропустить заголовок
-            Row row = sheet.getRow(i);
+		XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
+		XSSFSheet sheet = wb.getSheetAt(0);
+		//по сути
+		for (int i = 3; i <= sheet.getLastRowNum(); i++) { // Начинаем с 3, чтобы пропустить заголовок
+			Row row = sheet.getRow(i);
 
-            if (row != null) {
-            	Integer numStock = (int) row.getCell(0).getNumericCellValue();
-                Integer code = (int) row.getCell(1).getNumericCellValue();
-                String nameProduct = row.getCell(2).getStringCellValue();
-                int quantity = (int) roundВouble(row.getCell(3).getNumericCellValue(), 0);
+			if (row != null) {
+				Integer numStock = (int) row.getCell(0).getNumericCellValue();
+				Integer code = (int) row.getCell(1).getNumericCellValue();
+				String nameProduct = row.getCell(2).getStringCellValue();
+				int quantity = (int) roundВouble(row.getCell(3).getNumericCellValue(), 0);
+				String codeContract;
 
-                OrderProduct orderProduct = null;
-                if(orderMap.containsKey(code)) {
-                	orderProduct = orderMap.get(code);
-                }else {
-                	orderProduct = new OrderProduct();
-                }
-                
-                switch (numStock) {
-				case 1700:
-					orderProduct.setQuantity1700(quantity);
-					break;
-					
-				case 1800:
-					orderProduct.setQuantity1800(quantity);
-					break;
+				if(row.getCell(4) != null) {
+					Double cell = row.getCell(4).getNumericCellValue();
+					codeContract = cell.intValue() + "";
+				}else {
+					codeContract = null;
+				}
 
-				default:
-					orderProduct.setQuantity(quantity);
-					break;
-				}    
-                orderProduct.setNameProduct(nameProduct);
-                orderProduct.setCodeProduct(code);
+				OrderProduct orderProduct = null;
+				if(orderMap.containsKey(code)) {
+					orderProduct = orderMap.get(code);
+				}else {
+					orderProduct = new OrderProduct();
+				}
 
-                if(date != null) {
-                	Timestamp timestamp = Timestamp.valueOf(LocalDateTime.of(LocalDate.parse(date), LocalTime.now()));
-                	orderProduct.setDateCreate(timestamp);
-                }else {
-                    orderProduct.setDateCreate(new Timestamp(System.currentTimeMillis()));
+				switch (numStock) {
+					case 1700:
+						orderProduct.setQuantity1700(quantity);
+						break;
+					case 1800:
+						orderProduct.setQuantity1800(quantity);
+						break;
+
+					default:
+						orderProduct.setQuantity(quantity);
+						break;
+				}
+				orderProduct.setNameProduct(nameProduct);
+				orderProduct.setCodeProduct(code);
+				orderProduct.setMarketContractType(codeContract);
+
+				if(date != null) {
+					Timestamp timestamp = Timestamp.valueOf(LocalDateTime.of(LocalDate.parse(date), LocalTime.now()));
+					orderProduct.setDateCreate(timestamp);
+				}else {
+					orderProduct.setDateCreate(new Timestamp(System.currentTimeMillis()));
 //                  orderProduct.setDateCreate(Timestamp.valueOf(LocalDateTime.now()));
-                }
+				}
 
 
-                // Привязываем код как ключ и объект OrderProduct как значение
-                orderMap.put(code, orderProduct);
-            }
-        }
+				// Привязываем код как ключ и объект OrderProduct как значение
+				orderMap.put(code, orderProduct);
+			}
+		}
 
-        wb.close();
-        
-        
-        return orderMap;
-    }
+		wb.close();
+
+
+		return orderMap;
+	}
 	
 	/**
 	 * Возвращает кол-во колонок в ексель файле
@@ -4321,7 +4400,7 @@ public class POIExcel {
 	 * @return
 	 * @author Ira
 	 */
-	public void fillExcelAboutNeeds(OrderProduct product, double quantityFromOrders, double quantityFromOrders1700, double quantityFromOrders1800, Sheet sheet, int rowNum) {
+	public void fillExcelAboutNeeds(OrderProduct product, double quantityFromOrders, double quantityFromOrders1700, double quantityFromOrders1800, String counterparty, String category, Sheet sheet, int rowNum) {
 
 		Row row = sheet.createRow(rowNum);
 
@@ -4383,6 +4462,8 @@ public class POIExcel {
 
 		row.createCell(8).setCellValue(maxQuantity1700);
 		row.createCell(9).setCellValue(maxQuantity1800);
+		row.createCell(10).setCellValue(counterparty);
+		row.createCell(11).setCellValue(category);
 
 	}
 

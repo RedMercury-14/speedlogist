@@ -2,6 +2,7 @@ package by.base.main.service;
 
 import java.sql.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import by.base.main.model.*;
@@ -240,4 +241,32 @@ public interface OrderService {
 	 * @return
 	 */
 	List<Order> getOrderByFirstLoadSlotAndDateOrderOrl(Date dateStart, Date dateEnd, Date dateOrderOrl);
+
+	/**
+	 * @param goodsId
+	 * @return
+	 * <br>Возвращает последний Order по номеру товара</br>
+	 * @author Ira
+	 */
+	List<Order> getLastOrderByGoodId(Long goodsId);
+
+	/**
+	 * @param goodsId
+	 * @return
+	 * <br>Возвращает список Order по номеру товара</br>
+	 * @author Ira
+	 */
+	List<Order> getOrdersByGoodId(Long goodsId);
+
+	/**
+	 * @param goodsId
+	 * @return
+	 * <br>Возвращает дату последней поставки по номеру товара</br>
+	 * @author Ira
+	 */
+	java.util.Date getLastTime(Long goodsId);
+
+	List<Order> getOrderProductNotJOIN(Long goodsIds);
+
+	List<Order> getSpecialOrdersByListGoodId(List<Long> goodsIds);
 }

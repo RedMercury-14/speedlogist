@@ -407,6 +407,19 @@ public class MainController {
 	public String getDeliverySchedulePageForORL(Model model, HttpServletRequest request) {
 		return "deliverySchedule";
 	}
+
+	@GetMapping("/main/orl/calculated")
+	public String getCalculated(Model model, HttpServletRequest request) {
+		return "orlCalculated";
+	}
+	@GetMapping("/main/procurement/calculated")
+	public String getProcurementCalculated(Model model, HttpServletRequest request) {
+		return "orlCalculated";
+	}
+	@GetMapping("/main/orl/report/398")
+	public String getReport398(Model model, HttpServletRequest request) {
+		return "orlReport398";
+	}
 	
 	@GetMapping("/main/slots/delivery-schedule")
 	public String getDeliverySchedulePage(Model model, HttpServletRequest request) {

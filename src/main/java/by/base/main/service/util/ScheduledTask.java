@@ -298,7 +298,7 @@ public class ScheduledTask {
 //			System.out.println(appPath + "resources/others/" + fileName);
 
 			List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.problemsWithOrders");
-        mailService.sendEmailWithFilesToUsers(servletContext, "Незакрытые потребности " + currentTimeDayBeforeString, str, files, emails);
+			mailService.sendEmailWithFilesToUsers(servletContext, "Незакрытые потребности " + currentTimeDayBeforeString, str, files, emails);
 
 		}
     }

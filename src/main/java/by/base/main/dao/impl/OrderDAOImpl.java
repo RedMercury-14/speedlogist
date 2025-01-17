@@ -797,6 +797,53 @@ public class OrderDAOImpl implements OrderDAO{
 
 		return null;
 	}
+
+	private static final String queryGetOrdersByListMarketNumber = "from Order o LEFT JOIN FETCH o.orderLines ol "
+	        + "LEFT JOIN FETCH o.routes r "
+	        + "LEFT JOIN FETCH r.roteHasShop rhs "
+	        + "LEFT JOIN FETCH r.user ru "
+	        + "LEFT JOIN FETCH r.truck rt "
+	        + "LEFT JOIN FETCH r.driver rd "
+	        + "LEFT JOIN FETCH r.truck t "
+	        + "LEFT JOIN FETCH r.roteHasShop rhs "
+	        + "LEFT JOIN FETCH o.addresses a "
+	        + "where o.marketNumber IN (:marketNumber)";
+	@Transactional
+	@Override
+	public Map<String, Order> getOrdersByListMarketNumber(List<String> marketNumber) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Map<String, Order> resMap = new HashMap<String, Order>();
+	    Query<Order> query = currentSession.createQuery(queryGetOrdersByListMarketNumber, Order.class);
+	    query.setParameterList("marketNumber", marketNumber); // Указываем список идентификаторов продуктов
+	    Set<Order> orders = query.getResultList().stream().collect(Collectors.toSet());
+	    for (Order order : orders) {
+	    	resMap.put(order.getMarketNumber(), order);
+		}
+		return resMap;
+	}
+
+	
+	@Transactional
+	@Override
+	public List<Order> getOrderByDateOrderORLAndNumStock(Date dateOrderORL, Integer numStock) {
+		final String querygetOrderByDateOrderORLAndNumStock = "from Order o "
+				+ "LEFT JOIN FETCH o.orderLines ol "
+				+ "LEFT JOIN FETCH o.routes r "
+				+ "LEFT JOIN FETCH r.roteHasShop rhs "
+				+ "LEFT JOIN FETCH r.user ru "
+				+ "LEFT JOIN FETCH r.truck rt "
+				+ "LEFT JOIN FETCH r.driver rd "
+				+ "LEFT JOIN FETCH r.truck t "
+				+ "LEFT JOIN FETCH r.roteHasShop rhs "
+				+ "LEFT JOIN FETCH o.addresses a "
+				+ "where o.status !=10 AND o.status !=40 AND o.idRamp LIKE '%"+numStock+"%' AND o.dateOrderOrl =:dateOrderORL";
+
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Order> theObject = currentSession.createQuery(querygetOrderByDateOrderORLAndNumStock, Order.class);
+		theObject.setParameter("dateOrderORL", dateOrderORL, TemporalType.TIMESTAMP);
+		Set<Order> trucks = theObject.getResultList().stream().collect(Collectors.toSet());
+		return new ArrayList<Order>(trucks);
+	}
 	
 	
 }

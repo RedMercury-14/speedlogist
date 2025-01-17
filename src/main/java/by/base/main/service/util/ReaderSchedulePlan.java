@@ -613,8 +613,8 @@ public class ReaderSchedulePlan {
 		 
 		 if(checkHasLog(dateRange, order)) {
 			 //если входит в лог плече, то находим такие же заказы с такими же SKU
-//			 List<Order> orders = orderService.getOrderByTimeDelivery(dateRange.start, dateRange.end); // это сразу по всем складам
-			 List<Order> orders = orderService.getOrderByTimeDeliveryAndNumStock(dateNow, dateNow, factStock); // это по отдельному складу
+//			 List<Order> orders = orderService.getOrderByTimeDeliveryAndNumStock(dateNow, dateNow, factStock); // это по отдельному складу
+			 List<Order> orders = orderService.getOrderByDateOrderORLAndNumStock(order.getDateOrderOrl(), factStock); // новый метод. Теперь я беду ордеры тупо за указанную дату поставок
 			 if(!orders.contains(order)) {
 				 orders.add(order);
 			 }
@@ -647,28 +647,6 @@ public class ReaderSchedulePlan {
 						int zaq = quantityOrderAll.intValue(); // СУММА заказов по периоду
 						int singleZaq = orderLine.getQuantityOrder().intValue(); //Заказ по ордеру (не суммированный)
 						int orlZaq;
-//						if(factStock == 1700) {
-//							//тут происходит построчная оценка заказанного товара и принятие решения							 
-//							
-//							if(quantity.get(0).getQuantity1700() == null) {
-//								orlZaq = 0;
-//							}else {
-//								orlZaq = quantity.get(0).getQuantity1700(); // аказ от ОРЛ
-//							}
-//						}else if(factStock == 1800) {
-//							//тут происходит построчная оценка заказанного товара и принятие решения
-//							if(quantity.get(0).getQuantity1800() == null) {
-//								orlZaq = 0;
-//							}else {
-//								orlZaq = quantity.get(0).getQuantity1800(); // аказ от ОРЛ
-//							}							
-//						}else {
-//							if(quantity.get(0).getQuantity() == null) {
-//								orlZaq = 0;
-//							}else {
-//								orlZaq = quantity.get(0).getQuantity(); // аказ от ОРЛ
-//							}
-//						}
 						switch (factStock) {
 					    case 1700:
 					        orlZaq = quantity.get(0).getQuantity1700() != null ? quantity.get(0).getQuantity1700() : 0;

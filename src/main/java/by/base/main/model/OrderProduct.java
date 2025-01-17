@@ -51,6 +51,9 @@ public class OrderProduct {
     
     @Column(name = "quantity_in_pallet")
     private Integer quantityInPallet;
+    
+    @Column(name = "market_contract_type")
+    private String marketContractType;
 
 	@Column(name = "market_contract_type")
 	private String marketContractType;
@@ -59,6 +62,16 @@ public class OrderProduct {
     @JoinColumn(name = "product_idproduct", nullable = false)
     @JsonBackReference
     private Product product;
+    
+    
+
+	public String getMarketContractType() {
+		return marketContractType;
+	}
+
+	public void setMarketContractType(String marketContractType) {
+		this.marketContractType = marketContractType;
+	}
 
 	@ManyToOne (cascade= {CascadeType.MERGE,
 			CascadeType.PERSIST})

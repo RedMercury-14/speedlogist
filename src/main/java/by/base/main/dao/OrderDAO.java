@@ -10,8 +10,6 @@ import java.util.Set;
 import by.base.main.model.*;
 import com.dto.OrderDTO;
 
-import javax.transaction.Transactional;
-
 public interface OrderDAO {
 	
 	Order getOrderById(Integer id);
@@ -235,6 +233,21 @@ public interface OrderDAO {
 	 * @return
 	 */
 	List<Order> getOrderByFirstLoadSlotAndDateOrderOrl(Date dateStart, Date dateEnd, Date dateOrderOrl);
+
+	/**
+	 * Возвращает список Order со всеми связями по списку номеров контрактов
+	 * @param marketNumber
+	 * @return
+	 */
+	Map<String, Order> getOrdersByListMarketNumber(List<String> marketNumber);
+
+	/**
+	 * Метод отдаёт ордеты по дате заказа ОРЛ и складу
+	 * @param dateOrderORL
+	 * @param numStock
+	 * @return
+	 */
+	List<Order> getOrderByDateOrderORLAndNumStock(Date dateOrderORL, Integer numStock);
 
 	/**
 	 * @param goodsId

@@ -7,11 +7,15 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.poi.ss.usermodel.Row;
@@ -37,6 +41,7 @@ import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfGState;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfPageEventHelper;
 import com.itextpdf.text.pdf.PdfReader;
 import com.itextpdf.text.pdf.PdfStamper;
 import com.itextpdf.text.pdf.PdfWriter;
@@ -58,6 +63,31 @@ public class PDFWriter {
 	
 	@Autowired
 	private ActService actService;
+	
+	 // Фиксированный ключ (16 байт для AES-128)
+    private static final String FIXED_KEY = "9234367890127456"; // Длина ключа должна быть ровно 16 символов для AES-128
+
+    // Получение SecretKey из фиксированного ключа
+    private static SecretKey getKey() {
+        return new SecretKeySpec(FIXED_KEY.getBytes(), "AES");
+    }
+
+    // Шифрование текста
+    public static String encrypt(String text, SecretKey secretKey) throws Exception {
+        Cipher cipher = Cipher.getInstance("AES");
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+        byte[] encryptedBytes = cipher.doFinal(text.getBytes());
+        return Base64.getEncoder().encodeToString(encryptedBytes);
+    }
+
+    // Дешифрование текста
+    public static String decrypt(String encryptedText, SecretKey secretKey) throws Exception {
+        Cipher cipher = Cipher.getInstance("AES");
+        cipher.init(Cipher.DECRYPT_MODE, secretKey);
+        byte[] decodedBytes = Base64.getDecoder().decode(encryptedText);
+        byte[] decryptedBytes = cipher.doFinal(decodedBytes);
+        return new String(decryptedBytes);
+    }
 	
 	public int getProposal(HttpServletRequest request, Route route, User user) throws FileNotFoundException, DocumentException {
 	    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
@@ -281,7 +311,12 @@ public class PDFWriter {
 	 * @throws FileNotFoundException
 	 */
 	public int getActOfRoute(List<Route> routes, HttpServletRequest request, boolean isNDS, String dateContract,
-			String numContractTarget, String sheffName, String city, String requisitesCarrier, String dateOfAct, int numPage) throws DocumentException, FileNotFoundException {
+			String numContractTarget, String sheffName, String city, String requisitesCarrier, String dateOfAct, int numPage, 
+			String documentType,
+			String numOfIP,
+			String dateOfIP,
+			String directOfOOO,
+			String docOfOOO) throws DocumentException, FileNotFoundException {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 		DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
 		//загружаем шрифты
@@ -298,7 +333,11 @@ public class PDFWriter {
 	        document.setPageSize(PageSize.A4.rotate()); // поворачиваем на альбомную ориентацию		         
 	        
 	        String fileName = routes.get(0).getUser().getCompanyName();
-	        PdfWriter pdfWriter = PdfWriter.getInstance(document, new FileOutputStream(path+"resources/others/"+fileName+".pdf"));		        
+	        PdfWriter pdfWriter = PdfWriter.getInstance(document, new FileOutputStream(path+"resources/others/"+fileName+".pdf"));
+	        
+	     // Устанавливаем обработчик нижнего колонтитула
+	        pdfWriter.setPageEvent(new FooterEvent(fontForRequisitesBolt));
+	        
 	        document.open();
 	        
 	        //формируем текс шапки
@@ -326,12 +365,29 @@ public class PDFWriter {
 	        p3.setSpacingAfter(10f);
 	        document.add(p3);
 	        
-	        Paragraph p4 = new Paragraph("       Мы, нижеподписавшиеся: представитель Перевозчика "
-	        		+ routes.get(0).getUser().getCompanyName()
-	        		+ ", в лице директора " + sheffName
-	        		+ " действующего на основании Устава одной стороны, и представитель Заказчика  ЗАО «Доброном» в лице заместителя генерального директора по логистике Якубова Евгения Владимировича, действующего на основании доверенности № 8 от 20.12.2023 года, с другой стороны, составили настоящий акт о том, что услуги, оказанные на основании договора перевозки №"
-	        		+ numContractTarget + " от " + dateContract
-	        		+ " выполнены в полном объеме и стороны претензий друг к другу не имеют", fontMainText);
+	        String textMain;
+	        if(documentType.equals("свидетельства")) {
+	        	textMain = "       Мы, нижеподписавшиеся: Исполнитель " 
+        		+ routes.get(0).getUser().getCompanyName()
+        		+ ", в лице " + sheffName
+        		+ " действующего на основании"
+        		+" Свидетельства о государственной регистрации индивидуального предпринимателя №" + numOfIP + " от "+dateOfIP
+        		+", c одной стороны, и представитель Заказчика  ЗАО «Доброном» в лице заместителя генерального директора по логистике Якубова Евгения Владимировича, действующего на основании доверенности № 8 от 20.12.2024 года, с другой стороны, составили настоящий акт о том, что услуги, оказанные на основании договора перевозки №"
+        		+ numContractTarget + " от " + dateContract
+        		+ " выполнены в полном объеме и стороны претензий друг к другу не имеют";
+	        }else {
+	        	textMain = "       Мы, нижеподписавшиеся: Исполнитель " 
+	            		+ routes.get(0).getUser().getCompanyName()
+	            		+ ", в лице " + directOfOOO
+	            		+ " действующего на основании "
+	            		+ docOfOOO + ", c"
+	            		+" одной стороны, и представитель Заказчика  ЗАО «Доброном» в лице заместителя генерального директора по логистике Якубова Евгения Владимировича, действующего на основании доверенности № 8 от 20.12.2024 года, с другой стороны, составили настоящий акт о том, что услуги, оказанные на основании договора перевозки №"
+	            		+ numContractTarget + " от " + dateContract
+	            		+ " выполнены в полном объеме и стороны претензий друг к другу не имеют";
+	        }
+	        
+	        
+	        Paragraph p4 = new Paragraph(textMain, fontMainText);
 	        p4.setSpacingAfter(10f);
 	        document.add(p4);
 	        
@@ -542,12 +598,28 @@ public class PDFWriter {
 			        p3.setSpacingAfter(10f);
 			        document.add(p3);
 			        
-			        Paragraph p4 = new Paragraph("       Мы, нижеподписавшиеся: представитель Перевозчика "
-			        		+ routes.get(0).getUser().getCompanyName()
-			        		+ ", в лице директора " + sheffName
-			        		+ " действующего на основании Устава одной стороны, и представитель Заказчика  ЗАО «Доброном» в лице заместителя генерального директора по логистике Якубова Евгения Владимировича, действующего на основании доверенности № 8 от 20.12.2023 года, с другой стороны, составили настоящий акт о том, что услуги, оказанные на основании договора перевозки №"
-			        		+ numContractTarget + " от " + dateContract
-			        		+ " выполнены в полном объеме и стороны претензий друг к другу не имеют", fontMainText);
+			        String textMain;
+			        if(documentType.equals("свидетельства")) {
+			        	textMain = "       Мы, нижеподписавшиеся: Исполнитель " 
+		        		+ routes.get(0).getUser().getCompanyName()
+		        		+ ", в лице " + sheffName
+		        		+ " действующего на основании"
+		        		+" Свидетельства о государственной регистрации индивидуального предпринимателя №" + numOfIP + " от "+dateOfIP
+		        		+", c одной стороны, и представитель Заказчика  ЗАО «Доброном» в лице заместителя генерального директора по логистике Якубова Евгения Владимировича, действующего на основании доверенности № 8 от 20.12.2024 года, с другой стороны, составили настоящий акт о том, что услуги, оказанные на основании договора перевозки №"
+		        		+ numContractTarget + " от " + dateContract
+		        		+ " выполнены в полном объеме и стороны претензий друг к другу не имеют";
+			        }else {
+			        	textMain = "       Мы, нижеподписавшиеся: Исполнитель " 
+			            		+ routes.get(0).getUser().getCompanyName()
+			            		+ ", в лице " + directOfOOO
+			            		+ " действующего на основании "
+			            		+ docOfOOO + ", c"
+			            		+" одной стороны, и представитель Заказчика  ЗАО «Доброном» в лице заместителя генерального директора по логистике Якубова Евгения Владимировича, действующего на основании доверенности № 8 от 20.12.2024 года, с другой стороны, составили настоящий акт о том, что услуги, оказанные на основании договора перевозки №"
+			            		+ numContractTarget + " от " + dateContract
+			            		+ " выполнены в полном объеме и стороны претензий друг к другу не имеют";
+			        }
+			        
+			        Paragraph p4 = new Paragraph(textMain, fontMainText);
 			        p4.setSpacingAfter(10f);
 			        document.add(p4);
 				}
@@ -738,12 +810,28 @@ public class PDFWriter {
 			        p3.setSpacingAfter(10f);
 			        document.add(p3);
 			        
-			        Paragraph p4 = new Paragraph("       Мы, нижеподписавшиеся: представитель Перевозчика "
-			        		+ routes.get(0).getUser().getCompanyName()
-			        		+ ", в лице директора " + sheffName
-			        		+ " действующего на основании Устава одной стороны, и представитель Заказчика  ЗАО «Доброном» в лице заместителя генерального директора по логистике Якубова Евгения Владимировича, действующего на основании доверенности № 8 от 20.12.2023 года, с другой стороны, составили настоящий акт о том, что услуги, оказанные на основании договора перевозки №"
-			        		+ numContractTarget + " от " + dateContract
-			        		+ " выполнены в полном объеме и стороны претензий друг к другу не имеют", fontMainText);
+			        String textMain;
+			        if(documentType.equals("свидетельства")) {
+			        	textMain = "       Мы, нижеподписавшиеся: Исполнитель " 
+		        		+ routes.get(0).getUser().getCompanyName()
+		        		+ ", в лице " + sheffName
+		        		+ " действующего на основании"
+		        		+" Свидетельства о государственной регистрации индивидуального предпринимателя №" + numOfIP + " от "+dateOfIP
+		        		+", c одной стороны, и представитель Заказчика  ЗАО «Доброном» в лице заместителя генерального директора по логистике Якубова Евгения Владимировича, действующего на основании доверенности № 8 от 20.12.2024 года, с другой стороны, составили настоящий акт о том, что услуги, оказанные на основании договора перевозки №"
+		        		+ numContractTarget + " от " + dateContract
+		        		+ " выполнены в полном объеме и стороны претензий друг к другу не имеют";
+			        }else {
+			        	textMain = "       Мы, нижеподписавшиеся: Исполнитель " 
+			            		+ routes.get(0).getUser().getCompanyName()
+			            		+ ", в лице " + directOfOOO
+			            		+ " действующего на основании "
+			            		+ docOfOOO + ", c"
+			            		+" одной стороны, и представитель Заказчика  ЗАО «Доброном» в лице заместителя генерального директора по логистике Якубова Евгения Владимировича, действующего на основании доверенности № 8 от 20.12.2024 года, с другой стороны, составили настоящий акт о том, что услуги, оказанные на основании договора перевозки №"
+			            		+ numContractTarget + " от " + dateContract
+			            		+ " выполнены в полном объеме и стороны претензий друг к другу не имеют";
+			        }
+			        
+			        Paragraph p4 = new Paragraph(textMain, fontMainText);
 			        p4.setSpacingAfter(10f);
 			        document.add(p4);
 					//определяем и заполняем вторую таблицу на второй странице
@@ -937,7 +1025,12 @@ public class PDFWriter {
 	 * @throws FileNotFoundException
 	 */
 	public int getActOfRouteExpedition(List<Route> routes, HttpServletRequest request, boolean isNDS, String dateContract,
-			String numContractTarget, String sheffName, String city, String requisitesCarrier, String dateOfAct, int numPage) throws DocumentException, FileNotFoundException {
+			String numContractTarget, String sheffName, String city, String requisitesCarrier, String dateOfAct, int numPage,
+			String documentType,
+			String numOfIP,
+			String dateOfIP,
+			String directOfOOO,
+			String docOfOOO) throws DocumentException, FileNotFoundException {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 		DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
 		//загружаем шрифты
@@ -956,6 +1049,9 @@ public class PDFWriter {
         String fileName = routes.get(0).getUser().getCompanyName();
         PdfWriter pdfWriter = PdfWriter.getInstance(document, new FileOutputStream(path+"resources/others/"+fileName+".pdf"));		        
         document.open(); 
+        
+     // Устанавливаем обработчик нижнего колонтитула
+        pdfWriter.setPageEvent(new FooterEvent(fontForRequisitesBolt));
         
         //формируем текс шапки
         //Первая строка "Акт №5111551"
@@ -982,12 +1078,28 @@ public class PDFWriter {
         p3.setSpacingAfter(10f);
         document.add(p3);
         
-        Paragraph p4 = new Paragraph("       Мы, нижеподписавшиеся: представитель Перевозчика "
-        		+ routes.get(0).getUser().getCompanyName()
-        		+ ", в лице директора " + sheffName
-        		+ " действующего на основании Устава одной стороны, и представитель Заказчика  ЗАО «Доброном» в лице заместителя генерального директора по логистике Якубова Евгения Владимировича, действующего на основании доверенности № 8 от 20.12.2023 года, с другой стороны, составили настоящий акт о том, что услуги, оказанные на основании договора перевозки №"
-        		+ numContractTarget + " от " + dateContract
-        		+ " выполнены в полном объеме и стороны претензий друг к другу не имеют", fontMainText);
+        String textMain;
+        if(documentType.equals("свидетельства")) {
+        	textMain = "       Мы, нижеподписавшиеся: Исполнитель " 
+    		+ routes.get(0).getUser().getCompanyName()
+    		+ ", в лице " + sheffName
+    		+ " действующего на основании"
+    		+" Свидетельства о государственной регистрации индивидуального предпринимателя №" + numOfIP + " от "+dateOfIP
+    		+", c одной стороны, и представитель Заказчика  ЗАО «Доброном» в лице заместителя генерального директора по логистике Якубова Евгения Владимировича, действующего на основании доверенности № 8 от 20.12.2024 года, с другой стороны, составили настоящий акт о том, что услуги, оказанные на основании договора перевозки №"
+    		+ numContractTarget + " от " + dateContract
+    		+ " выполнены в полном объеме и стороны претензий друг к другу не имеют";
+        }else {
+        	textMain = "       Мы, нижеподписавшиеся: Исполнитель " 
+            		+ routes.get(0).getUser().getCompanyName()
+            		+ ", в лице " + directOfOOO
+            		+ " действующего на основании "
+            		+ docOfOOO + ", c"
+            		+" одной стороны, и представитель Заказчика  ЗАО «Доброном» в лице заместителя генерального директора по логистике Якубова Евгения Владимировича, действующего на основании доверенности № 8 от 20.12.2024 года, с другой стороны, составили настоящий акт о том, что услуги, оказанные на основании договора перевозки №"
+            		+ numContractTarget + " от " + dateContract
+            		+ " выполнены в полном объеме и стороны претензий друг к другу не имеют";
+        }
+        
+        Paragraph p4 = new Paragraph(textMain, fontMainText);
         p4.setSpacingAfter(10f);
         document.add(p4);
         
@@ -1154,25 +1266,13 @@ public class PDFWriter {
 	private void addFooterHasAct(Document document, com.itextpdf.text.Font fontForRequisites, String requisitesCarrier, String sheffName, Route route) throws DocumentException {
 		//тут вставляются реквизиты свои
 		Paragraph p11;
-		// временно сделал так, что если выгрузка позже июня 2024 - ставит старый адрес
-		if(Integer.parseInt(route.getDateUnload().split("\\.")[1]) >=7 && Integer.parseInt(route.getDateUnload().split("\\.")[2]) >= 2024) {
-			p11 = new Paragraph("Заказчик:\nЗАО Доброном: Республика Беларусь,\r\n"
-					+ "220073, г.Минск, пер.Загородный 1-й, 20-23; " + "УНП 191178504, ОКПО 378869615000\r\n"
-					+ "р/с BY61ALFA30122365100050270000 ( BYN)\r\nоткрытый  в Закрытое акционерное общество «Альфа-банк» \r\n"
-					+ "Юридический адрес: Ул. Сурганова, 43-47; 220013 Минск, Республика Беларусь\r\n"
-					+ "УНП 101541947; " + "SWIFT – ALFABY2X\r\n" + "р/с  BY24ALFA30122365100010270000 (USD)\r\n"
-					+ "р/с  BY09ALFA30122365100020270000(EUR)\r\n" + "р/с BY91 ALFA 3012 2365 1000 3027 0000 (RUB.)\r\n\n"
-					+ "_______________/Е.В. Якубов", fontForRequisites);
-	        
-		}else {
-			p11 = new Paragraph("Заказчик:\nЗАО Доброном: Республика Беларусь,\r\n"
-					+ "220112, г. Минск, ул. Янки Лучины, 5; " + "УНП 191178504, ОКПО 378869615000\r\n"
-					+ "р/с BY61ALFA30122365100050270000 ( BYN)\r\nоткрытый  в Закрытое акционерное общество «Альфа-банк» \r\n"
-					+ "Юридический адрес: Ул. Сурганова, 43-47; 220013 Минск, Республика Беларусь\r\n"
-					+ "УНП 101541947; " + "SWIFT – ALFABY2X\r\n" + "р/с  BY24ALFA30122365100010270000 (USD)\r\n"
-					+ "р/с  BY09ALFA30122365100020270000(EUR)\r\n" + "р/с BY91 ALFA 3012 2365 1000 3027 0000 (RUB.)\r\n\n"
-					+ "_______________/Е.В. Якубов", fontForRequisites);
-		}
+		p11 = new Paragraph("Заказчик:\nЗАО Доброном: Республика Беларусь,\r\n"
+				+ "220073, г.Минск, пер.Загородный 1-й, 20-23; " + "УНП 191178504, ОКПО 378869615000\r\n"
+				+ "р/с BY61ALFA30122365100050270000 ( BYN)\r\nоткрытый  в Закрытое акционерное общество «Альфа-банк» \r\n"
+				+ "Юридический адрес: Ул. Сурганова, 43-47; 220013 Минск, Республика Беларусь\r\n"
+				+ "УНП 101541947; " + "SWIFT – ALFABY2X\r\n" + "р/с  BY24ALFA30122365100010270000 (USD)\r\n"
+				+ "р/с  BY09ALFA30122365100020270000(EUR)\r\n" + "р/с BY91 ALFA 3012 2365 1000 3027 0000 (RUB.)\r\n\n"
+				+ "_______________/Е.В. Якубов", fontForRequisites);
 		
         		
         p11.setSpacingBefore(20f); // высота от прошлого текста
@@ -1182,7 +1282,7 @@ public class PDFWriter {
         /**
          * Реквизиты перевоза
          */
-        Paragraph p10 = new Paragraph("Перевозчик\n"+requisitesCarrier, fontForRequisites);			        
+        Paragraph p10 = new Paragraph("Исполнитель\n"+requisitesCarrier, fontForRequisites);			        
         p10.setSpacingBefore(-100f);
         p10.setIndentationRight(550f); // ширина относительно правого края		
         document.add(p10);
@@ -1191,7 +1291,40 @@ public class PDFWriter {
         p12.setIndentationRight(550f); // ширина относительно правого края
         p12.setAlignment(Element.ALIGN_RIGHT);
         document.add(p12);
+        
+//        Paragraph p13 = new Paragraph("Настоящий акт сдачи-приемки составлен в двух экземплярах, свидетельствует о приемке услуг и служит основанием для проведения расчетов Заказчика и Исполнителя. Является одновременно протоколом согласования тарифов и цен.", fontForRequisites);
+//        p13.setSpacingBefore(80f);
+//        p13.setAlignment(Element.ALIGN_LEFT);
+//        document.add(p13);
+        
 	}
+	
+    // Класс для добавления нижнего колонтитула
+     class FooterEvent extends PdfPageEventHelper {
+        private final Font fontForRequisites;
+        
+        public FooterEvent (Font fontForRequisites) {
+        	this.fontForRequisites = fontForRequisites;
+        }
+
+        @Override
+        public void onEndPage(PdfWriter writer, Document document) {
+            PdfContentByte cb = writer.getDirectContent();
+            Phrase footer = new Phrase(
+                    "Настоящий акт сдачи-приемки составлен в двух экземплярах, свидетельствует о приемке услуг и служит основанием для проведения расчетов Заказчика и Исполнителя. Является одновременно протоколом согласования тарифов и цен.", 
+                    fontForRequisites
+            );
+
+            ColumnText.showTextAligned(
+                    cb,
+                    Element.ALIGN_CENTER,
+                    footer,
+                    (document.right() + document.left()) / 2, // Центр страницы
+                    document.bottom() - 10, // Расположение над нижним краем
+                    0
+            );
+        }
+    }
 	
 	// округляем числа до 2-х знаков после запятой
 		private static double roundВouble(double value, int places) {

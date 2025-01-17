@@ -1,10 +1,17 @@
 package by.base.main.service.util;
 
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.lang.reflect.Type;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -23,18 +30,37 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
+
+import by.base.main.aspect.TimedExecution;
+import by.base.main.controller.ajax.MainRestController;
+import by.base.main.dto.MarketDataFor398Request;
+import by.base.main.dto.MarketDataForLoginDto;
+import by.base.main.dto.MarketPacketDto;
+import by.base.main.dto.MarketRequestDto;
+import by.base.main.dto.MarketTableDto;
 import by.base.main.model.Order;
 import by.base.main.model.OrderLine;
 import by.base.main.model.OrderProduct;
 import by.base.main.model.Product;
 import by.base.main.model.Schedule;
+import by.base.main.model.Task;
 import by.base.main.service.OrderProductService;
 import by.base.main.service.OrderService;
 import by.base.main.service.ProductService;
 import by.base.main.service.ScheduleService;
+import by.base.main.service.TaskService;
 import by.base.main.util.MainChat;
 
 /**
@@ -72,6 +98,21 @@ public class ScheduledTask {
 	
 	@Autowired
 	private ProductService productService;
+	
+	@Autowired
+	private TaskService taskService;
+	
+	@Autowired
+	private MainRestController mainRestController;
+	
+	private static final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(Date.class, new JsonSerializer<Date>() {
+				@Override
+				public JsonElement serialize(Date src, Type typeOfSrc, JsonSerializationContext context) {
+					return context.serialize(src.getTime());  // Сериализация даты в миллисекундах
+				}
+            })
+            .create();
 	
     @Scheduled(cron = "0 00 11 * * ?") // каждый день в 11:00
     public void sendSchedulesHasORL() {
@@ -490,6 +531,221 @@ public class ScheduledTask {
     public void clearMessageList() {
     	mainChat.messegeList.clear();
     }
+    
+    
+    
+    @Scheduled(cron = "0 00 06 * * ?") // каждый день в 06:00
+    public void get398() throws ParseException {
+		
+		Task task = taskService.getLastTaskFor398();
+		String stock = task.getStocks();
+		String from = task.getFromDate().toString();
+		String to = task.getToDate().toString();
+		
+		java.util.Date t1 = new java.util.Date();
+		Integer maxShopCoint = 40; // максимальное кол-во магазинов в запросе
+		
+		//сначала определяыем кол-во магазов и делим их на массивы запросов
+		 String [] mass = stock.split(",");
+		 Integer shopAllCoint = mass.length;
+		 
+		 System.out.println("Всего магазинов: " + shopAllCoint);
+		 
+		 List<String> shopsList = new ArrayList<String>();
+		 
+		 if(shopAllCoint > maxShopCoint) {
+			 int i = 1;
+			 String row = null;
+			 for (String string : mass) {
+				 if(i % maxShopCoint == 0) {
+					 shopsList.add(row); 
+					 row = null;
+					 System.out.println("записываем строку");
+				 }
+				if(row == null) {
+					row = string;
+				}else {
+					row = row + "," + string;
+				}
+				i++;
+			}
+			 if (row != null) {
+				    shopsList.add(row);
+				    System.out.println("Записываем последнюю строку");
+				}
+		 }else {
+			 shopsList.add(stock);
+		 }
+		 System.out.println("Запросов будет : " + shopsList.size());
+		 /*
+		  * Основной метод: проходимсмя по листу и формируем сексели по всем запросам
+		  */
+		String appPath = servletContext.getRealPath("/");
+		String pathFolder = appPath + "resources/others/398/";
+		//сначала удаляем мусор что есть в этой папке
+		
+		// Проверяем, существует ли папка
+	    File folder = new File(pathFolder);
+	    if (!folder.exists()) {
+	        System.out.println("Папка не существует. Создаем: " + pathFolder);
+	        folder.mkdirs();
+	    } else {
+	        // Если папка существует, удаляем все файлы внутри нее
+	        File[] files = folder.listFiles();
+	        if (files != null) {
+	            for (File file : files) {
+	                if (file.isFile()) {
+	                    System.out.println("Удаляем файл: " + file.getName());
+	                    file.delete();
+	                }
+	            }
+	        }
+	    }
+		 
+		 
+		 Integer j = 0;
+		 for (String stockStr : shopsList) {
+			 j++;
+			 String str = "{\"CRC\": \"\", \"Packet\": {\"MethodName\": \"SpeedLogist.GetReport398\", \"Data\": {\"DateFrom\": \""+from+"\", \"DateTo\": \""+to+"\", \"WarehouseId\": "
+						+ "["+stockStr+"],"
+						+ " \"WhatBase\": [11,12]}}}";
+				try {			
+					checkJWT(mainRestController.marketUrl);			
+				} catch (Exception e) {
+					System.err.println("Ошибка получения jwt токена");
+				}
+				Integer finalJ = j;
+				JSONParser parser = new JSONParser();
+				JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+				String marketPacketDtoStr = jsonMainObject.get("Packet") != null ? jsonMainObject.get("Packet").toString() : null;
+				JSONObject jsonMainObject2 = (JSONObject) parser.parse(marketPacketDtoStr);
+				String marketDataFor398RequestStr = jsonMainObject2.get("Data") != null ? jsonMainObject2.get("Data").toString() : null;
+				JSONObject jsonMainObjectTarget = (JSONObject) parser.parse(marketDataFor398RequestStr);
+				
+				JSONArray warehouseIdArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("WarehouseId").toString());
+				JSONArray whatBaseArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("WhatBase").toString());
+				
+				String dateForm = jsonMainObjectTarget.get("DateFrom") == null ? null : jsonMainObjectTarget.get("DateFrom").toString();
+				String dateTo = jsonMainObjectTarget.get("DateTo") == null ? null : jsonMainObjectTarget.get("DateTo").toString();
+				Object[] warehouseId = warehouseIdArray.toArray();
+				Object[] whatBase = whatBaseArray.toArray();
+				
+				MarketDataFor398Request for398Request = new MarketDataFor398Request(dateForm, dateTo, warehouseId, whatBase);		
+				MarketPacketDto marketPacketDto = new MarketPacketDto(mainRestController.marketJWT, "SpeedLogist.GetReport398", mainRestController.serviceNumber, for398Request);		
+				MarketRequestDto requestDto = new MarketRequestDto("", marketPacketDto);
+				
+				String marketOrder2 = postRequest(mainRestController.marketUrl, gson.toJson(requestDto));
+				System.out.println("Размер: " + getStringSizeInMegabytes(marketOrder2) + " мб");
+								
+				JSONObject jsonTable = (JSONObject) parser.parse(marketOrder2);	
+				
+				
+				new Thread(new Runnable() {			
+					@Override
+					public void run() {
+						try {
+							poiExcel.createExcel398(jsonTable.get("Table").toString(), pathFolder, finalJ, stockStr, from, to);
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}				
+					}
+				}).start();
+				
+		}
+		java.util.Date t2 = new java.util.Date();
+		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.398");
+//		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+		
+		long time = t2.getTime()-t1.getTime();
+		
+		String text = "Принято магазинов: " + mass.length + "\n"
+				+ "С " + from + " по " + to + "\n"
+				+ "Вид расходов : 11,12" + "\n"
+				+ "Всего файлов: " + j + "\n"
+				+ "Время работы: " + time + " мс";
+		
+		mailService.sendEmailToUsers(servletContext, "Автоматическая выгрузка : 398", text, emailsORL);
+    }
+    
+    /**
+     * Метод проверяет актуальность JWT токена
+     * @param url
+     */
+    private void checkJWT(String url) {
+		MarketDataForLoginDto dataDto = new MarketDataForLoginDto(mainRestController.loginMarket, mainRestController.passwordMarket, "101");
+//		MarketDataForLoginDtoTEST dataDto = new MarketDataForLoginDtoTEST("SpeedLogist", "12345678", 101);
+		MarketPacketDto packetDto = new MarketPacketDto("null", "GetJWT", mainRestController.serviceNumber, dataDto);
+		MarketRequestDto requestDto = new MarketRequestDto("", packetDto);
+		if(mainRestController.marketJWT == null){
+			//запрашиваем jwt
+			String str = postRequest(url, gson.toJson(requestDto));
+			MarketTableDto marketRequestDto = gson.fromJson(str, MarketTableDto.class);
+			mainRestController.marketJWT = marketRequestDto.getTable()[0].toString().split("=")[1].split("}")[0];
+		}
+	}
+    
+    /**
+     * Переводит байты в мегабайты
+     * @param input
+     * @return
+     */
+    public static double getStringSizeInMegabytes(String input) {
+        if (input == null) {
+            throw new IllegalArgumentException("Строка не может быть null");
+        }
+
+        // Получаем размер строки в байтах (используя кодировку UTF-8)
+        int sizeInBytes = input.getBytes(StandardCharsets.UTF_8).length;
+
+        // Переводим байты в мегабайты (1 MB = 1024 * 1024 bytes)
+        return (double) sizeInBytes / (1024 * 1024);
+    }
+    
+	/**
+	 * Метод отправки POST запросов 
+	 * сделан для запросов в маркет
+	 * @param url
+	 * @param payload
+	 * @return
+	 */
+	private String postRequest(String url, String payload) {
+        try {
+            URL urlForPost = new URL(url);
+            HttpURLConnection connection = (HttpURLConnection) urlForPost.openConnection();
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type", "application/json");
+            connection.setDoOutput(true);
+           
+            byte[] postData = payload.getBytes(StandardCharsets.UTF_8);
+            
+            try (DataOutputStream wr = new DataOutputStream(connection.getOutputStream())) {
+                wr.write(postData);
+            }
+            
+            int getResponseCode = connection.getResponseCode();
+//            System.out.println("POST Response Code: " + getResponseCode);
+
+            if (getResponseCode == HttpURLConnection.HTTP_OK) {
+            	StringBuilder response = new StringBuilder();
+            	try (BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"))) {
+                    String inputLine;	 
+                    while ((inputLine = in.readLine()) != null) {
+                    	response.append(inputLine.trim());
+                    }
+                    in.close();
+                }	           
+//            	System.out.println(connection.getContentType());
+                return response.toString();
+            } else {
+                return null;
+            }
+        } catch (IOException e) {
+            System.out.println("MainRestController.postRequest: Подключение недоступно - 503");
+            return "503";
+        }
+    }
+
     
     /*
 	 * 1. + Сначала разрабатываем метод который по дате определяет какие контракты должны быть заказаны в этот день (список Schedule) + 

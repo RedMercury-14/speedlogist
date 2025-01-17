@@ -115,5 +115,19 @@ function getInitDataUrl(url) {
 		return `${apiUrl}manager/getAllShops`
 	}
 
+	// приход паллет
+	if (url.includes('procurement/calculated') || url.includes('orl/calculated')) {
+		const baseUrl ='../../api/get-pallets/'
+		const PAGE_NAME = 'orlCalculated'
+		const DATES_KEY = `searchDates_to_${PAGE_NAME}`
+		const { dateStart, dateEnd } = dateHelper.getDatesToFetch(DATES_KEY, 7, 7)
+		return`${baseUrl}${dateStart}&${dateEnd}`
+	}
+
+	// 398 отчет
+	if (url.includes('orl/report/398')) {
+		return '../../../api/orl/task/getlist'
+	}
+
 	return ''
 }

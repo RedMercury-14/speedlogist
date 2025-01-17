@@ -215,6 +215,16 @@ public class ScheduleServiceImpl implements ScheduleService{
 	}
 
 	@Override
+	public List<Schedule> getSchedulesListTOAll() {
+		return scheduleDAO.getSchedulesListTOAll();
+	}
+
+	@Override
+	public List<CounterpartyDTO> getСounterpartyListRCNameOnly() {
+		return scheduleDAO.getСounterpartyListRCNameOnly();
+	}
+
+	@Override
 	public List<Schedule> getAllSchedulesByNumContractAndNumStock(Long num, Integer shock) {
 		return scheduleDAO.getAllSchedulesByNumContractAndNumStock(num, shock);
 	}

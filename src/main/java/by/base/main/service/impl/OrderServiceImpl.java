@@ -419,6 +419,17 @@ public class OrderServiceImpl implements OrderService {
 		return orderDAO.getOrderByFirstLoadSlotAndDateOrderOrl(dateStart, dateEnd, dateOrderOrl);
 	}
 
+
+	@Override
+	public Map<String, Order> getOrdersByListMarketNumber(List<String> marketNumber) {
+		return orderDAO.getOrdersByListMarketNumber(marketNumber);
+	}
+
+	@Override
+	public List<Order> getOrderByDateOrderORLAndNumStock(Date dateOrderORL, Integer numStock) {
+		return orderDAO.getOrderByDateOrderORLAndNumStock(dateOrderORL, numStock);
+	}
+
 	@Override
 	public List<Order> getLastOrderByGoodId(Long goodsId) {
 		return  orderDAO.getLastOrderByGoodId(goodsId);

@@ -27,10 +27,23 @@ public interface ScheduleDAO {
 	List<Schedule> getSchedulesListTO();
 	
 	/**
+	 * Метод возвращает все графики поставок и временные и удалённые и т.д.
+	 * @return
+	 */
+	List<Schedule> getSchedulesListTOAll();
+	
+	/**
 	 * Возвращает лист с контрагентами РЦ <b>DTO класс</b>
 	 * @return
 	 */
 	List<CounterpartyDTO> getcounterpartyListRC();
+	
+	/**
+	 * Возвращает лист с контрагентами РЦ <b>DTO класс</b>
+	 * <br><b>Важно то что он не подтягивает коды контрактов, что ускоряет работу</b>
+	 * @return
+	 */
+	List<CounterpartyDTO> getСounterpartyListRCNameOnly();
 	
 	/**
 	 * Возвращает лист с контрагентами ТО <b>DTO класс</b>
@@ -138,6 +151,8 @@ public interface ScheduleDAO {
 	 * @return
 	 */
 	public List<Schedule> getSchedulesListTOContractOnlyTemp(Long num);
+	
+	
 
 	/**
 	 * <br>Возвращает список графиков по номеру контракта и номеру склада

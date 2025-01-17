@@ -553,7 +553,7 @@ export async function checkEventsForBooking(events) {
 		const order = event.extendedProps.data
 		const marketNumber = order.marketNumber
 		const res = await getData(checkBookingBaseUrl + marketNumber)
-		return res.info ? `${marketNumber}: ${res.info}` : ''
+		return res && res.info ? `${marketNumber}: ${res.info}` : ''
 	}))
 	clearTimeout(timeoutId)
 	bootstrap5overlay.hideOverlay()

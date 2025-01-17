@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Paths;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -71,6 +72,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ibm.icu.text.RuleBasedNumberFormat;
 import com.ibm.icu.text.SimpleDateFormat;
 import com.itextpdf.text.Document;
@@ -90,6 +93,7 @@ import com.itextpdf.text.pdf.PdfWriter;
 import by.base.main.dao.RouteDAO;
 import by.base.main.dao.RouteHasShopDAO;
 import by.base.main.dao.ShopDAO;
+import by.base.main.dto.ReportRow;
 import by.base.main.service.ActService;
 import by.base.main.service.MessageService;
 import by.base.main.service.OrderService;
@@ -165,6 +169,205 @@ public class POIExcel {
 		return convFile;
 	}
 	
+	/**
+	 * Главный метод создания екселя ReportRow или сервис левел по приходу
+	 * @param reportRows
+	 * @param filePath
+	 * @throws IOException
+	 */
+	public static void generateExcelReport(List<ReportRow> reportRows, String filePath) throws IOException {
+        // Создаем рабочую книгу и лист
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Отчет");
+
+        // Первая строка заголовка (объединенные ячейки)
+        Row headerRow1 = sheet.createRow(0);
+        headerRow1.createCell(0).setCellValue("Все поставщики из ЦЗ");
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 4)); // Объединение первых 5 ячеек
+        headerRow1.createCell(5).setCellValue("56 404 524");
+        headerRow1.createCell(6).setCellValue("36 083 729");
+        headerRow1.createCell(7).setCellValue("64%");
+        headerRow1.createCell(8).setCellValue("20 320 796");
+        headerRow1.createCell(9).setCellValue("114 250 588");
+        headerRow1.createCell(10).setCellValue("66 694 280");
+        headerRow1.createCell(11).setCellValue("58%");
+        headerRow1.createCell(12).setCellValue("47 556 309");
+
+        // Вторая строка заголовка
+        Row headerRow2 = sheet.createRow(1);
+        String[] headers = {
+                "Наименование поставщика",
+                "Номер заказа из маркета",
+                "Период Поставки заказа (неделя)",
+                "Группа товаров",
+                "Наименование товара",
+                "Код товара",
+                "Заказано ед",
+                "Принято ед",
+                "Выполнения заказа, ед%",
+                "Расхождение кол-во",
+                "Заказано руб",
+                "Принято руб",
+                "% выполнения заказа руб без НДС",
+                "Расхождение (БЕЗ НДС)"
+        };
+
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow2.createCell(i);
+            cell.setCellValue(headers[i]);
+
+            // Стиль для заголовков
+            CellStyle headerStyle = workbook.createCellStyle();
+            Font font = workbook.createFont();
+            font.setBold(true);
+            headerStyle.setFont(font);
+            cell.setCellStyle(headerStyle);
+        }
+
+        // Заполняем данные
+        int rowNum = 2; // Данные начинаются со строки 3
+        for (ReportRow row : reportRows) {
+            Row excelRow = sheet.createRow(rowNum++);
+
+            excelRow.createCell(0).setCellValue(row.getCounterpartyName());
+            excelRow.createCell(1).setCellValue(row.getMarketNumber()); // Номер заказа из маркета
+            excelRow.createCell(2).setCellValue(row.getPeriodOrderDelivery());
+            excelRow.createCell(3).setCellValue(row.getProductGroup());
+            excelRow.createCell(4).setCellValue(row.getProductName());
+            excelRow.createCell(5).setCellValue(row.getProductCode() != null ? row.getProductCode() : 0);
+            excelRow.createCell(6).setCellValue(row.getOrderedUnitsORL() != null ? row.getOrderedUnitsORL() : 0);
+            excelRow.createCell(7).setCellValue(row.getAcceptedUnits() != null ? row.getAcceptedUnits() : 0);
+            excelRow.createCell(8).setCellValue(row.getPrecentOrderFulfillment() != null ? row.getPrecentOrderFulfillment() : 0.0);
+            excelRow.createCell(9).setCellValue(row.getDiscrepancyQuantity() != null ? row.getDiscrepancyQuantity() : 0);
+            excelRow.createCell(10).setCellValue(row.getOrderedRUB() != null ? row.getOrderedRUB() : 0.0);
+            excelRow.createCell(11).setCellValue(row.getAcceptedRUB() != null ? row.getAcceptedRUB() : 0.0);
+            excelRow.createCell(12).setCellValue(row.getPrecentOrderCompletionNotNDS() != null ? row.getPrecentOrderCompletionNotNDS() : 0.0);
+            excelRow.createCell(13).setCellValue(row.getDiscrepancyNotNDS() != null ? row.getDiscrepancyNotNDS() : 0.0);
+        }
+
+        // Автоматическая настройка ширины столбцов
+        for (int i = 0; i < headers.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+        // Сохраняем файл
+        try (FileOutputStream fileOut = new FileOutputStream(filePath)) {
+            workbook.write(fileOut);
+        }
+
+        // Закрываем рабочую книгу
+        workbook.close();
+
+        System.out.println("Excel файл успешно создан: " + filePath);
+    }
+
+	/**
+	 * Новый метод для создания файла 398 отчёта
+	 * @param jsonArray
+	 * @param outputPath
+	 * @throws IOException
+	 */
+	public static void createExcel398(String jsonArray, String folderPath, int i, String shops, String dateFrom, String dateTo) throws IOException {
+	    // Название файла
+	    String fileName1 = "398";
+	    String fileName2 = " " + i;
+	    String fileName3 = ".xlsx";
+	    String fileName = fileName1 + fileName2 + fileName3;
+
+	    // Полный путь к файлу
+	    File outputFile = Paths.get(folderPath, fileName).toFile();
+
+	    // Проверяем, существует ли папка
+	    File folder = new File(folderPath);
+	    if (!folder.exists()) {
+	        System.out.println("Папка не существует. Создаем: " + folderPath);
+	        folder.mkdirs();
+	    }
+
+	    // Проверяем, существует ли файл
+	    if (!outputFile.exists()) {
+	        System.out.println("Файл "+fileName+" не существует. Создаем новый файл: " + outputFile.getAbsolutePath());
+	        outputFile.createNewFile();
+	    } else {
+	        System.out.println("Файл "+fileName+" уже существует. Перезаписываем: " + outputFile.getAbsolutePath());
+	    }
+
+	    // Парсинг JSON
+	    ObjectMapper objectMapper = new ObjectMapper();
+	    JsonNode rootNode = objectMapper.readTree(jsonArray);
+
+	    // Создаем новый Excel файл
+//	    Workbook workbook = new XSSFWorkbook();
+	    Workbook workbook = new SXSSFWorkbook(); // Используем SXSSFWorkbook вместо XSSFWorkbook
+	    Sheet sheet = workbook.createSheet("Data");
+
+	    /*
+	     * Тут блок тестовых параметров: какие магазины
+	     * Даты
+	     */
+	    Sheet sheetParam = workbook.createSheet("Parameters");
+	    Row row1 = sheetParam.createRow(0);
+	    Cell cell0 = row1.createCell(0);
+	    cell0.setCellValue("Магазины: ");
+	    Cell cell1 = row1.createCell(1);
+	    cell1.setCellValue(shops);
+
+	    Row row2 = sheetParam.createRow(1);
+	    Cell cell00 = row2.createCell(0);
+	    cell00.setCellValue("Даты: ");
+	    Cell cell11 = row2.createCell(1);
+	    cell11.setCellValue("С " + dateFrom + " по " + dateTo);
+
+	    // Создаем заголовки
+	    Row headerRow = sheet.createRow(0);
+	    if (rootNode.isArray() && rootNode.size() > 0) {
+	        JsonNode firstElement = rootNode.get(0);
+	        int colIndex = 0;
+	        Iterator<String> fieldNames = firstElement.fieldNames();
+	        while (fieldNames.hasNext()) {
+	            String fieldName = fieldNames.next();
+	            Cell cell = headerRow.createCell(colIndex++);
+	            cell.setCellValue(fieldName);
+	        }
+	    }
+
+	    // Заполняем строки данными
+	    int rowIndex = 1;
+	    for (JsonNode jsonNode : rootNode) {
+	        Row row = sheet.createRow(rowIndex++);
+	        int colIndex = 0;
+	        Iterator<String> fieldNames = jsonNode.fieldNames();
+	        while (fieldNames.hasNext()) {
+	            String fieldName = fieldNames.next();
+
+	            Cell cell = row.createCell(colIndex++);
+	            JsonNode value = jsonNode.get(fieldName);
+
+	            if (value.isNumber()) {
+                    cell.setCellValue(value.asDouble());
+                } else if (value.isTextual()) {
+                    cell.setCellValue(value.asText());
+                } else if (value.isBoolean()) {
+                    cell.setCellValue(value.asBoolean());
+                } else {
+                    cell.setCellValue(value.toString());
+                }
+	        }
+	        if (rowIndex % 100000 == 0) {
+	            System.out.println(rowIndex);
+	        }
+	    }
+
+	    // Сохраняем Excel файл
+	    try (FileOutputStream fileOut = new FileOutputStream(outputFile)) {
+	        workbook.write(fileOut);
+	    }
+	    workbook.close();
+
+	    System.out.println("Excel файл успешно создан: " + outputFile.getAbsolutePath());
+	}
+
+
 	/**
 	 * Метод для создания графика поставок в excel НА РЦ
 	 * @param schedules
@@ -621,82 +824,87 @@ public class POIExcel {
 	 * @param resultOfTheDay
 	 * @param forSearch
 	 * @param dayNumber
+	 * Исправлено 13.01.2025
 	 * @return
 	 */
 	private List<LocalDate> getDates(Schedule schedule, LocalDate day, String resultOfTheDay, String forSearch, int dayNumber){
 
-		List<LocalDate> supplyDates = new ArrayList<>();
+	    List<LocalDate> supplyDates = new ArrayList<>();
 
-		String orderFormation = schedule.getOrderFormationSchedule();
-		int weekNumberParity;
-		if (schedule.getIsDayToDay()){
-			weekNumberParity = day.get(WeekFields.of(Locale.getDefault()).weekOfYear())%2;
-		} else {
-			weekNumberParity = day.plusDays(1).get(WeekFields.of(Locale.getDefault()).weekOfYear())%2;
-		}
+	    String orderFormation = schedule.getOrderFormationSchedule();
+	    int weekNumberParity;
+	    if (schedule.getIsDayToDay()){
+	       weekNumberParity = day.get(WeekFields.of(Locale.getDefault()).weekOfYear())%2;
+	    } else {
+	       weekNumberParity = day.plusDays(1).get(WeekFields.of(Locale.getDefault()).weekOfYear())%2;
+	    }
 
-        if ((orderFormation == null)
-				|| (orderFormation.isEmpty())
-				|| (weekNumberParity == 0 && orderFormation.equals("ч"))
-				|| (weekNumberParity == 1 && orderFormation.equals("н"))) {
+	       if ((orderFormation == null)
+	          || (orderFormation.isEmpty())
+	          || (weekNumberParity == 0 && orderFormation.equals("ч"))
+	          || (weekNumberParity == 1 && orderFormation.equals("н"))) {
 
-			if ((day.equals(LocalDate.now()) && schedule.getIsDayToDay()) || (day.equals(LocalDate.now().plusDays(1))) && !schedule.getIsDayToDay()){
+	       if ((day.equals(LocalDate.now()) && schedule.getIsDayToDay()) || (day.equals(LocalDate.now().plusDays(1))) && !schedule.getIsDayToDay()){
 
-				LocalDate supplyDate;
+	          LocalDate supplyDate;
 
-				List<Integer> daysOfSupplies = new ArrayList<>();
+	          List<Integer> daysOfSupplies = new ArrayList<>();
 
-				int addWeeks = 0;
+	          int addWeeks = 0;
 
-				if (resultOfTheDay.contains("з") || resultOfTheDay.contains("н0")){
-					if (schedule.getMonday() != null && schedule.getMonday().contains(forSearch)){
-						daysOfSupplies.add(1);
-						addWeeks = checkN(schedule.getMonday(), resultOfTheDay, forSearch);
-					}
-					if (schedule.getTuesday() != null && schedule.getTuesday().contains(forSearch)){
-						daysOfSupplies.add(2);
-						addWeeks = checkN(schedule.getTuesday(), resultOfTheDay, forSearch);
-					}
-					if (schedule.getWednesday() != null && schedule.getWednesday().contains(forSearch)){
-						daysOfSupplies.add(3);
-						addWeeks = checkN(schedule.getWednesday(), resultOfTheDay, forSearch);
-					}
-					if (schedule.getThursday() != null && schedule.getThursday().contains(forSearch)){
-						daysOfSupplies.add(4);
-						addWeeks = checkN(schedule.getThursday(), resultOfTheDay, forSearch);
-					}
-					if (schedule.getFriday() != null && schedule.getFriday().contains(forSearch)){
-						daysOfSupplies.add(5);
-						addWeeks = checkN(schedule.getFriday(), resultOfTheDay, forSearch);
-					}
-					if (schedule.getSaturday() != null && schedule.getSaturday().contains(forSearch)){
-						daysOfSupplies.add(6);
-						addWeeks = checkN(schedule.getSaturday(), resultOfTheDay, forSearch);
-					}
-					if (schedule.getSunday() != null && schedule.getSunday().contains(forSearch)){
-						daysOfSupplies.add(7);
-						addWeeks = checkN(schedule.getSunday(), resultOfTheDay, forSearch);
-					}
+	          if (schedule.getCounterpartyContractCode() == 1837){
+	             int d = 0;
+	          }
+
+	          if (resultOfTheDay.contains("з") || resultOfTheDay.contains("н0")){
+	             if (schedule.getMonday() != null && schedule.getMonday().contains(forSearch)){
+	                daysOfSupplies.add(1);
+	                addWeeks = checkN(schedule.getMonday(), resultOfTheDay, forSearch);
+	             }
+	             if (schedule.getTuesday() != null && schedule.getTuesday().contains(forSearch)){
+	                daysOfSupplies.add(2);
+	                addWeeks = checkN(schedule.getTuesday(), resultOfTheDay, forSearch);
+	             }
+	             if (schedule.getWednesday() != null && schedule.getWednesday().contains(forSearch)){
+	                daysOfSupplies.add(3);
+	                addWeeks = checkN(schedule.getWednesday(), resultOfTheDay, forSearch);
+	             }
+	             if (schedule.getThursday() != null && schedule.getThursday().contains(forSearch)){
+	                daysOfSupplies.add(4);
+	                addWeeks = checkN(schedule.getThursday(), resultOfTheDay, forSearch);
+	             }
+	             if (schedule.getFriday() != null && schedule.getFriday().contains(forSearch)){
+	                daysOfSupplies.add(5);
+	                addWeeks = checkN(schedule.getFriday(), resultOfTheDay, forSearch);
+	             }
+	             if (schedule.getSaturday() != null && schedule.getSaturday().contains(forSearch)){
+	                daysOfSupplies.add(6);
+	                addWeeks = checkN(schedule.getSaturday(), resultOfTheDay, forSearch);
+	             }
+	             if (schedule.getSunday() != null && schedule.getSunday().contains(forSearch)){
+	                daysOfSupplies.add(7);
+	                addWeeks = checkN(schedule.getSunday(), resultOfTheDay, forSearch);
+	             }
 
 
-					for (Integer daysOfSupply : daysOfSupplies) {
+	             for (Integer daysOfSupply : daysOfSupplies) {
 
-					    if (dayNumber > daysOfSupply ) {
-					       if (addWeeks != 0 && dayNumber != 8) {
-					          addWeeks -= 7;
-					       }
-					       supplyDate = day.plusDays(7 - dayNumber + daysOfSupply + addWeeks);
-					    } else {
-					       supplyDate = day.plusDays(daysOfSupply - dayNumber + addWeeks);
-					    }
+	                 if (dayNumber > daysOfSupply ) {
+	                    if (addWeeks != 0 && dayNumber != 8) {
+	                       addWeeks -= 7;
+	                    }
+	                    supplyDate = day.plusDays(7 - dayNumber + daysOfSupply + addWeeks);
+	                 } else {
+	                    supplyDate = day.plusDays(daysOfSupply - dayNumber + addWeeks);
+	                 }
 
-					    supplyDates.add(supplyDate);
-					}
-				}
-			}
-		}
+	                 supplyDates.add(supplyDate);
+	             }
+	          }
+	       }
+	    }
 
-		return supplyDates;
+	    return supplyDates;
 
 	}
 
@@ -1865,8 +2073,8 @@ public class POIExcel {
 		XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
 		XSSFSheet sheet = wb.getSheetAt(0);
 		
-		Date dateStart = Date.valueOf("2024-12-27");
-		Date dateEnd = Date.valueOf("2025-01-02");
+		Date dateStart = Date.valueOf("2025-01-03");
+		Date dateEnd = Date.valueOf("2025-01-08");
 		
 		for (int i = 1; i < sheet.getLastRowNum() + 1; i++) {
 			XSSFRow rowI = sheet.getRow(i);
@@ -2703,71 +2911,73 @@ public class POIExcel {
 	 * Метод считывает ексель с потребностью и отдаёт мапу, где ключ - это код товара
 	 * Устарел. Использовать 
 	 */
-	public Map<Integer, OrderProduct> loadNeedExcel2(File file, String date) throws ServiceException, InvalidFormatException, IOException, ParseException {
+    public Map<Integer, OrderProduct> loadNeedExcel2(File file, String date) throws ServiceException, InvalidFormatException, IOException, ParseException {
+		
 		System.out.println("КОл-во колонок = " + getColumnCount(file,2));
 		Map<Integer, OrderProduct> orderMap = new HashMap<>();
-		XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
-		XSSFSheet sheet = wb.getSheetAt(0);
-		//по сути
-		for (int i = 3; i <= sheet.getLastRowNum(); i++) { // Начинаем с 3, чтобы пропустить заголовок
-			Row row = sheet.getRow(i);
+        XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
+        XSSFSheet sheet = wb.getSheetAt(0);
+        //по сути 
+        for (int i = 3; i <= sheet.getLastRowNum(); i++) { // Начинаем с 3, чтобы пропустить заголовок
+            Row row = sheet.getRow(i);
 
-			if (row != null) {
-				Integer numStock = (int) row.getCell(0).getNumericCellValue();
-				Integer code = (int) row.getCell(1).getNumericCellValue();
-				String nameProduct = row.getCell(2).getStringCellValue();
-				int quantity = (int) roundВouble(row.getCell(3).getNumericCellValue(), 0);
-				String codeContract;
+            if (row != null) {
+            	Integer numStock = (int) row.getCell(0).getNumericCellValue();
+                Integer code = (int) row.getCell(1).getNumericCellValue();
+                String nameProduct = row.getCell(2).getStringCellValue();
+                int quantity = (int) roundВouble(row.getCell(3).getNumericCellValue(), 0);
+                String codeContract;
 
-				if(row.getCell(4) != null) {
-					Double cell = row.getCell(4).getNumericCellValue();
-					codeContract = cell.intValue() + "";
-				}else {
-					codeContract = null;
-				}
+                if(row.getCell(4) != null) {
+                	Double cell = row.getCell(4).getNumericCellValue();
+                	codeContract = cell.intValue() + "";
+                }else {
+                	codeContract = null;
+                }
 
-				OrderProduct orderProduct = null;
-				if(orderMap.containsKey(code)) {
-					orderProduct = orderMap.get(code);
-				}else {
-					orderProduct = new OrderProduct();
-				}
+                OrderProduct orderProduct = null;
+                if(orderMap.containsKey(code)) {
+                	orderProduct = orderMap.get(code);
+                }else {
+                	orderProduct = new OrderProduct();
+                }
+                
+                switch (numStock) {
+				case 1700:
+					orderProduct.setQuantity1700(quantity);
+					break;
+					
+				case 1800:
+					orderProduct.setQuantity1800(quantity);
+					break;
 
-				switch (numStock) {
-					case 1700:
-						orderProduct.setQuantity1700(quantity);
-						break;
-					case 1800:
-						orderProduct.setQuantity1800(quantity);
-						break;
+				default:
+					orderProduct.setQuantity(quantity);
+					break;
+				}    
+                orderProduct.setNameProduct(nameProduct);
+                orderProduct.setCodeProduct(code);
+                orderProduct.setMarketContractType(codeContract);;
 
-					default:
-						orderProduct.setQuantity(quantity);
-						break;
-				}
-				orderProduct.setNameProduct(nameProduct);
-				orderProduct.setCodeProduct(code);
-				orderProduct.setMarketContractType(codeContract);
-
-				if(date != null) {
-					Timestamp timestamp = Timestamp.valueOf(LocalDateTime.of(LocalDate.parse(date), LocalTime.now()));
-					orderProduct.setDateCreate(timestamp);
-				}else {
-					orderProduct.setDateCreate(new Timestamp(System.currentTimeMillis()));
+                if(date != null) {
+                	Timestamp timestamp = Timestamp.valueOf(LocalDateTime.of(LocalDate.parse(date), LocalTime.now()));
+                	orderProduct.setDateCreate(timestamp);
+                }else {
+                    orderProduct.setDateCreate(new Timestamp(System.currentTimeMillis()));
 //                  orderProduct.setDateCreate(Timestamp.valueOf(LocalDateTime.now()));
-				}
+                }
 
 
-				// Привязываем код как ключ и объект OrderProduct как значение
-				orderMap.put(code, orderProduct);
-			}
-		}
+                // Привязываем код как ключ и объект OrderProduct как значение
+                orderMap.put(code, orderProduct);
+            }
+        }
 
-		wb.close();
-
-
-		return orderMap;
-	}
+        wb.close();
+        
+        
+        return orderMap;
+    }
 	
 	/**
 	 * Возвращает кол-во колонок в ексель файле

@@ -28,71 +28,27 @@ export const MAX_PALL_RESTRICTIONS = [
 			internalMovement: 500,
 		},
 	},
+
+
+	// ------------------------------------
+	// ------------ 1200 склад ------------
+	// ------------------------------------
 	{
-		stockId: '1800',
-		date: '2024-12-22',
+		stockId: '1200',
+		date: '2025-01-14',
 		maxPall: {
-			externalMovement: 1200,
+			externalMovement: 600,
 			internalMovement: 500,
 		},
 	},
 	{
-		stockId: '1800',
-		date: '2024-12-23',
+		stockId: '1200',
+		date: '2025-01-15',
 		maxPall: {
-			externalMovement: 1200,
+			externalMovement: 600,
 			internalMovement: 500,
 		},
 	},
-	{
-		stockId: '1800',
-		date: '2024-12-24',
-		maxPall: {
-			externalMovement: 1200,
-			internalMovement: 500,
-		},
-	},
-	{
-		stockId: '1800',
-		date: '2024-12-25',
-		maxPall: {
-			externalMovement: 1200,
-			internalMovement: 500,
-		},
-	},
-	{
-		stockId: '1800',
-		date: '2024-12-26',
-		maxPall: {
-			externalMovement: 1200,
-			internalMovement: 500,
-		},
-	},
-	{
-		stockId: '1800',
-		date: '2024-12-27',
-		maxPall: {
-			externalMovement: 1200,
-			internalMovement: 500,
-		},
-	},
-	{
-		stockId: '1800',
-		date: '2024-12-28',
-		maxPall: {
-			externalMovement: 1200,
-			internalMovement: 500,
-		},
-	},
-	{
-		stockId: '1800',
-		date: '2024-12-29',
-		maxPall: {
-			externalMovement: 1200,
-			internalMovement: 500,
-		},
-	},
-	
 
 
 	// ------------------------------------

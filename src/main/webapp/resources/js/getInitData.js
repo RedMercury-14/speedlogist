@@ -129,5 +129,10 @@ function getInitDataUrl(url) {
 		return '../../../api/orl/task/getlist'
 	}
 
+	// Список магазинов
+	if (url.includes('logistics/counterpartiesList')) {
+		return '../../api/manager/getAllShops'
+	}
+
 	return ''
 }

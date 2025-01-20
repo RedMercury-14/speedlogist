@@ -57,6 +57,7 @@
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/ordersLogist" />">Менеджер заявок</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/documentflow" />">Документооборот</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/shopControl" />">Список магазинов</a>
+										<a class="dropdown-item" href="<spring:url value="/main/logistics/counterpartiesList" />">Список поставщиков</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/maintenance " />">Менеджер маршрутов АХО/СГИ</a>
 									</div>
 								</li>
@@ -119,6 +120,7 @@
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/ordersLogist" />">Менеджер заявок</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/documentflow" />">Документооборот</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/shopControl" />">Список магазинов</a>
+										<!-- <a class="dropdown-item" href="<spring:url value="/main/logistics/counterpartiesList" />">Список поставщиков</a> -->
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/maintenance " />">Менеджер маршрутов АХО/СГИ</a>
 									</div>
 								</li>
@@ -172,6 +174,7 @@
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/ordersLogist" />">Менеджер заявок</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/documentflow" />">Документооборот</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/shopControl" />">Список магазинов</a>
+										<!-- <a class="dropdown-item" href="<spring:url value="/main/logistics/counterpartiesList" />">Список поставщиков</a> -->
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/maintenance " />">Менеджер маршрутов АХО/СГИ</a>
 									</div>
 								</li>
@@ -190,6 +193,7 @@
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/ordersLogist" />">Менеджер заявок</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/documentflow" />">Документооборот</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/shopControl" />">Список магазинов</a>
+										<!-- <a class="dropdown-item" href="<spring:url value="/main/logistics/counterpartiesList" />">Список поставщиков</a> -->
 										<a class="dropdown-item" href="<spring:url value="/main/analytics/logistics" />">Аналитика Биржи</a>
 										<a class="dropdown-item" href="<spring:url value="/main/analytics/shortage" />">Аналитика: Нехватка товаров на РЦ</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/maintenance " />">Менеджер маршрутов АХО/СГИ</a>

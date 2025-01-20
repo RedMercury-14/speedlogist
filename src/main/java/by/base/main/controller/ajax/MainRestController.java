@@ -513,8 +513,8 @@ public class MainRestController {
 				e.printStackTrace();
 			}
 
-		responseMap.put("Done", "Done");
-		responseMap.put("size", orders.size());
+//		responseMap.put("Done", "Done");
+//		responseMap.put("size", orders.size());
 //		responseMap.put("orders", orders);
 			System.out.println("В прикреплённой таблице список товаров, по которым не были созданы расчеты");
 			List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");

@@ -196,20 +196,22 @@ public class POIExcel {
         // Вторая строка заголовка
         Row headerRow2 = sheet.createRow(1);
         String[] headers = {
-                "Наименование поставщика",
-                "Номер заказа из маркета",
-                "Период Поставки заказа (неделя)",
-                "Группа товаров",
-                "Наименование товара",
-                "Код товара",
-                "Заказано ед",
-                "Принято ед",
-                "Выполнения заказа, ед%",
-                "Расхождение кол-во",
-                "Заказано руб",
-                "Принято руб",
-                "% выполнения заказа руб без НДС",
-                "Расхождение (БЕЗ НДС)"
+                "Наименование поставщика", //0
+                "Номер заказа из маркета", //1
+                "Период Поставки заказа (неделя)", //2
+                "Группа товаров", // 3
+                "Наименование товара", //4
+                "Код товара", // 5
+                "Заказано ОРЛ ед", // 6 
+                "Заказано факт ед", // 7 
+                "Принято ед", // 8
+                "Выполнения заказа, ед%", // 9
+                "Расхождение кол-во", // 10
+                "Заказано руб", // 11
+                "Принято руб", // 12
+                "% выполнения заказа руб без НДС", // 13
+                "Расхождение (БЕЗ НДС)", // 14
+                "Комментарий при подготовке отчёта" // 15
         };
 
         for (int i = 0; i < headers.length; i++) {
@@ -236,13 +238,15 @@ public class POIExcel {
             excelRow.createCell(4).setCellValue(row.getProductName());
             excelRow.createCell(5).setCellValue(row.getProductCode() != null ? row.getProductCode() : 0);
             excelRow.createCell(6).setCellValue(row.getOrderedUnitsORL() != null ? row.getOrderedUnitsORL() : 0);
-            excelRow.createCell(7).setCellValue(row.getAcceptedUnits() != null ? row.getAcceptedUnits() : 0);
-            excelRow.createCell(8).setCellValue(row.getPrecentOrderFulfillment() != null ? row.getPrecentOrderFulfillment() : 0.0);
-            excelRow.createCell(9).setCellValue(row.getDiscrepancyQuantity() != null ? row.getDiscrepancyQuantity() : 0);
-            excelRow.createCell(10).setCellValue(row.getOrderedRUB() != null ? row.getOrderedRUB() : 0.0);
-            excelRow.createCell(11).setCellValue(row.getAcceptedRUB() != null ? row.getAcceptedRUB() : 0.0);
-            excelRow.createCell(12).setCellValue(row.getPrecentOrderCompletionNotNDS() != null ? row.getPrecentOrderCompletionNotNDS() : 0.0);
-            excelRow.createCell(13).setCellValue(row.getDiscrepancyNotNDS() != null ? row.getDiscrepancyNotNDS() : 0.0);
+            excelRow.createCell(7).setCellValue(row.getOrderedUnitsManager() != null ? row.getOrderedUnitsManager() : 0);
+            excelRow.createCell(8).setCellValue(row.getAcceptedUnits() != null ? row.getAcceptedUnits() : 0);
+            excelRow.createCell(9).setCellValue(row.getPrecentOrderFulfillment() != null ? row.getPrecentOrderFulfillment() + "%" : "0.0");
+            excelRow.createCell(10).setCellValue(row.getDiscrepancyQuantity() != null ? row.getDiscrepancyQuantity() : 0);
+            excelRow.createCell(11).setCellValue(row.getOrderedRUB() != null ? row.getOrderedRUB() : 0.0);
+            excelRow.createCell(12).setCellValue(row.getAcceptedRUB() != null ? row.getAcceptedRUB() : 0.0);
+            excelRow.createCell(13).setCellValue(row.getPrecentOrderCompletionNotNDS() != null ? row.getPrecentOrderCompletionNotNDS() : 0.0);
+            excelRow.createCell(14).setCellValue(row.getDiscrepancyNotNDS() != null ? row.getDiscrepancyNotNDS() : 0.0);
+            excelRow.createCell(15).setCellValue(row.getComment() != null ? row.getComment() : null);
         }
 
         // Автоматическая настройка ширины столбцов

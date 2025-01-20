@@ -33,6 +33,9 @@ public class OrderCreater {
 
 	/**
 	 * оздаёт объект Order из OrderBuyGroupDTO
+	 * <br>Создаёт заказы только с 50 или 51 статусом
+	 * <br>Просчитывает время на выгрузку
+	 * <br>Сразу записывает в базу данных
 	 * @param orderBuyGroupDTO
 	 * @return
 	 */
@@ -174,6 +177,47 @@ public class OrderCreater {
 		        
 	}
 	
+	/**
+	 * Простой ордер из маркета
+	 * <br> С любым статусом
+	 * <br> Не записывает в базу данных
+	 * <br> <b>Не просчитывает время</b>
+	 * @param orderBuyGroupDTO
+	 * @return
+	 */
+	public Order createSimpleOrder(OrderBuyGroupDTO orderBuyGroupDTO) {
+		
+		//cчитаем время и создаём Order
+				Order order = new Order();
+				order.setMarketNumber(orderBuyGroupDTO.getOrderBuyGroupId().toString());                   
+		        order.setCounterparty(orderBuyGroupDTO.getContractorNameShort().trim());
+		        order.setMarketContractGroupId(orderBuyGroupDTO.getContractGroupId() != null ? orderBuyGroupDTO.getContractGroupId().toString() : null);
+		        order.setMarketContractNumber(orderBuyGroupDTO.getContractNumber() != null ? orderBuyGroupDTO.getContractNumber().toString() : null);
+		        order.setMarketContractorId(orderBuyGroupDTO.getContractorId() != null ? orderBuyGroupDTO.getContractorId().toString() : null);
+		        order.setMarketContractType(orderBuyGroupDTO.getContractType() != null ? orderBuyGroupDTO.getContractType().toString() : null);
+		        
+		        order.setMarketOrderSumFirst(orderBuyGroupDTO.getOrderSumFirst() != null ? orderBuyGroupDTO.getOrderSumFirst() : null);
+		        order.setMarketOrderSumFinal(orderBuyGroupDTO.getOrderSumFinal() != null ? orderBuyGroupDTO.getOrderSumFinal() : null);
+		        
+		        Date dateDelivery = Date.valueOf(orderBuyGroupDTO.getDeliveryDate().toLocalDateTime().toLocalDate());
+		        order.setDateDelivery(dateDelivery);
+		        order.setNumStockDelivery(orderBuyGroupDTO.getWarehouseId().toString());
+		        
+		        order.setCargo(orderBuyGroupDTO.getOrderBuy().get(0).getGoodsName().trim() + ", ");
+		        //записываем в поле информация
+		        order.setMarketInfo(orderBuyGroupDTO.getInfo());
+		        
+		        Date dateCreateInMarket = Date.valueOf(orderBuyGroupDTO.getDatex().toLocalDateTime().toLocalDate());
+		        order.setDateCreateMarket(dateCreateInMarket);
+		        order.setChangeStatus("Заказ создан в маркете: " + dateCreateInMarket);
+		        		        
+		        order.setStatus(5);
+	        	List<OrderLine> orderLines =  createOrderLineListNOTDataBase(orderBuyGroupDTO, order);
+	        	order.setOrderLines(orderLines.stream().collect(Collectors.toSet()));
+	        	return order;
+		        
+	}
+	
 	private List<OrderLine> createOrderLineList(OrderBuyGroupDTO orderBuyGroupDTO, Order order) {
 		List<OrderBuyDTO> orderBuyDTOs = orderBuyGroupDTO.getOrderBuy();
 		List<OrderLine> result = new ArrayList<OrderLine>();		
@@ -193,6 +237,28 @@ public class OrderCreater {
 			Integer id = orderLineService.saveOrderLine(orderLine);
 			orderLine.setId(id);
 			result.add(orderLine);
+		}		
+		return result;	
+	}
+	
+	private List<OrderLine> createOrderLineListNOTDataBase(OrderBuyGroupDTO orderBuyGroupDTO, Order order) {
+		List<OrderBuyDTO> orderBuyDTOs = orderBuyGroupDTO.getOrderBuy();
+//		orderBuyGroupDTO.getOrderBuy().forEach(o-> System.out.println("На входе - "+o));
+		List<OrderLine> result = new ArrayList<OrderLine>();	
+		int id = 1;
+		for (OrderBuyDTO orderBuyDTO : orderBuyDTOs) {
+			OrderLine orderLine = new OrderLine();
+			orderLine.setBarcode(orderBuyDTO.getBarcode());
+			orderLine.setGoodsGroupName(orderBuyDTO.getGoodsGroupName());
+			orderLine.setGoodsId(orderBuyDTO.getGoodsId());
+			orderLine.setGoodsName(orderBuyDTO.getGoodsName());
+			orderLine.setOrder(order);
+			orderLine.setQuantityOrder(Double.parseDouble(orderBuyDTO.getQuantityOrder()));
+			orderLine.setQuantityPack(Double.parseDouble(orderBuyDTO.getQuantityInPack()));
+			orderLine.setQuantityPallet(Double.parseDouble(orderBuyDTO.getQuantityInPallet()));
+			orderLine.setId(id);
+			result.add(orderLine);
+			id++;
 		}		
 		return result;	
 	}

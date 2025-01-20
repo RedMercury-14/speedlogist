@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
@@ -52,17 +53,24 @@ import by.base.main.aspect.TimedExecution;
 import by.base.main.controller.ajax.MainRestController;
 import by.base.main.dto.MarketDataFor330Request;
 import by.base.main.dto.MarketDataFor330Responce;
+import by.base.main.dto.MarketDataForRequestDto;
+import by.base.main.dto.MarketErrorDto;
 import by.base.main.dto.MarketPacketDto;
 import by.base.main.dto.MarketRequestDto;
+import by.base.main.dto.OrderBuyGroupDTO;
 import by.base.main.dto.ReportRow;
 import by.base.main.model.Order;
+import by.base.main.model.OrderProduct;
 import by.base.main.model.Route;
 import by.base.main.model.Truck;
+import by.base.main.service.OrderProductService;
 import by.base.main.service.OrderService;
 import by.base.main.service.RouteService;
 import by.base.main.service.ServiceException;
 import by.base.main.service.TruckService;
+import by.base.main.service.util.CustomJSONParser;
 import by.base.main.service.util.MailService;
+import by.base.main.service.util.OrderCreater;
 import by.base.main.service.util.POIExcel;
 
 //@Controller
@@ -88,6 +96,11 @@ public class MainFileController {
 	@Autowired
 	private OrderService orderService;
 	
+	@Autowired
+	private OrderProductService orderProductService;
+	
+	@Autowired
+	private OrderCreater orderCreater;
 	private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(Date.class, new JsonSerializer<Date>() {
 				@Override
@@ -198,6 +211,22 @@ public class MainFileController {
 		//получаем заказы по списку        
 		Map<String, Order> orders = orderService.getOrdersByListMarketNumber(uniqueOrderBuyGroupIds);
 		
+		//получаем даты заказов ОРЛ которые нам понадобятся
+		List<Date> datesOrderORL = orders.values().stream()
+	            .map(Order::getDateOrderOrl) // Получаем значения getDateOrderOrl
+	            .filter(Objects::nonNull)   // Исключаем null
+	            .map(date -> new java.sql.Date(date.getTime() - 86400000)) // Уменьшаем на 1 день
+	            .distinct()                 // Убираем дубликаты
+	            .collect(Collectors.toList()); // Сохраняем в список
+		//получаем мапу с заказами орл
+		/*
+		 * ключ - дата, значение - мапа с кодом товара и значением (как в методе orderProductService.getOrderProductMapHasDate(dateTarget))
+		 */
+		Map<Date, Map<Integer, OrderProduct>> mapOrderProduct = orderProductService.getOrderProductMapHasDateList(datesOrderORL); // остановился тут. Не возвращает мапу!
+		
+//		mapOrderProduct.forEach((k,v) -> v.forEach((k1, v1)-> System.out.println(k + " -> " + k1 + " - " +v1)));
+		
+		
 		//подгатавливаем строку (собираем все нужные столбцы)
 		for (MarketDataFor330Responce data330 : dataList330) {
 			ReportRow reportRow = new ReportRow();
@@ -207,23 +236,103 @@ public class MainFileController {
 			String period = Date.valueOf(from).toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + " - " + Date.valueOf(to).toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
 			reportRow.setPeriodOrderDelivery(period);
 			reportRow.setOrderedUnitsORL(null); //сколько заказано ОРЛ	
+			
+			if(data330.getOrderBuyGroupId() == null) { // ПОТОМ ОБРАБОТАТЬ КОГДА НЕТУ КОДА ИЗ МАРКЕТА В 330 ОТЧЁТЕ
+				continue;
+			}
+			
 			Order order = orders.get(data330.getOrderBuyGroupId().toString());
 			if(order == null) {
 				System.err.println("Заказа с номером " + data330.getOrderBuyGroupId() + " не найдено!");
+				order = getMarketOrder(request, data330.getOrderBuyGroupId().toString()); // тянем простой ордер из маркета
 			}
+			
 			Map<Long, Double> productHasOrder = order.getOrderLinesMap();
 //			System.out.println("---> Хочу взять: " + data330.getGoodsId() + " из заказа " + data330.getOrderBuyGroupId());
 			if(!productHasOrder.containsKey(data330.getGoodsId())) {
 				System.err.println("Отсутствует товар " + data330.getGoodsId() + " ("+ data330.getGoodsName()+ ") в заказе " + data330.getOrderBuyGroupId());
 			}
-			Integer orderProductHasOrderManager = productHasOrder.get(data330.getGoodsId()).intValue();
+			Long longGoodIdHas330 = data330.getGoodsId();
+			Integer orderProductHasOrderManager;
+			if(!productHasOrder.containsKey(longGoodIdHas330)) {
+				Order orderFromMarket;
+				if(order.getIdOrder() == null) { // если id == null это значит что ордер уже вытянут из маркета
+					orderFromMarket = order;
+				}else {
+					orderFromMarket = getMarketOrder(request, data330.getOrderBuyGroupId().toString());
+				}
+				
+				if(!orderFromMarket.getOrderLinesMap().containsKey(longGoodIdHas330)) { // если и в заказе из маркета нет и в заказе из SL нет - записываем коммент
+					reportRow.setComment("Товара " +data330.getGoodsName() + " ("+ data330.getGoodsId() + ") нет в базе данных SpeedLogist и Маркета. Заказ сформирован менеджером " + order.getLoginManager());
+					orderProductHasOrderManager = 0;
+				}else {
+					orderProductHasOrderManager = orderFromMarket.getOrderLinesMap().get(longGoodIdHas330).intValue();
+					System.out.println("Товара " +data330.getGoodsName() + " ("+ data330.getGoodsId() + ") не было в заказе, который хранится в базе данных SpeedLogist. Однако был в заказе базы данных Маркета" );
+					reportRow.setComment("Товара " +data330.getGoodsName() + " ("+ data330.getGoodsId() + ") не было в заказе, который хранится в базе данных SpeedLogist. Однако был в заказе базы данных Маркета");
+				}
+				
+			}else {
+				orderProductHasOrderManager = productHasOrder.get(longGoodIdHas330).intValue();
+			}
 			reportRow.setOrderedUnitsManager(orderProductHasOrderManager); // сколько заказано менеджером
+			
+			OrderProduct orderORL;
+			Integer intOrderORL;
+			if(order.getDateOrderOrl() != null) {
+				Date dateTarget = Date.valueOf(order.getDateOrderOrl().toLocalDate().minusDays(1)); 
+				Map<Integer, OrderProduct> mapOrderProductTarget = mapOrderProduct.get(dateTarget);
+				System.out.println("dateTarget - " + dateTarget);
+				mapOrderProductTarget.forEach((k,v)-> System.out.println(k));
+				orderORL = mapOrderProductTarget.get(data330.getGoodsId().intValue()) != null ? mapOrderProductTarget.get(data330.getGoodsId().intValue()) : null;
+						
+//				intOrderORL = orderProductService.getOrderProductMapHasDate(dateTarget).get(data330.getGoodsId().intValue()); // потом в отдельный метод перед циклом	
+				
+				if(orderORL!= null) {
+					switch (data330.getWarehouseId().toString()) {
+					case "1700":
+						intOrderORL = orderORL.getQuantity1700();
+						break;
+					case "1800":
+						intOrderORL = orderORL.getQuantity1800();
+						break;
+					default:
+						intOrderORL = orderORL.getQuantity();
+						break;
+					}
+				}else {
+					intOrderORL = 0;
+				}
+				
+				
+				reportRow.setOrderedUnitsORL(intOrderORL);// сколько заказано ОРЛ
+			}else {
+				if(order.getIdOrder() != null) {
+					reportRow.setComment("В заказе " +data330.getOrderBuyGroupId() + " не стоит дата расчёта ОРЛ. Заказ сформирован менеджером " + order.getLoginManager());
+				}else {
+					reportRow.setComment("Заказ " +data330.getOrderBuyGroupId() + " не найден в базе данных SpeedLogist. Расчёт заказа ОРЛ невозможен");
+				}
+				
+			}
+			
 			reportRow.setMarketNumber(data330.getOrderBuyGroupId().toString());
 			reportRow.setDateStart(Date.valueOf(from));
 			reportRow.setDateFinish(Date.valueOf(to));
 			reportRow.setCounterpartyName(data330.getContractorNameShort());
 			reportRow.setAcceptedUnits(data330.getQuantity().intValue());
-			reportRows.add(reportRow);						
+			
+			//тут блок расчёта процентов для каждой строки и всяких разниц
+			/*
+			 * Рассчитываем % Выполнения заказа
+			 */
+			Double precentOrderFulfillment = (reportRow.getOrderedUnitsManager().doubleValue()/reportRow.getAcceptedUnits().doubleValue()*100);
+			reportRow.setPrecentOrderFulfillment(roundВouble(precentOrderFulfillment, 2));			
+				
+			/*
+			 * рассчитываем Расхождение кол-во
+			 */
+			reportRow.setDiscrepancyQuantity(reportRow.getOrderedUnitsManager()-reportRow.getAcceptedUnits());
+			
+			reportRows.add(reportRow);
 		}
 		
 		//записываем строки в ексель
@@ -239,6 +348,49 @@ public class MainFileController {
 		
         
 		return null;
+	}
+    
+    
+	private Order getMarketOrder(HttpServletRequest request, String idMarket) {		
+		try {			
+			mainRestController.checkJWT(mainRestController.marketUrl);			
+		} catch (Exception e) {
+			System.err.println("Ошибка получения jwt токена");
+		}
+		
+		Map<String, Object> response = new HashMap<String, Object>();
+		MarketDataForRequestDto dataDto3 = new MarketDataForRequestDto(idMarket);
+		MarketPacketDto packetDto3 = new MarketPacketDto(mainRestController.marketJWT, "SpeedLogist.GetOrderBuyInfo", mainRestController.serviceNumber, dataDto3);
+		MarketRequestDto requestDto3 = new MarketRequestDto("", packetDto3);
+		String marketOrder2 = mainRestController.postRequest(mainRestController.marketUrl, gson.toJson(requestDto3));
+		
+//		System.out.println(marketOrder2);
+		
+		if(marketOrder2.equals("503")) { // означает что связь с маркетом потеряна
+			System.err.println("Связь с маркетом потеряна");	
+			return null;
+		}else{//если есть связь с маркетом
+			//проверяем на наличие сообщений об ошибке со стороны маркета
+			if(marketOrder2.contains("Error")) {
+				MarketErrorDto errorMarket = gson.fromJson(marketOrder2, MarketErrorDto.class);
+				System.err.println("Error: " + errorMarket);
+				return null;
+			}
+			
+			//тут избавляемся от мусора в json
+			String str2 = marketOrder2.split("\\[", 2)[1];
+			String str3 = str2.substring(0, str2.length()-2);
+			
+			//создаём свой парсер и парсим json в объекты, с которыми будем работать.
+			CustomJSONParser customJSONParser = new CustomJSONParser();
+			
+			//создаём OrderBuyGroup
+			OrderBuyGroupDTO orderBuyGroupDTO = customJSONParser.parseOrderBuyGroupFromJSON(str3);
+						
+			//создаём Order, записываем в бд и возвращаем или сам ордер или ошибку (тот же ордер, только с отрицательным id)
+			Order order = orderCreater.createSimpleOrder(orderBuyGroupDTO);
+			return order;
+		}
 	}
     
     /**
@@ -364,5 +516,11 @@ public class MainFileController {
 	    fos.close();
 //	    return convFile;
 	}
+	
+	// округляем числа до 2-х знаков после запятой
+		private static double roundВouble(double value, int places) {
+			double scale = Math.pow(10, places);
+			return Math.round(value * scale) / scale;
+		}
 
 }

@@ -749,7 +749,7 @@ public class OrderDAOImpl implements OrderDAO{
 	        + "LEFT JOIN FETCH r.truck t "
 	        + "LEFT JOIN FETCH r.roteHasShop rhs "
 	        + "LEFT JOIN FETCH o.addresses a "
-	        + "where o.marketNumber IN (:marketNumber)";
+	        + "where o.status !=10 AND o.marketNumber IN (:marketNumber)";
 	@Transactional
 	@Override
 	public Map<String, Order> getOrdersByListMarketNumber(List<String> marketNumber) {

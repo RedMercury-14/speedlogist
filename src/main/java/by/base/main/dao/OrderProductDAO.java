@@ -3,6 +3,7 @@ package by.base.main.dao;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import by.base.main.model.OrderProduct;
 
@@ -48,5 +49,13 @@ public interface OrderProductDAO {
 	List<OrderProduct> getOrderProductListHasCodeProductGroupAndPeriod(List<Integer> codeProducts , Date start, Date finish);
 
 	void updateOrderProduct(OrderProduct orderProduct);
+	
+	/**
+	 * Получаем мапу где: 
+	 * <br>ключ - дата, значение - мапа с кодом товара (ключ) и значением (как в методе orderProductService.getOrderProductMapHasDate(dateTarget))
+	 * @param dates
+	 * @return
+	 */
+	Map<java.sql.Date, Map<Integer, OrderProduct>> getOrderProductMapHasDateList(List<java.sql.Date> dates);
 	
 }

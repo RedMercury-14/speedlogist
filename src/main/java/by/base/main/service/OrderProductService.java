@@ -57,4 +57,12 @@ public interface OrderProductService {
 	List<OrderProduct> getOrderProductListHasCodeProductGroupAndPeriod(List<OrderLine> orderLines , Date start, Date finish);
 
 	void updateOrderProduct(OrderProduct orderProduct);
+	
+	/**
+	 * Получаем мапу где: 
+	 * <br>ключ - дата, значение - мапа с кодом товара (ключ) и значением (как в методе orderProductService.getOrderProductMapHasDate(dateTarget))
+	 * @param dates
+	 * @return
+	 */
+	Map<java.sql.Date, Map<Integer, OrderProduct>> getOrderProductMapHasDateList(List<java.sql.Date> dates);
 }

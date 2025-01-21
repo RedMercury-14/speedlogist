@@ -243,7 +243,8 @@ public class POIExcel {
         int indexNameCounterpartyFinish;
         
         // Заполняем данные
-        int rowNum = 2; // Данные начинаются со строки 3        
+        int rowNum = 2; // Данные начинаются со строки 3   
+        int k = 0;
         for (ReportRow row : reportRows) {
 //        	
         	// Устанавливаем группировку снизу вверх
@@ -264,12 +265,15 @@ public class POIExcel {
             		sheet.groupRow(indexNameCounterpartyStart, indexNameCounterpartyFinish);
             		sheet.setRowGroupCollapsed(indexNameCounterpartyStart, true);
             		nameCounterparty = row.getCounterpartyName();
-            		indexNameCounterpartyStart = rowNum;
-//            		System.out.println(row.getCounterpartyName() + " Итог");
-//            		System.out.println("Начало :" + indexNameCounterpartyStart );
-//            		System.out.println("Кончало :" + indexNameCounterpartyFinish);
-            		
+            		indexNameCounterpartyStart = rowNum;            		
+            	}  
+            	if(k==reportRows.size()-1) {
+            		sheet.groupRow(indexNameCounterpartyStart, rowNum-1); // остановился тут. Последняя строка не групперуется.
+            		sheet.setRowGroupCollapsed(indexNameCounterpartyStart, true);
+//            		System.out.println("indexNameCounterpartyStart - "+indexNameCounterpartyStart);
+//            		System.out.println(rowNum-1);
             	}
+            	
             }
             Row excelRow = sheet.createRow(rowNum++);
             
@@ -292,6 +296,9 @@ public class POIExcel {
 //            excelRow.createCell(13).setCellValue(row.getPrecentOrderCompletionNotNDS() != null ? row.getPrecentOrderCompletionNotNDS() : 0.0);
 //            excelRow.createCell(14).setCellValue(row.getDiscrepancyNotNDS() != null ? row.getDiscrepancyNotNDS() : 0.0);
             excelRow.createCell(12).setCellValue(row.getComment() != null ? row.getComment() : null);
+            
+            Row excelRowEnd = sheet.createRow(rowNum+1);
+            k++;
         }
 
         // Автоматическая настройка ширины столбцов
@@ -307,6 +314,7 @@ public class POIExcel {
         // Второй параметр: количество фиксированных строк (2 строки)
         sheet.createFreezePane(0, 2);
 
+        
         
         // Сохраняем файл
         try (FileOutputStream fileOut = new FileOutputStream(filePath)) {

@@ -223,7 +223,7 @@ public class MainFileController {
 		/*
 		 * ключ - дата, значение - мапа с кодом товара и значением (как в методе orderProductService.getOrderProductMapHasDate(dateTarget))
 		 */
-		Map<String, Map<Integer, OrderProduct>> mapOrderProduct = orderProductService.getOrderProductMapHasDateList(datesOrderORL); // остановился тут. Не возвращает мапу!
+		Map<String, Map<Integer, OrderProduct>> mapOrderProduct = orderProductService.getOrderProductMapHasDateList(datesOrderORL);
 		
 		System.out.println("В мапе объектов : " + mapOrderProduct.size());
 		mapOrderProduct.forEach((k,v)-> System.out.println("Для даты :" + k + " -> " + v.size() + " значений"));
@@ -286,8 +286,6 @@ public class MainFileController {
 
 //				mapOrderProduct.forEach((k,v)-> System.out.println("Для даты :" + k + " -> " + k.toString().equals(dateTarget.toString()) + " значений"));
 				orderORL = mapOrderProductTarget.get(data330.getGoodsId().intValue()) != null ? mapOrderProductTarget.get(data330.getGoodsId().intValue()) : null;
-						
-//				intOrderORL = orderProductService.getOrderProductMapHasDate(dateTarget).get(data330.getGoodsId().intValue()); // потом в отдельный метод перед циклом	
 				if(dateTarget.toLocalDate().isBefore(LocalDate.parse("2024-12-08")) && orderORL!= null) {//тут искллючения на прошлые даты, когда не было двух складов
 					intOrderORL = orderORL.getQuantity();
 				}else {

@@ -56,6 +56,6 @@ public interface OrderProductDAO {
 	 * @param dates
 	 * @return
 	 */
-	Map<java.sql.Date, Map<Integer, OrderProduct>> getOrderProductMapHasDateList(List<java.sql.Date> dates);
+	Map<String, Map<Integer, OrderProduct>> getOrderProductMapHasDateList(List<java.sql.Date> dates);
 	
 }

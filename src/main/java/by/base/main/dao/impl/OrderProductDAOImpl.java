@@ -123,8 +123,9 @@ private static final String queryGetObjByCode = "from OrderProduct o left join f
 //	private static final String queryGetOrderProductMapHasDateList = "from OrderProduct where dateCreate IN (:dateCreate)";
 	@Transactional
 	@Override
-	public Map<java.sql.Date, Map<Integer, OrderProduct>> getOrderProductMapHasDateList(List<java.sql.Date> dates) {
-//		Map<java.sql.Date, Map<Integer, OrderProduct>> responce = new HashMap<java.sql.Date, Map<Integer,OrderProduct>>();
+	public Map<String, Map<Integer, OrderProduct>> getOrderProductMapHasDateList(List<java.sql.Date> dates) {
+//		System.out.println("Даты пришли в ко-ве :" + dates.size());
+		
 		Session currentSession = sessionFactory.getCurrentSession();
 		// Генерация запроса с учетом количества дат
 		String hql = "from OrderProduct where " +
@@ -141,14 +142,19 @@ private static final String queryGetObjByCode = "from OrderProduct o left join f
 		    theObject.setParameter("datePattern" + i, datePattern);
 		}
 		List<OrderProduct> results = theObject.getResultList();
-		Map<java.sql.Date, Map<Integer, OrderProduct>> orderProductMap = results.stream()
+		
+//		System.out.println("Выгрузил объектов: " + results.size());
+		Map<String, Map<Integer, OrderProduct>> orderProductMap = results.stream()
 	            .collect(Collectors.groupingBy(
-	                op -> new java.sql.Date(op.getDateCreate().getTime()), // Ключ верхнего уровня
+	                op -> op.getDateCreate().toString().split(" ")[0], // Ключ верхнего уровня
 	                Collectors.toMap(
 	                    OrderProduct::getCodeProduct, // Ключ вложенного Map
 	                    op -> op // Значение вложенного Map
 	                )
 	            ));
+		
+//		System.out.println("В мапе объектов : " + orderProductMap.size());
+//		orderProductMap.forEach((k,v)-> System.out.println("Для даты :" + k + " -> " + v.size() + " значений"));
 		
 		return orderProductMap;
 	}

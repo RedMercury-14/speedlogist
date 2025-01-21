@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Type;
 import java.sql.Date;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -222,9 +223,10 @@ public class MainFileController {
 		/*
 		 * ключ - дата, значение - мапа с кодом товара и значением (как в методе orderProductService.getOrderProductMapHasDate(dateTarget))
 		 */
-		Map<Date, Map<Integer, OrderProduct>> mapOrderProduct = orderProductService.getOrderProductMapHasDateList(datesOrderORL); // остановился тут. Не возвращает мапу!
+		Map<String, Map<Integer, OrderProduct>> mapOrderProduct = orderProductService.getOrderProductMapHasDateList(datesOrderORL); // остановился тут. Не возвращает мапу!
 		
-//		mapOrderProduct.forEach((k,v) -> v.forEach((k1, v1)-> System.out.println(k + " -> " + k1 + " - " +v1)));
+		System.out.println("В мапе объектов : " + mapOrderProduct.size());
+		mapOrderProduct.forEach((k,v)-> System.out.println("Для даты :" + k + " -> " + v.size() + " значений"));
 		
 		
 		//подгатавливаем строку (собираем все нужные столбцы)
@@ -263,7 +265,7 @@ public class MainFileController {
 				}
 				
 				if(!orderFromMarket.getOrderLinesMap().containsKey(longGoodIdHas330)) { // если и в заказе из маркета нет и в заказе из SL нет - записываем коммент
-					reportRow.setComment("Товара " +data330.getGoodsName() + " ("+ data330.getGoodsId() + ") нет в базе данных SpeedLogist и Маркета. Заказ сформирован менеджером " + order.getLoginManager());
+					reportRow.setComment("Товара " +data330.getGoodsName() + " ("+ data330.getGoodsId() + ") нет в базе данных SpeedLogist и Маркета.");
 					orderProductHasOrderManager = 0;
 				}else {
 					orderProductHasOrderManager = orderFromMarket.getOrderLinesMap().get(longGoodIdHas330).intValue();
@@ -280,30 +282,31 @@ public class MainFileController {
 			Integer intOrderORL;
 			if(order.getDateOrderOrl() != null) {
 				Date dateTarget = Date.valueOf(order.getDateOrderOrl().toLocalDate().minusDays(1)); 
-				Map<Integer, OrderProduct> mapOrderProductTarget = mapOrderProduct.get(dateTarget);
-				System.out.println("dateTarget - " + dateTarget);
-				mapOrderProductTarget.forEach((k,v)-> System.out.println(k));
+				Map<Integer, OrderProduct> mapOrderProductTarget = mapOrderProduct.get(dateTarget.toString());
+
+//				mapOrderProduct.forEach((k,v)-> System.out.println("Для даты :" + k + " -> " + k.toString().equals(dateTarget.toString()) + " значений"));
 				orderORL = mapOrderProductTarget.get(data330.getGoodsId().intValue()) != null ? mapOrderProductTarget.get(data330.getGoodsId().intValue()) : null;
 						
 //				intOrderORL = orderProductService.getOrderProductMapHasDate(dateTarget).get(data330.getGoodsId().intValue()); // потом в отдельный метод перед циклом	
-				
-				if(orderORL!= null) {
-					switch (data330.getWarehouseId().toString()) {
-					case "1700":
-						intOrderORL = orderORL.getQuantity1700();
-						break;
-					case "1800":
-						intOrderORL = orderORL.getQuantity1800();
-						break;
-					default:
-						intOrderORL = orderORL.getQuantity();
-						break;
-					}
+				if(dateTarget.toLocalDate().isBefore(LocalDate.parse("2024-12-08")) && orderORL!= null) {//тут искллючения на прошлые даты, когда не было двух складов
+					intOrderORL = orderORL.getQuantity();
 				}else {
-					intOrderORL = 0;
-				}
-				
-				
+					if(orderORL!= null) {
+						switch (data330.getWarehouseId().toString()) {
+						case "1700":
+							intOrderORL = orderORL.getQuantity1700();
+							break;
+						case "1800":
+							intOrderORL = orderORL.getQuantity1800();
+							break;
+						default:
+							intOrderORL = orderORL.getQuantity();
+							break;
+						}
+					}else {
+						intOrderORL = 0;
+					}
+				}			
 				reportRow.setOrderedUnitsORL(intOrderORL);// сколько заказано ОРЛ
 			}else {
 				if(order.getIdOrder() != null) {
@@ -319,12 +322,21 @@ public class MainFileController {
 			reportRow.setDateFinish(Date.valueOf(to));
 			reportRow.setCounterpartyName(data330.getContractorNameShort());
 			reportRow.setAcceptedUnits(data330.getQuantity().intValue());
+			reportRow.setStock(data330.getWarehouseId().toString());
+			reportRow.setDateUnload(data330.getDate3());
 			
 			//тут блок расчёта процентов для каждой строки и всяких разниц
 			/*
 			 * Рассчитываем % Выполнения заказа
 			 */
-			Double precentOrderFulfillment = (reportRow.getOrderedUnitsManager().doubleValue()/reportRow.getAcceptedUnits().doubleValue()*100);
+//			Double precentOrderFulfillment = (reportRow.getOrderedUnitsManager().doubleValue()/reportRow.getAcceptedUnits().doubleValue()*100);
+			Double precentOrderFulfillment;
+			if(reportRow.getOrderedUnitsManager().doubleValue() == 0) {
+				precentOrderFulfillment = 9999.0;
+			}else {
+				precentOrderFulfillment = (reportRow.getAcceptedUnits().doubleValue()/reportRow.getOrderedUnitsManager().doubleValue()*100);
+			}
+			 
 			reportRow.setPrecentOrderFulfillment(roundВouble(precentOrderFulfillment, 2));			
 				
 			/*

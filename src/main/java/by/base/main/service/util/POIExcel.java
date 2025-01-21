@@ -183,15 +183,25 @@ public class POIExcel {
         // Первая строка заголовка (объединенные ячейки)
         Row headerRow1 = sheet.createRow(0);
         headerRow1.createCell(0).setCellValue("Все поставщики из ЦЗ");
-        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 4)); // Объединение первых 5 ячеек
-        headerRow1.createCell(5).setCellValue("56 404 524");
-        headerRow1.createCell(6).setCellValue("36 083 729");
-        headerRow1.createCell(7).setCellValue("64%");
-        headerRow1.createCell(8).setCellValue("20 320 796");
-        headerRow1.createCell(9).setCellValue("114 250 588");
-        headerRow1.createCell(10).setCellValue("66 694 280");
-        headerRow1.createCell(11).setCellValue("58%");
-        headerRow1.createCell(12).setCellValue("47 556 309");
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 5)); // Объединение первых 5 ячеек
+//        headerRow1.createCell(6).setCellValue("56 404 524");
+//        headerRow1.createCell(7).setCellValue("36 083 729");
+//        headerRow1.createCell(8).setCellValue("64%");
+//        headerRow1.createCell(9).setCellValue("20 320 796");
+//        headerRow1.createCell(10).setCellValue("114 250 588");
+//        headerRow1.createCell(10).setCellValue("66 694 280");
+//        headerRow1.createCell(11).setCellValue("58%");
+//        headerRow1.createCell(12).setCellValue("47 556 309");
+        
+        /*
+         * первый хедер с итогами
+         * делается с помощью формул
+         */
+        headerRow1.createCell(7).setCellFormula("SUM(H3:H"+(reportRows.size()+2)+")");
+        headerRow1.createCell(8).setCellFormula("SUM(I3:I"+(reportRows.size()+2)+")");
+        headerRow1.createCell(9).setCellFormula("SUM(J3:J"+(reportRows.size()+2)+")");
+        headerRow1.createCell(10).setCellFormula("J1/I1*100");
+        
 
         // Вторая строка заголовка
         Row headerRow2 = sheet.createRow(1);
@@ -199,19 +209,20 @@ public class POIExcel {
                 "Наименование поставщика", //0
                 "Номер заказа из маркета", //1
                 "Период Поставки заказа (неделя)", //2
-                "Группа товаров", // 3
-                "Наименование товара", //4
-                "Код товара", // 5
-                "Заказано ОРЛ ед", // 6 
-                "Заказано факт ед", // 7 
-                "Принято ед", // 8
-                "Выполнения заказа, ед%", // 9
-                "Расхождение кол-во", // 10
-                "Заказано руб", // 11
-                "Принято руб", // 12
-                "% выполнения заказа руб без НДС", // 13
-                "Расхождение (БЕЗ НДС)", // 14
-                "Комментарий при подготовке отчёта" // 15
+                "Дата факт.выгрузки", // 3
+                "Склад", // 4
+                "Наименование товара", //5
+                "Код товара", // 6
+                "Заказано ОРЛ ед", // 7 
+                "Заказано факт ед", // 8 
+                "Принято ед", // 9
+                "Выполнения заказа, ед%", // 10
+                "Расхождение кол-во", // 11
+//                "Заказано руб", // 11
+//                "Принято руб", // 12
+//                "% выполнения заказа руб без НДС", // 13
+//                "Расхождение (БЕЗ НДС)", // 14
+                "Комментарий при подготовке отчёта" // 12
         };
 
         for (int i = 0; i < headers.length; i++) {
@@ -226,34 +237,77 @@ public class POIExcel {
             cell.setCellStyle(headerStyle);
         }
 
+        //флаги для спец строк
+        String nameCounterparty = null;
+        int indexNameCounterpartyStart = 3;
+        int indexNameCounterpartyFinish;
+        
         // Заполняем данные
-        int rowNum = 2; // Данные начинаются со строки 3
+        int rowNum = 2; // Данные начинаются со строки 3        
         for (ReportRow row : reportRows) {
+//        	
+        	// Устанавливаем группировку снизу вверх
+            sheet.setRowSumsBelow(false);
+            
+          //тут групируем по названию конрагента
+            if(nameCounterparty == null) {
+            	//создаём итоговую строку по названию контрагента
+            	Row conclusionRow = sheet.createRow(rowNum++);
+            	conclusionRow.createCell(0).setCellValue(row.getCounterpartyName() + " Итог");  
+            	nameCounterparty = row.getCounterpartyName();  
+            	indexNameCounterpartyStart = rowNum;
+            }else {
+            	if(!nameCounterparty.equals(row.getCounterpartyName())) {
+            		Row conclusionRow = sheet.createRow(rowNum++);
+                	conclusionRow.createCell(0).setCellValue(row.getCounterpartyName() + " Итог");
+            		indexNameCounterpartyFinish = rowNum-2;
+            		sheet.groupRow(indexNameCounterpartyStart, indexNameCounterpartyFinish);
+            		sheet.setRowGroupCollapsed(indexNameCounterpartyStart, true);
+            		nameCounterparty = row.getCounterpartyName();
+            		indexNameCounterpartyStart = rowNum;
+//            		System.out.println(row.getCounterpartyName() + " Итог");
+//            		System.out.println("Начало :" + indexNameCounterpartyStart );
+//            		System.out.println("Кончало :" + indexNameCounterpartyFinish);
+            		
+            	}
+            }
             Row excelRow = sheet.createRow(rowNum++);
+            
+            
 
             excelRow.createCell(0).setCellValue(row.getCounterpartyName());
             excelRow.createCell(1).setCellValue(row.getMarketNumber()); // Номер заказа из маркета
-            excelRow.createCell(2).setCellValue(row.getPeriodOrderDelivery());
-            excelRow.createCell(3).setCellValue(row.getProductGroup());
-            excelRow.createCell(4).setCellValue(row.getProductName());
-            excelRow.createCell(5).setCellValue(row.getProductCode() != null ? row.getProductCode() : 0);
-            excelRow.createCell(6).setCellValue(row.getOrderedUnitsORL() != null ? row.getOrderedUnitsORL() : 0);
-            excelRow.createCell(7).setCellValue(row.getOrderedUnitsManager() != null ? row.getOrderedUnitsManager() : 0);
-            excelRow.createCell(8).setCellValue(row.getAcceptedUnits() != null ? row.getAcceptedUnits() : 0);
-            excelRow.createCell(9).setCellValue(row.getPrecentOrderFulfillment() != null ? row.getPrecentOrderFulfillment() + "%" : "0.0");
-            excelRow.createCell(10).setCellValue(row.getDiscrepancyQuantity() != null ? row.getDiscrepancyQuantity() : 0);
-            excelRow.createCell(11).setCellValue(row.getOrderedRUB() != null ? row.getOrderedRUB() : 0.0);
-            excelRow.createCell(12).setCellValue(row.getAcceptedRUB() != null ? row.getAcceptedRUB() : 0.0);
-            excelRow.createCell(13).setCellValue(row.getPrecentOrderCompletionNotNDS() != null ? row.getPrecentOrderCompletionNotNDS() : 0.0);
-            excelRow.createCell(14).setCellValue(row.getDiscrepancyNotNDS() != null ? row.getDiscrepancyNotNDS() : 0.0);
-            excelRow.createCell(15).setCellValue(row.getComment() != null ? row.getComment() : null);
+            excelRow.createCell(2).setCellValue(getWeekRange(row.getDateUnload()));
+            excelRow.createCell(3).setCellValue(row.getDateUnload().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")));
+            excelRow.createCell(4).setCellValue(row.getStock());
+            excelRow.createCell(5).setCellValue(row.getProductName());
+            excelRow.createCell(6).setCellValue(row.getProductCode() != null ? row.getProductCode() : 0);
+            excelRow.createCell(7).setCellValue(row.getOrderedUnitsORL() != null ? row.getOrderedUnitsORL() : 0);
+            excelRow.createCell(8).setCellValue(row.getOrderedUnitsManager() != null ? row.getOrderedUnitsManager() : 0);
+            excelRow.createCell(9).setCellValue(row.getAcceptedUnits() != null ? row.getAcceptedUnits() : 0);
+            excelRow.createCell(10).setCellValue(row.getPrecentOrderFulfillment() != null ? row.getPrecentOrderFulfillment() + "%" : "0.0");
+            excelRow.createCell(11).setCellValue(row.getDiscrepancyQuantity() != null ? row.getDiscrepancyQuantity() : 0);
+//            excelRow.createCell(11).setCellValue(row.getOrderedRUB() != null ? row.getOrderedRUB() : 0.0);
+//            excelRow.createCell(12).setCellValue(row.getAcceptedRUB() != null ? row.getAcceptedRUB() : 0.0);
+//            excelRow.createCell(13).setCellValue(row.getPrecentOrderCompletionNotNDS() != null ? row.getPrecentOrderCompletionNotNDS() : 0.0);
+//            excelRow.createCell(14).setCellValue(row.getDiscrepancyNotNDS() != null ? row.getDiscrepancyNotNDS() : 0.0);
+            excelRow.createCell(12).setCellValue(row.getComment() != null ? row.getComment() : null);
         }
 
         // Автоматическая настройка ширины столбцов
         for (int i = 0; i < headers.length; i++) {
             sheet.autoSizeColumn(i);
         }
+        
+     // Устанавливаем фильтры на все столбцы
+        sheet.setAutoFilter(new CellRangeAddress(1, 1, 0, headers.length - 1));
+        
+        // Устанавливаем заморозку первых двух строк
+        // Первый параметр: количество фиксированных столбцов (0 — без заморозки столбцов)
+        // Второй параметр: количество фиксированных строк (2 строки)
+        sheet.createFreezePane(0, 2);
 
+        
         // Сохраняем файл
         try (FileOutputStream fileOut = new FileOutputStream(filePath)) {
             workbook.write(fileOut);
@@ -263,6 +317,29 @@ public class POIExcel {
         workbook.close();
 
         System.out.println("Excel файл успешно создан: " + filePath);
+    }
+	
+	/**
+	 * Метод который принимает дату 21.01.2025 а отдаёт диапазон дат недели, в которую входит эта дата 
+	 * 
+	 * @param date
+	 * @return 20.01.2025 - 26.01.2025
+	 */
+	public static String getWeekRange(LocalDateTime date) {
+        // Преобразуем LocalDateTime в LocalDate
+        LocalDate localDate = date.toLocalDate();
+
+        // Определяем первый и последний день недели
+        LocalDate startOfWeek = localDate.with(DayOfWeek.MONDAY);
+        LocalDate endOfWeek = localDate.with(DayOfWeek.SUNDAY);
+
+        // Форматируем даты в строку
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+        String startOfWeekStr = startOfWeek.format(formatter);
+        String endOfWeekStr = endOfWeek.format(formatter);
+
+        // Возвращаем диапазон дат
+        return startOfWeekStr + " - " + endOfWeekStr;
     }
 
 	/**

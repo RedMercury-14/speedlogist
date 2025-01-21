@@ -255,7 +255,7 @@ public class OrderCreater {
 			orderLine.setOrder(order);
 			orderLine.setQuantityOrder(Double.parseDouble(orderBuyDTO.getQuantityOrder()));
 			orderLine.setQuantityPack(Double.parseDouble(orderBuyDTO.getQuantityInPack()));
-			orderLine.setQuantityPallet(Double.parseDouble(orderBuyDTO.getQuantityInPallet()));
+			orderLine.setQuantityPallet(orderBuyDTO.getQuantityInPallet() != null ? Double.parseDouble(orderBuyDTO.getQuantityInPallet()) : null);
 			orderLine.setId(id);
 			result.add(orderLine);
 			id++;

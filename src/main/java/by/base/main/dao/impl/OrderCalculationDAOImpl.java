@@ -24,9 +24,6 @@ public class OrderCalculationDAOImpl implements OrderCalculationDAO {
 
     private static final String queryGetObjByIdOrderCalculation = "from OrderCalculation oc left join fetch oc.orderProducts op where oc.id=:idOrderCalculation";
 
-
-
-    @Transactional
     @Override
     public OrderCalculation getOrderCalculationById(Integer id) {
         Session currentSession = sessionFactory.getCurrentSession();
@@ -40,7 +37,6 @@ public class OrderCalculationDAOImpl implements OrderCalculationDAO {
         return object;
     }
 
-    @Transactional
     @Override
     public Integer saveOrderCalculation(OrderCalculation orderCalculation) {
         Session currentSession = sessionFactory.getCurrentSession();
@@ -49,7 +45,6 @@ public class OrderCalculationDAOImpl implements OrderCalculationDAO {
     }
 
     private static final String queryGetOrderCalculationByPeriod = "from OrderCalculation oc where oc.deliveryDate BETWEEN :dateStart and :dateEnd";
-    @Transactional
     @Override
     public List<OrderCalculation> getOrderCalculationsForPeriod(Date dateFrom, Date dateTo) {
         Session currentSession = sessionFactory.getCurrentSession();
@@ -64,8 +59,6 @@ public class OrderCalculationDAOImpl implements OrderCalculationDAO {
 
     private static final String queryGetOrderCalculationByContractAndNumStock = "from OrderCalculation oc where oc.counterpartyContractCode = :contract " +
             "and oc.numStock = :numStock and oc.deliveryDate = :date and oc.goodsId = :goodId";
-
-    @Transactional
     @Override
     public OrderCalculation getOrderCalculatiionByContractNumStockAndDeliveryDate(Long contract, Integer numStock, Date date, Long goodId) {
         Session currentSession = sessionFactory.getCurrentSession();

@@ -24,7 +24,6 @@ public class TruckDAOImlp implements TruckDAO{
 
 	private static final String queryGetList = "from Truck tr LEFT JOIN FETCH tr.user u LEFT JOIN FETCH tr.routes r order by tr.idTruck";
 	@Override
-	@Transactional
 	public List<Truck> getTruckList() {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<Truck> theObject = currentSession.createQuery(queryGetList, Truck.class);
@@ -33,7 +32,6 @@ public class TruckDAOImlp implements TruckDAO{
 	}
 
 	@Override
-	@Transactional
 	public void saveOrUpdateTruck(Truck truck) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		currentSession.saveOrUpdate(truck);
@@ -42,7 +40,6 @@ public class TruckDAOImlp implements TruckDAO{
 
 	private static final String queryGetObjById = "from Truck tr LEFT JOIN FETCH tr.user u LEFT JOIN FETCH tr.routes r where tr.idTruck=:idTruck";
 	@Override
-	@Transactional
 	public Truck getTruckById(int id) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<Truck> theObject = currentSession.createQuery(queryGetObjById, Truck.class);
@@ -54,7 +51,6 @@ public class TruckDAOImlp implements TruckDAO{
 
 	private static final String queryGetListObj = "from Truck tr LEFT JOIN FETCH tr.user u LEFT JOIN FETCH tr.routes r where tr.numTruck=:setNumTruck";
 	@Override
-	@Transactional
 	public Truck getTruckByNum(String login) {
 		try {
 			Session currentSession = sessionFactory.getCurrentSession();		
@@ -71,7 +67,6 @@ public class TruckDAOImlp implements TruckDAO{
 
 	private static final String queryDeleteById = "delete from Truck where idTruck=:setId";
 	@Override
-	@Transactional
 	public void deleteTruckById(int id) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query theQuery = 
@@ -83,7 +78,6 @@ public class TruckDAOImlp implements TruckDAO{
 
 	private static final String queryDeleteByLogin = "delete from Truck where numTruck=:setLogin";
 	@Override
-	@Transactional
 	public void deleteTruckByNum(String login) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query theQuery = 
@@ -95,7 +89,6 @@ public class TruckDAOImlp implements TruckDAO{
 	
 	private static final String queryGetListObjByUser = "from Truck tr LEFT JOIN FETCH tr.routes r where tr.user=:user";
 	@Override
-	@Transactional
 	public List<Truck> getTruckListByUser(User user) {
 		Session currentSession = sessionFactory.getCurrentSession();		
 		Query<Truck> theObject = currentSession.createQuery(queryGetListObjByUser, Truck.class);
@@ -104,7 +97,6 @@ public class TruckDAOImlp implements TruckDAO{
 		return trucks;
 	}
 
-	@Transactional
 	@Override
 	public Truck saveNewTruck(Truck truck) {
 		Session currentSession = sessionFactory.getCurrentSession();
@@ -113,7 +105,6 @@ public class TruckDAOImlp implements TruckDAO{
 		return truck;
 	}
 
-	@Transactional
 	@Override
 	public void updateTruck(Truck truck) {
 		Session currentSession = sessionFactory.getCurrentSession();

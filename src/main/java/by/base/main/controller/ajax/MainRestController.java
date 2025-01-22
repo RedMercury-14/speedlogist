@@ -6740,30 +6740,7 @@ public class MainRestController {
 		return jsonResponsePolygon;
 	}
 
-	@GetMapping("/manager/process")
-	public void getReport() {
-		System.out.println("start");
-		List<Message> messages = messageService.getMEssageList();
-		System.out.println("Выгрузка завершена, колличество сообщений: " + messages.size());
-		DateTimeFormatter myFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-		double precent = 0.0;
-		for (int i = 0; i < messages.size(); i++) {
-			Message message = messages.get(i);
-			if (message.getDate() != null) {
-				continue;
-			}
-			String dateStr = message.getDatetime().split(";")[0];
-			if (dateStr.length() < 10) {
-				dateStr = "0" + dateStr;
-			}
-			Date date = Date.valueOf(LocalDate.parse(dateStr, myFormatter));
-			messageService.updateDate(message.getIdMessage(), date);
-			precent = i * 100 / messages.size();
-			System.out.println(roundВouble(precent, 1) + "%");
-		}
-		System.out.println("Конец программы");
-	}
-
+	
 	/**
 	 * Метод отвечает за формирование отчёта.
 	 * Отлично отправляет его через rest
@@ -9581,18 +9558,18 @@ public class MainRestController {
 	public Set<Route> getActiveTenders() {
 		User target = getThisUser();
 		LocalDate dateNow = LocalDate.now();
-		if (getThisUserRole() == null) {
+		if (getThisUserRole(target) == null) {
 			return null;
 		}
 		if (target.isBlock() || target.getCheck().split("&").length > 1) {
 			return null;
 		} else {
-			Set<Route> routes = new HashSet<Route>();
-			routeService.getRouteListAsStatus("1", "1").stream()
-					.filter(r -> r.getComments() != null && r.getComments().equals("international"))
-					.filter(r-> !r.getDateLoadPreviously().isBefore(dateNow)) // не показывает тендеры со вчерашней датой загрузки
-					.forEach(r -> routes.add(r));
-//			System.out.println(routes.size());
+//			Set<Route> routes = new HashSet<Route>();
+//			routeService.getRouteListAsStatus("1", "1").stream() // это в отдельный запрос
+//					.filter(r -> r.getComments() != null && r.getComments().equals("international"))
+//					.filter(r-> !r.getDateLoadPreviously().isBefore(dateNow)) // не показывает тендеры со вчерашней датой загрузки
+//					.forEach(r -> routes.add(r));
+			Set<Route> routes = new HashSet<Route>(routeService.getActualRoute(Date.valueOf(dateNow)));
 			return routes;
 		}
 	}
@@ -9736,8 +9713,8 @@ public class MainRestController {
 		ChatEnpoint.internationalMessegeList.stream().filter(mes -> mes.getIdRoute().equals(idRoute + ""))
 				.forEach(mes -> messagesList.add(mes));
 
-		Role role = getThisUserRole();
 		User user = getThisUser();
+		Role role = getThisUserRole(user);
 		if (role != null && role.getAuthority().equals("ROLE_ADMIN") || role.getAuthority().equals("ROLE_TOPMANAGER") || role.getAuthority().equals("ROLE_MANAGER")) {
 			return messagesList;
 		} else {
@@ -9748,6 +9725,10 @@ public class MainRestController {
 
 	}
 
+	/**
+	 * отдаёт сообщения, на которые есть предложения от данного юзера (сравнине по УНП) из кеша
+	 * @return
+	 */
 	@GetMapping("/info/message/routes/from_me") // отдаёт сообщения, на которые есть предложения от данного юзера
 												// (сравнине по УНП) из кеша
 	public List<Message> getIdRouteByTargetCarrier() {
@@ -9784,6 +9765,7 @@ public class MainRestController {
 		return mainChat.messegeList;
 	}
 
+	@TimedExecution
 	@GetMapping("/mainchat/messagesList&{login}") // отдаёт лист непрочитанных сообщений из mainChat
 	public List<Message> getNumMessageListByLogin(@PathVariable String login) {
 		List<Message> messages = new ArrayList<Message>();
@@ -9791,7 +9773,9 @@ public class MainRestController {
 		List<Message> result = new ArrayList<Message>();
 		DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("d-MM-yyyy");
 		String now = LocalDate.now().format(dateFormatter);
-		messageService.getListMessageByComment(login).stream()
+		List<Message> listMess = messageService.getListMessageByComment(login); // остановился тут! этот метод постоянно вытягивает большое кол-во объектов message которые засоряют кеш
+		System.out.println(listMess.size());
+		listMess.stream()
 				.filter(mes -> mes.getDatetime().split(";")[0].equals(now)
 						|| mes.getDatetime().split(";")[0].equals(LocalDate.now().minusDays(1).format(dateFormatter))
 						|| mes.getDatetime().split(";")[0].equals(LocalDate.now().minusDays(2).format(dateFormatter))
@@ -9996,10 +9980,20 @@ public class MainRestController {
 		return convFile;
 	}
 
+	@Deprecated
 	private Role getThisUserRole() {
 		String name = SecurityContextHolder.getContext().getAuthentication().getName();
 		if (!name.equals("anonymousUser")) {
 			Role role = userService.getUserByLogin(name).getRoles().stream().findFirst().get();
+			return role;
+		} else {
+			return null;
+		}
+	}
+	private Role getThisUserRole(User user) {
+		String name = SecurityContextHolder.getContext().getAuthentication().getName();
+		if (!name.equals("anonymousUser")) {
+			Role role = user.getRoles().stream().findFirst().get();
 			return role;
 		} else {
 			return null;

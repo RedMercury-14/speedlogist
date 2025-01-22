@@ -47,9 +47,6 @@ public class TsdWebSocket {
 	private UserService userService;
 	
 	@Autowired
-	private MessageService messageService;
-	
-	@Autowired
 	private MainController mainController;
 	
 	@Autowired

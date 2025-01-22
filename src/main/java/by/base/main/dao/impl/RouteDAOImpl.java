@@ -3,6 +3,7 @@ package by.base.main.dao.impl;
 import java.sql.Date;
 import java.sql.Time;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -361,8 +362,11 @@ public class RouteDAOImpl implements RouteDAO {
 		return result;
 	}
 
-	private static final String queryUpdateDrop = "UPDATE Route r SET r.dateLoadActually =NULL, r.dateUnloadActually =NULL, r.timeLoadActually=NULL, r.timeUnloadActually=NULL, r.truck=NULL, r.driver =NULL where r.idRoute=:idRoute";
-
+	/**
+	 * хороший метод который использует SET
+	 */
+	private static final String queryUpdateDrop = "UPDATE Route r "
+			+ "SET r.dateLoadActually =NULL, r.dateUnloadActually =NULL, r.timeLoadActually=NULL, r.timeUnloadActually=NULL, r.truck=NULL, r.driver =NULL where r.idRoute=:idRoute";
 	@Transactional
 	@Override
 	public int updateDropRouteDateOfCarrier(Integer idRoute) {
@@ -559,5 +563,22 @@ public class RouteDAOImpl implements RouteDAO {
 		Session currentSession = sessionFactory.getCurrentSession();
 		currentSession.update(route);
 		
+	}
+
+	private static final String queryGetActualRoute = "from Route r "
+			+ "LEFT JOIN FETCH r.orders ord "
+			+ "LEFT JOIN FETCH ord.addresses addr "
+			+ "LEFT JOIN FETCH r.user u "
+			+ "LEFT JOIN FETCH r.truck tr "
+			+ "LEFT JOIN FETCH r.roteHasShop rhs "
+			+ "LEFT JOIN FETCH r.driver d "
+			+ "where r.comments ='international' AND r.statusRoute =1 AND r.dateLoadPreviously >= :dateNow";
+	@Override
+	public List<Route> getActualRoute(Date date) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Route> theObject = currentSession.createQuery(queryGetActualRoute, Route.class);
+		theObject.setParameter("dateNow", date, TemporalType.DATE);
+		List<Route> objects = theObject.getResultList();		
+		return new ArrayList<Route>(new HashSet<Route>(objects));
 	}
 }

@@ -104,18 +104,18 @@ for (let i = 1; i < rows.length; i++) {
 	row.querySelector('#status').addEventListener('mousedown', (event) => {
 		var index = row.querySelector('#option').options.selectedIndex
 		var text = row.querySelector('#option').options[index].value
-		sendStatus(text, idRoute)
+//		sendStatus(text, idRoute)
 	})
 	if (row.querySelector('input[name=update]') != null) {
 		row.querySelector('input[name=update]').addEventListener('mousedown', () => {
 			var routeDirection = row.querySelector('td[id=routeDirection]').innerHTML;
-			sendProofDriverAndCar(idRoute, routeDirection);
+//			sendProofDriverAndCar(idRoute, routeDirection);
 		})
 	} else {
 		row.querySelector('input[name=revers]') &&
 		row.querySelector('input[name=revers]').addEventListener('mousedown', () => {
 			var routeDirection = row.querySelector('td[id=routeDirection]').innerHTML;
-			sendReversDriverAndCar(idRoute, routeDirection);
+//			sendReversDriverAndCar(idRoute, routeDirection);
 		})
 
 	}

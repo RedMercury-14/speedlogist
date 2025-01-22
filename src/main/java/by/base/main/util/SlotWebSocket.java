@@ -52,9 +52,6 @@ public class SlotWebSocket {
 	UserService userService;
 	
 	@Autowired
-	MessageService messageService;
-	
-	@Autowired
 	MainController mainController;
 	
 	@Autowired

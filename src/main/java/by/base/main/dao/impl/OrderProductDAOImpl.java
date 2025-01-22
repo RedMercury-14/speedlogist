@@ -1,13 +1,16 @@
 package by.base.main.dao.impl;
 
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -47,7 +50,9 @@ public class OrderProductDAOImpl implements OrderProductDAO{
 	}
 
 	
-	private static final String queryGetObjByCode = "from OrderProduct where idOrderProduct=:idOrderProduct";
+//	private static final String queryGetObjByCode = "from OrderProduct where idOrderProduct=:idOrderProduct";
+private static final String queryGetObjByCode = "from OrderProduct o left join fetch o.orderCalculation where o.idOrderProduct=:idOrderProduct";
+
 	@Transactional
 	@Override
 	public OrderProduct getOrderProductById(Integer id) {
@@ -113,6 +118,45 @@ public class OrderProductDAOImpl implements OrderProductDAO{
 		Set<OrderProduct> trucks = new HashSet<OrderProduct>(theObject.getResultList());
 //		System.out.println(codeProducts);
 		return new ArrayList<OrderProduct>(trucks);
+	}
+
+//	private static final String queryGetOrderProductMapHasDateList = "from OrderProduct where dateCreate IN (:dateCreate)";
+	@Transactional
+	@Override
+	public Map<String, Map<Integer, OrderProduct>> getOrderProductMapHasDateList(List<java.sql.Date> dates) {
+//		System.out.println("Даты пришли в ко-ве :" + dates.size());
+		
+		Session currentSession = sessionFactory.getCurrentSession();
+		// Генерация запроса с учетом количества дат
+		String hql = "from OrderProduct where " +
+		             dates.stream()
+		                  .map(date -> "str(dateCreate) LIKE :datePattern" + dates.indexOf(date))
+		                  .collect(Collectors.joining(" OR "));
+		
+		
+		
+		Query<OrderProduct> theObject = currentSession.createQuery(hql, OrderProduct.class);
+		// Установка параметров
+		for (int i = 0; i < dates.size(); i++) {
+		    String datePattern = new SimpleDateFormat("yyyy-MM-dd").format(dates.get(i)) + "%";
+		    theObject.setParameter("datePattern" + i, datePattern);
+		}
+		List<OrderProduct> results = theObject.getResultList();
+		
+//		System.out.println("Выгрузил объектов: " + results.size());
+		Map<String, Map<Integer, OrderProduct>> orderProductMap = results.stream()
+	            .collect(Collectors.groupingBy(
+	                op -> op.getDateCreate().toString().split(" ")[0], // Ключ верхнего уровня
+	                Collectors.toMap(
+	                    OrderProduct::getCodeProduct, // Ключ вложенного Map
+	                    op -> op // Значение вложенного Map
+	                )
+	            ));
+		
+//		System.out.println("В мапе объектов : " + orderProductMap.size());
+//		orderProductMap.forEach((k,v)-> System.out.println("Для даты :" + k + " -> " + v.size() + " значений"));
+		
+		return orderProductMap;
 	}
 
 }

@@ -223,4 +223,9 @@ public class ScheduleServiceImpl implements ScheduleService{
 	public List<CounterpartyDTO> getСounterpartyListRCNameOnly() {
 		return scheduleDAO.getСounterpartyListRCNameOnly();
 	}
+
+	@Override
+	public List<Schedule> getAllSchedulesByNumContractAndNumStock(Long num, Integer shock) {
+		return scheduleDAO.getAllSchedulesByNumContractAndNumStock(num, shock);
+	}
 }

@@ -419,15 +419,6 @@ public class OrderServiceImpl implements OrderService {
 		return orderDAO.getOrderByFirstLoadSlotAndDateOrderOrl(dateStart, dateEnd, dateOrderOrl);
 	}
 
-	@Override
-	public List<Order> getOrdersByGoodId(Long goodsId) {
-		return orderDAO.getOrdersByGoodId(goodsId);
-	}
-
-	@Override
-	public Map<Long, Order> getSpecialOrdersByListGoodId(List<Long> goodsIds) {
-		return orderDAO.getSpecialOrdersByListGoodId(goodsIds);
-	}
 
 	@Override
 	public Map<String, Order> getOrdersByListMarketNumber(List<String> marketNumber) {
@@ -438,6 +429,30 @@ public class OrderServiceImpl implements OrderService {
 	public List<Order> getOrderByDateOrderORLAndNumStock(Date dateOrderORL, Integer numStock) {
 		return orderDAO.getOrderByDateOrderORLAndNumStock(dateOrderORL, numStock);
 	}
-	
-	
+
+	@Override
+	public List<Order> getLastOrderByGoodId(Long goodsId) {
+		return  orderDAO.getLastOrderByGoodId(goodsId);
+	}
+
+	@Override
+	public List<Order> getOrdersByGoodId(Long goodsId) {
+		return orderDAO.getOrdersByGoodId(goodsId);
+	}
+
+	@Override
+	public java.util.Date getLastTime(Long goodsId){
+		return orderDAO.getLastTime(goodsId);
+	}
+
+	@Override
+	public List<Order> getOrderProductNotJOIN(Long goodsIds){
+		return  orderDAO.getOrderProductNotJOIN(goodsIds);
+	}
+
+	@Override
+	public List<Order> getSpecialOrdersByListGoodId(List<Long> goodsIds) {
+		return orderDAO.getSpecialOrdersByListGoodId(goodsIds);
+	}
+
 }

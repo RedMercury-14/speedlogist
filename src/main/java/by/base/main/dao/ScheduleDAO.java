@@ -154,4 +154,12 @@ public interface ScheduleDAO {
 	
 	
 
+	/**
+	 * <br>Возвращает список графиков по номеру контракта и номеру склада
+	 * @param num
+	 * @param shock
+	 * @return
+	 * @author Ira
+	 */
+	List<Schedule> getAllSchedulesByNumContractAndNumStock(Long num, Integer shock);
 }

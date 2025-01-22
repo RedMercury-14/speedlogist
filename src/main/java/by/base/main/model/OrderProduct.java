@@ -1,18 +1,14 @@
 package by.base.main.model;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import javax.persistence.*;
+
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Объект, в который записывается количество заказанного товара
@@ -63,15 +59,19 @@ public class OrderProduct {
     @JoinColumn(name = "product_idproduct", nullable = false)
     @JsonBackReference
     private Product product;
-    
-    
 
-	public String getMarketContractType() {
-		return marketContractType;
+	@ManyToOne (cascade= {CascadeType.MERGE,
+			CascadeType.PERSIST})
+	@JoinColumn(name = "order_calculation_idorder_calculation")
+	@JsonBackReference
+	private OrderCalculation orderCalculation;
+
+	public OrderCalculation getOrderCalculation() {
+		return orderCalculation;
 	}
 
-	public void setMarketContractType(String marketContractType) {
-		this.marketContractType = marketContractType;
+	public void setOrderCalculation(OrderCalculation orderCalculation) {
+		this.orderCalculation = orderCalculation;
 	}
 
 	public Integer getIdOrderProduct() {
@@ -169,6 +169,15 @@ public class OrderProduct {
 
 	public void setQuantityInPallet(Integer quantityInPallet) {
 		this.quantityInPallet = quantityInPallet;
+	}
+
+
+	public String getMarketContractType() {
+		return marketContractType;
+	}
+
+	public void setMarketContractType(String marketContractType) {
+		this.marketContractType = marketContractType;
 	}
 
 	@Override

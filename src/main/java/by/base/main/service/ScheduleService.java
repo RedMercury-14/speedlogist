@@ -20,7 +20,7 @@ public interface ScheduleService {
 	 * @return
 	 */
 	List<Schedule> getSchedulesListTOAll();
-	
+
 	/**
 	 * Метод изменяет название кванта по коду контрагента.
 	 * Возвращает кол-во измененных строк.
@@ -155,12 +155,21 @@ public interface ScheduleService {
 	 * @return
 	 */
 	public List<Schedule> getSchedulesListTOContractOnlyTemp(Long num);
-	
+
 	/**
 	 * Возвращает лист с контрагентами РЦ <b>DTO класс</b>
 	 * <br><b>Важно то что он не подтягивает коды контрактов, что ускоряет работу</b>
 	 * @return
 	 */
 	List<CounterpartyDTO> getСounterpartyListRCNameOnly();
+
+	/**
+	 * <br>Возвращает список графиков по номеру контракта и номеру склада
+	 * @param num
+	 * @param shock
+	 * @return
+	 * @author Ira
+	 */
+	List<Schedule> getAllSchedulesByNumContractAndNumStock(Long num, Integer shock);
 }
 

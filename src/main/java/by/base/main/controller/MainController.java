@@ -403,19 +403,6 @@ public class MainController {
 		return "orlNeed";
 	}
 	
-	@GetMapping("/main/orl/calculated")
-	public String getCalculated(Model model, HttpServletRequest request) {
-		return "orlCalculated";
-	}
-	@GetMapping("/main/procurement/calculated")
-	public String getProcurementCalculated(Model model, HttpServletRequest request) {
-		return "orlCalculated";
-	}
-	@GetMapping("/main/orl/report/398")
-	public String getReport398(Model model, HttpServletRequest request) {
-		return "orlReport398";
-	}
-	
 	@GetMapping("/main/orl/delivery-schedule-to")
 	public String getDeliveryScheduleTOPageForORL(Model model, HttpServletRequest request) {
 		return "deliveryScheduleTO";
@@ -429,6 +416,19 @@ public class MainController {
 	@GetMapping("/main/orl/delivery-schedule")
 	public String getDeliverySchedulePageForORL(Model model, HttpServletRequest request) {
 		return "deliverySchedule";
+	}
+
+	@GetMapping("/main/orl/calculated")
+	public String getCalculated(Model model, HttpServletRequest request) {
+		return "orlCalculated";
+	}
+	@GetMapping("/main/procurement/calculated")
+	public String getProcurementCalculated(Model model, HttpServletRequest request) {
+		return "orlCalculated";
+	}
+	@GetMapping("/main/orl/report/398")
+	public String getReport398(Model model, HttpServletRequest request) {
+		return "orlReport398";
 	}
 	
 	@GetMapping("/main/slots/delivery-schedule")

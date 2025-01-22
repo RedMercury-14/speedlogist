@@ -25,10 +25,12 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -61,7 +63,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import by.base.main.dto.*;
 import by.base.main.model.*;
+import by.base.main.service.*;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -291,10 +295,13 @@ public class MainRestController {
 	
 	@Autowired
 	private PDFWriter pdfWriter;
-	
+
 	@Autowired
 	private TaskService taskService;
-	
+
+
+	@Autowired
+	private OrderCalculationService orderCalculationService;
 	private static String classLog;
 	public static String marketJWT;
 	//в отдельный файл
@@ -308,16 +315,13 @@ public class MainRestController {
 	public static final String passwordMarket = "SL!2024D@2005";
 	
 
-
 	public static final Comparator<Address> comparatorAddressId = (Address e1, Address e2) -> (e1.getIdAddress() - e2.getIdAddress());
 	public static final Comparator<Address> comparatorAddressIdForView = (Address e1, Address e2) -> (e2.getType().charAt(0) - e1.getType().charAt(0));
 	/**
 	 * сортирует от последней точки загрузки
 	 */
 	public static final Comparator<Address> comparatorAddressForLastLoad = (Address e1, Address e2) -> (e2.getPointNumber() - e1.getPointNumber());
-	
-	
-	
+
 	@Autowired
     private ServletContext servletContext;
 
@@ -327,16 +331,267 @@ public class MainRestController {
 		Map<String, Object> responseMap = new HashMap<>();
 
 		List<Order> orders = orderService.getOrdersByGoodId(1773101L);
-		
-		orderService.getSpecialOrdersByListGoodId(Arrays.asList(1773101L, 871528L));
-		
-		
-		
-		System.out.println("Finish --- sendSchedulesHasTOORL");
 
-		responseMap.put("Done", "Done");
-		responseMap.put("size", orders.size());
+		orderService.getSpecialOrdersByListGoodId(Arrays.asList(1773101L, 871528L));
+
+
+
+		System.out.println("Finish --- sendSchedulesHasTOORL");
+        responseMap.put("Done", "Done");
+        responseMap.put("size", orders.size());
 //		responseMap.put("orders", orders);
+		   return responseMap;
+	}
+
+	/**
+	 * Метод для заполнения таблицы расчетов.
+	 * @param orderProductMap
+	 * @param dateStr
+	 * @throws IOException
+	 * @author Ira
+	 */
+    @TimedExecution
+	public void fillOrderCalculation(Map<Integer, OrderProduct> orderProductMap, String dateStr) throws IOException {
+
+		java.util.Date t1 = new java.util.Date();
+
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+		LocalDate date = dateStr == null ? LocalDate.now() : LocalDate.parse(dateStr, dtf);
+
+		Map<Long, String> goodsWithoutContracts = new HashMap<>();
+		Map<List <String>, Double> contractsWithoutSchedules = new HashMap<>();
+		boolean isFileCreated = false;
+
+		List <Long> goodsIds = orderProductMap.keySet().stream().map(Long::valueOf).collect(Collectors.toList());
+
+		Map<Long, Order> resMap = new HashMap<Long, Order>();
+		java.util.Date os1 = new java.util.Date();
+		List <Order> orders = orderService.getSpecialOrdersByListGoodId(goodsIds); //сюда привести лист из OrderDao?
+
+		java.util.Date os2 = new java.util.Date();
+		System.out.println("order service = " + (os2.getTime() - os1.getTime()));
+
+		List <Long> goodsWithoutOrders = new ArrayList<>(goodsIds);
+		List <Long> goodsWithOrders = new ArrayList<>(goodsIds);
+
+		//распределяем лист ордеров в мапу по кодам товара + создаём лист для товаров ордеров
+		int i = 0;
+		for (long goodId: goodsIds) {
+			i = 0;
+			for (Order order : orders) {
+				if(order.getOrderLinesMap().containsKey(goodId)) {
+					if(!resMap.containsKey(goodId) ) {
+						resMap.put(goodId, order);
+						i++;
+					} else {
+						continue;
+					}
+				} else {
+					continue;
+				}
+			}
+			if (i == 0) {
+				goodsWithOrders.remove(goodId);
+			} else {
+				goodsWithoutOrders.remove(goodId);
+			}
+		}
+
+		if (!goodsWithoutOrders.isEmpty()) {
+			isFileCreated = true;
+		}
+
+		for (Long goodId: goodsWithOrders) {
+			if (orderProductMap.containsKey(goodId.intValue())) {
+				OrderProduct orderProduct = orderProductMap.get(goodId.intValue());
+				String goodName = orderProduct.getNameProduct();
+				String counterpartyContractCode = orderProduct.getMarketContractType();
+
+				List<Integer> stocks = new ArrayList<>();
+				if (orderProduct.getQuantity1700() != null) {
+					stocks.add(1700);
+				}
+				if (orderProduct.getQuantity1800() != null) {
+					stocks.add(1800);
+				}
+
+				for (Integer stock: stocks) {
+					List<Schedule> schedules = null;
+					Schedule schedule = null;
+					LocalDate deliveryDate = null;
+					OrderCalculation orderCalculation = new OrderCalculation();
+					schedules = scheduleService.getAllSchedulesByNumContractAndNumStock(Long.valueOf(counterpartyContractCode), 1700);//потому что для 1800 действует такой же график, как и для 1700
+
+					schedules.sort(Comparator.comparing(Schedule::getStatus).reversed());
+					int quantity = 0;
+					if (stock == 1700) {
+						quantity = orderProduct.getQuantity1700();
+					} else if (orderProduct.getQuantity1800() != null) {
+						quantity = orderProduct.getQuantity1800();
+					}
+
+					List <OrderLine> orderLines = resMap.get(goodId).getOrderLines().stream().collect(Collectors.toList());
+					double quantityInPallet = 0;
+					double currentAmountOfPallets = 0.0;
+					double amountOfPallets = 0;
+
+					OrderLine orderLine = orderLines.get(0);
+					quantityInPallet = orderLine.getQuantityPallet();
+					currentAmountOfPallets = Math.ceil(quantity/quantityInPallet);
+					amountOfPallets += currentAmountOfPallets;
+					orderCalculation.setGoodGroup(orderLine.getGoodsGroupName());
+					if (schedules.isEmpty()) {
+						if (contractsWithoutSchedules.containsKey(Arrays.asList(counterpartyContractCode, stock.toString()))) {
+							Double pallets = contractsWithoutSchedules.get(Arrays.asList(counterpartyContractCode, stock.toString()));
+							pallets += currentAmountOfPallets;
+							contractsWithoutSchedules.put(Arrays.asList(counterpartyContractCode, stock.toString(), "Нет графиков для данного товара"), pallets);
+						} else {
+							contractsWithoutSchedules.put(Arrays.asList(counterpartyContractCode, stock.toString()), currentAmountOfPallets);
+						}
+						continue;
+					}
+					for (Schedule checkSchedule: schedules) {
+						deliveryDate = getDeliveryDate(checkSchedule, date);
+						if (deliveryDate != null) {
+							schedule = checkSchedule;
+							break;
+						}
+
+					}
+
+					if (deliveryDate == null) {
+						isFileCreated = true;
+						if (contractsWithoutSchedules.containsKey(Arrays.asList(counterpartyContractCode, stock.toString()))) {
+							Double pallets = contractsWithoutSchedules.get(Arrays.asList(counterpartyContractCode, stock.toString()));
+							pallets += currentAmountOfPallets;
+
+							contractsWithoutSchedules.put(Arrays.asList(counterpartyContractCode, stock.toString()), pallets);
+						} else {
+							contractsWithoutSchedules.put(Arrays.asList(counterpartyContractCode, stock.toString()), currentAmountOfPallets);
+						}
+						continue;
+					}
+
+					orderCalculation = orderCalculationService.getOrderCalculatiionByContractNumStockGoodIdAndDeliveryDate(Long.valueOf(counterpartyContractCode), stock, Date.valueOf(deliveryDate), goodId);
+					double oldAmountOfPallets = orderCalculation.getQuantityOfPallets() == null ? 0 : orderCalculation.getQuantityOfPallets();
+					double oldQuantity = orderCalculation.getQuantityOrder() == null ? 0 : orderCalculation.getQuantityOrder();
+					orderCalculation.setDeliveryDate(Date.valueOf(deliveryDate));
+					orderCalculation.setCounterpartyCode(schedule.getCounterpartyCode());
+					orderCalculation.setCounterpartyName(schedule.getName());
+					orderCalculation.setGoodsId(goodId);
+					orderCalculation.setGoodName(goodName);
+					orderCalculation.setCounterpartyContractCode(Long.valueOf(counterpartyContractCode));
+					orderCalculation.setNumStock(stock);
+					orderCalculation.setQuantityOrder((double) quantity + oldQuantity);
+					orderCalculation.setQuantityInPallet(quantityInPallet);
+					orderCalculation.setQuantityOfPallets(amountOfPallets + oldAmountOfPallets);
+					orderCalculation.setStatus(20);
+					String history = orderCalculation.getHistory() == null ? "" : orderCalculation.getHistory();
+					history += " " + dateStr + " - " + Math.ceil(quantity/quantityInPallet) + ";";
+					orderCalculation.setHistory(history);
+					orderCalculationService.saveOrderCalculation(orderCalculation);
+
+				}
+			}
+		}
+
+		String filePath = servletContext.getRealPath("/") + "resources/others/";
+
+		String filename = "Товары без расчетов " + dateStr + ".xlsx";
+		poiExcel.fillTableForProblemGoods(contractsWithoutSchedules, goodsWithoutOrders, filePath + filename);
+
+		if (isFileCreated) {
+			List <File> filesForEmail = new ArrayList<>();
+			filesForEmail.add(new File(filePath + filename));
+			File zipFile;
+			List <File> filesToSend = new ArrayList<File>();
+
+			try {
+				zipFile = createZipFile(filesForEmail, filePath + "Товары без расчетов.zip");
+				filesToSend.add(zipFile);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+//		responseMap.put("Done", "Done");
+//		responseMap.put("size", orders.size());
+//		responseMap.put("orders", orders);
+			System.out.println("В прикреплённой таблице список товаров, по которым не были созданы расчеты");
+			List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+			//mailService.sendEmailWithFilesToUsers(servletContext, "Товары без расчетов", В прикреплённой таблице список товаров, по которым не были созданы расчеты, filesToSend, emails);
+
+		}
+		java.util.Date t2 = new java.util.Date();
+		System.out.println("all method = " + (t2.getTime() - t1.getTime()));
+
+	}
+
+	/**
+
+	 * @param request
+	 * @param response
+	 * @param dateStart
+	 * @param dateFinish
+	 * @throws IOException
+	 * @throws ParseException
+	 * Метод передаёт на фронт информацию о количестве паллет
+	 * для каждого кода контракта за указанный диапазон дат.
+	 * @author Ira
+	 */
+
+	@GetMapping("/get-pallets/{dateStart}&{dateFinish}")
+	@TimedExecution
+	public Map<String, Object> getAmountOfPallets(HttpServletRequest request, HttpServletResponse response,
+												  @PathVariable String dateStart,
+												  @PathVariable String dateFinish) throws IOException, ParseException {
+		Map<String, Object> responseMap = new HashMap<>();
+
+		Date dateFrom = Date.valueOf(dateStart);
+		Date dateTo = Date.valueOf(dateFinish);
+
+		List<OrderCalculation> orderCalculations = orderCalculationService.getOrderCalculationsForPeriod(dateFrom, dateTo);
+
+		Set <Integer> stocks = new HashSet<>();
+		Set <Long> counterpartyContractCodes = new HashSet<>();
+		for (OrderCalculation orderCalculation: orderCalculations) {
+			stocks.add(orderCalculation.getNumStock());
+			counterpartyContractCodes.add(orderCalculation.getCounterpartyContractCode());
+		}
+		List<AmountOfPalletsDto> amountOfPalletsDtos = new ArrayList<>();
+		for (Long counterpartyContractCode: counterpartyContractCodes) {
+			for (Integer stock: stocks) {
+
+				Date temp = dateFrom;
+
+				while (temp.before(dateTo)) {
+					boolean addDto = false;
+					AmountOfPalletsDto amountOfPalletsDto = new AmountOfPalletsDto();
+					int amountOfPalletsTotal = 0;
+					for (OrderCalculation orderCalculation: orderCalculations) {
+
+						if (Objects.equals(orderCalculation.getCounterpartyContractCode(), counterpartyContractCode)
+								&& (Objects.equals(orderCalculation.getNumStock(), stock))
+								&& (Objects.equals(orderCalculation.getDeliveryDate(), temp))) {
+							addDto = true;
+							amountOfPalletsTotal += orderCalculation.getQuantityOfPallets();
+							amountOfPalletsDto.setCounterpartyCode(orderCalculation.getCounterpartyCode());
+							amountOfPalletsDto.setCounterpartyName(orderCalculation.getCounterpartyName());
+
+						}
+					}
+					amountOfPalletsDto.setCounterpartyContractCode(counterpartyContractCode);
+					amountOfPalletsDto.setNumStock(stock);
+					amountOfPalletsDto.setAmountOfPallets(amountOfPalletsTotal);
+					amountOfPalletsDto.setDeliveryDate(temp);
+					if (addDto) {
+						amountOfPalletsDtos.add(amountOfPalletsDto);
+					}
+					temp = Date.valueOf(temp.toLocalDate().plusDays(1));
+				}
+			}
+		}
+
+		responseMap.put("body", amountOfPalletsDtos);
 		return responseMap;
 
 	}
@@ -391,22 +646,165 @@ public class MainRestController {
             zos.closeEntry();
         }
     }
-    
+
     @GetMapping("/balance/{idOrder}")
     public Map<String, Object> balanceMethod(HttpServletRequest request, HttpServletResponse response,
     		@PathVariable String idOrder) throws IOException{
 
 		Map<String, Object> responseMap = new HashMap<>();
-		
+
 		Order order = orderService.getOrderById(Integer.parseInt(idOrder));
 		order.getOrderLines().forEach(o-> System.out.println(o));
 		List<Product> products = readerSchedulePlan.checkBalanceBetweenStock(order);
-		
+
 		responseMap.put("products", products);
 		return responseMap;
     }
-	
-    
+
+
+	public static LocalDate getDeliveryDate(Schedule schedule, LocalDate today) {
+
+		DayOfWeek day = today.getDayOfWeek();
+		Map <DayOfWeek, List<String>> days = new LinkedHashMap<>();
+		days.put(DayOfWeek.MONDAY, new ArrayList<>(Arrays.asList(schedule.getMonday(), "понедельник")));
+		days.put(DayOfWeek.TUESDAY, new ArrayList<>(Arrays.asList(schedule.getTuesday(), "вторник")));
+		days.put(DayOfWeek.WEDNESDAY, new ArrayList<>(Arrays.asList(schedule.getWednesday(), "среда")));
+		days.put(DayOfWeek.THURSDAY, new ArrayList<>(Arrays.asList(schedule.getThursday(), "четверг")));
+		days.put(DayOfWeek.FRIDAY, new ArrayList<>(Arrays.asList(schedule.getFriday(), "пятница")));
+		days.put(DayOfWeek.SATURDAY, new ArrayList<>(Arrays.asList(schedule.getSaturday(), "суббота")));
+		days.put(DayOfWeek.SUNDAY, new ArrayList<>(Arrays.asList(schedule.getSunday(), "воскресенье")));
+
+		DayOfWeek[] keys = days.keySet().toArray(new DayOfWeek[0]);
+
+		DayOfWeek orderDay = day.plus(1);
+		int indexZ = 0;
+		for (int i = 0; i < keys.length; i++) {
+			if (keys[i] == orderDay) {
+				indexZ = i;
+				break;
+			}
+		}
+
+		LocalDate deliveryDate = null;
+		int index;
+		String forSearch = days.get(orderDay).get(1);
+		DayOfWeek dayToCheck;
+		for (int i = 1; i <= keys.length; i++) {
+			index = (indexZ + i) % keys.length; // Циклический обход
+			dayToCheck = keys[index];
+			String findWord = days.get(dayToCheck).get(0);
+			if (findWord !=null && findWord.contains(forSearch)) {
+				int week = 0;
+				if (findWord.contains("н10")) {
+					week = 10 * 7;
+				} else {
+					for (int x = 1; x <= 9; x++) {
+						String weekStr = "н" + x;
+						int weeks;
+						if (findWord.contains(weekStr)) {
+
+							weeks = x;
+
+							if (index <= indexZ) {
+								weeks--;
+							}
+							week = weeks * 7;
+							break;
+						}
+					}
+				}
+
+				deliveryDate = today.plusDays(i + 1 + week);
+				break;
+			}
+		}
+
+		if (deliveryDate == null) {
+			int d = 0;
+		}
+		return deliveryDate;
+	}
+
+	/*
+	 * мой старый метод
+	 */
+//	@GetMapping("/test")
+//	public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException{
+//		java.util.Date t1 = new java.util.Date();
+//		Map<String, Object> responseMap = new HashMap<>();
+//		// Получаем текущую дату для имени файла
+//        LocalDate currentTime = LocalDate.now();
+//        String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+//
+//		List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+////		List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to");
+////		List<String> emailsSupport = propertiesUtils.getValuesByPartialKey(servletContext, "email.orderSupport");
+////		emails.addAll(emailsSupport);
+//		String appPath = servletContext.getRealPath("/");
+//
+//		String fileName1200 = "1200 (----Холодный----).xlsm";
+//		String fileName1100 = "1100 График прямой сухой.xlsm";
+//		String fileNameSample = "График для шаблоново.xlsx";
+//
+//		try {
+//			poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()),
+//					appPath + "resources/others/" + fileName1200);
+//			poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesByTOType("сухой").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()),
+//					appPath + "resources/others/" + fileName1100);
+//			poiExcel.exportToExcelSampleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()),
+//					appPath + "resources/others/" + fileNameSample);
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//			System.err.println("Ошибка формирование EXCEL");
+//		}
+//
+////		response.setHeader("content-disposition", "attachment;filename="+fileName+".xlsx");
+//		List<File> files = new ArrayList<File>();
+//		files.add(new File(appPath + "resources/others/" + fileName1200));
+//		files.add(new File(appPath + "resources/others/" + fileName1100));
+//		files.add(new File(appPath + "resources/others/" + fileNameSample));
+//
+//		 File zipFile = createZipFile(files, appPath + "resources/others/TO.zip");
+//		 List<File> filesZip = new ArrayList<File>();
+//		 filesZip.add(zipFile);
+//
+////		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от TEST" + currentTimeString, "Тестовая отправка сообщения.\nНе обращайте внимания / игнорируте это сообщение", files, emails);
+//		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от TEST" + currentTimeString, "Тестовая отправка сообщения.\nНе обращайте внимания / игнорируте это сообщение \nВерсия с макросом выделений (Ctr+t)", filesZip, emails);
+//		java.util.Date t2 = new java.util.Date();
+//		System.out.println(t2.getTime()-t1.getTime() + " ms - testNewMethod" );
+//		return responseMap;
+//	}
+//
+//    public static File createZipFile(List<File> files, String zipFilePath) throws IOException {
+//        File zipFile = new File(zipFilePath);
+//        try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile))) {
+//            for (File file : files) {
+//                if (file.exists() && !file.isDirectory()) {
+//                    addFileToZip(file, zos);
+//                } else {
+//                    System.err.println("File not found or is a directory: " + file.getAbsolutePath());
+//                }
+//            }
+//        }
+//        return zipFile; // Возвращаем объект File архива
+//    }
+//
+//    private static void addFileToZip(File file, ZipOutputStream zos) throws IOException {
+//        try (FileInputStream fis = new FileInputStream(file)) {
+//            ZipEntry zipEntry = new ZipEntry(file.getName());
+//            zos.putNextEntry(zipEntry);
+//
+//            byte[] buffer = new byte[1024];
+//            int length;
+//            while ((length = fis.read(buffer)) > 0) {
+//                zos.write(buffer, 0, length);
+//            }
+//
+//            zos.closeEntry();
+//        }
+//    }
+
+
     /**
      * Метод для сводной таблицы.
      * принимает даты с по того, что стоит в слотах и код продукта
@@ -437,15 +835,15 @@ public class MainRestController {
     @GetMapping("/logistics/getCounterpartiesList")
     public Map<String, Object> getCounterpartiesList(HttpServletRequest request, HttpServletResponse response) throws IOException{
 
-		Map<String, Object> responseMap = new HashMap<>();		
-		
+		Map<String, Object> responseMap = new HashMap<>();
+
 		responseMap.put("list", scheduleService.getСounterpartyListRCNameOnly());
 		responseMap.put("status", "200");
 		return responseMap;
     }
-    
+
     /**
-     * Метод для страницы ОРЛ, который возвращает все таски в обратном порядке 
+     * Метод для страницы ОРЛ, который возвращает все таски в обратном порядке
      * @param request
      * @param response
      * @param idOrder
@@ -487,15 +885,15 @@ public class MainRestController {
         task.setFromDate(dateFrom);
         task.setStocks(shops);
         task.setToDate(dateTo);
-        
-        int id = taskService.saveTask(task);        
+
+        int id = taskService.saveTask(task);
         task.setIdTask(id);
-       
+
         response.put("status", "200");
         response.put("task", task);
         return response;
     }
-    
+
     /**
 	 * Метод который проверяет будующие заказы на предмет балансов относительно склада, который задан в параметре.
 	 * @param request
@@ -1051,34 +1449,34 @@ public class MainRestController {
 		response.put("json request", requestDto);
 		return response;
 	}
-	
+
 	@TimedExecution
 	@GetMapping("/398/get")
 	public Map<String, Object> get398AndStock(HttpServletRequest request) throws ParseException {
-		
+
 		Task task = taskService.getLastTaskFor398();
 		String stock = task.getStocks();
 		String from = task.getFromDate().toString();
 		String to = task.getToDate().toString();
-		
+
 		java.util.Date t1 = new java.util.Date();
 		Integer maxShopCoint = 40; // максимальное кол-во магазинов в запросе
 		Map<String, Object> response = new HashMap<>();
-		
+
 		//сначала определяыем кол-во магазов и делим их на массивы запросов
 		 String [] mass = stock.split(",");
 		 Integer shopAllCoint = mass.length;
-		 
+
 		 System.out.println("Всего магазинов: " + shopAllCoint);
-		 
+
 		 List<String> shopsList = new ArrayList<String>();
-		 
+
 		 if(shopAllCoint > maxShopCoint) {
 			 int i = 1;
 			 String row = null;
 			 for (String string : mass) {
 				 if(i % maxShopCoint == 0) {
-					 shopsList.add(row); 
+					 shopsList.add(row);
 					 row = null;
 					 System.out.println("записываем строку");
 				 }
@@ -1103,7 +1501,7 @@ public class MainRestController {
 		 String appPath = servletContext.getRealPath("/");
 		String pathFolder = appPath + "resources/others/398/";
 		//сначала удаляем мусор что есть в этой папке
-		
+
 		// Проверяем, существует ли папка
 	    File folder = new File(pathFolder);
 	    if (!folder.exists()) {
@@ -1121,16 +1519,16 @@ public class MainRestController {
 	            }
 	        }
 	    }
-		 
-		 
+
+
 		 Integer j = 0;
 		 for (String stockStr : shopsList) {
 			 j++;
 			 String str = "{\"CRC\": \"\", \"Packet\": {\"MethodName\": \"SpeedLogist.GetReport398\", \"Data\": {\"DateFrom\": \""+from+"\", \"DateTo\": \""+to+"\", \"WarehouseId\": "
 						+ "["+stockStr+"],"
 						+ " \"WhatBase\": [11,12]}}}";
-				try {			
-					checkJWT(marketUrl);			
+				try {
+					checkJWT(marketUrl);
 				} catch (Exception e) {
 					System.err.println("Ошибка получения jwt токена");
 				}
@@ -1141,28 +1539,28 @@ public class MainRestController {
 				JSONObject jsonMainObject2 = (JSONObject) parser.parse(marketPacketDtoStr);
 				String marketDataFor398RequestStr = jsonMainObject2.get("Data") != null ? jsonMainObject2.get("Data").toString() : null;
 				JSONObject jsonMainObjectTarget = (JSONObject) parser.parse(marketDataFor398RequestStr);
-				
+
 				JSONArray warehouseIdArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("WarehouseId").toString());
 				JSONArray whatBaseArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("WhatBase").toString());
-				
+
 				String dateForm = jsonMainObjectTarget.get("DateFrom") == null ? null : jsonMainObjectTarget.get("DateFrom").toString();
 				String dateTo = jsonMainObjectTarget.get("DateTo") == null ? null : jsonMainObjectTarget.get("DateTo").toString();
 				Object[] warehouseId = warehouseIdArray.toArray();
 				Object[] whatBase = whatBaseArray.toArray();
 //				String warehouseId = jsonMainObjectTarget.get("WarehouseId") == null ? null : jsonMainObjectTarget.get("WarehouseId").toString();
 //				String whatBase = jsonMainObjectTarget.get("WhatBase") == null ? null : jsonMainObjectTarget.get("WhatBase").toString();
-				
-				MarketDataFor398Request for398Request = new MarketDataFor398Request(dateForm, dateTo, warehouseId, whatBase);		
-				MarketPacketDto marketPacketDto = new MarketPacketDto(marketJWT, "SpeedLogist.GetReport398", serviceNumber, for398Request);		
+
+				MarketDataFor398Request for398Request = new MarketDataFor398Request(dateForm, dateTo, warehouseId, whatBase);
+				MarketPacketDto marketPacketDto = new MarketPacketDto(marketJWT, "SpeedLogist.GetReport398", serviceNumber, for398Request);
 				MarketRequestDto requestDto = new MarketRequestDto("", marketPacketDto);
-				
+
 				String marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto));
 //				System.out.println(gson.toJson(requestDto));
 				System.out.println("Размер: " + getStringSizeInMegabytes(marketOrder2) + " мб");
-								
-				JSONObject jsonTable = (JSONObject) parser.parse(marketOrder2);	
-				
-				new Thread(new Runnable() {			
+
+				JSONObject jsonTable = (JSONObject) parser.parse(marketOrder2);
+
+				new Thread(new Runnable() {
 					@Override
 					public void run() {
 						try {
@@ -1170,30 +1568,30 @@ public class MainRestController {
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
-						}				
+						}
 					}
 				}).start();
-				
+
 		}
 		java.util.Date t2 = new java.util.Date();
 		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.398");
 //		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
-		
+
 		long time = t2.getTime()-t1.getTime();
-		
+
 		String text = "Принято магазинов: " + mass.length + "\n"
 				+ "С " + from + " по " + to + "\n"
 				+ "Вид расходов : 11,12" + "\n"
 				+ "Всего файлов: " + j + "\n"
 				+ "Время работы: " + time + " мс";
-		
+
 		mailService.sendEmailToUsers(request, "Автоматическая выгрузка : 398", text, emailsORL);
-				
+
 		response.put("status", "200");
-		
+
 		return response;
 	}
-	
+
 	@TimedExecution
 	@GetMapping("/398/{stock}&{from}&{to}")
 	public Map<String, Object> get398AndMoreStock(HttpServletRequest request, @PathVariable String stock,
@@ -1202,21 +1600,21 @@ public class MainRestController {
 		java.util.Date t1 = new java.util.Date();
 		Integer maxShopCoint = 40; // максимальное кол-во магазинов в запросе
 		Map<String, Object> response = new HashMap<>();
-		
+
 		//сначала определяыем кол-во магазов и делим их на массивы запросов
 		 String [] mass = stock.split(",");
 		 Integer shopAllCoint = mass.length;
-		 
+
 		 System.out.println("Всего магазинов: " + shopAllCoint);
-		 
+
 		 List<String> shopsList = new ArrayList<String>();
-		 
+
 		 if(shopAllCoint > maxShopCoint) {
 			 int i = 1;
 			 String row = null;
 			 for (String string : mass) {
 				 if(i % maxShopCoint == 0) {
-					 shopsList.add(row); 
+					 shopsList.add(row);
 					 row = null;
 					 System.out.println("записываем строку");
 				 }
@@ -1241,7 +1639,7 @@ public class MainRestController {
 		 String appPath = servletContext.getRealPath("/");
 		String pathFolder = appPath + "resources/others/398/";
 		//сначала удаляем мусор что есть в этой папке
-		
+
 		// Проверяем, существует ли папка
 	    File folder = new File(pathFolder);
 	    if (!folder.exists()) {
@@ -1259,16 +1657,16 @@ public class MainRestController {
 	            }
 	        }
 	    }
-		 
-		 
+
+
 		 Integer j = 0;
 		 for (String stockStr : shopsList) {
 			 j++;
 			 String str = "{\"CRC\": \"\", \"Packet\": {\"MethodName\": \"SpeedLogist.GetReport398\", \"Data\": {\"DateFrom\": \""+from+"\", \"DateTo\": \""+to+"\", \"WarehouseId\": "
 						+ "["+stockStr+"],"
 						+ " \"WhatBase\": [11,12]}}}";
-				try {			
-					checkJWT(marketUrl);			
+				try {
+					checkJWT(marketUrl);
 				} catch (Exception e) {
 					System.err.println("Ошибка получения jwt токена");
 				}
@@ -1279,28 +1677,28 @@ public class MainRestController {
 				JSONObject jsonMainObject2 = (JSONObject) parser.parse(marketPacketDtoStr);
 				String marketDataFor398RequestStr = jsonMainObject2.get("Data") != null ? jsonMainObject2.get("Data").toString() : null;
 				JSONObject jsonMainObjectTarget = (JSONObject) parser.parse(marketDataFor398RequestStr);
-				
+
 				JSONArray warehouseIdArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("WarehouseId").toString());
 				JSONArray whatBaseArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("WhatBase").toString());
-				
+
 				String dateForm = jsonMainObjectTarget.get("DateFrom") == null ? null : jsonMainObjectTarget.get("DateFrom").toString();
 				String dateTo = jsonMainObjectTarget.get("DateTo") == null ? null : jsonMainObjectTarget.get("DateTo").toString();
 				Object[] warehouseId = warehouseIdArray.toArray();
 				Object[] whatBase = whatBaseArray.toArray();
 //				String warehouseId = jsonMainObjectTarget.get("WarehouseId") == null ? null : jsonMainObjectTarget.get("WarehouseId").toString();
 //				String whatBase = jsonMainObjectTarget.get("WhatBase") == null ? null : jsonMainObjectTarget.get("WhatBase").toString();
-				
-				MarketDataFor398Request for398Request = new MarketDataFor398Request(dateForm, dateTo, warehouseId, whatBase);		
-				MarketPacketDto marketPacketDto = new MarketPacketDto(marketJWT, "SpeedLogist.GetReport398", serviceNumber, for398Request);		
+
+				MarketDataFor398Request for398Request = new MarketDataFor398Request(dateForm, dateTo, warehouseId, whatBase);
+				MarketPacketDto marketPacketDto = new MarketPacketDto(marketJWT, "SpeedLogist.GetReport398", serviceNumber, for398Request);
 				MarketRequestDto requestDto = new MarketRequestDto("", marketPacketDto);
-				
+
 				String marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto));
 //				System.out.println(gson.toJson(requestDto));
 				System.out.println("Размер: " + getStringSizeInMegabytes(marketOrder2) + " мб");
-								
-				JSONObject jsonTable = (JSONObject) parser.parse(marketOrder2);	
-				
-				new Thread(new Runnable() {			
+
+				JSONObject jsonTable = (JSONObject) parser.parse(marketOrder2);
+
+				new Thread(new Runnable() {
 					@Override
 					public void run() {
 						try {
@@ -1308,29 +1706,29 @@ public class MainRestController {
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
-						}				
+						}
 					}
 				}).start();
-				
+
 		}
 		java.util.Date t2 = new java.util.Date();
 		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.398");
 //		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
-		
+
 		long time = t2.getTime()-t1.getTime();
-		
+
 		String text = "Принято магазинов: " + mass.length + "\n"
 				+ "С " + from + " по " + to + "\n"
 				+ "Вид расходов : 11,12" + "\n"
 				+ "Всего файлов: " + j + "\n"
 				+ "Время работы: " + time + " мс";
-		
+
 		mailService.sendEmailToUsers(request, "Автоматическая выгрузка : 398", text, emailsORL);
-				
+
 		response.put("status", "200");
 		return response;
 	}
-	
+
     public static double getStringSizeInMegabytes(String input) {
         if (input == null) {
             throw new IllegalArgumentException("Строка не может быть null");
@@ -1342,7 +1740,7 @@ public class MainRestController {
         // Переводим байты в мегабайты (1 MB = 1024 * 1024 bytes)
         return (double) sizeInBytes / (1024 * 1024);
     }
-	
+
     /**
      * тестовый метод 330 отчёта
      * @param request
@@ -1356,8 +1754,8 @@ public class MainRestController {
 //		String str = "{\"CRC\": \"\", \"Packet\": {\"MethodName\": \"SpeedLogist.GetReport330\", \"Data\": {\"DateFrom\": \"2024-11-05\", \"DateTo\": \"2024-11-29\", \"WarehouseId\": [1700], \"GoodsId\": []}}}";
 		Map<String, Object> response = new HashMap<>();
 		List<MarketDataFor330Responce> responces = new ArrayList<MarketDataFor330Responce>();
-		try {			
-			checkJWT(marketUrl);			
+		try {
+			checkJWT(marketUrl);
 		} catch (Exception e) {
 			System.err.println("Ошибка получения jwt токена");
 		}
@@ -1367,22 +1765,22 @@ public class MainRestController {
 		JSONObject jsonMainObject2 = (JSONObject) parser.parse(marketPacketDtoStr);
 		String marketDataFor398RequestStr = jsonMainObject2.get("Data") != null ? jsonMainObject2.get("Data").toString() : null;
 		JSONObject jsonMainObjectTarget = (JSONObject) parser.parse(marketDataFor398RequestStr);
-		
+
 		JSONArray warehouseIdArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("WarehouseId").toString());
 		JSONArray goodsIdArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("GoodsId").toString());
-		
+
 		String dateForm = jsonMainObjectTarget.get("DateFrom") == null ? null : jsonMainObjectTarget.get("DateFrom").toString();
 		String dateTo = jsonMainObjectTarget.get("DateTo") == null ? null : jsonMainObjectTarget.get("DateTo").toString();
 		Object[] warehouseId = warehouseIdArray.toArray();
 		Object[] goodsId = goodsIdArray.toArray();
-		
-		MarketDataFor330Request for330Request = new MarketDataFor330Request(dateForm, dateTo, warehouseId, goodsId);		
-		MarketPacketDto marketPacketDto = new MarketPacketDto(marketJWT, "SpeedLogist.GetReport330", serviceNumber, for330Request);		
+
+		MarketDataFor330Request for330Request = new MarketDataFor330Request(dateForm, dateTo, warehouseId, goodsId);
+		MarketPacketDto marketPacketDto = new MarketPacketDto(marketJWT, "SpeedLogist.GetReport330", serviceNumber, for330Request);
 		MarketRequestDto requestDto = new MarketRequestDto("", marketPacketDto);
-		
+
 		String marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto));
 		System.out.println(gson.toJson(requestDto));
-		
+
 		if(marketOrder2.equals("503")) { // означает что связь с маркетом потеряна
 			//в этом случае проверяем бд
 			System.err.println("Связь с маркетом потеряна");
@@ -1390,21 +1788,21 @@ public class MainRestController {
 			response.put("payload responce", marketOrder2);
 			response.put("message", "Связь с маркетом потеряна");
 			return response;
-			
+
 		}else{//если есть связь с маркетом
 			JSONObject jsonResponceMainObject = (JSONObject) parser.parse(marketOrder2);
-			JSONArray jsonResponceTable = (JSONArray) parser.parse(jsonResponceMainObject.get("Table").toString());			
+			JSONArray jsonResponceTable = (JSONArray) parser.parse(jsonResponceMainObject.get("Table").toString());
 			for (Object obj : jsonResponceTable) {
 	        	responces.add(new MarketDataFor330Responce(obj.toString())); // парсин json засунул в конструктор
 	        }
-			
-		}	
+
+		}
 		response.put("status", "200");
 		response.put("payload request", marketOrder2);
 		response.put("responce", responces);
 		return response;
 	}
-	
+
 	@TimedExecution
 	@GetMapping("/330/{from}&{to}&{stock}&{code}")
 	public Map<String, Object> get330AndParam(HttpServletRequest request,
@@ -1419,8 +1817,8 @@ public class MainRestController {
 				+ "\"GoodsId\": ["+code+"]}}}";
 		Map<String, Object> response = new HashMap<>();
 		List<MarketDataFor330Responce> responces = new ArrayList<MarketDataFor330Responce>();
-		try {			
-			checkJWT(marketUrl);			
+		try {
+			checkJWT(marketUrl);
 		} catch (Exception e) {
 			System.err.println("Ошибка получения jwt токена");
 		}
@@ -1430,22 +1828,22 @@ public class MainRestController {
 		JSONObject jsonMainObject2 = (JSONObject) parser.parse(marketPacketDtoStr);
 		String marketDataFor398RequestStr = jsonMainObject2.get("Data") != null ? jsonMainObject2.get("Data").toString() : null;
 		JSONObject jsonMainObjectTarget = (JSONObject) parser.parse(marketDataFor398RequestStr);
-		
+
 		JSONArray warehouseIdArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("WarehouseId").toString());
 		JSONArray goodsIdArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("GoodsId").toString());
-		
+
 		String dateForm = jsonMainObjectTarget.get("DateFrom") == null ? null : jsonMainObjectTarget.get("DateFrom").toString();
 		String dateTo = jsonMainObjectTarget.get("DateTo") == null ? null : jsonMainObjectTarget.get("DateTo").toString();
 		Object[] warehouseId = warehouseIdArray.toArray();
 		Object[] goodsId = goodsIdArray.toArray();
-		
-		MarketDataFor330Request for330Request = new MarketDataFor330Request(dateForm, dateTo, warehouseId, goodsId);		
-		MarketPacketDto marketPacketDto = new MarketPacketDto(marketJWT, "SpeedLogist.GetReport330", serviceNumber, for330Request);		
+
+		MarketDataFor330Request for330Request = new MarketDataFor330Request(dateForm, dateTo, warehouseId, goodsId);
+		MarketPacketDto marketPacketDto = new MarketPacketDto(marketJWT, "SpeedLogist.GetReport330", serviceNumber, for330Request);
 		MarketRequestDto requestDto = new MarketRequestDto("", marketPacketDto);
-		
+
 		String marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto));
 		System.out.println(gson.toJson(requestDto));
-		
+
 		if(marketOrder2.equals("503")) { // означает что связь с маркетом потеряна
 			//в этом случае проверяем бд
 			System.err.println("Связь с маркетом потеряна");
@@ -1453,19 +1851,20 @@ public class MainRestController {
 			response.put("payload responce", marketOrder2);
 			response.put("message", "Связь с маркетом потеряна");
 			return response;
-			
+
 		}else{//если есть связь с маркетом
 			JSONObject jsonResponceMainObject = (JSONObject) parser.parse(marketOrder2);
-			JSONArray jsonResponceTable = (JSONArray) parser.parse(jsonResponceMainObject.get("Table").toString());			
+			JSONArray jsonResponceTable = (JSONArray) parser.parse(jsonResponceMainObject.get("Table").toString());
 			for (Object obj : jsonResponceTable) {
 	        	responces.add(new MarketDataFor330Responce(obj.toString())); // парсин json засунул в конструктор
 	        }
-			
-		}	
+
+		}
 		response.put("status", "200");
 		response.put("payload request", marketOrder2);
 		response.put("responce", responces);
 		return response;
+				
 	}
 	
 	/**
@@ -2381,7 +2780,7 @@ public class MainRestController {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		List<Product> products = productService.getAllProductList();
 		Map<Integer, Product> productsMap = products.stream().collect(Collectors.toMap(
 		        Product::getCodeProduct,
@@ -2408,7 +2807,9 @@ public class MainRestController {
 			product.addOrderProducts(entry.getValue());
 			productService.updateProduct(product);
 		}
-		
+
+		fillOrderCalculation(mapOrderProduct, dateStr);
+
 		//Тут будут проверки по потребностям согласно таблице заказов
 		
 		
@@ -3666,8 +4067,7 @@ public class MainRestController {
 				response.put("order", order);
 				return response;
 			}
-		}		
-				
+		}	
 	}
 	
 	/**
@@ -4678,11 +5078,11 @@ public class MainRestController {
 			@RequestParam(value = "excel", required = false) MultipartFile excel)
 			throws InvalidFormatException, IOException, ServiceException {
 		Map<String, String> response = new HashMap<String, String>();	
-		
+
 		float quality = 0.5f; // Уровень качества
 
 		File file1 = poiExcel.getFileByMultipartTarget(excel, request, "666.jpg");
-		
+
 		// Чтение исходного изображения
         BufferedImage image = ImageIO.read(file1);
 
@@ -4696,7 +5096,7 @@ public class MainRestController {
             param.setCompressionQuality(quality); // Качество (0.0 - 1.0)
         }
         String appPath = request.getServletContext().getRealPath("");
-        
+
         // Запись сжатого изображения
         try (FileOutputStream fos = new FileOutputStream(appPath + "resources/others/docs/333.jpg");
              ImageOutputStream ios = ImageIO.createImageOutputStream(fos)) {
@@ -4705,9 +5105,9 @@ public class MainRestController {
         }
 
         writer.dispose();
-        
+
         System.out.println(appPath + "resources/others/docs/333.jpg");
-		
+
 //		response.put("200", text);
 		return response;
 	}
@@ -6669,7 +7069,7 @@ public class MainRestController {
 		shop.setLength(!jsonMainObject.get("length").toString().isEmpty() ? Double.parseDouble(jsonMainObject.get("length").toString()) : null);
 		shop.setWidth(!jsonMainObject.get("width").toString().isEmpty() ? Double.parseDouble(jsonMainObject.get("width").toString()) : null);
 		shop.setHeight(!jsonMainObject.get("height").toString().isEmpty() ? Double.parseDouble(jsonMainObject.get("height").toString()) : null);
-		shop.setMaxPall(!jsonMainObject.get("maxPall").toString().isEmpty() ? Integer.parseInt(jsonMainObject.get("maxPall").toString()) : null);	
+		shop.setMaxPall(!jsonMainObject.get("maxPall").toString().isEmpty() ? Integer.parseInt(jsonMainObject.get("maxPall").toString()) : null);
 		shop.setName(jsonMainObject.get("name") != null && !jsonMainObject.get("name").toString().isEmpty() ? jsonMainObject.get("name").toString() : null);
 		if(jsonMainObject.get("isTailLift") != null) {
 			shop.setIsTailLift(jsonMainObject.get("isTailLift").toString().equals("true") ? true : false);

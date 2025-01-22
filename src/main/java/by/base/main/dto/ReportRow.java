@@ -1,6 +1,7 @@
 package by.base.main.dto;
 
 import java.sql.Date;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class ReportRow {
@@ -15,6 +16,11 @@ public class ReportRow {
 	private Date dateStart;
 	
 	private Date dateFinish;
+	
+	/**
+	 * Дата прихода на склад
+	 */
+	private LocalDateTime dateUnload;
 	
 	/**
 	 * Номер заказа из маркета
@@ -86,6 +92,38 @@ public class ReportRow {
 	 * расхождение (БЕЗ НДС)
 	 */
 	private Double discrepancyNotNDS;
+	
+	/**
+	 * Комментарий при подготовке отчёта
+	 */
+	private String comment;
+	
+	/**
+	 * склад прихода
+	 */
+	private String stock;
+	
+	
+	/**
+	 * Дата прихода на склад
+	 */
+	public LocalDateTime getDateUnload() {
+		return dateUnload;
+	}
+	/**
+	 * Дата прихода на склад
+	 */
+	public void setDateUnload(LocalDateTime dateUnload) {
+		this.dateUnload = dateUnload;
+	}
+
+	public String getStock() {
+		return stock;
+	}
+
+	public void setStock(String stock) {
+		this.stock = stock;
+	}
 
 	public Long getIdReportRow() {
 		return idReportRow;
@@ -229,6 +267,23 @@ public class ReportRow {
 
 	public void setDiscrepancyNotNDS(Double discrepancyNotNDS) {
 		this.discrepancyNotNDS = discrepancyNotNDS;
+	}
+
+	public String getComment() {
+		return comment;
+	}
+
+	/**
+	 * Можно без перехода строки, всё есть в методе
+	 * @param comment
+	 */
+	public void setComment(String comment) {
+		if(this.comment != null) {
+			this.comment = this.comment + comment + "; \n";
+		}else {
+			this.comment = comment + "; \n";
+		}
+		
 	}
 
 	@Override

@@ -247,6 +247,20 @@ export const dateHelper = {
 	},
 
 	/**
+	 * Метод `getShortDayName` возвращает короткое название дня недели.
+	 * @param {*} dateMs - это строка или число милисекунд.
+	 * @returns {string} возвращает короткое название дня недели.
+	 */
+	getShortDayName(date) {
+		const shortDayNamesDict = {
+			0: 'Вс', 1: 'Пн', 2: 'Вт', 3: 'Ср',
+			4: 'Чт', 5: 'Пт', 6: 'Сб',
+		}
+		const dayNumber = new Date(date).getDay()
+		return shortDayNamesDict[dayNumber]
+	},
+
+	/**
 	 * Метод `getMinValidDate` возвращает минимальную допустимую дату точки
 	 * выгрузки для заявок и слотов в формате "YYYY-MM-DD".
 	 * @returns {string} строку даты в формате "YYYY-MM-DD".
@@ -953,4 +967,26 @@ export function blurActiveElem(e) {
 	const activeElem = document.activeElement
 	if (!activeElem) return
 	activeElem.blur()
+}
+
+// создание опций для элемента
+export function createOptions(optionData, select) {
+	optionData.forEach((option) => {
+		const optionElement = document.createElement('option')
+		optionElement.value = option
+		optionElement.text = option
+		select.append(optionElement)
+	})
+}
+
+// группировка по ключу
+export function groupBy(data, key) {
+	return data.reduce((acc, currentValue) => {
+		let groupKey = currentValue[key]
+		if (!acc[groupKey]) {
+			acc[groupKey] = []
+		}
+		acc[groupKey].push(currentValue)
+		return acc
+	}, {})
 }

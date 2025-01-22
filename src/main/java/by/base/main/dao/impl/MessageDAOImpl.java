@@ -24,7 +24,6 @@ public class MessageDAOImpl implements MessageDAO{
 
 	private static final String queryGetList = "from Message order by idMessage";
 	@Override
-	@Transactional
 	public List<Message> getMEssageList() {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<Message> theObject = currentSession.createQuery(queryGetList, Message.class);
@@ -33,7 +32,6 @@ public class MessageDAOImpl implements MessageDAO{
 	}
 
 	@Override
-	@Transactional
 	public void saveOrUpdateMessage(Message message) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		message.setDate(Date.valueOf(LocalDate.now()));
@@ -41,7 +39,6 @@ public class MessageDAOImpl implements MessageDAO{
 	}
 
 	@Override
-	@Transactional
 	public Message getMessageById(Integer id) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Message message = currentSession.get(Message.class, id);
@@ -51,7 +48,6 @@ public class MessageDAOImpl implements MessageDAO{
 
 	private static final String queryGetObjToUser = "from Message where toUser=:login";
 	@Override
-	@Transactional
 	public List<Message> getListMessageByToUser(String login) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<Message> theObject = currentSession.createQuery(queryGetObjToUser, Message.class);
@@ -62,7 +58,6 @@ public class MessageDAOImpl implements MessageDAO{
 
 	private static final String queryGetObjByStatus = "from Message where status=:login";
 	@Override
-	@Transactional
 	public List<Message> getListMessageByStatus(String status) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<Message> theObject = currentSession.createQuery(queryGetObjByStatus, Message.class);
@@ -73,7 +68,6 @@ public class MessageDAOImpl implements MessageDAO{
 
 	private static final String queryGetObjByCompanyName = "from Message where status=:login";
 	@Override
-	@Transactional
 	public List<Message> getListMessageByCompanyName(String companyName) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<Message> theObject = currentSession.createQuery(queryGetObjByCompanyName, Message.class);
@@ -84,7 +78,6 @@ public class MessageDAOImpl implements MessageDAO{
 	
 	private static final String queryGetListObj = "from Message where fromUser=:login";
 	@Override
-	@Transactional
 	public List<Message> getListMessageByFromUser(String login) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<Message> theObject = currentSession.createQuery(queryGetListObj, Message.class);
@@ -95,7 +88,6 @@ public class MessageDAOImpl implements MessageDAO{
 
 	private static final String queryDeleteById = "delete from Message where idMessage=:id";
 	@Override
-	@Transactional
 	public void deleteMessageById(Integer id) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query theQuery = 
@@ -107,7 +99,6 @@ public class MessageDAOImpl implements MessageDAO{
 
 	private static final String queryGetListObjIdRoute = "from Message where idRoute=:login";
 	@Override
-	@Transactional
 	public List<Message> getListMessageByIdRoute(String idRoute) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<Message> theObject = currentSession.createQuery(queryGetListObjIdRoute, Message.class);
@@ -118,7 +109,6 @@ public class MessageDAOImpl implements MessageDAO{
 	
 	private static final String queryGetListObjComment = "from Message where comment=:comment";
 	@Override
-	@Transactional
 	public List<Message> getListMessageByComment(String comment) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<Message> theObject = currentSession.createQuery(queryGetListObjComment, Message.class);
@@ -129,7 +119,6 @@ public class MessageDAOImpl implements MessageDAO{
 
 	private static final String queryGetObject = "select idRoute from Message where idRoute=:idRoute AND text=:disposition AND comment=:comment AND datetime=:datetime";
 	@Override
-	@Transactional
 	public void singleSaveMessage(Message message) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query query = currentSession.createQuery(queryGetObject);
@@ -144,7 +133,6 @@ public class MessageDAOImpl implements MessageDAO{
 	}
 
 	private static final String queryGetListAsDate = "from Message m where m.date BETWEEN :frmdate and :todate";
-	@Transactional
 	@Override
 	public List<Message> getListMessageByPeriod(Date start, Date finish) {
 		Session currentSession = sessionFactory.getCurrentSession();
@@ -156,7 +144,6 @@ public class MessageDAOImpl implements MessageDAO{
 	}
 
 	private static final String queryUpdate = "UPDATE Message SET date=:date where idMessage=:idMessage";
-	@Transactional
 	@Override
 	public int updateDate(Integer id, Date date) {
 		Session currentSession = sessionFactory.getCurrentSession();

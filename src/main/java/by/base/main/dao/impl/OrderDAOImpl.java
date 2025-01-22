@@ -5,6 +5,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -737,66 +738,7 @@ public class OrderDAOImpl implements OrderDAO{
 		Set<Order> trucks = theObject.getResultList().stream().collect(Collectors.toSet());
 		return trucks.stream().collect(Collectors.toList());
 	}
-	
-	private static final String queryGetOrdersByGoodId = "from Order o left join fetch o.orderLines ol where ol.goodsId =: goodsId ORDER BY o.dateDelivery DESC";
-	@Transactional
-	@Override
-	public List<Order> getOrdersByGoodId(Long goodsId) {
 
-	    Session currentSession = sessionFactory.getCurrentSession();
-	    Query<Order> theObject = currentSession.createQuery(queryGetOrdersByGoodId, Order.class);
-
-	    theObject.setParameter("goodsId", goodsId);
-	    Set<Order> trucks = theObject.getResultList().stream().collect(Collectors.toSet());
-	    return trucks.stream().collect(Collectors.toList());
-	}
-
-//	private static final String queryGetSpecialOrdersByListGoodId = "FROM Order o "
-//			+ "WHERE o.idOrder IN ("
-//			+ "    SELECT ol.order.idOrder"
-//			+ "    FROM OrderLine ol"
-//			+ "    WHERE ol.goodsId IN (:goodsIds)"
-//			+ ")"
-//			+ "ORDER BY o.dateDelivery DESC";
-	
-	private static final String queryGetSpecialOrdersByListGoodId = "from Order o LEFT JOIN FETCH o.orderLines ol "
-	        + "where ol.goodsId IN (:goodsIds)"
-	        + "ORDER BY o.dateDelivery DESC";
-
-	@Transactional
-	@Override
-	public Map<Long, Order> getSpecialOrdersByListGoodId(List<Long> goodsIds) {
-		  Session currentSession = sessionFactory.getCurrentSession();
-		  Map<Long, Order> resMap = new HashMap<Long, Order>();
-		    // Шаг 1: Получаем основной набор данных
-		    Query<Order> query = currentSession.createQuery(queryGetSpecialOrdersByListGoodId, Order.class);
-		    query.setParameterList("goodsIds", goodsIds);
-
-		    List<Order> orders = query.getResultList();		    
-		    
-		    orders.forEach(o-> System.out.println(o.getOrderLinesMap() + "  ---  " +o.getDateDelivery()));
-		    
-		    int i = 0;
-		    for (Order order : orders) {
-		    	if(i>goodsIds.size()-1) {
-		    		break;
-		    	}
-		    	if(order.getOrderLinesMap().containsKey(goodsIds.get(i))) {
-		    		if(!resMap.containsKey(goodsIds.get(i)) ) {
-						resMap.put(goodsIds.get(i), order);
-						i++;
-					}else {
-						continue;
-					}
-		    	}else{
-		    		continue;
-		    	}
-				
-			}
-		    resMap.forEach((k,v) -> System.err.println(k + ": " + v));
-
-		return null;
-	}
 
 	private static final String queryGetOrdersByListMarketNumber = "from Order o LEFT JOIN FETCH o.orderLines ol "
 	        + "LEFT JOIN FETCH o.routes r "
@@ -807,7 +749,7 @@ public class OrderDAOImpl implements OrderDAO{
 	        + "LEFT JOIN FETCH r.truck t "
 	        + "LEFT JOIN FETCH r.roteHasShop rhs "
 	        + "LEFT JOIN FETCH o.addresses a "
-	        + "where o.marketNumber IN (:marketNumber)";
+	        + "where o.status !=10 AND o.marketNumber IN (:marketNumber)";
 	@Transactional
 	@Override
 	public Map<String, Order> getOrdersByListMarketNumber(List<String> marketNumber) {
@@ -822,7 +764,7 @@ public class OrderDAOImpl implements OrderDAO{
 		return resMap;
 	}
 
-	
+
 	@Transactional
 	@Override
 	public List<Order> getOrderByDateOrderORLAndNumStock(Date dateOrderORL, Integer numStock) {
@@ -844,8 +786,94 @@ public class OrderDAOImpl implements OrderDAO{
 		Set<Order> trucks = theObject.getResultList().stream().collect(Collectors.toSet());
 		return new ArrayList<Order>(trucks);
 	}
-	
-	
+
+
+
+
+//		private static final String queryGetLastOrderByGoodId = "select max(o.timeDelivery) from Order o left join o.orderLines ol where ol.goodsId = :goodsId";
+	private static final String queryGetLastOrderByGoodId = "from Order o LEFT JOIN FETCH o.orderLines ol "
+			+ "WHERE ol.goodsId =: goodsId and o.timeDelivery = (select max(o.timeDelivery) from Order o left join o.orderLines ol where ol.goodsId = :goodsId)";
+	@Transactional
+	@Override
+	public List<Order> getLastOrderByGoodId(Long goodsId) {
+
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Order> theObject = currentSession.createQuery(queryGetLastOrderByGoodId, Order.class);
+		theObject.setParameter("goodsId", goodsId);
+		List<Order> orders = theObject.getResultList().stream().collect(Collectors.toList());
+		Set<Order> trucks = theObject.getResultList().stream().collect(Collectors.toSet());
+		return trucks.stream().collect(Collectors.toList());
+	}
+
+	private static final String queryGetOrdersByGoodId = "from Order o left join fetch o.orderLines ol " +
+			"where ol.goodsId =: goodsId " +
+			"and o.timeDelivery is not null " +
+			"order by o.dateDelivery";
+	@Transactional
+	@Override
+	public List<Order> getOrdersByGoodId(Long goodsId) {
+
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Order> theObject = currentSession.createQuery(queryGetOrdersByGoodId, Order.class);
+
+		theObject.setParameter("goodsId", goodsId);
+		Set<Order> trucks = theObject.getResultList().stream().collect(Collectors.toSet());
+		return trucks.stream().collect(Collectors.toList());
+	}
+
+	private static final String queryLastTime = "select max(o.timeDelivery) from Order o left join o.orderLines ol where ol.goodsId = :goodsId";
+	@Transactional
+	@Override
+	public java.util.Date getLastTime(Long goodsId) {
+
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<java.util.Date> theObject = currentSession.createQuery(queryLastTime, java.util.Date.class);
+		theObject.setParameter("goodsId", goodsId);
+		List<java.util.Date> orders = theObject.getResultList();
+		return orders.get(0);
+	}
+
+
+	private static final String queryGetOrderByGoodId = "from Order o "
+			+ "where o.id IN (SELECT ol.order.id FROM OrderLine ol WHERE ol.goodsId = :goodsId)";
+	@Transactional
+	@Override
+	public List<Order> getOrderProductNotJOIN(Long goodsIds) {
+
+		Session currentSession = sessionFactory.getCurrentSession();
+
+		// Шаг 1: Получаем основной набор данных
+		Query<Order> query = currentSession.createQuery(queryGetOrderByGoodId, Order.class);
+		query.setParameter("goodsId", goodsIds);
+
+		List<Order> orders = query.getResultList();
+
+		// Шаг 2: Ленивая загрузка связанных сущностей
+		for (Order order : orders) {
+			Hibernate.initialize(order.getOrderLines());
+//		        Hibernate.initialize(order.getRoutes());
+//		        Hibernate.initialize(order.getAddresses());
+		}
+
+		return orders;
+	}
+
+	private static final String queryGetSpecialOrdersByListGoodId = "from Order o LEFT JOIN FETCH o.orderLines ol "
+			+ "where ol.goodsId IN (:goodsIds)"
+			+ "and o.dateDelivery is not null "
+			+ "ORDER BY o.dateDelivery DESC";
+
+	@Transactional
+	@Override
+	public List<Order> getSpecialOrdersByListGoodId(List<Long> goodsIds) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Map<Long, Order> resMap = new HashMap<Long, Order>();
+// Шаг 1: Получаем основной набор данных
+		Query<Order> query = currentSession.createQuery(queryGetSpecialOrdersByListGoodId, Order.class);
+		query.setParameterList("goodsIds", goodsIds);
+		List<Order> orders = query.getResultList();
+		return orders;
+	}
 }
 
 

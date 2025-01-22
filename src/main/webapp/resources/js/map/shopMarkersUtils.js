@@ -169,16 +169,18 @@ function getImageSrc(shop) {
 	const isStorage = shop.address.toLowerCase().includes('склад') || shop.type === 'Склад'
 	const hasRestriction = shop.length || shop.width || shop.height || shop.maxPall
 	const isCrossDocking = shop.type === 'Кросс-докинг'
+	const isSupplier = shop.type === 'Поставщик'
 
-	const baseUrl =  isLogisticsDeliveryPage() ? '../../../speedlogist/' : '../../speedlogist/'
+	const baseUrl =  isLogisticsDeliveryPage() ? '../../../speedlogist/resources/img/' : '../../speedlogist/resources/img/'
 	
-	if (isCrossDocking) return `${baseUrl}resources/img/cross-docking_80x80_2.png`
+	if (isCrossDocking) return `${baseUrl}cross-docking_80x80_2.png`
+	if (isSupplier) return `${baseUrl}supplier_64x64.png`
 
 	const imgSrc = isStorage
-		? `${baseUrl}resources/img/warehouse_32x32.png`
+		? `${baseUrl}warehouse_32x32.png`
 		: hasRestriction
-			? `${baseUrl}resources/img/shop_restr_32x32_2.png`
-			: `${baseUrl}resources/img/shop_32x32.png`
+			? `${baseUrl}shop_restr_32x32_2.png`
+			: `${baseUrl}shop_32x32.png`
 	return imgSrc
 }
 

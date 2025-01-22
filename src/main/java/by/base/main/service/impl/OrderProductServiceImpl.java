@@ -87,5 +87,10 @@ public class OrderProductServiceImpl implements OrderProductService{
 		}
 	}
 
+	@Override
+	public Map<String, Map<Integer, OrderProduct>> getOrderProductMapHasDateList(List<java.sql.Date> dates) {
+		return productDAO.getOrderProductMapHasDateList(dates);
+	}
+
 
 }

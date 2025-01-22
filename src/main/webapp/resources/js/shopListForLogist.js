@@ -143,7 +143,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // установка стартовых данных
 async function initStartData() {
-	await updateTable(gridOptions, window.initData)
+	const filtered = window.initData.filter(item => item.type !== 'Поставщик')
+	await updateTable(gridOptions, filtered)
 	window.initData = null
 }
 
@@ -163,7 +164,8 @@ async function updateTable(gridOptions, data) {
 		return
 	}
 
-	const mappingData = getMappingData(shops)
+	const filtered = shops.filter(item => item.type !== 'Поставщик')
+	const mappingData = getMappingData(filtered)
 
 	gridOptions.api.setRowData(mappingData)
 	gridOptions.api.hideOverlay()

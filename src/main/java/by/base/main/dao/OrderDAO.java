@@ -2,6 +2,7 @@ package by.base.main.dao;
 
 import java.sql.Date;
 import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -232,33 +233,14 @@ public interface OrderDAO {
 	 * @return
 	 */
 	List<Order> getOrderByFirstLoadSlotAndDateOrderOrl(Date dateStart, Date dateEnd, Date dateOrderOrl);
-	
-	/**
-	 * Возващает список ордеров по коду товара.
-	 * <br> <b>Не для фронта</b>
-	 * <br> <b>используется только join orderLines</b>
-	 * @author Ira
-	 * @param goodsId
-	 * @return
-	 */
-	List<Order> getOrdersByGoodId(Long goodsId);
-	
-	/**
-	 * Специальный метод выгрузки который выгружает Order который был последним поставленным в слоты (по dateDelivery)
-	 * <br> в который входит товар из List<Long> goodsIds.
-	 * <br> Возвращает <b>МАР где ключ - это код товара по которому проходил поиск</b>
-	 * @param goodsIds
-	 * @return
-	 */
-	Map<Long, Order> getSpecialOrdersByListGoodId(List<Long> goodsIds);
-	
+
 	/**
 	 * Возвращает список Order со всеми связями по списку номеров контрактов
 	 * @param marketNumber
 	 * @return
 	 */
 	Map<String, Order> getOrdersByListMarketNumber(List<String> marketNumber);
-	
+
 	/**
 	 * Метод отдаёт ордеты по дате заказа ОРЛ и складу
 	 * @param dateOrderORL
@@ -266,4 +248,32 @@ public interface OrderDAO {
 	 * @return
 	 */
 	List<Order> getOrderByDateOrderORLAndNumStock(Date dateOrderORL, Integer numStock);
+
+	/**
+	 * @param goodsId
+	 * @return
+	 * <br>Возвращает список Order по дате доставки и номерам товара</br>
+	 * @author Ira
+	 */
+	List<Order> getLastOrderByGoodId(Long goodsId);
+
+	/**
+	 * @param goodsId
+	 * @return
+	 * <br>Возвращает список Order по номеру товара</br>
+	 * @author Ira
+	 */
+	List<Order> getOrdersByGoodId(Long goodsId);
+
+	/**
+	 * @param goodsId
+	 * @return
+	 * <br>Возвращает дату последней поставки по номеру товара</br>
+	 * @author Ira
+	 */
+	java.util.Date getLastTime(Long goodsId);
+
+	List<Order> getOrderProductNotJOIN(Long goodsIds);
+
+	List<Order> getSpecialOrdersByListGoodId(List<Long> goodsIds);
 }

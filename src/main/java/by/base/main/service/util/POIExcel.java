@@ -183,33 +183,46 @@ public class POIExcel {
         // Первая строка заголовка (объединенные ячейки)
         Row headerRow1 = sheet.createRow(0);
         headerRow1.createCell(0).setCellValue("Все поставщики из ЦЗ");
-        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 4)); // Объединение первых 5 ячеек
-        headerRow1.createCell(5).setCellValue("56 404 524");
-        headerRow1.createCell(6).setCellValue("36 083 729");
-        headerRow1.createCell(7).setCellValue("64%");
-        headerRow1.createCell(8).setCellValue("20 320 796");
-        headerRow1.createCell(9).setCellValue("114 250 588");
-        headerRow1.createCell(10).setCellValue("66 694 280");
-        headerRow1.createCell(11).setCellValue("58%");
-        headerRow1.createCell(12).setCellValue("47 556 309");
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 5)); // Объединение первых 5 ячеек
+//        headerRow1.createCell(6).setCellValue("56 404 524");
+//        headerRow1.createCell(7).setCellValue("36 083 729");
+//        headerRow1.createCell(8).setCellValue("64%");
+//        headerRow1.createCell(9).setCellValue("20 320 796");
+//        headerRow1.createCell(10).setCellValue("114 250 588");
+//        headerRow1.createCell(10).setCellValue("66 694 280");
+//        headerRow1.createCell(11).setCellValue("58%");
+//        headerRow1.createCell(12).setCellValue("47 556 309");
+        
+        /*
+         * первый хедер с итогами
+         * делается с помощью формул
+         */
+        headerRow1.createCell(7).setCellFormula("SUM(H3:H"+(reportRows.size()+2)+")");
+        headerRow1.createCell(8).setCellFormula("SUM(I3:I"+(reportRows.size()+2)+")");
+        headerRow1.createCell(9).setCellFormula("SUM(J3:J"+(reportRows.size()+2)+")");
+        headerRow1.createCell(10).setCellFormula("J1/I1*100");
+        
 
         // Вторая строка заголовка
         Row headerRow2 = sheet.createRow(1);
         String[] headers = {
-                "Наименование поставщика",
-                "Номер заказа из маркета",
-                "Период Поставки заказа (неделя)",
-                "Группа товаров",
-                "Наименование товара",
-                "Код товара",
-                "Заказано ед",
-                "Принято ед",
-                "Выполнения заказа, ед%",
-                "Расхождение кол-во",
-                "Заказано руб",
-                "Принято руб",
-                "% выполнения заказа руб без НДС",
-                "Расхождение (БЕЗ НДС)"
+                "Наименование поставщика", //0
+                "Номер заказа из маркета", //1
+                "Период Поставки заказа (неделя)", //2
+                "Дата факт.выгрузки", // 3
+                "Склад", // 4
+                "Наименование товара", //5
+                "Код товара", // 6
+                "Заказано ОРЛ ед", // 7 
+                "Заказано факт ед", // 8 
+                "Принято ед", // 9
+                "Выполнения заказа, ед%", // 10
+                "Расхождение кол-во", // 11
+//                "Заказано руб", // 11
+//                "Принято руб", // 12
+//                "% выполнения заказа руб без НДС", // 13
+//                "Расхождение (БЕЗ НДС)", // 14
+                "Комментарий при подготовке отчёта" // 12
         };
 
         for (int i = 0; i < headers.length; i++) {
@@ -224,32 +237,85 @@ public class POIExcel {
             cell.setCellStyle(headerStyle);
         }
 
+        //флаги для спец строк
+        String nameCounterparty = null;
+        int indexNameCounterpartyStart = 3;
+        int indexNameCounterpartyFinish;
+        
         // Заполняем данные
-        int rowNum = 2; // Данные начинаются со строки 3
+        int rowNum = 2; // Данные начинаются со строки 3   
+        int k = 0;
         for (ReportRow row : reportRows) {
+//        	
+        	// Устанавливаем группировку снизу вверх
+            sheet.setRowSumsBelow(false);
+            
+          //тут групируем по названию конрагента
+            if(nameCounterparty == null) {
+            	//создаём итоговую строку по названию контрагента
+            	Row conclusionRow = sheet.createRow(rowNum++);
+            	conclusionRow.createCell(0).setCellValue(row.getCounterpartyName() + " Итог");  
+            	nameCounterparty = row.getCounterpartyName();  
+            	indexNameCounterpartyStart = rowNum;
+            }else {
+            	if(!nameCounterparty.equals(row.getCounterpartyName())) {
+            		Row conclusionRow = sheet.createRow(rowNum++);
+                	conclusionRow.createCell(0).setCellValue(row.getCounterpartyName() + " Итог");
+            		indexNameCounterpartyFinish = rowNum-2;
+            		sheet.groupRow(indexNameCounterpartyStart, indexNameCounterpartyFinish);
+            		sheet.setRowGroupCollapsed(indexNameCounterpartyStart, true);
+            		nameCounterparty = row.getCounterpartyName();
+            		indexNameCounterpartyStart = rowNum;            		
+            	}  
+            	if(k==reportRows.size()-1) {
+            		sheet.groupRow(indexNameCounterpartyStart, rowNum-1); // остановился тут. Последняя строка не групперуется.
+            		sheet.setRowGroupCollapsed(indexNameCounterpartyStart, true);
+//            		System.out.println("indexNameCounterpartyStart - "+indexNameCounterpartyStart);
+//            		System.out.println(rowNum-1);
+            	}
+            	
+            }
             Row excelRow = sheet.createRow(rowNum++);
+            
+            
 
             excelRow.createCell(0).setCellValue(row.getCounterpartyName());
             excelRow.createCell(1).setCellValue(row.getMarketNumber()); // Номер заказа из маркета
-            excelRow.createCell(2).setCellValue(row.getPeriodOrderDelivery());
-            excelRow.createCell(3).setCellValue(row.getProductGroup());
-            excelRow.createCell(4).setCellValue(row.getProductName());
-            excelRow.createCell(5).setCellValue(row.getProductCode() != null ? row.getProductCode() : 0);
-            excelRow.createCell(6).setCellValue(row.getOrderedUnitsORL() != null ? row.getOrderedUnitsORL() : 0);
-            excelRow.createCell(7).setCellValue(row.getAcceptedUnits() != null ? row.getAcceptedUnits() : 0);
-            excelRow.createCell(8).setCellValue(row.getPrecentOrderFulfillment() != null ? row.getPrecentOrderFulfillment() : 0.0);
-            excelRow.createCell(9).setCellValue(row.getDiscrepancyQuantity() != null ? row.getDiscrepancyQuantity() : 0);
-            excelRow.createCell(10).setCellValue(row.getOrderedRUB() != null ? row.getOrderedRUB() : 0.0);
-            excelRow.createCell(11).setCellValue(row.getAcceptedRUB() != null ? row.getAcceptedRUB() : 0.0);
-            excelRow.createCell(12).setCellValue(row.getPrecentOrderCompletionNotNDS() != null ? row.getPrecentOrderCompletionNotNDS() : 0.0);
-            excelRow.createCell(13).setCellValue(row.getDiscrepancyNotNDS() != null ? row.getDiscrepancyNotNDS() : 0.0);
+            excelRow.createCell(2).setCellValue(getWeekRange(row.getDateUnload()));
+            excelRow.createCell(3).setCellValue(row.getDateUnload().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")));
+            excelRow.createCell(4).setCellValue(row.getStock());
+            excelRow.createCell(5).setCellValue(row.getProductName());
+            excelRow.createCell(6).setCellValue(row.getProductCode() != null ? row.getProductCode() : 0);
+            excelRow.createCell(7).setCellValue(row.getOrderedUnitsORL() != null ? row.getOrderedUnitsORL() : 0);
+            excelRow.createCell(8).setCellValue(row.getOrderedUnitsManager() != null ? row.getOrderedUnitsManager() : 0);
+            excelRow.createCell(9).setCellValue(row.getAcceptedUnits() != null ? row.getAcceptedUnits() : 0);
+            excelRow.createCell(10).setCellValue(row.getPrecentOrderFulfillment() != null ? row.getPrecentOrderFulfillment() + "%" : "0.0");
+            excelRow.createCell(11).setCellValue(row.getDiscrepancyQuantity() != null ? row.getDiscrepancyQuantity() : 0);
+//            excelRow.createCell(11).setCellValue(row.getOrderedRUB() != null ? row.getOrderedRUB() : 0.0);
+//            excelRow.createCell(12).setCellValue(row.getAcceptedRUB() != null ? row.getAcceptedRUB() : 0.0);
+//            excelRow.createCell(13).setCellValue(row.getPrecentOrderCompletionNotNDS() != null ? row.getPrecentOrderCompletionNotNDS() : 0.0);
+//            excelRow.createCell(14).setCellValue(row.getDiscrepancyNotNDS() != null ? row.getDiscrepancyNotNDS() : 0.0);
+            excelRow.createCell(12).setCellValue(row.getComment() != null ? row.getComment() : null);
+            
+            Row excelRowEnd = sheet.createRow(rowNum+1);
+            k++;
         }
 
         // Автоматическая настройка ширины столбцов
         for (int i = 0; i < headers.length; i++) {
             sheet.autoSizeColumn(i);
         }
+        
+     // Устанавливаем фильтры на все столбцы
+        sheet.setAutoFilter(new CellRangeAddress(1, 1, 0, headers.length - 1));
+        
+        // Устанавливаем заморозку первых двух строк
+        // Первый параметр: количество фиксированных столбцов (0 — без заморозки столбцов)
+        // Второй параметр: количество фиксированных строк (2 строки)
+        sheet.createFreezePane(0, 2);
 
+        
+        
         // Сохраняем файл
         try (FileOutputStream fileOut = new FileOutputStream(filePath)) {
             workbook.write(fileOut);
@@ -262,6 +328,29 @@ public class POIExcel {
     }
 	
 	/**
+	 * Метод который принимает дату 21.01.2025 а отдаёт диапазон дат недели, в которую входит эта дата 
+	 * 
+	 * @param date
+	 * @return 20.01.2025 - 26.01.2025
+	 */
+	public static String getWeekRange(LocalDateTime date) {
+        // Преобразуем LocalDateTime в LocalDate
+        LocalDate localDate = date.toLocalDate();
+
+        // Определяем первый и последний день недели
+        LocalDate startOfWeek = localDate.with(DayOfWeek.MONDAY);
+        LocalDate endOfWeek = localDate.with(DayOfWeek.SUNDAY);
+
+        // Форматируем даты в строку
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+        String startOfWeekStr = startOfWeek.format(formatter);
+        String endOfWeekStr = endOfWeek.format(formatter);
+
+        // Возвращаем диапазон дат
+        return startOfWeekStr + " - " + endOfWeekStr;
+    }
+
+	/**
 	 * Новый метод для создания файла 398 отчёта
 	 * @param jsonArray
 	 * @param outputPath
@@ -273,7 +362,7 @@ public class POIExcel {
 	    String fileName2 = " " + i;
 	    String fileName3 = ".xlsx";
 	    String fileName = fileName1 + fileName2 + fileName3;
-	    
+
 	    // Полный путь к файлу
 	    File outputFile = Paths.get(folderPath, fileName).toFile();
 
@@ -300,7 +389,7 @@ public class POIExcel {
 //	    Workbook workbook = new XSSFWorkbook();
 	    Workbook workbook = new SXSSFWorkbook(); // Используем SXSSFWorkbook вместо XSSFWorkbook
 	    Sheet sheet = workbook.createSheet("Data");
-	    
+
 	    /*
 	     * Тут блок тестовых параметров: какие магазины
 	     * Даты
@@ -311,7 +400,7 @@ public class POIExcel {
 	    cell0.setCellValue("Магазины: ");
 	    Cell cell1 = row1.createCell(1);
 	    cell1.setCellValue(shops);
-	    
+
 	    Row row2 = sheetParam.createRow(1);
 	    Cell cell00 = row2.createCell(0);
 	    cell00.setCellValue("Даты: ");
@@ -367,7 +456,7 @@ public class POIExcel {
 	    System.out.println("Excel файл успешно создан: " + outputFile.getAbsolutePath());
 	}
 
-	
+
 	/**
 	 * Метод для создания графика поставок в excel НА РЦ
 	 * @param schedules
@@ -728,7 +817,7 @@ public class POIExcel {
 	 * @param today
 	 * @return
 	 */
-	private List<LocalDate> checkSchedule(Schedule schedule, LocalDate today){
+	public List<LocalDate> checkSchedule(Schedule schedule, LocalDate today){
 
 		List<LocalDate> supplyDates = new ArrayList<>();
 
@@ -908,7 +997,7 @@ public class POIExcel {
 
 	}
 
-	private int checkN (String daySearch, String resultOfTheDay, String forSearch) {
+	public int checkN (String daySearch, String resultOfTheDay, String forSearch) {
 		int week = 0;
 
 		if (daySearch.contains("н10")) {
@@ -975,11 +1064,79 @@ public class POIExcel {
 		}
 		return rowNum;
 	}
-    
-    
-    /*
-     * КОНЕЦ Ира
-     */
+
+	/**
+	 * @param contractsWithoutSchedules
+	 * @param goodsWithoutContracts
+	 * @param fullFilePath
+	 * @throws IOException
+	 * <br>Метод создаёт эксель с контрактами и товарами, для которых не удалось создать расчёт<br>
+	 * @author Ira
+	 */
+	public boolean fillTableForProblemGoods (Map<List<String>, Double> contractsWithoutSchedules, List<Long> goodsWithoutContracts, String fullFilePath) throws IOException {
+
+		String[] noSchedulesHeaders = {
+				"Код контракта", "Количество паллет", "Склад", "Комментарий"
+		};
+
+		String[] noContractsHeaders = {
+				"Код товара", "Комментарий"
+		};
+
+		Workbook workbook = new SXSSFWorkbook();
+		Sheet noSchedulesSheet = workbook.createSheet("Нет графиков");
+		Sheet noContractsSheet = workbook.createSheet("Нет кодов контракта");
+
+		boolean isBookEmpty = true;
+
+		Row noSchedulesRow = noSchedulesSheet.createRow(0);
+		for (int i = 0; i < noSchedulesHeaders.length; i++) {
+			Cell cell = noSchedulesRow.createCell(i);
+			cell.setCellValue(noSchedulesHeaders[i]);
+		}
+
+		Row noContractsRow = noContractsSheet.createRow(0);
+		for (int i = 0; i < noContractsHeaders.length; i++) {
+			Cell cell = noContractsRow.createCell(i);
+			cell.setCellValue(noContractsHeaders[i]);
+		}
+
+		int noSchedulesRowNum = 1;
+		for (Map.Entry<List<String>, Double> object : contractsWithoutSchedules.entrySet()) {
+			isBookEmpty = false;
+			Row row = noSchedulesSheet.createRow(noSchedulesRowNum++);
+
+			row.createCell(0).setCellValue(object.getKey().get(0));
+			row.createCell(1).setCellValue(object.getValue());
+			row.createCell(2).setCellValue(object.getKey().get(1));
+			row.createCell(3).setCellValue("Графики не найдены или некорректны");
+
+
+		}
+
+		int noContractsRowNum = 1;
+		for (Long goodId: goodsWithoutContracts) {
+			isBookEmpty = false;
+
+			Row row = noContractsSheet.createRow(noContractsRowNum++);
+			row.createCell(0).setCellValue(goodId);
+			row.createCell(1).setCellValue("Нет заказов для данного товара");
+
+		}
+
+		if(!isBookEmpty) {
+			try (FileOutputStream fileOut = new FileOutputStream(fullFilePath)) {
+				workbook.write(fileOut);
+			}// Сохраняем файл
+            catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+		workbook.close();
+
+		return !isBookEmpty;
+	}
 
     // Оригинальный метод
     /**
@@ -2858,8 +3015,8 @@ public class POIExcel {
                 Integer code = (int) row.getCell(1).getNumericCellValue();
                 String nameProduct = row.getCell(2).getStringCellValue();
                 int quantity = (int) roundВouble(row.getCell(3).getNumericCellValue(), 0);
-                String codeContract; 
-                
+                String codeContract;
+
                 if(row.getCell(4) != null) {
                 	Double cell = row.getCell(4).getNumericCellValue();
                 	codeContract = cell.intValue() + "";
@@ -4542,7 +4699,7 @@ public class POIExcel {
 	 * @return
 	 * @author Ira
 	 */
-	public void fillExcelAboutNeeds(OrderProduct product, double quantityFromOrders, double quantityFromOrders1700, double quantityFromOrders1800, Sheet sheet, int rowNum) {
+	public void fillExcelAboutNeeds(OrderProduct product, double quantityFromOrders, double quantityFromOrders1700, double quantityFromOrders1800, String counterparty, String category, Sheet sheet, int rowNum) {
 
 		Row row = sheet.createRow(rowNum);
 
@@ -4604,6 +4761,8 @@ public class POIExcel {
 
 		row.createCell(8).setCellValue(maxQuantity1700);
 		row.createCell(9).setCellValue(maxQuantity1800);
+		row.createCell(10).setCellValue(counterparty);
+		row.createCell(11).setCellValue(category);
 
 	}
 

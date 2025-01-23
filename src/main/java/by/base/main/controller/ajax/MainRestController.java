@@ -9771,37 +9771,21 @@ public class MainRestController {
 		List<Message> messages = new ArrayList<Message>();
 		messages.addAll(mainChat.messegeList);
 		List<Message> result = new ArrayList<Message>();
-		DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("d-MM-yyyy");
-		String now = LocalDate.now().format(dateFormatter);
-		List<Message> listMess = messageService.getListMessageByComment(login); // остановился тут! этот метод постоянно вытягивает большое кол-во объектов message которые засоряют кеш
-		System.out.println(listMess.size());
-		listMess.stream()
-				.filter(mes -> mes.getDatetime().split(";")[0].equals(now)
-						|| mes.getDatetime().split(";")[0].equals(LocalDate.now().minusDays(1).format(dateFormatter))
-						|| mes.getDatetime().split(";")[0].equals(LocalDate.now().minusDays(2).format(dateFormatter))
-						|| mes.getDatetime().split(";")[0].equals(LocalDate.now().minusDays(3).format(dateFormatter))
-						|| mes.getDatetime().split(";")[0].equals(LocalDate.now().minusDays(4).format(dateFormatter))
-						|| mes.getDatetime().split(";")[0].equals(LocalDate.now().minusDays(5).format(dateFormatter)))
-				.forEach(mes -> result.add(mes));
+		result = messageService.getListMessageByComment5Days(login);
 		for (Message message : result) {
 			message.setIdMessage(null);
 			message.setStatus("1");
 			message.setComment(null);
 			messages.remove(message);
 		}
-		List<Message> finalResult = new ArrayList<Message>();
-		finalResult = messages.stream()
-				.filter(m -> m.getToUser().equals(login) || m.getToUser().equals("international"))
-				.collect(Collectors.toList());
-		// тут возвращался тупо messages, причём всех юзеров
 		Role role = getThisUserRole();
 		if (role == null) {
-			return finalResult;
+			return result;
 		}
 		if (role != null && role.getAuthority().equals("ROLE_ADMIN") || role.getAuthority().equals("ROLE_TOPMANAGER")) {
 			return messages;
 		} else {
-			return finalResult;
+			return result;
 		}
 
 	}
@@ -9812,16 +9796,7 @@ public class MainRestController {
 		mainChat.messegeList.stream().filter(m -> m.getYnp() != null && m.getYnp().equals(session.getAttribute("YNP")))
 				.forEach(m -> messages.add(m));
 		List<Message> result = new ArrayList<Message>();
-		DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("d-MM-yyyy");
-		String now = LocalDate.now().format(dateFormatter);
-		messageService.getListMessageByComment(login).stream()
-				.filter(mes -> mes.getDatetime().split(";")[0].equals(now)
-						|| mes.getDatetime().split(";")[0].equals(LocalDate.now().minusDays(1).format(dateFormatter))
-						|| mes.getDatetime().split(";")[0].equals(LocalDate.now().minusDays(2).format(dateFormatter))
-						|| mes.getDatetime().split(";")[0].equals(LocalDate.now().minusDays(3).format(dateFormatter))
-						|| mes.getDatetime().split(";")[0].equals(LocalDate.now().minusDays(4).format(dateFormatter))
-						|| mes.getDatetime().split(";")[0].equals(LocalDate.now().minusDays(5).format(dateFormatter)))
-				.forEach(mes -> result.add(mes));
+		result = messageService.getListMessageByYNP5Days(login);		
 		for (Message message : result) {
 			message.setIdMessage(null);
 			message.setStatus("1");
@@ -9874,16 +9849,7 @@ public class MainRestController {
 	@GetMapping("/mainchat/massages/getfromdb&{login}") // отдаёт сообщения к системе за последние 5 дней
 	public List<Message> getDBMessage(@PathVariable String login) throws ParseException {
 		List<Message> result = new ArrayList<Message>();
-		DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("d-MM-yyyy");
-		String now = LocalDate.now().format(dateFormatter);
-		messageService.getListMessageByComment(login).stream()
-				.filter(mes -> mes.getDatetime().split(";")[0].equals(now)
-						|| mes.getDatetime().split(";")[0].equals(LocalDate.now().minusDays(1).format(dateFormatter))
-						|| mes.getDatetime().split(";")[0].equals(LocalDate.now().minusDays(2).format(dateFormatter))
-						|| mes.getDatetime().split(";")[0].equals(LocalDate.now().minusDays(3).format(dateFormatter))
-						|| mes.getDatetime().split(";")[0].equals(LocalDate.now().minusDays(4).format(dateFormatter))
-						|| mes.getDatetime().split(";")[0].equals(LocalDate.now().minusDays(5).format(dateFormatter)))
-				.forEach(mes -> result.add(mes));
+		result = messageService.getListMessageByComment5Days(login);
 		return result;
 	}
 

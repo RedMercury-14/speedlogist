@@ -2,6 +2,7 @@ package by.base.main.model;
 
 import java.io.Serializable;
 import java.sql.Date;
+import java.sql.Timestamp;
 import java.util.Objects;
 
 import javax.persistence.Column;
@@ -66,6 +67,9 @@ public class Message implements Serializable{
 	@Column(name = "date")
 	private Date date;
 	
+	@Column(name = "datetime_converted")
+	private Timestamp datetimeConverted;
+	
 	@Transient
 	private String action;
 	
@@ -113,6 +117,14 @@ public class Message implements Serializable{
 		this.WSPath = WSPath;
 	}
 	
+	public Timestamp getDatetimeConverted() {
+		return datetimeConverted;
+	}
+
+	public void setDatetimeConverted(Timestamp datetimeConverted) {
+		this.datetimeConverted = datetimeConverted;
+	}
+
 	public String getFromUser() {
 		return fromUser;
 	}

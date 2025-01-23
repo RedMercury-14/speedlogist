@@ -32,5 +32,21 @@ public interface MessageDAO {
 	int updateDate(Integer id, Date date);
 	
 	void deleteMessageById(Integer id);
+	
+	/**
+	 * Отдаёт сообщения за последние 5 дней, по таргетному комментарию (который равен логину)
+	 * <br> а так же если toUser = логину или international	 * 
+	 * @param comment
+	 * @return
+	 */
+	List<Message> getListMessageByComment5Days(String comment);
+	
+	/**
+	 * Отдаёт сообщения за последние 5 дней, по УНП
+	 * <br>  или international	 * 
+	 * @param comment
+	 * @return
+	 */
+	List<Message> getListMessageByYNP5Days(String comment);
 
 }

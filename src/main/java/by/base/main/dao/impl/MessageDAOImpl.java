@@ -153,4 +153,28 @@ public class MessageDAOImpl implements MessageDAO{
 		int result = query.executeUpdate();
 		return result;
 	}
+
+	private static final String queryGetListMessageByComment5Days = "from Message where datetimeConverted >= :datetime AND comment=:comment AND (toUser =:comment OR toUser ='international')";
+	@Override
+	public List<Message> getListMessageByComment5Days(String comment) {
+		Date date = Date.valueOf(LocalDate.now().minusDays(5));
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Message> theObject = currentSession.createQuery(queryGetListMessageByComment5Days, Message.class);
+		theObject.setParameter("comment", comment);
+		theObject.setParameter("datetime", date, TemporalType.DATE);
+		List<Message> objects = theObject.getResultList();
+		return objects;
+	}
+
+	private static final String queryGetListMessageByYNP5Days = "from Message where datetimeConverted >= :datetime AND (ynp=:ynp OR toUser ='international')";
+	@Override
+	public List<Message> getListMessageByYNP5Days(String comment) {
+		Date date = Date.valueOf(LocalDate.now().minusDays(5));
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Message> theObject = currentSession.createQuery(queryGetListMessageByYNP5Days, Message.class);
+		theObject.setParameter("ynp", comment);
+		theObject.setParameter("datetime", date, TemporalType.DATE);
+		List<Message> objects = theObject.getResultList();
+		return objects;
+	}
 }

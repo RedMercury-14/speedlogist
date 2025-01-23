@@ -176,7 +176,12 @@ public class PDFWriter {
 		        addRowToTable(table, "Тип кузова:", order.getTypeTruck(), fontMainTextBold, fontMainText, false, false, true);
 		        addRowToTable(table, "Штабелирование:", order.getStacking() ? "Да" : "Нет", fontMainTextBold, fontMainText, false, false, true);
 		        addRowToTable(table, "Температура:", order.getTemperature(), fontMainTextBold, fontMainText, false, false, true); 
-		        if(order.getControl() != null) addRowToTable(table, "Сверка УКЗ: ", order.getControl() ? "Да, сверять УКЗ" : "Нет, не сверять УКЗ", fontMainTextBold, fontMainText, false, false, true); 
+		        if(order.getControl() != null) {
+		        	if(order.getControl()) { //вообще не показывает это поля, если нет сверки УКЗ
+		        		addRowToTable(table, "Сверка УКЗ: ", order.getControl() ? "Да, сверять УКЗ" : "Нет, не сверять УКЗ", fontMainTextBold, fontMainText, false, false, true);
+		        	}
+		        	
+		        } 
 	        }
 	        
 	        

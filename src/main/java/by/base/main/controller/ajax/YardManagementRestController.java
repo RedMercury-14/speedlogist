@@ -13,6 +13,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -70,6 +71,13 @@ public class YardManagementRestController {
 	private SlotWebSocket slotWebSocket;
 	
 	private static final String staticToken = "3d075c53-4fd3-41c3-89fc-a5e5c4a0b25b";
+	
+	/*
+	 * тут данные которые определяют приоритетную рампу и время
+	 */
+	private static final Integer idRumpPriority = 170001;
+	private static final LocalTime startTimePriority = LocalTime.of(9, 0, 0);
+	private static final LocalTime finishTimePriority = LocalTime.of(20, 0, 0);
 
 	@RequestMapping("/echo")
 	public Map<String, String> getEcho (HttpServletRequest request) {
@@ -158,6 +166,12 @@ public class YardManagementRestController {
 			o.setAddresses(null);
 			o.setMailInfo(null);
 			o.setSlotInfo(null);
+			//доп логика где указываю для двора приоритетные машины
+			if(o.getIdRamp().intValue() == idRumpPriority.intValue()) {
+				if(o.getTimeDelivery().toLocalDateTime().toLocalTime().isAfter(startTimePriority) && o.getTimeDelivery().toLocalDateTime().toLocalTime().isBefore(finishTimePriority)) {
+					o.setIsPriority(true);
+				}
+			}
 			result.add(o);
 		});
 		return orders;
@@ -174,6 +188,12 @@ public class YardManagementRestController {
 			o.setAddresses(null);
 			o.setMailInfo(null);
 			o.setSlotInfo(null);
+			//доп логика где указываю для двора приоритетные машины
+			if(o.getIdRamp().intValue() == idRumpPriority.intValue()) {
+				if(o.getTimeDelivery().toLocalDateTime().toLocalTime().isAfter(startTimePriority) && o.getTimeDelivery().toLocalDateTime().toLocalTime().isBefore(finishTimePriority)) {
+					o.setIsPriority(true);
+				}
+			}
 			result.add(o);
 		});
 		return orders;

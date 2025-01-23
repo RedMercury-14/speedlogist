@@ -101,6 +101,8 @@ import com.dto.RouteDTO;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.graphhopper.GHRequest;
@@ -9816,10 +9818,42 @@ public class MainRestController {
 		return messagesList;
 	}
 
+	
+	/**
+	 * Пробразует 1737622336000 в формат Timestamp
+	 * Вместо изменения адаптера Gson, мы можем перехватить строку JSON до десериализации и преобразовать поле datetimeConverted из 1737622336000 (Unix Timestamp) в строку ISO 8601.
+	 * @param json
+	 * @return
+	 */
+	public String preprocessJson(String json) {
+        // Парсим JSON-объект
+        JsonObject jsonObject = JsonParser.parseString(json).getAsJsonObject();
+
+        // Проверяем наличие поля datetimeConverted
+        if (jsonObject.has("datetimeConverted")) {
+            String timestamp = jsonObject.get("datetimeConverted").getAsString();
+            try {
+                // Преобразуем Timestamp в ISO 8601
+                long timeInMillis = Long.parseLong(timestamp);
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+                sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+                String isoDate = sdf.format(new Date(timeInMillis));
+
+                // Заменяем значение в JSON
+                jsonObject.addProperty("datetimeConverted", isoDate);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Invalid timestamp: " + timestamp, e);
+            }
+        }
+
+        // Возвращаем обновленную строку JSON
+        return jsonObject.toString();
+    }
+	
 	@PostMapping("/mainchat/massage/add") // сохраняет сообщение в бд, если есть сообщение, то не сохзраняет
 	public JSONObject postSaveDBMessage(@RequestBody String str) throws ParseException {
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d-MM-yyyy; HH:mm:ss");
-		Message message = gson.fromJson(str, Message.class);
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d-MM-yyyy; HH:mm:ss");		
+		Message message = gson.fromJson(preprocessJson(str), Message.class);
 		message.setStatus(LocalDateTime.now().format(formatter));
 		messageService.singleSaveMessage(message);
 		HashMap<String, String> map = new HashMap<String, String>();

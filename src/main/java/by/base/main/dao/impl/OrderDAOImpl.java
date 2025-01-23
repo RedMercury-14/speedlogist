@@ -333,10 +333,19 @@ public class OrderDAOImpl implements OrderDAO{
 		return trucks.stream().collect(Collectors.toList());
 	}
 
-	@Transactional
 	@Override
 	public Set<Order> getOrderListHasDateAndStockFromSlots(Date dateTarget, String stockTarget) {
-		final String queryGetSummPallInStock = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH o.addresses a LEFT JOIN FETCH r.truck t LEFT JOIN FETCH r.roteHasShop rhs where o.timeDelivery BETWEEN :dateStart and :dateEnd and o.status !=10 AND o.idRamp LIKE '%"+stockTarget+"%'";
+		final String queryGetSummPallInStock = "from Order o "
+				+ "LEFT JOIN FETCH o.orderLines ol "
+				+ "LEFT JOIN FETCH o.routes r "
+				+ "LEFT JOIN FETCH r.roteHasShop rhs "
+				+ "LEFT JOIN FETCH r.user ru "
+				+ "LEFT JOIN FETCH r.truck rt "
+				+ "LEFT JOIN FETCH r.driver rd "
+				+ "LEFT JOIN FETCH o.addresses a "
+				+ "LEFT JOIN FETCH r.truck t "
+				+ "LEFT JOIN FETCH r.roteHasShop rhs "
+				+ "where o.timeDelivery BETWEEN :dateStart and :dateEnd and o.status !=10 AND o.idRamp LIKE '%"+stockTarget+"%'";
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<Order> theObject = currentSession.createQuery(queryGetSummPallInStock, Order.class);
 		LocalDateTime start = LocalDateTime.of(dateTarget.toLocalDate(), LocalTime.of(00, 00, 00));
@@ -350,6 +359,40 @@ public class OrderDAOImpl implements OrderDAO{
 			return null;
 		}
 		
+	}
+	
+	@Override
+	public Set<Order> getOrderListHasDateAndStockFromSlotsNOTJOIN(Date dateTarget, String stockTarget) {
+		   final String queryGetSummPallInStock = "from Order o "
+		            + "left join fetch o.orderLines " // Подгружаем orderLines за один запрос
+		            + "where o.timeDelivery BETWEEN :dateStart and :dateEnd and o.status !=10 AND o.idRamp LIKE '%"+stockTarget+"%'";
+		    Session currentSession = sessionFactory.getCurrentSession();
+		    Query<Order> theObject = currentSession.createQuery(queryGetSummPallInStock, Order.class);
+
+		    // Избегаем использования LocalDateTime для конвертации дат
+		    Calendar start = Calendar.getInstance();
+		    start.setTime(dateTarget);
+		    start.set(Calendar.HOUR_OF_DAY, 0);
+		    start.set(Calendar.MINUTE, 0);
+		    start.set(Calendar.SECOND, 0);
+		    start.set(Calendar.MILLISECOND, 0);
+
+		    Calendar finish = Calendar.getInstance();
+		    finish.setTime(dateTarget);
+		    finish.set(Calendar.HOUR_OF_DAY, 23);
+		    finish.set(Calendar.MINUTE, 59);
+		    finish.set(Calendar.SECOND, 59);
+		    finish.set(Calendar.MILLISECOND, 999);
+
+		    theObject.setParameter("dateStart", start.getTime(), TemporalType.TIMESTAMP);
+		    theObject.setParameter("dateEnd", finish.getTime(), TemporalType.TIMESTAMP);
+
+		    Set<Order> orders = theObject.getResultList().stream().collect(Collectors.toSet());
+		    if (!orders.isEmpty()) {
+		        return orders;
+		    } else {
+		        return null;
+		    }
 	}
 
 	private static final String queryGetListOrdersLogist = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH r.truck t LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH o.addresses a where o.status >= 17 AND o.dateCreate BETWEEN :dateStart and :dateEnd";
@@ -874,6 +917,7 @@ public class OrderDAOImpl implements OrderDAO{
 		List<Order> orders = query.getResultList();
 		return orders;
 	}
+
 }
 
 

@@ -624,7 +624,6 @@ public class ReaderSchedulePlan {
 			
 			 for (OrderLine orderLine : lines) {
 				Double quantityOrderAll = map.get(orderLine.getGoodsId()).num;
-//				Product product = productService.getProductByCodeAndStock(orderLine.getGoodsId().intValue(), factStock);
 				Product product = products.get(orderLine.getGoodsId().intValue());
 								
 				if(product!=null) {
@@ -783,7 +782,7 @@ public class ReaderSchedulePlan {
 						//закончилась проверка балансов
 					}
 				}
-			}
+			} // ===========================конец цикла
 			 
 		 }else {
 			 
@@ -1177,7 +1176,7 @@ public class ReaderSchedulePlan {
 			
 		}else { // реализация проверкиЮ когда нужно проверить все продукты, через цикл, которые указангы в заказе
 			for (String string : numProductMass) {
-				Product productTarget = productService.getProductByCode(Integer.parseInt(string));
+				Product productTarget = productService.getProductByCode(Integer.parseInt(string)); // на оптимизацию! используется в цикле!
 				
 				if(productTarget != null) {
 					if(productTarget.getBalanceStockAndReserves() == null) {
@@ -1289,8 +1288,6 @@ public class ReaderSchedulePlan {
 				}
 			}
 		}
-		
-		
 		return message;
 	}
 	

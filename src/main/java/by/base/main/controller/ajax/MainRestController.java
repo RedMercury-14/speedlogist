@@ -9780,14 +9780,19 @@ public class MainRestController {
 			message.setComment(null);
 			messages.remove(message);
 		}
+		List<Message> finalResult = new ArrayList<Message>();
+		finalResult = messages.stream()
+				.filter(m -> m.getToUser().equals(login) || m.getToUser().equals("international"))
+				.collect(Collectors.toList());
+		// тут возвращался тупо messages, причём всех юзеров
 		Role role = getThisUserRole();
 		if (role == null) {
-			return result;
+			return finalResult;
 		}
 		if (role != null && role.getAuthority().equals("ROLE_ADMIN") || role.getAuthority().equals("ROLE_TOPMANAGER")) {
 			return messages;
 		} else {
-			return result;
+			return finalResult;
 		}
 
 	}

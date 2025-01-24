@@ -1514,6 +1514,7 @@ public class MainController {
 	}
 	
 	//получение страницы с маршрутами перевозчика!
+	@TimedExecution
 	@RequestMapping("/main/carrier/transportation")
 	public String transportationGet(Model model, HttpServletRequest request, HttpSession session) {	
 		User user = getThisUser();
@@ -1556,7 +1557,8 @@ public class MainController {
 	 * @param expeditionCostStr
 	 * @return
 	 */
-	@RequestMapping("/main/carrier/transportation/update")
+	@TimedExecution
+	@RequestMapping("/main/carrier/transportation/update") // остановился тут. Всё поместить в POST
 	public String transportationUpdate(Model model, HttpServletRequest request, HttpSession session,
 			@RequestParam(value ="isTruck", required = false) Integer idTruck,
 			@RequestParam(value ="isDriver", required = false) Integer idDriver,

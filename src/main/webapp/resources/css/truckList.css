@@ -2,7 +2,7 @@
     display: none !important;
 }
 .grid-container {
-    margin-top: 83px;
+    margin-top: 60px;
     padding: 0 5px;
     font-family: var(--font-family-sans-serif);
 }
@@ -78,7 +78,10 @@ footer.to-bottom {
 
 #myGrid {
     width: 100%;
-    height: calc(100vh - 190px);
+    height: calc(100vh - 97px);
+}
+.with-footer #myGrid {
+    height: calc(100vh - 181px);
 }
 .ag-theme-alpine {
     --ag-cell-horizontal-border: var(--ag-row-border-width) var(--ag-row-border-style) var(--ag-row-border-color);
@@ -244,14 +247,10 @@ footer.to-bottom {
 }
 
 @media (max-width: 992px) {
-    .grid-container {
-        margin-top: 60px
-    }
     .form-container {
         flex-direction: column;
         gap: 0;
     }
-
     .separationLine {
         display: none;
     }
@@ -259,6 +258,9 @@ footer.to-bottom {
 
 @media (max-width: 767px) {
     #myGrid {
-        height: calc(100vh - 240px);
+        height: calc(100vh - 97px);
+    }
+    .with-footer #myGrid {
+        height: calc(100vh - 226px);
     }
 }

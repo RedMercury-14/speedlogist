@@ -24,7 +24,6 @@ import org.springframework.web.socket.server.standard.SpringConfigurator;
 import by.base.main.coders.MessageDecoder;
 import by.base.main.coders.MessageEncoder;
 import by.base.main.model.Message;
-import by.base.main.service.MessageService;
 import by.base.main.service.UserService;
 
 @Component
@@ -34,9 +33,6 @@ public class MainChat {
 
 	@Autowired
 	UserService userService;
-
-	@Autowired
-	MessageService messageService;
 
 	private Session session = null;
 

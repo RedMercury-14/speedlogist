@@ -64,7 +64,7 @@ export const stocks = [
 		workingHoursStart: '00:00',
 		workingHoursEnd: '24:00',
 		shiftChange: ['08:00', '09:00', '20:00', '21:00'],
-		internaMovementsTimes: ['12:00', '20:00'],
+		internaMovementsTimes: ['09:00', '20:00'],
 		internalMovementsRamps: ['170001'],
 		maxPall: {
 			externalMovement: 1000, // редактировать ПОСТОЯННУЮ паллетовместимость ЗДЕСЬ
@@ -117,7 +117,7 @@ export const stocks = [
 		internaMovementsTimes: [],
 		internalMovementsRamps: [],
 		maxPall: {
-			externalMovement: 400, // редактировать ПОСТОЯННУЮ паллетовместимость ЗДЕСЬ
+			externalMovement: 600, // редактировать ПОСТОЯННУЮ паллетовместимость ЗДЕСЬ
 			internalMovement: 500, // паллетовместимость внутренних перевозок
 		},
 		weekends: [],

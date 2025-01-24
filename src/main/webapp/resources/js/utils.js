@@ -600,8 +600,8 @@ export function randomColor(brightness = 0) {
 
 export function showLoadingSpinner(button, text='Загрузка...') {
 	button.innerHTML = `
-		<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
 		${text}
+		<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
 	`
 }
 export function hideLoadingSpinner(button, text) {

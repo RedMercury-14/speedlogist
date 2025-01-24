@@ -386,7 +386,6 @@
 		<option value="23:30">23:30</option>
 	</datalist>
 
-	<jsp:include page="footer.jsp" />
 	<script src='${pageContext.request.contextPath}/resources/js/bootstrapSelect/bootstrapSelect.js'></script>
 	<script src='${pageContext.request.contextPath}/resources/js/bootstrapSelect/defaults-ru_RU.js'></script>
 	<script charset="utf-8" src="${pageContext.request.contextPath}/resources/js/procurementEditImport.js" type="module"></script>

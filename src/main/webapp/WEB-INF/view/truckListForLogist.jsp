@@ -25,7 +25,6 @@
 		<div id="myGrid" class="ag-theme-alpine"></div>
 		<div id="snackbar"></div>
 	</div>
-	<jsp:include page="footer.jsp" />
 
 	<!-- Модальное окно для добавления и редактирования машины -->
 	<div class="modal fade" id="truckModal" tabindex="-1" aria-labelledby="truckModalLabel" aria-hidden="true">

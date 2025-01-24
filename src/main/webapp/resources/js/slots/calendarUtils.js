@@ -420,7 +420,9 @@ export function copyToClipboard(text) {
 export function showMessageModal(message) {
 	const messageContainer = document.querySelector('#messageContainer')
 	messageContainer.innerHTML = message
-	$('#displayMessageModal').modal('show')
+	setTimeout(() => {
+		$('#displayMessageModal').modal('show')
+	}, 300);
 }
 
 // добавление текущей даты в атрибуты календаря
@@ -447,7 +449,7 @@ export function createCalendarDateInput(calendar) {
 
 	const changeCalendarDateInput = document.createElement('input')
 	changeCalendarDateInput.type = 'date'
-	changeCalendarDateInput.classList.add('form-control', 'changeCalendarDate')
+	changeCalendarDateInput.classList.add('form-control', 'form-control-sm', 'changeCalendarDate')
 	letfHeaderToolbarContainer.classList.add('d-flex', 'align-items-center')
 
 	// обработчик изменения даты

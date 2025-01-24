@@ -252,6 +252,9 @@ public class Order {
 	@JsonIgnore
 	private String message;
 	
+	@Transient
+	private Boolean isPriority = false;
+	
 	
 	public Order() {
 		super();
@@ -290,6 +293,12 @@ public class Order {
 
 	
 	
+	public Boolean getIsPriority() {
+		return isPriority;
+	}
+	public void setIsPriority(Boolean isPriority) {
+		this.isPriority = isPriority;
+	}
 	public Timestamp getFirstLoadSlot() {
 		return firstLoadSlot;
 	}

@@ -33,7 +33,7 @@ export const backgroundEvents = [
 		id: `internalMovementZone1700`,
 		resourceId: `170001`,
 		display: 'background',
-		startTime: '12:00',
+		startTime: '09:00',
 		endTime: '20:00',
 		eventOverlap: true,
 		title: '',

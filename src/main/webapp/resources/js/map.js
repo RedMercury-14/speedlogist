@@ -77,7 +77,6 @@ import {
 	addCrossDockingPointOptions,
 	addDistanceInfo,
 	addRouteInfo,
-	addSmallHeaderClass,
 	updateTruckListsOptions,
 	clearRouteTable,
 	displayEmptyTruck,
@@ -437,9 +436,6 @@ map.on(L.Draw.Event.DELETED, leafletDrawLayerEventHandlers.onDeletedLayersHandle
 // -------------------------------------------------------------------------------//
 
 document.addEventListener('DOMContentLoaded', async () => {
-	// изменение размера контейнера для контента
-	addSmallHeaderClass()
-
 	// кнопки боковой панели
 	const menuItems = document.querySelectorAll(".menu-item")
 	const buttonClose = document.querySelector(".close-button")

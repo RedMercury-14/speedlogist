@@ -7,20 +7,12 @@
 }
 .my-container {
 	position: relative;
-	margin: 83px 0 0 0;
+	margin: 60px 0 0 0;
 	font-family: 'Roboto', sans-serif;
 	display: flex;
 	justify-content: flex-end;
 	gap: 20px;
-	height: calc(100vh - 85px);
-}
-.my-container.smallHeader {
-	margin: 64px 0 0 0;
-	font-family: 'Roboto', sans-serif;
-	display: flex;
-	justify-content: flex-end;
-	gap: 20px;
-	height: calc(100vh - 65px);
+	height: calc(100vh - 60px);
 }
 @media (max-width: 767px) {
 	.my-container {

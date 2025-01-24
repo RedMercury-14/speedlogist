@@ -5,10 +5,7 @@ body {
 	background-color: #0e377b !important;
 }
 .my-container {
-	margin-top: 83px;
-}
-.my-container.smallHeader {
-	margin-top: 64px;
+	margin-top: 60px;
 }
 footer.to-bottom {
 	margin-top: 51px;
@@ -138,10 +135,7 @@ footer.to-bottom {
 
 #myGrid {
 	width: 100%;
-	height: calc(100vh - 155px);
-}
-#myGrid.smallHeader {
-	height: calc(100vh - 138px);
+	height: calc(100vh - 132px);
 }
 .ag-theme-alpine {
 	--ag-cell-horizontal-border: var(--ag-row-border-width) var(--ag-row-border-style) var(--ag-row-border-color);

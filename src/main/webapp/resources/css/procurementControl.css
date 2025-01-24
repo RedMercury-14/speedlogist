@@ -2,14 +2,7 @@
 	background-color: #0e377b !important;
 }
 .my-container {
-	margin-top: 83px;
-}
-.my-container.smallHeader {
-	margin-top: 64px;
-}
-footer.to-bottom {
-	margin-top: 51px;
-	position: fixed;
+	margin-top: 60px;
 }
 
 .title-container,
@@ -88,11 +81,7 @@ footer.to-bottom {
 
 #myGrid {
 	width: 100%;
-	height: calc(100vh - 208px);
-	margin-bottom: 50px;
-}
-#myGrid.smallHeader {
-	height: calc(100vh - 183px);
+	height: calc(100vh - 133px);
 }
 @media (min-width: 992px) {
 	.search-form-container form.collapse {
@@ -103,16 +92,8 @@ footer.to-bottom {
 	}
 }
 @media (max-width: 991px) {
-	.my-container {
-		margin-top: 60px;
-	}
 	#myGrid {
-		height: calc(100vh - 218px);
-	}
-}
-@media (max-width: 768px) {
-	#myGrid {
-		margin-bottom: 100px;
+		height: calc(100vh - 128px);
 	}
 }
 

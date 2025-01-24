@@ -44,8 +44,6 @@
 		<div id="snackbar"></div>
 	</div>
 
-	<jsp:include page="footer.jsp" />
-
 	<script src='${pageContext.request.contextPath}/resources/js/mainPage/nav-fixed-top.js'></script>
 	<script src="${pageContext.request.contextPath}/resources/js/orderSupportTimeControlView.js" type="module"></script>
 </body>

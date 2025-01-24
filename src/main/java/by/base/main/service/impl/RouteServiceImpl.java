@@ -5,6 +5,8 @@ import java.sql.Time;
 import java.time.LocalDate;
 import java.util.List;
 
+import javax.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -217,6 +219,12 @@ public class RouteServiceImpl implements RouteService{
 	@Override
 	public void updateRoute(Route route) {
 		routeDAO.updateRoute(route);
+	}
+
+	@Transactional
+	@Override
+	public List<Route> getActualRoute(Date date) {
+		return routeDAO.getActualRoute(date);
 	}
 
 	

@@ -104,6 +104,17 @@ public interface OrderDAO {
 	Set<Order> getOrderListHasDateAndStockFromSlots (Date dateTarget, String stockTarget);
 	
 	/**
+	 * Возвращает список заявок, проставленных на таргетном складе, согласно дате
+	 * <br>Для поиска по складу использует метод LIKE 
+	 * <br>Не использует Join
+	 * <br><b>Не для фронта</b>
+	 * @param dateTarget дата перемещения
+	 * @param stockTarget номер склада в стринге
+	 * @return
+	 */
+	Set<Order> getOrderListHasDateAndStockFromSlotsNOTJOIN(Date dateTarget, String stockTarget);
+	
+	/**
 	 * Метод который возращает заказы по дате доставки 
 	 * <br>сложный метод, который сначала ищет по столбцу timeDelivery, если он не равен null
 	 * <br>а если он равен null -  то ищет по dateDelivery

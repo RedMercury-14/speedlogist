@@ -3,7 +3,7 @@ import { ajaxUtils } from './ajaxUtils.js'
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 import { snackbar } from "./snackbar/snackbar.js"
 import { uiIcons } from './uiIcons.js'
-import { blurActiveElem, changeGridTableMarginTop, getData, hideLoadingSpinner, isAdmin, showLoadingSpinner } from './utils.js'
+import { blurActiveElem, getData, hideLoadingSpinner, isAdmin, showLoadingSpinner } from './utils.js'
 
 const getAllShopsUrl = '../../api/manager/getAllShops'
 const loadShopsUrl = '../../api/map/loadShop'
@@ -102,8 +102,6 @@ const gridOptions = {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-	// изменение отступа для таблицы
-	changeGridTableMarginTop()
 	// скрытие кнопок редактирования
 	if (!isEditable(login, role)) hideEditableButtons()
 

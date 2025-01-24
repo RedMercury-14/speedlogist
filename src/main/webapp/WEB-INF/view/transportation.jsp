@@ -21,7 +21,7 @@
 			<span class="sr-only">Загрузка...</span>
 		</div>
 	</div>
-	<div class="container-fluid px-1" style="margin-top: 80px;">
+	<div class="container-fluid px-1" style="margin-top: 60px;">
 		<div class="d-flex justify-content-between">
 			<h1 class="my-1 px-3">Текущие маршруты</h1>
 		</div>

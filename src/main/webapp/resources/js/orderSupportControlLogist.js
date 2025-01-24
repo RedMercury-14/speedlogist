@@ -6,7 +6,7 @@ import {
 	gridFilterLocalState,
 	highlightRow,
 } from "./AG-Grid/ag-grid-utils.js"
-import { debounce, getData, dateHelper, changeGridTableMarginTop, isAdmin, isOrderSupport, } from './utils.js'
+import { debounce, getData, dateHelper, isAdmin, isOrderSupport, } from './utils.js'
 import { ajaxUtils } from './ajaxUtils.js'
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 
@@ -159,9 +159,6 @@ const gridOptions = {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-	// изменение отступа для таблицы
-	changeGridTableMarginTop()
-
 	// отрисовка таблицы
 	const gridDiv = document.querySelector('#myGrid')
 	renderTable(gridDiv, gridOptions)

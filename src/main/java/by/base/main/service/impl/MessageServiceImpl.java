@@ -98,4 +98,16 @@ public class MessageServiceImpl implements MessageService{
 		return messageDAO.updateDate(id, date);
 	}
 
+	@Transactional
+	@Override
+	public List<Message> getListMessageByComment5Days(String comment) {
+		return messageDAO.getListMessageByComment5Days(comment);
+	}
+
+	@Transactional
+	@Override
+	public List<Message> getListMessageByYNP5Days(String ynp) {
+		return messageDAO.getListMessageByYNP5Days(ynp);
+	}
+
 }

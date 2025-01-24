@@ -27,6 +27,7 @@ import {
 	isMatchNumStockDelivery,
 	isOldSupplierOrder,
 	isOverlapWithInternalMovementTime,
+	isOverlapWithInternalMovementTimeForLogists,
 	isOverlapWithShiftChange,
 	newYearRestrictions
 } from "./rules.js"
@@ -114,6 +115,7 @@ export async function eventDropHandler(info, orderTableGridOption) {
 	const role = store.getRole()
 	const { event: fcEvent } = info
 	const order = fcEvent.extendedProps.data
+	const eventDateStr = fcEvent.startStr.split('T')[0]
 
 	// проверка даты начала ивента
 	const minUnloadDate = getMinUnloadDate(order, role)
@@ -134,28 +136,38 @@ export async function eventDropHandler(info, orderTableGridOption) {
 		return
 	}
 
-	// запрет установки слота с 09:00 10.01.2025 по 11:00 10.01.2025
-	const restrictionProps = {
-		startDateTimeStr: '2025-01-10T09:00:00',
-		endDateTimeStr: '2025-01-10T11:00:00',
-		stockId: '1700'
-	}
-	if (customRestrictions(fcEvent, currentStock, restrictionProps)) {
-		info.revert()
-		snackbar.show(
-			'Запрещено устанавливать слоты с 09:00 10.01.2025 по 11:00 10.01.2025'
-		)
-		return
-	}
+	// // запрет установки слота с 09:00 10.01.2025 по 11:00 10.01.2025
+	// const restrictionProps = {
+	// 	startDateTimeStr: '2025-01-10T09:00:00',
+	// 	endDateTimeStr: '2025-01-10T11:00:00',
+	// 	stockId: '1700'
+	// }
+	// if (customRestrictions(fcEvent, currentStock, restrictionProps)) {
+	// 	info.revert()
+	// 	snackbar.show(
+	// 		'Запрещено устанавливать слоты с 09:00 10.01.2025 по 11:00 10.01.2025'
+	// 	)
+	// 	return
+	// }
 
 	// проверка пересечения со временем для внутренних перемещений
-	const eventDateStr = fcEvent.startStr.split('T')[0]
 	const internaMovementsTimes = currentStock.internaMovementsTimes
 	const internalMovementsRamps = currentStock.internalMovementsRamps
-	if (isOverlapWithInternalMovementTime(info, internaMovementsTimes, internalMovementsRamps)) {
-		info.revert()
-		alert(userMessages.internalMovementTimeError(currentStock))
-		return
+	if (currentStock.id === '1700') {
+		// время для внутренних перемещений отдано для установки слотов логистами ВНЕ ОЧЕРЕДИ
+		if (isOverlapWithInternalMovementTimeForLogists(info, internaMovementsTimes, internalMovementsRamps, role)) {
+			info.revert()
+			alert(userMessages.internalMovementTimeForLogistError(currentStock))
+			return
+		}
+	}
+	if (currentStock.id === '1800') {
+		// стандартная проверка пересечения со временем для внутренних перемещений
+		if (isOverlapWithInternalMovementTime(info, internaMovementsTimes, internalMovementsRamps)) {
+			info.revert()
+			alert(userMessages.internalMovementTimeError(currentStock))
+			return
+		}
 	}
 
 	// проверка паллетовместимости склада на соседние даты
@@ -206,19 +218,19 @@ export async function eventReceiveHandler(info, orderTableGridOption, orderDateC
 		return
 	}
 
-	// запрет установки слота с 09:00 10.01.2025 по 11:00 10.01.2025
-	const restrictionProps = {
-		startDateTimeStr: '2025-01-10T09:00:00',
-		endDateTimeStr: '2025-01-10T11:00:00',
-		stockId: '1700'
-	}
-	if (customRestrictions(fcEvent, currentStock, restrictionProps)) {
-		info.revert()
-		snackbar.show(
-			'Запрещено устанавливать слоты с 09:00 10.01.2025 по 11:00 10.01.2025'
-		)
-		return
-	}
+	// // запрет установки слота с 09:00 10.01.2025 по 11:00 10.01.2025
+	// const restrictionProps = {
+	// 	startDateTimeStr: '2025-01-10T09:00:00',
+	// 	endDateTimeStr: '2025-01-10T11:00:00',
+	// 	stockId: '1700'
+	// }
+	// if (customRestrictions(fcEvent, currentStock, restrictionProps)) {
+	// 	info.revert()
+	// 	snackbar.show(
+	// 		'Запрещено устанавливать слоты с 09:00 10.01.2025 по 11:00 10.01.2025'
+	// 	)
+	// 	return
+	// }
 
 	// проверка совпадения склада из Маркета и текущего склада
 	const numStockDelivery = order.numStockDelivery
@@ -238,10 +250,21 @@ export async function eventReceiveHandler(info, orderTableGridOption, orderDateC
 	// проверка пересечения со временем для внутренних перемещений
 	const internaMovementsTimes = currentStock.internaMovementsTimes
 	const internalMovementsRamps = currentStock.internalMovementsRamps
-	if (isOverlapWithInternalMovementTime(info, internaMovementsTimes, internalMovementsRamps)) {
-		info.revert()
-		alert(userMessages.internalMovementTimeError(currentStock))
-		return
+	if (currentStock.id === '1700') {
+		// время для внутренних перемещений отдано для установки слотов логистами ВНЕ ОЧЕРЕДИ
+		if (isOverlapWithInternalMovementTimeForLogists(info, internaMovementsTimes, internalMovementsRamps, role)) {
+			info.revert()
+			alert(userMessages.internalMovementTimeForLogistError(currentStock))
+			return
+		}
+	}
+	if (currentStock.id === '1800') {
+		// стандартная проверка пересечения со временем для внутренних перемещений
+		if (isOverlapWithInternalMovementTime(info, internaMovementsTimes, internalMovementsRamps)) {
+			info.revert()
+			alert(userMessages.internalMovementTimeError(currentStock))
+			return
+		}
 	}
 
 	// проверка совпадения с графиком поставок

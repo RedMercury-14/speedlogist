@@ -11,6 +11,7 @@ export const userMessages = {
 	messageLogistIsShort: 'Сообщение должно быть не менее 10 символов!',
 	shiftChangeError: 'Невозможно установить заказ на это время! Время выгрузки заказа пересекается со временем пересменки склада!',
 	internalMovementTimeError: (stock) => `Невозможно установить заказ на это время! Время с ${stock.internaMovementsTimes[0]} до ${stock.internaMovementsTimes[1]} на рампе ${stock.internalMovementsRamps[0]} зарезервировано для внутренних перемещений!`,
+	internalMovementTimeForLogistError: (stock) => `Невозможно установить заказ на это время! Время с ${stock.internaMovementsTimes[0]} до ${stock.internaMovementsTimes[1]} на рампе ${stock.internalMovementsRamps[0]} зарезервировано!`,
 	orderNotForSlot: 'Данный заказ не нуждается в слотах - проверьте склад в Маркете',
 	isScheduleMatch: 'Поставка соответствует графику',
 	isScheduleNotMatch: 'Поставка не соответствует графику',

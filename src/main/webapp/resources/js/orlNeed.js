@@ -2,7 +2,7 @@ import { AG_GRID_LOCALE_RU } from "./AG-Grid/ag-grid-locale-RU.js"
 import { ajaxUtils } from "./ajaxUtils.js"
 import { bootstrap5overlay } from "./bootstrap5overlay/bootstrap5overlay.js"
 import { snackbar } from "./snackbar/snackbar.js"
-import { changeGridTableMarginTop, dateHelper, getData, hideLoadingSpinner, isObserver, showLoadingSpinner } from "./utils.js"
+import { dateHelper, getData, hideLoadingSpinner, isObserver, showLoadingSpinner } from "./utils.js"
 
 const getOrlNeedBaseUrl = `../../api/orl/need/getNeed/`
 const excelUrl = `../../api/orl/need/load`
@@ -86,9 +86,6 @@ const gridOptions = {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-	// изменение отступа для таблицы
-	changeGridTableMarginTop()
-
 	const filterDateInput = document.querySelector('#filterDate')
 	// кнопка переключения даты вперед
 	const datePrevBtn = document.querySelector('#datePrev')

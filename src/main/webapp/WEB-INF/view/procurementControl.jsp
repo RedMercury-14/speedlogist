@@ -53,7 +53,6 @@
 		<div id="myGrid" class="ag-theme-alpine"></div>
 		<div id="snackbar"></div>
 	</div>
-	<jsp:include page="footer.jsp" />
 	<script src='${pageContext.request.contextPath}/resources/js/mainPage/nav-fixed-top.js'></script>
 	<script src="${pageContext.request.contextPath}/resources/js/procurementControl.js" type="module"></script>
 </body>

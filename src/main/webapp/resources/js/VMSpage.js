@@ -3,7 +3,7 @@ import { dateComparator } from './AG-Grid/ag-grid-utils.js'
 import { ajaxUtils } from './ajaxUtils.js'
 import { snackbar } from "./snackbar/snackbar.js"
 import { uiIcons } from './uiIcons.js'
-import { changeGridTableMarginTop, dateHelper, getData, hideLoadingSpinner, showLoadingSpinner } from './utils.js'
+import { dateHelper, getData, hideLoadingSpinner, showLoadingSpinner } from './utils.js'
 
 const stocksData = [
 	{
@@ -216,9 +216,6 @@ function isPinnedRowDataCompleted(params) {
 
 
 window.onload = async () => {
-	// изменение отступа для таблицы
-	changeGridTableMarginTop()
-
 	const numStockButtonsContainer = document.querySelector("#numStockButtons")
 	const numStockButtons = numStockButtonsContainer.querySelectorAll(".btn")
 	const addRestrictionForm = document.querySelector("#addRestrictionForm")

@@ -125,4 +125,16 @@ public interface RouteService {
 	 * @return
 	 */
 	List<Route> getMaintenanceListAsDateAndLogin(Date dateStart, Date dateFinish, User user);
+	
+	/**
+	 * Основной метод для выдачи маршрутов которые торгуются.
+	 * <br>фильтруется по 1 статусу
+	 * <br>потом по комментарию international
+	 * <br>начиная с таргетной даты и далее (не показывает прошлые даты)
+	 * @param dateStart
+	 * @param dateFinish
+	 * @param user
+	 * @return
+	 */
+	List<Route> getActualRoute(Date date);
 }

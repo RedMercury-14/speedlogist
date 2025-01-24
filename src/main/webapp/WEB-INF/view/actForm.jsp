@@ -7,65 +7,11 @@
 <html>
 <head>
 	<meta name="${_csrf.parameterName}" content="${_csrf.token}" />
-	<style type="text/css">
-		.none {
-			display: none;
-		}
-		.navbar {
-			background-color: #0e377b !important;
-		}
-		.my-container {
-			margin-top: 83px;
-			margin-bottom: 80px;
-			padding: 0 20px;
-			font-family: var(--font-family-sans-serif);
-		}
-		.my-container .table td {
-			padding: 0.25rem;
-		}
-		.active {
-			background: #c4ffe1db;
-		}
-		::-webkit-input-placeholder {
-			color: red;
-		}
-		:-moz-placeholder {
-			color: red;
-		}
-		:-ms-input-placeholder {
-			color: red;
-		}
-		#documentType {
-			color: red;
-		}
-		#documentType option {
-			color: #000;
-		}
-		.requisites {
-			width: 320px;
-			height: 300px;
-			max-width: 320px;
-			display: inline-block;
-		}
-		thead tr {
-			font-weight: bold;
-		}
-		.table-bordered .whiteBorderRight {
-			border-right-color: #fff;
-		}
-		@media (max-width: 1534px) {
-			.table-scroll {
-				overflow-x: scroll;
-			}
-		}
-		footer.to-bottom {
-			margin-top: 51px;
-			position: fixed;
-		}
-	</style>
 	<title>Редактор актов</title>
 	<link rel="icon" href="${pageContext.request.contextPath}/resources/img/favicon.ico">
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/actForm.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/bootstrap5overlay.css">
+	<script src='${pageContext.request.contextPath}/resources/js/popper/popper.js'></script>
 </head>
 <body>
 	<jsp:include page="headerNEW.jsp" />
@@ -79,42 +25,42 @@
 	<div class="my-container">
 		<input type="hidden" value="${user.numContract}" id="numContractFromServer">
 		<!-- <h1>Редактор акта выполненных работ</h1> -->
-		<div align="center">
-			<h3 class="mb-0">Акт</h3>
-		</div>
-		<div align="center">
-			<h3 class="mb-0">сдачи-приемки выполненных работ на оказание транспортных услуг</h3>
-		</div>
+	
+		<!-- <button class="btn btn-outline-info position-absolute" data-toggle="modal" data-target="#helpModal">Помощь</button> -->
+
+		<h5 class="mb-0 text-center">Акт</h5>
+		<h5 class="mb-2 text-center">сдачи-приемки выполненных работ на оказание транспортных услуг</h5>
+
 		<form:form method="post" id="getformact">
 			<input type="hidden" value="${dateNow}" name="dateOfAct" />
-			<div class="d-flex justify-content-between mb-1">
-				<div style="display: inline-block;">${dateNow}</div>
+			<div class="d-flex justify-content-between mb-2">
+				<div class="font-weight-bold" style="display: inline-block;">${dateNow}</div>
 				<div style="display: inline-block; ">
-					<input type="text" name="city" placeholder="Город заполнения акта" required>
+					<input class="header-input" type="text" name="city" placeholder="Город заполнения акта" required>
 				</div>
 			</div>
-			<div class="text-justify">
+			<div class="header-text text-justify">
 				Мы, нижеподписавшиеся: Исполнитель 
-				<select name="documentType" id="documentType">
+				<select class="header-input" name="documentType" id="documentType">
 					<option value="устава">Юр. лицо</option>
 					<option value="свидетельства">Индивидуальный предприниматель</option>
 				</select>
 				${user.companyName},
 				в лице  
 				<span id="hiddenBlock1">
-					<input type="text" id="directOfOOO" name="directOfOOO" placeholder="ФИО полностью" />
+					<input class="header-input" type="text" id="directOfOOO" name="directOfOOO" placeholder="ФИО полностью" />
 				</span>
 				<span id="hiddenBlock2" style="display: none;">
 					${user.director} 
 				</span>
 				действующего на основании 
 				<span id="hiddenBlock1-doc">
-				    <input type="text" id="docOfOOO" name="docOfOOO" placeholder="Устава, доверенности" />
+				    <input class="header-input" type="text" id="docOfOOO" name="docOfOOO" placeholder="Устава, доверенности" />
 				</span>
 				<span id="hiddenBlock2-doc" style="display: none;">
 				    Свидетельства о государственной регистрации индивидуального предпринимателя
-				    № <input type="text" id="numOfIP" name="numOfIP" placeholder="Введите номер документа" />
-				    от <input type="text" id="dateOfIP" name="dateOfIP" placeholder="Введите дату документа" />
+				    № <input class="header-input" type="text" id="numOfIP" name="numOfIP" placeholder="Введите номер документа" />
+				    от <input class="header-input" type="text" id="dateOfIP" name="dateOfIP" placeholder="Введите дату документа" />
 				</span>
 				одной стороны, и представитель Заказчика ЗАО «Доброном» в лице
 				заместителя генерального директора Якубова Евгения Владимировича,
@@ -126,27 +72,47 @@
 					<option value="${user.numContract}">${user.numContract}</option>
 					<option value="0000000 от 01.01.1999">0000000 от 01.01.1999</option>
 				</select> -->
-				<input type="text" name="numContract" required style="color: red;"> 
+				<input class="header-input" type="text" id="numContract" name="numContract" required style="color: red;"> 
 				от
-				<input type="text" name="dateContract" required style="color: red;"> 
+				<input class="header-input" type="text" id="dateContract" name="dateContract" required style="color: red;"> 
 				выполнены в полном объеме и стороны	претензий друг к другу не имеют.
 			</div>
+
 			<input type="hidden" value="<sec:authentication property="principal.username" />"id="login">
 			<div class="form-group">
 				<c:out value="${errorMessage}" />
 			</div>
+
 			<div class="table-scroll">
-				<table class="table table-bordered">
+				<table id="table" class="table table-bordered m-0">
 					<thead class="text-center">
 						<tr>
 							<th>Дата загрузки</th>
 							<th>Дата выгрузки</th>
 							<th>№ рейса</th>
 							<th>Маршрут</th>
-							<th>№ ТС</th>
+							<th>
+								<span data-toggle="tooltip" data-placement="left"
+									title='Номер авто и прицепа через "/"'>
+									№ ТС
+									<sup class="text-danger">?</sup>
+								</span>
+							</th>
 							<th>№ Путевого листа</th>
-							<th>№ ТТН/CMR</th>
-							<th>Объем Груза (тонн)</th>
+							<th>
+								<span data-toggle="tooltip" data-placement="left"
+									title="Номер ТТН или CMR">
+									№ ТТН/CMR
+									<sup class="text-danger">?</sup>
+								</span>
+							</th>
+							<th>
+								<span data-toggle="tooltip" data-placement="left"
+								title="Масса груза в тоннах (по документам)">
+									Объем груза (тонн)
+									<sup class="text-danger">?</sup>
+								</span>
+							</th>
 							<th>Сумма без НДС</th>
 							<th>Сумма НДС</th>
 							<c:forEach var="route" items="${routes}" end="0">
@@ -162,14 +128,15 @@
 							<th>Сумма c НДС</th>
 						</tr>
 					</thead>
-					<c:forEach var="route" items="${routes}">
-						<input type="hidden" value="${route.idRoute}" name="idRoute" />
-						<input type="hidden" value="${isNDS}" name="isNDS" />
-						<tr>
+					<c:forEach var="route" items="${routes}" varStatus="loop">
+						<tr class="routeRow">
+							<input type="hidden" value="${route.idRoute}" name="idRoute" id="idRoute_route${loop.count}" />
+							<input type="hidden" value="${isNDS}" name="isNDS" id="isNDS_route${loop.count}" />
 							<td>${route.simpleDateStart}</td>
 							<td>
-								<input type=text name="dateUnload" value="${route.dateUnload}"
-									style="width: 100px;"
+								<input class="border-0" type=text name="dateUnload"
+									id="dateUnload_route${loop.count}"
+									value="${route.dateUnload}"
 									required readonly>
 							</td>
 							<td>${route.idRoute}</td>
@@ -178,6 +145,7 @@
 								<c:when test="${route.truck.numTruck != null}">
 									<td>
 										<input type="text" name="numTruckAndTrailer"
+											id="numTruckAndTrailer_route${loop.count}"
 											placeholder="Номер тягача и прицепа"
 											value="${route.truck.numTruck} / ${route.truck.numTrailer}"
 											required>
@@ -186,21 +154,25 @@
 								<c:otherwise>
 									<td>
 										<input type="text" name="numTruckAndTrailer"
-											placeholder="Номер тягача и прицепа" required>
+											id="numTruckAndTrailer_route${loop.count}"
+											placeholder="Номер тягача и прицепа"
+											required>
 									</td>
 								</c:otherwise>
 							</c:choose>
 							<td>
-								<input type="text" name="numWayList" placeholder="Путевой лист"
-									style="width: 155px;"
+								<input type="text" name="numWayList"
+									id="numWayList_route${loop.count}"
+									placeholder="Путевой лист"
 									required>
 							</td>
 							<td>
-								<textarea name="cmr" id="cmr" required></textarea>
+								<textarea class="cmr" name="cmr" id="cmr_route${loop.count}" required></textarea>
 							</td>
 							<td>
-								<input type="text" name="сargoWeight" placeholder="Вес по документам"
-									style="width: 155px;"
+								<input type="text" name="сargoWeight"
+									id="сargoWeight_route${loop.count}"
+									placeholder="Вес по документам"
 									required>
 							</td>
 							<c:choose>
@@ -217,19 +189,17 @@
 									<c:choose>
 										<c:when test="${route.way == 'Импорт'}">
 											<td class="p-0">
-												<input type="hidden" name="costWay" placeholder="платные дороги"
+												<input type="hidden" name="costWay" id="costWay_route${loop.count}" placeholder="платные дороги"
 													value="0"
 													onkeyup="this.value = this.value.replace(/[A-Za-zА-Яа-яЁё,]/g,'.');"
-													style="width: 100px;"
 													required>
 											</td>
 										</c:when>
 										<c:otherwise>
 											<td>
-												<input type="text" name="costWay" placeholder="платные дороги"
+												<input type="text" name="costWay" id="costWay_route${loop.count}" placeholder="платные дороги"
 													value="0"
 													onkeyup="this.value = this.value.replace(/[A-Za-zА-Яа-яЁё,]/g,'.');"
-													style="width: 100px;"
 													required>
 											</td>
 										</c:otherwise>
@@ -244,7 +214,6 @@
 												<input type="hidden" name="costWay" placeholder="платные дороги"
 													value="0"
 													onkeyup="this.value = this.value.replace(/[A-Za-zА-Яа-яЁё,]/g,'.');"
-													style="width: 100px;"
 													required>
 											</td>
 										</c:when>
@@ -253,7 +222,6 @@
 												<input type="text" name="costWay" placeholder="платные дороги"
 													value="0"
 													onkeyup="this.value = this.value.replace(/[A-Za-zА-Яа-яЁё,]/g,'.');"
-													style="width: 100px;"
 													required>
 											</td>
 										</c:otherwise>
@@ -304,48 +272,67 @@
 									<td>${route.finishPrice} ${route.startCurrency}</td>
 								</tr>
 							</c:when>
-					</c:choose>
+						</c:choose>
 					</c:forEach>
 				</table>
 			</div>
-			<div class="requisites">
-				<p class="mb-0">Заказчик:</p>
-				ЗАО Доброном: Республика Беларусь,
-				220112, г. Минск, ул. Янки Лучины, 5
-				р/с BY61ALFA30122365100050270000 ( BYN) открытый в Закрытое акционерное общество
-				«Альфа-банк»
-				Юридический адрес: Ул. Сурганова, 43-47 220013 Минск, Республика Беларусь
-				УНП 101541947
-				Closed Joint-Stock Company «Alfa-Bank»
-				SWIFT – ALFABY2X
-				р/с BY24ALFA30122365100010270000 (USD)
-				р/с BY09ALFA30122365100020270000(EUR)
-				р/с BY91 ALFA 3012 2365 1000 3027 0000 (RUB.)
-			</div>
-			<div class="requisites" style="float: right;">
-				<p class="mb-0">Исполнитель:</p>
-				<textarea name="requisitesCarrier" style="height:250px; width: 320px" required
-					readonly>${user.requisites}
-				</textarea>
+			<div class="d-flex justify-content-between mb-2">
+				<div class="requisites">
+					<p class="mb-0">Заказчик:</p>
+					ЗАО Доброном: Республика Беларусь,
+					220112, г. Минск, ул. Янки Лучины, 5
+					р/с BY61ALFA30122365100050270000 ( BYN) открытый в Закрытое акционерное общество
+					«Альфа-банк»
+					Юридический адрес: Ул. Сурганова, 43-47 220013 Минск, Республика Беларусь
+					УНП 101541947
+					Closed Joint-Stock Company «Alfa-Bank»
+					SWIFT – ALFABY2X
+					р/с BY24ALFA30122365100010270000 (USD)
+					р/с BY09ALFA30122365100020270000(EUR)
+					р/с BY91 ALFA 3012 2365 1000 3027 0000 (RUB.)
+				</div>
+				<div class="requisites">
+					<p class="mb-0">Исполнитель:</p>
+					<textarea class="border-0" name="requisitesCarrier"
+						required readonly>${user.requisites}
+					</textarea>
+				</div>
 			</div>
 		</form:form>
-		<div align="center">
+		<div class="d-flex justify-content-center">
 			<input type="submit" value="Сформировать и скачать акт"
-				class="btn btn-lg btn-primary"
+				class="btn btn-primary mr-2"
 				form="getformact"
-				onclick="if (!(confirm('После формирования и отправки акта, маршрут будет считаться завершенным. Он пропадёт из списка перевозок. Вы уверены что хотите завершить маршрут?'))) return false"
 				id="get">
-		</div>
-		<br>
-		<div align="center">
 			<form:form
 				action="${pageContext.request.contextPath}/main/carrier/transportation/routecontrole">
 				<input type="submit" value="Назад"
 					class="btn btn-secondary">
 			</form:form>
 		</div>
+
+		<div class="modal fade" id="helpModal" data-keyboard="false" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-lg">
+				<div class="modal-content">
+					<div class="modal-header justify-content-center bg-color">
+						<h5 class="modal-title" id="helpModalLabel">Помощь</h5>
+						<button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					<div class="modal-body">
+
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+					</div>
+				</div>
+			</div>
+		</div>
 	</div>
+
 	<jsp:include page="footer.jsp" />
+
 	<script type="module" src="${pageContext.request.contextPath}/resources/js/actForm.js"></script>
 	<script src='${pageContext.request.contextPath}/resources/js/mainPage/nav-fixed-top.js'></script>
 	<script src="${pageContext.request.contextPath}/resources/js/myMessage.js" type="module"></script>

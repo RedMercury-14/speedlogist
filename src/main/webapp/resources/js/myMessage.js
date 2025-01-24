@@ -9,8 +9,8 @@ const login = document.querySelector('#login').value
 const myMessageKeys = ['international', login]
 
 if (role === '[ROLE_CARRIER]') {
-	wsHead.addEventListener('message', socketMessageHandler)
-	showUnreadMessages()
+	// wsHead.addEventListener('message', socketMessageHandler)
+	// showUnreadMessages()
 }
 
 // показывает сообщения от текущего логина

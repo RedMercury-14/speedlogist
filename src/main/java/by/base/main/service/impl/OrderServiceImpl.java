@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.transaction.Transactional;
+
 import by.base.main.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -303,7 +305,8 @@ public class OrderServiceImpl implements OrderService {
 
 	@Override
 	@TimedExecution
-	public Integer getSummPallInStockExternal(Order order) {
+	@Transactional
+	public Integer getSummPallInStockExternal(Order order) { // оптимизирован!
 		Timestamp dateTimeStart = order.getTimeDelivery();
 		String numStock = null;
 		if(order.getIdRamp().toString().length() < 5) {
@@ -313,16 +316,17 @@ public class OrderServiceImpl implements OrderService {
 			numStock = order.getIdRamp().toString().substring(0, 3);
 		}else {
 			numStock = order.getIdRamp().toString().substring(0, 4);
-		}
+		} 
 		Date dateTarget = Date.valueOf(dateTimeStart.toLocalDateTime().toLocalDate());
-		Set<Order> ordersSet = orderDAO.getOrderListHasDateAndStockFromSlots(dateTarget, numStock); // получаем список всех заказов на данном складе на текущий день
+//		Set<Order> ordersSet2 = orderDAO.getOrderListHasDateAndStockFromSlots(dateTarget, numStock); // получаем список всех заказов на данном складе на текущий день ОЧЕНЬ ДОЛГО РАБОТАЕТ!
+		Set<Order> ordersSet = orderDAO.getOrderListHasDateAndStockFromSlotsNOTJOIN(dateTarget, numStock); // получаем список всех заказов на данном складе на текущий день  
 		if(ordersSet == null) {
 			return 0;
 		}
 		List<Order> orders = ordersSet.stream()
 				.filter(o-> !o.getMarketNumber().equals(order.getMarketNumber()))// убираем таргетный зака, если он есть
 				.filter(o-> o.getIsInternalMovement()==null || o.getIsInternalMovement()!=null && o.getIsInternalMovement().equals("falce")) // пропускаем только обычные заказы 
-				.collect(Collectors.toList()); 
+				.collect(Collectors.toList());  
 		Integer summPall = 0;
 		for (Order order2 : orders) {
 			summPall = summPall + Integer.parseInt(order2.getPall().trim());

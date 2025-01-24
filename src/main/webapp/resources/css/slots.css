@@ -4,15 +4,6 @@
 .navbar {
 	background-color: #0e377b !important;
 }
-.my-container {
-	margin-top: 83px;
-	font-family: 'Roboto', sans-serif;
-}
-
-footer.to-bottom {
-	margin-top: 51px;
-	position: fixed;
-}
 
 html, body {
 	margin: 0;
@@ -40,16 +31,13 @@ html, body {
 
 .calendar-wrapper {
 	margin: 0 auto;
-	padding-top: 83px;
+	padding-top: 60px;
 	font-family: 'Roboto', sans-serif;
 	height: 100%;
 	display: flex;
 	flex-direction: row;
 	gap: 5px;
 	position: relative;
-}
-.calendar-wrapper.smallHeader {
-	padding-top: 64px;
 }
 .calendar-wrapper .btn-primary {
 	--bs-btn-color: #fff;
@@ -87,6 +75,9 @@ html, body {
 	font-weight: bold;
 	color: #0195ae;
 }
+#slotSearchForm .searchValue::placeholder {
+	font-size: 95%;
+}
 
 .separator-horizontal {
 	border-bottom: 3px solid grey;
@@ -96,8 +87,8 @@ html, body {
 .changeCalendarDate.form-control,
 .changeCalendarDate.form-control:focus {
 	position: absolute;
-	width: 150px;
-	margin-left: 178px !important;
+	width: 120px;
+	margin-left: 142px !important;
 	background-color: #2c3e50;
 	color: #ffffff;
 	font-weight: bold;
@@ -115,9 +106,9 @@ html, body {
 
 .pallInfo-container {
 	position: absolute;
-	top: 90px;
+	top: 67px;
 	right: 10px;
-	font-size: 1rem;
+	font-size: 0.8rem;
 	font-weight: bold;
 	padding: 0 10px;
 	border-radius: 5px;
@@ -152,17 +143,14 @@ html, body {
 }
 .adminAction-container {
 	position: absolute;
-	top: 90px;
-	right: 210px;
+	top: 67px;
+	right: 182px;
 	width: 150px;
 	font-size: 1rem;
 	font-weight: bold;
 	border-radius: 5px;
 	background-color: #2c3e50;
 	color: white;
-}
-.smallHeader .adminAction-container {
-	top: 71px;
 }
 
 #eventInfoModal .modal-header {
@@ -280,7 +268,7 @@ html, body {
 .left-sidebar {
 	position: relative;
 	background-color: white;
-	width: 540px;
+	width: 420px;
 	padding: 15px 15px 10px 15px;
 	display: flex;
 	flex-direction: column;
@@ -288,7 +276,7 @@ html, body {
 	gap: 20px;
 }
 .left-sidebar-title {
-	font-size: 1.2rem;
+	font-size: .9rem;
 	font-weight: 300;
 	line-height: 1.2;
 	margin-bottom: 5px;
@@ -312,102 +300,43 @@ html, body {
 .fc .fc-view-harness {
 	margin-right: 45px;
 }
+
+
+
+/* Стили для размеров и шрифтов календаря */
+.fc-header-toolbar {
+	font-size: 80%;
+}
+.fc-timegrid-slot,
+.fc-timegrid-slots td,
+.fc-timegrid-axis,
+.fc-col-header-cell,
+.fc-daygrid-day-frame {
+	height: 14px !important;
+}
+.fc-timegrid-slot,
+.fc-timegrid-axis-frame,
+.fc-timegrid-event,
+.fc-col-header-cell-cushion,
+.fc-daygrid-day-top {
+	font-size: 12px;
+}
+.fc-timegrid-event {
+	margin-top: 1px;
+	margin-bottom: 1px;
+}
 .fc-timegrid-slot-label {
-	font-size: 70%;
+	line-height: 1;
+	font-size: 11px;
 	opacity: 0.5;
 	font-weight: 400;
 }
 .fc-timegrid-slot-label[data-time*=":00:00"] {
 	font-weight: bold;
-	font-size: 85%;
+	font-size: 12px;
 	opacity: 1;
 }
 
-/* -------- выделение пересменки -------- */
-#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="08:00:00"],
-#calendar[data-stock="1800"] .fc-timegrid-slot-lane[data-time="08:00:00"],
-#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="20:00:00"],
-#calendar[data-stock="1800"] .fc-timegrid-slot-lane[data-time="20:00:00"] {
-	border-top: none;
-	border-bottom: none;
-	background: repeating-linear-gradient(
-		45deg,
-		#ffffff,
-		#ffffff 10px,
-		#f44336 10px,
-		#f44336 20px
-	);
-}
-#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="08:10:00"],
-#calendar[data-stock="1800"] .fc-timegrid-slot-lane[data-time="08:10:00"],
-#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="20:10:00"],
-#calendar[data-stock="1800"] .fc-timegrid-slot-lane[data-time="20:10:00"] {
-	border-top: none;
-	border-bottom: none;
-	background: repeating-linear-gradient(
-		45deg,
-		#f44336 4.15px,
-		#f44336 14.15px,
-		#ffffff 14.15px,
-		#ffffff 24.15px
-	);
-}
-#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="08:20:00"],
-#calendar[data-stock="1800"] .fc-timegrid-slot-lane[data-time="08:20:00"],
-#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="20:20:00"],
-#calendar[data-stock="1800"] .fc-timegrid-slot-lane[data-time="20:20:00"] {
-	border-top: none;
-	border-bottom: none;
-	background: repeating-linear-gradient(
-		45deg,
-		#f44336 18.30px,
-		#f44336 28.30px,
-		#ffffff 28.30px,
-		#ffffff 38.30px
-	);
-}
-#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="08:30:00"],
-#calendar[data-stock="1800"] .fc-timegrid-slot-lane[data-time="08:30:00"],
-#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="20:30:00"],
-#calendar[data-stock="1800"] .fc-timegrid-slot-lane[data-time="20:30:00"] {
-	border-top: none;
-	border-bottom: none;
-	background: repeating-linear-gradient(
-		45deg,
-		#ffffff 2.45px,
-		#ffffff 12.45px,
-		#f44336 12.45px,
-		#f44336 22.45px
-	);
-}
-#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="08:40:00"],
-#calendar[data-stock="1800"] .fc-timegrid-slot-lane[data-time="08:40:00"],
-#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="20:40:00"],
-#calendar[data-stock="1800"] .fc-timegrid-slot-lane[data-time="20:40:00"] {
-	border-top: none;
-	border-bottom: none;
-	background: repeating-linear-gradient(
-		45deg,
-		#f44336 6.6px,
-		#f44336 16.6px,
-		#ffffff 16.6px,
-		#ffffff 26.6px
-	);
-}
-#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="08:50:00"],
-#calendar[data-stock="1800"] .fc-timegrid-slot-lane[data-time="08:50:00"],
-#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="20:50:00"],
-#calendar[data-stock="1800"] .fc-timegrid-slot-lane[data-time="20:50:00"] {
-	border-top: none;
-	border-bottom: none;
-	background: repeating-linear-gradient(
-		45deg,
-		#f44336 20.75px,
-		#f44336 30.75px,
-		#ffffff 30.75px,
-		#ffffff 40.75px
-	);
-}
 .fc-timegrid-slots table tr {
 	transition: all .15s ease;
 }
@@ -417,9 +346,6 @@ html, body {
 }
 .fc .fc-highlight {
 	background: var(--secondary-color) !important;
-}
-.fc .fc-timegrid-slot {
-	height: 20px;
 }
 .fc .fc-timegrid-now-indicator-line {
 	border-width: 2px 0 0 0;
@@ -434,10 +360,7 @@ html, body {
 	height: 0.7em;
 	cursor: pointer;
 }
-.fc-event-main .close:hover {
-	opacity: .75;
-	text-decoration: underline;
-}
+
 .fc-event-main .close:disabled {
 	color: #ababab;
 	cursor: default;
@@ -448,7 +371,6 @@ html, body {
 .fc-event-main .deleteSlot {
 	position: absolute;
 	top: 0px;
-	right: 20px;
 	font-size: 0.7rem;
 	font-weight: bold;
 	color: #000;
@@ -469,25 +391,32 @@ html, body {
 	transform: scale3d(1, 1, 1);
 }
 .fc-event-main .popup {
-	top: 0px;
 	right: 20px;
 }
 .fc-event-main .checkSlot {
-	top: 0px;
 	right: 40px;
 }
 .fc-event-main .checkBooking {
-	top: 0px;
 	right: 60px;
 }
 .fc-event-main .deleteSlot {
-	top: 0px;
 	right: 80px;
 }
+.fc-event-main .close:hover {
+	opacity: 1 !important;
+	color: brown;
+}
 .fc-event-main .popup:hover,
-.fc-event-main .checkSlot:hover {
+.fc-event-main .checkSlot:hover,
+.fc-event-main .checkBooking:hover {
 	opacity: .75;
-	text-decoration: underline;
+	background-color: #0fcbc9;
+	border-color: #0fcbc9;
+}
+.fc-event-main .deleteSlot:hover {
+	opacity: 1;
+	border-color: brown;
+	background-color: brown;
 }
 .fc .fc-non-business {
 	background: #c4c4c4b5;
@@ -497,6 +426,91 @@ html, body {
 	/* border-left-width: 8px; */
 }
 
+/* -------- выделение пересменки -------- */
+#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="08:00:00"],
+#calendar[data-stock="1800"] .fc-timegrid-slot-lane[data-time="08:00:00"],
+#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="20:00:00"],
+#calendar[data-stock="1800"] .fc-timegrid-slot-lane[data-time="20:00:00"] {
+	border-top: none;
+	border-bottom: none;
+	background: repeating-linear-gradient(
+		45deg,
+		#ffffff,
+		#ffffff 7px,
+		#f44336 7px,
+		#f44336 14px
+	);
+}
+#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="08:10:00"],
+#calendar[data-stock="1800"] .fc-timegrid-slot-lane[data-time="08:10:00"],
+#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="20:10:00"],
+#calendar[data-stock="1800"] .fc-timegrid-slot-lane[data-time="20:10:00"] {
+	border-top: none;
+	border-bottom: none;
+	background: repeating-linear-gradient(
+		45deg,
+		#f44336 2.9px,
+		#f44336 9.9px,
+		#ffffff 9.9px,
+		#ffffff 16.9px
+	);
+}
+#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="08:20:00"],
+#calendar[data-stock="1800"] .fc-timegrid-slot-lane[data-time="08:20:00"],
+#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="20:20:00"],
+#calendar[data-stock="1800"] .fc-timegrid-slot-lane[data-time="20:20:00"] {
+	border-top: none;
+	border-bottom: none;
+	background: repeating-linear-gradient(
+		45deg,
+		#f44336 12.8px,
+		#f44336 19.8px,
+		#ffffff 19.8px,
+		#ffffff 26.8px
+	);
+}
+#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="08:30:00"],
+#calendar[data-stock="1800"] .fc-timegrid-slot-lane[data-time="08:30:00"],
+#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="20:30:00"],
+#calendar[data-stock="1800"] .fc-timegrid-slot-lane[data-time="20:30:00"] {
+	border-top: none;
+	border-bottom: none;
+	background: repeating-linear-gradient(
+		45deg,
+		#ffffff 1.7px,
+		#ffffff 8.7px,
+		#f44336 8.7px,
+		#f44336 15.7px
+	);
+}
+#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="08:40:00"],
+#calendar[data-stock="1800"] .fc-timegrid-slot-lane[data-time="08:40:00"],
+#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="20:40:00"],
+#calendar[data-stock="1800"] .fc-timegrid-slot-lane[data-time="20:40:00"] {
+	border-top: none;
+	border-bottom: none;
+	background: repeating-linear-gradient(
+		45deg,
+		#f44336 4.6px,
+		#f44336 11.6px,
+		#ffffff 11.6px,
+		#ffffff 18.6px
+	);
+}
+#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="08:50:00"],
+#calendar[data-stock="1800"] .fc-timegrid-slot-lane[data-time="08:50:00"],
+#calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="20:50:00"],
+#calendar[data-stock="1800"] .fc-timegrid-slot-lane[data-time="20:50:00"] {
+	border-top: none;
+	border-bottom: none;
+	background: repeating-linear-gradient(
+		45deg,
+		#f44336 14.5px,
+		#f44336 21.5px,
+		#ffffff 21.5px,
+		#ffffff 28.5px
+	);
+}
 
 
 /* ------- ивенты ------- */
@@ -506,7 +520,7 @@ html, body {
 }
 .events-container p {
 	text-align: center;
-	font-size: 1.3rem;
+	font-size: 1rem;
 	font-weight: bold;
 	line-height: 1.2;
 	margin: 0;
@@ -523,7 +537,7 @@ html, body {
 	flex-wrap: wrap;
 	align-content: flex-start;
 	gap: 0.5rem;
-	height: calc(100vh - 425px);
+	height: calc(100vh - 360px);
 	overflow-y: scroll;
 }
 #external-events .fc-event {
@@ -554,19 +568,22 @@ html, body {
 
 
 /* ------- AG-Grid таблица ------- */
-.ag-theme-alpine {
+.ag-theme-balham {
+	--ag-row-border-color: #dde2eb;
 	--ag-cell-horizontal-border: var(--ag-row-border-width) var(--ag-row-border-style) var(--ag-row-border-color);
 	--ag-control-panel-background-color: var(--control-panel-bg-color:);
 	--ag-cell-horizontal-padding: calc(var(--ag-grid-size)*1.5);
 	--ag-header-column-resize-handle-color: lightslategray;
 	--ag-odd-row-background-color: var(--white-color);
 	--ag-header-background-color: #eeeeee;
+	--ag-row-hover-color: #0194ae56; /* Замените на нужный цвет */
+	--ag-secondary-foreground-color: rgba(0, 0, 0, 0.85);
 }
 .ag-grid-container {
 	height: 95%;
 	margin-top: 7px;
 }
-.ag-theme-alpine .ag-side-buttons {
+.ag-theme-balham .ag-side-buttons {
 	background-color: #a7bad3;
 	font-weight: 600;
 }
@@ -664,7 +681,7 @@ svg:not(:root) {
 	display: none;
 }
 .sidebar {
-	margin-top: 154px;
+	margin-top: 49px;
 	display: flex;
 	gap: 0;
 	position: absolute;
@@ -676,10 +693,10 @@ svg:not(:root) {
 	box-shadow: none;
 	overflow: hidden;
 	border-right: 2px solid rgba(0, 0, 0, 0.2);
-	height: 100%;
+	height: calc(100% - 110px);
 }
 .sidebar.smallHeader {
-	margin-top: 135px;
+	margin-top: 121px;
 }
 .active-sidebar .sidebar {
 	max-width: 760px;
@@ -689,7 +706,8 @@ svg:not(:root) {
 	.sidebar {
 		top: 0px;
 		right: 0px;
-		height: calc(100% - 154px);
+		margin-top: 118px;
+		height: calc(100% - 118px);
 		border: 2px solid rgba(0, 0, 0, 0.2);
 		transition: width 500ms;
 	}
@@ -802,7 +820,7 @@ svg:not(:root) {
 	transition: opacity 200ms;
 }
 .sidebar-content h2 {
-	font-size: 1.2rem;
+	font-size: 1.1rem;
 	font-weight: bold;
 	letter-spacing: 1px;
 	color: #fff;

@@ -5,14 +5,7 @@ body {
 	background-color: #0e377b !important;
 }
 .my-container {
-	margin-top: 83px;
-}
-.my-container.smallHeader {
-	margin-top: 64px;
-}
-footer.to-bottom {
-	margin-top: 51px;
-	position: fixed;
+	margin-top: 60px;
 }
 
 .text-red {
@@ -155,11 +148,7 @@ footer.to-bottom {
 #freeTrucksGrid,
 #selectedTrucksGrid {
 	width: 100%;
-	height: calc(100vh - 155px);
-}
-#freeTrucksGrid.smallHeader,
-#selectedTrucksGrid.smallHeader {
-	height: calc(100vh - 138px);
+	height: calc(100vh - 131px);
 }
 .ag-theme-alpine {
 	--ag-cell-horizontal-border: var(--ag-row-border-width) var(--ag-row-border-style) var(--ag-row-border-color);
@@ -190,22 +179,9 @@ footer.to-bottom {
 }
 
 @media (max-width: 991px) {
-	.my-container {
-		margin-top: 60px;
-	}
 	.shopNumber-container {
 		flex-wrap: wrap;
 		gap: 0;
-	}
-}
-@media (max-width: 768px) {
-	#freeTrucksGrid,
-	#selectedTrucksGrid {
-		height: calc(100vh - 280px);
-		margin-bottom: 53px;
-	}
-	.container.my-container {
-		padding: 0;
 	}
 }
 

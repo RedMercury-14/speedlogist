@@ -11,7 +11,6 @@
 	<link rel="icon" href="${pageContext.request.contextPath}/resources/img/favicon.ico">
 	<script src="${pageContext.request.contextPath}/resources/js/AG-Grid/ag-grid-enterprise.min.js"></script>
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/variables.css">
-	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/procurementForm.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/procurementControl.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/autocomplete.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/snackbar.css">

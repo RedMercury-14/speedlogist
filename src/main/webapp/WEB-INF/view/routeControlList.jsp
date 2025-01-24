@@ -25,9 +25,14 @@
 		}
 		.table-scroll {
 			overflow-x: scroll;
+			max-height: calc(100vh - 385px);
+		}
+		.table-scroll .table th {
+			padding: 0.25rem 0.5rem;
 		}
 		.container-fluid {
 			font-family: 'Open Sans', sans-serif;
+			margin-top: 60px;
 		}
 		.container-fluid a {
 			color: #003369;
@@ -65,15 +70,15 @@
 </head>
 <body>
 	<jsp:include page="headerNEW.jsp" />
-	<div class="container-fluid" style="margin-top: 83px;">
+	<div class="container-fluid">
 		<h3 class="mt-2 mb-2">Незавершенные перевозки</h3>
-		<p class="">
+		<p class="mb-2">
 			Здесь отображаются незавершенные рейсы. Чтобы завершить рейс, нужно выделить его и
 			сформировать отчёт. После того как сформируется отчёт, рейс будет считаться завершенным. Не
 			рекомендуется завершать рейс в программе, до непосредственного заверения рейса автомобилем.
 		</p>
-		<p class="text-info"><strong>По вопросам формирования актов звонить +375 44 738 36 65 Ольга</strong></p>
-		<p class="text-danger">
+		<p class="text-info mb-2"><strong>По вопросам формирования актов звонить +375 44 738 36 65 Ольга</strong></p>
+		<p class="text-danger mb-2">
 			<strong>
 				Нельзя создать акт, не прикрепив автомобиль. Авто нужно прикрепить к маршруту в
 				<a class="" href="/speedlogist/main/carrier/transportation">Текущих перевозках</a>
@@ -88,11 +93,13 @@
 				<c:out value="${errorMessage}" />
 			</h2>
 		</div>
-		<input class="btn btn-primary mb-3" type="submit" value="Сформировать отчёт" form="getformact">
 		<form method="get" action="routecontrole/getformact" id="getformact">
-			<div class="mb-2" id="myForm">
-				<label>С НДС <input class="withNDS" type="radio" name="isNDS" value="${true}" required></label>
-				<label style="padding-left: 50px">Без НДС <input class="withoutNDS" type="radio" name="isNDS" value="${false}" required></label>
+			<div class="d-flex align-items-center mb-2">
+				<input class="btn btn-primary mr-3" type="submit" value="Сформировать отчёт" form="getformact">
+				<div class="" id="myForm">
+					<label>С НДС <input class="withNDS" type="radio" name="isNDS" value="${true}" required></label>
+					<label style="padding-left: 50px">Без НДС <input class="withoutNDS" type="radio" name="isNDS" value="${false}" required></label>
+				</div>
 			</div>
 			<div class="table-scroll">
 				<table class="table table-bordered border-primary table-hover table-condensed"id="sort">
@@ -112,7 +119,7 @@
 							<th>Общее колличество паллет</th>
 							<th>Общий вес</th>
 							<th>Стоимость перевозки</th>
-							<th>Колличество точек выгрузок</th>
+							<th>Колличество точек</th>
 						</tr>
 					</thead>
 					<c:forEach var="route" items="${routes}">

@@ -30,7 +30,7 @@
 		<input type="hidden" value="${sessionCheck}" id="sessionCheck">
 		<nav class="navbar navbar-expand-lg navbar-dark">
 			<div class="container p-0">
-				<a class="navbar-brand" href="<spring:url value="/main"/>" ><img src="${pageContext.request.contextPath}/resources/img/mainPage/master/logo.png" alt="speedlogist_logo"></a>
+				<a class="navbar-brand py-0" href="<spring:url value="/main"/>" ><img src="${pageContext.request.contextPath}/resources/img/mainPage/master/logo.png" alt="speedlogist_logo"></a>
 				<sec:authorize access="isAuthenticated()">  
 					<strong><sec:authentication property="principal.authorities" var="roles"/></strong>
 					<sec:authentication property="name" var="login"/>
@@ -97,11 +97,12 @@
 								<li class="dropdown">
 									<a href="#" class="nav-item nav-link" data-toggle="dropdown">Аналитика</a>
 									<div class="dropdown-menu">
-										<a class="dropdown-item" href="<spring:url value="/main/analytics/shortage" />">Нехватка товаров на РЦ</a>
-										<a class="dropdown-item" href="<spring:url value="/main/analytics/logistics" />">Аналитика Биржи</a>
-										<a class="dropdown-item" href="<spring:url value="/main/analytics/zero" />">Аналитика нулей</a>
-										<a class="dropdown-item" href="<spring:url value="/main/analytics/changing-matrix" />">Изменения матрицы</a>
-										<a class="dropdown-item" href="<spring:url value="/main/analytics/needs" />">Аналитика Слотов</a>
+										<a class="dropdown-item" href="<spring:url value="/main/analytics?pageName=rc" />">Нехватка товаров на РЦ</a>
+										<a class="dropdown-item" href="<spring:url value="/main/analytics?pageName=logistic" />">Аналитика Биржи</a>
+										<a class="dropdown-item" href="<spring:url value="/main/analytics?pageName=zero" />">Аналитика нулей</a>
+										<a class="dropdown-item" href="<spring:url value="/main/analytics?pageName=changeMatrix" />">Изменения матрицы</a>
+										<a class="dropdown-item" href="<spring:url value="/main/analytics?pageName=slots" />">Аналитика Слотов</a>
+										<a class="dropdown-item" href="<spring:url value="/main/analytics?pageName=serviceLvl" />">Сервис Lvl</a>
 										<a class="dropdown-item" href="<spring:url value="/main/admin/reports/mainReports" />">Таблица заявок</a>
 									</div>
 								</li>
@@ -154,11 +155,11 @@
 								<li class="dropdown">
 									<a href="#" class="nav-item nav-link" data-toggle="dropdown">Аналитика</a>
 									<div class="dropdown-menu">
-										<a class="dropdown-item" href="<spring:url value="/main/analytics/shortage" />">Нехватка товаров на РЦ</a>
-										<a class="dropdown-item" href="<spring:url value="/main/analytics/logistics" />">Аналитика Биржи</a>
-										<a class="dropdown-item" href="<spring:url value="/main/analytics/zero" />">Аналитика нулей</a>
-										<a class="dropdown-item" href="<spring:url value="/main/analytics/changing-matrix" />">Изменения матрицы</a>
-										<a class="dropdown-item" href="<spring:url value="/main/analytics/needs" />">Аналитика Слотов</a>
+										<a class="dropdown-item" href="<spring:url value="/main/analytics?pageName=rc" />">Нехватка товаров на РЦ</a>
+										<a class="dropdown-item" href="<spring:url value="/main/analytics?pageName=logistic" />">Аналитика Биржи</a>
+										<a class="dropdown-item" href="<spring:url value="/main/analytics?pageName=zero" />">Аналитика нулей</a>
+										<a class="dropdown-item" href="<spring:url value="/main/analytics?pageName=changeMatrix" />">Изменения матрицы</a>
+										<a class="dropdown-item" href="<spring:url value="/main/analytics?pageName=slots" />">Аналитика Слотов</a>
 									</div>
 								</li>
 							</c:when>	
@@ -194,8 +195,8 @@
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/documentflow" />">Документооборот</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/shopControl" />">Список магазинов</a>
 										<!-- <a class="dropdown-item" href="<spring:url value="/main/logistics/counterpartiesList" />">Список поставщиков</a> -->
-										<a class="dropdown-item" href="<spring:url value="/main/analytics/logistics" />">Аналитика Биржи</a>
-										<a class="dropdown-item" href="<spring:url value="/main/analytics/shortage" />">Аналитика: Нехватка товаров на РЦ</a>
+										<a class="dropdown-item" href="<spring:url value="/main/analytics?pageName=logistic" />">Аналитика Биржи</a>
+										<a class="dropdown-item" href="<spring:url value="/main/analytics?pageName=rc" />">Аналитика: Нехватка товаров на РЦ</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/maintenance " />">Менеджер маршрутов АХО/СГИ</a>
 									</div>
 								</li>
@@ -220,11 +221,11 @@
 								<li class="dropdown">
 									<a href="#" class="nav-item nav-link" data-toggle="dropdown">Аналитика</a>
 									<div class="dropdown-menu">
-										<a class="dropdown-item" href="<spring:url value="/main/analytics/shortage" />">Нехватка товаров на РЦ</a>
-										<a class="dropdown-item" href="<spring:url value="/main/analytics/logistics" />">Аналитика Биржи</a>
-										<a class="dropdown-item" href="<spring:url value="/main/analytics/zero" />">Аналитика нулей</a>
-										<a class="dropdown-item" href="<spring:url value="/main/analytics/changing-matrix" />">Изменения матрицы</a>
-										<a class="dropdown-item" href="<spring:url value="/main/analytics/needs" />">Аналитика Слотов</a>
+										<a class="dropdown-item" href="<spring:url value="/main/analytics?pageName=rc" />">Нехватка товаров на РЦ</a>
+										<a class="dropdown-item" href="<spring:url value="/main/analytics?pageName=logistic" />">Аналитика Биржи</a>
+										<a class="dropdown-item" href="<spring:url value="/main/analytics?pageName=zero" />">Аналитика нулей</a>
+										<a class="dropdown-item" href="<spring:url value="/main/analytics?pageName=changeMatrix" />">Изменения матрицы</a>
+										<a class="dropdown-item" href="<spring:url value="/main/analytics?pageName=slots" />">Аналитика Слотов</a>
 									</div>
 								</li>
 							</c:when>
@@ -237,7 +238,7 @@
 									</div>
 								</li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/orl/need" />">Потребности</a></li>
-								<li><a class="nav-item nav-link" href="<spring:url value="/main/procurement/ordersBalance" />">Остаток товара</a></li>
+								<!-- <li><a class="nav-item nav-link" href="<spring:url value="/main/procurement/ordersBalance" />">Остаток товара</a></li> -->
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/orl/calculated" />">Приход паллет</a></li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/orl/report/398" />">398 отчёт</a></li>
 							</c:when>
@@ -295,9 +296,10 @@
 								<li class="dropdown">
 									<a href="#" class="nav-item nav-link" data-toggle="dropdown">Аналитика</a>
 									<div class="dropdown-menu">
-										<a class="dropdown-item" href="<spring:url value="/main/analytics/shortage" />">Нехватка товаров на РЦ</a>
-										<a class="dropdown-item" href="<spring:url value="/main/analytics/changing-matrix" />">Изменения матрицы</a>
-										<a class="dropdown-item" href="<spring:url value="/main/analytics/needs" />">Аналитика Слотов</a>
+										<a class="dropdown-item" href="<spring:url value="/main/analytics?pageName=rc" />">Нехватка товаров на РЦ</a>
+										<a class="dropdown-item" href="<spring:url value="/main/analytics?pageName=changeMatrix" />">Изменения матрицы</a>
+										<a class="dropdown-item" href="<spring:url value="/main/analytics?pageName=slots" />">Аналитика Слотов</a>
+									</div>
 									</div>
 								</li>
 							</c:when>
@@ -325,12 +327,6 @@
 										<!-- <a class="dropdown-item" href="<spring:url value="/main/orl/report/398" />">398 отчёт</a> -->
 									</div>
 								</li>
-								<!-- <li class="dropdown">
-									<a href="#" class="nav-item nav-link" data-toggle="dropdown">Аналитика</a>
-									<div class="dropdown-menu">
-										<a class="dropdown-item" href="<spring:url value="/main/analytics/changing-matrix" />">Изменения матрицы</a>
-									</div>
-								</li> -->
 							</c:when>
 							<c:when test="${roles == '[ROLE_STOCKPROCUREMENT]'}">
 								<li class="dropdown">
@@ -357,8 +353,7 @@
 							<c:when test="${authenticated}">
 								<li class="dropdown">
 									<a href="#" class="nav-item nav-link" data-toggle="dropdown">
-										Welcome
-										<sec:authentication property="name" />
+										Welcome <sec:authentication property="name" />
 										<span id="message-badge"></span>
 										<input type="hidden" value="<sec:authentication property="name" />" id="login">
 									</a>

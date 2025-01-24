@@ -23,7 +23,7 @@
 			<span class="sr-only">Загрузка...</span>
 		</div>
 	</div>
-	<div class="fluid-container grid-container" style="margin-top: 64px;">
+	<div class="fluid-container grid-container with-footer">
 		<div class="title-container">
 			<strong><h3>Список автомобилей</h3></strong>
 		</div>

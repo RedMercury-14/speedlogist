@@ -7,7 +7,6 @@ import {
 	setCalendarWidth,
 	showMobileTooltop,
 	createDraggableElement,
-	addSmallHeaderClass,
 	updateDropZone,
 	copyToClipboard,
 	setStockAttr,
@@ -221,8 +220,6 @@ document.addEventListener('DOMContentLoaded', async function() {
 	if(isMobileDevice()) {
 		showMobileTooltop()
 	}
-	// добавляем класс при хэдере меньшего размера
-	addSmallHeaderClass()
 	// создание таблицы
 	const gridDiv = document.querySelector('#myGrid')
 	renderTable(gridDiv, orderTableGridOption, [])
@@ -287,7 +284,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 	$('#pallChartModal').on('hide.bs.modal', blurActiveElem)
 	$('#updateSlotReasonModal').on('hide.bs.modal', blurActiveElem)
 
-	// showSlotNewsModal()
+	showSlotNewsModal()
 })
 
 
@@ -704,7 +701,7 @@ function setOldMarketInfo(order, oldValue, gridOption) {
 
 // функции для модального окна обновлений в слотах
 function showSlotNewsModal() {
-	const value = cookieHelper.getCookie('_slotNews1')
+	const value = cookieHelper.getCookie('_slotNews2')
 	if (value) return 
 	setSlotNewsCookie('ок')
 	$('#slotNewsModal').modal('show')
@@ -712,5 +709,5 @@ function showSlotNewsModal() {
 function setSlotNewsCookie(value) {
 	let date = new Date(Date.now() + 31562e7)
 	date = date.toUTCString()
-	cookieHelper.setCookie('_slotNews1', value, { expires: date, })
+	cookieHelper.setCookie('_slotNews2', value, { expires: date, })
 }

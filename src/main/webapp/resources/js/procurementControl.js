@@ -1,6 +1,6 @@
 import { AG_GRID_LOCALE_RU } from '../js/AG-Grid/ag-grid-locale-RU.js'
 import { ResetStateToolPanel, dateComparator, deselectAllCheckboxes, gridColumnLocalState, gridFilterLocalState } from './AG-Grid/ag-grid-utils.js'
-import { debounce, getData, dateHelper, getStatus, changeGridTableMarginTop, rowClassRules, isAdmin, isStockProcurement, isSlotsObserver, isObserver } from './utils.js'
+import { debounce, getData, dateHelper, getStatus, rowClassRules, isAdmin, isStockProcurement, isSlotsObserver, isObserver } from './utils.js'
 import { snackbar } from './snackbar/snackbar.js'
 import { uiIcons } from './uiIcons.js'
 import { checkCombineOrders, excelStyles, mapCallbackForProcurementControl, procurementExcelExportParams } from "./procurementControlUtils.js"
@@ -195,9 +195,6 @@ const gridOptions = {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-	// изменение отступа для таблицы
-	changeGridTableMarginTop()
-
 	const orderSearchForm = document.querySelector('#orderSearchForm')
 	const date_fromInput = document.querySelector('#date_from')
 	const date_toInput = document.querySelector('#date_to')

@@ -2,14 +2,7 @@
 	background-color: #0e377b !important;
 }
 .my-container {
-	margin-top: 83px;
-}
-.my-container.smallHeader {
-	margin-top: 64px;
-}
-footer.to-bottom {
-	margin-top: 51px;
-	position: fixed;
+	margin-top: 60px;
 }
 
 .text-red {
@@ -63,9 +56,6 @@ footer.to-bottom {
 .toolbar .btn {
 	padding: 0 8px;
 	height: 30px;
-}
-.toolbar input[type="date"] {
-	/* width: 120px; */
 }
 .toolbar input[type="text"] {
 	width: 260px;
@@ -128,10 +118,7 @@ footer.to-bottom {
 
 #myGrid {
 	width: 100%;
-	height: calc(100vh - 155px);
-}
-#myGrid.smallHeader {
-	height: calc(100vh - 138px);
+	height: calc(100vh - 131px);
 }
 .ag-theme-alpine {
 	--ag-cell-horizontal-border: var(--ag-row-border-width) var(--ag-row-border-style) var(--ag-row-border-color);
@@ -172,9 +159,6 @@ footer.to-bottom {
 	background-color: #9e9e9e80 !important;
 }
 @media (max-width: 991px) {
-	.my-container {
-		margin-top: 60px;
-	}
 	.shopNumber-container {
 		flex-wrap: wrap;
 		gap: 0;
@@ -182,8 +166,7 @@ footer.to-bottom {
 }
 @media (max-width: 768px) {
 	#myGrid {
-		height: calc(100vh - 280px);
-		margin-bottom: 53px;
+		height: calc(100vh - 171px);
 	}
 	.container.my-container {
 		padding: 0;

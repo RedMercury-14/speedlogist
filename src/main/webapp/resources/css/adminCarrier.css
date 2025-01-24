@@ -28,18 +28,12 @@
 }
 
 .my-container {
-    margin-top: 85px;
-}
-.my-container.smallHeader {
-	margin-top: 64px;
+    margin-top: 60px;
 }
 
 #myGrid {
     width: 100%;
-    height: calc(100vh - 149px);
-}
-#myGrid.smallHeader {
-	height: calc(100vh - 128px);
+    height: calc(100vh - 124px);
 }
 @media (max-width: 768px) {
 	#myGrid {

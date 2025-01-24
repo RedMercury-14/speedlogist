@@ -41,9 +41,9 @@
 			<div class="border-bottom border-secondary pb-3">
 				<form id="slotSearchForm" action="">
 					<div class="input-group is-invalid">
-						<input type="number" name="searchValue" class="form-control border-info searchValue" min="0" placeholder="Поиск слота по id или номеру из Маркета" aria-label="Поиск слота по id или номеру из Маркета" aria-describedby="slotSearchBtn">
+						<input type="number" name="searchValue" class="form-control form-control-sm border-info searchValue" min="0" placeholder="Поиск слота по id или номеру из Маркета" aria-label="Поиск слота по id или номеру из Маркета" aria-describedby="slotSearchBtn">
 						<div class="input-group-append">
-							<button class="btn btn-outline-info" id="slotSearchBtn" type="submit">
+							<button class="btn btn-sm btn-outline-info" id="slotSearchBtn" type="submit">
 								<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
 									<path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
 								</svg>
@@ -55,14 +55,14 @@
 
 			<div class="">
 				<p class="left-sidebar-title">1: выберите склад</p>
-				<select class="form-control" name="stockNumber" id="stockNumber">
+				<select class="form-control form-control-sm" name="stockNumber" id="stockNumber">
 					<option selected disabled value="">Выберите склад</option>
 				</select>
 			</div>
 
 			<div>
 				<p class="left-sidebar-title">2: добавьте заказ по номеру из Маркета</p>
-				<button id="addNewOrder" class="btn btn-primary w-100" disabled>+ Добавить заказ</button>
+				<button id="addNewOrder" class="btn btn-sm btn-primary w-100" disabled>+ Добавить заказ</button>
 			</div>
 
 			<div class="d-flex flex-column">
@@ -78,7 +78,7 @@
 		<c:choose>
 			<c:when test="${roles == '[ROLE_ADMIN]' || login == 'romashkok%!dobronom.by'}">
 				<div class="adminAction-container">
-					<select name="adminAction" id="adminAction" class="px-1 form-control font-weight-bold">
+					<select name="adminAction" id="adminAction" class="px-1 form-control form-control-sm font-weight-bold">
 						<option selected disabled value="">Для админа</option>
 						<option value="checkBookingForCurrentDate">Брони на текущую дату</option>
 						<option value="1700to1800">Рекомендации по перемещениям с 1700 на 1800</option>
@@ -95,7 +95,7 @@
 				<span>/</span>
 				<span id="externalMaxPall">0</span>
 				<span>палл</span>
-				<button type="button" class="btn btn-link px-1 py-0" data-toggle="modal" data-target="#pallChartModal">
+				<button type="button" class="btn btn-link px-1 py-0 d-inline-flex" data-toggle="modal" data-target="#pallChartModal">
 					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-graph-down" viewBox="0 0 16 16">
 						<path fill-rule="evenodd" d="M0 0h1v15h15v1H0V0Zm14.817 11.887a.5.5 0 0 0 .07-.704l-4.5-5.5a.5.5 0 0 0-.74-.037L7.06 8.233 3.404 3.206a.5.5 0 0 0-.808.588l4 5.5a.5.5 0 0 0 .758.06l2.609-2.61 4.15 5.073a.5.5 0 0 0 .704.07Z"/>
 					</svg>
@@ -150,7 +150,7 @@
 				<div class="item-content" id="orderList">
 					<h2 class="ml-2">Список заказов</h2>
 					<div class="ag-grid-container">
-						<div id="myGrid" style="height: 100%; width: 100%;" class="ag-theme-alpine"></div>
+						<div id="myGrid" style="height: 100%; width: 100%;" class="ag-theme-balham"></div>
 					</div>
 				</div>
 			</div>
@@ -312,27 +312,23 @@
 					<h3 class="modal-title text-center" id="slotNewsModalLabel">Что нового</h3>
 				</div>
 				<div class="modal-body">
-					<h5 class="text-center text-muted font-weight-bold">Изменения в проверке паллетовместимости 1800 склада</h5>
+					<h5 class="text-center text-muted font-weight-bold">Изменения зоны внутренних перемещений</h5>
 					<p class="text-justify">
-						Для <strong>1800</strong> склада временно отключена проверка ёмкости склада
-						при установке слота в период с <strong>00:00</strong> до <strong>07:00</strong>. Эта зона выделена голубым цветом. 
-						Это означает, что даже при превышении емкости склада можно будет поставить поставку в указанный временной интервал. 
+						Для <strong>1700</strong> склада зона для внутренних перемещений (170001 рампа с 9:00 по 20:00) 
+						больше не является зоной для установки слотов на внутренние перемещения. 
+						Теперь эта зона зарезервирована для установки слотов <strong>только логистами</strong>. Слоты внутренних перемещений 
+						можно устанавливать в любое свободное место, кроме вышеупомянутой зоны.
 					</p>
 					<div class="text-center px-5">
-						<img src="${pageContext.request.contextPath}/resources/img/slotNews/1.png"
+						<img src="${pageContext.request.contextPath}/resources/img/slotNews/imzfl.png"
 							alt="Обозначение голубой зоны"
 							class="img-fluid mb-3" style="max-width: 100%; height: auto;">
 					</div>
 					<br>
 					<p class="text-justify">
-						Однако для таких поставок действует одно ограничение: <strong>при наличии превышения ёмкости склада,
-						перемещение поставок возможно только в пределах указанной зоны.</strong>
+						<strong>На 1800 складе изменений пока нет - зона для внутренних перемещений (180001 рампа с 9:00 по 20:00) 
+						остается без изменений.</strong>
 					</p>
-					<div class="text-center px-5">
-						<img src="${pageContext.request.contextPath}/resources/img/slotNews/extraPallErr.gif"
-							alt="Демонстрация функционала"
-							class="img-fluid" style="max-width: 100%; height: auto;">
-					</div>
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-secondary" data-dismiss="modal">Ок, понятно</button>

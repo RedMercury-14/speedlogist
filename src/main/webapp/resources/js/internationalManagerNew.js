@@ -1,6 +1,6 @@
 import { AG_GRID_LOCALE_RU } from "./AG-Grid/ag-grid-locale-RU.js"
 import { ResetStateToolPanel, dateComparator, gridColumnLocalState, gridFilterLocalState } from "./AG-Grid/ag-grid-utils.js"
-import { changeGridTableMarginTop, dateHelper, debounce, getData, getRouteStatus, isAdmin, isObserver } from "./utils.js"
+import { dateHelper, debounce, getData, getRouteStatus, isAdmin, isObserver } from "./utils.js"
 import { ws } from './global.js'
 import { wsHead } from './global.js'
 import { snackbar } from "./snackbar/snackbar.js"
@@ -160,9 +160,6 @@ const gridOptions = {
 
 
 document.addEventListener('DOMContentLoaded', async () => {
-	// изменение отступа для таблицы
-	changeGridTableMarginTop()
-
 	const routeSearchForm = document.querySelector('#routeSearchForm')
 	const date_fromInput = document.querySelector('#date_from')
 	const date_toInput = document.querySelector('#date_to')

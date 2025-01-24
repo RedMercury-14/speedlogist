@@ -2,11 +2,9 @@
 	background-color: #0e377b !important;
 }
 .my-container {
-	margin-top: 83px;
+	margin-top: 60px;
 }
-.my-container.smallHeader {
-	margin-top: 64px;
-}
+
 
 .title-container,
 .search-form-container {
@@ -81,10 +79,7 @@
 
 #myGrid {
 	width: 100%;
-	height: calc(100vh - 120px);
-}
-#myGrid.smallHeader {
-	height: calc(100vh - 101px);
+	height: calc(100vh - 97px);
 }
 @media (min-width: 992px) {
 	.search-form-container form.collapse {
@@ -92,11 +87,6 @@
 	}
 	.accordion .search-form-container .accordion-btn {
 		display: none;
-	}
-}
-@media (max-width: 991px) {
-	#myGrid {
-		height: calc(100vh - 218px);
 	}
 }
 

@@ -28,7 +28,7 @@
 		</div>
 	</div>
 
-	<div class="my-container container-fluid px-1">
+	<div class="my-container container-fluid px-0">
 		<div class="title-container">
 			<strong><p>Список перевозчиков</p></strong>
 		</div>

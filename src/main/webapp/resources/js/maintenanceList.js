@@ -1,7 +1,6 @@
 import { AG_GRID_LOCALE_RU } from "./AG-Grid/ag-grid-locale-RU.js"
 import { ResetStateToolPanel, dateComparator, gridColumnLocalState, gridFilterLocalState } from "./AG-Grid/ag-grid-utils.js"
 import {
-	changeGridTableMarginTop,
 	cutToInteger,
 	dateHelper,
 	debounce,
@@ -204,9 +203,6 @@ const gridOptions = {
 
 
 document.addEventListener('DOMContentLoaded', async () => {
-	// изменение отступа для таблицы
-	changeGridTableMarginTop()
-
 	// отрисовка таблицы
 	const gridDiv = document.querySelector('#myGrid')
 	renderTable(gridDiv, gridOptions)

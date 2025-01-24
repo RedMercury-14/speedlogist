@@ -153,9 +153,6 @@ const gridOptions = {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-	// изменение отступа для таблицы
-	changeGridTableMarginTop()
-
 	const gridDiv = document.querySelector('#myGrid')
 	renderTable(gridDiv, gridOptions)
 

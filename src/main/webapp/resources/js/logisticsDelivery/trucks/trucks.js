@@ -12,7 +12,6 @@ import {
 } from './agGridUtils.js'
 import { snackbar } from '../../snackbar/snackbar.js'
 import {
-	changeContentMarginTop,
 	getTruckDateForAjax,
 	getTruckLists,
 	groupTrucksByDate,
@@ -97,9 +96,6 @@ window.onload = async function() {
 	const freeTrucksGridDiv = document.querySelector('#freeTrucksGrid')
 	// div таблицы выбранных машин
 	const selectedTrucksGridDiv = document.querySelector('#selectedTrucksGrid')
-
-	// изменение отступа для контейнера таблиц
-	changeContentMarginTop(freeTrucksGridDiv, selectedTrucksGridDiv)
 
 	// установака начальной даты
 	currentDateInput.value = store.getCurrentDate()

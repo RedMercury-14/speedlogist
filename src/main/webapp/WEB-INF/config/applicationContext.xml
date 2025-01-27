@@ -40,6 +40,9 @@
 	    <property name="connectionTimeout" value="30000" /> <!-- 30 секунд -->
 	    <property name="maxLifetime" value="1800000" /> <!-- 30 минут -->
 	    <property name="poolName" value="HikariCP-Pool" />
+	    
+	    <!-- Включаем регистрацию MBeans -->
+    	<property name="registerMbeans" value="true" />
 	</bean>
 
 	

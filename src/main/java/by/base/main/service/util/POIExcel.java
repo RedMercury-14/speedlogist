@@ -242,13 +242,15 @@ public class POIExcel {
         int indexNameCounterpartyStart = 3;
         int indexNameCounterpartyFinish;
         
+        // Устанавливаем группировку снизу вверх
+        sheet.setRowSumsBelow(false);
+        
         // Заполняем данные
         int rowNum = 2; // Данные начинаются со строки 3   
         int k = 0;
         for (ReportRow row : reportRows) {
 //        	
-        	// Устанавливаем группировку снизу вверх
-            sheet.setRowSumsBelow(false);
+        	
             
           //тут групируем по названию конрагента
             if(nameCounterparty == null) {
@@ -264,6 +266,8 @@ public class POIExcel {
             		indexNameCounterpartyFinish = rowNum-2;
             		sheet.groupRow(indexNameCounterpartyStart, indexNameCounterpartyFinish);
             		sheet.setRowGroupCollapsed(indexNameCounterpartyStart, true);
+            		System.err.println(indexNameCounterpartyStart + " - " + indexNameCounterpartyFinish);
+            		
             		nameCounterparty = row.getCounterpartyName();
             		indexNameCounterpartyStart = rowNum;            		
             	}  
@@ -326,6 +330,131 @@ public class POIExcel {
 
         System.out.println("Excel файл успешно создан: " + filePath);
     }
+	
+	
+	
+//	public static void generateExcelReport(List<ReportRow> reportRows, String filePath) throws IOException {
+//	    // Создаем рабочую книгу и лист
+//	    Workbook workbook = new XSSFWorkbook();
+//	    Sheet sheet = workbook.createSheet("Отчет");
+//
+//	    // Первая строка заголовка (объединенные ячейки)
+//	    Row headerRow1 = sheet.createRow(0);
+//	    headerRow1.createCell(0).setCellValue("Все поставщики из ЦЗ");
+//	    sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 5)); // Объединение первых 5 ячеек
+//
+//	    headerRow1.createCell(7).setCellFormula("SUM(H3:H" + (reportRows.size() + 2) + ")");
+//	    headerRow1.createCell(8).setCellFormula("SUM(I3:I" + (reportRows.size() + 2) + ")");
+//	    headerRow1.createCell(9).setCellFormula("SUM(J3:J" + (reportRows.size() + 2) + ")");
+//	    headerRow1.createCell(10).setCellFormula("J1/I1*100");
+//
+//	    // Вторая строка заголовка
+//	    Row headerRow2 = sheet.createRow(1);
+//	    String[] headers = {
+//	            "Наименование поставщика", //0
+//	            "Номер заказа из маркета", //1
+//	            "Период Поставки заказа (неделя)", //2
+//	            "Дата факт.выгрузки", // 3
+//	            "Склад", // 4
+//	            "Наименование товара", //5
+//	            "Код товара", // 6
+//	            "Заказано ОРЛ ед", // 7 
+//	            "Заказано факт ед", // 8 
+//	            "Принято ед", // 9
+//	            "Выполнения заказа, ед%", // 10
+//	            "Расхождение кол-во", // 11
+//	            "Комментарий при подготовке отчёта" // 12
+//	    };
+//
+//	    for (int i = 0; i < headers.length; i++) {
+//	        Cell cell = headerRow2.createCell(i);
+//	        cell.setCellValue(headers[i]);
+//
+//	        // Стиль для заголовков
+//	        CellStyle headerStyle = workbook.createCellStyle();
+//	        Font font = workbook.createFont();
+//	        font.setBold(true);
+//	        headerStyle.setFont(font);
+//	        cell.setCellStyle(headerStyle);
+//	    }
+//
+//	    // Заполняем данные
+//	    int rowNum = 2; // Данные начинаются со строки 3
+//	    String nameCounterparty = null;
+//	    int startRow = rowNum; // Начало группы строк
+//	    
+//	    
+//	    for (ReportRow row : reportRows) {
+//	    	
+//	        // Если контрагент изменился, добавляем строку с итогом
+//	        if (nameCounterparty != null && !nameCounterparty.equals(row.getCounterpartyName())) {
+//	            // Добавляем строку с итогом
+//	            Row conclusionRow = sheet.createRow(rowNum++);
+//	            conclusionRow.createCell(0).setCellValue(nameCounterparty + " Итог");
+//
+//	            // Группируем строки
+//	            sheet.groupRow(startRow, rowNum - 2); // Группируем от startRow до строки перед итогом
+//	            sheet.setRowGroupCollapsed(startRow, true); // Сворачиваем группу
+//
+//	            // Начинаем новую группу
+//	            startRow = rowNum;
+//	        }
+//
+//	        // Записываем строку с данными
+//	        Row excelRow = sheet.createRow(rowNum++);
+//	        excelRow.createCell(0).setCellValue(row.getCounterpartyName());
+//	        excelRow.createCell(1).setCellValue(row.getMarketNumber());
+//	        excelRow.createCell(2).setCellValue(getWeekRange(row.getDateUnload()));
+//	        excelRow.createCell(3).setCellValue(row.getDateUnload().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")));
+//	        excelRow.createCell(4).setCellValue(row.getStock());
+//	        excelRow.createCell(5).setCellValue(row.getProductName());
+//	        excelRow.createCell(6).setCellValue(row.getProductCode() != null ? row.getProductCode() : 0);
+//	        excelRow.createCell(7).setCellValue(row.getOrderedUnitsORL() != null ? row.getOrderedUnitsORL() : 0);
+//	        excelRow.createCell(8).setCellValue(row.getOrderedUnitsManager() != null ? row.getOrderedUnitsManager() : 0);
+//	        excelRow.createCell(9).setCellValue(row.getAcceptedUnits() != null ? row.getAcceptedUnits() : 0);
+//	        excelRow.createCell(10).setCellValue(row.getPrecentOrderFulfillment() != null ? row.getPrecentOrderFulfillment() + "%" : "0.0");
+//	        excelRow.createCell(11).setCellValue(row.getDiscrepancyQuantity() != null ? row.getDiscrepancyQuantity() : 0);
+//	        excelRow.createCell(12).setCellValue(row.getComment() != null ? row.getComment() : null);
+//
+//	        // Обновляем текущего контрагента
+//	        nameCounterparty = row.getCounterpartyName();
+//	    }
+//
+//	    // Добавляем итоговую строку для последнего контрагента
+//	    if (nameCounterparty != null) {
+//	        Row conclusionRow = sheet.createRow(rowNum++);
+//	        conclusionRow.createCell(0).setCellValue(nameCounterparty + " Итог");
+//
+//	        // Группируем строки для последнего контрагента
+//	        sheet.groupRow(startRow, rowNum - 2);
+//	        sheet.setRowGroupCollapsed(startRow, true);
+//	    }
+//
+//	    // Автоматическая настройка ширины столбцов
+//	    for (int i = 0; i < headers.length; i++) {
+//	        sheet.autoSizeColumn(i);
+//	    }
+//
+//	    // Устанавливаем фильтры на все столбцы
+//	    sheet.setAutoFilter(new CellRangeAddress(1, 1, 0, headers.length - 1));
+//
+//	    // Устанавливаем заморозку первых двух строк
+//	    sheet.createFreezePane(0, 2);
+//
+//	    // Сохраняем файл
+//	    try (FileOutputStream fileOut = new FileOutputStream(filePath)) {
+//	        workbook.write(fileOut);
+//	    }
+//
+//	    // Закрываем рабочую книгу
+//	    workbook.close();
+//
+//	    System.out.println("Excel файл успешно создан: " + filePath);
+//	}
+	
+
+
+
 	
 	/**
 	 * Метод который принимает дату 21.01.2025 а отдаёт диапазон дат недели, в которую входит эта дата 

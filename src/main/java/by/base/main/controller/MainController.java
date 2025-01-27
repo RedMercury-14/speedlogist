@@ -62,7 +62,6 @@ import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfGState;
 import com.itextpdf.text.pdf.PdfStructTreeController.returnType;
 import com.itextpdf.text.pdf.PdfWriter;
-import com.mchange.v2.c3p0.ComboPooledDataSource;
 
 import by.base.main.aspect.TimedExecution;
 import by.base.main.controller.ajax.MainRestController;
@@ -170,9 +169,6 @@ public class MainController {
 	
 	@Autowired
 	private CurrencyService currencyService;
-	
-	@Autowired
-	private ComboPooledDataSource cpds;
 	
 	@Autowired
 	private OrderService orderService;
@@ -551,19 +547,6 @@ public class MainController {
 		request.setAttribute("time", LocalTime.now().format(formatter));
 		request.setAttribute("sizeMainChat", mainChat.messegeList.size());
 		request.setAttribute("sizeChatEnpoint", ChatEnpoint.internationalMessegeList.size());
-		String poolConnectInfo;
-		try {
-			poolConnectInfo = cpds.getMinPoolSize() + "  MinPoolSize\n"
-					+cpds.getInitialPoolSize()+ "  InitialPoolSize\n"
-					+cpds.getNumUserPools() + "  NumUserPools\n"
-					+cpds.getMaxPoolSize() + "  MaxPoolSize\n"
-					+cpds.getMaxStatements() + "  MaxStatements\n"
-					+cpds.getNumConnectionsAllUsers() + "  NumConnectionsAllUsers\n"
-					+cpds.getNumConnections() + "  NumConnections\n";
-		} catch (SQLException e) {
-			poolConnectInfo = "ERROR";
-		}
-		request.setAttribute("poolConnectInfo", poolConnectInfo);
 		return "admin";
 	}
 	

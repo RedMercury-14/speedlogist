@@ -23,94 +23,29 @@
 	<context:component-scan base-package="by.base.main" />
 	<mvc:annotation-driven/>	
 	
-	<bean id="myDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource"
-          destroy-method="close">
-        <property name="driverClass" value="com.mysql.jdbc.Driver" />
-        <property name="jdbcUrl" value="jdbc:mysql://localhost:3306/logistdb?useSSL=false&amp;serverTimezone=Europe/Moscow&amp;characterEncoding=utf8" />
-        <property name="user" value="root" />
-        <property name="password" value="5001020" />
+	<bean id="myDataSource" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
+	    <property name="driverClassName" value="com.mysql.cj.jdbc.Driver" />
+	    <property name="jdbcUrl" value="jdbc:mysql://localhost:3306/logistdb?useSSL=false&amp;serverTimezone=Europe/Moscow&amp;characterEncoding=utf8" />
+	    <property name="username" value="root" />
+	    <property name="password" value="5001020" />
+	    
+<!-- 	    <property name="jdbcUrl" value="jdbc:mysql://93.125.114.112:3311/logistdbNew7?serverTimezone=Europe/Moscow" /> -->
+<!-- 	    <property name="username" value="hdf" /> -->
+<!-- 	    <property name="password" value="111403hdf" /> -->
+	
+	    <!-- Настройки пула -->
+	    <property name="maximumPoolSize" value="30" />
+	    <property name="minimumIdle" value="5" />
+	    <property name="idleTimeout" value="300000" /> <!-- 300 секунд -->
+	    <property name="connectionTimeout" value="30000" /> <!-- 30 секунд -->
+	    <property name="maxLifetime" value="1800000" /> <!-- 30 минут -->
+	    <property name="poolName" value="HikariCP-Pool" />
+	    
+	    <!-- Включаем регистрацию MBeans -->
+    	<property name="registerMbeans" value="true" />
+	</bean>
 
-<!-- 		 <property name="jdbcUrl" value="jdbc:mysql://93.125.114.112:3311/logistdbNew7?serverTimezone=Europe/Moscow" /> -->
-<!--          <property name="user" value="hdf" /> -->
-<!--          <property name="password" value="111403hdf" /> -->
-
-<!-- БЫЛО -->
-<!--         <property name="minPoolSize" value="10" /> -->
-<!--         <property name="maxPoolSize" value="30" /> -->
-<!--         <property name="maxIdleTime" value="30" /> TEST 30000 -->
-<!--         <property name="maxStatements" value="200"/> TEST  -->
-<!--         <property name="initialPoolSize" value="10"/> TEST -->
-<!--         <property name="preferredTestQuery" value="select 1"/> NEW TEST -->
-
-<!--      СТАЛО    -->
-		<property name="minPoolSize" value="5" />
-		<!-- 
-		Минимальное количество соединений, которое всегда будет поддерживаться в пуле. 
-		Даже если нагрузка низкая, пул всегда будет держать минимум 5 соединений готовыми к работе.
-		-->
-		
-		<property name="maxPoolSize" value="30" />
-		<!-- 
-		Максимальное количество соединений, которое может содержать пул. 
-		Если приложение запросит больше соединений, чем это значение, запросы будут ожидать освобождения соединений.
-		-->
-		
-		<property name="initialPoolSize" value="5" />
-		<!-- 
-		Количество соединений, создаваемых при инициализации пула. 
-		Рекомендуется, чтобы значение совпадало с minPoolSize для минимизации задержек при запуске.
-		-->
-		
-		<property name="maxIdleTime" value="300" />
-		<!-- 
-		Максимальное время (в секундах), в течение которого соединение может быть неактивным. 
-		Если соединение остается неиспользованным дольше этого времени, оно удаляется из пула.
-		-->
-		
-		<property name="maxStatements" value="100" />
-		<!-- 
-		Максимальное количество подготовленных запросов (Prepared Statements), кэшируемых в пуле. 
-		Это ускоряет выполнение повторяющихся запросов, если база данных поддерживает подготовленные запросы.
-		-->
-		
-		<property name="preferredTestQuery" value="SELECT 1" />
-		<!-- 
-		Запрос, который выполняется для проверки доступности соединения перед его использованием. 
-		`SELECT 1` — простой и эффективный запрос, поддерживаемый большинством баз данных.
-		-->
-		
-		<property name="idleConnectionTestPeriod" value="300" />
-		<!-- 
-		Интервал (в секундах) между автоматическими проверками доступности неактивных соединений в пуле.
-		Если соединение оказалось закрытым на стороне базы данных, оно будет удалено из пула.
-		-->
-		
-		<property name="testConnectionOnCheckout" value="true" />
-		<!-- 
-		Включает проверку соединения перед его выдачей приложению. 
-		Это гарантирует, что приложение всегда получает рабочее соединение, но может увеличить задержки.
-		-->
-		
-		<property name="checkoutTimeout" value="30000" />
-		<!-- 
-		Максимальное время ожидания (в миллисекундах) для получения свободного соединения из пула. 
-		Если свободное соединение недоступно в течение этого времени, выбрасывается исключение.
-		-->
-		
-		<property name="maxIdleTimeExcessConnections" value="120" />
-		<!-- 
-		Максимальное время (в секундах), в течение которого избыточные соединения могут оставаться в пуле. 
-		Если число соединений превышает minPoolSize, лишние соединения будут удалены, если они простаивают более 120 секунд.
-		-->
-		
-		<property name="maxConnectionAge" value="600" />
-		<!-- 
-		Максимальное время жизни соединения.
-		-->
-
-     
-        
-	</bean>  
+	
 	<bean id="sessionFactory"
 		class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
 		<property name="dataSource" ref="myDataSource" />

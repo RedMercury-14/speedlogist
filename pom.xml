@@ -18,6 +18,14 @@
 
 	<dependencies>
 		
+		<!-- https://mvnrepository.com/artifact/com.zaxxer/HikariCP -->
+<dependency>
+    <groupId>com.zaxxer</groupId>
+    <artifactId>HikariCP</artifactId>
+    <version>6.2.1</version>
+</dependency>
+
+		
 		<!-- https://mvnrepository.com/artifact/com.github.jai-imageio/jai-imageio-core -->
 <dependency>
     <groupId>com.github.jai-imageio</groupId>
@@ -225,20 +233,6 @@
 			<version>2.0</version>
 			<scope>provided</scope>
 		</dependency>
-
-<!-- 		<dependency> -->
-<!-- 			<groupId>c3p0</groupId> -->
-<!-- 			<artifactId>c3p0</artifactId> -->
-<!-- 			<version>0.9.1.2</version> -->
-<!-- 		</dependency> -->
-
-			<!-- https://mvnrepository.com/artifact/com.mchange/c3p0 -->
-			<dependency>
-			    <groupId>com.mchange</groupId>
-			    <artifactId>c3p0</artifactId>
-			    <version>0.9.5.5</version>
-			</dependency>
-
 
 
 

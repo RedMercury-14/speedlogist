@@ -75,7 +75,8 @@ public class YardManagementRestController {
 	/*
 	 * тут данные которые определяют приоритетную рампу и время
 	 */
-	private static final Integer idRumpPriority = 170001;
+	private static final Integer idRumpPriority1700 = 170001;
+	private static final Integer idRumpPriority1800 = 180001;
 	private static final LocalTime startTimePriority = LocalTime.of(9, 0, 0);
 	private static final LocalTime finishTimePriority = LocalTime.of(20, 0, 0);
 
@@ -167,7 +168,7 @@ public class YardManagementRestController {
 			o.setMailInfo(null);
 			o.setSlotInfo(null);
 			//доп логика где указываю для двора приоритетные машины
-			if(o.getIdRamp().intValue() == idRumpPriority.intValue()) {
+			if(o.getIdRamp().intValue() == idRumpPriority1700.intValue() || o.getIdRamp().intValue() == idRumpPriority1800.intValue()) {
 				if(o.getTimeDelivery().toLocalDateTime().toLocalTime().isAfter(startTimePriority) && o.getTimeDelivery().toLocalDateTime().toLocalTime().isBefore(finishTimePriority)) {
 					o.setIsPriority(true);
 				}
@@ -189,7 +190,7 @@ public class YardManagementRestController {
 			o.setMailInfo(null);
 			o.setSlotInfo(null);
 			//доп логика где указываю для двора приоритетные машины
-			if(o.getIdRamp().intValue() == idRumpPriority.intValue()) {
+			if(o.getIdRamp().intValue() == idRumpPriority1700.intValue() || o.getIdRamp().intValue() == idRumpPriority1800.intValue()) {
 				if(o.getTimeDelivery().toLocalDateTime().toLocalTime().isAfter(startTimePriority) && o.getTimeDelivery().toLocalDateTime().toLocalTime().isBefore(finishTimePriority)) {
 					o.setIsPriority(true);
 				}

@@ -164,7 +164,7 @@
 		<div class="modal-dialog modal-dialog-centered">
 			<div class="modal-content">
 				<div class="modal-header justify-content-center">
-					<h2 class="modal-title text-center" id="reloadWindowModalLabel">Связь с сервером потеряна. Пожалуйста, обновите страницу!</h2>
+					<h2 class="modal-title text-center" id="reloadWindowModalLabel"></h2>
 				</div>
 				<div class="modal-body">
 					<div class="modal-buttons d-flex justify-content-center">
@@ -314,7 +314,7 @@
 				<div class="modal-body">
 					<h5 class="text-center text-muted font-weight-bold">Изменения зоны внутренних перемещений</h5>
 					<p class="text-justify">
-						Для <strong>1700</strong> склада зона для внутренних перемещений (170001 рампа с 9:00 по 20:00) 
+						Для <strong>1800</strong> склада (как и для 1700 склада ранее) зона для внутренних перемещений (180001 рампа с 9:00 по 20:00) 
 						больше не является зоной для установки слотов на внутренние перемещения. 
 						Теперь эта зона зарезервирована для установки слотов <strong>только логистами</strong>. Слоты внутренних перемещений 
 						можно устанавливать в любое свободное место, кроме вышеупомянутой зоны.
@@ -325,10 +325,6 @@
 							class="img-fluid mb-3" style="max-width: 100%; height: auto;">
 					</div>
 					<br>
-					<p class="text-justify">
-						<strong>На 1800 складе изменений пока нет - зона для внутренних перемещений (180001 рампа с 9:00 по 20:00) 
-						остается без изменений.</strong>
-					</p>
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-secondary" data-dismiss="modal">Ок, понятно</button>

@@ -153,21 +153,11 @@ export async function eventDropHandler(info, orderTableGridOption) {
 	// проверка пересечения со временем для внутренних перемещений
 	const internaMovementsTimes = currentStock.internaMovementsTimes
 	const internalMovementsRamps = currentStock.internalMovementsRamps
-	if (currentStock.id === '1700') {
-		// время для внутренних перемещений отдано для установки слотов логистами ВНЕ ОЧЕРЕДИ
-		if (isOverlapWithInternalMovementTimeForLogists(info, internaMovementsTimes, internalMovementsRamps, role)) {
-			info.revert()
-			alert(userMessages.internalMovementTimeForLogistError(currentStock))
-			return
-		}
-	}
-	if (currentStock.id === '1800') {
-		// стандартная проверка пересечения со временем для внутренних перемещений
-		if (isOverlapWithInternalMovementTime(info, internaMovementsTimes, internalMovementsRamps)) {
-			info.revert()
-			alert(userMessages.internalMovementTimeError(currentStock))
-			return
-		}
+	// время для внутренних перемещений отдано для установки слотов логистами ВНЕ ОЧЕРЕДИ
+	if (isOverlapWithInternalMovementTimeForLogists(info, internaMovementsTimes, internalMovementsRamps, role)) {
+		info.revert()
+		alert(userMessages.internalMovementTimeForLogistError(currentStock))
+		return
 	}
 
 	// проверка паллетовместимости склада на соседние даты
@@ -250,21 +240,11 @@ export async function eventReceiveHandler(info, orderTableGridOption, orderDateC
 	// проверка пересечения со временем для внутренних перемещений
 	const internaMovementsTimes = currentStock.internaMovementsTimes
 	const internalMovementsRamps = currentStock.internalMovementsRamps
-	if (currentStock.id === '1700') {
-		// время для внутренних перемещений отдано для установки слотов логистами ВНЕ ОЧЕРЕДИ
-		if (isOverlapWithInternalMovementTimeForLogists(info, internaMovementsTimes, internalMovementsRamps, role)) {
-			info.revert()
-			alert(userMessages.internalMovementTimeForLogistError(currentStock))
-			return
-		}
-	}
-	if (currentStock.id === '1800') {
-		// стандартная проверка пересечения со временем для внутренних перемещений
-		if (isOverlapWithInternalMovementTime(info, internaMovementsTimes, internalMovementsRamps)) {
-			info.revert()
-			alert(userMessages.internalMovementTimeError(currentStock))
-			return
-		}
+	// время для внутренних перемещений отдано для установки слотов логистами ВНЕ ОЧЕРЕДИ
+	if (isOverlapWithInternalMovementTimeForLogists(info, internaMovementsTimes, internalMovementsRamps, role)) {
+		info.revert()
+		alert(userMessages.internalMovementTimeForLogistError(currentStock))
+		return
 	}
 
 	// проверка совпадения с графиком поставок

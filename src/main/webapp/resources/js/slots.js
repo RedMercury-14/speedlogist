@@ -12,6 +12,7 @@ import {
 	setStockAttr,
 	createCalendarDateInput,
 	searchSlot,
+	showReloadWindowModal,
 } from "./slots/calendarUtils.js"
 import {
 	blurActiveElem, cookieHelper, debounce, isAdmin, isLogist, isObserver,
@@ -701,7 +702,7 @@ function setOldMarketInfo(order, oldValue, gridOption) {
 
 // функции для модального окна обновлений в слотах
 function showSlotNewsModal() {
-	const value = cookieHelper.getCookie('_slotNews2')
+	const value = cookieHelper.getCookie('_slotNews3')
 	if (value) return 
 	setSlotNewsCookie('ок')
 	$('#slotNewsModal').modal('show')
@@ -709,5 +710,5 @@ function showSlotNewsModal() {
 function setSlotNewsCookie(value) {
 	let date = new Date(Date.now() + 31562e7)
 	date = date.toUTCString()
-	cookieHelper.setCookie('_slotNews2', value, { expires: date, })
+	cookieHelper.setCookie('_slotNews3', value, { expires: date, })
 }

@@ -307,14 +307,14 @@ public class MainRestController {
 	private static String classLog;
 	public static String marketJWT;
 	//в отдельный файл
-	public static final String marketUrl = "https://api.dobronom.by:10806/Json";
-	public static final String serviceNumber = "BB7617FD-D103-4724-B634-D655970C7EC0";
-	public static final String loginMarket = "191178504_SpeedLogist";
-	public static final String passwordMarket = "SL!2024D@2005";
-//	public static final String marketUrl = "https://api.dobronom.by:10896/Json";
-//	public static final String serviceNumber = "CD6AE87C-2477-4852-A4E7-8BA5BD01C156";
+//	public static final String marketUrl = "https://api.dobronom.by:10806/Json";
+//	public static final String serviceNumber = "BB7617FD-D103-4724-B634-D655970C7EC0";
 //	public static final String loginMarket = "191178504_SpeedLogist";
 //	public static final String passwordMarket = "SL!2024D@2005";
+	public static final String marketUrl = "https://api.dobronom.by:10896/Json";
+	public static final String serviceNumber = "CD6AE87C-2477-4852-A4E7-8BA5BD01C156";
+	public static final String loginMarket = "191178504_SpeedLogist";
+	public static final String passwordMarket = "SL!2024D@2005";
 	
 
 	public static final Comparator<Address> comparatorAddressId = (Address e1, Address e2) -> (e1.getIdAddress() - e2.getIdAddress());

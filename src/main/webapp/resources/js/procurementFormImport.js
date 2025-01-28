@@ -188,6 +188,7 @@ function transformToAhoForm() {
 	hideFormField('marketInfo')
 	hideFormField('stacking')
 	hideFormField('cargo')
+	hideFormField('control')
 
 	changeSubmitButtonText('перевозка АХО/СГИ')
 }
@@ -214,7 +215,7 @@ function wayButtonsContainerOnClickHandler(e, wayTypeInput) {
 			inputEditBan(document, 'counterparty', true)
 			// показываем дополнительные поля для Импорта
 			// showFormField('recipient', 'ЗАО "Доброном"', true)
-			showFormField('control', '', true)
+			// showFormField('control', '', true)
 			// showFormField('routeComments', '', false)
 			// showFormField('truckLoadCapacity', '', true)
 			// showFormField('truckVolume', '', true)

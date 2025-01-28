@@ -545,7 +545,7 @@ export function changeForm(orderData, formType) {
 	// отображение дополнительных полей для Импорта
 	if (way === 'Импорт') {
 	// 	showFormField('recipient', 'ЗАО "Доброном"', true)
-		showFormField('control', '', true)
+	// 	showFormField('control', '', true)
 	// 	showFormField('routeComments', '', false)
 	// 	showFormField('truckLoadCapacity', '', true)
 	// 	showFormField('truckVolume', '', true)
@@ -577,6 +577,7 @@ export function changeForm(orderData, formType) {
 		hideFormField('marketInfo')
 		hideFormField('stacking')
 		hideFormField('cargo')
+		hideFormField('control')
 	}
 
 	showIncotermsInput(typeTruck)
@@ -587,7 +588,7 @@ export function changeForm(orderData, formType) {
 export function changeFormToDefault() {
 	showFormField('contact', '', false)
 	// hideFormField('recipient')
-	hideFormField('control')
+	// hideFormField('control')
 	// hideFormField('tir')
 	hideFormField('hydrolift')
 	hideFormField('carBodyLength')

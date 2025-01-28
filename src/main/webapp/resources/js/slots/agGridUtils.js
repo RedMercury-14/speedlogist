@@ -38,7 +38,7 @@ const columnDefs = [
 	{ headerName: "Перен-но логистом", field: "isLogistEdited", width: 90, cellClass: 'px-1 text-center font-weight-bold', },
 	{
 		headerName: "Информация (из Маркета)", field: "marketInfo",
-		width: 190, wrapText: true, autoHeight: true,
+		width: 490, wrapText: true, autoHeight: true,
 		editable: true, cellEditor: 'agLargeTextCellEditor', cellEditorPopup: true, cellEditorPopupPosition: 'under',
 	},
 	{

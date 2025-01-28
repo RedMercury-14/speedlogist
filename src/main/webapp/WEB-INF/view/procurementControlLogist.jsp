@@ -86,12 +86,12 @@
 										<label for="recipient" class="col-form-label text-muted font-weight-bold">Получатель</label>
 										<input type="text" class="form-control" name="recipient" id="recipient" placeholder="Получатель">
 									</div>
-									<div id="control-container" class="form-group input-row-container none">
-										<span class="text-muted font-weight-bold">Сверка УКЗ:</span>
-										<select id="control" name="control" class="form-control">
-											<option value="" hidden disabled>Выберите один из пунктов</option>
+									<div id="control-container" class="form-group input-row-container">
+										<span class="text-muted font-weight-bold">Сверка УКЗ: <span class="text-red">*</span></span>
+										<select id="control" name="control" class="form-control" required>
+											<option value="" hidden selected disabled>Выберите один из пунктов</option>
 											<option value="Да">Да, сверять УКЗ</option>
-											<option value="Нет" selected>Нет, не сверять УКЗ</option>
+											<option value="Нет">Нет, не сверять УКЗ</option>
 										</select>
 									</div>
 									<div id="control-container" class="form-group input-row-container none">

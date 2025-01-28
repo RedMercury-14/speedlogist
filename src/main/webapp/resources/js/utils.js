@@ -990,3 +990,24 @@ export function groupBy(data, key) {
 		return acc
 	}, {})
 }
+
+
+// обнаружение нескольких вкладок
+export function detectMultipleTabs(callback) {
+	// Генерируем уникальный идентификатор для вкладки
+	const tabId = Math.random().toString(36).slice(2, 9)
+
+	// Создаем канал
+	const channel = new BroadcastChannel('tab-tracker')
+
+	// Отправляем сообщение о том, что вкладка открыта
+	channel.postMessage({ type: 'tabOpened', tabId })
+
+	// Слушаем сообщения от других вкладок
+	channel.onmessage = (event) => {
+		if (event.data.type === 'tabOpened' && event.data.tabId !== tabId) {
+			console.log('Другая вкладка открыта:', event.data.tabId)
+			callback()
+		}
+	}
+}

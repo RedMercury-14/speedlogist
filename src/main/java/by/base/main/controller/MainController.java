@@ -3031,16 +3031,15 @@ public class MainController {
 			if(order != null && order.getStatus() == 10) {			
 				return "redirect:/main/logistics/international";
 			}
-			User user = userService.getUserByLogin(login);
+			User user = userService.getUserByLogin(login.trim());
 			if (status == null) {
 				status = "4";
 				routeService.updateRouteInBase(idRoute, cost, currency, user, status);
 			}else {
 				routeService.updateRouteInBase(idRoute, cost, currency, user, status);
 				Route route = routeService.getRouteById(idRoute);						
-				User userHasCarrier = userService.getUserByLogin(login);
-				java.util.Date t2 = new java.util.Date();
-				String message = "На маршрут "+route.getRouteDirection()+" принят единственный заявившийся перевозчик: " + userHasCarrier.getCompanyName() 
+//				User userHasCarrier = userService.getUserByLogin(login.trim());
+				String message = "На маршрут "+route.getRouteDirection()+" принят единственный заявившийся перевозчик: " + user.getCompanyName() 
 						+ ". Заявленная стоимость перевозки составляет "+ route.getFinishPrice() + " "+ route.getStartCurrency() + ". \nОптимальная стоимость составляет " + route.getOptimalCost()+" BYN";
 				mailService.sendSimpleEmail(appPath, "Подтверждение единственного перевозчика", message, "YakubovE@dobronom.by");
 			}

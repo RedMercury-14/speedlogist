@@ -242,6 +242,9 @@ public class Order {
 	@Column(name = "first_load_slot")
 	private Timestamp firstLoadSlot;
 	
+	@Column(name = "slot_message_history")
+	private String slotMessageHistory;
+	
 	@Transient
 	private List<Address> addressesSort;
 	
@@ -785,6 +788,17 @@ public class Order {
 	}
 	public void setRegistrationFactYard(Timestamp registrationFactYard) {
 		this.registrationFactYard = registrationFactYard;
+	}
+	
+	public String getSlotMessageHistory() {
+		return slotMessageHistory;
+	}
+	public void setSlotMessageHistory(String slotMessageHistory) {
+		if(this.slotMessageHistory == null) {
+			this.slotMessageHistory = slotMessageHistory;			
+		}else {
+			this.slotMessageHistory = this.slotMessageHistory + ";\n" + slotMessageHistory;
+		}
 	}
 	@Override
 	public int hashCode() {

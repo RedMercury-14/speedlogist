@@ -4640,6 +4640,7 @@ public class MainRestController {
 						infoCheck = planResponce.getMessage();
 						response.put("info", infoCheck.replace("\n", "<br>"));
 						response.put("status", "200");
+						order.setSlotMessageHistory(planResponce.getMessage());
 					}		
 					
 				}
@@ -4894,13 +4895,11 @@ public class MainRestController {
 					infoCheck = planResponce.getMessage();
 					response.put("info", infoCheck.replace("\n", "<br>"));
 					response.put("status", "200");
-					//проверка по балансу на складах
-//					response.put("balance", readerSchedulePlan.checkBalanceBetweenStock(order));
+					order.setSlotMessageHistory(planResponce.getMessage());
 				}	
 				
 			}
 		}
-		
 		//конец главная проверка по графику поставок
 		
 				

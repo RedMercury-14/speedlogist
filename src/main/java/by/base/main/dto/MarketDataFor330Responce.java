@@ -254,9 +254,9 @@ public class MarketDataFor330Responce {
 		this.infoOrder = (json330Object.get("InfoOrder") != null 
                 ? json330Object.get("InfoOrder").toString() 
                 : null);
-		this.date33 = date3.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-		this.date22 = date2.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-		this.dateXX = datex.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+		this.date33 = date33 != null ? date3.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) : null;
+		this.date22 = date22 != null ? date2.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) : null;
+		this.dateXX = dateXX != null ? datex.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) : null;
 	}
 	public MarketDataFor330Responce() {
 		super();

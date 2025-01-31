@@ -4640,6 +4640,11 @@ public class MainRestController {
 						infoCheck = planResponce.getMessage();
 						response.put("info", infoCheck.replace("\n", "<br>"));
 						response.put("status", "200");
+						if(order.getSlotMessageHistory() != null) { // записываем в историю сообщение сообщение
+							order.setSlotMessageHistory(order.getSlotMessageHistory() + "\n---------\n"+planResponce.getMessage());
+						}else {
+							order.setSlotMessageHistory(planResponce.getMessage());
+						}
 					}		
 					
 				}
@@ -4894,6 +4899,11 @@ public class MainRestController {
 					infoCheck = planResponce.getMessage();
 					response.put("info", infoCheck.replace("\n", "<br>"));
 					response.put("status", "200");
+					if(order.getSlotMessageHistory() != null) { // записываем в историю сообщение сообщение
+						order.setSlotMessageHistory(order.getSlotMessageHistory() + "\n---------\n"+planResponce.getMessage());
+					}else {
+						order.setSlotMessageHistory(planResponce.getMessage());
+					}
 				}	
 				
 			}

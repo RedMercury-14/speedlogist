@@ -387,7 +387,10 @@ export function errorHandler_105status(info, data) {
 
 
 // отображение модального окна обновления страницы
-export function showReloadWindowModal() {
+export function showReloadWindowModal(text) {
+	const defaultText = 'Связь с сервером потеряна. Пожалуйста, обновите страницу!'
+	const displayText = text ? text : defaultText
+	$('#reloadWindowModalLabel').text(displayText)
 	$('#reloadWindowModal').modal('show')
 	$('.modal-backdrop').addClass("whiteOverlay")
 }

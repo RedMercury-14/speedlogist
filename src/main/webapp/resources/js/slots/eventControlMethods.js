@@ -7,7 +7,7 @@ import { getOrderDataForAjax, getOrderType, getPallCoutnAction, stockAndDayIsVis
 import { store } from "./store.js"
 
 /* -------------- методы для управления иветнтами ------------------ */
-export function addCalendarEvent(gridOptions, orderData, isAnotherUser) {
+export function addCalendarEvent(gridOptions, orderData) {
 	// обновляем заказ в сторе
 	const updatedOrder = store.updateOrder(orderData)
 	// обновляем заказ в таблице
@@ -19,16 +19,13 @@ export function addCalendarEvent(gridOptions, orderData, isAnotherUser) {
 	// обновляем количество паллет для склада
 	changePallCapacity(orderData, currentStock, updatedOrder)
 
-	if (!isAnotherUser) {
-		// удаляем ивент из календаря, так как он уже добавлен в стор
-		orderData.fcEvent.remove()
-		// удаляем ивент из контейнера, так как он уже добавлен в календарь
-		document.querySelector(`#event_${orderData.marketNumber}`)?.remove()
-		// удаляем ивент из очереди ожидания добавления в календарь
-		store.removeEventFromDropZone(orderData.marketNumber)
-	}
+	// ДЛЯ ВКЛАДКИ, НА КОТОРОЙ ПРОИЗОШЛО ДЕЙСТВИЕ
+	// удаляем ивент из контейнера, так как он уже добавлен в календарь
+	document.querySelector(`#event_${orderData.marketNumber}`)?.remove()
+	// удаляем ивент из очереди ожидания добавления в календарь
+	store.removeEventFromDropZone(orderData.marketNumber)
 }
-export function updateCalendarEvent(gridOptions, orderData, isAnotherUser) {
+export function updateCalendarEvent(gridOptions, orderData) {
 	const oldOrder = store.getOrderByMarketNumber(orderData.marketNumber)
 	if (!oldOrder) return
 	const oldOrderStockId = `${oldOrder.idRamp}`.slice(0,-2)
@@ -54,7 +51,7 @@ export function updateCalendarEvent(gridOptions, orderData, isAnotherUser) {
 	const currentStock = store.getCurrentStock()
 	if (!currentStock) return
 	// обновляем количество паллет для склада
-	changePallCapacityForUpdateCE(orderData, currentStock, oldOrder, updatedOrder, isAnotherUser)
+	changePallCapacityForUpdateCE(orderData, currentStock, oldOrder, updatedOrder)
 }
 export function deleteCalendarEvent(gridOptions, orderData, isAnotherUser) {
 	const login = store.getLogin()
@@ -84,15 +81,21 @@ export function deleteCalendarEvent(gridOptions, orderData, isAnotherUser) {
 	// обновляем количество паллет для склада
 	changePallCapacity(orderData, currentStock, updatedOrder)
 
-	if (!isAnotherUser && currentStock) {
-		// добавляем ивент в очередь ожидания
-		store.addEventToDropZone(updatedOrder)
-		// показываем сообщение об удалении ивента из календаря
-		snackbar.show(userMessages.eventRemove)
-		// пересоздаём ивент в контейнере
-		const eventContainer = document.querySelector("#external-events")
-		createDraggableElement(eventContainer, updatedOrder, login, currentStock)
-	}
+	// из-за того, что сообщение приходит раньше, чем ответ от сервера
+	setTimeout(() => {
+		if (!isAnotherUser && currentStock && !orderData.deleteByAdmin) {
+			const eventId = orderData.marketNumber
+			const isExistRemovedId = store.removeFromDropZoneList(eventId)
+			if (!isExistRemovedId) return
+			// добавляем ивент в очередь ожидания
+			store.addEventToDropZone(updatedOrder)
+			// показываем сообщение об удалении ивента из календаря
+			snackbar.show(userMessages.eventRemove)
+			// пересоздаём ивент в контейнере
+			const eventContainer = document.querySelector("#external-events")
+			createDraggableElement(eventContainer, updatedOrder, login, currentStock)
+		}
+	}, 300)
 }
 export function deleteCalendarEventFromTable(gridOptions, orderData) {
 	// удаляем заказ в сторе
@@ -145,7 +148,7 @@ function changePallCapacity(orderData, currentStock, order) {
 	}
 }
 
-function changePallCapacityForUpdateCE(orderData, currentStock, oldOrder, order, isAnotherUser) {
+function changePallCapacityForUpdateCE(orderData, currentStock, oldOrder, order) {
 	const oldEvent = orderData.oldEvent
 	const oldOrderStockId = `${oldOrder.idRamp}`.slice(0,-2)
 	const currentDate = store.getCurrentDate()
@@ -153,45 +156,28 @@ function changePallCapacityForUpdateCE(orderData, currentStock, oldOrder, order,
 	const eventDateStr = orderData.startDateStr.split('T')[0]
 	const orderType = getOrderType(order)
 	const currentPallCount = store.getPallCount(currentStock, currentDate)
+	const oldStockId = oldEvent
+		? oldEvent.extendedProps.data.numStockDelivery
+		: oldOrderStockId
+	const oldEventDateStr = oldEvent
+		? oldEvent.start.split('T')[0]
+		: new Date(oldOrder.timeDelivery).toISOString().split('T')[0]
+	const stockId = orderData.stockId
 
-	// для текущего пользователя
-	if (!isAnotherUser) {
-		const oldEventDateStr = oldEvent
-			? oldEvent.startStr.split('T')[0]
-			: new Date(oldOrder.timeDelivery).toISOString().split('T')[0]
-
-		// если даты не совпадают, то обновляем паллетовместимость
-		if (oldEventDateStr !== eventDateStr) {
-			updatePallInfo(currentPallCount, maxPall, orderType)
-			return
-		}
+	// если даты и склады совпадают, то не обновляем паллетовместимость
+	if ((oldEventDateStr === eventDateStr) && (stockId === oldStockId)) {
+		return
 	}
 
-	// для других пользователей
-	if (isAnotherUser) {
-		const oldStockId = oldEvent
-			? oldEvent.extendedProps.data.numStockDelivery
-			: oldOrderStockId
-		const oldEventDateStr = oldEvent
-			? oldEvent.start.split('T')[0]
-			: new Date(oldOrder.timeDelivery).toISOString().split('T')[0]
-		const stockId = orderData.stockId
+	// если виден склад и дата старого ивента
+	if (stockAndDayIsVisible(currentStock, currentDate, oldStockId, oldEventDateStr)) {
+		updatePallInfo(currentPallCount, maxPall, orderType)
+		return
+	}
 
-		// если даты и склады совпадают, то не обновляем паллетовместимость
-		if ((oldEventDateStr === eventDateStr) && (stockId === oldStockId)) {
-			return
-		}
-
-		// если виден склад и дата старого ивента
-		if (stockAndDayIsVisible(currentStock, currentDate, oldStockId, oldEventDateStr)) {
-			updatePallInfo(currentPallCount, maxPall, orderType)
-			return
-		}
-
-		// если виден склад и дата нового ивента
-		if (stockAndDayIsVisible(currentStock, currentDate, stockId, eventDateStr)) {
-			updatePallInfo(currentPallCount, maxPall, orderType)
-			return
-		}
+	// если виден склад и дата нового ивента
+	if (stockAndDayIsVisible(currentStock, currentDate, stockId, eventDateStr)) {
+		updatePallInfo(currentPallCount, maxPall, orderType)
+		return
 	}
 }

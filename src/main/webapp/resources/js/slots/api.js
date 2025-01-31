@@ -20,12 +20,12 @@ import {
 } from "./constants.js"
 import { getMoveOrdersReportDates, getOrderDataForAjax } from "./dataUtils.js"
 import { renderOrderCalendar } from "./deliveryCalendar.js"
-import { addCalendarEvent, deleteCalendarEvent, updateCalendarEvent, updateOrderAndEvent } from "./eventControlMethods.js"
+import { updateOrderAndEvent } from "./eventControlMethods.js"
 import { methodAccessRules } from "./rules.js"
 import { store } from "./store.js"
 
 /* -------------- методы для обновления БД ------------------ */
-export function preloadOrder(info, orderTableGridOption, orderDateClickHandler) {
+export function preloadOrder(info, orderDateClickHandler) {
 	const method = 'preload'
 	const currentStock = store.getCurrentStock()
 	const currentLogin = store.getLogin()
@@ -48,7 +48,6 @@ export function preloadOrder(info, orderTableGridOption, orderDateClickHandler) 
 
 	// проверка доступа к методу
 	if (!methodAccessRules(method, orderData, currentLogin, currentRole)) {
-		info.revert()
 		snackbar.show(userMessages.operationNotAllowed)
 		return
 	}
@@ -70,19 +69,19 @@ export function preloadOrder(info, orderTableGridOption, orderDateClickHandler) 
 
 				if (!data.planResponce) {
 					// нет данных о графике - загружаем заказ в БД
-					loadOrder(info, orderTableGridOption)
+					loadOrder(info)
 				} else {
 					const plan = data.planResponce
 
 					// нет данных о датах заказов и поставок
 					if (!plan.dates) {
-						loadOrder(info, orderTableGridOption)
+						loadOrder(info)
 						return
 					}
 
 					// нет данных о датах заказов и поставок
 					if (plan.dates.length === 0) {
-						loadOrder(info, orderTableGridOption)
+						loadOrder(info)
 						return
 					}
 
@@ -96,24 +95,23 @@ export function preloadOrder(info, orderTableGridOption, orderDateClickHandler) 
 			}
 
 			if (data.status === '105') {
-				errorHandler_105status(info, data)
+				errorHandler_105status(null, data)
 				return
 			}
 
 			if (data.status === '100') {
-				errorHandler_100status(info, data)
+				errorHandler_100status(null, data)
 			} else {
 				snackbar.show(userMessages.actionNotCompleted)
 			}
 		},
 		errorCallback: () => {
-			info.revert()
 			clearTimeout(timeoutId)
 			bootstrap5overlay.hideOverlay()
 		}
 	})
 }
-export function loadOrder(info, orderTableGridOption, dateOrderOrl) {
+export function loadOrder(info, dateOrderOrl) {
 	const method = 'load'
 	const currentStock = store.getCurrentStock()
 	const currentLogin = store.getLogin()
@@ -138,7 +136,6 @@ export function loadOrder(info, orderTableGridOption, dateOrderOrl) {
 
 	// проверка доступа к методу
 	if (!methodAccessRules(method, orderData, currentLogin, currentRole)) {
-		info.revert()
 		snackbar.show(userMessages.operationNotAllowed)
 		return
 	}
@@ -165,29 +162,27 @@ export function loadOrder(info, orderTableGridOption, dateOrderOrl) {
 
 			if (data.status === '200') {
 				data.info && showMessageModal(data.info)
-				addCalendarEvent(orderTableGridOption, orderData, false)
 				return
 			}
 
 			if (data.status === '105') {
-				errorHandler_105status(info, data)
+				errorHandler_105status(null, data)
 				return
 			}
 
 			if (data.status === '100') {
-				errorHandler_100status(info, data)
+				errorHandler_100status(null, data)
 			} else {
 				snackbar.show(userMessages.actionNotCompleted)
 			}
 		},
 		errorCallback: () => {
-			info.revert()
 			clearTimeout(timeoutId)
 			bootstrap5overlay.hideOverlay()
 		}
 	})
 }
-export function updateOrder(info, orderTableGridOption, reasonText) {
+export function updateOrder(info, reasonText) {
 	const method = 'update'
 	const currentStock = store.getCurrentStock()
 	const currentLogin = store.getLogin()
@@ -201,6 +196,8 @@ export function updateOrder(info, orderTableGridOption, reasonText) {
 		snackbar.show(userMessages.operationNotAllowed)
 		return
 	}
+
+	orderData.isComplexUpdate = isComplexUpdate
 
 	// просьба указать причину переноса слота для логистов
 	if (isLogist(currentRole) && reasonText) {
@@ -219,9 +216,6 @@ export function updateOrder(info, orderTableGridOption, reasonText) {
 
 			if (data.status === '200') {
 				data.info && showMessageModal(data.info)
-				isComplexUpdate
-					? addCalendarEvent(orderTableGridOption, orderData, false)
-					: updateCalendarEvent(orderTableGridOption, orderData, false)
 				return
 			}
 
@@ -243,15 +237,14 @@ export function updateOrder(info, orderTableGridOption, reasonText) {
 		}
 	})
 }
-export function deleteOrder(info, orderTableGridOption, deleteByAdmin) {
+export function deleteOrder(info, deleteByAdmin) {
 	const method = 'delete'
 	const currentStock = store.getCurrentStock()
 	const currentLogin = store.getLogin()
 	const currentRole = store.getRole()
 	const orderData = getOrderDataForAjax(info, currentStock, currentLogin, currentRole, method)
 
-	// для админа - удалять заказ без переноса в дроп-зону
-	const isAnotherUser = !!deleteByAdmin
+	orderData.deleteByAdmin = deleteByAdmin
 
 	// проверка доступа к методу
 	if (!methodAccessRules(method, orderData, currentLogin, currentRole)) {
@@ -270,7 +263,8 @@ export function deleteOrder(info, orderTableGridOption, deleteByAdmin) {
 			bootstrap5overlay.hideOverlay()
 
 			if (data.status === '200') {
-				deleteCalendarEvent(orderTableGridOption, orderData, isAnotherUser)
+				const eventId = orderData.marketNumber
+				store.addToDropZoneList(eventId)
 				return
 			}
 
@@ -286,13 +280,12 @@ export function deleteOrder(info, orderTableGridOption, deleteByAdmin) {
 			}
 		},
 		errorCallback: () => {
-			// info.revert()
 			clearTimeout(timeoutId)
 			bootstrap5overlay.hideOverlay()
 		}
 	})
 }
-export function confirmSlot(fcEvent, action, orderTableGridOption) {
+export function confirmSlot(fcEvent, action) {
 	const method = 'confirm'
 	const currentStock = store.getCurrentStock()
 	const currentLogin = store.getLogin()
@@ -318,7 +311,6 @@ export function confirmSlot(fcEvent, action, orderTableGridOption) {
 
 			if (data.status === '200') {
 				action === 'save' && data.info && showMessageModal(data.info)
-				updateCalendarEvent(orderTableGridOption, orderData, false)
 				hideEventInfoPopup()
 				return
 			}

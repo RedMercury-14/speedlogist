@@ -323,7 +323,7 @@ html, body {
 .fc-timegrid-axis,
 .fc-col-header-cell,
 .fc-daygrid-day-frame {
-	height: 14px !important;
+	height: 16px !important;
 }
 .fc-timegrid-slot,
 .fc-timegrid-axis-frame,
@@ -363,8 +363,8 @@ html, body {
 }
 .fc-event-main .close {
 	position: absolute;
-	top: -4px;
-	right: 1px;
+	top: -6px;
+	right: 0;
 	font-size: 1.5rem;
 	color: #000;
 	width: 0.7em;
@@ -380,6 +380,8 @@ html, body {
 .fc-event-main .checkSlot,
 .fc-event-main .checkBooking,
 .fc-event-main .deleteSlot {
+	/* visibility: hidden; */
+	/* opacity: 0; */
 	position: absolute;
 	top: 0px;
 	font-size: 0.7rem;
@@ -400,6 +402,7 @@ html, body {
 	border: 2px solid rgba(0, 0, 0, 0.7);
 	border-radius: 50%;
 	transform: scale3d(1, 1, 1);
+	/* transition: opacity .3s ease-out; */
 }
 .fc-event-main .popup {
 	right: 20px;
@@ -412,6 +415,13 @@ html, body {
 }
 .fc-event-main .deleteSlot {
 	right: 80px;
+}
+.fc-event-main:hover .popup,
+.fc-event-main:hover .checkSlot,
+.fc-event-main:hover .checkBooking,
+.fc-event-main:hover .deleteSlot {
+	opacity: 1;
+	visibility: visible;
 }
 .fc-event-main .close:hover {
 	opacity: 1 !important;
@@ -447,9 +457,9 @@ html, body {
 	background: repeating-linear-gradient(
 		45deg,
 		#ffffff,
-		#ffffff 7px,
-		#f44336 7px,
-		#f44336 14px
+		#ffffff 8px,
+		#f44336 8px,
+		#f44336 16px
 	);
 }
 #calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="08:10:00"],
@@ -460,10 +470,10 @@ html, body {
 	border-bottom: none;
 	background: repeating-linear-gradient(
 		45deg,
-		#f44336 2.9px,
-		#f44336 9.9px,
-		#ffffff 9.9px,
-		#ffffff 16.9px
+		#f44336 3.31px,
+		#f44336 11.31px,
+		#ffffff 11.31px,
+		#ffffff 19.31px
 	);
 }
 #calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="08:20:00"],
@@ -474,10 +484,10 @@ html, body {
 	border-bottom: none;
 	background: repeating-linear-gradient(
 		45deg,
-		#f44336 12.8px,
-		#f44336 19.8px,
-		#ffffff 19.8px,
-		#ffffff 26.8px
+		#f44336 14.62px,
+		#f44336 22.62px,
+		#ffffff 22.62px,
+		#ffffff 30.62px
 	);
 }
 #calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="08:30:00"],
@@ -488,10 +498,10 @@ html, body {
 	border-bottom: none;
 	background: repeating-linear-gradient(
 		45deg,
-		#ffffff 1.7px,
-		#ffffff 8.7px,
-		#f44336 8.7px,
-		#f44336 15.7px
+		#ffffff 1.93px,
+		#ffffff 9.93px,
+		#f44336 9.93px,
+		#f44336 17.93px
 	);
 }
 #calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="08:40:00"],
@@ -502,10 +512,10 @@ html, body {
 	border-bottom: none;
 	background: repeating-linear-gradient(
 		45deg,
-		#f44336 4.6px,
-		#f44336 11.6px,
-		#ffffff 11.6px,
-		#ffffff 18.6px
+		#f44336 5.24px,
+		#f44336 13.24px,
+		#ffffff 13.24px,
+		#ffffff 21.24px
 	);
 }
 #calendar[data-stock="1700"] .fc-timegrid-slot-lane[data-time="08:50:00"],
@@ -516,10 +526,10 @@ html, body {
 	border-bottom: none;
 	background: repeating-linear-gradient(
 		45deg,
-		#f44336 14.5px,
-		#f44336 21.5px,
-		#ffffff 21.5px,
-		#ffffff 28.5px
+		#f44336 16.55px,
+		#f44336 24.55px,
+		#ffffff 24.55px,
+		#ffffff 32.55px
 	);
 }
 

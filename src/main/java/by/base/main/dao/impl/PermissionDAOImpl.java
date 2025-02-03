@@ -6,11 +6,12 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 import by.base.main.dao.PermissionDAO;
-import by.base.main.model.OrderProduct;
 import by.base.main.model.Permission;
 
+@Repository
 public class PermissionDAOImpl implements PermissionDAO{
 
 	@Autowired
@@ -25,29 +26,37 @@ public class PermissionDAOImpl implements PermissionDAO{
 		return roles;
 	}
 
-	
+	private static final String queryGetPermissionsByIdObject = "from Permission where idObjectApprover =:idObjectApprover order by idPermissions desc";
 	@Override
 	public List<Permission> getPermissionsByIdObject(Integer id) {
-		// TODO Auto-generated method stub
-		return null;
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Permission> theObject = currentSession.createQuery(queryGetPermissionsByIdObject, Permission.class);
+		theObject.setParameter("idObjectApprover", id);
+		List<Permission> trucks = theObject.getResultList();
+		return trucks;
 	}
 
+	private static final String queryGetPermissionById = "from Permission where idPermissions =:idPermissions";
 	@Override
 	public Permission getPermissionById(Integer id) {
-		// TODO Auto-generated method stub
-		return null;
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Permission> theObject = currentSession.createQuery(queryGetPermissionById, Permission.class);
+		theObject.setParameter("idPermissions", id);
+		Permission permission = theObject.getSingleResult();
+		return permission;
 	}
 
 	@Override
 	public Integer savePermission(Permission permission) {
-		// TODO Auto-generated method stub
-		return null;
+		Session currentSession = sessionFactory.getCurrentSession();
+		currentSession.save(permission);
+		return Integer.parseInt(currentSession.getIdentifier(permission).toString());
 	}
 
 	@Override
 	public void updatePermission(Permission task) {
-		// TODO Auto-generated method stub
-		
+		Session currentSession = sessionFactory.getCurrentSession();
+		currentSession.update(task);
 	}
 
 }

@@ -527,6 +527,15 @@ public class MainRestController {
 		System.out.println("all method = " + (t2.getTime() - t1.getTime()));
 
 	}
+    
+    @GetMapping("/procurement/permission/testOrbject")
+	public Map<String, Object> testOrbjectPermission(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		Map<String, Object> responseMap = new HashMap<>();
+		Permission permission = new Permission();
+		responseMap.put("status", "200");
+		responseMap.put("object", permission);
+		return responseMap;
+	}
 
 	/**
 

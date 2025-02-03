@@ -103,6 +103,10 @@ public class Permission {
 		return userInitiator;
 	}
 
+	/**
+	 * Логин, кому требуется разрешение
+	 * @param userInitiator
+	 */
 	public void setUserInitiator(String userInitiator) {
 		this.userInitiator = userInitiator;
 	}

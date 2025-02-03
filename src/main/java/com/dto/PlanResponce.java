@@ -4,19 +4,23 @@ import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
 
+import by.base.main.model.Permission;
 import by.base.main.model.Schedule;
 
 /**
  * Класс реализующий ответ со статусом для метода ReaderSchedulePlan.process
  * <br/>Если статус 0 - то запрещено действие
  * <br/>Если статус 200 - то разрешено действие
+ * <br/>Если статус 5 - запрещено + создан объект разрешения
  */
 public class PlanResponce {
 
+	
 	private Integer status;
 	private String message;
 	private List <Date> dates = new ArrayList<Date>();
 	private Schedule schedule;
+	private Permission permission;
 	
 	/**
 	 * @param status
@@ -77,6 +81,15 @@ public class PlanResponce {
 
 	public void setSchedule(Schedule schedule) {
 		this.schedule = schedule;
+	}
+	
+
+	public Permission getPermission() {
+		return permission;
+	}
+
+	public void setPermission(Permission permission) {
+		this.permission = permission;
 	}
 
 	@Override

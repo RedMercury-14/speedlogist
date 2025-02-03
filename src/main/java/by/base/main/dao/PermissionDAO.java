@@ -1,5 +1,6 @@
 package by.base.main.dao;
 
+import java.sql.Date;
 import java.util.List;
 
 import by.base.main.model.Permission;
@@ -18,6 +19,24 @@ public interface PermissionDAO {
 	
 	Integer savePermission(Permission permission);
 	
+	/**
+	 * Проверяет, есть ли в базе данных разрешение по параметрма:
+	 * <br> dateValid - дату на которое должно действовать разрешение
+	 * <br> idObjectApprover - id объекта.
+	 * Если такой объект имеется - возвращает true
+	 * @param permission
+	 * @return
+	 */
+	boolean checkPermission(Permission permission);
+	
 	void updatePermission(Permission task);
+	
+	/**
+	 * Возвращает лист разрешений по дате dateValid 
+	 * @param start
+	 * @param end
+	 * @return
+	 */
+	List<Permission> getPermissionListFromDateValid(Date start, Date end);
 
 }

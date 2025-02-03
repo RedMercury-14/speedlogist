@@ -585,7 +585,6 @@ public class ReaderSchedulePlan {
 	 * даже если вне графика поставок
 	 */
 	public PlanResponce process(Order order) {
-		User user = getThisUser();
 		 Set<OrderLine> lines = order.getOrderLines(); // строки в заказе
 //		 List<Product> products = new ArrayList<Product>(); 
 		 Map<Integer,Product> products = new HashMap<Integer, Product>(); 
@@ -647,7 +646,7 @@ public class ReaderSchedulePlan {
 		 
 		 List<Product> balance = checkBalanceBetweenStock(order); // проерка балансов
 		 
-		 if(checkHasLog(dateRange, order)) {
+		 if(!checkHasLog(dateRange, order)) {
 			 result = result + "<b>Данный заказ " + order.getMarketNumber() + " " + order.getCounterparty() + " установлен не по графику поставок. Он должен быть установлен в диапазоне: с "
 					 +dateRange.start.toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + ", по " + dateRange.end.toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))+"</b>\n";
 		 }
@@ -732,16 +731,7 @@ public class ReaderSchedulePlan {
 								//закончилась проверка балансов
 								 if(dayStockMessage!= null) {
 						             result = dayStockMessage+"\n" + result;
-						             Permission permission = new Permission();
-						             permission.setIdObjectApprover(order.getIdOrder());
-						             permission.setDateValid(Date.valueOf(order.getTimeDelivery().toLocalDateTime().toLocalDate()));
-						             permission.setUserInitiator(user.getLogin());
-						             permission.setDateTimeInitiations(Timestamp.valueOf(LocalDateTime.now()));
-						             permission.setIdUserInitiator(user.getIdUser());
-						             permission.setNameUserInitiator(user.getSurname() + " " + user.getName());
-						             permission.setEmailUserInitiator(user.geteMail());
-						             permission.setCommentUserInitiator(dayStockMessage);
-						             permissionService.savePermission(permission);
+						             createPermission(order, dayStockMessage);					             
 						             isMistakeZAQ = true;						             
 						         }
 							}
@@ -767,25 +757,29 @@ public class ReaderSchedulePlan {
 										if(balanceProduct.getCalculatedDayStock1700() > balanceProduct.getCalculatedDayMax()) {
 											if(balanceProduct.getCalculatedDayStock1700() > balanceProduct.getCalculatedDayStock1800()) {
 												result = result +"Необходимо доставить товар "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") на <b>1800 склад</b>, т.к. остаток товаров в днях меньше чем на текущем складе;\n\n";
-												isMistakeZAQ = true;
+												isBalanceMistake = true;
 											}
 										}
 									}else {
 										if(balanceProduct.getCalculatedDayStock1800() > balanceProduct.getCalculatedDayMax()) {
 											if(balanceProduct.getCalculatedDayStock1800() > balanceProduct.getCalculatedDayStock1700()) {
 												result = result +"Необходимо доставить товар "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") на <b>1700 склад</b>, т.к. остаток товаров в днях меньше чем на текущем складе;\n\n";
-												isMistakeZAQ = true;
+												isBalanceMistake = true;
 											}
 										}
 									}
 								}
 							}
-							//закончилась проверка балансов
-							 if(dayStockMessage!= null) {
-					             result = dayStockMessage+"\n" + result;
-					             isMistakeZAQ = true;
-					         }
-//						isMistakeZAQ = true;
+							if(isBalanceMistake) {
+								isMistakeZAQ = true;
+							}else {
+								//закончилась проверка балансов
+								 if(dayStockMessage!= null) {
+						             result = dayStockMessage+"\n" + result;
+						             createPermission(order, dayStockMessage);
+						             isMistakeZAQ = true;						             
+						         }
+							}
 						}else {
 							result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + singleZaq + " шт. из " + orlZaq + " шт.\n";													
 						}
@@ -793,10 +787,7 @@ public class ReaderSchedulePlan {
 					
 				}else { // если отсутствует заказ ОРЛ
 					String dayStockMessage =  checkNumProductHasStock(order, product, dateRange); // проверяем по стокам относительно одного продукта
-					 if(dayStockMessage!= null) {
-			             result = dayStockMessage+"\n" + result;
-			             isMistakeZAQ = true;
-			         }
+					 
 					result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - отсутствует в плане заказа (Заказы поставщика от ОРЛ)\n";
 					//пошла проверка балансов
 					if(getTrueStock(order).equals("1700") || getTrueStock(order).equals("1800")) {
@@ -814,20 +805,30 @@ public class ReaderSchedulePlan {
 								if(balanceProduct.getCalculatedDayStock1700() > balanceProduct.getCalculatedDayMax()) {
 									if(balanceProduct.getCalculatedDayStock1700() > balanceProduct.getCalculatedDayStock1800()) {
 										result = result +"Необходимо доставить товар "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") на <b>1800 склад</b>, т.к. остаток товаров в днях меньше чем на текущем складе;\n\n";
-										isMistakeZAQ = true;
+										isBalanceMistake = true;
 									}
 								}
 							}else {
 								if(balanceProduct.getCalculatedDayStock1800() > balanceProduct.getCalculatedDayMax()) {
 									if(balanceProduct.getCalculatedDayStock1800() > balanceProduct.getCalculatedDayStock1700()) {
 										result = result +"Необходимо доставить товар "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") на <b>1700 склад</b>, т.к. остаток товаров в днях меньше чем на текущем складе;\n\n";
-										isMistakeZAQ = true;
+										isBalanceMistake = true;
 									}
 								}
 							}
 						}
 					}
 					//закончилась проверка балансов
+					if(isBalanceMistake) {
+						isMistakeZAQ = true;
+					}else {
+						//закончилась проверка балансов
+						 if(dayStockMessage!= null) {
+				             result = dayStockMessage+"\n" + result;
+				             createPermission(order, dayStockMessage);
+				             isMistakeZAQ = true;						             
+				         }
+					}
 				}
 			}
 		} // ===========================конец цикла
@@ -839,7 +840,28 @@ public class ReaderSchedulePlan {
 		 }		 
 	}
 	
-	
+	/**
+	 * Главный метод создания объекта разрешения
+	 * @param order
+	 * @param dayStockMessage
+	 */
+	private void createPermission(Order order, String dayStockMessage) {
+		User user = getThisUser();
+		Permission permission = new Permission();
+        permission.setIdObjectApprover(order.getIdOrder());
+        permission.setDateValid(Date.valueOf(order.getTimeDelivery().toLocalDateTime().toLocalDate()));
+        permission.setUserInitiator(user.getLogin());
+        permission.setDateTimeInitiations(Timestamp.valueOf(LocalDateTime.now()));
+        permission.setIdUserInitiator(user.getIdUser());
+        permission.setNameUserInitiator(user.getSurname() + " " + user.getName());
+        permission.setEmailUserInitiator(user.geteMail());
+        permission.setTelUserInitiator(user.getTelephone());
+        permission.setCommentUserInitiator(dayStockMessage);
+        if(!permissionService.checkPermission(permission)) {
+       	 permissionService.savePermission(permission);
+       	 // сюда вставляем отправку сообщения
+        }
+	}
 
 	
 	/**
@@ -1118,13 +1140,12 @@ public class ReaderSchedulePlan {
 //				System.out.println("Остаток ("+product.getCodeProduct()+") в паллетах на 1700 складе: "+product.getOstInPallets1700());
 //				System.out.println("Остаток ("+product.getCodeProduct()+") в паллетах на 1800 складе: "+product.getOstInPallets1800());
 //				System.out.println();
-				
+				Double summOstPallets = product.getOstInPallets1700() + product.getOstInPallets1800();
 				switch (numStock) {
 				case 1700:
 					if(product.getOstInPallets1700() == null || product.getBalanceStockAndReserves1700() == null) {
 						return null;
 					}
-					Double summOstPallets = product.getOstInPallets1700() + product.getOstInPallets1800();
 					System.err.println("("+product.getOstInPallets1700() + " + " + product.getOstInPallets1800() + ") < " + "4");
 					if(summOstPallets < 4.0) {
 						return null;
@@ -1144,10 +1165,10 @@ public class ReaderSchedulePlan {
 							//считаем сколько дней нужно прибавить, чтобы заказать товар
 							Long deltDate = (long) (trueBalance1700 - dateRange.stock );
 							if(message == null) {
-								message = "Товара " + product.getCodeProduct() + " ("+product.getName()+")" + " на складе хранится на <strong>" + trueBalance1700 + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней."
+								message = "Товара " + product.getCodeProduct() + " ("+product.getName()+")" + " суммарно на 1700 и 1800 хранится на <strong>" + trueBalance1700 + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней."
 										+" Ближайшая дата на которую можно доставить данный товар: <strong>" + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy")) + ";</strong>\n";
 							}else {
-								message = message + "\nТовара " + product.getCodeProduct() + " ("+product.getName()+")" + " на складе хранится на <strong>" + trueBalance1700 + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней. "
+								message = message + "\nТовара " + product.getCodeProduct() + " ("+product.getName()+")" + " суммарно на 1700 и 1800 хранится на <strong>" + trueBalance1700 + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней. "
 										+" Ближайшая дата на которую можно доставить данный товар: <strong>" + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy"))+ ";</strong>\n";
 							}
 							 
@@ -1159,9 +1180,14 @@ public class ReaderSchedulePlan {
 					if(product.getOstInPallets1800() == null || product.getBalanceStockAndReserves1800() == null) {
 						return null;
 					}
-					if(product.getOstInPallets1800() < 15.0) { //если в паллетах товара меньшге чем 33 - то пропускаем
+					
+					System.err.println("("+product.getOstInPallets1700() + " + " + product.getOstInPallets1800() + ") < " + "4");
+					if(summOstPallets < 4.0) {
 						return null;
 					}
+//					if(product.getOstInPallets1800() < 15.0) { //если в паллетах товара меньшге чем 33 - то пропускаем
+//						return null;
+//					}
 //					Double trueBalance1800 = roundВouble(product.getBalanceStockAndReserves1800() + currentDate, 0);//баланс на таргетном складе
 					Double trueBalance1800 = roundВouble(product.getBalanceStockAndReserves() + currentDate, 0);//суммарный баланс
 					System.err.println("Код продукта: " + product.getCodeProduct() + " -> " + trueBalance1800 + "(trueBalance1700)" + " > " + dateRange.stock + "(dateRange.stock)");
@@ -1170,10 +1196,10 @@ public class ReaderSchedulePlan {
 							//считаем сколько дней нужно прибавить, чтобы заказать товар
 							Long deltDate = (long) (trueBalance1800 - dateRange.stock );
 							if(message == null) {
-								message = "Товара " + product.getCodeProduct() + " ("+product.getName()+")" + " на складе хранится на <strong>" + trueBalance1800 + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней."
+								message = "Товара " + product.getCodeProduct() + " ("+product.getName()+")" + " суммарно на 1700 и 1800 хранится на <strong>" + trueBalance1800 + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней."
 										+" Ближайшая дата на которую можно доставить данный товар: <strong>" + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy")) + ";</strong>\n";
 							}else {
-								message = message + "\nТовара " + product.getCodeProduct() + " ("+product.getName()+")" + " на складе хранится на <strong>" + trueBalance1800 + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней. "
+								message = message + "\nТовара " + product.getCodeProduct() + " ("+product.getName()+")" + " суммарно на 1700 и 1800 хранится на <strong>" + trueBalance1800 + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней. "
 										+" Ближайшая дата на которую можно доставить данный товар: <strong>" + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy"))+ ";</strong>\n";
 							}
 							 
@@ -1185,7 +1211,7 @@ public class ReaderSchedulePlan {
 					if(product.getOstInPallets() == null || product.getBalanceStockAndReserves() == null) {
 						return null;
 					}
-					if(product.getOstInPallets() < 15.0) { //если в паллетах товара меньшге чем 33 - то пропускаем
+					if(product.getOstInPallets() < 4.0) { //если в паллетах товара меньшге чем 33 - то пропускаем
 						return null;
 					}
 					Double trueBalanceDefault = roundВouble(product.getBalanceStockAndReserves() + currentDate, 0);

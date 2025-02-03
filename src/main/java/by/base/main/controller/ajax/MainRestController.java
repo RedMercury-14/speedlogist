@@ -300,6 +300,9 @@ public class MainRestController {
 
 	@Autowired
 	private TaskService taskService;
+	
+	@Autowired	
+	private PermissionService permissionService;
 
 
 	@Autowired
@@ -534,6 +537,27 @@ public class MainRestController {
 		Permission permission = new Permission();
 		responseMap.put("status", "200");
 		responseMap.put("object", permission);
+		return responseMap;
+	}
+    
+    @GetMapping("/procurement/permission/{dateStart}&{dateEnd}")
+	public Map<String, Object> getOrbjectPermissionList(HttpServletRequest request, HttpServletResponse response,
+			@PathVariable String dateStart,
+			@PathVariable String dateEnd) throws IOException {
+		Map<String, Object> responseMap = new HashMap<>();
+		Date dateSQLStart = Date.valueOf(dateStart);
+		Date dateSQLEnd = Date.valueOf(dateEnd);
+		responseMap.put("status", "200");
+		responseMap.put("object", permissionService.getPermissionListFromDateValid(dateSQLStart, dateSQLEnd));
+		return responseMap;
+	}
+    
+    @GetMapping("/procurement/permission/{id}")
+	public Map<String, Object> getOrbjectPermissionListFromId(HttpServletRequest request, HttpServletResponse response,
+			@PathVariable String id) throws IOException {
+		Map<String, Object> responseMap = new HashMap<>();
+		responseMap.put("status", "200");
+		responseMap.put("object", permissionService.getPermissionById(Integer.parseInt(id)));
 		return responseMap;
 	}
 

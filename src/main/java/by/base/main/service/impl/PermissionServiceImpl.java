@@ -1,5 +1,6 @@
 package by.base.main.service.impl;
 
+import java.sql.Date;
 import java.util.List;
 
 import javax.transaction.Transactional;
@@ -45,6 +46,18 @@ public class PermissionServiceImpl implements PermissionService{
 	@Override
 	public void updatePermission(Permission permission) {
 		permissionDAO.updatePermission(permission);		
+	}
+
+	@Transactional
+	@Override
+	public boolean checkPermission(Permission permission) {
+		return permissionDAO.checkPermission(permission);
+	}
+
+	@Transactional
+	@Override
+	public List<Permission> getPermissionListFromDateValid(Date start, Date end) {
+		return permissionDAO.getPermissionListFromDateValid(start, end);
 	}
 
 }

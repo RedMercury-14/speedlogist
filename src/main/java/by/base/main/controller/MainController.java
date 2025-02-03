@@ -331,6 +331,16 @@ public class MainController {
 		return "main";		
 	}
 	
+	@GetMapping("/main/procurement/permission/list")
+	public String getPermissionList(Model model, HttpServletRequest request) {
+		return "permissionList";
+	}
+	@GetMapping("/main/procurement/permission/control")
+	public String getPermissionСontrol(Model model, HttpServletRequest request) {
+		//вход строо для определенной роли
+		return "permissionСontrol";
+	}
+	
 	@GetMapping("/main/logistics/counterpartiesListInDB")
 	public String getcounterpartiesListInDB(Model model, HttpServletRequest request) {
 		return "counterpartiesListInDB";

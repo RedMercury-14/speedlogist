@@ -1,6 +1,9 @@
 package by.base.main.dao.impl;
 
+import java.sql.Date;
 import java.util.List;
+
+import javax.persistence.TemporalType;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -57,6 +60,32 @@ public class PermissionDAOImpl implements PermissionDAO{
 	public void updatePermission(Permission task) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		currentSession.update(task);
+	}
+
+	private static final String queryCheckPermission = "from Permission where idObjectApprover =:idObjectApprover AND dateValid =:dateValid";
+	@Override
+	public boolean checkPermission(Permission permission) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Permission> theObject = currentSession.createQuery(queryCheckPermission, Permission.class);
+		theObject.setParameter("idObjectApprover", permission.getIdObjectApprover());
+		theObject.setParameter("dateValid", permission.getDateValid(), TemporalType.DATE);
+		List<Permission> permissionResult = theObject.getResultList();
+		if(!permissionResult.isEmpty()) {
+			return true;
+		}else {
+			return false;
+		}		
+	}
+
+	private static final String queryGetPermissionListFromDateValid = "from Permission where dateCreate BETWEEN :dateStart and :dateEnd";
+	@Override
+	public List<Permission> getPermissionListFromDateValid(Date start, Date end) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Permission> theObject = currentSession.createQuery(queryGetPermissionListFromDateValid, Permission.class);
+		theObject.setParameter("dateStart", start, TemporalType.DATE);
+		theObject.setParameter("dateEnd", end, TemporalType.DATE);
+		List<Permission> permissionResult = theObject.getResultList();
+		return permissionResult;
 	}
 
 }

@@ -265,12 +265,12 @@ public class MainFileController {
 				}
 				
 				if(!orderFromMarket.getOrderLinesMap().containsKey(longGoodIdHas330)) { // если и в заказе из маркета нет и в заказе из SL нет - записываем коммент
-					reportRow.setComment("Товара " +data330.getGoodsName() + " ("+ data330.getGoodsId() + ") нет в базе данных SpeedLogist и Маркета.");
+					reportRow.setComment("Товара нет в базе данных SpeedLogist и Маркета.");
 					orderProductHasOrderManager = 0;
 				}else {
 					orderProductHasOrderManager = orderFromMarket.getOrderLinesMap().get(longGoodIdHas330).intValue();
 					System.out.println("Товара " +data330.getGoodsName() + " ("+ data330.getGoodsId() + ") не было в заказе, который хранится в базе данных SpeedLogist. Однако был в заказе базы данных Маркета" );
-					reportRow.setComment("Товара " +data330.getGoodsName() + " ("+ data330.getGoodsId() + ") не было в заказе, который хранится в базе данных SpeedLogist. Однако был в заказе базы данных Маркета");
+					reportRow.setComment("Товара не было в заказе, который хранится в базе данных SpeedLogist. Однако был в заказе базы данных Маркета");
 				}
 				
 			}else {
@@ -308,9 +308,9 @@ public class MainFileController {
 				reportRow.setOrderedUnitsORL(intOrderORL);// сколько заказано ОРЛ
 			}else {
 				if(order.getIdOrder() != null) {
-					reportRow.setComment("В заказе " +data330.getOrderBuyGroupId() + " не стоит дата расчёта ОРЛ. Заказ сформирован менеджером " + order.getLoginManager());
+					reportRow.setComment("В заказе не стоит дата расчёта ОРЛ");
 				}else {
-					reportRow.setComment("Заказ " +data330.getOrderBuyGroupId() + " не найден в базе данных SpeedLogist. Расчёт заказа ОРЛ невозможен");
+					reportRow.setComment("Заказ не найден в базе данных SpeedLogist. Расчёт заказа ОРЛ невозможен");
 				}
 				
 			}

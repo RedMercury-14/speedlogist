@@ -38,5 +38,9 @@ public interface PermissionDAO {
 	 * @return
 	 */
 	List<Permission> getPermissionListFromDateValid(Date start, Date end);
+	
+	void deletePermissionById(Integer id);
+	
+	void deletePermissionByIdObject(Integer id);
 
 }

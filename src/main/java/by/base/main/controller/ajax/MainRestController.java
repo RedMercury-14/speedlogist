@@ -540,7 +540,7 @@ public class MainRestController {
 		return responseMap;
 	}
     
-    @GetMapping("/procurement/permission/{dateStart}&{dateEnd}")
+    @GetMapping("/procurement/permission/getList/{dateStart}&{dateEnd}")
 	public Map<String, Object> getOrbjectPermissionList(HttpServletRequest request, HttpServletResponse response,
 			@PathVariable String dateStart,
 			@PathVariable String dateEnd) throws IOException {
@@ -552,7 +552,7 @@ public class MainRestController {
 		return responseMap;
 	}
     
-    @GetMapping("/procurement/permission/{id}")
+    @GetMapping("/procurement/permission/getObject/{id}")
 	public Map<String, Object> getOrbjectPermissionListFromId(HttpServletRequest request, HttpServletResponse response,
 			@PathVariable String id) throws IOException {
 		Map<String, Object> responseMap = new HashMap<>();

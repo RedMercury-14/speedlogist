@@ -77,7 +77,7 @@ public class PermissionDAOImpl implements PermissionDAO{
 		}		
 	}
 
-	private static final String queryGetPermissionListFromDateValid = "from Permission where dateCreate BETWEEN :dateStart and :dateEnd";
+	private static final String queryGetPermissionListFromDateValid = "from Permission where dateValid BETWEEN :dateStart and :dateEnd";
 	@Override
 	public List<Permission> getPermissionListFromDateValid(Date start, Date end) {
 		Session currentSession = sessionFactory.getCurrentSession();
@@ -86,6 +86,26 @@ public class PermissionDAOImpl implements PermissionDAO{
 		theObject.setParameter("dateEnd", end, TemporalType.DATE);
 		List<Permission> permissionResult = theObject.getResultList();
 		return permissionResult;
+	}
+
+	private static final String queryDeletePermissionById = "delete from Permission where idPermissions=:id";
+	@Override
+	public void deletePermissionById(Integer id) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query theQuery = 
+				currentSession.createQuery(queryDeletePermissionById);
+		theQuery.setParameter("id", id);
+		theQuery.executeUpdate();
+	}
+
+	private static final String queryDeletePermissionByIdObject = "delete from Permission where idObjectApprover=:id";
+	@Override
+	public void deletePermissionByIdObject(Integer id) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query theQuery = 
+				currentSession.createQuery(queryDeletePermissionByIdObject);
+		theQuery.setParameter("id", id);
+		theQuery.executeUpdate();
 	}
 
 }

@@ -39,5 +39,9 @@ public interface PermissionService {
 	 * @return
 	 */
 	List<Permission> getPermissionListFromDateValid(Date start, Date end);
+	
+	void deletePermissionById(Integer id);
+	
+	void deletePermissionByIdObject(Integer id);
 
 }

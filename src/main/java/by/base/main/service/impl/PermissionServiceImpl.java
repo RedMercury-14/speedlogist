@@ -60,4 +60,18 @@ public class PermissionServiceImpl implements PermissionService{
 		return permissionDAO.getPermissionListFromDateValid(start, end);
 	}
 
+	@Transactional
+	@Override
+	public void deletePermissionById(Integer id) {
+		permissionDAO.deletePermissionById(id);
+		
+	}
+	
+	@Transactional
+	@Override
+	public void deletePermissionByIdObject(Integer id) {
+		permissionDAO.deletePermissionByIdObject(id);
+		
+	}
+
 }

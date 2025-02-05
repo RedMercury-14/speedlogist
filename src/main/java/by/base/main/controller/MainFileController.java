@@ -260,8 +260,14 @@ public class MainFileController {
                Order orderFromMarket;
                if(order.getIdOrder() == null) { // если id == null это значит что ордер уже вытянут из маркета
                   orderFromMarket = order;
-               }else {
-                  orderFromMarket = getMarketOrder(request, data330.getOrderBuyGroupId().toString());
+               }else {                  
+                  try {
+                	  orderFromMarket = getMarketOrder(request, data330.getOrderBuyGroupId().toString());
+				} catch (MarketConnectionException e) {
+					response.put("status", 100);
+					response.put("message", e.getMessage());
+					return response;
+				}
                }
                
                if(!orderFromMarket.getOrderLinesMap().containsKey(longGoodIdHas330)) { // если и в заказе из маркета нет и в заказе из SL нет - записываем коммент
@@ -361,7 +367,7 @@ public class MainFileController {
       }
     
     
-	private Order getMarketOrder(HttpServletRequest request, String idMarket) {		
+	private Order getMarketOrder(HttpServletRequest request, String idMarket) throws MarketConnectionException {		
 		try {			
 			mainRestController.checkJWT(mainRestController.marketUrl);			
 		} catch (Exception e) {
@@ -378,7 +384,7 @@ public class MainFileController {
 		
 		if(marketOrder2.equals("503")) { // означает что связь с маркетом потеряна
 			System.err.println("Связь с маркетом потеряна");	
-			return null;
+			throw new MarketConnectionException("Связь с маркетом потеряна");
 		}else{//если есть связь с маркетом
 			//проверяем на наличие сообщений об ошибке со стороны маркета
 			if(marketOrder2.contains("Error")) {

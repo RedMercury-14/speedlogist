@@ -334,18 +334,23 @@ public class MainRestController {
 	@TimedExecution
 	public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		Map<String, Object> responseMap = new HashMap<>();
-
-		List<Order> orders = orderService.getOrdersByGoodId(1773101L);
-
-		orderService.getSpecialOrdersByListGoodId(Arrays.asList(1773101L, 871528L));
-
-
-
-		System.out.println("Finish --- sendSchedulesHasTOORL");
-        responseMap.put("Done", "Done");
-        responseMap.put("size", orders.size());
-//		responseMap.put("orders", orders);
-		   return responseMap;
+		Date dateStart = Date.valueOf(LocalDate.now().minusDays(1));
+		Date dateFinish7Week = Date.valueOf(LocalDate.now().plusMonths(2));
+		List<Schedule> schedules = scheduleService.getSchedulesByDateOrder(dateStart, 1700); // реализация 1 пункта
+		List<Order> ordersHas7Week = orderService.getOrderByPeriodDeliveryAndListCodeContract(dateStart, dateFinish7Week, schedules); // реализация 2 пункта
+    	List<File> files = new ArrayList<File>();
+    	String appPath = servletContext.getRealPath("/");
+    	files.add(serviceLevel.checkingOrdersForORLNeeds(ordersHas7Week, dateStart, appPath));
+    	
+    	//получаем email
+    	List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.slevel");
+    	
+        LocalDate currentTime = LocalDate.now().minusDays(1);
+        String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+    	mailService.sendEmailWithFilesToUsers(servletContext, "Service level на " + currentTimeString, "Service level заказов, относительно заказов ОРЛ.\nВключает брони.\nVer 1.1", files, emails);
+    	mainChat.messegeList.clear();
+		responseMap.put("status", "200");
+		return responseMap;
 	}
 
 	/**
@@ -531,14 +536,16 @@ public class MainRestController {
 
 	}
     
+       
     @GetMapping("/procurement/permission/testOrbject")
-	public Map<String, Object> testOrbjectPermission(HttpServletRequest request, HttpServletResponse response) throws IOException {
-		Map<String, Object> responseMap = new HashMap<>();
-		Permission permission = new Permission();
-		responseMap.put("status", "200");
-		responseMap.put("object", permission);
-		return responseMap;
-	}
+    public Map<String, Object> testOrbjectPermission(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    	Map<String, Object> responseMap = new HashMap<>();
+    	Permission permission = new Permission();
+    	responseMap.put("status", "200");
+    	responseMap.put("object", permission);
+    	return responseMap;
+    }
+    
     
     @GetMapping("/procurement/permission/getList/{dateStart}&{dateEnd}")
 	public Map<String, Object> getOrbjectPermissionList(HttpServletRequest request, HttpServletResponse response,
@@ -4673,11 +4680,7 @@ public class MainRestController {
 						infoCheck = planResponce.getMessage();
 						response.put("info", infoCheck.replace("\n", "<br>"));
 						response.put("status", "200");
-						if(order.getSlotMessageHistory() != null) { // записываем в историю сообщение сообщение
-							order.setSlotMessageHistory(order.getSlotMessageHistory() + "\n---------\n"+planResponce.getMessage());
-						}else {
-							order.setSlotMessageHistory(planResponce.getMessage());
-						}
+						order.setSlotMessageHistory(planResponce.getMessage());
 					}		
 					
 				}
@@ -4932,12 +4935,8 @@ public class MainRestController {
 					infoCheck = planResponce.getMessage();
 					response.put("info", infoCheck.replace("\n", "<br>"));
 					response.put("status", "200");
-					if(order.getSlotMessageHistory() != null) { // записываем в историю сообщение сообщение
-						order.setSlotMessageHistory(order.getSlotMessageHistory() + "\n---------\n"+planResponce.getMessage());
-					}else {
-						order.setSlotMessageHistory(planResponce.getMessage());
-					}
-				}	
+					order.setSlotMessageHistory(planResponce.getMessage());				
+					}	
 				
 			}
 		}
@@ -8730,6 +8729,7 @@ public class MainRestController {
 				|| order.getManager().split(";")[1].trim().equals("PozdnyakovR@dobronom.by")
 				|| order.getManager().split(";")[1].trim().equals("KuzmickayaE@dobronom.by")
 				|| order.getManager().split(";")[1].trim().equals("VegeroK@dobronom.by")
+				|| order.getManager().split(";")[1].trim().equals("KashickiyD@dobronom.by")
 				|| order.getManager().split(";")[1].trim().equals("ProrovskayaM@dobronom.by")
 				|| order.getManager().split(";")[1].trim().equals("YakzhikE@dobronom.by") // нет такого?
 				|| order.getManager().split(";")[1].trim().equals("TishalovichA@dobronom.by")){
@@ -8936,6 +8936,7 @@ public class MainRestController {
 				|| order.getManager().split(";")[1].trim().equals("PozdnyakovR@dobronom.by")
 				|| order.getManager().split(";")[1].trim().equals("KuzmickayaE@dobronom.by")
 				|| order.getManager().split(";")[1].trim().equals("VegeroK@dobronom.by")
+				|| order.getManager().split(";")[1].trim().equals("KashickiyD@dobronom.by")
 				|| order.getManager().split(";")[1].trim().equals("ProrovskayaM@dobronom.by")
 				|| order.getManager().split(";")[1].trim().equals("YakzhikE@dobronom.by") // нет такого?
 				|| order.getManager().split(";")[1].trim().equals("TishalovichA@dobronom.by")){

@@ -794,11 +794,12 @@ public class Order {
 		return slotMessageHistory;
 	}
 	public void setSlotMessageHistory(String slotMessageHistory) {
-		if(this.slotMessageHistory == null) {
-			this.slotMessageHistory = slotMessageHistory;			
-		}else {
-			this.slotMessageHistory = this.slotMessageHistory + ";\n" + slotMessageHistory;
-		}
+//		if(this.slotMessageHistory == null) {
+//			this.slotMessageHistory = slotMessageHistory;			
+//		}else {
+//			this.slotMessageHistory = this.slotMessageHistory + ";\n" + slotMessageHistory;
+//		}
+		this.slotMessageHistory = slotMessageHistory;
 	}
 	@Override
 	public int hashCode() {

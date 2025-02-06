@@ -202,7 +202,8 @@ public class RouteDAOImpl implements RouteDAO {
 	                     .orElse(null),
 	                order.getLastDatetimePointLoad(),
 	                order.getDateOrderOrl(),
-	                order.getLink()
+	                order.getLink(),
+	                order.getSlotMessageHistory()
 	            )).collect(Collectors.toSet());
 	        // Если нужно, добавьте OrderDTO обратно в Route или сохраните для дальнейшей обработки
 	        route.setOrdersDTO(orderDTOs); // Добавьте это поле в `Route`, если требуется

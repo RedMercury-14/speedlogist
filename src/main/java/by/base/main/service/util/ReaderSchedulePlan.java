@@ -1252,7 +1252,7 @@ public class ReaderSchedulePlan {
 				}
 			}else {
 //				System.err.println("Данные по остаткам (потребностям если с точки зрения ОРЛ) устаревшие! Дата последней прогрузки :" + product.getDateUnload());
-				return new ResultMethod("<span style=\"color: #cccc00;\">Данные по потребностям " + product.getName() + " (" + product.getCodeProduct()+") устаревшие!.  Дата последней прогрузки :" + product.getDateUnload() + "</span>", 200);
+				return new ResultMethod("<span style=\"color: #bbaa00;\">Данные по потребностям " + product.getName() + " (" + product.getCodeProduct()+") устаревшие!.  Дата последней прогрузки: " + product.getDateUnload().toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + "</span>", 200);
 			}
 			
 			

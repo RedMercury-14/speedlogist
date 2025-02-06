@@ -274,7 +274,7 @@
 		</div>
 	</div>
 
-	<!-- Модальное окно выбора даты заказа согласно графику поставок-->
+	<!-- Модальное окно выбора причины переноса слота-->
 	<div class="modal fade" id="updateSlotReasonModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="updateSlotReasonModalLabel" aria-hidden="true">
 		<div class="modal-dialog modal-lg">
 			<div class="modal-content">
@@ -312,22 +312,61 @@
 					<h3 class="modal-title text-center" id="slotNewsModalLabel">Что нового</h3>
 				</div>
 				<div class="modal-body">
-					<h5 class="text-center text-muted font-weight-bold">Изменения зоны внутренних перемещений</h5>
+					<h5 class="text-center text-muted font-weight-bold">Добавлена кнопка <strong>Помощь</strong></h5>
 					<p class="text-justify">
-						Для <strong>1800</strong> склада (как и для 1700 склада ранее) зона для внутренних перемещений (180001 рампа с 9:00 по 20:00) 
-						больше не является зоной для установки слотов на внутренние перемещения. 
-						Теперь эта зона зарезервирована для установки слотов <strong>только логистами</strong>. Слоты внутренних перемещений 
-						можно устанавливать в любое свободное место, кроме вышеупомянутой зоны.
+						В правом верхнем углу появилась кнопка помощь. Эта кнопка открывает окно помощи.
+						В данный момент там находится список доступных инструкций к Слотам.
 					</p>
 					<div class="text-center px-5">
-						<img src="${pageContext.request.contextPath}/resources/img/slotNews/imzfl.png"
-							alt="Обозначение голубой зоны"
+						<img src="${pageContext.request.contextPath}/resources/img/slotNews/helpButton.png"
+							alt="кнопка Помощь"
 							class="img-fluid mb-3" style="max-width: 100%; height: auto;">
+					</div>
+					<div class="text-center px-5">
+						<img src="${pageContext.request.contextPath}/resources/img/slotNews/helpModal.png"
+							alt="модальное окно Помощь"
+							class="img-fluid mb-3" style="max-width: 100%; height: auto;">
+					</div>
+					<br>
+					<br>
+					<h5 class="text-center text-muted font-weight-bold">Отображение кнопки с информацией о слоте</h5>
+					<p class="text-justify">
+						Кнопка с информацией о конкретном слоте теперь отображается при наведении курсора на слот.
+					</p>
+					<div class="text-center px-5">
+						<img src="${pageContext.request.contextPath}/resources/img/slotNews/eventHovered.gif"
+							alt="кнопка Помощь"
+							class="img-fluid mb-3" style="max-width: 100%; height: auto;">
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Ок, понятно</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Модальное окно отображения изменений в слотах -->
+	<div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header justify-content-center">
+					<h3 class="modal-title text-center text-white"  id="helpModalLabel">Помощь</h3>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<h5 class="text-center text-muted font-weight-bold">Список доступных инструкций</h5>
+					<div class="list-group">
+						<a href="../file/slot/downdoad/instruction-join" class="list-group-item list-group-item-action text-info">
+							Инструкция по связыванию заказов
+						</a>
 					</div>
 					<br>
 				</div>
 				<div class="modal-footer">
-					<button type="button" class="btn btn-secondary" data-dismiss="modal">Ок, понятно</button>
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
 				</div>
 			</div>
 		</div>

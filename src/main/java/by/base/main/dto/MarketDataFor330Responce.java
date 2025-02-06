@@ -34,6 +34,10 @@ public class MarketDataFor330Responce {
      * Дата разгрузки (datetime).
      */
     private LocalDateTime date3;
+    
+    private String date33;
+    private String date22;
+    private String dateXX;
 
     /** 
      * Идентификатор документа заказа поставщику (bigint). ОН КОД ЗАКАЗА ИЗ МАРКЕТА
@@ -250,6 +254,9 @@ public class MarketDataFor330Responce {
 		this.infoOrder = (json330Object.get("InfoOrder") != null 
                 ? json330Object.get("InfoOrder").toString() 
                 : null);
+		this.date33 = date33 != null ? date3.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) : null;
+		this.date22 = date22 != null ? date2.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) : null;
+		this.dateXX = dateXX != null ? datex.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) : null;
 	}
 	public MarketDataFor330Responce() {
 		super();
@@ -421,6 +428,30 @@ public class MarketDataFor330Responce {
 
 	public void setInfoOrder(String infoOrder) {
 		this.infoOrder = infoOrder;
+	}
+
+	public String getDate33() {
+		return date33;
+	}
+
+	public void setDate33(String date33) {
+		this.date33 = date33;
+	}
+
+	public String getDate22() {
+		return date22;
+	}
+
+	public void setDate22(String date22) {
+		this.date22 = date22;
+	}
+
+	public String getDateXX() {
+		return dateXX;
+	}
+
+	public void setDateXX(String date11) {
+		this.dateXX = date11;
 	}
 
 	@Override

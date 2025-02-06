@@ -300,6 +300,9 @@ public class MainRestController {
 
 	@Autowired
 	private TaskService taskService;
+	
+	@Autowired	
+	private PermissionService permissionService;
 
 
 	@Autowired
@@ -331,18 +334,23 @@ public class MainRestController {
 	@TimedExecution
 	public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		Map<String, Object> responseMap = new HashMap<>();
-
-		List<Order> orders = orderService.getOrdersByGoodId(1773101L);
-
-		orderService.getSpecialOrdersByListGoodId(Arrays.asList(1773101L, 871528L));
-
-
-
-		System.out.println("Finish --- sendSchedulesHasTOORL");
-        responseMap.put("Done", "Done");
-        responseMap.put("size", orders.size());
-//		responseMap.put("orders", orders);
-		   return responseMap;
+		Date dateStart = Date.valueOf(LocalDate.now().minusDays(1));
+		Date dateFinish7Week = Date.valueOf(LocalDate.now().plusMonths(2));
+		List<Schedule> schedules = scheduleService.getSchedulesByDateOrder(dateStart, 1700); // реализация 1 пункта
+		List<Order> ordersHas7Week = orderService.getOrderByPeriodDeliveryAndListCodeContract(dateStart, dateFinish7Week, schedules); // реализация 2 пункта
+    	List<File> files = new ArrayList<File>();
+    	String appPath = servletContext.getRealPath("/");
+    	files.add(serviceLevel.checkingOrdersForORLNeeds(ordersHas7Week, dateStart, appPath));
+    	
+    	//получаем email
+    	List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.slevel");
+    	
+        LocalDate currentTime = LocalDate.now().minusDays(1);
+        String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+    	mailService.sendEmailWithFilesToUsers(servletContext, "Service level на " + currentTimeString, "Service level заказов, относительно заказов ОРЛ.\nВключает брони.\nVer 1.1", files, emails);
+    	mainChat.messegeList.clear();
+		responseMap.put("status", "200");
+		return responseMap;
 	}
 
 	/**
@@ -353,179 +361,217 @@ public class MainRestController {
 	 * @author Ira
 	 */
     @TimedExecution
-	public void fillOrderCalculation(Map<Integer, OrderProduct> orderProductMap, String dateStr) throws IOException {
+    public void fillOrderCalculation(Map<Integer, OrderProduct> orderProductMap, String dateStr) throws IOException {
 
-		java.util.Date t1 = new java.util.Date();
+        java.util.Date t1 = new java.util.Date();
 
-		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-		LocalDate date = dateStr == null ? LocalDate.now() : LocalDate.parse(dateStr, dtf);
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDate date = dateStr == null ? LocalDate.now() : LocalDate.parse(dateStr, dtf);
 
-		Map<Long, String> goodsWithoutContracts = new HashMap<>();
-		Map<List <String>, Double> contractsWithoutSchedules = new HashMap<>();
-		boolean isFileCreated = false;
+        Map<Long, String> goodsWithoutContracts = new HashMap<>();
+        Map<List <String>, Double> contractsWithoutSchedules = new HashMap<>();
+        boolean isFileCreated = false;
 
-		List <Long> goodsIds = orderProductMap.keySet().stream().map(Long::valueOf).collect(Collectors.toList());
+        List <Long> goodsIds = orderProductMap.keySet().stream().map(Long::valueOf).collect(Collectors.toList());
 
-		Map<Long, Order> resMap = new HashMap<Long, Order>();
-		java.util.Date os1 = new java.util.Date();
-		List <Order> orders = orderService.getSpecialOrdersByListGoodId(goodsIds); //сюда привести лист из OrderDao?
+        Map<Long, Order> resMap = new HashMap<Long, Order>();
+        java.util.Date os1 = new java.util.Date();
+        List <Order> orders = orderService.getSpecialOrdersByListGoodId(goodsIds); //сюда привести лист из OrderDao?
 
-		java.util.Date os2 = new java.util.Date();
-		System.out.println("order service = " + (os2.getTime() - os1.getTime()));
+        java.util.Date os2 = new java.util.Date();
+        System.out.println("order service = " + (os2.getTime() - os1.getTime()));
 
-		List <Long> goodsWithoutOrders = new ArrayList<>(goodsIds);
-		List <Long> goodsWithOrders = new ArrayList<>(goodsIds);
+        List <Long> goodsWithoutOrders = new ArrayList<>(goodsIds);
+        List <Long> goodsWithOrders = new ArrayList<>(goodsIds);
 
-		//распределяем лист ордеров в мапу по кодам товара + создаём лист для товаров ордеров
-		int i = 0;
-		for (long goodId: goodsIds) {
-			i = 0;
-			for (Order order : orders) {
-				if(order.getOrderLinesMap().containsKey(goodId)) {
-					if(!resMap.containsKey(goodId) ) {
-						resMap.put(goodId, order);
-						i++;
-					} else {
-						continue;
-					}
-				} else {
-					continue;
-				}
-			}
-			if (i == 0) {
-				goodsWithOrders.remove(goodId);
-			} else {
-				goodsWithoutOrders.remove(goodId);
-			}
-		}
+        //распределяем лист ордеров в мапу по кодам товара + создаём лист для товаров ордеров
+        int i = 0;
+        for (long goodId: goodsIds) {
+           i = 0;
+           for (Order order : orders) {
+              if(order.getOrderLinesMap().containsKey(goodId)) {
+                 if(!resMap.containsKey(goodId) ) {
+                    resMap.put(goodId, order);
+                    i++;
+                 } else {
+                    continue;
+                 }
+              } else {
+                 continue;
+              }
+           }
+           if (i == 0) {
+              goodsWithOrders.remove(goodId);
+           } else {
+              goodsWithoutOrders.remove(goodId);
+           }
+        }
 
-		if (!goodsWithoutOrders.isEmpty()) {
-			isFileCreated = true;
-		}
+        if (!goodsWithoutOrders.isEmpty()) {
+           isFileCreated = true;
+        }
 
-		for (Long goodId: goodsWithOrders) {
-			if (orderProductMap.containsKey(goodId.intValue())) {
-				OrderProduct orderProduct = orderProductMap.get(goodId.intValue());
-				String goodName = orderProduct.getNameProduct();
-				String counterpartyContractCode = orderProduct.getMarketContractType();
+        for (Long goodId: goodsWithOrders) {
+           if (orderProductMap.containsKey(goodId.intValue())) {
+              OrderProduct orderProduct = orderProductMap.get(goodId.intValue());
+              String goodName = orderProduct.getNameProduct();
+              String counterpartyContractCode = orderProduct.getMarketContractType();
 
-				List<Integer> stocks = new ArrayList<>();
-				if (orderProduct.getQuantity1700() != null) {
-					stocks.add(1700);
-				}
-				if (orderProduct.getQuantity1800() != null) {
-					stocks.add(1800);
-				}
+              List<Integer> stocks = new ArrayList<>();
+              if (orderProduct.getQuantity1700() != null) {
+                 stocks.add(1700);
+              }
+              if (orderProduct.getQuantity1800() != null) {
+                 stocks.add(1800);
+              }
 
-				for (Integer stock: stocks) {
-					List<Schedule> schedules = null;
-					Schedule schedule = null;
-					LocalDate deliveryDate = null;
-					OrderCalculation orderCalculation = new OrderCalculation();
-					schedules = scheduleService.getAllSchedulesByNumContractAndNumStock(Long.valueOf(counterpartyContractCode), 1700);//потому что для 1800 действует такой же график, как и для 1700
+              for (Integer stock: stocks) {
+                 List<Schedule> schedules = null;
+                 Schedule schedule = null;
+                 LocalDate deliveryDate = null;
+                 OrderCalculation orderCalculation = new OrderCalculation();
+                 schedules = scheduleService.getAllSchedulesByNumContractAndNumStock(Long.valueOf(counterpartyContractCode), 1700);//потому что для 1800 действует такой же график, как и для 1700
 
-					schedules.sort(Comparator.comparing(Schedule::getStatus).reversed());
-					int quantity = 0;
-					if (stock == 1700) {
-						quantity = orderProduct.getQuantity1700();
-					} else if (orderProduct.getQuantity1800() != null) {
-						quantity = orderProduct.getQuantity1800();
-					}
+                 schedules.sort(Comparator.comparing(Schedule::getStatus).reversed());
+                 int quantity = 0;
+                 if (stock == 1700) {
+                    quantity = orderProduct.getQuantity1700();
+                 } else if (orderProduct.getQuantity1800() != null) {
+                    quantity = orderProduct.getQuantity1800();
+                 }
 
-					List <OrderLine> orderLines = resMap.get(goodId).getOrderLines().stream().collect(Collectors.toList());
-					double quantityInPallet = 0;
-					double currentAmountOfPallets = 0.0;
-					double amountOfPallets = 0;
+                 List <OrderLine> orderLines = resMap.get(goodId).getOrderLines().stream().collect(Collectors.toList());
+                 double quantityInPallet = 0;
+                 double currentAmountOfPallets = 0.0;
+                 double amountOfPallets = 0;
 
-					OrderLine orderLine = orderLines.get(0);
-					quantityInPallet = orderLine.getQuantityPallet();
-					currentAmountOfPallets = Math.ceil(quantity/quantityInPallet);
-					amountOfPallets += currentAmountOfPallets;
-					orderCalculation.setGoodGroup(orderLine.getGoodsGroupName());
-					if (schedules.isEmpty()) {
-						if (contractsWithoutSchedules.containsKey(Arrays.asList(counterpartyContractCode, stock.toString()))) {
-							Double pallets = contractsWithoutSchedules.get(Arrays.asList(counterpartyContractCode, stock.toString()));
-							pallets += currentAmountOfPallets;
-							contractsWithoutSchedules.put(Arrays.asList(counterpartyContractCode, stock.toString(), "Нет графиков для данного товара"), pallets);
-						} else {
-							contractsWithoutSchedules.put(Arrays.asList(counterpartyContractCode, stock.toString()), currentAmountOfPallets);
-						}
-						continue;
-					}
-					for (Schedule checkSchedule: schedules) {
-						deliveryDate = getDeliveryDate(checkSchedule, date);
-						if (deliveryDate != null) {
-							schedule = checkSchedule;
-							break;
-						}
+                 OrderLine orderLine = null;
+                 for (OrderLine ol: orderLines) {
+                    if (ol.getGoodsId() == goodId.intValue()) {
+                       orderLine = ol;
+                       break;
+                    }
+                 }
+                 quantityInPallet = orderLine.getQuantityPallet();
+                 currentAmountOfPallets = Math.ceil(quantity/quantityInPallet);
+                 amountOfPallets += currentAmountOfPallets;
+                 orderCalculation.setGoodGroup(orderLine.getGoodsGroupName());
+                 if (schedules.isEmpty()) {
+                    if (contractsWithoutSchedules.containsKey(Arrays.asList(counterpartyContractCode, stock.toString()))) {
+                       Double pallets = contractsWithoutSchedules.get(Arrays.asList(counterpartyContractCode, stock.toString()));
+                       pallets += currentAmountOfPallets;
+                       contractsWithoutSchedules.put(Arrays.asList(counterpartyContractCode, stock.toString(), "Нет графиков для данного товара"), pallets);
+                    } else {
+                       contractsWithoutSchedules.put(Arrays.asList(counterpartyContractCode, stock.toString()), currentAmountOfPallets);
+                    }
+                    continue;
+                 }
+                 for (Schedule checkSchedule: schedules) {
+                    deliveryDate = getDeliveryDate(checkSchedule, date);
+                    if (deliveryDate != null) {
+                       schedule = checkSchedule;
+                       break;
+                    }
 
-					}
+                 }
 
-					if (deliveryDate == null) {
-						isFileCreated = true;
-						if (contractsWithoutSchedules.containsKey(Arrays.asList(counterpartyContractCode, stock.toString()))) {
-							Double pallets = contractsWithoutSchedules.get(Arrays.asList(counterpartyContractCode, stock.toString()));
-							pallets += currentAmountOfPallets;
+                 if (deliveryDate == null) {
+                    isFileCreated = true;
+                    if (contractsWithoutSchedules.containsKey(Arrays.asList(counterpartyContractCode, stock.toString()))) {
+                       Double pallets = contractsWithoutSchedules.get(Arrays.asList(counterpartyContractCode, stock.toString()));
+                       pallets += currentAmountOfPallets;
 
-							contractsWithoutSchedules.put(Arrays.asList(counterpartyContractCode, stock.toString()), pallets);
-						} else {
-							contractsWithoutSchedules.put(Arrays.asList(counterpartyContractCode, stock.toString()), currentAmountOfPallets);
-						}
-						continue;
-					}
+                       contractsWithoutSchedules.put(Arrays.asList(counterpartyContractCode, stock.toString()), pallets);
+                    } else {
+                       contractsWithoutSchedules.put(Arrays.asList(counterpartyContractCode, stock.toString()), currentAmountOfPallets);
+                    }
+                    continue;
+                 }
 
-					orderCalculation = orderCalculationService.getOrderCalculatiionByContractNumStockGoodIdAndDeliveryDate(Long.valueOf(counterpartyContractCode), stock, Date.valueOf(deliveryDate), goodId);
-					double oldAmountOfPallets = orderCalculation.getQuantityOfPallets() == null ? 0 : orderCalculation.getQuantityOfPallets();
-					double oldQuantity = orderCalculation.getQuantityOrder() == null ? 0 : orderCalculation.getQuantityOrder();
-					orderCalculation.setDeliveryDate(Date.valueOf(deliveryDate));
-					orderCalculation.setCounterpartyCode(schedule.getCounterpartyCode());
-					orderCalculation.setCounterpartyName(schedule.getName());
-					orderCalculation.setGoodsId(goodId);
-					orderCalculation.setGoodName(goodName);
-					orderCalculation.setCounterpartyContractCode(Long.valueOf(counterpartyContractCode));
-					orderCalculation.setNumStock(stock);
-					orderCalculation.setQuantityOrder((double) quantity + oldQuantity);
-					orderCalculation.setQuantityInPallet(quantityInPallet);
-					orderCalculation.setQuantityOfPallets(amountOfPallets + oldAmountOfPallets);
-					orderCalculation.setStatus(20);
-					String history = orderCalculation.getHistory() == null ? "" : orderCalculation.getHistory();
-					history += " " + dateStr + " - " + Math.ceil(quantity/quantityInPallet) + ";";
-					orderCalculation.setHistory(history);
-					orderCalculationService.saveOrderCalculation(orderCalculation);
+                 orderCalculation = orderCalculationService.getOrderCalculatiionByContractNumStockGoodIdAndDeliveryDate(Long.valueOf(counterpartyContractCode), stock, Date.valueOf(deliveryDate), goodId);
+                 double oldAmountOfPallets = orderCalculation.getQuantityOfPallets() == null ? 0 : orderCalculation.getQuantityOfPallets();
+                 double oldQuantity = orderCalculation.getQuantityOrder() == null ? 0 : orderCalculation.getQuantityOrder();
+                 orderCalculation.setDeliveryDate(Date.valueOf(deliveryDate));
+                 orderCalculation.setCounterpartyCode(schedule.getCounterpartyCode());
+                 orderCalculation.setCounterpartyName(schedule.getName());
+                 orderCalculation.setGoodsId(goodId);
+                 orderCalculation.setGoodName(goodName);
+                 orderCalculation.setCounterpartyContractCode(Long.valueOf(counterpartyContractCode));
+                 orderCalculation.setNumStock(stock);
+                 orderCalculation.setQuantityOrder((double) quantity + oldQuantity);
+                 orderCalculation.setQuantityInPallet(quantityInPallet);
+                 orderCalculation.setQuantityOfPallets(amountOfPallets + oldAmountOfPallets);
+                 orderCalculation.setStatus(20);
+                 String history = orderCalculation.getHistory() == null ? "" : orderCalculation.getHistory();
+                 history += " " + dateStr + " - " + Math.ceil(quantity/quantityInPallet) + ";";
+                 orderCalculation.setHistory(history);
+                 orderCalculationService.saveOrderCalculation(orderCalculation);
 
-				}
-			}
-		}
+              }
+           }
+        }
 
-		String filePath = servletContext.getRealPath("/") + "resources/others/";
+        String filePath = servletContext.getRealPath("/") + "resources/others/";
 
-		String filename = "Товары без расчетов " + dateStr + ".xlsx";
-		poiExcel.fillTableForProblemGoods(contractsWithoutSchedules, goodsWithoutOrders, filePath + filename);
+        String filename = "Товары без расчетов " + dateStr + ".xlsx";
+        poiExcel.fillTableForProblemGoods(contractsWithoutSchedules, goodsWithoutOrders, filePath + filename);
 
-		if (isFileCreated) {
-			List <File> filesForEmail = new ArrayList<>();
-			filesForEmail.add(new File(filePath + filename));
-			File zipFile;
-			List <File> filesToSend = new ArrayList<File>();
+        if (isFileCreated) {
+           List <File> filesForEmail = new ArrayList<>();
+           filesForEmail.add(new File(filePath + filename));
+           File zipFile;
+           List <File> filesToSend = new ArrayList<File>();
 
-			try {
-				zipFile = createZipFile(filesForEmail, filePath + "Товары без расчетов.zip");
-				filesToSend.add(zipFile);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+           try {
+              zipFile = createZipFile(filesForEmail, filePath + "Товары без расчетов.zip");
+              filesToSend.add(zipFile);
+           } catch (IOException e) {
+              e.printStackTrace();
+           }
 
-//		responseMap.put("Done", "Done");
-//		responseMap.put("size", orders.size());
-//		responseMap.put("orders", orders);
-			System.out.println("В прикреплённой таблице список товаров, по которым не были созданы расчеты");
-			List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
-			//mailService.sendEmailWithFilesToUsers(servletContext, "Товары без расчетов", В прикреплённой таблице список товаров, по которым не были созданы расчеты, filesToSend, emails);
+//      responseMap.put("Done", "Done");
+//      responseMap.put("size", orders.size());
+//      responseMap.put("orders", orders);
+           System.out.println("В прикреплённой таблице список товаров, по которым не были созданы расчеты");
+           List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+           //mailService.sendEmailWithFilesToUsers(servletContext, "Товары без расчетов", В прикреплённой таблице список товаров, по которым не были созданы расчеты, filesToSend, emails);
 
-		}
-		java.util.Date t2 = new java.util.Date();
-		System.out.println("all method = " + (t2.getTime() - t1.getTime()));
+        }
+        java.util.Date t2 = new java.util.Date();
+        System.out.println("all method = " + (t2.getTime() - t1.getTime()));
 
+     }
+    
+       
+    @GetMapping("/procurement/permission/testOrbject")
+    public Map<String, Object> testOrbjectPermission(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    	Map<String, Object> responseMap = new HashMap<>();
+    	Permission permission = new Permission();
+    	responseMap.put("status", "200");
+    	responseMap.put("object", permission);
+    	return responseMap;
+    }
+    
+    
+    @GetMapping("/procurement/permission/getList/{dateStart}&{dateEnd}")
+	public Map<String, Object> getOrbjectPermissionList(HttpServletRequest request, HttpServletResponse response,
+			@PathVariable String dateStart,
+			@PathVariable String dateEnd) throws IOException {
+		Map<String, Object> responseMap = new HashMap<>();
+		Date dateSQLStart = Date.valueOf(dateStart);
+		Date dateSQLEnd = Date.valueOf(dateEnd);
+		responseMap.put("status", "200");
+		responseMap.put("object", permissionService.getPermissionListFromDateValid(dateSQLStart, dateSQLEnd));
+		return responseMap;
+	}
+    
+    @GetMapping("/procurement/permission/getObject/{id}")
+	public Map<String, Object> getOrbjectPermissionListFromId(HttpServletRequest request, HttpServletResponse response,
+			@PathVariable String id) throws IOException {
+		Map<String, Object> responseMap = new HashMap<>();
+		responseMap.put("status", "200");
+		responseMap.put("object", permissionService.getPermissionById(Integer.parseInt(id)));
+		return responseMap;
 	}
 
 	/**
@@ -4640,6 +4686,7 @@ public class MainRestController {
 						infoCheck = planResponce.getMessage();
 						response.put("info", infoCheck.replace("\n", "<br>"));
 						response.put("status", "200");
+						order.setSlotMessageHistory(planResponce.getMessage());
 					}		
 					
 				}
@@ -4894,13 +4941,11 @@ public class MainRestController {
 					infoCheck = planResponce.getMessage();
 					response.put("info", infoCheck.replace("\n", "<br>"));
 					response.put("status", "200");
-					//проверка по балансу на складах
-//					response.put("balance", readerSchedulePlan.checkBalanceBetweenStock(order));
-				}	
+					order.setSlotMessageHistory(planResponce.getMessage());				
+					}	
 				
 			}
 		}
-		
 		//конец главная проверка по графику поставок
 		
 				
@@ -8690,6 +8735,7 @@ public class MainRestController {
 				|| order.getManager().split(";")[1].trim().equals("PozdnyakovR@dobronom.by")
 				|| order.getManager().split(";")[1].trim().equals("KuzmickayaE@dobronom.by")
 				|| order.getManager().split(";")[1].trim().equals("VegeroK@dobronom.by")
+				|| order.getManager().split(";")[1].trim().equals("KashickiyD@dobronom.by")
 				|| order.getManager().split(";")[1].trim().equals("ProrovskayaM@dobronom.by")
 				|| order.getManager().split(";")[1].trim().equals("YakzhikE@dobronom.by") // нет такого?
 				|| order.getManager().split(";")[1].trim().equals("TishalovichA@dobronom.by")){
@@ -8896,6 +8942,7 @@ public class MainRestController {
 				|| order.getManager().split(";")[1].trim().equals("PozdnyakovR@dobronom.by")
 				|| order.getManager().split(";")[1].trim().equals("KuzmickayaE@dobronom.by")
 				|| order.getManager().split(";")[1].trim().equals("VegeroK@dobronom.by")
+				|| order.getManager().split(";")[1].trim().equals("KashickiyD@dobronom.by")
 				|| order.getManager().split(";")[1].trim().equals("ProrovskayaM@dobronom.by")
 				|| order.getManager().split(";")[1].trim().equals("YakzhikE@dobronom.by") // нет такого?
 				|| order.getManager().split(";")[1].trim().equals("TishalovichA@dobronom.by")){

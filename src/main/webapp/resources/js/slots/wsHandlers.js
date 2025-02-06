@@ -23,20 +23,24 @@ export function wsSlotOnMessageHandler(e, gridOptions) {
 		// заглушка для игнорирования сообщений о машинах
 		if (data.WSPath !== 'slot') return
 
-		if (fromUser === login) return
-
 		const action = data.action
+		const isAnotherUser = fromUser !== login
 
 		if (action === 'load') {
-			addCalendarEvent(gridOptions, orderData, true)
+			addCalendarEvent(gridOptions, orderData)
 		}
 
 		if (action === 'update' || action === 'save' || action === 'unsave') {
-			updateCalendarEvent(gridOptions, orderData, true)
+			const isComplexUpdate = orderData.isComplexUpdate
+			const eventId = orderData.marketNumber
+			const isEventMounted = store.getEvent('all', eventId)
+			isComplexUpdate && !isEventMounted
+				? addCalendarEvent(gridOptions, orderData)
+				: updateCalendarEvent(gridOptions, orderData)
 		}
 
 		if (action === 'delete') {
-			deleteCalendarEvent(gridOptions, orderData, true)
+			deleteCalendarEvent(gridOptions, orderData, isAnotherUser)
 		}
 
 		// удаление заказа из таблицы контроля заявок
@@ -83,7 +87,7 @@ export function wsSlotOnMessageHandler(e, gridOptions) {
 				stockId,
 				timeDelivery,
 			}
-			updateCalendarEvent(gridOptions, modifiedOrderData, true)
+			updateCalendarEvent(gridOptions, modifiedOrderData)
 		}
 	}
 }

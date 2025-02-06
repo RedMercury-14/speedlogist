@@ -21,6 +21,7 @@ export const store = {
 		slotToConfirm: null,
 		stocks,
 		dropZone: [],
+		dropZoneList: new Set(),
 		orders: null,
 		currentStock: null,
 		currentDate: null,
@@ -332,6 +333,16 @@ export const store = {
 		this._state.dropZone = this._state.dropZone.filter(order => order.marketNumber !== id)
 	},
 
+	getDropZoneList() {
+		return 
+
+	},
+	addToDropZoneList(eventId) {
+		this._state.dropZoneList.add(eventId)
+	},
+	removeFromDropZoneList(eventId) {
+		return this._state.dropZoneList.delete(eventId)
+	},
 
 	addEvent(orderData, updatedOrder) {
 		const stockId = `${orderData.idRamp}`.slice(0, -2)
@@ -402,6 +413,9 @@ export const store = {
 		this._callSubscriber(this._state)
 	},
 	getEvent(stockId, eventId) {
+		if (stockId === 'all') {
+			return this._state.stocks.flatMap(stock => stock.events).find(event => event.id === eventId)
+		}
 		const stockIndex = this._state.stocks.findIndex(stock => stock.id === stockId)
 		if (stockIndex === -1) return null
 		return this._state.stocks[stockIndex].events.find(event => event.id === eventId)

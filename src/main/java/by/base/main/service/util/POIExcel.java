@@ -197,18 +197,17 @@ public class POIExcel {
          * первый хедер с итогами
          * делается с помощью формул
          */
-        headerRow1.createCell(7).setCellFormula("SUM(H3:H"+(reportRows.size()+2)+")");
-        headerRow1.createCell(8).setCellFormula("SUM(I3:I"+(reportRows.size()+2)+")");
-        headerRow1.createCell(9).setCellFormula("SUM(J3:J"+(reportRows.size()+2)+")");
+        headerRow1.createCell(7).setCellFormula("SUM(H3:H" + (reportRows.size() + 2) + ")");
+        headerRow1.createCell(8).setCellFormula("SUM(I3:I" + (reportRows.size() + 2) + ")");
+        headerRow1.createCell(9).setCellFormula("SUM(J3:J" + (reportRows.size() + 2) + ")");
         headerRow1.createCell(10).setCellFormula("J1/I1*100");
-        
 
         // Вторая строка заголовка
         Row headerRow2 = sheet.createRow(1);
         String[] headers = {
                 "Наименование поставщика", //0
                 "Номер заказа из маркета", //1
-                "Период Поставки заказа (неделя)", //2
+                "Период поставки заказа (неделя)", //2
                 "Дата факт.выгрузки", // 3
                 "Склад", // 4
                 "Наименование товара", //5
@@ -253,59 +252,112 @@ public class POIExcel {
         // Заполняем данные
         int rowNum = 2; // Данные начинаются со строки 3   
         int k = 0;
+
+       //билдеры для формированиф формул подсчёта итогов
+       StringBuilder builderORL = new StringBuilder();
+       StringBuilder builderManager = new StringBuilder();
+       StringBuilder builderAccepted = new StringBuilder();
+       StringBuilder builderDiscrepancy = new StringBuilder();
+
         for (ReportRow row : reportRows) {
-//        	
-        	
-            
+//
           //тут групируем по названию конрагента
             if(nameCounterparty == null) {
-            	//создаём итоговую строку по названию контрагента
-            	Row conclusionRow = sheet.createRow(rowNum++);
-            	conclusionRow.createCell(0).setCellValue(row.getCounterpartyName() + " Итог");  
-            	nameCounterparty = row.getCounterpartyName(); 
-            	indexNameCounterpartyStart = rowNum;
-            	
-            	//дальше создаём данные с неделей
-            	Row weekRow = sheet.createRow(rowNum++);
-            	weekRow.createCell(0).setCellValue(row.getCounterpartyName()); 
-            	weekRow.createCell(2).setCellValue(getWeekRange(row.getDateUnload()) + " Итог");
-            	week = getWeekRange(row.getDateUnload());
-            	indexWeekStart = rowNum;
-            	
-            	
-            	
+                //создаём итоговую строку по названию контрагента
+                Row conclusionRow = sheet.createRow(rowNum++);
+                conclusionRow.createCell(0).setCellValue(row.getCounterpartyName() + " Итог");  
+                nameCounterparty = row.getCounterpartyName(); 
+                indexNameCounterpartyStart = rowNum;
+                
+                //дальше создаём данные с неделей
+                Row weekRow = sheet.createRow(rowNum++);
+                weekRow.createCell(0).setCellValue(row.getCounterpartyName()); 
+                weekRow.createCell(2).setCellValue(getWeekRange(row.getDateUnload()) + " Итог");
+                week = getWeekRange(row.getDateUnload());
+                indexWeekStart = rowNum;
+
             }else {
-            	if(!nameCounterparty.equals(row.getCounterpartyName())) { // следим за сменой контрагента
-            		Row conclusionRow = sheet.createRow(rowNum++);
-                	conclusionRow.createCell(0).setCellValue(row.getCounterpartyName() + " Итог");
-            		indexNameCounterpartyFinish = rowNum- 2;
-            		sheet.groupRow(indexNameCounterpartyStart, indexNameCounterpartyFinish);
-            		sheet.setRowGroupCollapsed(indexNameCounterpartyStart, true);  
-            		
-            		nameCounterparty = row.getCounterpartyName();
-            		indexNameCounterpartyStart = rowNum;
-            		
-            		indexWeekFinish = rowNum-2;
-            		sheet.groupRow(indexWeekStart, indexWeekFinish);//закрываем прошлые даты
-            		sheet.setRowGroupCollapsed(indexWeekStart, true); //не знаю почему, но именно эта строка не работает, т.е. не сворачивает
-            		
-            		Row weekRow = sheet.createRow(rowNum++);
-            		weekRow.createCell(0).setCellValue(row.getCounterpartyName());
-            		weekRow.createCell(2).setCellValue(getWeekRange(row.getDateUnload()) + " Итог");
-                	week = getWeekRange(row.getDateUnload());
-                	indexWeekStart = rowNum;
-            		
-            	} 
-            	if(nameCounterparty.equals(row.getCounterpartyName()) && !week.equals(getWeekRange(row.getDateUnload()))) { // следим за сменой недели
-            		Row weekRow = sheet.createRow(rowNum++);
-            		weekRow.createCell(0).setCellValue(row.getCounterpartyName());
-                	weekRow.createCell(2).setCellValue(getWeekRange(row.getDateUnload()) + " Итог");
-                	indexWeekFinish = rowNum-2;
-                	sheet.groupRow(indexWeekStart, indexWeekFinish);
-            		sheet.setRowGroupCollapsed(indexWeekStart, true); 
-            		week = getWeekRange(row.getDateUnload());
-            		indexWeekStart = rowNum; 
-            	}
+                if(!nameCounterparty.equals(row.getCounterpartyName())) { // следим за сменой контрагента
+                   Row conclusionRow = sheet.createRow(rowNum++);
+                    conclusionRow.createCell(0).setCellValue(row.getCounterpartyName() + " Итог");
+                   indexNameCounterpartyFinish = rowNum - 2;
+                indexWeekFinish = rowNum - 2;
+                String formulaORL = "SUM(H" + (indexWeekStart + 1) + ":H" + (indexWeekFinish + 1) + ")";
+                String formulaManager = "SUM(I" + (indexWeekStart + 1) + ":I" + (indexWeekFinish +  1) + ")";
+                String formulaAccepted = "SUM(J" + (indexWeekStart + 1) + ":J" + (indexWeekFinish +  1) + ")";
+                String formulaDiscrepancy = "SUM(L" + (indexWeekStart + 1) + ":L" + (indexWeekFinish +  1) + ")";
+
+                builderORL.append(formulaORL);
+                builderManager.append(formulaManager);
+                builderAccepted.append(formulaAccepted);
+                builderDiscrepancy.append(formulaDiscrepancy);
+
+                   sheet.groupRow(indexNameCounterpartyStart, indexNameCounterpartyFinish);
+                   sheet.setRowGroupCollapsed(indexNameCounterpartyStart, true);
+                Row previousConclusionRow = sheet.getRow(indexNameCounterpartyStart - 1);
+                previousConclusionRow.createCell(7).setCellFormula(builderORL.toString());
+                previousConclusionRow.createCell(8).setCellFormula(builderManager.toString());
+                previousConclusionRow.createCell(9).setCellFormula(builderAccepted.toString());
+                previousConclusionRow.createCell(11).setCellFormula(builderDiscrepancy.toString());
+
+                builderORL = new StringBuilder();
+                builderManager = new StringBuilder();
+                builderAccepted = new StringBuilder();
+                builderDiscrepancy = new StringBuilder();
+
+                nameCounterparty = row.getCounterpartyName();
+                   indexNameCounterpartyStart = rowNum;
+
+                sheet.groupRow(indexWeekStart, indexWeekFinish);//закрываем прошлые даты
+                   sheet.setRowGroupCollapsed(indexWeekStart, true); //не знаю почему, но именно эта строка не работает, т.е. не сворачивает
+
+                Row previousWeekConclusionRow = sheet.getRow(indexWeekStart - 1);
+
+                previousWeekConclusionRow.createCell(7).setCellFormula(formulaORL);
+                previousWeekConclusionRow.createCell(8).setCellFormula(formulaManager);
+                previousWeekConclusionRow.createCell(9).setCellFormula(formulaAccepted);
+                previousWeekConclusionRow.createCell(11).setCellFormula(formulaDiscrepancy);
+
+                builderORL.append("+");
+                builderManager.append("+");
+                builderAccepted.append("+");
+                builderDiscrepancy.append("+");
+                   Row weekRow = sheet.createRow(rowNum++);
+                   weekRow.createCell(0).setCellValue(row.getCounterpartyName());
+                   weekRow.createCell(2).setCellValue(getWeekRange(row.getDateUnload()) + " Итог");
+                    week = getWeekRange(row.getDateUnload());
+                    indexWeekStart = rowNum;
+                   
+                } 
+                if(nameCounterparty.equals(row.getCounterpartyName()) && !week.equals(getWeekRange(row.getDateUnload()))) { // следим за сменой недели
+                   Row weekRow = sheet.createRow(rowNum++);
+                Row previousWeekConclusionRow = sheet.getRow(indexWeekStart - 1);
+
+                weekRow.createCell(0).setCellValue(row.getCounterpartyName());
+                    weekRow.createCell(2).setCellValue(getWeekRange(row.getDateUnload()) + " Итог");
+                    indexWeekFinish = rowNum - 2;
+                String formulaORL = "SUM(H" + (indexWeekStart + 1) + ":H" + (indexWeekFinish +  1) + ")";
+                String formulaManager = "SUM(I" + (indexWeekStart + 1) + ":I" + (indexWeekFinish +  1) + ")";
+                String formulaAccepted = "SUM(J" + (indexWeekStart + 1) + ":J" + (indexWeekFinish +  1) + ")";
+                String formulaDiscrepancy = "SUM(L" + (indexWeekStart + 1) + ":L" + (indexWeekFinish +  1) + ")";
+                builderORL.append(formulaORL);
+                builderManager.append(formulaManager);
+                builderAccepted.append(formulaAccepted);
+                previousWeekConclusionRow.createCell(7).setCellFormula(formulaORL);
+                previousWeekConclusionRow.createCell(8).setCellFormula(formulaManager);
+                previousWeekConclusionRow.createCell(9).setCellFormula(formulaAccepted);
+                previousWeekConclusionRow.createCell(11).setCellFormula(formulaDiscrepancy);
+
+                builderORL.append("+");
+                builderManager.append("+");
+                builderAccepted.append("+");
+                builderDiscrepancy.append("+");
+
+                sheet.groupRow(indexWeekStart, indexWeekFinish);
+                   sheet.setRowGroupCollapsed(indexWeekStart, true);
+                   week = getWeekRange(row.getDateUnload());
+                   indexWeekStart = rowNum; 
+                }
             }
             Row excelRow = sheet.createRow(rowNum++);
             excelRow.createCell(0).setCellValue(row.getCounterpartyName());
@@ -326,12 +378,11 @@ public class POIExcel {
 //            excelRow.createCell(14).setCellValue(row.getDiscrepancyNotNDS() != null ? row.getDiscrepancyNotNDS() : 0.0);
             excelRow.createCell(12).setCellValue(row.getComment() != null ? row.getComment() : null);
 
-            
             //создаём последжнюю группу
-            if(k==reportRows.size()-1) {            	
-        		sheet.groupRow(indexNameCounterpartyStart, sheet.getLastRowNum()); // остановился тут. Последняя строка не групперуется.
-        		sheet.setRowGroupCollapsed(indexNameCounterpartyStart, true);
-        	}
+            if(k == reportRows.size() - 1) {
+               sheet.groupRow(indexNameCounterpartyStart, sheet.getLastRowNum()); // остановился тут. Последняя строка не групперуется.
+               sheet.setRowGroupCollapsed(indexNameCounterpartyStart, true);
+            }
             k++;
         }
         

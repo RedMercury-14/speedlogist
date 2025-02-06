@@ -111,7 +111,7 @@ export function eventDragStartHandler(info, wsSlot) {
 export function eventDragStopHandler(info) {
 	// console.log(info)
 }
-export async function eventDropHandler(info, orderTableGridOption) {
+export async function eventDropHandler(info) {
 	const role = store.getRole()
 	const { event: fcEvent } = info
 	const order = fcEvent.extendedProps.data
@@ -180,10 +180,13 @@ export async function eventDropHandler(info, orderTableGridOption) {
 	// для логиста просим причину
 	isLogist(role)
 		? $('#updateSlotReasonModal').modal('show')
-		: updateOrder(info, orderTableGridOption)
+		: updateOrder(info)
 }
 
-export async function eventReceiveHandler(info, orderTableGridOption, orderDateClickHandler) {
+export async function eventReceiveHandler(info, orderDateClickHandler) {
+	// отменяем установку ивента в календарь, т.к. это обрабатывается вручную
+	info.revert()
+
 	const role = store.getRole()
 	const { event: fcEvent } = info
 	const order = fcEvent.extendedProps.data
@@ -193,7 +196,6 @@ export async function eventReceiveHandler(info, orderTableGridOption, orderDateC
 	const minUnloadDate = getMinUnloadDate(order, role)
 	const minUnloadDateStr = convertToDayMonthTime(minUnloadDate)
 	if (isInvalidEventDate(info, minUnloadDate)) {
-		info.revert()
 		snackbar.show(userMessages.dateDropError(minUnloadDateStr))
 		return
 	}
@@ -203,7 +205,6 @@ export async function eventReceiveHandler(info, orderTableGridOption, orderDateC
 	const pallCount = store.getPallCount(currentStock, eventDateStr)
 	const maxPall = store.getMaxPallByDate(currentStock.id, eventDateStr)
 	if (!checkPallCount(info, pallCount, maxPall, currentStock)) {
-		info.revert()
 		snackbar.show(userMessages.pallDropError)
 		return
 	}
@@ -225,14 +226,12 @@ export async function eventReceiveHandler(info, orderTableGridOption, orderDateC
 	// проверка совпадения склада из Маркета и текущего склада
 	const numStockDelivery = order.numStockDelivery
 	if (!isMatchNumStockDelivery(numStockDelivery, currentStock)) {
-		info.revert()
 		return
 	}
 
 	// проверка пересечения с пересменкой
 	const shiftChange = currentStock.shiftChange
 	if (isOverlapWithShiftChange(info, shiftChange)) {
-		info.revert()
 		snackbar.show(userMessages.shiftChangeError)
 		return
 	}
@@ -242,7 +241,6 @@ export async function eventReceiveHandler(info, orderTableGridOption, orderDateC
 	const internalMovementsRamps = currentStock.internalMovementsRamps
 	// время для внутренних перемещений отдано для установки слотов логистами ВНЕ ОЧЕРЕДИ
 	if (isOverlapWithInternalMovementTimeForLogists(info, internaMovementsTimes, internalMovementsRamps, role)) {
-		info.revert()
 		alert(userMessages.internalMovementTimeForLogistError(currentStock))
 		return
 	}
@@ -260,16 +258,16 @@ export async function eventReceiveHandler(info, orderTableGridOption, orderDateC
 		// для логиста просим причину
 		isLogist(role)
 			? $('#updateSlotReasonModal').modal('show')
-			: updateOrder(info, orderTableGridOption)
+			: updateOrder(info)
 		return
 	}
 
 	// загрузка заказа в БД либо требование установки даты заказа
 	const isInternalMovement = order.isInternalMovement === 'true'
 	if (isInternalMovement) {
-		loadOrder(info, orderTableGridOption)
+		loadOrder(info)
 	} else {
-		preloadOrder(info, orderTableGridOption, orderDateClickHandler)
+		preloadOrder(info, orderDateClickHandler)
 		store.setCalendarInfo(info)
 	}
 }
@@ -291,12 +289,14 @@ export function eventClickHandler(info, orderTableGridOption, wsSlot) {
 			const method = 'update'
 			const currentStock = store.getCurrentStock()
 			const orderData = getOrderDataForAjax(info, currentStock, login, role, method)
+			const eventId = orderData.marketNumber
+			store.addToDropZoneList(eventId)
 			deleteCalendarEvent(orderTableGridOption, orderData, false)
 			return
 		}
 
 		// удаление заказа из БД
-		deleteOrder(info, orderTableGridOption)
+		deleteOrder(info)
 		return
 	}
 
@@ -322,7 +322,7 @@ export function eventClickHandler(info, orderTableGridOption, wsSlot) {
 	// обработчик клика на кнопку проверки на бронь
 	if (jsEvent.target.dataset.action === 'deleteSlot') {
 		if (confirm(`Вы уверены, что хотите удалить слот?`)) {
-			deleteOrder(info, orderTableGridOption, true)
+			deleteOrder(info, true)
 		}
 		return
 	}

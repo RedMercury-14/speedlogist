@@ -152,10 +152,17 @@ const calendarOptions = {
 	nowIndicator: true,
 	navLinks: true,
 
+	customButtons: {
+		helpButton: {
+			text: 'Помощь',
+			click: () => $('#helpModal').modal('show')
+		}
+	},
+
 	headerToolbar: {
 		left: "prev,next today",
 		center: "title",
-		right: "",
+		right: "helpButton",
 	},
 
 	viewDidMount: (info) => {
@@ -202,11 +209,11 @@ const calendarOptions = {
 
 	// обработчик события перемещения собития камендаря
 	// (срабатывает при установке события на новое место)
-	eventDrop: async (info) => await eventDropHandler(info, orderTableGridOption),
+	eventDrop: async (info) => await eventDropHandler(info),
 
 	// вызывается, когда внешний перетаскиваемый элемент со связанными
 	// данными о событии перетаскивается в календарь (дроп)
-	eventReceive: async (info) => await eventReceiveHandler(info, orderTableGridOption, orderDateClickHandler),
+	eventReceive: async (info) => await eventReceiveHandler(info, orderDateClickHandler),
 
 	// обработчик события клика по собитию календаря
 	eventClick: (info) => eventClickHandler(info, orderTableGridOption, wsSlot),
@@ -534,11 +541,10 @@ function orderDateClickHandler(e) {
 	$("#orderCalendarModal").modal('hide')
 
 	if (!dateOrderOrl) {
-		info.revert()
 		return
 	}
 
-	loadOrder(info, orderTableGridOption, dateOrderOrl)
+	loadOrder(info, dateOrderOrl)
 }
 
 // обработка выбора админского действия в слотах
@@ -588,7 +594,7 @@ function gettingReasonForUpdateSlot(e) {
 		return
 	}
 
-	updateOrder(info, orderTableGridOption, reason)
+	updateOrder(info, reason)
 	form.reset()
 	$("#updateSlotReasonModal").modal('hide')
 }
@@ -702,7 +708,7 @@ function setOldMarketInfo(order, oldValue, gridOption) {
 
 // функции для модального окна обновлений в слотах
 function showSlotNewsModal() {
-	const value = cookieHelper.getCookie('_slotNews3')
+	const value = cookieHelper.getCookie('_slotNews4')
 	if (value) return 
 	setSlotNewsCookie('ок')
 	$('#slotNewsModal').modal('show')
@@ -710,5 +716,5 @@ function showSlotNewsModal() {
 function setSlotNewsCookie(value) {
 	let date = new Date(Date.now() + 31562e7)
 	date = date.toUTCString()
-	cookieHelper.setCookie('_slotNews3', value, { expires: date, })
+	cookieHelper.setCookie('_slotNews4', value, { expires: date, })
 }

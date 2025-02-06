@@ -63,7 +63,7 @@ public class OrderProductServiceImpl implements OrderProductService{
 
 	@Override
 	public Map<Integer, Integer> getOrderProductMapHasDate(Date date) {
-		List<OrderProduct> orderProducts = productDAO.getOrderProductListHasDate(date);
+		List<OrderProduct> orderProducts = productDAO.getOrderProductListHasDate(date); 
 		Map<Integer, Integer> responce = orderProducts.stream()
 			    .collect(Collectors.toMap(
 			        OrderProduct::getCodeProduct, 

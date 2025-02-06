@@ -153,6 +153,8 @@ public class OrderDTO {
 	
 	private Integer link;
 	
+	private String slotMessageHistory;
+	
 	public OrderDTO() {
 		
 	}
@@ -170,7 +172,7 @@ public class OrderDTO {
 			String marketContractorId, String numProduct, Integer statusYard, Object unloadStartYard,
 			Object unloadFinishYard, Integer pallFactYard, Double weightFactYard, Double marketOrderSumFirst,
 			Double marketOrderSumFinal, Object arrivalFactYard, Object registrationFactYard, String addressLoading, Object lastDatetimePointLoad, Object dateOrderOrl,
-			Integer link) {
+			Integer link, String slotMessageHistory) {
 		super();
 		this.idOrder = idOrder;
 		this.counterparty = counterparty;
@@ -231,6 +233,7 @@ public class OrderDTO {
 		this.lastDatetimePointLoad = (Timestamp) lastDatetimePointLoad;
 		this.dateOrderOrl = (Date) dateOrderOrl;
 		this.link = link;
+		this.slotMessageHistory = slotMessageHistory;
 	}
 	
 	@Deprecated
@@ -307,6 +310,16 @@ public class OrderDTO {
 	}
 
 
+
+
+	public String getSlotMessageHistory() {
+		return slotMessageHistory;
+	}
+
+
+	public void setSlotMessageHistory(String slotMessageHistory) {
+		this.slotMessageHistory = slotMessageHistory;
+	}
 
 
 	public Date getDateOrderOrl() {

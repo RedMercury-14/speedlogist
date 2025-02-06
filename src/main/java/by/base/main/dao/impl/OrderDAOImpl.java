@@ -503,7 +503,8 @@ public class OrderDAOImpl implements OrderDAO{
 	        "a.bodyAddress, "+
 	        "o.lastDatetimePointLoad,"+
 	        "o.dateOrderOrl,"+ // добавлено 27,09,2024
-	        "o.link)"; // добавлен 26,11,2024
+	        "o.link,"+// добавлен 26,11,2024
+	        "o.slotMessageHistory)"; // добавлен 06,02,2025
 	
 	private static final String queryGetOrderDTOByPeriodDeliveryAndSlots = orderConstruct + " from Order o LEFT JOIN o.addresses a where \r\n"
 			+ "(CASE \r\n"

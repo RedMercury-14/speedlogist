@@ -207,6 +207,12 @@ public class MainFileController {
             
          }
          
+         if(dataList330.isEmpty()) {
+        	 response.put("status", 100);
+        	 response.put("message", "Данные по 330 отчёту из маркета не найдены");
+        	 return response;
+         }
+         
 //       for (MarketDataFor330Responce object : responces) {
 //          System.out.println(object);
 //       }
@@ -222,6 +228,8 @@ public class MainFileController {
          //получаем заказы по списку        
          Map<String, Order> orders = orderService.getOrdersByListMarketNumber(uniqueOrderBuyGroupIds);
          
+         
+         
          //получаем даты заказов ОРЛ которые нам понадобятся
          List<Date> datesOrderORL = orders.values().stream()
                   .map(Order::getDateOrderOrl) // Получаем значения getDateOrderOrl
@@ -232,7 +240,7 @@ public class MainFileController {
          //получаем мапу с заказами орл
          /*
           * ключ - дата, значение - мапа с кодом товара и значением (как в методе orderProductService.getOrderProductMapHasDate(dateTarget))
-          */
+          */         
          Map<String, Map<Integer, OrderProduct>> mapOrderProduct = orderProductService.getOrderProductMapHasDateList(datesOrderORL);
          
          System.out.println("В мапе объектов : " + mapOrderProduct.size());
@@ -256,8 +264,30 @@ public class MainFileController {
             Order order = orders.get(data330.getOrderBuyGroupId().toString());
             if(order == null) {
                System.err.println("Заказа с номером " + data330.getOrderBuyGroupId() + " не найдено!");
-               order = getMarketOrder(request, data330.getOrderBuyGroupId().toString()); // тянем простой ордер из маркета
-            }
+               try {
+            	   order = getMarketOrder(request, data330.getOrderBuyGroupId().toString()); // тянем простой ордер из маркета
+				} catch (MarketConnectionException e) {
+					if(e.getStatus() == 503) { // связь с маркетом потеряна
+						response.put("status", 100);
+	                    response.put("message", e.getMessage());
+	                    return response;
+					}else { // значит что общая ошибка
+						reportRow.setComment(e.getMessage());
+						reportRow.setMarketNumber(data330.getOrderBuyGroupId().toString());
+			            reportRow.setDateStart(Date.valueOf(from));
+			            reportRow.setDateFinish(Date.valueOf(to));
+			            reportRow.setCounterpartyName(data330.getContractorNameShort());
+			            reportRow.setAcceptedUnits(data330.getQuantity().intValue());
+			            reportRow.setStock(data330.getWarehouseId().toString());
+			            reportRow.setDateUnload(data330.getDate3());			              
+			            reportRow.setPrecentOrderFulfillment(0.0); 
+			            reportRow.setDiscrepancyQuantity(0);
+						reportRows.add(reportRow);
+						continue; // пропускаем остальные данные этого товара
+					}
+				}
+	               
+	        }
             
             Map<Long, Double> productHasOrder = order.getOrderLinesMap();
 //          System.out.println("---> Хочу взять: " + data330.getGoodsId() + " из заказа " + data330.getOrderBuyGroupId());
@@ -415,13 +445,14 @@ public class MainFileController {
 		
 		if(marketOrder2.equals("503")) { // означает что связь с маркетом потеряна
 			System.err.println("Связь с маркетом потеряна");	
-			throw new MarketConnectionException("Связь с маркетом потеряна");
+			throw new MarketConnectionException("Связь с маркетом потеряна", 503);
 		}else{//если есть связь с маркетом
 			//проверяем на наличие сообщений об ошибке со стороны маркета
 			if(marketOrder2.contains("Error")) {
 				MarketErrorDto errorMarket = gson.fromJson(marketOrder2, MarketErrorDto.class);
 				System.err.println("Error: " + errorMarket);
-				return null;
+				throw new MarketConnectionException("Error: " + errorMarket, 500);
+//				return null;
 			}
 			
 			//тут избавляемся от мусора в json

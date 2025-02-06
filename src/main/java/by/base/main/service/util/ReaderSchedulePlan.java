@@ -1115,6 +1115,9 @@ public class ReaderSchedulePlan {
 		
 		//реализация проверки, когда нужно проверить только один продукт
 		if(product != null) {
+			if(product.getDateUnload() == null) {
+				return new ResultMethod("<span style=\"color: #bbaa00;\">Данные по потребностям " + product.getName() + " (" + product.getCodeProduct()+") не прогружены!.", 200);
+			}
 			LocalDate dateNow = LocalDate.now();
 			Period period = Period.between(product.getDateUnload().toLocalDate(), dateNow);
 			if(product.getDateUnload() != null && period.getDays()<2) {

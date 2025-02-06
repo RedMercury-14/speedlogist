@@ -129,9 +129,18 @@ function getInitDataUrl(url) {
 		return '../../../api/orl/task/getlist'
 	}
 
-	// Список магазинов
+	// Список контрагентов
 	if (url.includes('logistics/counterpartiesList')) {
 		return '../../api/manager/getAllShops'
+	}
+
+	// История решений по заказам
+	if (url.includes('permission/list')) {
+		const baseUrl ='../../../api/procurement/permission/getList/'
+		const PAGE_NAME = 'permissionList'
+		const DATES_KEY = `searchDates_to_${PAGE_NAME}`
+		const { dateStart, dateEnd } = dateHelper.getDatesToFetch(DATES_KEY, 14, 0)
+		return`${baseUrl}${dateStart}&${dateEnd}`
 	}
 
 	return ''

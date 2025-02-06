@@ -138,9 +138,19 @@ public class MainFileController {
     	return "Good!";
     }
     
+    /**
+     * Метод отвечает за формирование и скачку 330 отчёта сервис левела
+     * @param request
+     * @param from
+     * @param to
+     * @param stock
+     * @param code
+     * @return
+     * @throws ParseException
+     */
     @TimedExecution
 	@GetMapping("/330/{from}&{to}&{stock}&{code}")
-    public Map<String, Object> get330AndParam(HttpServletRequest request,
+    public Map<String, Object> get330AndParam(HttpServletRequest request, HttpServletResponse servletResponse,
             @PathVariable String from,
             @PathVariable String to,
             @PathVariable String stock,
@@ -260,14 +270,20 @@ public class MainFileController {
                Order orderFromMarket;
                if(order.getIdOrder() == null) { // если id == null это значит что ордер уже вытянут из маркета
                   orderFromMarket = order;
-               }else {                  
+               }else {
                   try {
-                	  orderFromMarket = getMarketOrder(request, data330.getOrderBuyGroupId().toString());
-				} catch (MarketConnectionException e) {
-					response.put("status", 100);
-					response.put("message", e.getMessage());
-					return response;
-				}
+                     orderFromMarket = getMarketOrder(request, data330.getOrderBuyGroupId().toString());
+                  } catch (MarketConnectionException e) {
+                     response.put("status", 100);
+                     response.put("message", e.getMessage());
+                     return response;
+                  }
+               }
+
+               if (orderFromMarket == null) {
+                  System.err.println("orderFromMarket == null. Возможно, связь с макетом была потеряна.");
+                  response.put("message", "Возможно, связь с маркетом потеряна. Попробуйте создать отчёт ещё раз.");
+                  return response;
                }
                
                if(!orderFromMarket.getOrderLinesMap().containsKey(longGoodIdHas330)) { // если и в заказе из маркета нет и в заказе из SL нет - записываем коммент
@@ -361,8 +377,23 @@ public class MainFileController {
             // TODO Auto-generated catch block
             e.printStackTrace();
          }
-         
-          
+
+         servletResponse.setHeader("content-disposition", "attachment;filename="+"report330.xlsx");
+         servletResponse.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+
+         try (FileInputStream in = new FileInputStream(folderPath); OutputStream out = servletResponse.getOutputStream();){
+
+            byte buffer[] = new byte[1024];
+            int len = 0;
+            //  Прочитать содержимое входного потока в буфер в цикле
+            while ((len = in.read(buffer)) > 0) {
+               out.write(buffer, 0, len);
+            }
+
+         } catch (Exception e) {
+            e.printStackTrace();
+         }
+
          return null;
       }
     
@@ -427,6 +458,42 @@ public class MainFileController {
 		try {
 			// Прочтите файл, который нужно загрузить, и сохраните его во входном потоке файла
 			in = new FileInputStream(appPath + "resources/others/docs/instruction-trading-objects.docx");
+			//  Создать выходной поток
+			out = response.getOutputStream();
+			//  Создать буфер
+			byte buffer[] = new byte[1024];
+			int len = 0;
+			//  Прочитать содержимое входного потока в буфер в цикле
+			while ((len = in.read(buffer)) > 0) {
+				out.write(buffer, 0, len);
+			}
+			in.close();
+			out.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}finally {
+			in.close();
+			out.close();
+		}
+	}
+	
+	/**
+	 * метод отвечает за скачку иснтрукции из слотов (в частности по объеденению заказов)
+	 * @param request
+	 * @param response
+	 * @throws IOException
+	 */
+	@RequestMapping("/slot/downdoad/instruction-join")
+	public void downdoadInstructionJoin(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		String appPath = request.getServletContext().getRealPath("");
+		//File file = new File(appPath + "resources/others/Speedlogist.apk");
+		response.setHeader("content-disposition", "attachment;filename="+"instruction-join.docx");
+		response.setContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+		FileInputStream in = null;
+		OutputStream out = null;
+		try {
+			// Прочтите файл, который нужно загрузить, и сохраните его во входном потоке файла
+			in = new FileInputStream(appPath + "resources/others/docs/instruction-join.docx");
 			//  Создать выходной поток
 			out = response.getOutputStream();
 			//  Создать буфер

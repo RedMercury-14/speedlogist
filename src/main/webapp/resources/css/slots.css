@@ -117,8 +117,8 @@ html, body {
 
 .pallInfo-container {
 	position: absolute;
-	top: 67px;
-	right: 10px;
+	top: 66px;
+	right: 80px;
 	font-size: 0.8rem;
 	font-weight: bold;
 	padding: 0 10px;
@@ -155,7 +155,7 @@ html, body {
 .adminAction-container {
 	position: absolute;
 	top: 67px;
-	right: 182px;
+	right: 252px;
 	width: 150px;
 	font-size: 1rem;
 	font-weight: bold;
@@ -380,8 +380,8 @@ html, body {
 .fc-event-main .checkSlot,
 .fc-event-main .checkBooking,
 .fc-event-main .deleteSlot {
-	/* visibility: hidden; */
-	/* opacity: 0; */
+	visibility: hidden;
+	opacity: 0;
 	position: absolute;
 	top: 0px;
 	font-size: 0.7rem;
@@ -910,12 +910,10 @@ svg:not(:root) {
 }
 
 /* ------- календарь заказов и поставок ------- */
-#updateSlotReasonModal .modal-header {
-	background-color: cadetblue;
-}
-#slotNewsModal .modal-header {
-	background-color: cadetblue;
-}
+
+#helpModal .modal-header,
+#updateSlotReasonModal .modal-header,
+#slotNewsModal .modal-header,
 #orderCalendarModal .modal-header {
 	background-color: cadetblue;
 }

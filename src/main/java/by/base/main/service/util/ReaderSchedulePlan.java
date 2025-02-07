@@ -1156,9 +1156,9 @@ public class ReaderSchedulePlan {
 //				System.out.println("Остаток ("+product.getCodeProduct()+") в паллетах на 1800 складе: "+product.getOstInPallets1800());
 //				System.out.println();
 				Double summOstPallets = null;
+				summOstPallets = product.getOstInPallets1700() + product.getOstInPallets1800();
 				switch (numStock) {
 				case 1700:
-					summOstPallets = product.getOstInPallets1700() + product.getOstInPallets1800();
 					if(product.getOstInPallets1700() == null || product.getBalanceStockAndReserves1700() == null) {
 						return new ResultMethod("В файле потребности, по 1700 складу, отсутствуют данные по товару " + product.getName() + " (" + product.getCodeProduct()+").  Проверки по остаткам не проводилось.", 200);
 //						return null;

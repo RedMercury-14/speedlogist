@@ -1136,13 +1136,15 @@ public class ReaderSchedulePlan {
 				}
 				
 				if(balanceStockAndReserves == null) {
-					return null;
+					return new ResultMethod("<span style=\"color: #bbaa00;\">Данные по потребностям " + product.getName() + " (" + product.getCodeProduct()+") не прогружены!.", 200);
+//					return null;
 				}
 //				if(product.getOrderProducts() != null && !product.getOrderProducts().isEmpty()) {
 //					return null;
 //				}
 				if(balanceStockAndReserves == 9999.0) {
-					return null;
+					return new ResultMethod("<span style=\"color: #bbaa00;\">Данные по потребностям " + product.getName() + " (" + product.getCodeProduct()+") равны 9999!.", 200);
+//					return null;
 				}
 				
 				//считаем разницу в днях сегодняшнеего дня и непосредственно записи

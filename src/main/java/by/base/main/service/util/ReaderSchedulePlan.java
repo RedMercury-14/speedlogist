@@ -1156,7 +1156,11 @@ public class ReaderSchedulePlan {
 //				System.out.println("Остаток ("+product.getCodeProduct()+") в паллетах на 1800 складе: "+product.getOstInPallets1800());
 //				System.out.println();
 				Double summOstPallets = null;
-				summOstPallets = product.getOstInPallets1700() + product.getOstInPallets1800();
+				if(numStock.intValue() == 1700 || numStock.intValue() == 1800) {
+					summOstPallets = product.getOstInPallets1700() + product.getOstInPallets1800();
+				}else {
+					summOstPallets = product.getOstInPallets();
+				}				
 				switch (numStock) {
 				case 1700:
 					if(product.getOstInPallets1700() == null || product.getBalanceStockAndReserves1700() == null) {

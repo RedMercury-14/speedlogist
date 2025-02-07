@@ -6241,6 +6241,7 @@ public class MainRestController {
 	}
 	
 	
+	
 	/**
 	 * Метод отвечает за отправку email сообщения менеджеру от логиста о данных по машине и водителю, когда тендер сыграл
 	 * Новый метод!
@@ -6256,6 +6257,11 @@ public class MainRestController {
 		managerEmail = managerEmail.split(".by")[0];
 		managerEmail = managerEmail+".by";
 		User logist = getThisUser();
+		List<Order> orders = new ArrayList<Order>();
+		if(order.getLink() != null) {
+			orders = orderService.getOrderByLink(order.getLink());
+		}
+		
 		final String finalManagerEmail = managerEmail;
 		if(managerEmail == null || managerEmail.equals("")) {
 			response.put("status", "100");
@@ -6265,6 +6271,7 @@ public class MainRestController {
 		String text = "";
 		List<Route> routes = new ArrayList<Route>(order.getRoutes());
 		String driverStr = "";
+		String subjectEmail = null;
 		for (int i = 0; i < routes.size(); i++) {
 			Route r = routes.get(i);
 			if(r.getStatusRoute().equals("5")) {
@@ -6285,38 +6292,91 @@ public class MainRestController {
 				response.put("message", "Ошибка: перевозчик не назначил водителя на маршрут");
 				return response;
 			}
-			driverStr = r.getDriver().getSurname() + " " + r.getDriver().getName() + " " + r.getDriver().getPatronymic()+"\n";
-			text = text + "Данные по маршруту: " + r.getRouteDirection() + "; \n" + "Номер заказа из маркета: " + order.getMarketNumber() + "; \nID заказа в системе " + order.getIdOrder()+";\n";
-			text = text + "ID маршрута в системе: " + r.getIdRoute() + ";\n";
-			text = text + "Контрагент: " + order.getCounterparty() + ";\n";
-			text = text + "Маршрут: \n";
-			int k = 1;
-			for (RouteHasShop routeHasShop : r.getRoteHasShop()) {
-				text = text + "	" + k + ". " + routeHasShop.getAddress() + "; \n";
-				k++;
+			//тут разделение, если заказ один или если заказы связаны:
+			if(!orders.isEmpty()) {//если несколько связанных заказов
+				subjectEmail = "Данные по заявке ";
+				boolean w05 = false;
+				boolean w07 = false;
+				driverStr = r.getDriver().getSurname() + " " + r.getDriver().getName() + " " + r.getDriver().getPatronymic()+"\n";
+//				text = text + "Объедененные заказы.\n";
+				text = text + "Данные по маршруту: " + r.getRouteDirection() + "; \n";
+				text = text + "Заказы: \n";
+				int j = 1;
+				for (Order orderI : orders) {
+					switch (getTrueStock(orderI)) {
+					case "1700":
+						w05 = true;
+						break;
+					case "1800":
+						w07 = true;
+						break;
+					}
+					text = text + "	"+j+". " + "Номер заказа из маркета: " + orderI.getMarketNumber() + "; ID заказа в системе " + orderI.getIdOrder()+"; "+ "Контрагент: " + orderI.getCounterparty() + ";\n";
+					subjectEmail = subjectEmail + "№" + orderI.getIdOrder()+"; ";
+					j++;
+				}
+				subjectEmail = subjectEmail +" Внимание: выгрузка на складе W05 (1700) и W07 (1800)";
+				text = text + "Маршрут: \n";
+				int k = 1;
+				for (RouteHasShop routeHasShop : r.getRoteHasShop()) {
+					text = text + "	" + k + ". " + routeHasShop.getAddress() + "; \n";
+					k++;
+				}
+				if(w05 && w07) {
+					text = text + "	" + "Внимание: выгрузка на складе W05 (1700) и W07 (1800); \n";
+				}
+				text = text + "\nПеревозчик: " + r.getUser().getCompanyName()+"\n";
+				text = text + "Подвижной состав: " + r.getTruck().getNumTruck() + "/" + r.getTruck().getNumTrailer()+"\n";
+				text = text + "Марка машины / прицепа: " + r.getTruck().getBrandTruck() + "/" + r.getTruck().getBrandTrailer()+"\n";
+				text = text + "Водитель: " + r.getDriver().getSurname() + " " + r.getDriver().getName() + " " + r.getDriver().getPatronymic()+"\n";
+				text = text + "Телефон: " + r.getDriver().getTelephone()+"\n";
+				text = text + "Паспортные данные водителя: " +r.getDriver().getNumPass() + "; водительское удостоверение:" + r.getDriver().getNumDriverCard() +"\n\n";
+				
+				text = text + "Итоговая цена за перевозку составила: " +r.getFinishPrice() + " " + r.getStartCurrency();	
+				if(r.getExpeditionCost() != null) {
+					text = text + ", в т.ч. экспедиторские услуги составили: " + r.getExpeditionCost() + " " + r.getStartCurrency() + "\n";
+				}else {
+					text = text + ";\n";
+				}
+				text = text + "Дата подачи машины на загрузку: " +r.getDateLoadActually().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + " в " + r.getTimeLoadActually().format(DateTimeFormatter.ofPattern("HH:mm")) +"\n";			
+				text = text + "Дата подачи машины на выгрузку: " +r.getDateUnloadActually().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + " в " + r.getTimeUnloadActually().format(DateTimeFormatter.ofPattern("HH:mm")) +"\n";
+				
+			}else {//если один заказа
+				subjectEmail = "Данные по заявке №"+order.getIdOrder();
+				driverStr = r.getDriver().getSurname() + " " + r.getDriver().getName() + " " + r.getDriver().getPatronymic()+"\n";
+				text = text + "Данные по маршруту: " + r.getRouteDirection() + "; \n" + "Номер заказа из маркета: " + order.getMarketNumber() + "; \nID заказа в системе " + order.getIdOrder()+";\n";
+				text = text + "ID маршрута в системе: " + r.getIdRoute() + ";\n";
+				text = text + "Маршрут: \n";
+				int k = 1;
+				for (RouteHasShop routeHasShop : r.getRoteHasShop()) {
+					text = text + "	" + k + ". " + routeHasShop.getAddress() + "; \n";
+					k++;
+				}
+				text = text + "\nПеревозчик: " + r.getUser().getCompanyName()+"\n";
+				text = text + "Подвижной состав: " + r.getTruck().getNumTruck() + "/" + r.getTruck().getNumTrailer()+"\n";
+				text = text + "Марка машины / прицепа: " + r.getTruck().getBrandTruck() + "/" + r.getTruck().getBrandTrailer()+"\n";
+				text = text + "Водитель: " + r.getDriver().getSurname() + " " + r.getDriver().getName() + " " + r.getDriver().getPatronymic()+"\n";
+				text = text + "Телефон: " + r.getDriver().getTelephone()+"\n";
+				text = text + "Паспортные данные водителя: " +r.getDriver().getNumPass() + "; водительское удостоверение:" + r.getDriver().getNumDriverCard() +"\n\n";
+				
+				text = text + "Итоговая цена за перевозку составила: " +r.getFinishPrice() + " " + r.getStartCurrency();	
+				if(r.getExpeditionCost() != null) {
+					text = text + ", в т.ч. экспедиторские услуги составили: " + r.getExpeditionCost() + " " + r.getStartCurrency() + "\n";
+				}else {
+					text = text + ";\n";
+				}
+				text = text + "Дата подачи машины на загрузку: " +r.getDateLoadActually().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + " в " + r.getTimeLoadActually().format(DateTimeFormatter.ofPattern("HH:mm")) +"\n";			
+				text = text + "Дата подачи машины на выгрузку: " +r.getDateUnloadActually().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + " в " + r.getTimeUnloadActually().format(DateTimeFormatter.ofPattern("HH:mm")) +"\n";
 			}
-			text = text + "\nПеревозчик: " + r.getUser().getCompanyName()+"\n";
-			text = text + "Подвижной состав: " + r.getTruck().getNumTruck() + "/" + r.getTruck().getNumTrailer()+"\n";
-			text = text + "Марка машины / прицепа: " + r.getTruck().getBrandTruck() + "/" + r.getTruck().getBrandTrailer()+"\n";
-			text = text + "Водитель: " + r.getDriver().getSurname() + " " + r.getDriver().getName() + " " + r.getDriver().getPatronymic()+"\n";
-			text = text + "Телефон: " + r.getDriver().getTelephone()+"\n";
-			text = text + "Паспортные данные водителя: " +r.getDriver().getNumPass() + "; водительское удостоверение:" + r.getDriver().getNumDriverCard() +"\n\n";
 			
-			text = text + "Итоговая цена за перевозку составила: " +r.getFinishPrice() + " " + r.getStartCurrency();	
-			if(r.getExpeditionCost() != null) {
-				text = text + ", в т.ч. экспедиторские услуги составили: " + r.getExpeditionCost() + " " + r.getStartCurrency() + "\n";
-			}else {
-				text = text + ";\n";
-			}
-			text = text + "Дата подачи машины на загрузку: " +r.getDateLoadActually().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + " в " + r.getTimeLoadActually().format(DateTimeFormatter.ofPattern("HH:mm")) +"\n";			
-			text = text + "Дата подачи машины на выгрузку: " +r.getDateUnloadActually().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + " в " + r.getTimeUnloadActually().format(DateTimeFormatter.ofPattern("HH:mm")) +"\n";	
+				
 		}
 		
 		final String message = text;
 		String mailInfo = "Сообщение было отправлено " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")) + ". Водитель: " + driverStr + "\n";
 		order.setMailInfo(order.getMailInfo() + mailInfo);
 		orderService.updateOrder(order);
-		mailService.sendSimpleEmailTwiceUsers(request, "Данные по заявке №"+order.getIdOrder(), message, finalManagerEmail, logist.geteMail());
+		mailService.sendSimpleEmailTwiceUsers(request, subjectEmail, message, finalManagerEmail, logist.geteMail());
 		response.put("status", "200");
 		response.put("message", "Данные отправлены на почту: " + managerEmail);
 		return response;

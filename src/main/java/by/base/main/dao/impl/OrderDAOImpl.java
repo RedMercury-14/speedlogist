@@ -6,12 +6,6 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.TemporalType;
@@ -73,7 +67,15 @@ public class OrderDAOImpl implements OrderDAO{
 		return trucks;
 	}
 	
-	private static final String queryGetOrderByLink = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH o.addresses a where o.link=:link";
+	private static final String queryGetOrderByLink = "from Order o "
+			+ "LEFT JOIN FETCH o.orderLines ol "
+			+ "LEFT JOIN FETCH o.routes r "
+			+ "LEFT JOIN FETCH r.roteHasShop rhs "
+			+ "LEFT JOIN FETCH r.user ru "
+			+ "LEFT JOIN FETCH r.truck rt "
+			+ "LEFT JOIN FETCH r.driver rd "
+			+ "LEFT JOIN FETCH o.addresses a "
+			+ "where o.status !=10 AND o.status !=40 AND o.link=:link";
 	@Transactional
 	@Override
 	public List<Order> getOrderByLink(Integer link) {
@@ -81,7 +83,7 @@ public class OrderDAOImpl implements OrderDAO{
 		Query<Order> theObject = currentSession.createQuery(queryGetOrderByLink, Order.class);
 		theObject.setParameter("link", link);
 		List<Order> trucks = theObject.getResultList();		
-		return trucks;
+		return new ArrayList<Order>(new HashSet<Order>(trucks));
 	}
 
 	private static final String queryGetObjByRoute = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH o.addresses a where r=:route";

@@ -152,10 +152,17 @@ const calendarOptions = {
 	nowIndicator: true,
 	navLinks: true,
 
+	customButtons: {
+		helpButton: {
+			text: 'Помощь',
+			click: () => $('#helpModal').modal('show')
+		}
+	},
+
 	headerToolbar: {
 		left: "prev,next today",
 		center: "title",
-		right: "",
+		right: "helpButton",
 	},
 
 	viewDidMount: (info) => {
@@ -701,7 +708,7 @@ function setOldMarketInfo(order, oldValue, gridOption) {
 
 // функции для модального окна обновлений в слотах
 function showSlotNewsModal() {
-	const value = cookieHelper.getCookie('_slotNews3')
+	const value = cookieHelper.getCookie('_slotNews4')
 	if (value) return 
 	setSlotNewsCookie('ок')
 	$('#slotNewsModal').modal('show')
@@ -709,5 +716,5 @@ function showSlotNewsModal() {
 function setSlotNewsCookie(value) {
 	let date = new Date(Date.now() + 31562e7)
 	date = date.toUTCString()
-	cookieHelper.setCookie('_slotNews3', value, { expires: date, })
+	cookieHelper.setCookie('_slotNews4', value, { expires: date, })
 }

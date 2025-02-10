@@ -1115,6 +1115,9 @@ public class ReaderSchedulePlan {
 		
 		//реализация проверки, когда нужно проверить только один продукт
 		if(product != null) {
+			if(product.getDateUnload() == null) {
+				return new ResultMethod("<span style=\"color: #bbaa00;\">Данные по потребностям " + product.getName() + " (" + product.getCodeProduct()+") не прогружены!.", 200);
+			}
 			LocalDate dateNow = LocalDate.now();
 			Period period = Period.between(product.getDateUnload().toLocalDate(), dateNow);
 			if(product.getDateUnload() != null && period.getDays()<2) {
@@ -1133,13 +1136,15 @@ public class ReaderSchedulePlan {
 				}
 				
 				if(balanceStockAndReserves == null) {
-					return null;
+					return new ResultMethod("<span style=\"color: #bbaa00;\">Данные по потребностям " + product.getName() + " (" + product.getCodeProduct()+") не прогружены!.", 200);
+//					return null;
 				}
 //				if(product.getOrderProducts() != null && !product.getOrderProducts().isEmpty()) {
 //					return null;
 //				}
 				if(balanceStockAndReserves == 9999.0) {
-					return null;
+					return new ResultMethod("<span style=\"color: #bbaa00;\">Данные по потребностям " + product.getName() + " (" + product.getCodeProduct()+") равны 9999!.", 200);
+//					return null;
 				}
 				
 				//считаем разницу в днях сегодняшнеего дня и непосредственно записи
@@ -1152,7 +1157,12 @@ public class ReaderSchedulePlan {
 //				System.out.println("Остаток ("+product.getCodeProduct()+") в паллетах на 1700 складе: "+product.getOstInPallets1700());
 //				System.out.println("Остаток ("+product.getCodeProduct()+") в паллетах на 1800 складе: "+product.getOstInPallets1800());
 //				System.out.println();
-				Double summOstPallets = product.getOstInPallets1700() + product.getOstInPallets1800();
+				Double summOstPallets = null;
+				if(numStock.intValue() == 1700 || numStock.intValue() == 1800) {
+					summOstPallets = product.getOstInPallets1700() + product.getOstInPallets1800();
+				}else {
+					summOstPallets = product.getOstInPallets();
+				}				
 				switch (numStock) {
 				case 1700:
 					if(product.getOstInPallets1700() == null || product.getBalanceStockAndReserves1700() == null) {
@@ -1224,6 +1234,7 @@ public class ReaderSchedulePlan {
 					break;
 
 				default:
+					summOstPallets = product.getOstInPallets();
 					if(product.getOstInPallets() == null || product.getBalanceStockAndReserves() == null) {
 						return new ResultMethod("В файле потребности, по "+numStock+" складу, отсутствуют данные по товару " + product.getName() + " (" + product.getCodeProduct()+").  Проверки по остаткам не проводилось.", 200);
 //						return null;

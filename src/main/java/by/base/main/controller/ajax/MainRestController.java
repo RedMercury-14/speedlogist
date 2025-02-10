@@ -332,25 +332,26 @@ public class MainRestController {
 
 	@GetMapping("/test")
 	@TimedExecution
-	public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException {
-		Map<String, Object> responseMap = new HashMap<>();
-		Date dateStart = Date.valueOf(LocalDate.now().minusDays(1));
-		Date dateFinish7Week = Date.valueOf(LocalDate.now().plusMonths(2));
-		List<Schedule> schedules = scheduleService.getSchedulesByDateOrder(dateStart, 1700); // реализация 1 пункта
-		List<Order> ordersHas7Week = orderService.getOrderByPeriodDeliveryAndListCodeContract(dateStart, dateFinish7Week, schedules); // реализация 2 пункта
-    	List<File> files = new ArrayList<File>();
-    	String appPath = servletContext.getRealPath("/");
-    	files.add(serviceLevel.checkingOrdersForORLNeeds(ordersHas7Week, dateStart, appPath));
-    	
-    	//получаем email
-    	List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.slevel");
-    	
-        LocalDate currentTime = LocalDate.now().minusDays(1);
-        String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-    	mailService.sendEmailWithFilesToUsers(servletContext, "Service level на " + currentTimeString, "Service level заказов, относительно заказов ОРЛ.\nВключает брони.\nVer 1.1", files, emails);
-    	mainChat.messegeList.clear();
-		responseMap.put("status", "200");
-		return responseMap;
+	public Map<String, Object> getTEST(HttpServletRequest request) throws ParseException {
+		String code = "1231325, 156845";
+		String str = "{\"CRC\": \"\", \"Packet\": {\"MethodName\": \"SpeedLogist.GetOrderBuyInfo\", \"Data\": "
+				+ "{\"OrderBuyGroupId\": ["+code+"]}}}";
+		Map<String, Object> response = new HashMap<>();
+		
+		try {			
+			checkJWT(marketUrl);			
+		} catch (Exception e) {
+			System.err.println("Ошибка получения jwt токена");
+		}
+		MarketDataForRequestDto dataDto3 = new MarketDataForRequestDto(code);
+		MarketPacketDto packetDto3 = new MarketPacketDto(marketJWT, "SpeedLogist.GetOrderBuyInfo", serviceNumber, dataDto3);
+		MarketRequestDto requestDto3 = new MarketRequestDto("", packetDto3);
+		String marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto3));
+		
+		response.put("status", "200");
+		response.put("responce", marketOrder2);
+		return response;
+				
 	}
 
 	/**
@@ -4285,11 +4286,7 @@ public class MainRestController {
 	@GetMapping("/manager/getRouteForInternational/{dateStart}&{dateFinish}")
 	public Set<Route> getRouteForInternational(HttpServletRequest request, @PathVariable Date dateStart, @PathVariable Date dateFinish) {
 		java.util.Date t1 = new java.util.Date();
-		Set<Route> routes = new HashSet<Route>();
-		List<Route>targetRoutes = routeService.getRouteListAsDate(dateStart, dateFinish);
-		targetRoutes.stream()
-			.filter(r-> r.getComments() != null && r.getComments().equals("international") && Integer.parseInt(r.getStatusRoute())<=8)
-			.forEach(r -> routes.add(r)); // проверяет созданы ли точки вручную, и отдаёт только международные маршруты	
+		Set<Route> routes = routeService.getRouteListAsDateForInternational(dateStart, dateFinish);		
 		java.util.Date t2 = new java.util.Date();
 		System.out.println("getRouteForInternational :" + (t2.getTime() - t1.getTime()) + " ms");
 		return routes;

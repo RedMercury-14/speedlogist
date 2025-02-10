@@ -4,6 +4,8 @@ import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,12 +22,14 @@ public class ScheduleServiceImpl implements ScheduleService{
 	@Autowired
 	ScheduleDAO scheduleDAO;
 	
+	@Transactional
 	@Override
 	public Schedule getScheduleById(Integer id) {
 		// TODO Auto-generated method stub
 		return scheduleDAO.getScheduleById(id);
 	}
 
+	@Transactional
 	@Override
 	@TimedExecution
 	public Schedule getScheduleByNumContract(Long num) {
@@ -33,86 +37,102 @@ public class ScheduleServiceImpl implements ScheduleService{
 		return scheduleDAO.getScheduleByNumContract(num);
 	}
 
+	@Transactional
 	@Override
 	public Integer saveSchedule(Schedule schedule) {
 		// TODO Auto-generated method stub
 		return scheduleDAO.saveOrder(schedule);
 	}
 
+	@Transactional
 	@Override
 	public void updateSchedule(Schedule schedule) {
 		scheduleDAO.updateOrder(schedule);
 		
 	}
 
+	@Transactional
 	@Override
 	public void deleteOrderById(Integer id) {
 		scheduleDAO.deleteOrderById(id);
 	}
 
+	@Transactional
 	@Override
 	public List<Schedule> getSchedulesByStock(Integer numStock) {
 		return scheduleDAO.getSchedulesByStock(numStock);
 	}
 
+	@Transactional
 	@Override
 	public List<Schedule> getSchedulesByDateOrder(Date date, Integer numStock) {
 		return scheduleDAO.getSchedulesByDateOrder(date, numStock);
 	}
 
+	@Transactional
 	@Override
 	public List<Schedule> getSchedulesListRC() {
 		return scheduleDAO.getSchedulesListRC();
 	}
 
+	@Transactional
 	@Override
 	@Deprecated
 	public List<Schedule> getSchedulesListTO() {
   		return scheduleDAO.getSchedulesListTO();
 	}
 
+	@Transactional
 	@Override
 	@Deprecated
 	public List<Schedule> getSchedulesListTOContract(String contractCode) {
 		return scheduleDAO.getSchedulesListTOContract(contractCode);
 	}
 
+	@Transactional
 	@Override
 	public List<Schedule> getSchedulesListTOСounterparty(String counterpartyName) {
 		return scheduleDAO.getSchedulesListTOСounterparty(counterpartyName);
 	}
 
+	@Transactional
 	@Override
 	@Deprecated
 	public List<Schedule> getSchedulesByTOType(String toType) {
 		return scheduleDAO.getSchedulesByTOType(toType);
 	}
 
+	@Transactional
 	@Override
 	public Schedule getScheduleByNumContractAndNUmStock(Long num, Integer numStock) {
 		return scheduleDAO.getScheduleByNumContractAndNUmStock(num, numStock);
 	}
 
+	@Transactional
 	@Override
 	public List<CounterpartyDTO> getcounterpartyListRC() {
 		return scheduleDAO.getcounterpartyListRC();
 	}
 
+	@Transactional
 	@Override
 	public List<CounterpartyDTO> getcounterpartyListTO() {
 		return scheduleDAO.getcounterpartyListTO();
 	}
 
+	@Transactional
 	@Override
 	public Schedule getScheduleByNumContractAndNumStock(Long num, Integer shock) {
 		return scheduleDAO.getScheduleByNumContractAndNumStock(num, shock);
 	}
 
+	@Transactional
 	@Override
 	public List<CounterpartyDTO> getUnicCodeContractTO() {
 		return scheduleDAO.getUnicCodeContractTO();
 	}
 
+	@Transactional
 	@Override
 	public int updateScheduleBycounterpartyCodeHascodeNameOfQuantumCounterparty(Long counterpartyCode,
 			String codeNameOfQuantumCounterparty) {
@@ -125,6 +145,7 @@ public class ScheduleServiceImpl implements ScheduleService{
 	 * <br>Возвращает список всех графиков на ТО по номеру контракта - и временных, и постоянных</br>
 	 * @return
 	 */
+	@Transactional
 	@Override
 	public List<Schedule> getSchedulesListTOContractWithTemp(Long contract) {
 		return scheduleDAO.getSchedulesListTOContractWithTemp(contract);
@@ -136,6 +157,7 @@ public class ScheduleServiceImpl implements ScheduleService{
 	 * <br>Возвращает список только актуальных графиков на ТО - либо временных, либо постоянных</br>
 	 * @return
 	 */
+	@Transactional
 	@Override
 	public List<Schedule> getSchedulesListTOWithTemp() {
 		return scheduleDAO.getSchedulesListTOWithTemp();
@@ -146,6 +168,7 @@ public class ScheduleServiceImpl implements ScheduleService{
 	 * <br>Возвращает список графиков на ТО по номеру контракта и номеру ТО - и временных, и постоянных</br>
 	 * @return
 	 */
+	@Transactional
 	@Override
 	public List<Schedule> getScheduleByNumContractAndNUmStockWithTemp(Long num, Integer numStock) {
 		return scheduleDAO.getScheduleByNumContractAndNUmStockWithTemp(num, numStock);
@@ -156,6 +179,7 @@ public class ScheduleServiceImpl implements ScheduleService{
 	 * <br>Проверяет создаваемый график на пересечение временных границ с существующими графиками</br>
 	 * @return
 	 */
+	@Transactional
 	@Override
 	public boolean checkScheduleIntersection(List<Schedule> existingSchedules, Schedule newSchedule){
 		for (Schedule sch: existingSchedules) {
@@ -181,6 +205,7 @@ public class ScheduleServiceImpl implements ScheduleService{
 	 * @param toType
 	 * @return
 	 */
+	@Transactional
 	@Override
 	public List<Schedule> getSchedulesByTOTypeWithTemp(String toType) {
 		return scheduleDAO.getSchedulesByTOTypeWithTemp(toType);
@@ -192,6 +217,7 @@ public class ScheduleServiceImpl implements ScheduleService{
 	 * @param allSchedules
 	 * @return
 	 */
+	@Transactional
 	@Override
 	public List<Schedule> getSchedulesListTOOnlyActual(List<Schedule> allSchedules){
 		List<Schedule> actualSchedules = new ArrayList<>(allSchedules);
@@ -209,21 +235,25 @@ public class ScheduleServiceImpl implements ScheduleService{
 		return actualSchedules;
 	}
 
+	@Transactional
 	@Override
 	public List<Schedule> getSchedulesListTOContractOnlyTemp(Long num) {
 		return scheduleDAO.getSchedulesListTOContractOnlyTemp(num);
 	}
 
+	@Transactional
 	@Override
 	public List<Schedule> getSchedulesListTOAll() {
 		return scheduleDAO.getSchedulesListTOAll();
 	}
 
+	@Transactional
 	@Override
 	public List<CounterpartyDTO> getСounterpartyListRCNameOnly() {
 		return scheduleDAO.getСounterpartyListRCNameOnly();
 	}
 
+	@Transactional
 	@Override
 	public List<Schedule> getAllSchedulesByNumContractAndNumStock(Long num, Integer shock) {
 		return scheduleDAO.getAllSchedulesByNumContractAndNumStock(num, shock);

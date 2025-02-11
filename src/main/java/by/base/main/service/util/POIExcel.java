@@ -98,6 +98,7 @@ import by.base.main.service.ActService;
 import by.base.main.service.MessageService;
 import by.base.main.service.OrderService;
 import by.base.main.service.ProductService;
+import by.base.main.service.RouteService;
 import by.base.main.service.ScheduleService;
 import by.base.main.service.ServiceException;
 
@@ -114,7 +115,7 @@ public class POIExcel {
 	private ShopDAO shopDAO;
 
 	@Autowired
-	private RouteDAO routeDAO;
+	private RouteService routeDAO;
 
 	@Autowired
 	private RouteHasShopDAO routeHasShopDAO;

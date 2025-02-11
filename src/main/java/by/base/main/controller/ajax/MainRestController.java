@@ -18,7 +18,11 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.Time;
@@ -350,6 +354,72 @@ public class MainRestController {
 		
 		response.put("status", "200");
 		response.put("responce", marketOrder2);
+		return response;
+				
+	}
+	
+	/**
+	 * GPT
+	 * @param request
+	 * @return
+	 * @throws ParseException
+	 * @throws InterruptedException 
+	 * @throws IOException 
+	 */
+	@GetMapping("/gpt/{message}")
+	@TimedExecution
+	public Map<String, Object> getGPT(HttpServletRequest request,
+			@PathVariable String message) throws ParseException, IOException, InterruptedException {
+		Map<String, Object> response = new HashMap<>();
+		
+		System.out.println("Начало!");
+		
+	  	  // Создаем HTTP клиент
+	    HttpClient client = HttpClient.newHttpClient();
+	        
+	        // Формируем тело запроса
+	    String jsonFirst = "{\n" +
+	                      "  \"model\": \"mistral\",\n" +
+	                      "  \"messages\": [{\"role\": \"user\", \"content\": \"Привет, как дела?\"}],\n"
+	                      + "}";
+	    
+//	    String jsonMain = "{\n" +
+//                "  \"model\": \"mistral\",\n" +
+//                "  \"messages\": [{\"role\": \"user\", \"content\": \""+message+"\"}],\n"
+//                + "\"conversation_id\": \"chatcmpl-468\"" +
+//                "}";
+	    
+	    String jsonMain = "{"
+                + "\"model\": \"mistral\","
+                + "\"messages\": ["
+                + "{\"role\": \"system\", \"content\": \"Отвечай только кратко и строго на русском.\"},"
+                + "{\"role\": \"user\", \"content\": \""+message+"\"}"
+                + "],"
+                + "\"temperature\": 0.1,"
+                + "\"max_tokens\": 100"
+                + "}";
+	    
+	    
+	    
+	    
+	    System.out.println("запрос!");
+	    // Создаем запрос
+	    HttpRequest requestGPT = HttpRequest.newBuilder()
+	             .uri(URI.create("http://127.0.0.1:11434/v1/chat/completions"))
+	             .header("Content-Type", "application/json")
+	             .POST(HttpRequest.BodyPublishers.ofString(jsonMain))
+	             .build();
+	    System.out.println("отправляем запрос!");
+	        
+	    // Отправляем запрос и получаем ответ
+	    HttpResponse<String> responseGPT = client.send(requestGPT, HttpResponse.BodyHandlers.ofString());
+	    System.out.println("Получаем ответ!");
+
+	    // Выводим ответ
+	    System.out.println("Ответ от Ollama: " + responseGPT.body());
+		
+		response.put("status", "200");
+		response.put("responseGPT", responseGPT.body());
 		return response;
 				
 	}

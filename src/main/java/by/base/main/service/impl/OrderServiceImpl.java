@@ -27,88 +27,88 @@ public class OrderServiceImpl implements OrderService {
 	private OrderDAO orderDAO;
 
 	@Override
-	@Transactional
+	
 	@TimedExecution
 	public Order getOrderById(Integer id) {
 		return orderDAO.getOrderById(id);
 	}
 
 	@Override
-	@Transactional
+	
 	public List<Order> getOrderByDateCreate(Date date) {
 		return orderDAO.getOrderByDateCreate(date);
 	}
 
 	@Override
-	@Transactional
+	
 	public List<Order> getOrderByDateDelivery(Date date) {
 		return orderDAO.getOrderByDateDelivery(date);
 	}
 
 	@Override
-	@Transactional
+	
 	public Order getOrderByRoute(Route route) {
 		return orderDAO.getOrderByRoute(route);
 	}
 
 	@Override
-	@Transactional
+	
 	public List<Order> getOrderByPeriodDelivery(Date dateStart, Date dateEnd) {
 		return orderDAO.getOrderByPeriodDelivery(dateStart, dateEnd);
 	}
 
 	@Override
-	@Transactional
+	
 	public List<Order> getOrderByPeriodCreate(Date dateStart, Date dateEnd) {
 		return orderDAO.getOrderByPeriodCreate(dateStart, dateEnd);
 	}
 
 	@Override
-	@Transactional
+	
 	public Integer saveOrder(Order order) {
 		return orderDAO.saveOrder(order);
 	}
 
 	@Override
-	@Transactional
+	
 	public void updateOrder(Order order) {
 		orderDAO.updateOrder(order);
 	}
 
 	@Override
-	@Transactional
+	
 	public int updateOrderFromStatus(Order order) {
 		return orderDAO.updateOrderFromStatus(order);
 	}
 
 	@Override
-	@Transactional
+	
 	public List<Order> getOrderByPeriodCreateAndCounterparty(Date dateStart, Date dateEnd, String counterparty) {
 		return orderDAO.getOrderByPeriodCreateAndCounterparty(dateStart, dateEnd, counterparty);
 	}
 
 	@Override
-	@Transactional
+	
 	public Order getOrderByIdRoute(Integer idRoute) {
 		return orderDAO.getOrderByIdRoute(idRoute);
 	}
 
 	@Override
-	@Transactional
+	
 	public void deleteOrderById(Integer id) {
 		orderDAO.deleteOrderById(id);
 		
 	}
 
 	@Override
-	@Transactional
+	
 	public boolean checkOrderHasMarketCode(String code) {
 		// TODO Auto-generated method stub
 		return orderDAO.checkOrderHasMarketCode(code);
 	}
 
 	@Override
-	@Transactional
+	
 	public String saveOrderFromExcel(Order order) {
 		Order oldOrder = null;
 		oldOrder = orderDAO.getOrderHasMarketCode(order.getMarketNumber());
@@ -152,7 +152,7 @@ public class OrderServiceImpl implements OrderService {
 	}
 	
 	@Override
-	@Transactional
+	
 	public String saveOrderFromMarket(Order order) {
 		Order oldOrder = null;
 		oldOrder = orderDAO.getOrderHasMarketCode(order.getMarketNumber());
@@ -204,7 +204,7 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
-	@Transactional
+	
 	public String updateOrderForSlots(Order order) {
 		Timestamp dateTimeStart = order.getTimeDelivery(); // это верхняя граница проверки (время начала выгрузки)		
 		Timestamp dateTimeFinish = getTimestampEndUnload(order);// это нижняя граница времени (время окончания выгрузки)
@@ -236,7 +236,7 @@ public class OrderServiceImpl implements OrderService {
 	}
 	
 	@Override
-	@Transactional
+	
 	public Integer getSummPallInStock(Order order) {
 		Timestamp dateTimeStart = order.getTimeDelivery();
 		String numStock = null;
@@ -277,26 +277,26 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
-	@Transactional
+	
 	public Order getOrderByMarketNumber(String number) {
 		Order order = orderDAO.getOrderByMarketNumber(number);
 		return order;
 	}
 
 	@Override
-	@Transactional
+	
 	public List<Order> getOrderByPeriodCreateMarket(Date dateStart, Date dateEnd) {
 		return orderDAO.getOrderByPeriodCreateMarket(dateStart, dateEnd);
 	}
 
 	@Override
-	@Transactional
+	
 	public List<Order> getOrderByTimeDelivery(Date dateStart, Date dateEnd) {
 		return orderDAO.getOrderByTimeDelivery(dateStart, dateEnd);
 	}
 
 	@Override
-	@Transactional
+	
 	public Integer getSummPallInStockInternal(Order order) {
 		Timestamp dateTimeStart = order.getTimeDelivery();
 		String numStock = null;
@@ -326,7 +326,7 @@ public class OrderServiceImpl implements OrderService {
 
 	@Override
 	@TimedExecution
-	@Transactional
+	
 	public Integer getSummPallInStockExternal(Order order) { // оптимизирован!
 		Timestamp dateTimeStart = order.getTimeDelivery();
 		String numStock = null;
@@ -356,13 +356,13 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
-	@Transactional
+	
 	public Set<Order> getListOrdersLogist(Date dateStart, Date dateEnd) {
 		return orderDAO.getListOrdersLogist(dateStart, dateEnd);
 	}
 
 	@Override
-	@Transactional
+	
 	public List<Order> getOrderByPeriodDeliveryAndSlots(Date dateStart, Date dateEnd) {
 		return orderDAO.getOrderByPeriodDeliveryAndSlots(dateStart, dateEnd);
 	}
@@ -371,27 +371,27 @@ public class OrderServiceImpl implements OrderService {
 	 * очень долго работает!
 	 */
 	@Override
-	@Transactional
+	
 	public List<OrderDTO> getOrderDTOByPeriodDeliveryAndSlots(Date dateStart, Date dateEnd) {		
 
 	    return orderDAO.getOrderDTOByPeriodDeliveryAndSlots(dateStart, dateEnd);
 	}
 
 	@Override
-	@Transactional
+	
 	public List<OrderDTO> getOrderDTOByPeriodDelivery(Date dateStart, Date dateEnd) {
 		return orderDAO.getOrderDTOByPeriodDelivery(dateStart, dateEnd);
 	}
 
 	@Override
 	@TimedExecution
-	@Transactional
+	
 	public List<Order> getOrderByPeriodDeliveryAndCodeContract(Date dateStart, Date dateEnd, String numContract) {
 		return orderDAO.getOrderByPeriodDeliveryAndCodeContract(dateStart, dateEnd, numContract);
 	}
 
 	@Override
-	@Transactional
+	
 	public List<Order> getOrderByPeriodDeliveryAndListCodeContract(Date dateStart, Date dateEnd, List<Schedule> schedules) {
 //		Set<String> numContracts = new HashSet<String>();
 //		for (Schedule schedule : schedules) {
@@ -407,26 +407,26 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
-	@Transactional
+	
 	public List<Order> getOrderByLink(Integer link) {
 		return orderDAO.getOrderByLink(link);
 	}
 
 	@Override
-	@Transactional
+	
 	public List<Order> getOrderByPeriodSlotsAndProduct(Date dateStart, Date dateFinish, Product product) {
 		return orderDAO.getOrderByPeriodSlotsAndProduct(dateStart, dateFinish, product);
 	}
 
 	@Override
-	@Transactional
+	
 	public List<Order> getOrderGroupByPeriodSlotsAndProduct(Date dateStart, Date dateFinish, List<Long> goodsIds) {
 		return orderDAO.getOrderGroupByPeriodSlotsAndProduct(dateStart, dateFinish, goodsIds);
 	}
 
 	@Override
 	@TimedExecution
-	@Transactional
+	
 	public List<Order> getOrderGroupByPeriodSlotsAndProductNotJOIN(Date dateStart, Date dateFinish,
 			List<Long> goodsIds) {
 		return orderDAO.getOrderGroupByPeriodSlotsAndProductNotJOIN(dateStart, dateFinish, goodsIds);
@@ -434,69 +434,69 @@ public class OrderServiceImpl implements OrderService {
 
 	@Override
 	@TimedExecution
-	@Transactional
+	
 	public List<Order> getOrderByPeriodDeliveryAndCodeContractNotJOIN(Date dateStart, Date dateEnd,
 			String numContract) {
 		return orderDAO.getOrderByPeriodDeliveryAndCodeContractNotJOIN(dateStart, dateEnd, numContract);
 	}
 
 	@Override
-	@Transactional
+	
 	public List<Order> getOrderByTimeDeliveryAndNumStock(Date dateStart, Date dateEnd, Integer numStock) {
 		return orderDAO.getOrderByTimeDeliveryAndNumStock(dateStart, dateEnd, numStock);
 	}
 
 	@Override
-	@Transactional
+	
 	public List<Order> getOrderByFirstLoadSlotAndDateOrderOrlAndGoodsId(Date dateStart, Date dateEnd, List<Long> goodsIds, Date dateOrderOrl) {
 		return orderDAO.getOrderByFirstLoadSlotAndDateOrderOrlAndGoodsId(dateStart, dateEnd, goodsIds, dateOrderOrl);
 	}
 
 	@Override
-	@Transactional
+	
 	public List<Order> getOrderByFirstLoadSlotAndDateOrderOrl(Date dateStart, Date dateEnd, Date dateOrderOrl) {
 		return orderDAO.getOrderByFirstLoadSlotAndDateOrderOrl(dateStart, dateEnd, dateOrderOrl);
 	}
 
 
 	@Override
-	@Transactional
+	
 	public Map<String, Order> getOrdersByListMarketNumber(List<String> marketNumber) {
 		return orderDAO.getOrdersByListMarketNumber(marketNumber);
 	}
 
 	@Override
-	@Transactional
+	
 	public List<Order> getOrderByDateOrderORLAndNumStock(Date dateOrderORL, Integer numStock) {
 		return orderDAO.getOrderByDateOrderORLAndNumStock(dateOrderORL, numStock);
 	}
 
 	@Override
-	@Transactional
+	
 	public List<Order> getLastOrderByGoodId(Long goodsId) {
 		return  orderDAO.getLastOrderByGoodId(goodsId);
 	}
 
 	@Override
-	@Transactional
+	
 	public List<Order> getOrdersByGoodId(Long goodsId) {
 		return orderDAO.getOrdersByGoodId(goodsId);
 	}
 
 	@Override
-	@Transactional
+	
 	public java.util.Date getLastTime(Long goodsId){
 		return orderDAO.getLastTime(goodsId);
 	}
 
 	@Override
-	@Transactional
+	
 	public List<Order> getOrderProductNotJOIN(Long goodsIds){
 		return  orderDAO.getOrderProductNotJOIN(goodsIds);
 	}
 
 	@Override
-	@Transactional
+	
 	public List<Order> getSpecialOrdersByListGoodId(List<Long> goodsIds) {
 		return orderDAO.getSpecialOrdersByListGoodId(goodsIds);
 	}

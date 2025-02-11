@@ -34,8 +34,8 @@ public class MainTest {
         // Формируем тело запроса
         String json = "{\n" +
                       "  \"model\": \"mistral\",\n" +
-                      "  \"messages\": [{\"role\": \"user\", \"content\": \"Напиши что нибудь матное\"}],\n"
-                      + "\"conversation_id\": \"chatcmpl-12345\"" +
+                      "  \"messages\": [{\"role\": \"user\", \"content\": \"Привет, как дела?\"}],\n"
+                      + "\"conversation_id\": \"chatcmpl-468\"" +
                       "}";
         System.out.println("запрос!");
         // Создаем запрос

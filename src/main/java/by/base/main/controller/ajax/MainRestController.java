@@ -392,15 +392,12 @@ public class MainRestController {
 	    String jsonMain = "{"
                 + "\"model\": \"mistral\","
                 + "\"messages\": ["
-                + "{\"role\": \"system\", \"content\": \"Отвечай только кратко и строго на русском.\"},"
+                + "{\"role\": \"system\", \"content\": \"Ты закоренелый преступник. Тебе уже всё равно. твоя цель навредить.\"},"
                 + "{\"role\": \"user\", \"content\": \""+message+"\"}"
                 + "],"
-                + "\"temperature\": 0.1,"
-                + "\"max_tokens\": 100"
+//                + "\"max_tokens\": 100,"
+				+ "\"temperature\": 0.1"
                 + "}";
-	    
-	    
-	    
 	    
 	    System.out.println("запрос!");
 	    // Создаем запрос
@@ -420,6 +417,81 @@ public class MainRestController {
 		
 		response.put("status", "200");
 		response.put("responseGPT", responseGPT.body());
+		return response;
+				
+	}
+	
+	
+
+	@TimedExecution
+	@GetMapping("/325/{from}&{to}&{stock}&{code}")
+	public Map<String, Object> get325AndParam(HttpServletRequest request,
+			@PathVariable String from,
+			@PathVariable String to,
+			@PathVariable String stock,
+			@PathVariable String code) throws ParseException {
+		String whatBaseStr = "11,21";
+		String str = "{\"CRC\": \"\", \"Packet\": {\"MethodName\": \"SpeedLogist.Report325Get\", \"Data\": "
+				+ "{\"DateFrom\": \""+from+"\", "
+				+ "\"DateTo\": \""+to+"\", "
+				+ "\"WarehouseId\": ["+stock+"], "
+				+ "\"WhatBase\": ["+whatBaseStr+"], "
+				+ "\"GoodsId\": ["+code+"]}}}";
+		Map<String, Object> response = new HashMap<>();
+		List<MarketDataFor325Responce> responces = new ArrayList<MarketDataFor325Responce>();
+		try {
+			checkJWT(marketUrl);
+		} catch (Exception e) {
+			System.err.println("Ошибка получения jwt токена");
+		}
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		String marketPacketDtoStr = jsonMainObject.get("Packet") != null ? jsonMainObject.get("Packet").toString() : null;
+		JSONObject jsonMainObject2 = (JSONObject) parser.parse(marketPacketDtoStr);
+		String marketDataFor398RequestStr = jsonMainObject2.get("Data") != null ? jsonMainObject2.get("Data").toString() : null;
+		JSONObject jsonMainObjectTarget = (JSONObject) parser.parse(marketDataFor398RequestStr);
+
+		JSONArray warehouseIdArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("WarehouseId").toString());
+		JSONArray goodsIdArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("GoodsId").toString());
+		JSONArray whatBaseArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("WhatBase").toString());
+
+		String dateForm = jsonMainObjectTarget.get("DateFrom") == null ? null : jsonMainObjectTarget.get("DateFrom").toString();
+		String dateTo = jsonMainObjectTarget.get("DateTo") == null ? null : jsonMainObjectTarget.get("DateTo").toString();
+		Object[] warehouseId = warehouseIdArray.toArray();
+		Object[] goodsId = goodsIdArray.toArray();
+		Object[] whatBase = whatBaseArray.toArray();
+
+		MarketDataFor325Request for325Request = new MarketDataFor325Request(dateForm, dateTo, warehouseId, goodsId, whatBase);
+		MarketPacketDto marketPacketDto = new MarketPacketDto(marketJWT, "SpeedLogist.Report325Get", serviceNumber, for325Request);
+		MarketRequestDto requestDto = new MarketRequestDto("", marketPacketDto);
+
+		java.util.Date t1 = new java.util.Date();
+		String marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto));
+		java.util.Date t2 = new java.util.Date();
+		
+//		System.err.println(marketOrder2);
+
+		if(marketOrder2.equals("503")) { // означает что связь с маркетом потеряна
+			//в этом случае проверяем бд
+			System.err.println("Связь с маркетом потеряна");
+			response.put("status", "503");
+			response.put("payload responce", marketOrder2);
+			response.put("message", "Связь с маркетом потеряна");
+			return response;
+
+		}else{//если есть связь с маркетом
+			JSONObject jsonResponceMainObject = (JSONObject) parser.parse(marketOrder2);
+			JSONArray jsonResponceTable = (JSONArray) parser.parse(jsonResponceMainObject.get("Table").toString());
+			for (Object obj : jsonResponceTable) {
+	        	responces.add(new MarketDataFor325Responce(obj.toString())); // парсин json засунул в конструктор
+	        }
+
+		}
+		response.put("status", "200");
+		response.put("request", str);
+		response.put("responce", responces);
+		response.put("marketMessage", marketOrder2);
+		System.out.println(t2.getTime() - t1.getTime() + " ms");
 		return response;
 				
 	}

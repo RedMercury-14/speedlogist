@@ -4,6 +4,7 @@ import java.sql.Date;
 import java.sql.Time;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 import com.dto.RouteDTO;
 
@@ -137,4 +138,13 @@ public interface RouteService {
 	 * @return
 	 */
 	List<Route> getActualRoute(Date date);
+	
+	/**
+	 * отдаёт все маршруты для новой страницы менеджер международных маршрутов
+	 * Происходит филтрация маршрутов
+	 * @param dateStart
+	 * @param dateFinish
+	 * @return
+	 */
+	Set<Route> getRouteListAsDateForInternational(Date dateStart, Date dateFinish);
 }

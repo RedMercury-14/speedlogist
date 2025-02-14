@@ -123,7 +123,7 @@ public class PDFWriter {
 	    float[] columnWidths = {1f, 2f}; // Первая колонка будет в 2 раза уже второй
 	    table.setWidths(columnWidths);
 
-	    table.addCell(new Paragraph("Перевозчик", fontMainTextBold));
+	    table.addCell(new Paragraph("Исполнитель", fontMainTextBold));
 	    table.addCell(new Paragraph(route.getUser() != null ? route.getUser().getCompanyName() : "", fontMainText));
 	    
 	    table.addCell(new Paragraph("Выставляемая стоимость :", fontMainTextBold));
@@ -213,17 +213,19 @@ public class PDFWriter {
         document.add(importantInfo3); // Добавляем параграф в документ
         
         if(order.getControl() != null) {
-        	Paragraph importantInfo4 = new Paragraph("Не уезжать без отправки фото УКЗ ответственному логисту!", fontMainTextBoldImportant);
-        	importantInfo4.setSpacingBefore(5f); // Отступ перед параграфом
-        	document.add(importantInfo4); // Добавляем параграф в документ   
-        	
-        	String logistInfo = user.getSurname() + " " +user.getName() + " <" + user.geteMail() + ">; тел: " + user.getTelephone();
-        	Paragraph importantInfo5 = new Paragraph("Отв. : " + logistInfo, fontForRequisitesBolt);
-        	importantInfo5.setSpacingBefore(1f); // Отступ перед параграфом
-        	document.add(importantInfo5); // Добавляем параграф в документ 
+        	if(order.getControl()) {
+        		Paragraph importantInfo4 = new Paragraph("Не уезжать без отправки фото УКЗ ответственному логисту!", fontMainTextBoldImportant);
+            	importantInfo4.setSpacingBefore(5f); // Отступ перед параграфом
+            	document.add(importantInfo4); // Добавляем параграф в документ   
+            	
+            	String logistInfo = user.getSurname() + " " +user.getName() + " <" + user.geteMail() + ">; тел: " + user.getTelephone();
+            	Paragraph importantInfo5 = new Paragraph("Отв. : " + logistInfo, fontForRequisitesBolt);
+            	importantInfo5.setSpacingBefore(1f); // Отступ перед параграфом
+            	document.add(importantInfo5); // Добавляем параграф в документ 
+        	}        	
         }
 	    
-	    Paragraph paragraph = new Paragraph("Перевозчик:", fontMainTextBoldForDetails);
+	    Paragraph paragraph = new Paragraph("Исполнитель:", fontMainTextBoldForDetails);
 	    paragraph.setAlignment(Element.ALIGN_RIGHT); // Устанавливаем выравнивание по правой стороне
 	    paragraph.setSpacingBefore(20f); // Отступ перед параграфом
         document.add(paragraph); // Добавляем параграф в документ

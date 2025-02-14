@@ -90,6 +90,7 @@ import by.base.main.service.ActService;
 import by.base.main.service.MessageService;
 import by.base.main.service.OrderService;
 import by.base.main.service.ProductService;
+import by.base.main.service.RouteService;
 import by.base.main.service.ScheduleService;
 import by.base.main.service.ServiceException;
 
@@ -106,7 +107,7 @@ public class POIExcel {
 	private ShopDAO shopDAO;
 
 	@Autowired
-	private RouteDAO routeDAO;
+	private RouteService routeDAO;
 
 	@Autowired
 	private RouteHasShopDAO routeHasShopDAO;
@@ -2039,23 +2040,23 @@ public class POIExcel {
 	        XSSFCell movedFrom1700To1800 = rowI.getCell(43);
 
 	        // Третий блок - 1800
-	        XSSFCell cellWarehouseNumber1800 = rowI.getCell(44);
-	        XSSFCell cellCalculatedDailySales1800 = rowI.getCell(45);
-	        XSSFCell cellSumOst1800 = rowI.getCell(46);
-	        XSSFCell cellSumFromOrder1800 = rowI.getCell(47);
-	        XSSFCell cellMaxOtgruzimTwoStages1800 = rowI.getCell(48);
-	        XSSFCell cellMaxOstInNetwork1800 = rowI.getCell(49);
-	        XSSFCell cellOstInPallets1800 = rowI.getCell(50);
-	        XSSFCell cellOstOnRCInDays1800 = rowI.getCell(51);
-	        XSSFCell cellMaxOstNetworkInDays1800 = rowI.getCell(52);
-	        XSSFCell cellCountTOInCalculation1800 = rowI.getCell(53);
-	        XSSFCell cellCountTOLess2Days1800 = rowI.getCell(54);
-	        XSSFCell cellPercentShopsLess2Days1800 = rowI.getCell(55);
-	        XSSFCell cellKol1800 = rowI.getCell(56);
-	        XSSFCell cellSumm1800 = rowI.getCell(57);
-	        XSSFCell cell380_1800 = rowI.getCell(58);
-	        XSSFCell cellExpectedArrival1800 = rowI.getCell(59);
-	        XSSFCell movedFrom1800To1700 = rowI.getCell(60);
+	        XSSFCell cellWarehouseNumber1800 = rowI.getCell(45);
+	        XSSFCell cellCalculatedDailySales1800 = rowI.getCell(46);
+	        XSSFCell cellSumOst1800 = rowI.getCell(47);
+	        XSSFCell cellSumFromOrder1800 = rowI.getCell(48);
+	        XSSFCell cellMaxOtgruzimTwoStages1800 = rowI.getCell(49);
+	        XSSFCell cellMaxOstInNetwork1800 = rowI.getCell(50);
+	        XSSFCell cellOstInPallets1800 = rowI.getCell(51);
+	        XSSFCell cellOstOnRCInDays1800 = rowI.getCell(52);
+	        XSSFCell cellMaxOstNetworkInDays1800 = rowI.getCell(53);
+	        XSSFCell cellCountTOInCalculation1800 = rowI.getCell(54);
+	        XSSFCell cellCountTOLess2Days1800 = rowI.getCell(55);
+	        XSSFCell cellPercentShopsLess2Days1800 = rowI.getCell(56);
+	        XSSFCell cellKol1800 = rowI.getCell(57);
+	        XSSFCell cellSumm1800 = rowI.getCell(58);
+	        XSSFCell cell380_1800 = rowI.getCell(59);
+	        XSSFCell cellExpectedArrival1800 = rowI.getCell(60);
+	        XSSFCell movedFrom1800To1700 = rowI.getCell(61);
 			
 			
 	        Product product = productService.getProductByCode(Integer.parseInt(getCellValue(cellProductCode)));

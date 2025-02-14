@@ -35,6 +35,7 @@ public class UserServiceImpl implements UserService{
 	@Autowired
 	private BCryptPasswordEncoder bCryptPasswordEncoder;
 
+	
 	@Override
 	@Transactional
 	public List<User> getUserList() {
@@ -283,66 +284,77 @@ public class UserServiceImpl implements UserService{
 	}
 
 	@Override
+	@Transactional
 	public List<User> getDriverList(String companyName) {
 		return userDAO.getDriverList(companyName);
 	}
 
+	@Transactional
 	@Override
 	public User getUserByDriverCard(String num) {
 		return userDAO.getUserByNumDriverCard(num);
 	}
 
+	@Transactional
 	@Override
 	public List<User> getCarrierList() {
 		return userDAO.getCarrierList();
 	}
 
+	@Transactional
 	@Override
 	public List<User> getDesableCarrierList() {
 		return userDAO.getDesableCarrierList();
 	}
 
+	@Transactional
 	@Override
 	public void echo() {
 		System.out.println("UserService -- echo");		
 	}
 
+	@Transactional
 	@Override
 	public List<User> getUserByYNP(String YNP) {
 		return userDAO.getUserByYNP(YNP);
 	}
 	
-	private String getCompanyName() {
-		String name = SecurityContextHolder.getContext().getAuthentication().getName();	
-		String companyName = userDAO.getUserByLogin(name).getCompanyName();
-		return companyName;
-		
-	}
+//	private String getCompanyName() {
+//		String name = SecurityContextHolder.getContext().getAuthentication().getName();	
+//		String companyName = userDAO.getUserByLogin(name).getCompanyName();
+//		return companyName;
+//		
+//	}
 	private User getThisUser() {
 		String name = SecurityContextHolder.getContext().getAuthentication().getName();	
 		return userDAO.getUserByLogin(name);
 	}
 
+	@Transactional
 	@Override
 	public Integer getCountUserInDB() {		
 		return userDAO.getCountUserInDB();
 	}
 
+	@Transactional
 	@Override
 	public List<User> getCarrierListV2() {
 		return userDAO.getCarrierListV2();
 	}
 
+	@Transactional
 	@Override
 	public int updateUserInBaseDocuments(int idUser, String text) {
 		return userDAO.updateUserInBaseDocuments(idUser, text);
 	}
 
+	@Transactional
 	@Override
 	public User saveNewDriver(User user) {
 		return userDAO.saveNewDriver(user);
 	}
 
+	@Transactional
 	@Override
 	public List<User> getEmployeesList() {
 		return userDAO.getEmployeesList();

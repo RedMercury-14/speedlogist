@@ -3,7 +3,9 @@ package by.base.main.service.impl;
 import java.sql.Date;
 import java.sql.Time;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.transaction.Transactional;
 
@@ -29,23 +31,26 @@ public class RouteServiceImpl implements RouteService{
 	@Autowired
 	private UserDAO userDAO;
 	
-	
+	@Transactional
 	@Override
 	public List<Route> getRouteList() {
 		return routeDAO.getRouteList();
 	}
 
+	@Transactional
 	@Override
 	public void saveOrUpdateRoute(Route route) {
 		routeDAO.saveOrUpdateRoute(route);
 		
 	}
 
+	@Transactional
 	@Override
 	public Route getRouteById(int id) {
 		return routeDAO.getRouteById(id);
 	}
 
+	@Transactional
 	@Override
 	public Route getRouteByDirection(String login) {
 		return routeDAO.getRouteByDirection(login);
@@ -63,11 +68,13 @@ public class RouteServiceImpl implements RouteService{
 //		
 //	}
 
+	@Transactional
 	@Override
 	public Route getLastRoute() {
 		return routeDAO.getLastRoute();
 	}
 
+	@Transactional
 	@Override
 	public Tender parseTenderByRourte(Route route) {		
 		return new Tender(route.getIdRoute(), route.getNumStock(), route.getDateLoadPreviously(), 
@@ -78,6 +85,7 @@ public class RouteServiceImpl implements RouteService{
 				route.getTruck(), route.getRoteHasShop());
 	}
 
+	@Transactional
 	@Override
 	public void unparseTenderAndUpdateByRourteAndUpdate(Tender tender) {
 		Route route = new Route();
@@ -100,21 +108,25 @@ public class RouteServiceImpl implements RouteService{
 		routeDAO.saveOrUpdateRoute(route);
 	}
 
+	@Transactional
 	@Override
 	public List<Route> getRouteListAsDate(Date dateStart, Date dateFinish) {
 		return routeDAO.getRouteListAsDate(dateStart, dateFinish);
 	}
 
+	@Transactional
 	@Override
 	public List<Route> getRouteListAsDateAndStatus(Date dateStart, Date dateFinish, String stat1, String stat2) {
 		return routeDAO.getRouteListAsDateAndStatus(dateStart, dateFinish, stat1, stat2);
 	}
 
+	@Transactional
 	@Override
 	public List<Route> getRouteListAsStatus(String stat1, String stat2) {
 		return routeDAO.getRouteListAsStatus(stat1, stat2);
 	}
 
+	@Transactional
 	@Override
 	public List<Route> getRouteListByUser() {
 		String name = SecurityContextHolder.getContext().getAuthentication().getName();	
@@ -122,11 +134,13 @@ public class RouteServiceImpl implements RouteService{
 		return routeDAO.getRouteListByUser(user);
 	}
 
+	@Transactional
 	@Override
 	public List<Route> getRouteListAsComment(String comment) {
 		return routeDAO.getRouteListAsComment(comment);
 	}
 
+	@Transactional
 	@Override
 	public void deleteRouteByIdFromMeneger(Integer idRoute) {
 		Route route = routeDAO.getRouteById(idRoute);
@@ -134,21 +148,25 @@ public class RouteServiceImpl implements RouteService{
 		routeDAO.saveOrUpdateRoute(route);		
 	}
 
+	@Transactional
 	@Override
 	public int updateRouteInBase(Integer idRoute, Integer finishCost, String currency, User user, String statusRoute) {
 		return routeDAO.updateRouteInBase(idRoute, finishCost, currency, user, statusRoute);
 	}
 	
+	@Transactional
 	@Override
 	public int updateRouteInBase(Integer idRoute, String statusRoute) {
 		return routeDAO.updateRouteInBase(idRoute, statusRoute);
 	}
 
+	@Transactional
 	@Override
 	public List<Route> getRouteListAsRouteDirection(Route route) {
 		return routeDAO.getRouteListAsRouteDirection(route);
 	}
 
+	@Transactional
 	@Override
 	public List<Route> getRouteListAsDateAndUser(Date dateStart, Date dateFinish) {
 		return routeDAO.getRouteListAsDateAndUser(dateStart, dateFinish, getThisUser());
@@ -160,62 +178,73 @@ public class RouteServiceImpl implements RouteService{
 		return user;
 	}
 
+	@Transactional
 	@Override
 	public int updateRouteInBase(Integer idRoute, Date dateLoadActually, Time timeLoadActually, Date dateUnloadActually,
 			Time timeUnloadActually, Truck truck, User driver) {
 		return routeDAO.updateRouteInBase(idRoute, dateLoadActually, timeLoadActually, dateUnloadActually, timeUnloadActually, truck, driver);
 	}
 
+	@Transactional
 	@Override
 	public int updateRouteInBase(Integer idRoute, Date dateLoadPreviously) {
 		return routeDAO.updateRouteInBase(idRoute, dateLoadPreviously);
 	}
 
+	@Transactional
 	@Override
 	public int updateDropRouteDateOfCarrier(Integer idRoute) {
 		return routeDAO.updateDropRouteDateOfCarrier(idRoute);
 	}
 
+	@Transactional
 	@Override
 	public Integer saveRouteAndReturnId(Route route) {
 		return routeDAO.saveRouteAndReturnId(route);
 	}
 
+	@Transactional
 	@Override
 	public List<Route> getRouteListParticipated(User user) {
 		// TODO Auto-generated method stub
 		return routeDAO.getRouteListParticipated(user);
 	}
 
+	@Transactional
 	@Override
 	public List<Route> getRouteListByUserHasPeriod(User user, LocalDate start, LocalDate end) {
 		// TODO Auto-generated method stub
 		return routeDAO.getRouteListByUserHasPeriod(user, start, end);
 	}
-
+	
+	@Transactional
 	@Override
 	public List<Route> getMaintenanceListAsDate(Date dateStart, Date dateFinish) {
 		// TODO Auto-generated method stub
 		return routeDAO.getMaintenanceListAsDate(dateStart, dateFinish);
 	}
 
+	@Transactional
 	@Override
 	public List<Route> getMaintenanceListAsDateAndLogin(Date dateStart, Date dateFinish, User user) {
 		// TODO Auto-generated method stub
 		return routeDAO.getMaintenanceListAsDateAndLogin(dateStart, dateFinish, user);
 	}
 
+	@Transactional
 	@Override
 	public List<RouteDTO> getRouteListAsDateDTO(Date dateStart, Date dateFinish) {
 		return routeDAO.getRouteListAsDateDTO(dateStart, dateFinish);
 	}
 
+	@Transactional
 	@Override
 	public void saveRoute(Route route) {
 		routeDAO.saveRoute(route);
 		
 	}
 
+	@Transactional
 	@Override
 	public void updateRoute(Route route) {
 		routeDAO.updateRoute(route);
@@ -225,6 +254,17 @@ public class RouteServiceImpl implements RouteService{
 	@Override
 	public List<Route> getActualRoute(Date date) {
 		return routeDAO.getActualRoute(date);
+	}
+
+	@Transactional
+	@Override
+	public Set<Route> getRouteListAsDateForInternational(Date dateStart, Date dateFinish) {
+		Set<Route> routes = new HashSet<Route>();
+		List<Route>targetRoutes = routeDAO.getRouteListAsDate(dateStart, dateFinish);
+		targetRoutes.stream()
+			.filter(r-> r.getComments() != null && r.getComments().equals("international") && Integer.parseInt(r.getStatusRoute())<=8)
+			.forEach(r -> routes.add(r)); // проверяет созданы ли точки вручную, и отдаёт только международные маршруты	
+		return routes;
 	}
 
 	

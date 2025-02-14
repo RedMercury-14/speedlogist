@@ -614,6 +614,9 @@ public class PDFWriter {
 			act.setColumnTollRoads(columnTollRoads);
 			act.setColumnTotal(columnTotal);
 			act.setColumnVeigthCargo(columnVeigthCargo);
+			act.setCarrier(carrier);
+			act.setCarrierHead(carrierHead);
+			act.setLogist(logist);			
 			actService.saveOrUpdateAct(act);
 	        return 1;
 		}
@@ -862,6 +865,9 @@ public class PDFWriter {
 					act.setColumnTollRoads(columnTollRoads);
 					act.setColumnTotal(columnTotal);
 					act.setColumnVeigthCargo(columnVeigthCargo);
+					act.setCarrier(carrier);
+					act.setCarrierHead(carrierHead);
+					act.setLogist(logist);
 					actService.saveOrUpdateAct(act);
 					
 					//обнуляем общие значения
@@ -1114,6 +1120,9 @@ public class PDFWriter {
 					act.setColumnTollRoads(columnTollRoads);
 					act.setColumnTotal(columnTotal);
 					act.setColumnVeigthCargo(columnVeigthCargo);
+					act.setCarrier(carrier);
+					act.setCarrierHead(carrierHead);
+					act.setLogist(logist);
 					actService.saveOrUpdateAct(act);
 				}
 				
@@ -1163,6 +1172,24 @@ public class PDFWriter {
 		com.itextpdf.text.Font fontMainTextBold = FontFactory.getFont(path + "resources/others/fonts/DejaVuSans-Bold.ttf", "cp1251", BaseFont.EMBEDDED, 6);
 //		com.itextpdf.text.Font fontWatermark = new Font(Font.FontFamily.HELVETICA, 34, Font.BOLD, new GrayColor(0.5f));
 		System.err.println(path+"resources/others/");
+		
+		String columnDateLoad = "";
+		String columnDateUnload = "";
+		String columnNameRoute = "";
+		String columnNumTruck = "";
+		String columnNumRouteList = "";
+		String columnNumDocument = "";
+		String columnVeigthCargo = "";
+		String columnSummCost = "";
+		String columnNdsSumm = ""; 
+		String columnTollRoads = ""; 
+		String columnTotal = ""; 
+		
+		String carrier = "";
+		String carrierHead = "";
+//		String carrierDriver = "";
+//		String order = "";
+		String logist = "";
 		
 		Document document = new Document();
         document.setPageSize(PageSize.A4.rotate()); // поворачиваем на альбомную ориентацию		
@@ -1257,21 +1284,30 @@ public class PDFWriter {
 		String currency = routes.get(0).getStartCurrency();
 		for (Route route : routes) {
 			table.addCell(new PdfPCell(new Phrase(route.getDateLoadPreviously().format(formatter), fontMainText)));
+			columnDateLoad = columnDateLoad +route.getDateLoadPreviously().format(formatter)+"^";
 	        table.addCell(new PdfPCell(new Phrase(route.getDateUnload(), fontMainText)));
+	        columnDateUnload = columnDateUnload + route.getDateUnload()+"^";
 	        table.addCell(new PdfPCell(new Phrase(route.getIdRoute().toString(), fontMainText)));
 	        table.addCell(new PdfPCell(new Phrase(route.getRouteDirection(), fontMainText)));
+	        columnNameRoute = columnNameRoute + route.getRouteDirection() + "^";
 	        if(route.getNumTruckAndTrailer() != null) {
 	        	table.addCell(new PdfPCell(new Phrase(route.getNumTruckAndTrailer(), fontMainText)));
+	        	columnNumTruck = columnNumTruck + route.getNumTruckAndTrailer() + "^";
 	        }else {
 	        	table.addCell(new PdfPCell(new Phrase(route.getTruck().getNumTruck() + "/" + route.getTruck().getNumTrailer(), fontMainText)));
+	        	columnNumTruck = columnNumTruck + route.getNumTruckAndTrailer() + "/" + route.getTruck().getNumTrailer() + "^";
 	        }
 	        table.addCell(new PdfPCell(new Phrase(route.getNumWayList(), fontMainText)));
+	        columnNumRouteList  = columnNumRouteList  + route.getNumWayList() + "^";
 	        table.addCell(new PdfPCell(new Phrase(route.getCmr(), fontMainText)));
+	        columnNumDocument = columnNumDocument + route.getCmr() + "^";
 	        table.addCell(new PdfPCell(new Phrase(route.getCargoWeightForAct(), fontMainText)));
+	        columnVeigthCargo = columnVeigthCargo + route.getCargoWeightForAct() + "^";
 	        cost = cost + route.getFinishPrice();
 	        expeditionCost = expeditionCost + Double.parseDouble(route.getExpeditionCost().toString());
 	        Integer price = route.getFinishPrice() - route.getExpeditionCost();
 	        table.addCell(new PdfPCell(new Phrase(price.toString(), fontMainText))); // финальная цена
+	        columnSummCost = columnSummCost + route.getFinishPrice().toString()+ "^";
 	        double totalNDS = 0.0;
 			way = way + Double.parseDouble(route.getCostWay());
 			nds = nds + totalNDS; 
@@ -1280,6 +1316,7 @@ public class PDFWriter {
 					+ Double.parseDouble(route.getCostWay());
         	Double costAndNDS = route.getFinishPrice() + roundВouble(totalNDS, 2)+ roundВouble(Double.parseDouble(route.getCostWay()), 2);
 	        table.addCell(new PdfPCell(new Phrase(price.toString(), fontMainText)));
+	        columnTotal = columnTotal + price.toString() + "^";
 		}
 		document.add(table);
 		
@@ -1371,6 +1408,21 @@ public class PDFWriter {
 		act.setCurrency(currency);
 		act.setDate(LocalDate.now());
 		act.setTime(LocalDateTime.now().format(formatter2).toString());
+		
+		act.setColumnDateLoad(columnDateLoad);
+		act.setColumnDateUnload(columnDateUnload);
+		act.setColumnNameRoute(columnNameRoute);
+		act.setColumnNdsSumm(columnNdsSumm);
+		act.setColumnNumDocument(columnNumDocument);
+		act.setColumnNumRouteList(columnNumRouteList);
+		act.setColumnNumTruck(columnNumTruck);
+		act.setColumnSummCost(columnSummCost);
+		act.setColumnTollRoads(columnTollRoads);
+		act.setColumnTotal(columnTotal);
+		act.setColumnVeigthCargo(columnVeigthCargo);
+		act.setCarrier(carrier);
+		act.setCarrierHead(carrierHead);
+		act.setLogist(logist);
 		actService.saveOrUpdateAct(act);
         return 1;
 	}

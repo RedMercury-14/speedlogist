@@ -335,6 +335,25 @@ public class PDFWriter {
 //		com.itextpdf.text.Font fontWatermark = new Font(Font.FontFamily.HELVETICA, 34, Font.BOLD, new GrayColor(0.5f));
 		System.err.println(path+"resources/others/");
 		
+		String columnDateLoad = "";
+		String columnDateUnload = "";
+		String columnNameRoute = "";
+		String columnNumTruck = "";
+		String columnNumRouteList = "";
+		String columnNumDocument = "";
+		String columnVeigthCargo = "";
+		String columnSummCost = "";
+		String columnNdsSumm = ""; 
+		String columnTollRoads = ""; 
+		String columnTotal = ""; 
+		
+		String carrier = "";
+		String carrierHead = "";
+//		String carrierDriver = "";
+//		String order = "";
+		String logist = "";
+		
+		
 		if(numPage == 0) { // самый первый прогон документа.
 			Document document = new Document();
 	        document.setPageSize(PageSize.A4.rotate()); // поворачиваем на альбомную ориентацию		         
@@ -434,40 +453,59 @@ public class PDFWriter {
 			double way = 0.0;
 			double costAndNdsValue = 0.0;
 			String currency = routes.get(0).getStartCurrency();
-			for (Route route : routes) {
+			for (Route route : routes) {				
+				carrier = carrier + route.getUser().getCompanyName()+"^";
+				carrierHead = carrierHead + directOfOOO + "^";
+//				carrierDriver = carrierDriver + route.getDriver().getSurname() + " " + route.getDriver().getName() + "^";
+				logist = logist + route.getLogistInfo() + "^";
+				
 				table.addCell(new PdfPCell(new Phrase(route.getDateLoadPreviously().format(formatter), fontMainText)));
+				columnDateLoad = columnDateLoad +route.getDateLoadPreviously().format(formatter)+"^";
 		        table.addCell(new PdfPCell(new Phrase(route.getDateUnload(), fontMainText)));
+		        columnDateUnload = columnDateUnload + route.getDateUnload()+"^";
 		        table.addCell(new PdfPCell(new Phrase(route.getIdRoute().toString(), fontMainText)));
 		        table.addCell(new PdfPCell(new Phrase(route.getRouteDirection(), fontMainText)));
+		        columnNameRoute = columnNameRoute + route.getRouteDirection() + "^";
 		        if(route.getNumTruckAndTrailer() != null) {
 		        	table.addCell(new PdfPCell(new Phrase(route.getNumTruckAndTrailer(), fontMainText)));
+		        	columnNumTruck = columnNumTruck + route.getNumTruckAndTrailer() + "^";
 		        }else {
 		        	table.addCell(new PdfPCell(new Phrase(route.getTruck().getNumTruck() + "/" + route.getTruck().getNumTrailer(), fontMainText)));
+		        	columnNumTruck = columnNumTruck + route.getNumTruckAndTrailer() + "/" + route.getTruck().getNumTrailer() + "^";
 		        }
 		        table.addCell(new PdfPCell(new Phrase(route.getNumWayList(), fontMainText)));
+		        columnNumRouteList  = columnNumRouteList  + route.getNumWayList() + "^";
 		        table.addCell(new PdfPCell(new Phrase(route.getCmr(), fontMainText)));
+		        columnNumDocument = columnNumDocument + route.getCmr() + "^";
 		        table.addCell(new PdfPCell(new Phrase(route.getCargoWeightForAct(), fontMainText)));
+		        columnVeigthCargo = columnVeigthCargo + route.getCargoWeightForAct() + "^";
 		        cost = cost + route.getFinishPrice();
 		        table.addCell(new PdfPCell(new Phrase(route.getFinishPrice().toString(), fontMainText))); // финальная цена
+		        columnSummCost = columnSummCost + route.getFinishPrice().toString()+ "^";
 		        if(isNDS) {
 		        	double totalNDS = route.getFinishPrice() * 20.0 / 100.0;
 					nds = nds + totalNDS;
 					way = way + Double.parseDouble(route.getCostWay());
 					table.addCell(new PdfPCell(new Phrase(totalNDS+"", fontMainText))); // сумма с НДС 
+					columnNdsSumm = columnNdsSumm + totalNDS+"^";
 					table.addCell(new PdfPCell(new Phrase(roundВouble(Double.parseDouble(route.getCostWay()), 2)+"", fontMainText)));
+					columnTollRoads = columnTollRoads + roundВouble(Double.parseDouble(route.getCostWay()), 2)+"^";
 					costAndNdsValue = costAndNdsValue + route.getFinishPrice() + totalNDS
 							+ Double.parseDouble(route.getCostWay());
 					Double costAndNDS = route.getFinishPrice() + totalNDS + roundВouble(Double.parseDouble(route.getCostWay()), 2);
 			        table.addCell(new PdfPCell(new Phrase(costAndNDS.toString(), fontMainText)));
+			        columnTotal = columnTotal + costAndNDS.toString() + "^";
 		        }else {
 		        	double totalNDS = 0.0;
 					way = way + Double.parseDouble(route.getCostWay());
 					nds = nds + totalNDS; 
 		        	table.addCell(new PdfPCell(new Phrase(roundВouble(Double.parseDouble(route.getCostWay()), 2)+"", fontMainText)));
+		        	columnTollRoads = columnTollRoads + roundВouble(Double.parseDouble(route.getCostWay()), 2)+"^";
 		        	costAndNdsValue = costAndNdsValue + route.getFinishPrice() + totalNDS
 							+ Double.parseDouble(route.getCostWay());
 		        	Double costAndNDS = route.getFinishPrice() + roundВouble(totalNDS, 2)+ roundВouble(Double.parseDouble(route.getCostWay()), 2);
 			        table.addCell(new PdfPCell(new Phrase(costAndNDS.toString(), fontMainText)));
+			        columnTotal = columnTotal + costAndNDS.toString() + "^";
 		        }
 			}
 			document.add(table);
@@ -562,7 +600,20 @@ public class PDFWriter {
 			act.setStatus("1");
 			act.setCurrency(currency);
 			act.setDate(LocalDate.now());
-			act.setTime(LocalDateTime.now().format(formatter2).toString());
+			act.setTime(LocalDateTime.now().format(formatter2).toString());			
+			
+			//новые вставки
+			act.setColumnDateLoad(columnDateLoad);
+			act.setColumnDateUnload(columnDateUnload);
+			act.setColumnNameRoute(columnNameRoute);
+			act.setColumnNdsSumm(columnNdsSumm);
+			act.setColumnNumDocument(columnNumDocument);
+			act.setColumnNumRouteList(columnNumRouteList);
+			act.setColumnNumTruck(columnNumTruck);
+			act.setColumnSummCost(columnSummCost);
+			act.setColumnTollRoads(columnTollRoads);
+			act.setColumnTotal(columnTotal);
+			act.setColumnVeigthCargo(columnVeigthCargo);
 			actService.saveOrUpdateAct(act);
 	        return 1;
 		}
@@ -672,39 +723,58 @@ public class PDFWriter {
 					//определяем и заполняем первую таблицу на основной страинце					
 					for (int j = 0; j < firstTable; j++) {
 						Route route = routes.get(j);
+						carrier = carrier + route.getUser().getCompanyName()+"^";
+						carrierHead = carrierHead + directOfOOO + "^";
+//						carrierDriver = carrierDriver + route.getDriver().getSurname() + " " + route.getDriver().getName() + "^";
+						logist = logist + route.getLogistInfo() + "^";
+						
 						table.addCell(new PdfPCell(new Phrase(route.getDateLoadPreviously().format(formatter), fontMainText)));
+						columnDateLoad = columnDateLoad +route.getDateLoadPreviously().format(formatter)+"^";
 				        table.addCell(new PdfPCell(new Phrase(route.getDateUnload(), fontMainText)));
+				        columnDateUnload = columnDateUnload + route.getDateUnload()+"^";
 				        table.addCell(new PdfPCell(new Phrase(route.getIdRoute().toString(), fontMainText)));
 				        table.addCell(new PdfPCell(new Phrase(route.getRouteDirection(), fontMainText)));
+				        columnNameRoute = columnNameRoute + route.getRouteDirection() + "^";
 				        if(route.getNumTruckAndTrailer() != null) {
 				        	table.addCell(new PdfPCell(new Phrase(route.getNumTruckAndTrailer(), fontMainText)));
+				        	columnNumTruck = columnNumTruck + route.getNumTruckAndTrailer() + "^";
 				        }else {
 				        	table.addCell(new PdfPCell(new Phrase(route.getTruck().getNumTruck() + "/" + route.getTruck().getNumTrailer(), fontMainText)));
+				        	columnNumTruck = columnNumTruck + route.getNumTruckAndTrailer() + "/" + route.getTruck().getNumTrailer() + "^";
 				        }
 				        table.addCell(new PdfPCell(new Phrase(route.getNumWayList(), fontMainText)));
+				        columnNumRouteList  = columnNumRouteList  + route.getNumWayList() + "^";
 				        table.addCell(new PdfPCell(new Phrase(route.getCmr(), fontMainText)));
+				        columnNumDocument = columnNumDocument + route.getCmr() + "^";
 				        table.addCell(new PdfPCell(new Phrase(route.getCargoWeightForAct(), fontMainText)));
+				        columnVeigthCargo = columnVeigthCargo + route.getCargoWeightForAct() + "^";
 				        cost = cost + route.getFinishPrice();
 				        table.addCell(new PdfPCell(new Phrase(route.getFinishPrice().toString(), fontMainText))); // финальная цена
+				        columnSummCost = columnSummCost + route.getFinishPrice().toString()+ "^";
 				        if(isNDS) {
 				        	double totalNDS = route.getFinishPrice() * 20.0 / 100.0;
 							nds = nds + totalNDS;
 							way = way + Double.parseDouble(route.getCostWay());
 							table.addCell(new PdfPCell(new Phrase(totalNDS+"", fontMainText))); // сумма с НДС 
+							columnNdsSumm = columnNdsSumm + totalNDS+"^";
 							table.addCell(new PdfPCell(new Phrase(roundВouble(Double.parseDouble(route.getCostWay()), 2)+"", fontMainText)));
+							columnTollRoads = columnTollRoads + roundВouble(Double.parseDouble(route.getCostWay()), 2)+"^";
 							costAndNdsValue = costAndNdsValue + route.getFinishPrice() + totalNDS
 									+ Double.parseDouble(route.getCostWay());
 							Double costAndNDS = route.getFinishPrice() + totalNDS + roundВouble(Double.parseDouble(route.getCostWay()), 2);
 					        table.addCell(new PdfPCell(new Phrase(costAndNDS.toString(), fontMainText)));
+					        columnTotal = columnTotal + costAndNDS.toString() + "^";
 				        }else {
 				        	double totalNDS = 0.0;
 							way = way + Double.parseDouble(route.getCostWay());
 							nds = nds + totalNDS; 
 				        	table.addCell(new PdfPCell(new Phrase(roundВouble(Double.parseDouble(route.getCostWay()), 2)+"", fontMainText)));
+				        	columnTollRoads = columnTollRoads + roundВouble(Double.parseDouble(route.getCostWay()), 2)+"^";
 				        	costAndNdsValue = costAndNdsValue + route.getFinishPrice() + totalNDS
 									+ Double.parseDouble(route.getCostWay());
 				        	Double costAndNDS = route.getFinishPrice() + roundВouble(totalNDS, 2)+ roundВouble(Double.parseDouble(route.getCostWay()), 2);
 					        table.addCell(new PdfPCell(new Phrase(costAndNDS.toString(), fontMainText)));
+					        columnTotal = columnTotal + costAndNDS.toString() + "^";
 				        }				        
 					}
 					document.add(table);
@@ -779,6 +849,19 @@ public class PDFWriter {
 					act.setCurrency(currency);
 					act.setDate(LocalDate.now());
 					act.setTime(LocalDateTime.now().format(formatter2).toString());
+					
+					//новые вставки
+					act.setColumnDateLoad(columnDateLoad);
+					act.setColumnDateUnload(columnDateUnload);
+					act.setColumnNameRoute(columnNameRoute);
+					act.setColumnNdsSumm(columnNdsSumm);
+					act.setColumnNumDocument(columnNumDocument);
+					act.setColumnNumRouteList(columnNumRouteList);
+					act.setColumnNumTruck(columnNumTruck);
+					act.setColumnSummCost(columnSummCost);
+					act.setColumnTollRoads(columnTollRoads);
+					act.setColumnTotal(columnTotal);
+					act.setColumnVeigthCargo(columnVeigthCargo);
 					actService.saveOrUpdateAct(act);
 					
 					//обнуляем общие значения
@@ -875,39 +958,58 @@ public class PDFWriter {
 			      //определяем и заполняем первую таблицу на основной страинце					
 					for (int j = firstTable; j < routes.size(); j++) {
 						Route route = routes.get(j);
+						carrier = carrier + route.getUser().getCompanyName()+"^";
+						carrierHead = carrierHead + directOfOOO + "^";
+//						carrierDriver = carrierDriver + route.getDriver().getSurname() + " " + route.getDriver().getName() + "^";
+						logist = logist + route.getLogistInfo() + "^";
+						
 						tableSecond.addCell(new PdfPCell(new Phrase(route.getDateLoadPreviously().format(formatter), fontMainText)));
+						columnDateLoad = columnDateLoad +route.getDateLoadPreviously().format(formatter)+"^";
 						tableSecond.addCell(new PdfPCell(new Phrase(route.getDateUnload(), fontMainText)));
+						columnDateUnload = columnDateUnload + route.getDateUnload()+"^";
 						tableSecond.addCell(new PdfPCell(new Phrase(route.getIdRoute().toString(), fontMainText)));
 						tableSecond.addCell(new PdfPCell(new Phrase(route.getRouteDirection(), fontMainText)));
+						columnNameRoute = columnNameRoute + route.getRouteDirection() + "^";
 				        if(route.getNumTruckAndTrailer() != null) {
 				        	tableSecond.addCell(new PdfPCell(new Phrase(route.getNumTruckAndTrailer(), fontMainText)));
+				        	columnNumTruck = columnNumTruck + route.getNumTruckAndTrailer() + "^";
 				        }else {
 				        	tableSecond.addCell(new PdfPCell(new Phrase(route.getTruck().getNumTruck() + "/" + route.getTruck().getNumTrailer(), fontMainText)));
+				        	columnNumTruck = columnNumTruck + route.getNumTruckAndTrailer() + "/" + route.getTruck().getNumTrailer() + "^";
 				        }
 				        tableSecond.addCell(new PdfPCell(new Phrase(route.getNumWayList(), fontMainText)));
+				        columnNumRouteList  = columnNumRouteList  + route.getNumWayList() + "^";
 				        tableSecond.addCell(new PdfPCell(new Phrase(route.getCmr(), fontMainText)));
+				        columnNumDocument = columnNumDocument + route.getCmr() + "^";
 				        tableSecond.addCell(new PdfPCell(new Phrase(route.getCargoWeightForAct(), fontMainText)));
+				        columnVeigthCargo = columnVeigthCargo + route.getCargoWeightForAct() + "^";
 				        cost = cost + route.getFinishPrice();
 				        tableSecond.addCell(new PdfPCell(new Phrase(route.getFinishPrice().toString(), fontMainText))); // финальная цена
+				        columnSummCost = columnSummCost + route.getFinishPrice().toString()+ "^";
 				        if(isNDS) {
 				        	double totalNDS = route.getFinishPrice() * 20.0 / 100.0;
 							nds = nds + totalNDS;
 							way = way + Double.parseDouble(route.getCostWay());
 							tableSecond.addCell(new PdfPCell(new Phrase(totalNDS+"", fontMainText))); // сумма с НДС 
+							columnNdsSumm = columnNdsSumm + totalNDS+"^";
 							tableSecond.addCell(new PdfPCell(new Phrase(roundВouble(Double.parseDouble(route.getCostWay()), 2)+"", fontMainText)));
+							columnTollRoads = columnTollRoads + roundВouble(Double.parseDouble(route.getCostWay()), 2)+"^";
 							costAndNdsValue = costAndNdsValue + route.getFinishPrice() + totalNDS
 									+ Double.parseDouble(route.getCostWay());
 							Double costAndNDS = route.getFinishPrice() + totalNDS + roundВouble(Double.parseDouble(route.getCostWay()), 2);
 							tableSecond.addCell(new PdfPCell(new Phrase(costAndNDS.toString(), fontMainText)));
+							columnTotal = columnTotal + costAndNDS.toString() + "^";
 				        }else {
 				        	double totalNDS = 0.0;
 							way = way + Double.parseDouble(route.getCostWay());
 							nds = nds + totalNDS; 
 							tableSecond.addCell(new PdfPCell(new Phrase(roundВouble(Double.parseDouble(route.getCostWay()), 2)+"", fontMainText)));
+							columnTollRoads = columnTollRoads + roundВouble(Double.parseDouble(route.getCostWay()), 2)+"^";
 				        	costAndNdsValue = costAndNdsValue + route.getFinishPrice() + totalNDS
 									+ Double.parseDouble(route.getCostWay());
 				        	Double costAndNDS = route.getFinishPrice() + roundВouble(totalNDS, 2)+ roundВouble(Double.parseDouble(route.getCostWay()), 2);
 				        	tableSecond.addCell(new PdfPCell(new Phrase(costAndNDS.toString(), fontMainText)));
+				        	columnTotal = columnTotal + costAndNDS.toString() + "^";
 				        }				        
 					}
 					document.add(tableSecond);
@@ -999,6 +1101,19 @@ public class PDFWriter {
 					act.setCurrency(currency);
 					act.setDate(LocalDate.now());
 					act.setTime(LocalDateTime.now().format(formatter2).toString());
+					
+					//новые вставки
+					act.setColumnDateLoad(columnDateLoad);
+					act.setColumnDateUnload(columnDateUnload);
+					act.setColumnNameRoute(columnNameRoute);
+					act.setColumnNdsSumm(columnNdsSumm);
+					act.setColumnNumDocument(columnNumDocument);
+					act.setColumnNumRouteList(columnNumRouteList);
+					act.setColumnNumTruck(columnNumTruck);
+					act.setColumnSummCost(columnSummCost);
+					act.setColumnTollRoads(columnTollRoads);
+					act.setColumnTotal(columnTotal);
+					act.setColumnVeigthCargo(columnVeigthCargo);
 					actService.saveOrUpdateAct(act);
 				}
 				

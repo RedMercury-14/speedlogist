@@ -346,6 +346,56 @@ public class MainRestController {
 		return result;
 	}
 
+	@PostMapping("/logistics/documentflow/documentlist/setActStatus")
+	public Map<String, Object> setActStatus(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+		Map<String, Object> response = new HashMap<>();
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		
+		Integer idAct = jsonMainObject.get("idAct") != null ? Integer.valueOf(jsonMainObject.get("idAct").toString()) : null;
+		String comment = jsonMainObject.get("comment") != null ? jsonMainObject.get("comment").toString() : null;
+		String command = jsonMainObject.get("command") != null ? jsonMainObject.get("command").toString() : null;
+		Act act;
+		DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
+		if(command.equals("confirm")) {
+			act = actService.getActById(idAct);
+			act.setStatus(LocalDateTime.now().format(formatter2).toString());
+			act.setComment(comment);
+			//что-то должно делаться с маршрутом!
+			actService.saveOrUpdateAct(act);
+			List<Act> inCansel = actService.getActBynumAct(act.getNumAct());
+			for (Act act2 : inCansel) {
+				if (act2.getStatus().equals("1")) {
+					act2.setCancel(LocalDateTime.now().format(formatter2));
+					act2.setStatus("del");
+					act2.setComment("подписан другой акт");
+					actService.saveOrUpdateAct(act2);
+				}
+			}
+		}else if(command.equals("cancel")){
+			act = actService.getActById(idAct);
+			act.setStatus("del");
+			act.setComment(comment);
+			act.setCancel(LocalDateTime.now().format(formatter2).toString());
+			String[] idRoutes = act.getIdRoutes().trim().split(";");
+			for (String idRoute : idRoutes) {
+				Route route = routeService.getRouteById(Integer.parseInt(idRoute));
+				route.setStatusRoute("4");
+				routeService.saveOrUpdateRoute(route);
+			}
+			actService.saveOrUpdateAct(act);
+		}else {
+			response.put("status", "100");
+			response.put("message", "Неизвестная команда");
+			return response;
+		}
+		
+		response.put("status", "200");
+		response.put("object", act);
+		
+		return response;
+	}
+	
 	@PostMapping("/logistics/documentflow/documentlist/saveDocumentsArrivedDate")
 	public Map<String, Object> setDocumentsArrivedDate(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
 		Map<String, Object> response = new HashMap<>();
@@ -353,12 +403,13 @@ public class MainRestController {
 		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
 		Integer idAct = jsonMainObject.get("idAct") != null ? Integer.valueOf(jsonMainObject.get("idAct").toString()) : null;
 		Timestamp documentsArrived = jsonMainObject.get("documentsArrived") != null ? Timestamp.valueOf(jsonMainObject.get("documentsArrived").toString()) : null;
-		String userDocumentsArrived = jsonMainObject.get("userDocumentsArrived") != null ? jsonMainObject.get("userDocumentsArrived").toString() : null;
 		Act act = actService.getActById(idAct);
 		act.setDocumentsArrived(documentsArrived);
-		act.setUserDocumentsArrived(userDocumentsArrived);
+		User user = getThisUser();
+		act.setUserDocumentsArrived(user.getSurname() + " " + user.getName());
 		actService.saveOrUpdateAct(act);
 		response.put("status", "200");
+		response.put("object", act);
 		return response;
 	}
 
@@ -10246,7 +10297,7 @@ public class MainRestController {
 
 	private User getThisUser() {
 		String name = SecurityContextHolder.getContext().getAuthentication().getName();
-		User user = userService.getUserByLogin(name);
+		User user = userService.getUserByLoginV2(name);
 		return user;
 	}
 

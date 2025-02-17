@@ -43,5 +43,7 @@ public interface UserDAO {
 	Integer getCountUserInDB();
 	
 	int updateUserInBaseDocuments(int idUser, String text);
+	
+	User getUserByLoginV2(String login);
 
 }

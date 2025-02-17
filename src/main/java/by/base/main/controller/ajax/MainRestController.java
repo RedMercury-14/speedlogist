@@ -308,6 +308,8 @@ public class MainRestController {
 	@Autowired	
 	private PermissionService permissionService;
 
+	@Autowired
+	private ActService actService;
 
 	@Autowired
 	private OrderCalculationService orderCalculationService;
@@ -333,6 +335,32 @@ public class MainRestController {
 
 	@Autowired
     private ServletContext servletContext;
+
+	@GetMapping("/logistics/documentflow/documentlist/{dateStart}&{dateEnd}")
+	public Map<String, Object>  documentListGet(@PathVariable String dateStart, @PathVariable String dateEnd) {
+		Map<String, Object> result = new HashMap<>();
+		Date dateFrom = Date.valueOf(dateStart);
+		Date dateTo = Date.valueOf(dateEnd);
+        Set<Act> acts = new HashSet<>(actService.getActListAsDate(dateFrom, dateTo));
+		result.put("acts", acts);
+		return result;
+	}
+
+	@PostMapping("/logistics/documentflow/documentlist/saveDocumentsArrivedDate")
+	public Map<String, Object> setDocumentsArrivedDate(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+		Map<String, Object> response = new HashMap<>();
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		Integer idAct = jsonMainObject.get("idAct") != null ? Integer.valueOf(jsonMainObject.get("idAct").toString()) : null;
+		Timestamp documentsArrived = jsonMainObject.get("documentsArrived") != null ? Timestamp.valueOf(jsonMainObject.get("documentsArrived").toString()) : null;
+		String userDocumentsArrived = jsonMainObject.get("userDocumentsArrived") != null ? jsonMainObject.get("userDocumentsArrived").toString() : null;
+		Act act = actService.getActById(idAct);
+		act.setDocumentsArrived(documentsArrived);
+		act.setUserDocumentsArrived(userDocumentsArrived);
+		actService.saveOrUpdateAct(act);
+		response.put("status", "200");
+		return response;
+	}
 
 	@GetMapping("/test")
 	@TimedExecution

@@ -24,7 +24,8 @@ public class UserDetailsServiceImpl implements UserDetailsService{
 	@Transactional(readOnly = true)
 	public UserDetails loadUserByUsername(String loginfirst) {
 		String login = loginfirst.toLowerCase();
-		User user = userDAO.getUserByLogin(login);
+//		User user = userDAO.getUserByLogin(login);
+		User user = userDAO.getUserByLoginV2(login);
 		UserBuilder userBuilder = null;
 		if (user != null) {
 			userBuilder = org.springframework.security.core.userdetails.User.withUsername(login);

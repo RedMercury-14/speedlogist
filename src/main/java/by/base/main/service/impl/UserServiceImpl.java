@@ -360,4 +360,10 @@ public class UserServiceImpl implements UserService{
 		return userDAO.getEmployeesList();
 	}
 
+	@Transactional
+	@Override
+	public User getUserByLoginV2(String login) {
+		return userDAO.getUserByLoginV2(login);
+	}
+
 }

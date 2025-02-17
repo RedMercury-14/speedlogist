@@ -205,4 +205,14 @@ public class UserDAOImpl implements UserDAO{
 		return users;
 	}
 
+	
+	private static final String queryGetUserByLoginV2 = "from User u LEFT JOIN FETCH u.roles rol where u.login=:login";
+	@Override
+	public User getUserByLoginV2(String login) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<User> query = currentSession.createQuery(queryGetUserByLoginV2, User.class);
+		query.setParameter("login", login);
+        return query.uniqueResult();
+	}
+
 }

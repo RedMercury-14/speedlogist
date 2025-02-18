@@ -78,7 +78,7 @@ public class OrderDAOImpl implements OrderDAO{
 			+ "LEFT JOIN FETCH r.truck rt "
 			+ "LEFT JOIN FETCH r.driver rd "
 			+ "LEFT JOIN FETCH o.addresses a "
-			+ "where o.status !=10 AND o.status !=40 AND o.link=:link";
+			+ "where o.status !=10 AND o.link=:link";
 	
 	@Override
 	@Transactional

@@ -47,4 +47,8 @@ public interface UserService {
 	void echo();
 	
 	int updateUserInBaseDocuments(int idUser, String text);
+	
+	User getUserByLoginV2(String login);
+	
+	List<User> getUserLoginList();
 }

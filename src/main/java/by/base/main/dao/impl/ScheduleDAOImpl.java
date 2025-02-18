@@ -28,7 +28,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	private SessionFactory sessionFactory;
 	
 	private static final String queryGetObjByIdOrder = "from Schedule where idSchedule=:idSchedule";
-	@Transactional
+	
 	@Override
 	public Schedule getScheduleById(Integer id) {
 		Session currentSession = sessionFactory.getCurrentSession();
@@ -44,7 +44,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 
 	
 	private static final String queryGetListRC = "from Schedule where type='РЦ'";
-	@Transactional
+	
 	@Override
 	public List<Schedule> getSchedulesListRC() {
 		Session currentSession = sessionFactory.getCurrentSession();
@@ -54,7 +54,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	}
 	
 	private static final String queryGetListTO = "from Schedule where type='ТО' AND status = 20";
-	@Transactional
+	
 	@Override
 	@Deprecated
 	public List<Schedule> getSchedulesListTO() {
@@ -65,7 +65,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	}
 	
 	private static final String queryGetListTOAll = "from Schedule where type='ТО'";
-	@Transactional
+	
 	@Override
 	public List<Schedule> getSchedulesListTOAll() {
 		Session currentSession = sessionFactory.getCurrentSession();
@@ -75,7 +75,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	}
 
 	private static final String queryGetObjByNumContract = "from Schedule where counterpartyContractCode=:counterpartyContractCode";
-	@Transactional
+	
 	@Override
 	public Schedule getScheduleByNumContract(Long num) {
 		Session currentSession = sessionFactory.getCurrentSession();
@@ -97,7 +97,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 //	    return theObject.uniqueResultOptional().orElse(null);
 	}
 
-	@Transactional
+	
 	@Override
 	public Integer saveOrder(Schedule schedule) {
 		Session currentSession = sessionFactory.getCurrentSession();
@@ -105,7 +105,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 		return Integer.parseInt(currentSession.getIdentifier(schedule).toString());
 	}
 
-	@Transactional
+	
 	@Override
 	public void updateOrder(Schedule schedule) {
 		Session currentSession = sessionFactory.getCurrentSession();
@@ -113,7 +113,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	}
 
 	private static final String queryDeleteById = "delete from Schedule where idSchedule=:idSchedule";
-	@Transactional
+	
 	@Override
 	public void deleteOrderById(Integer id) {
 		Session currentSession = sessionFactory.getCurrentSession();
@@ -125,7 +125,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	}
 
 	private static final String queryGetSchedulesByStock = "from Schedule where numStock=:numStock";
-	@Transactional
+	
 	@Override
 	public List<Schedule> getSchedulesByStock(Integer numStock) {
 		Session currentSession = sessionFactory.getCurrentSession();
@@ -139,7 +139,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	}
 
 
-	@Transactional
+	
 	@Override
 	public List<Schedule> getSchedulesByDateOrder(Date date, Integer numStock) {
 		String dayName = DayOfWeek.from(date.toLocalDate()).getDisplayName(java.time.format.TextStyle.FULL, new Locale("en")).toLowerCase();		
@@ -155,7 +155,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	}
 
 	private static final String queryGetListTOContract = "from Schedule where type='ТО' AND counterpartyContractCode=:counterpartyContractCode";
-	@Transactional
+	
 	@Override
 	@Deprecated
 	public List<Schedule> getSchedulesListTOContract(String contractCode) {
@@ -166,7 +166,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 		return roles;
 	}
 
-	@Transactional
+	
 	@Override
 	public List<Schedule> getSchedulesListTOСounterparty(String counterpartyName) {
 		final String queryGetListTOСounterparty = "from Schedule where type='ТО' AND name LIKE '%"+ counterpartyName + "%'";
@@ -177,7 +177,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	}
 
 	private static final String queryGetSchedulesByTOType = "from Schedule where toType=:toType AND status=20";
-	@Transactional
+	
 	@Override
 	public List<Schedule> getSchedulesByTOType(String toType) {
 		Session currentSession = sessionFactory.getCurrentSession();
@@ -191,7 +191,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	}
 
 	private static final String queryGetObjByNumContractAndStock = "from Schedule where counterpartyContractCode=:counterpartyContractCode AND numStock=:numStock";
-	@Transactional
+	
 	@Override
 	@Deprecated
 	public Schedule getScheduleByNumContractAndNUmStock(Long num, Integer numStock) {
@@ -216,7 +216,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
             "FROM Schedule s " +
             "WHERE s.type ='РЦ' AND s.counterpartyCode IS NOT NULL " +
             "GROUP BY s.counterpartyCode";	
-	@Transactional
+	
 	@Override
 	public List<CounterpartyDTO> getcounterpartyListRC() {
 		Session currentSession = sessionFactory.getCurrentSession();
@@ -236,8 +236,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 		return roles;
 	}
 	
-	@Override
-	@Transactional
+	@Override	
 	public List<CounterpartyDTO> getСounterpartyListRCNameOnly() {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<CounterpartyDTO> theRole = currentSession.createQuery(queryGetcounterpartyListRC, CounterpartyDTO.class);
@@ -249,7 +248,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
             "FROM Schedule s " +
             "WHERE s.type ='ТО' AND s.counterpartyCode IS NOT NULL " +
             "GROUP BY s.counterpartyCode";
-	@Transactional
+	
 	@Override
 	public List<CounterpartyDTO> getcounterpartyListTO() {
 		Session currentSession = sessionFactory.getCurrentSession();
@@ -267,7 +266,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	}
 
 	private static final String queryGetObjByNumContractAndNumStock = "from Schedule where counterpartyContractCode=:counterpartyContractCode AND numStock=:numStock";
-	@Transactional
+	
 	@Override
 	public Schedule getScheduleByNumContractAndNumStock(Long num, Integer shock) {
 		Session currentSession = sessionFactory.getCurrentSession();
@@ -290,7 +289,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	private static final String queryGetUnicCodeContractTO = counterpartyConstruct2 + "FROM Schedule s " +
             "WHERE s.type ='ТО' AND s.counterpartyContractCode IS NOT NULL " +
             "GROUP BY s.counterpartyContractCode";
-	@Transactional
+	
 	@Override
 	public List<CounterpartyDTO> getUnicCodeContractTO() {
 		Session currentSession = sessionFactory.getCurrentSession();
@@ -300,7 +299,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	}
 
 	private static final String queryUpdateScheduleBycounterpartyCodeHascodeNameOfQuantumCounterparty = "UPDATE Schedule s SET s.codeNameOfQuantumCounterparty = :newCodeName WHERE s.counterpartyCode = :counterpartyCode";
-	@Transactional
+	
 	@Override
 	public int updateScheduleBycounterpartyCodeHascodeNameOfQuantumCounterparty(Long counterpartyCode,
 			String codeNameOfQuantumCounterparty) {
@@ -321,7 +320,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	 */
 	private static final String queryGetTemporaryObjByNumContract = "from Schedule s where type = 'ТО' AND counterpartyContractCode=:counterpartyContractCode AND ((startDateTemp IS NOT NULL AND endDateTemp IS NOT NULL AND CURRENT_DATE BETWEEN startDateTemp AND endDateTemp) or (startDateTemp IS NULL AND endDateTemp IS NULL))";
 
-	@Transactional
+	
 	@Override
 	public List<Schedule> getSchedulesListTOContractWithTemp(Long num) {
 		Session currentSession = sessionFactory.getCurrentSession();
@@ -343,7 +342,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 			"AND ((startDateTemp IS NOT NULL AND endDateTemp IS NOT NULL AND CURRENT_DATE BETWEEN startDateTemp AND endDateTemp) or (startDateTemp IS NULL AND endDateTemp IS NULL))";
 	//private static final String queryGetListTOWithTemp = "from Schedule where type='ТО'";
 
-	@Transactional
+	
 	@Override
 	public List<Schedule> getSchedulesListTOWithTemp() {
 		Session currentSession = sessionFactory.getCurrentSession();
@@ -359,7 +358,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	 * @return
 	 */
 	private static final String queryGetObjByNumContractAndNumStockWithTemp = "from Schedule where counterpartyContractCode=:counterpartyContractCode AND numStock=:numStock";
-	@Transactional
+	
 	@Override
 	public List<Schedule> getScheduleByNumContractAndNUmStockWithTemp(Long num, Integer numStock) {
 		Session currentSession = sessionFactory.getCurrentSession();
@@ -378,7 +377,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	 * @return
 	 */
 	private static final String queryGetSchedulesByTOTypeWithTemp = "from Schedule where toType=:toType AND status=20 AND ((startDateTemp IS NOT NULL AND endDateTemp IS NOT NULL AND CURRENT_DATE BETWEEN startDateTemp AND endDateTemp) or (startDateTemp IS NULL AND endDateTemp IS NULL))";
-	@Transactional
+	
 	@Override
 	public List<Schedule> getSchedulesByTOTypeWithTemp(String toType) {
 		Session currentSession = sessionFactory.getCurrentSession();
@@ -396,7 +395,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 			+ "where counterpartyContractCode=:counterpartyContractCode "
 			+ "AND status=20 "
 			+ "AND startDateTemp IS NOT NULL AND endDateTemp IS NOT NULL";
-	@Transactional
+	
 	@Override
 	public List<Schedule> getSchedulesListTOContractOnlyTemp(Long num) {
 		Session currentSession = sessionFactory.getCurrentSession();
@@ -412,7 +411,7 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	}
 
 	private static final String queryAllGetObjByNumContractAndNumStock = "from Schedule where counterpartyContractCode=:counterpartyContractCode AND numStock=:numStock";
-	@Transactional
+	
 	@Override
 	public List<Schedule> getAllSchedulesByNumContractAndNumStock(Long num, Integer shock) {
 		Session currentSession = sessionFactory.getCurrentSession();

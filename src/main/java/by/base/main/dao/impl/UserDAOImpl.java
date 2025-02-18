@@ -24,8 +24,7 @@ public class UserDAOImpl implements UserDAO{
 	private SessionFactory sessionFactory;
 
 	private static final String queryGetList = "from User u LEFT JOIN FETCH u.route r LEFT JOIN FETCH u.roles rol LEFT JOIN FETCH u.trucks tr LEFT JOIN FETCH u.shop sh LEFT JOIN FETCH u.feedbackList f LEFT JOIN FETCH u.singleRoute SR order by u.idUser";
-	@Override
-	@Transactional
+	@Override	
 	public List<User> getUserList() {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<User> theRole = currentSession.createQuery(queryGetList, User.class);
@@ -33,16 +32,14 @@ public class UserDAOImpl implements UserDAO{
 		return users;
 	}
 
-	@Override
-	@Transactional
+	@Override	
 	public void saveOrUpdateUser(User user) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		currentSession.saveOrUpdate(user);
 	}
 
 	private static final String queryGetObjById = "from User u LEFT JOIN FETCH u.route r LEFT JOIN FETCH u.roles rol LEFT JOIN FETCH u.trucks tr LEFT JOIN FETCH u.shop sh LEFT JOIN FETCH u.feedbackList f where u.idUser=:idUser";
-	@Override
-	@Transactional
+	@Override	
 	public User getUserById(int id) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<User> theObject = currentSession.createQuery(queryGetObjById, User.class);
@@ -53,8 +50,7 @@ public class UserDAOImpl implements UserDAO{
 	}
 
 	private static final String queryGetListUser = "from User u LEFT JOIN FETCH u.roles rol LEFT JOIN FETCH u.trucks tr where u.login=:setLogin";
-	@Override
-	@Transactional
+	@Override	
 	public User getUserByLogin(String login) {
 		try {
 			Session currentSession = sessionFactory.getCurrentSession();		
@@ -80,8 +76,7 @@ public class UserDAOImpl implements UserDAO{
 	}
 
 	private static final String queryDeleteUserId = "delete from User where iduser=:setId";
-	@Override
-	@Transactional
+	@Override	
 	public void deleteUserById(int id) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query theQuery = 
@@ -91,8 +86,7 @@ public class UserDAOImpl implements UserDAO{
 	}
 	
 	private static final String queryDeleteUserLogin = "delete from User where login=:setLogin";
-	@Override
-	@Transactional
+	@Override	
 	public void deleteUserByLogin(String login) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query theQuery = 
@@ -103,8 +97,7 @@ public class UserDAOImpl implements UserDAO{
 	}
 
 	private static final String queryGetDriverList = "from User u LEFT JOIN FETCH u.route r LEFT JOIN FETCH u.roles rol LEFT JOIN FETCH u.trucks tr LEFT JOIN FETCH u.shop sh LEFT JOIN FETCH u.feedbackList f where u.isDriver=1 and u.companyName =:companyName";
-	@Override
-	@Transactional
+	@Override	
 	public List<User> getDriverList(String companyName) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<User> theRole = currentSession.createQuery(queryGetDriverList, User.class);
@@ -114,8 +107,7 @@ public class UserDAOImpl implements UserDAO{
 	}
 
 	private static final String queryGetUserCard = "from User u LEFT JOIN FETCH u.route r LEFT JOIN FETCH u.roles rol LEFT JOIN FETCH u.trucks tr LEFT JOIN FETCH u.shop sh LEFT JOIN FETCH u.feedbackList f where u.numDriverCard=:num";
-	@Override
-	@Transactional
+	@Override	
 	public User getUserByNumDriverCard(String num) {
 		Session currentSession = sessionFactory.getCurrentSession();		
 		Query<User> theUser = currentSession.createQuery(queryGetUserCard, User.class);
@@ -132,8 +124,7 @@ public class UserDAOImpl implements UserDAO{
 	}
 
 	private static final String queryGetCarrierList = "from User u LEFT JOIN FETCH u.route r LEFT JOIN FETCH u.roles rol LEFT JOIN FETCH u.trucks tr LEFT JOIN FETCH u.shop sh LEFT JOIN FETCH u.feedbackList f where u.isDriver=0 and u.numYNP IS NOT NULL and u.enablet=1";
-	@Override
-	@Transactional
+	@Override	
 	public List<User> getCarrierList() {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<User> theRole = currentSession.createQuery(queryGetCarrierList, User.class);
@@ -142,8 +133,7 @@ public class UserDAOImpl implements UserDAO{
 	}
 
 	private static final String queryGetDesableCarrierList = "from User u LEFT JOIN FETCH u.route r LEFT JOIN FETCH u.roles rol LEFT JOIN FETCH u.trucks tr LEFT JOIN FETCH u.shop sh LEFT JOIN FETCH u.feedbackList f where u.isDriver=0 and u.numYNP IS NOT NULL and u.enablet=0";
-	@Override
-	@Transactional
+	@Override	
 	public List<User> getDesableCarrierList() {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<User> theRole = currentSession.createQuery(queryGetDesableCarrierList, User.class);
@@ -152,8 +142,7 @@ public class UserDAOImpl implements UserDAO{
 	}
 
 	private static final String queryGetListUserYNP = "from User u LEFT JOIN FETCH u.route r LEFT JOIN FETCH u.roles rol LEFT JOIN FETCH u.trucks tr LEFT JOIN FETCH u.shop sh LEFT JOIN FETCH u.feedbackList f where u.numYNP=:setNumYNP";
-	@Override
-	@Transactional
+	@Override	
 	public List<User> getUserByYNP(String YNP) {
 		try {
 			Session currentSession = sessionFactory.getCurrentSession();		
@@ -168,8 +157,7 @@ public class UserDAOImpl implements UserDAO{
 	}
 
 	private static final String queryGetCountUser = "select count(*) from User";
-	@Override
-	@Transactional
+	@Override	
 	public Integer getCountUserInDB() {
 		Session currentSession = sessionFactory.getCurrentSession();	
 		Query query = currentSession.createQuery(queryGetCountUser);
@@ -178,8 +166,7 @@ public class UserDAOImpl implements UserDAO{
 	}
 
 	private static final String queryGetCarrierListV2 = "from User u LEFT JOIN FETCH u.roles rol LEFT JOIN FETCH u.trucks tr where u.isDriver=0 and u.numYNP IS NOT NULL and u.enablet=1";
-	@Override
-	@Transactional
+	@Override	
 	public List<User> getCarrierListV2() {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<User> theRole = currentSession.createQuery(queryGetCarrierListV2, User.class);
@@ -188,7 +175,7 @@ public class UserDAOImpl implements UserDAO{
 	}
 
 	private static final String queryUpdateDateDoute = "UPDATE User SET numContract =:text where idUser=:idUser";
-	@Transactional
+	
 	@Override
 	public int updateUserInBaseDocuments(int idUser, String text) {
 		Session currentSession = sessionFactory.getCurrentSession();
@@ -199,7 +186,7 @@ public class UserDAOImpl implements UserDAO{
 		return result;
 	}
 
-	@Transactional
+	
 	@Override
 	public User saveNewDriver(User user) {
 		Session currentSession = sessionFactory.getCurrentSession();
@@ -209,12 +196,30 @@ public class UserDAOImpl implements UserDAO{
 	}
 
 	private static final String queryGetEmployeesList = "from User u LEFT JOIN FETCH u.roles rol WHERE u.companyName=:text";
-	@Override
-	@Transactional
+	@Override	
 	public List<User> getEmployeesList() {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<User> theRole = currentSession.createQuery(queryGetEmployeesList, User.class);
 		theRole.setParameter("text", "Доброном");
+		List <User> users = theRole.getResultList();
+		return users;
+	}
+
+	
+	private static final String queryGetUserByLoginV2 = "from User u LEFT JOIN FETCH u.roles rol where u.login=:login";
+	@Override
+	public User getUserByLoginV2(String login) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<User> query = currentSession.createQuery(queryGetUserByLoginV2, User.class);
+		query.setParameter("login", login);
+        return query.uniqueResult();
+	}
+
+	private static final String queryGetUserLoginList = "from User u where login IS NOT NULL order by u.idUser";
+	@Override
+	public List<User> getUserLoginList() {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<User> theRole = currentSession.createQuery(queryGetUserLoginList, User.class);
 		List <User> users = theRole.getResultList();
 		return users;
 	}

@@ -313,6 +313,9 @@ public class Route implements Serializable{
 	@Transient
 	private Set<OrderDTO> ordersDTO;
 	
+	@Transient
+	private Integer numOffer;
+	
 
 
 	/**
@@ -351,6 +354,18 @@ public class Route implements Serializable{
 
 	public void setOrdersDTO(Set<OrderDTO> ordersDTO) {
 		this.ordersDTO = ordersDTO;
+	}
+
+
+
+	public Integer getNumOffer() {
+		return numOffer;
+	}
+
+
+
+	public void setNumOffer(Integer numOffer) {
+		this.numOffer = numOffer;
 	}
 
 

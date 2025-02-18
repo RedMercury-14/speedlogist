@@ -17,7 +17,11 @@ public interface OrderDAO {
 	List<Order> getOrderByDateCreate(Date date);
 	
 	List<Order> getOrderByDateDelivery(Date date);
-	
+	/**
+	 * <b>o.status !=10 AND o.status !=40</b>
+	 * @param link
+	 * @return
+	 */
 	List<Order> getOrderByLink(Integer link);
 	
 	Order getOrderByRoute(Route route);

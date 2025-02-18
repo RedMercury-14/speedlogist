@@ -163,8 +163,8 @@ public class MainFileController {
          Map<String, Object> response = new HashMap<>();
          List<MarketDataFor330Responce> dataList330 = new ArrayList<MarketDataFor330Responce>();
          List<ReportRow> reportRows = new ArrayList<ReportRow>();
-         try {        
-            mainRestController.checkJWT(mainRestController.marketUrl);       
+         try {
+            mainRestController.checkJWT(mainRestController.marketUrl);
          } catch (Exception e) {
             System.err.println("Ошибка получения jwt токена");
          }
@@ -174,22 +174,22 @@ public class MainFileController {
          JSONObject jsonMainObject2 = (JSONObject) parser.parse(marketPacketDtoStr);
          String marketDataFor398RequestStr = jsonMainObject2.get("Data") != null ? jsonMainObject2.get("Data").toString() : null;
          JSONObject jsonMainObjectTarget = (JSONObject) parser.parse(marketDataFor398RequestStr);
-         
+
          JSONArray warehouseIdArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("WarehouseId").toString());
          JSONArray goodsIdArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("GoodsId").toString());
-         
+
          String dateForm = jsonMainObjectTarget.get("DateFrom") == null ? null : jsonMainObjectTarget.get("DateFrom").toString();
          String dateTo = jsonMainObjectTarget.get("DateTo") == null ? null : jsonMainObjectTarget.get("DateTo").toString();
          Object[] warehouseId = warehouseIdArray.toArray();
          Object[] goodsId = goodsIdArray.toArray();
-         
-         MarketDataFor330Request for330Request = new MarketDataFor330Request(dateForm, dateTo, warehouseId, goodsId);      
-         MarketPacketDto marketPacketDto = new MarketPacketDto(mainRestController.marketJWT, "SpeedLogist.GetReport330", mainRestController.serviceNumber, for330Request);     
+
+         MarketDataFor330Request for330Request = new MarketDataFor330Request(dateForm, dateTo, warehouseId, goodsId);
+         MarketPacketDto marketPacketDto = new MarketPacketDto(mainRestController.marketJWT, "SpeedLogist.GetReport330", mainRestController.serviceNumber, for330Request);
          MarketRequestDto requestDto = new MarketRequestDto("", marketPacketDto);
-         
+
          String marketOrder2 = mainRestController.postRequest(mainRestController.marketUrl, gson.toJson(requestDto));
          System.out.println(gson.toJson(requestDto));
-         
+
          if(marketOrder2.equals("503")) { // означает что связь с маркетом потеряна
             //в этом случае проверяем бд
             System.err.println("Связь с маркетом потеряна");
@@ -197,26 +197,26 @@ public class MainFileController {
             response.put("payload responce", marketOrder2);
             response.put("message", "Связь с маркетом потеряна");
             return response;
-            
+
          }else{//если есть связь с маркетом
             JSONObject jsonResponceMainObject = (JSONObject) parser.parse(marketOrder2);
-            JSONArray jsonResponceTable = (JSONArray) parser.parse(jsonResponceMainObject.get("Table").toString());          
+            JSONArray jsonResponceTable = (JSONArray) parser.parse(jsonResponceMainObject.get("Table").toString());
             for (Object obj : jsonResponceTable) {
                  dataList330.add(new MarketDataFor330Responce(obj.toString())); // парсин json засунул в конструктор
               }
-            
+
          }
-         
+
          if(dataList330.isEmpty()) {
         	 response.put("status", 100);
         	 response.put("message", "Данные по 330 отчёту из маркета не найдены");
         	 return response;
          }
-         
+
 //       for (MarketDataFor330Responce object : responces) {
 //          System.out.println(object);
 //       }
-         
+
          // Получаем номера заказов
          List<String> uniqueOrderBuyGroupIds = dataList330.stream()
                   .map(MarketDataFor330Responce::getOrderBuyGroupId) // Получаем значения
@@ -224,12 +224,12 @@ public class MainFileController {
                   .map(String::valueOf) // Преобразуем Long в String
                   .distinct() // Убираем дубликаты
                   .collect(Collectors.toList()); // Преобразуем обратно в список
-         
-         //получаем заказы по списку        
+
+         //получаем заказы по списку
          Map<String, Order> orders = orderService.getOrdersByListMarketNumber(uniqueOrderBuyGroupIds);
-         
-         
-         
+
+
+
          //получаем даты заказов ОРЛ которые нам понадобятся
          List<Date> datesOrderORL = orders.values().stream()
                   .map(Order::getDateOrderOrl) // Получаем значения getDateOrderOrl
@@ -240,27 +240,27 @@ public class MainFileController {
          //получаем мапу с заказами орл
          /*
           * ключ - дата, значение - мапа с кодом товара и значением (как в методе orderProductService.getOrderProductMapHasDate(dateTarget))
-          */         
+          */
          Map<String, Map<Integer, OrderProduct>> mapOrderProduct = orderProductService.getOrderProductMapHasDateList(datesOrderORL);
-         
+
          System.out.println("В мапе объектов : " + mapOrderProduct.size());
          mapOrderProduct.forEach((k,v)-> System.out.println("Для даты :" + k + " -> " + v.size() + " значений"));
-         
-         
+
+
          //подгатавливаем строку (собираем все нужные столбцы)
          for (MarketDataFor330Responce data330 : dataList330) {
             ReportRow reportRow = new ReportRow();
             reportRow.setProductName(data330.getGoodsName());
             reportRow.setProductCode(data330.getGoodsId());
-            
+
             String period = Date.valueOf(from).toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + " - " + Date.valueOf(to).toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
             reportRow.setPeriodOrderDelivery(period);
-            reportRow.setOrderedUnitsORL(null); //сколько заказано ОРЛ 
-            
+            reportRow.setOrderedUnitsORL(null); //сколько заказано ОРЛ
+
             if(data330.getOrderBuyGroupId() == null) { // ПОТОМ ОБРАБОТАТЬ КОГДА НЕТУ КОДА ИЗ МАРКЕТА В 330 ОТЧЁТЕ
                continue;
             }
-            
+
             Order order = orders.get(data330.getOrderBuyGroupId().toString());
             if(order == null) {
                System.err.println("Заказа с номером " + data330.getOrderBuyGroupId() + " не найдено!");
@@ -279,16 +279,16 @@ public class MainFileController {
 			            reportRow.setCounterpartyName(data330.getContractorNameShort());
 			            reportRow.setAcceptedUnits(data330.getQuantity().intValue());
 			            reportRow.setStock(data330.getWarehouseId().toString());
-			            reportRow.setDateUnload(data330.getDate3());			              
-			            reportRow.setPrecentOrderFulfillment(0.0); 
+			            reportRow.setDateUnload(data330.getDate3());
+			            reportRow.setPrecentOrderFulfillment(0.0);
 			            reportRow.setDiscrepancyQuantity(0);
 						reportRows.add(reportRow);
 						continue; // пропускаем остальные данные этого товара
 					}
 				}
-	               
+
 	        }
-            
+
             Map<Long, Double> productHasOrder = order.getOrderLinesMap();
 //          System.out.println("---> Хочу взять: " + data330.getGoodsId() + " из заказа " + data330.getOrderBuyGroupId());
             if(!productHasOrder.containsKey(data330.getGoodsId())) {
@@ -507,7 +507,7 @@ public class MainFileController {
 			out.close();
 		}
 	}
-	
+
 	/**
 	 * метод отвечает за скачку иснтрукции из слотов (в частности по объеденению заказов)
 	 * @param request
@@ -543,7 +543,7 @@ public class MainFileController {
 			out.close();
 		}
 	}
-	
+
 	@RequestMapping("/orl/download/zip398")
 	public void downloadInstructionArchive(HttpServletRequest request, HttpServletResponse response) throws IOException {
 	    String appPath = request.getServletContext().getRealPath("");

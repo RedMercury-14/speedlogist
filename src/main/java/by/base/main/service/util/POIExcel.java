@@ -20,15 +20,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
 import java.time.temporal.WeekFields;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import javax.servlet.ServletContext;
@@ -98,6 +90,7 @@ import by.base.main.service.ActService;
 import by.base.main.service.MessageService;
 import by.base.main.service.OrderService;
 import by.base.main.service.ProductService;
+import by.base.main.service.RouteService;
 import by.base.main.service.ScheduleService;
 import by.base.main.service.ServiceException;
 
@@ -114,7 +107,7 @@ public class POIExcel {
 	private ShopDAO shopDAO;
 
 	@Autowired
-	private RouteDAO routeDAO;
+	private RouteService routeDAO;
 
 	@Autowired
 	private RouteHasShopDAO routeHasShopDAO;
@@ -265,13 +258,13 @@ public class POIExcel {
             if(nameCounterparty == null) {
                 //создаём итоговую строку по названию контрагента
                 Row conclusionRow = sheet.createRow(rowNum++);
-                conclusionRow.createCell(0).setCellValue(row.getCounterpartyName() + " Итог");  
-                nameCounterparty = row.getCounterpartyName(); 
+                conclusionRow.createCell(0).setCellValue(row.getCounterpartyName() + " Итог");
+                nameCounterparty = row.getCounterpartyName();
                 indexNameCounterpartyStart = rowNum;
-                
+
                 //дальше создаём данные с неделей
                 Row weekRow = sheet.createRow(rowNum++);
-                weekRow.createCell(0).setCellValue(row.getCounterpartyName()); 
+                weekRow.createCell(0).setCellValue(row.getCounterpartyName());
                 weekRow.createCell(2).setCellValue(getWeekRange(row.getDateUnload()) + " Итог");
                 week = getWeekRange(row.getDateUnload());
                 indexWeekStart = rowNum;
@@ -327,8 +320,8 @@ public class POIExcel {
                    weekRow.createCell(2).setCellValue(getWeekRange(row.getDateUnload()) + " Итог");
                     week = getWeekRange(row.getDateUnload());
                     indexWeekStart = rowNum;
-                   
-                } 
+
+                }
                 if(nameCounterparty.equals(row.getCounterpartyName()) && !week.equals(getWeekRange(row.getDateUnload()))) { // следим за сменой недели
                    Row weekRow = sheet.createRow(rowNum++);
                 Row previousWeekConclusionRow = sheet.getRow(indexWeekStart - 1);
@@ -356,7 +349,7 @@ public class POIExcel {
                 sheet.groupRow(indexWeekStart, indexWeekFinish);
                    sheet.setRowGroupCollapsed(indexWeekStart, true);
                    week = getWeekRange(row.getDateUnload());
-                   indexWeekStart = rowNum; 
+                   indexWeekStart = rowNum;
                 }
             }
             Row excelRow = sheet.createRow(rowNum++);
@@ -2047,23 +2040,23 @@ public class POIExcel {
 	        XSSFCell movedFrom1700To1800 = rowI.getCell(43);
 
 	        // Третий блок - 1800
-	        XSSFCell cellWarehouseNumber1800 = rowI.getCell(44);
-	        XSSFCell cellCalculatedDailySales1800 = rowI.getCell(45);
-	        XSSFCell cellSumOst1800 = rowI.getCell(46);
-	        XSSFCell cellSumFromOrder1800 = rowI.getCell(47);
-	        XSSFCell cellMaxOtgruzimTwoStages1800 = rowI.getCell(48);
-	        XSSFCell cellMaxOstInNetwork1800 = rowI.getCell(49);
-	        XSSFCell cellOstInPallets1800 = rowI.getCell(50);
-	        XSSFCell cellOstOnRCInDays1800 = rowI.getCell(51);
-	        XSSFCell cellMaxOstNetworkInDays1800 = rowI.getCell(52);
-	        XSSFCell cellCountTOInCalculation1800 = rowI.getCell(53);
-	        XSSFCell cellCountTOLess2Days1800 = rowI.getCell(54);
-	        XSSFCell cellPercentShopsLess2Days1800 = rowI.getCell(55);
-	        XSSFCell cellKol1800 = rowI.getCell(56);
-	        XSSFCell cellSumm1800 = rowI.getCell(57);
-	        XSSFCell cell380_1800 = rowI.getCell(58);
-	        XSSFCell cellExpectedArrival1800 = rowI.getCell(59);
-	        XSSFCell movedFrom1800To1700 = rowI.getCell(60);
+	        XSSFCell cellWarehouseNumber1800 = rowI.getCell(45);
+	        XSSFCell cellCalculatedDailySales1800 = rowI.getCell(46);
+	        XSSFCell cellSumOst1800 = rowI.getCell(47);
+	        XSSFCell cellSumFromOrder1800 = rowI.getCell(48);
+	        XSSFCell cellMaxOtgruzimTwoStages1800 = rowI.getCell(49);
+	        XSSFCell cellMaxOstInNetwork1800 = rowI.getCell(50);
+	        XSSFCell cellOstInPallets1800 = rowI.getCell(51);
+	        XSSFCell cellOstOnRCInDays1800 = rowI.getCell(52);
+	        XSSFCell cellMaxOstNetworkInDays1800 = rowI.getCell(53);
+	        XSSFCell cellCountTOInCalculation1800 = rowI.getCell(54);
+	        XSSFCell cellCountTOLess2Days1800 = rowI.getCell(55);
+	        XSSFCell cellPercentShopsLess2Days1800 = rowI.getCell(56);
+	        XSSFCell cellKol1800 = rowI.getCell(57);
+	        XSSFCell cellSumm1800 = rowI.getCell(58);
+	        XSSFCell cell380_1800 = rowI.getCell(59);
+	        XSSFCell cellExpectedArrival1800 = rowI.getCell(60);
+	        XSSFCell movedFrom1800To1700 = rowI.getCell(61);
 			
 			
 	        Product product = productService.getProductByCode(Integer.parseInt(getCellValue(cellProductCode)));

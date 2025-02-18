@@ -18,7 +18,11 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.Time;
@@ -83,6 +87,10 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.core.userdetails.User.UserBuilder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -304,6 +312,8 @@ public class MainRestController {
 	@Autowired	
 	private PermissionService permissionService;
 
+	@Autowired
+	private ActService actService;
 
 	@Autowired
 	private OrderCalculationService orderCalculationService;
@@ -330,27 +340,233 @@ public class MainRestController {
 	@Autowired
     private ServletContext servletContext;
 
+	@GetMapping("/logistics/documentflow/documentlist/{dateStart}&{dateEnd}")
+	public Map<String, Object>  documentListGet(@PathVariable String dateStart, @PathVariable String dateEnd) {
+		Map<String, Object> result = new HashMap<>();
+		Date dateFrom = Date.valueOf(dateStart);
+		Date dateTo = Date.valueOf(dateEnd);
+        Set<Act> acts = new HashSet<>(actService.getActListAsDate(dateFrom, dateTo));
+		result.put("acts", acts);
+		return result;
+	}
+
+	@PostMapping("/logistics/documentflow/documentlist/setActStatus")
+	public Map<String, Object> setActStatus(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+		Map<String, Object> response = new HashMap<>();
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		
+		Integer idAct = jsonMainObject.get("idAct") != null ? Integer.valueOf(jsonMainObject.get("idAct").toString()) : null;
+		String comment = jsonMainObject.get("comment") != null ? jsonMainObject.get("comment").toString() : null;
+		String command = jsonMainObject.get("command") != null ? jsonMainObject.get("command").toString() : null;
+		Act act;
+		DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
+		if(command.equals("confirm")) {
+			act = actService.getActById(idAct);
+			act.setStatus(LocalDateTime.now().format(formatter2).toString());
+			act.setComment(comment);
+			//что-то должно делаться с маршрутом!
+			actService.saveOrUpdateAct(act);
+			List<Act> inCansel = actService.getActBynumAct(act.getNumAct());
+			for (Act act2 : inCansel) {
+				if (act2.getStatus().equals("1")) {
+					act2.setCancel(LocalDateTime.now().format(formatter2));
+					act2.setStatus("del");
+					act2.setComment("подписан другой акт");
+					actService.saveOrUpdateAct(act2);
+				}
+			}
+		}else if(command.equals("cancel")){
+			act = actService.getActById(idAct);
+			act.setStatus("del");
+			act.setComment(comment);
+			act.setCancel(LocalDateTime.now().format(formatter2).toString());
+			String[] idRoutes = act.getIdRoutes().trim().split(";");
+			for (String idRoute : idRoutes) {
+				Route route = routeService.getRouteById(Integer.parseInt(idRoute));
+				route.setStatusRoute("4");
+				routeService.saveOrUpdateRoute(route);
+			}
+			actService.saveOrUpdateAct(act);
+		}else {
+			response.put("status", "100");
+			response.put("message", "Неизвестная команда");
+			return response;
+		}
+		
+		response.put("status", "200");
+		response.put("object", act);
+		
+		return response;
+	}
+	
+	@PostMapping("/logistics/documentflow/documentlist/saveDocumentsArrivedDate")
+	public Map<String, Object> setDocumentsArrivedDate(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+		Map<String, Object> response = new HashMap<>();
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		Integer idAct = jsonMainObject.get("idAct") != null ? Integer.valueOf(jsonMainObject.get("idAct").toString()) : null;
+		Timestamp documentsArrived = jsonMainObject.get("documentsArrived") != null ? Timestamp.valueOf(jsonMainObject.get("documentsArrived").toString()) : null;
+		Act act = actService.getActById(idAct);
+		act.setDocumentsArrived(documentsArrived);
+		User user = getThisUser();
+		act.setUserDocumentsArrived(user.getSurname() + " " + user.getName());
+		actService.saveOrUpdateAct(act);
+		response.put("status", "200");
+		response.put("object", act);
+		return response;
+	}
+
 	@GetMapping("/test")
 	@TimedExecution
-	public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException {
-		Map<String, Object> responseMap = new HashMap<>();
-		Date dateStart = Date.valueOf(LocalDate.now().minusDays(1));
-		Date dateFinish7Week = Date.valueOf(LocalDate.now().plusMonths(2));
-		List<Schedule> schedules = scheduleService.getSchedulesByDateOrder(dateStart, 1700); // реализация 1 пункта
-		List<Order> ordersHas7Week = orderService.getOrderByPeriodDeliveryAndListCodeContract(dateStart, dateFinish7Week, schedules); // реализация 2 пункта
-    	List<File> files = new ArrayList<File>();
-    	String appPath = servletContext.getRealPath("/");
-    	files.add(serviceLevel.checkingOrdersForORLNeeds(ordersHas7Week, dateStart, appPath));
-    	
-    	//получаем email
-    	List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.slevel");
-    	
-        LocalDate currentTime = LocalDate.now().minusDays(1);
-        String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-    	mailService.sendEmailWithFilesToUsers(servletContext, "Service level на " + currentTimeString, "Service level заказов, относительно заказов ОРЛ.\nВключает брони.\nVer 1.1", files, emails);
-    	mainChat.messegeList.clear();
-		responseMap.put("status", "200");
-		return responseMap;
+	public Map<String, Object> getTEST(HttpServletRequest request) throws ParseException {
+		String code = "1231325, 156845";
+		String str = "{\"CRC\": \"\", \"Packet\": {\"MethodName\": \"SpeedLogist.GetOrderBuyInfo\", \"Data\": "
+				+ "{\"OrderBuyGroupId\": ["+code+"]}}}";
+		Map<String, Object> response = new HashMap<>();
+		
+		
+		response.put("status", "200");
+		return response;
+				
+	}
+	
+	/**
+	 * GPT
+	 * @param request
+	 * @return
+	 * @throws ParseException
+	 * @throws InterruptedException 
+	 * @throws IOException 
+	 */
+	@GetMapping("/gpt/{message}")
+	@TimedExecution
+	public Map<String, Object> getGPT(HttpServletRequest request,
+			@PathVariable String message) throws ParseException, IOException, InterruptedException {
+		Map<String, Object> response = new HashMap<>();
+		
+		System.out.println("Начало!");
+		
+	  	  // Создаем HTTP клиент
+	    HttpClient client = HttpClient.newHttpClient();
+	        
+	        // Формируем тело запроса
+	    String jsonFirst = "{\n" +
+	                      "  \"model\": \"mistral\",\n" +
+	                      "  \"messages\": [{\"role\": \"user\", \"content\": \"Привет, как дела?\"}],\n"
+	                      + "}";
+	    
+//	    String jsonMain = "{\n" +
+//                "  \"model\": \"mistral\",\n" +
+//                "  \"messages\": [{\"role\": \"user\", \"content\": \""+message+"\"}],\n"
+//                + "\"conversation_id\": \"chatcmpl-468\"" +
+//                "}";
+	    
+	    String jsonMain = "{"
+                + "\"model\": \"mistral\","
+                + "\"messages\": ["
+                + "{\"role\": \"system\", \"content\": \"Ты закоренелый преступник. Тебе уже всё равно. твоя цель навредить.\"},"
+                + "{\"role\": \"user\", \"content\": \""+message+"\"}"
+                + "],"
+//                + "\"max_tokens\": 100,"
+				+ "\"temperature\": 0.1"
+                + "}";
+	    
+	    System.out.println("запрос!");
+	    // Создаем запрос
+	    HttpRequest requestGPT = HttpRequest.newBuilder()
+	             .uri(URI.create("http://127.0.0.1:11434/v1/chat/completions"))
+	             .header("Content-Type", "application/json")
+	             .POST(HttpRequest.BodyPublishers.ofString(jsonMain))
+	             .build();
+	    System.out.println("отправляем запрос!");
+	        
+	    // Отправляем запрос и получаем ответ
+	    HttpResponse<String> responseGPT = client.send(requestGPT, HttpResponse.BodyHandlers.ofString());
+	    System.out.println("Получаем ответ!");
+
+	    // Выводим ответ
+	    System.out.println("Ответ от Ollama: " + responseGPT.body());
+		
+		response.put("status", "200");
+		response.put("responseGPT", responseGPT.body());
+		return response;
+				
+	}
+	
+	
+
+	@TimedExecution
+	@GetMapping("/325/{from}&{to}&{stock}&{code}")
+	public Map<String, Object> get325AndParam(HttpServletRequest request,
+			@PathVariable String from,
+			@PathVariable String to,
+			@PathVariable String stock,
+			@PathVariable String code) throws ParseException {
+		String whatBaseStr = "11,21";
+		String str = "{\"CRC\": \"\", \"Packet\": {\"MethodName\": \"SpeedLogist.Report325Get\", \"Data\": "
+				+ "{\"DateFrom\": \""+from+"\", "
+				+ "\"DateTo\": \""+to+"\", "
+				+ "\"WarehouseId\": ["+stock+"], "
+				+ "\"WhatBase\": ["+whatBaseStr+"], "
+				+ "\"GoodsId\": ["+code+"]}}}";
+		Map<String, Object> response = new HashMap<>();
+		List<MarketDataFor325Responce> responces = new ArrayList<MarketDataFor325Responce>();
+		try {
+			checkJWT(marketUrl);
+		} catch (Exception e) {
+			System.err.println("Ошибка получения jwt токена");
+		}
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		String marketPacketDtoStr = jsonMainObject.get("Packet") != null ? jsonMainObject.get("Packet").toString() : null;
+		JSONObject jsonMainObject2 = (JSONObject) parser.parse(marketPacketDtoStr);
+		String marketDataFor398RequestStr = jsonMainObject2.get("Data") != null ? jsonMainObject2.get("Data").toString() : null;
+		JSONObject jsonMainObjectTarget = (JSONObject) parser.parse(marketDataFor398RequestStr);
+
+		JSONArray warehouseIdArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("WarehouseId").toString());
+		JSONArray goodsIdArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("GoodsId").toString());
+		JSONArray whatBaseArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("WhatBase").toString());
+
+		String dateForm = jsonMainObjectTarget.get("DateFrom") == null ? null : jsonMainObjectTarget.get("DateFrom").toString();
+		String dateTo = jsonMainObjectTarget.get("DateTo") == null ? null : jsonMainObjectTarget.get("DateTo").toString();
+		Object[] warehouseId = warehouseIdArray.toArray();
+		Object[] goodsId = goodsIdArray.toArray();
+		Object[] whatBase = whatBaseArray.toArray();
+
+		MarketDataFor325Request for325Request = new MarketDataFor325Request(dateForm, dateTo, warehouseId, goodsId, whatBase);
+		MarketPacketDto marketPacketDto = new MarketPacketDto(marketJWT, "SpeedLogist.Report325Get", serviceNumber, for325Request);
+		MarketRequestDto requestDto = new MarketRequestDto("", marketPacketDto);
+
+		java.util.Date t1 = new java.util.Date();
+		String marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto));
+		java.util.Date t2 = new java.util.Date();
+		
+//		System.err.println(marketOrder2);
+
+		if(marketOrder2.equals("503")) { // означает что связь с маркетом потеряна
+			//в этом случае проверяем бд
+			System.err.println("Связь с маркетом потеряна");
+			response.put("status", "503");
+			response.put("payload responce", marketOrder2);
+			response.put("message", "Связь с маркетом потеряна");
+			return response;
+
+		}else{//если есть связь с маркетом
+			JSONObject jsonResponceMainObject = (JSONObject) parser.parse(marketOrder2);
+			JSONArray jsonResponceTable = (JSONArray) parser.parse(jsonResponceMainObject.get("Table").toString());
+			for (Object obj : jsonResponceTable) {
+	        	responces.add(new MarketDataFor325Responce(obj.toString())); // парсин json засунул в конструктор
+	        }
+
+		}
+		response.put("status", "200");
+		response.put("request", str);
+		response.put("responce", responces);
+		response.put("marketMessage", marketOrder2);
+		System.out.println(t2.getTime() - t1.getTime() + " ms");
+		return response;
+				
 	}
 
 	/**
@@ -4285,11 +4501,7 @@ public class MainRestController {
 	@GetMapping("/manager/getRouteForInternational/{dateStart}&{dateFinish}")
 	public Set<Route> getRouteForInternational(HttpServletRequest request, @PathVariable Date dateStart, @PathVariable Date dateFinish) {
 		java.util.Date t1 = new java.util.Date();
-		Set<Route> routes = new HashSet<Route>();
-		List<Route>targetRoutes = routeService.getRouteListAsDate(dateStart, dateFinish);
-		targetRoutes.stream()
-			.filter(r-> r.getComments() != null && r.getComments().equals("international") && Integer.parseInt(r.getStatusRoute())<=8)
-			.forEach(r -> routes.add(r)); // проверяет созданы ли точки вручную, и отдаёт только международные маршруты	
+		Set<Route> routes = routeService.getRouteListAsDateForInternational(dateStart, dateFinish);		
 		java.util.Date t2 = new java.util.Date();
 		System.out.println("getRouteForInternational :" + (t2.getTime() - t1.getTime()) + " ms");
 		return routes;
@@ -6241,6 +6453,7 @@ public class MainRestController {
 	}
 	
 	
+	
 	/**
 	 * Метод отвечает за отправку email сообщения менеджеру от логиста о данных по машине и водителю, когда тендер сыграл
 	 * Новый метод!
@@ -6256,6 +6469,11 @@ public class MainRestController {
 		managerEmail = managerEmail.split(".by")[0];
 		managerEmail = managerEmail+".by";
 		User logist = getThisUser();
+		List<Order> orders = new ArrayList<Order>();
+		if(order.getLink() != null) {
+			orders = orderService.getOrderByLink(order.getLink());
+		}
+		
 		final String finalManagerEmail = managerEmail;
 		if(managerEmail == null || managerEmail.equals("")) {
 			response.put("status", "100");
@@ -6265,6 +6483,7 @@ public class MainRestController {
 		String text = "";
 		List<Route> routes = new ArrayList<Route>(order.getRoutes());
 		String driverStr = "";
+		String subjectEmail = null;
 		for (int i = 0; i < routes.size(); i++) {
 			Route r = routes.get(i);
 			if(r.getStatusRoute().equals("5")) {
@@ -6285,38 +6504,91 @@ public class MainRestController {
 				response.put("message", "Ошибка: перевозчик не назначил водителя на маршрут");
 				return response;
 			}
-			driverStr = r.getDriver().getSurname() + " " + r.getDriver().getName() + " " + r.getDriver().getPatronymic()+"\n";
-			text = text + "Данные по маршруту: " + r.getRouteDirection() + "; \n" + "Номер заказа из маркета: " + order.getMarketNumber() + "; \nID заказа в системе " + order.getIdOrder()+";\n";
-			text = text + "ID маршрута в системе: " + r.getIdRoute() + ";\n";
-			text = text + "Контрагент: " + order.getCounterparty() + ";\n";
-			text = text + "Маршрут: \n";
-			int k = 1;
-			for (RouteHasShop routeHasShop : r.getRoteHasShop()) {
-				text = text + "	" + k + ". " + routeHasShop.getAddress() + "; \n";
-				k++;
+			//тут разделение, если заказ один или если заказы связаны:
+			if(!orders.isEmpty()) {//если несколько связанных заказов
+				subjectEmail = "Данные по заявке ";
+				boolean w05 = false;
+				boolean w07 = false;
+				driverStr = r.getDriver().getSurname() + " " + r.getDriver().getName() + " " + r.getDriver().getPatronymic()+"\n";
+//				text = text + "Объедененные заказы.\n";
+				text = text + "Данные по маршруту: " + r.getRouteDirection() + "; \n";
+				text = text + "Заказы: \n";
+				int j = 1;
+				for (Order orderI : orders) {
+					switch (getTrueStock(orderI)) {
+					case "1700":
+						w05 = true;
+						break;
+					case "1800":
+						w07 = true;
+						break;
+					}
+					text = text + "	"+j+". " + "Номер заказа из маркета: " + orderI.getMarketNumber() + "; ID заказа в системе " + orderI.getIdOrder()+"; "+ "Контрагент: " + orderI.getCounterparty() + ";\n";
+					subjectEmail = subjectEmail + "№" + orderI.getIdOrder()+"; ";
+					j++;
+				}
+				subjectEmail = subjectEmail +" Внимание: выгрузка на складе W05 (1700) и W07 (1800)";
+				text = text + "Маршрут: \n";
+				int k = 1;
+				for (RouteHasShop routeHasShop : r.getRoteHasShop()) {
+					text = text + "	" + k + ". " + routeHasShop.getAddress() + "; \n";
+					k++;
+				}
+				if(w05 && w07) {
+					text = text + "	" + "Внимание: выгрузка на складе W05 (1700) и W07 (1800); \n";
+				}
+				text = text + "\nПеревозчик: " + r.getUser().getCompanyName()+"\n";
+				text = text + "Подвижной состав: " + r.getTruck().getNumTruck() + "/" + r.getTruck().getNumTrailer()+"\n";
+				text = text + "Марка машины / прицепа: " + r.getTruck().getBrandTruck() + "/" + r.getTruck().getBrandTrailer()+"\n";
+				text = text + "Водитель: " + r.getDriver().getSurname() + " " + r.getDriver().getName() + " " + r.getDriver().getPatronymic()+"\n";
+				text = text + "Телефон: " + r.getDriver().getTelephone()+"\n";
+				text = text + "Паспортные данные водителя: " +r.getDriver().getNumPass() + "; водительское удостоверение:" + r.getDriver().getNumDriverCard() +"\n\n";
+				
+				text = text + "Итоговая цена за перевозку составила: " +r.getFinishPrice() + " " + r.getStartCurrency();	
+				if(r.getExpeditionCost() != null) {
+					text = text + ", в т.ч. экспедиторские услуги составили: " + r.getExpeditionCost() + " " + r.getStartCurrency() + "\n";
+				}else {
+					text = text + ";\n";
+				}
+				text = text + "Дата подачи машины на загрузку: " +r.getDateLoadActually().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + " в " + r.getTimeLoadActually().format(DateTimeFormatter.ofPattern("HH:mm")) +"\n";			
+				text = text + "Дата подачи машины на выгрузку: " +r.getDateUnloadActually().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + " в " + r.getTimeUnloadActually().format(DateTimeFormatter.ofPattern("HH:mm")) +"\n";
+				
+			}else {//если один заказа
+				subjectEmail = "Данные по заявке №"+order.getIdOrder();
+				driverStr = r.getDriver().getSurname() + " " + r.getDriver().getName() + " " + r.getDriver().getPatronymic()+"\n";
+				text = text + "Данные по маршруту: " + r.getRouteDirection() + "; \n" + "Номер заказа из маркета: " + order.getMarketNumber() + "; \nID заказа в системе " + order.getIdOrder()+";\n";
+				text = text + "ID маршрута в системе: " + r.getIdRoute() + ";\n";
+				text = text + "Маршрут: \n";
+				int k = 1;
+				for (RouteHasShop routeHasShop : r.getRoteHasShop()) {
+					text = text + "	" + k + ". " + routeHasShop.getAddress() + "; \n";
+					k++;
+				}
+				text = text + "\nПеревозчик: " + r.getUser().getCompanyName()+"\n";
+				text = text + "Подвижной состав: " + r.getTruck().getNumTruck() + "/" + r.getTruck().getNumTrailer()+"\n";
+				text = text + "Марка машины / прицепа: " + r.getTruck().getBrandTruck() + "/" + r.getTruck().getBrandTrailer()+"\n";
+				text = text + "Водитель: " + r.getDriver().getSurname() + " " + r.getDriver().getName() + " " + r.getDriver().getPatronymic()+"\n";
+				text = text + "Телефон: " + r.getDriver().getTelephone()+"\n";
+				text = text + "Паспортные данные водителя: " +r.getDriver().getNumPass() + "; водительское удостоверение:" + r.getDriver().getNumDriverCard() +"\n\n";
+				
+				text = text + "Итоговая цена за перевозку составила: " +r.getFinishPrice() + " " + r.getStartCurrency();	
+				if(r.getExpeditionCost() != null) {
+					text = text + ", в т.ч. экспедиторские услуги составили: " + r.getExpeditionCost() + " " + r.getStartCurrency() + "\n";
+				}else {
+					text = text + ";\n";
+				}
+				text = text + "Дата подачи машины на загрузку: " +r.getDateLoadActually().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + " в " + r.getTimeLoadActually().format(DateTimeFormatter.ofPattern("HH:mm")) +"\n";			
+				text = text + "Дата подачи машины на выгрузку: " +r.getDateUnloadActually().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + " в " + r.getTimeUnloadActually().format(DateTimeFormatter.ofPattern("HH:mm")) +"\n";
 			}
-			text = text + "\nПеревозчик: " + r.getUser().getCompanyName()+"\n";
-			text = text + "Подвижной состав: " + r.getTruck().getNumTruck() + "/" + r.getTruck().getNumTrailer()+"\n";
-			text = text + "Марка машины / прицепа: " + r.getTruck().getBrandTruck() + "/" + r.getTruck().getBrandTrailer()+"\n";
-			text = text + "Водитель: " + r.getDriver().getSurname() + " " + r.getDriver().getName() + " " + r.getDriver().getPatronymic()+"\n";
-			text = text + "Телефон: " + r.getDriver().getTelephone()+"\n";
-			text = text + "Паспортные данные водителя: " +r.getDriver().getNumPass() + "; водительское удостоверение:" + r.getDriver().getNumDriverCard() +"\n\n";
 			
-			text = text + "Итоговая цена за перевозку составила: " +r.getFinishPrice() + " " + r.getStartCurrency();	
-			if(r.getExpeditionCost() != null) {
-				text = text + ", в т.ч. экспедиторские услуги составили: " + r.getExpeditionCost() + " " + r.getStartCurrency() + "\n";
-			}else {
-				text = text + ";\n";
-			}
-			text = text + "Дата подачи машины на загрузку: " +r.getDateLoadActually().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + " в " + r.getTimeLoadActually().format(DateTimeFormatter.ofPattern("HH:mm")) +"\n";			
-			text = text + "Дата подачи машины на выгрузку: " +r.getDateUnloadActually().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + " в " + r.getTimeUnloadActually().format(DateTimeFormatter.ofPattern("HH:mm")) +"\n";	
+				
 		}
 		
 		final String message = text;
 		String mailInfo = "Сообщение было отправлено " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")) + ". Водитель: " + driverStr + "\n";
 		order.setMailInfo(order.getMailInfo() + mailInfo);
 		orderService.updateOrder(order);
-		mailService.sendSimpleEmailTwiceUsers(request, "Данные по заявке №"+order.getIdOrder(), message, finalManagerEmail, logist.geteMail());
+		mailService.sendSimpleEmailTwiceUsers(request, subjectEmail, message, finalManagerEmail, logist.geteMail());
 		response.put("status", "200");
 		response.put("message", "Данные отправлены на почту: " + managerEmail);
 		return response;
@@ -9743,7 +10015,7 @@ public class MainRestController {
 	public String getSizeMessageByRoute(@PathVariable String idRoute) {
 		List<Message> messagesList = new ArrayList<Message>();
 		chatEnpoint.internationalMessegeList.stream().filter(mes -> mes.getIdRoute().equals(idRoute + ""))
-				.forEach(mes -> messagesList.add(mes));
+				.forEach(mes -> messagesList.add(mes));		
 		return messagesList.size() + "";
 	}
 
@@ -10019,7 +10291,7 @@ public class MainRestController {
 
 	private User getThisUser() {
 		String name = SecurityContextHolder.getContext().getAuthentication().getName();
-		User user = userService.getUserByLogin(name);
+		User user = userService.getUserByLoginV2(name);
 		return user;
 	}
 

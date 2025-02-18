@@ -114,7 +114,7 @@ public class ScheduledTask {
             })
             .create();
 	
-    @Scheduled(cron = "0 00 11 * * ?") // каждый день в 11:00
+    @Scheduled(cron = "0 10 08 * * ?") // каждый день в 08:10
     public void sendSchedulesHasORL() {
     	System.out.println("Start --- sendSchedulesHasORL");
     	

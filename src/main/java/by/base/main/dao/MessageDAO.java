@@ -21,6 +21,13 @@ public interface MessageDAO {
 	
 	List<Message> getListMessageByIdRoute(String idRoute);
 	
+	/**
+	 * отдаёт сообщения по листу с idRoute
+	 * @param idRoute
+	 * @return
+	 */
+	List<Message> getListMessageByIdRouteList(List<String> idRoute);
+	
 	List<Message> getListMessageByStatus(String status);
 	
 	List<Message> getListMessageByCompanyName(String companyName);

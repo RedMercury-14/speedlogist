@@ -42,8 +42,7 @@ public class RouteDAOImpl implements RouteDAO {
 
 	private static final String queryGetList = "from Route r LEFT JOIN FETCH r.orders ord LEFT JOIN FETCH ord.addresses addr LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d order by r.idroute";
 
-	@Override
-	@Transactional
+	@Override	
 	public List<Route> getRouteList() {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<Route> theObject = currentSession.createQuery(queryGetList, Route.class);
@@ -51,8 +50,7 @@ public class RouteDAOImpl implements RouteDAO {
 		return objects;
 	}
 
-	@Override
-	@Transactional
+	@Override	
 	public void saveOrUpdateRoute(Route route) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		currentSession.saveOrUpdate(route);
@@ -61,8 +59,7 @@ public class RouteDAOImpl implements RouteDAO {
 
 	private static final String queryGetObjById = "from Route r LEFT JOIN FETCH r.orders ord LEFT JOIN FETCH ord.addresses addr LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d where r.idRoute=:idRoute";
 
-	@Override
-	@Transactional
+	@Override	
 	public Route getRouteById(int id) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<Route> theObject = currentSession.createQuery(queryGetObjById, Route.class);
@@ -74,8 +71,7 @@ public class RouteDAOImpl implements RouteDAO {
 
 	private static final String queryGetListObj = "from Route r LEFT JOIN FETCH r.orders ord LEFT JOIN FETCH ord.addresses addr LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d where r.routeDirection=:setNumTruck";
 
-	@Override
-	@Transactional
+	@Override	
 	public Route getRouteByDirection(String login) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<Route> theObject = currentSession.createQuery(queryGetListObj, Route.class);
@@ -88,7 +84,7 @@ public class RouteDAOImpl implements RouteDAO {
 //	private static final String queryDeleteById = "delete from Route where idroute=:setId";
 //
 //	@Override
-//	@Transactional
+//	
 //	@Deprecated
 //	public void deleteRouteById(int id) {
 //		Session currentSession = sessionFactory.getCurrentSession();
@@ -100,7 +96,7 @@ public class RouteDAOImpl implements RouteDAO {
 //	private static final String queryDeleteByLogin = "delete from Route where routeDirection=:setLogin";
 //
 //	@Override
-//	@Transactional
+//	
 //	public void deleteRouteByDirection(String login) {
 //		Session currentSession = sessionFactory.getCurrentSession();
 //		Query theQuery = currentSession.createQuery(queryDeleteByLogin);
@@ -111,8 +107,7 @@ public class RouteDAOImpl implements RouteDAO {
 
 	private static final String queryGetLast = "SELECT * FROM route order BY idroute DESC LIMIT 1";
 
-	@Override
-	@Transactional
+	@Override	
 	public Route getLastRoute() {
 		Session currentSession = sessionFactory.getCurrentSession();
 		List<Route> theObject = currentSession.createSQLQuery(queryGetLast).addEntity(Route.class).list();
@@ -128,8 +123,7 @@ public class RouteDAOImpl implements RouteDAO {
 			+ "LEFT JOIN FETCH r.driver d "
 			+ "where r.dateLoadPreviously BETWEEN :frmdate and :todate";
 
-	@Override
-	@Transactional
+	@Override	
 	public List<Route> getRouteListAsDate(Date dateStart, Date dateFinish) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<Route> theObject = currentSession.createQuery(queryGetListAsDate, Route.class);
@@ -213,8 +207,7 @@ public class RouteDAOImpl implements RouteDAO {
 
 	private static final String queryGetListAsDateAndStatus = "from Route r LEFT JOIN FETCH r.orders ord LEFT JOIN FETCH ord.addresses addr LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d where r.dateLoadPreviously BETWEEN :frmdate and :todate AND where r.statusRoute BETWEEN :frstat and :tostat";
 
-	@Override
-	@Transactional
+	@Override	
 	public List<Route> getRouteListAsDateAndStatus(Date dateStart, Date dateFinish, String stat1, String stat2) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<Route> theObject = currentSession.createQuery(queryGetListAsDateAndStatus, Route.class);
@@ -229,8 +222,7 @@ public class RouteDAOImpl implements RouteDAO {
 	private static final String queryGetListAsStatus = "from Route r LEFT JOIN FETCH r.orders ord LEFT JOIN FETCH ord.addresses addr LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d where r.statusRoute BETWEEN :frstat and :tostat";
 	private static final String queryGetListAsStatus1And1 = "from Route r LEFT JOIN FETCH r.orders ord LEFT JOIN FETCH ord.addresses addr LEFT JOIN FETCH r.roteHasShop rhs where r.statusRoute BETWEEN :frstat and :tostat";
 
-	@Override
-	@Transactional
+	@Override	
 	public List<Route> getRouteListAsStatus(String stat1, String stat2) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<Route> theObject;
@@ -248,8 +240,7 @@ public class RouteDAOImpl implements RouteDAO {
 
 	private static final String queryGetListObjByUser = "from Route r LEFT JOIN FETCH r.orders ord LEFT JOIN FETCH ord.addresses addr LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d where r.user=:user";
 
-	@Override
-	@Transactional
+	@Override	
 	public List<Route> getRouteListByUser(User user) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<Route> theObject = currentSession.createQuery(queryGetListObjByUser, Route.class);
@@ -260,8 +251,7 @@ public class RouteDAOImpl implements RouteDAO {
 
 	private static final String queryGetListAsComment = "from Route r LEFT JOIN FETCH r.orders ord LEFT JOIN FETCH ord.addresses addr LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d where r.comments=:comment";
 
-	@Override
-	@Transactional
+	@Override	
 	public List<Route> getRouteListAsComment(String comment) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<Route> theObject = currentSession.createQuery(queryGetListAsComment, Route.class);
@@ -272,8 +262,7 @@ public class RouteDAOImpl implements RouteDAO {
 
 	private static final String queryUpdate = "UPDATE Route SET finishPrice =: finishPrice, startCurrency=: currency, user=:user, statusRoute=:statusRoute where idRoute=:idRoute";
 
-	@Override
-	@Transactional
+	@Override	
 	public int updateRouteInBase(Integer idRoute, Integer finishCost, String currency, User user, String statusRoute) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query query = currentSession.createQuery(queryUpdate);
@@ -288,8 +277,7 @@ public class RouteDAOImpl implements RouteDAO {
 
 	private static final String queryUpdateSimple = "UPDATE Route SET statusRoute=:statusRoute where idRoute=:idRoute";
 
-	@Override
-	@Transactional
+	@Override	
 	public int updateRouteInBase(Integer idRoute, String statusRoute) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query query = currentSession.createQuery(queryUpdateSimple);
@@ -299,8 +287,7 @@ public class RouteDAOImpl implements RouteDAO {
 		return result;
 	}
 
-	@Override
-	@Transactional
+	@Override	
 	public List<Route> getRouteListAsRouteDirection(Route route) { // 09.10.2023
 		Session currentSession = sessionFactory.getCurrentSession();
 		String SQL;
@@ -317,8 +304,7 @@ public class RouteDAOImpl implements RouteDAO {
 
 	private static final String queryGetListAsDateAndUser = "from Route r LEFT JOIN FETCH r.orders LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d where r.dateLoadPreviously BETWEEN :frmdate and :todate AND r.user =:user";
 
-	@Override
-	@Transactional
+	@Override	
 	public List<Route> getRouteListAsDateAndUser(Date dateStart, Date dateFinish, User user) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<Route> theObject = currentSession.createQuery(queryGetListAsDateAndUser, Route.class);
@@ -331,7 +317,7 @@ public class RouteDAOImpl implements RouteDAO {
 
 	private static final String queryUpdateDates = "UPDATE Route r SET r.dateLoadActually =:dateLoadActually, r.dateUnloadActually =:dateUnloadActually, r.timeLoadActually=:timeLoadActually, r.timeUnloadActually=:timeUnloadActually, r.truck=:truck, r.driver =:driver where idRoute=:idRoute";
 
-	@Transactional
+	
 	@Override
 	@Deprecated
 	public int updateRouteInBase(Integer idRoute, Date dateLoadActually, Time timeLoadActually, Date dateUnloadActually,
@@ -352,7 +338,7 @@ public class RouteDAOImpl implements RouteDAO {
 
 	private static final String queryUpdateDateDoute = "UPDATE Route SET dateLoadPreviously =:dateLoadPreviously where idRoute=:idRoute";
 
-	@Transactional
+	
 	@Override
 	public int updateRouteInBase(Integer idRoute, Date dateLoadPreviously) {
 		Session currentSession = sessionFactory.getCurrentSession();
@@ -368,7 +354,7 @@ public class RouteDAOImpl implements RouteDAO {
 	 */
 	private static final String queryUpdateDrop = "UPDATE Route r "
 			+ "SET r.dateLoadActually =NULL, r.dateUnloadActually =NULL, r.timeLoadActually=NULL, r.timeUnloadActually=NULL, r.truck=NULL, r.driver =NULL where r.idRoute=:idRoute";
-	@Transactional
+	
 	@Override
 	public int updateDropRouteDateOfCarrier(Integer idRoute) {
 		Session currentSession = sessionFactory.getCurrentSession();
@@ -378,7 +364,7 @@ public class RouteDAOImpl implements RouteDAO {
 		return result;
 	}
 
-	@Transactional
+	
 	@Override
 	public Integer saveRouteAndReturnId(Route route) {
 		Session currentSession = sessionFactory.getCurrentSession();
@@ -388,7 +374,7 @@ public class RouteDAOImpl implements RouteDAO {
 
 	private static final String queryGetObjByCompanyNameMessage = "from Message where status=1 AND companyName=:companuName AND date BETWEEN :frmdate and :todate";
 
-	@Transactional
+	
 	@Override
 	public List<Route> getRouteListParticipated(User user) {
 		Session currentSession = sessionFactory.getCurrentSession();
@@ -412,7 +398,7 @@ public class RouteDAOImpl implements RouteDAO {
 
 	private static final String queryПetRouteListByUserHasPeriod = "from Route r LEFT JOIN FETCH r.orders LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d where r.user =:user AND r.dateLoadPreviously BETWEEN :frmdate and :todate";
 
-	@Transactional
+	
 	@Override
 	public List<Route> getRouteListByUserHasPeriod(User user, LocalDate start, LocalDate end) {
 		Session currentSession = sessionFactory.getCurrentSession();
@@ -430,8 +416,7 @@ public class RouteDAOImpl implements RouteDAO {
 
 	private static final String queryGetMaintenanceListAsDate = "from Route r LEFT JOIN FETCH r.orders ord LEFT JOIN FETCH ord.addresses addr LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d where r.comments ='maintenance' AND r.dateLoadPreviously BETWEEN :frmdate and :todate";
 
-	@Override
-	@Transactional
+	@Override	
 	public List<Route> getMaintenanceListAsDate(Date dateStart, Date dateFinish) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<Route> theObject = currentSession.createQuery(queryGetMaintenanceListAsDate, Route.class);
@@ -443,7 +428,7 @@ public class RouteDAOImpl implements RouteDAO {
 
 	private static final String queryGetMaintenanceListAsDateAndLogin = "from Route r LEFT JOIN FETCH r.orders ord LEFT JOIN FETCH ord.addresses addr LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d where r.comments ='maintenance' AND r.user =:user AND r.dateLoadPreviously BETWEEN :frmdate and :todate";
 
-	@Transactional
+	
 	@Override
 	public List<Route> getMaintenanceListAsDateAndLogin(Date dateStart, Date dateFinish, User user) {
 		Session currentSession = sessionFactory.getCurrentSession();
@@ -532,7 +517,7 @@ public class RouteDAOImpl implements RouteDAO {
 		
 	private static final String queryGetRouteListAsDateDTO = routeConstruct + " from Route r LEFT JOIN r.orders ord LEFT JOIN ord.addresses addr LEFT JOIN r.user u LEFT JOIN r.truck tr LEFT JOIN r.roteHasShop rhs LEFT JOIN r.driver d where r.dateLoadPreviously BETWEEN :frmdate and :todate ";
 	
-	@Transactional
+	
 	@Override
 	public List<RouteDTO> getRouteListAsDateDTO(Date dateStart, Date dateFinish) {
 		Session currentSession = sessionFactory.getCurrentSession();
@@ -551,15 +536,13 @@ public class RouteDAOImpl implements RouteDAO {
 		return objects;
 	}
 
-	@Override
-	@Transactional
+	@Override	
 	public void saveRoute(Route route) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		currentSession.save(route);
 	}
 
-	@Override
-	@Transactional
+	@Override	
 	public void updateRoute(Route route) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		currentSession.update(route);
@@ -581,5 +564,96 @@ public class RouteDAOImpl implements RouteDAO {
 		theObject.setParameter("dateNow", date, TemporalType.DATE);
 		List<Route> objects = theObject.getResultList();		
 		return new ArrayList<Route>(new HashSet<Route>(objects));
+	}
+
+	private static final String queryGetRouteListAsDateForInternational = "from Route r LEFT JOIN FETCH r.orders ord "
+			+ "LEFT JOIN FETCH ord.addresses addr "
+			+ "LEFT JOIN FETCH r.user u "
+			+ "LEFT JOIN FETCH r.truck tr "
+			+ "LEFT JOIN FETCH r.roteHasShop rhs "
+			+ "LEFT JOIN FETCH r.driver d "
+			+ "where r.dateLoadPreviously BETWEEN :frmdate and :todate "
+			+ "AND r.comments='international' ";
+//			+ "AND CAST(r.statusRoute AS integer) <= 8";
+	@Override
+	public List<Route> getRouteListAsDateForInternational(Date dateStart, Date dateFinish) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Route> theObject = currentSession.createQuery(queryGetRouteListAsDateForInternational, Route.class);
+		theObject.setParameter("frmdate", dateStart, TemporalType.DATE);
+		theObject.setParameter("todate", dateFinish, TemporalType.DATE);
+		List<Route> objects = theObject.getResultList();
+		// Преобразуем связанные заказы в DTO
+	    for (Route route : objects) {
+	        Set<Order> orders = route.getOrders(); // Инициализируем заказы
+	        Set<OrderDTO> orderDTOs = orders.stream()
+	            .map(order -> new OrderDTO(
+	                order.getIdOrder(),
+	                order.getCounterparty(),
+	                order.getContact(),
+	                order.getCargo(),
+	                order.getTypeLoad(),
+	                order.getMethodLoad(),
+	                order.getTypeTruck(),
+	                order.getTemperature(),
+	                order.getControl(),
+	                order.getComment(),
+	                order.getStatus(),
+	                order.getDateCreate(),
+	                order.getDateDelivery(),
+	                order.getManager(),
+	                order.getTelephoneManager(),
+	                order.getStacking(),
+	                order.getLogist(),
+	                order.getLogistTelephone(),
+	                order.getMarketNumber(),
+	                order.getOnloadWindowDate(),
+	                order.getOnloadWindowTime(),
+	                order.getLoadNumber(),
+	                order.getNumStockDelivery(),
+	                order.getPall(),
+	                order.getWay(),
+	                order.getOnloadTime(),
+	                order.getIncoterms(),
+	                order.getChangeStatus(),
+	                order.getNeedUnloadPoint(),
+	                order.getIdRamp(),
+	                order.getTimeDelivery(),
+	                order.getTimeUnload(),
+	                order.getLoginManager(),
+	                order.getSku(),
+	                order.getMonoPall(),
+	                order.getMixPall(),
+	                order.getIsInternalMovement(),
+	                order.getMailInfo(),
+	                order.getSlotInfo(),
+	                order.getDateCreateMarket(),
+	                order.getMarketInfo(),
+	                order.getMarketContractType(),
+	                order.getMarketContractGroupId(),
+	                order.getMarketContractNumber(),
+	                order.getMarketContractorId(),
+	                order.getNumProduct(),
+	                order.getStatusYard(),
+	                order.getUnloadStartYard(),
+	                order.getUnloadFinishYard(),
+	                order.getPallFactYard(),
+	                order.getWeightFactYard(),
+	                order.getMarketOrderSumFirst(),
+	                order.getMarketOrderSumFinal(),
+	                order.getArrivalFactYard(),
+	                order.getRegistrationFactYard(),
+	                order.getAddresses().stream()
+	                     .findFirst() // Извлекаем первый адрес, если он существует
+	                     .map(Address::getBodyAddress)
+	                     .orElse(null),
+	                order.getLastDatetimePointLoad(),
+	                order.getDateOrderOrl(),
+	                order.getLink(),
+	                order.getSlotMessageHistory()
+	            )).collect(Collectors.toSet());
+	        // Если нужно, добавьте OrderDTO обратно в Route или сохраните для дальнейшей обработки
+	        route.setOrdersDTO(orderDTOs); // Добавьте это поле в `Route`, если требуется
+	    }
+		return objects;
 	}
 }

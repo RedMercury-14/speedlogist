@@ -119,6 +119,21 @@ public class Act implements Serializable{
 
     @Column(name = "logist", columnDefinition = "TEXT", nullable = true)
     private String logist; // Логисты (разделитель ^)
+    
+    @Column(name = "total_cost")
+    private Double totalCost;
+    
+    @Column(name = "total_way")
+    private Double totalWay;
+    
+    @Column(name = "total_nds")
+    private Double totalNds;
+    
+    @Column(name = "column_expedition_сost", columnDefinition = "TEXT", nullable = true)
+    private String columnExpeditionCost; // кспедиторские услуги (разделитель ^)
+    
+    @Column(name = "total_expedition_сost")
+    private Double totalExpeditionCost;
 	
 	public Integer getIdAct() {
 		return idAct;
@@ -221,7 +236,7 @@ public class Act implements Serializable{
 	}
 
 	public void setColumnDateLoad(String columnDateLoad) {
-		this.columnDateLoad = columnDateLoad;
+		this.columnDateLoad = columnDateLoad.isEmpty() ? null : columnDateLoad;
 	}
 
 	public String getColumnDateUnload() {
@@ -229,7 +244,7 @@ public class Act implements Serializable{
 	}
 
 	public void setColumnDateUnload(String columnDateUnload) {
-		this.columnDateUnload = columnDateUnload;
+		this.columnDateUnload = columnDateUnload.isEmpty() ? null : columnDateUnload;
 	}
 
 	public String getColumnNameRoute() {
@@ -237,7 +252,7 @@ public class Act implements Serializable{
 	}
 
 	public void setColumnNameRoute(String columnNameRoute) {
-		this.columnNameRoute = columnNameRoute;
+		this.columnNameRoute = columnNameRoute.isEmpty() ? null : columnNameRoute;
 	}
 
 	public String getColumnNumTruck() {
@@ -245,7 +260,7 @@ public class Act implements Serializable{
 	}
 
 	public void setColumnNumTruck(String columnNumTruck) {
-		this.columnNumTruck = columnNumTruck;
+		this.columnNumTruck = columnNumTruck.isEmpty() ? null : columnNumTruck;
 	}
 
 	public String getColumnNumRouteList() {
@@ -253,7 +268,7 @@ public class Act implements Serializable{
 	}
 
 	public void setColumnNumRouteList(String columnNumRouteList) {
-		this.columnNumRouteList = columnNumRouteList;
+		this.columnNumRouteList = columnNumRouteList.isEmpty() ? null : columnNumRouteList;
 	}
 
 	public String getColumnNumDocument() {
@@ -261,7 +276,7 @@ public class Act implements Serializable{
 	}
 
 	public void setColumnNumDocument(String columnNumDocument) {
-		this.columnNumDocument = columnNumDocument;
+		this.columnNumDocument = columnNumDocument.isEmpty() ? null : columnNumDocument;
 	}
 
 	public String getColumnVeigthCargo() {
@@ -269,7 +284,7 @@ public class Act implements Serializable{
 	}
 
 	public void setColumnVeigthCargo(String columnVeigthCargo) {
-		this.columnVeigthCargo = columnVeigthCargo;
+		this.columnVeigthCargo = columnVeigthCargo.isEmpty() ? null : columnVeigthCargo;
 	}
 
 	public String getColumnSummCost() {
@@ -277,7 +292,7 @@ public class Act implements Serializable{
 	}
 
 	public void setColumnSummCost(String columnSummCost) {
-		this.columnSummCost = columnSummCost;
+		this.columnSummCost = columnSummCost.isEmpty() ? null : columnSummCost;
 	}
 
 	public String getColumnNdsSumm() {
@@ -285,7 +300,7 @@ public class Act implements Serializable{
 	}
 
 	public void setColumnNdsSumm(String columnNdsSumm) {
-		this.columnNdsSumm = columnNdsSumm;
+		this.columnNdsSumm = columnNdsSumm.isEmpty() ? null : columnNdsSumm;
 	}
 
 	public String getColumnTollRoads() {
@@ -293,7 +308,7 @@ public class Act implements Serializable{
 	}
 
 	public void setColumnTollRoads(String columnTollRoads) {
-		this.columnTollRoads = columnTollRoads;
+		this.columnTollRoads = columnTollRoads.isEmpty() ? null : columnTollRoads;
 	}
 
 	public String getColumnTotal() {
@@ -301,7 +316,7 @@ public class Act implements Serializable{
 	}
 
 	public void setColumnTotal(String columnTotal) {
-		this.columnTotal = columnTotal;
+		this.columnTotal = columnTotal.isEmpty() ? null : columnTotal;
 	}
 
 	public Timestamp getDocumentsArrived() {
@@ -358,6 +373,46 @@ public class Act implements Serializable{
 
 	public void setLogist(String logist) {
 		this.logist = logist;
+	}
+
+	public Double getTotalCost() {
+		return totalCost;
+	}
+
+	public void setTotalCost(Double totalCost) {
+		this.totalCost = totalCost;
+	}
+
+	public Double getTotalWay() {
+		return totalWay;
+	}
+
+	public void setTotalWay(Double totalWey) {
+		this.totalWay = totalWey;
+	}
+
+	public Double getTotalNds() {
+		return totalNds;
+	}
+
+	public void setTotalNds(Double totalNds) {
+		this.totalNds = totalNds;
+	}
+
+	public String getColumnExpeditionCost() {
+		return columnExpeditionCost;
+	}
+
+	public void setColumnExpeditionCost(String columnExpeditionCost) {
+		this.columnExpeditionCost = columnExpeditionCost.isEmpty() ? null : columnExpeditionCost;
+	}
+
+	public Double getTotalExpeditionCost() {
+		return totalExpeditionCost;
+	}
+
+	public void setTotalExpeditionCost(Double totalExpeditionCost) {
+		this.totalExpeditionCost = totalExpeditionCost;
 	}
 
 	@Override

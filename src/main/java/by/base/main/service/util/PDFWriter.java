@@ -616,7 +616,11 @@ public class PDFWriter {
 			act.setColumnVeigthCargo(columnVeigthCargo);
 			act.setCarrier(carrier);
 			act.setCarrierHead(carrierHead);
-			act.setLogist(logist);			
+			act.setLogist(logist);		
+			
+			act.setTotalCost(cost);
+			act.setTotalWay(way);
+			act.setTotalNds(nds);
 			actService.saveOrUpdateAct(act);
 	        return 1;
 		}
@@ -868,6 +872,11 @@ public class PDFWriter {
 					act.setCarrier(carrier);
 					act.setCarrierHead(carrierHead);
 					act.setLogist(logist);
+					
+					act.setTotalCost(cost);
+					act.setTotalWay(way);
+					act.setTotalNds(nds);
+					
 					actService.saveOrUpdateAct(act);
 					
 					//обнуляем общие значения
@@ -1123,6 +1132,10 @@ public class PDFWriter {
 					act.setCarrier(carrier);
 					act.setCarrierHead(carrierHead);
 					act.setLogist(logist);
+					
+					act.setTotalCost(cost);
+					act.setTotalWay(way);
+					act.setTotalNds(nds);
 					actService.saveOrUpdateAct(act);
 				}
 				
@@ -1184,6 +1197,7 @@ public class PDFWriter {
 		String columnNdsSumm = ""; 
 		String columnTollRoads = ""; 
 		String columnTotal = ""; 
+		String expeditionCostStr = "";
 		
 		String carrier = "";
 		String carrierHead = "";
@@ -1283,6 +1297,11 @@ public class PDFWriter {
 		double costAndNdsValue = 0.0;
 		String currency = routes.get(0).getStartCurrency();
 		for (Route route : routes) {
+			carrier = carrier + route.getUser().getCompanyName()+"^";
+			carrierHead = carrierHead + directOfOOO + "^";
+//			carrierDriver = carrierDriver + route.getDriver().getSurname() + " " + route.getDriver().getName() + "^";
+			logist = logist + route.getLogistInfo() + "^";
+			
 			table.addCell(new PdfPCell(new Phrase(route.getDateLoadPreviously().format(formatter), fontMainText)));
 			columnDateLoad = columnDateLoad +route.getDateLoadPreviously().format(formatter)+"^";
 	        table.addCell(new PdfPCell(new Phrase(route.getDateUnload(), fontMainText)));
@@ -1305,9 +1324,10 @@ public class PDFWriter {
 	        columnVeigthCargo = columnVeigthCargo + route.getCargoWeightForAct() + "^";
 	        cost = cost + route.getFinishPrice();
 	        expeditionCost = expeditionCost + Double.parseDouble(route.getExpeditionCost().toString());
+	        expeditionCostStr = expeditionCostStr + expeditionCost + "^";
 	        Integer price = route.getFinishPrice() - route.getExpeditionCost();
 	        table.addCell(new PdfPCell(new Phrase(price.toString(), fontMainText))); // финальная цена
-	        columnSummCost = columnSummCost + route.getFinishPrice().toString()+ "^";
+	        columnSummCost = columnSummCost + price.toString()+ "^";
 	        double totalNDS = 0.0;
 			way = way + Double.parseDouble(route.getCostWay());
 			nds = nds + totalNDS; 
@@ -1423,6 +1443,12 @@ public class PDFWriter {
 		act.setCarrier(carrier);
 		act.setCarrierHead(carrierHead);
 		act.setLogist(logist);
+		act.setColumnExpeditionCost(expeditionCostStr);
+		
+		act.setTotalCost(cost);
+		act.setTotalWay(way);
+		act.setTotalNds(nds);
+		act.setTotalExpeditionCost(expeditionCost);
 		actService.saveOrUpdateAct(act);
         return 1;
 	}

@@ -118,6 +118,7 @@
 						</button>
 					</div>
 					<div class="modal-body">
+						<div class="d-flex flex-column mb-2 text-muted" id="actInfoToActRowsModal"></div>
 						<div class="table-scroll">
 							<table id="table" class="table table-bordered table-striped m-0">
 								<thead class="thead-dark text-center">

@@ -280,7 +280,6 @@ public class RouteServiceImpl implements RouteService{
 			.forEach(r -> routes.add(r)); // проверяет созданы ли точки вручную, и отдаёт только международные маршруты
 		
 		//подгрузка кол-ва заявок на тендер
-//		java.util.Date t1 = new java.util.Date();
 //		List<String> routesId = routes.stream().map(r-> r.getIdRoute().toString()).collect(Collectors.toList());
 //		List <Message> messages = messageDAO.getListMessageByIdRouteList(routesId);	
 //		
@@ -295,7 +294,6 @@ public class RouteServiceImpl implements RouteService{
 //			route.setNumOffer(messagesList.size());
 //			
 //		}
-//		java.util.Date t2 = new java.util.Date();
 		return routes;
 	}
 

@@ -55,7 +55,7 @@
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/internationalNew" />">New Менеджер международных маршрутов</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/internationalCarrier" />">Список перевозчиков</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/ordersLogist" />">Менеджер заявок</a>
-										<a class="dropdown-item" href="<spring:url value="/main/logistics/documentflow" />">Документооборот</a>
+										<a class="dropdown-item" href="<spring:url value="/main/logistics/documentflow/documentlist" />">Документооборот</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/shopControl" />">Список магазинов</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/counterpartiesList" />">Список поставщиков</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/maintenance " />">Менеджер маршрутов АХО/СГИ</a>
@@ -120,7 +120,7 @@
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/internationalNew" />">New Менеджер международных маршрутов</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/internationalCarrier" />">Список перевозчиков</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/ordersLogist" />">Менеджер заявок</a>
-										<a class="dropdown-item" href="<spring:url value="/main/logistics/documentflow" />">Документооборот</a>
+										<a class="dropdown-item" href="<spring:url value="/main/logistics/documentflow/documentlist" />">Документооборот</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/shopControl" />">Список магазинов</a>
 										<!-- <a class="dropdown-item" href="<spring:url value="/main/logistics/counterpartiesList" />">Список поставщиков</a> -->
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/maintenance " />">Менеджер маршрутов АХО/СГИ</a>
@@ -174,7 +174,7 @@
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/internationalNew" />">New Менеджер международных маршрутов</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/internationalCarrier" />">Список перевозчиков</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/ordersLogist" />">Менеджер заявок</a>
-										<a class="dropdown-item" href="<spring:url value="/main/logistics/documentflow" />">Документооборот</a>
+										<a class="dropdown-item" href="<spring:url value="/main/logistics/documentflow/documentlist" />">Документооборот</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/shopControl" />">Список магазинов</a>
 										<!-- <a class="dropdown-item" href="<spring:url value="/main/logistics/counterpartiesList" />">Список поставщиков</a> -->
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/maintenance " />">Менеджер маршрутов АХО/СГИ</a>
@@ -193,7 +193,7 @@
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/internationalNew" />">New Менеджер международных маршрутов</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/internationalCarrier" />">Список перевозчиков</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/ordersLogist" />">Менеджер заявок</a>
-										<a class="dropdown-item" href="<spring:url value="/main/logistics/documentflow" />">Документооборот</a>
+										<a class="dropdown-item" href="<spring:url value="/main/logistics/documentflow/documentlist" />">Документооборот</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/shopControl" />">Список магазинов</a>
 										<!-- <a class="dropdown-item" href="<spring:url value="/main/logistics/counterpartiesList" />">Список поставщиков</a> -->
 										<a class="dropdown-item" href="<spring:url value="/main/analytics?pageName=logistic" />">Аналитика Биржи</a>

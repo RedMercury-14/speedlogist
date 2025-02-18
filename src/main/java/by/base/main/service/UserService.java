@@ -49,4 +49,6 @@ public interface UserService {
 	int updateUserInBaseDocuments(int idUser, String text);
 	
 	User getUserByLoginV2(String login);
+	
+	List<User> getUserLoginList();
 }

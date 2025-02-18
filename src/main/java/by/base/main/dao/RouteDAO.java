@@ -35,6 +35,14 @@ public interface RouteDAO {
 	
 	List<Route> getRouteListAsDate(Date dateStart, Date dateFinish);
 	
+	/**
+	 * отдаёт маршруты для менеджера международных перевозок
+	 * @param dateStart
+	 * @param dateFinish
+	 * @return
+	 */
+	List<Route> getRouteListAsDateForInternational(Date dateStart, Date dateFinish);
+	
 	List<RouteDTO> getRouteListAsDateDTO(Date dateStart, Date dateFinish);
 	
 	List<Route> getRouteListAsDateAndStatus(Date dateStart, Date dateFinish, String stat1, String stat2);

@@ -215,4 +215,13 @@ public class UserDAOImpl implements UserDAO{
         return query.uniqueResult();
 	}
 
+	private static final String queryGetUserLoginList = "from User u where login IS NOT NULL order by u.idUser";
+	@Override
+	public List<User> getUserLoginList() {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<User> theRole = currentSession.createQuery(queryGetUserLoginList, User.class);
+		List <User> users = theRole.getResultList();
+		return users;
+	}
+
 }

@@ -177,4 +177,14 @@ public class MessageDAOImpl implements MessageDAO{
 		List<Message> objects = theObject.getResultList();
 		return objects;
 	}
+
+	private static final String queryGetListObjIdRouteList = "from Message where idRoute IN (:idRoute)";
+	@Override
+	public List<Message> getListMessageByIdRouteList(List<String> idRoute) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Message> theObject = currentSession.createQuery(queryGetListObjIdRouteList, Message.class);
+		theObject.setParameter("idRoute", idRoute);
+		List<Message> objects = theObject.getResultList();
+		return objects;
+	}
 }

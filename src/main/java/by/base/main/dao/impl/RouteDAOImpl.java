@@ -565,4 +565,95 @@ public class RouteDAOImpl implements RouteDAO {
 		List<Route> objects = theObject.getResultList();		
 		return new ArrayList<Route>(new HashSet<Route>(objects));
 	}
+
+	private static final String queryGetRouteListAsDateForInternational = "from Route r LEFT JOIN FETCH r.orders ord "
+			+ "LEFT JOIN FETCH ord.addresses addr "
+			+ "LEFT JOIN FETCH r.user u "
+			+ "LEFT JOIN FETCH r.truck tr "
+			+ "LEFT JOIN FETCH r.roteHasShop rhs "
+			+ "LEFT JOIN FETCH r.driver d "
+			+ "where r.dateLoadPreviously BETWEEN :frmdate and :todate "
+			+ "AND r.comments='international' ";
+//			+ "AND CAST(r.statusRoute AS integer) <= 8";
+	@Override
+	public List<Route> getRouteListAsDateForInternational(Date dateStart, Date dateFinish) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Route> theObject = currentSession.createQuery(queryGetRouteListAsDateForInternational, Route.class);
+		theObject.setParameter("frmdate", dateStart, TemporalType.DATE);
+		theObject.setParameter("todate", dateFinish, TemporalType.DATE);
+		List<Route> objects = theObject.getResultList();
+		// Преобразуем связанные заказы в DTO
+	    for (Route route : objects) {
+	        Set<Order> orders = route.getOrders(); // Инициализируем заказы
+	        Set<OrderDTO> orderDTOs = orders.stream()
+	            .map(order -> new OrderDTO(
+	                order.getIdOrder(),
+	                order.getCounterparty(),
+	                order.getContact(),
+	                order.getCargo(),
+	                order.getTypeLoad(),
+	                order.getMethodLoad(),
+	                order.getTypeTruck(),
+	                order.getTemperature(),
+	                order.getControl(),
+	                order.getComment(),
+	                order.getStatus(),
+	                order.getDateCreate(),
+	                order.getDateDelivery(),
+	                order.getManager(),
+	                order.getTelephoneManager(),
+	                order.getStacking(),
+	                order.getLogist(),
+	                order.getLogistTelephone(),
+	                order.getMarketNumber(),
+	                order.getOnloadWindowDate(),
+	                order.getOnloadWindowTime(),
+	                order.getLoadNumber(),
+	                order.getNumStockDelivery(),
+	                order.getPall(),
+	                order.getWay(),
+	                order.getOnloadTime(),
+	                order.getIncoterms(),
+	                order.getChangeStatus(),
+	                order.getNeedUnloadPoint(),
+	                order.getIdRamp(),
+	                order.getTimeDelivery(),
+	                order.getTimeUnload(),
+	                order.getLoginManager(),
+	                order.getSku(),
+	                order.getMonoPall(),
+	                order.getMixPall(),
+	                order.getIsInternalMovement(),
+	                order.getMailInfo(),
+	                order.getSlotInfo(),
+	                order.getDateCreateMarket(),
+	                order.getMarketInfo(),
+	                order.getMarketContractType(),
+	                order.getMarketContractGroupId(),
+	                order.getMarketContractNumber(),
+	                order.getMarketContractorId(),
+	                order.getNumProduct(),
+	                order.getStatusYard(),
+	                order.getUnloadStartYard(),
+	                order.getUnloadFinishYard(),
+	                order.getPallFactYard(),
+	                order.getWeightFactYard(),
+	                order.getMarketOrderSumFirst(),
+	                order.getMarketOrderSumFinal(),
+	                order.getArrivalFactYard(),
+	                order.getRegistrationFactYard(),
+	                order.getAddresses().stream()
+	                     .findFirst() // Извлекаем первый адрес, если он существует
+	                     .map(Address::getBodyAddress)
+	                     .orElse(null),
+	                order.getLastDatetimePointLoad(),
+	                order.getDateOrderOrl(),
+	                order.getLink(),
+	                order.getSlotMessageHistory()
+	            )).collect(Collectors.toSet());
+	        // Если нужно, добавьте OrderDTO обратно в Route или сохраните для дальнейшей обработки
+	        route.setOrdersDTO(orderDTOs); // Добавьте это поле в `Route`, если требуется
+	    }
+		return objects;
+	}
 }

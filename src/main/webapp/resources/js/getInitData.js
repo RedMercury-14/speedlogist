@@ -143,5 +143,14 @@ function getInitDataUrl(url) {
 		return`${baseUrl}${dateStart}&${dateEnd}`
 	}
 
+	// Архив актов
+	if (url.includes('documentflow/documentlist')) {
+		const baseUrl ='../../../api/logistics/documentflow/documentlist/'
+		const PAGE_NAME = 'documentlist'
+		const DATES_KEY = `searchDates_to_${PAGE_NAME}`
+		const { dateStart, dateEnd } = dateHelper.getDatesToFetch(DATES_KEY, 14, 0)
+		return`${baseUrl}${dateStart}&${dateEnd}`
+	}
+
 	return ''
 }

@@ -3,9 +3,11 @@ package by.base.main.service.impl;
 import java.sql.Date;
 import java.sql.Time;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
@@ -15,13 +17,16 @@ import org.springframework.stereotype.Service;
 
 import com.dto.RouteDTO;
 
+import by.base.main.dao.MessageDAO;
 import by.base.main.dao.RouteDAO;
 import by.base.main.dao.UserDAO;
+import by.base.main.model.Message;
 import by.base.main.model.Route;
 import by.base.main.model.Tender;
 import by.base.main.model.Truck;
 import by.base.main.model.User;
 import by.base.main.service.RouteService;
+import by.base.main.util.ChatEnpoint;
 @Service
 public class RouteServiceImpl implements RouteService{
 	
@@ -30,6 +35,12 @@ public class RouteServiceImpl implements RouteService{
 	
 	@Autowired
 	private UserDAO userDAO;
+	
+	@Autowired
+	private ChatEnpoint chatEnpoint;
+	
+	@Autowired
+	private MessageDAO messageDAO;
 	
 	@Transactional
 	@Override
@@ -260,10 +271,31 @@ public class RouteServiceImpl implements RouteService{
 	@Override
 	public Set<Route> getRouteListAsDateForInternational(Date dateStart, Date dateFinish) {
 		Set<Route> routes = new HashSet<Route>();
-		List<Route>targetRoutes = routeDAO.getRouteListAsDate(dateStart, dateFinish);
+		List<Route>targetRoutes = routeDAO.getRouteListAsDateForInternational(dateStart, dateFinish); 
+		
+//		List<Route>testRoutes = routeDAO.getRouteListAsDateForInternational(dateStart, dateFinish); 
 		targetRoutes.stream()
-			.filter(r-> r.getComments() != null && r.getComments().equals("international") && Integer.parseInt(r.getStatusRoute())<=8)
-			.forEach(r -> routes.add(r)); // проверяет созданы ли точки вручную, и отдаёт только международные маршруты	
+//			.filter(r-> r.getComments() != null && r.getComments().equals("international") && Integer.parseInt(r.getStatusRoute())<=8)
+			.filter(r-> Integer.parseInt(r.getStatusRoute())<=8)
+			.forEach(r -> routes.add(r)); // проверяет созданы ли точки вручную, и отдаёт только международные маршруты
+		
+		//подгрузка кол-ва заявок на тендер
+//		java.util.Date t1 = new java.util.Date();
+//		List<String> routesId = routes.stream().map(r-> r.getIdRoute().toString()).collect(Collectors.toList());
+//		List <Message> messages = messageDAO.getListMessageByIdRouteList(routesId);	
+//		
+//		for (Route route : routes) {
+//			List<Message> messagesList = new ArrayList<Message>();			
+//			if(route.getStatusRoute().equals("1")) {
+//				chatEnpoint.internationalMessegeList.stream().filter(mes -> mes.getIdRoute().equals(route.getIdRoute().toString()))
+//				.forEach(mes -> messagesList.add(mes));
+//			}else {							
+//				messages.stream().filter(m-> m.getCurrency() != null && m.getIdRoute().equals(route.getIdRoute().toString())).forEach(mes -> messagesList.add(mes));
+//			}
+//			route.setNumOffer(messagesList.size());
+//			
+//		}
+//		java.util.Date t2 = new java.util.Date();
 		return routes;
 	}
 

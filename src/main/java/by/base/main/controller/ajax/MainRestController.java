@@ -87,6 +87,10 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.core.userdetails.User.UserBuilder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -421,18 +425,8 @@ public class MainRestController {
 				+ "{\"OrderBuyGroupId\": ["+code+"]}}}";
 		Map<String, Object> response = new HashMap<>();
 		
-		try {			
-			checkJWT(marketUrl);			
-		} catch (Exception e) {
-			System.err.println("Ошибка получения jwt токена");
-		}
-		MarketDataForRequestDto dataDto3 = new MarketDataForRequestDto(code);
-		MarketPacketDto packetDto3 = new MarketPacketDto(marketJWT, "SpeedLogist.GetOrderBuyInfo", serviceNumber, dataDto3);
-		MarketRequestDto requestDto3 = new MarketRequestDto("", packetDto3);
-		String marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto3));
 		
 		response.put("status", "200");
-		response.put("responce", marketOrder2);
 		return response;
 				
 	}
@@ -10021,7 +10015,7 @@ public class MainRestController {
 	public String getSizeMessageByRoute(@PathVariable String idRoute) {
 		List<Message> messagesList = new ArrayList<Message>();
 		chatEnpoint.internationalMessegeList.stream().filter(mes -> mes.getIdRoute().equals(idRoute + ""))
-				.forEach(mes -> messagesList.add(mes));
+				.forEach(mes -> messagesList.add(mes));		
 		return messagesList.size() + "";
 	}
 

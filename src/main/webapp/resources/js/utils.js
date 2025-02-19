@@ -147,6 +147,25 @@ export const dateHelper = {
 
 
 	/**
+	 * Метод `getISODateTime` принимает дату в миллисекундах и возвращает
+	 * отформатированную строку даты и времени в формате "YYYY-MM-DDTHH:MM"
+	 * @param { number } dateInMs - это число, представляющее дату в миллисекундах.
+	 * @returns { string } возвращает отформатированную строку даты и времени в
+	 * формате "YYYY-MM-DDTHH:MM".
+	 */
+	getISODateTime(dateInMs) {
+		if (!dateInMs) return ''
+		const date = new Date(dateInMs);
+		const year = date.getFullYear();
+		const month = this.pad(date.getMonth() + 1);
+		const day = this.pad(date.getDate());
+		const hours = this.pad(date.getHours());
+		const minutes = this.pad(date.getMinutes());
+		return `${year}-${month}-${day}T${hours}:${minutes}`;
+	},
+
+
+	/**
 	 * Метод `getDateForInput` принимает дату в миллисекундах либо
 	 * объект `Date` и возвращает отформатированную строку даты в
 	 * формате "YYYY-MM-DD"

@@ -127,7 +127,7 @@
 										<th scope="col">Дата выгрузки</th>
 										<th scope="col">№ рейса</th>
 										<th scope="col">Маршрут</th>
-										<th class="carNumber" scope="col">№ ТС</th>
+										<th scope="col" class="carNumber">№ ТС</th>
 										<th scope="col">№ Путевого листа</th>
 										<th scope="col">№ ТТН/CMR</th>
 										<th scope="col">Объем груза (тонн)</th>
@@ -139,6 +139,21 @@
 								</thead>
 								<tbody id="actRows"></tbody>
 							</table>
+						</div>
+						<div class="mt-4">
+							<form id="allDataForm" action="">
+								<div class="d-flex justify-content-end">
+									<div class="allDataForm-container">
+										<input type="hidden" name="idAct">
+										<input type="hidden" name="status">
+										<input type="datetime-local" class="form-control" name="documentsArrived" id="documentsArrived_allDataForm">
+										<textarea class="form-control" rows="1" name="comment" id="comment_allDataForm" placeholder="Комментарий"></textarea>
+										<button type="submit" data-command="confirm" class="btn btn-primary">Подписать акт</button>
+										<button type="submit" data-command="cancel" class="btn btn-danger">Отменить акт</button>
+									</div>
+								</div>
+								<div class="allDataForm-message">* для подписания акта укажите дату получения документов, для отмены - комментарий</div>
+							</form>
 						</div>
 					</div>
 					<div class="modal-footer">

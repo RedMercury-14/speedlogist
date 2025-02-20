@@ -366,6 +366,15 @@ public class MainRestController {
 			act.setStatus(LocalDateTime.now().format(formatter2).toString());
 			act.setComment(comment);
 			//что-то должно делаться с маршрутом!
+			
+			//добавляю функцию подписания о призоде документов. Если null - то ничего не пишется.
+			Timestamp documentsArrived = jsonMainObject.get("documentsArrived") != null ? Timestamp.valueOf(jsonMainObject.get("documentsArrived").toString()) : null;
+			if(documentsArrived != null) {
+				act.setDocumentsArrived(documentsArrived);
+				User user = getThisUser();
+				act.setUserDocumentsArrived(user.getSurname() + " " + user.getName());
+			}		
+			
 			actService.saveOrUpdateAct(act);
 			List<Act> inCansel = actService.getActBynumAct(act.getNumAct());
 			for (Act act2 : inCansel) {

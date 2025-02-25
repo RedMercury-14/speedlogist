@@ -103,6 +103,11 @@ public class ReportRow {
 	 */
 	private String stock;
 	
+	/**
+	 * дата расчёта ORL
+	 */
+	private Date dateOrderORL;
+	
 	
 	/**
 	 * Дата прихода на склад
@@ -272,7 +277,15 @@ public class ReportRow {
 	public String getComment() {
 		return comment;
 	}
+	
+	
 
+	public Date getDateOrderORL() {
+		return dateOrderORL;
+	}
+	public void setDateOrderORL(Date dateOrderORL) {
+		this.dateOrderORL = dateOrderORL;
+	}
 	/**
 	 * Можно без перехода строки, всё есть в методе
 	 * @param comment

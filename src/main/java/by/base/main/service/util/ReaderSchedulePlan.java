@@ -1198,6 +1198,9 @@ public class ReaderSchedulePlan {
 //				try {
 //					System.err.println("!!!!!!!");
 //					System.err.println(get325AndParam(date.toString(), stockParameters.get(1700), product.getCodeProduct().toString()));
+//					
+//					
+//					
 //				} catch (ParseException e) {
 //					// TODO Auto-generated catch block
 //					e.printStackTrace();
@@ -1492,6 +1495,7 @@ public class ReaderSchedulePlan {
 		 * @return
 		 * @throws ParseException
 		 */
+		@TimedExecution
 		public MarketDataFor325Responce get325AndParam(String date, String stock, String code) throws ParseException {
 			String whatBaseStr = "11,21";
 			String str = "{\"CRC\": \"\", \"Packet\": {\"MethodName\": \"SpeedLogist.Report325Get\", \"Data\": "
@@ -1556,6 +1560,7 @@ public class ReaderSchedulePlan {
 			}
 			
 			if(marketDataFor325Responcies.size() > 1) {
+				System.out.println("Пришло " + marketDataFor325Responcies.size() + " объектов");
 				MarketDataFor325Responce summDataFor325Responce = new MarketDataFor325Responce();
 				Double summ = 0.0;
 				for (MarketDataFor325Responce dataFor325Responce : marketDataFor325Responcies) {
@@ -1564,13 +1569,17 @@ public class ReaderSchedulePlan {
 				summDataFor325Responce.setGoodsId(marketDataFor325Responcies.get(0).getGoodsId());
 				summDataFor325Responce.setGoodsName(marketDataFor325Responcies.get(0).getGoodsName());
 				summDataFor325Responce.setRestWithOrderSale(summ);
-				System.out.println("---->" + (t2.getTime() - t1.getTime()) + " ms");
-				
-				System.err.println(str);
-				System.err.println(marketOrder2);
+				System.out.println("time get325AndParam ---->  " + (t2.getTime() - t1.getTime()) + " ms");
+//				
+//				System.err.println("request -->  " + str);
+//				System.err.println("responce -->  " +marketOrder2);
 				return summDataFor325Responce;
 			}else {
-				System.out.println("---->" + (t2.getTime() - t1.getTime()) + " ms");
+				System.out.println("Пришел 1 объект");
+				System.out.println("time get325AndParam ---->" + (t2.getTime() - t1.getTime()) + " ms");
+//				
+//				System.err.println("request -->  " + str);
+//				System.err.println("responce -->  " +marketOrder2);
 				return marketDataFor325Responcies.get(0);
 			}
 					

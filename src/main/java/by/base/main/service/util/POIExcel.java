@@ -371,7 +371,7 @@ public class POIExcel {
 //            excelRow.createCell(13).setCellValue(row.getPrecentOrderCompletionNotNDS() != null ? row.getPrecentOrderCompletionNotNDS() : 0.0);
 //            excelRow.createCell(14).setCellValue(row.getDiscrepancyNotNDS() != null ? row.getDiscrepancyNotNDS() : 0.0);
             excelRow.createCell(12).setCellValue(row.getComment() != null ? row.getComment() : null);
-            excelRow.createCell(13).setCellValue(row.getDateOrderORL() != null ? row.getDateOrderORL() : null);
+            excelRow.createCell(13).setCellValue(row.getDateOrderORL() != null ? row.getDateOrderORL().toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) : null);
 
             //создаём последжнюю группу
             if(k == reportRows.size() - 1) {

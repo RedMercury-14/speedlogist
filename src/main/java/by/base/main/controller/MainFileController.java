@@ -333,7 +333,7 @@ public class MainFileController {
             OrderProduct orderORL;
             Integer intOrderORL;
             if(order.getDateOrderOrl() != null) {
-            	reportRow.setDateOrderORL(null);
+            	reportRow.setDateOrderORL(order.getDateOrderOrl());
                Date dateTarget = Date.valueOf(order.getDateOrderOrl().toLocalDate().minusDays(1)); 
                Map<Integer, OrderProduct> mapOrderProductTarget = mapOrderProduct.get(dateTarget.toString());
 

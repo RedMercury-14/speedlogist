@@ -339,6 +339,23 @@ public class MainRestController {
 
 	@Autowired
     private ServletContext servletContext;
+	
+	@GetMapping("/jwt/get")
+	public Map<String, Object>  testJWT(){
+		Map<String, Object> result = new HashMap<>();
+		MarketTableDto marketTableDto = testRequestJWT(marketUrl);
+		result.put("status", "200");
+		result.put("responce", marketTableDto);
+		return result;		
+	}
+	
+	@GetMapping("/jwt/now")
+	public Map<String, Object>  testJWTNow(){
+		Map<String, Object> result = new HashMap<>();
+		result.put("status", "200");
+		result.put("responce", marketJWT);
+		return result;		
+	}
 
 	@GetMapping("/logistics/documentflow/documentlist/{dateStart}&{dateEnd}")
 	public Map<String, Object>  documentListGet(@PathVariable String dateStart, @PathVariable String dateEnd) {
@@ -502,7 +519,6 @@ public class MainRestController {
 		return response;
 				
 	}
-	
 	
 
 	@TimedExecution
@@ -4473,6 +4489,22 @@ public class MainRestController {
 			System.err.println("Пришел такой JWT (marketRequestDto): " + marketRequestDto);
 			System.err.println("Пришел такой JWT (распарсил): " + marketJWT);
 		}
+	}
+	
+	public MarketTableDto testRequestJWT(String url) {
+		MarketDataForLoginDto dataDto = new MarketDataForLoginDto(loginMarket, passwordMarket, "101");
+//		MarketDataForLoginDtoTEST dataDto = new MarketDataForLoginDtoTEST("SpeedLogist", "12345678", 101);
+		MarketPacketDto packetDto = new MarketPacketDto("null", "GetJWT", serviceNumber, dataDto);
+		MarketRequestDto requestDto = new MarketRequestDto("", packetDto);
+		MarketTableDto marketRequestDto = null;
+		//запрашиваем jwt
+		String str = postRequest(url, gson.toJson(requestDto));
+		System.out.println("Запрос в Маркет: " + gson.toJson(requestDto));
+		marketRequestDto = gson.fromJson(str, MarketTableDto.class);
+		System.err.println("Пришел такой JWT (marketRequestDto): " + marketRequestDto);
+		marketJWT = marketRequestDto.getTable()[0].toString().split("=")[1].split("}")[0];
+		System.err.println("Пришел такой JWT (распарсил): " + marketJWT);		
+		return marketRequestDto;
 	}
 	
 	/**
@@ -10498,12 +10530,14 @@ public class MainRestController {
                     in.close();
                 }	           
 //            	System.out.println(connection.getContentType());
+//            	System.err.println(response.toString());
                 return response.toString();
             } else {
                 return null;
             }
         } catch (IOException e) {
             System.out.println("MainRestController.postRequest: Подключение недоступно - 503");
+//            e.printStackTrace();
             return "503";
         }
     }

@@ -1,5 +1,9 @@
 package by.base.main.service.util;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.lang.reflect.Type;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.DayOfWeek;
@@ -19,19 +23,39 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import com.dto.PlanResponce;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
+import com.itextpdf.text.pdf.PdfStructTreeController.returnType;
 
 import by.base.main.aspect.TimedExecution;
+import by.base.main.controller.ajax.MainRestController;
+import by.base.main.dto.MarketDataFor325Request;
+import by.base.main.dto.MarketDataFor325Responce;
+import by.base.main.dto.MarketPacketDto;
+import by.base.main.dto.MarketRequestDto;
 import by.base.main.model.Order;
 import by.base.main.model.OrderLine;
 import by.base.main.model.OrderProduct;
@@ -55,6 +79,16 @@ import by.base.main.service.UserService;
  */
 @Component
 public class ReaderSchedulePlan {
+	
+	
+	private static final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(Date.class, new JsonSerializer<Date>() {
+				@Override
+				public JsonElement serialize(Date src, Type typeOfSrc, JsonSerializationContext context) {
+					return context.serialize(src.getTime());  // Сериализация даты в миллисекундах
+				}
+            })
+            .create();
 	
 	/*
 	 * 1. Получаем заказ, и дату постановки заказа в слоты
@@ -83,7 +117,18 @@ public class ReaderSchedulePlan {
 	@Autowired
 	private PermissionService permissionService;
 	
+	@Autowired
+    private ServletContext servletContext;
+	
+	@Autowired
+	private MainRestController mainRestController;
+	
 	private static final Map<String, DayOfWeek> RUSSIAN_DAYS = new HashMap<>();
+	/*
+	 * здесь хранятся параметры, для запроса по складам по 325 отчёту
+	 */
+	private static Map<Integer, String> stockParameters = new HashMap<Integer, String>();
+	private static Properties properties = null;
 
     static {
         RUSSIAN_DAYS.put("понедельник", DayOfWeek.MONDAY);
@@ -94,7 +139,34 @@ public class ReaderSchedulePlan {
         RUSSIAN_DAYS.put("суббота", DayOfWeek.SATURDAY);
         RUSSIAN_DAYS.put("воскресенье", DayOfWeek.SUNDAY);
     }
-	
+    
+    private void initStockParameters() {
+    	//инициализируем параметры складов 
+        if(stockParameters.isEmpty()) {
+			String appPath = servletContext.getRealPath("/");
+			FileInputStream fileInputStream;
+			try {
+				fileInputStream = new FileInputStream(appPath + "resources/properties/stocksFor325.properties");
+				properties = new Properties();
+				properties.load(fileInputStream);
+				
+				properties.entrySet().forEach(e->{
+					stockParameters.put(Integer.parseInt(e.getKey().toString()), e.getValue().toString());
+				});
+				
+//				stockParameters.forEach((k,v) -> System.err.println(k + " = " + v));
+				
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
+    }
+    
     private String getTrueStock(Order order) {
 		String numStock = null;
 		if(order.getIdRamp().toString().length() < 5) {
@@ -585,6 +657,7 @@ public class ReaderSchedulePlan {
 	 * даже если вне графика поставок
 	 */
 	public PlanResponce process(Order order) {
+		initStockParameters();
 		 Set<OrderLine> lines = order.getOrderLines(); // строки в заказе
 //		 List<Product> products = new ArrayList<Product>(); 
 		 Map<Integer,Product> products = new HashMap<Integer, Product>(); 
@@ -620,8 +693,6 @@ public class ReaderSchedulePlan {
 		 }
 		 
 //		 products.forEach(p-> System.out.println(p));
-		 
-		 
 		 
 		 DateRange dateRange = getDateRange(schedule, new ArrayList<>(products.values()), order); // тут раелизуются пункты 2 и 3
 		 if(dateRange == null) {
@@ -697,7 +768,7 @@ public class ReaderSchedulePlan {
 						//далее проверяем суммарный заказ. А суммарный звказ - это сумма заказов относящихся к дню расчётов и складу.
 						if(zaq > orlZaq*1.1) {
 							result = result +"<span style=\"color: red;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + zaq + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + orlZaq + " шт.</span>\n";	
-							ResultMethod dayStockMessage =  checkNumProductHasStock(order, product, dateRange); // проверяем по стокам относительно одного продукта (дни остатка)
+							ResultMethod dayStockMessage =  checkNumProductHasStockFromDay(order, product, dateRange); // проверяем по стокам относительно одного продукта (дни остатка)
 							if(dayStockMessage.getStatus().intValue() == 200) {
 								result = result + dayStockMessage.getMessage() + "\n";
 							}
@@ -744,7 +815,7 @@ public class ReaderSchedulePlan {
 					}else {	// если заказ БОЛЬШЕ чем 80% от того что заказал ОРЛ		
 						if(singleZaq > orlZaq*1.1) {
 							result = result +"<span style=\"color: red;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + singleZaq + " шт. из " + orlZaq + " шт.</span>\n";	
-							ResultMethod dayStockMessage =  checkNumProductHasStock(order, product, dateRange); // проверяем по стокам относительно одного продукта
+							ResultMethod dayStockMessage =  checkNumProductHasStockFromDay(order, product, dateRange); // проверяем по стокам относительно одного продукта
 							if(dayStockMessage.getStatus().intValue() == 200) {
 								result = result + dayStockMessage.getMessage() + "\n";
 							}
@@ -792,7 +863,7 @@ public class ReaderSchedulePlan {
 					}
 					
 				}else { // если отсутствует заказ ОРЛ
-					ResultMethod dayStockMessage =  checkNumProductHasStock(order, product, dateRange); // проверяем по стокам относительно одного продукта
+					ResultMethod dayStockMessage =  checkNumProductHasStockFromDay(order, product, dateRange); // проверяем по стокам относительно одного продукта
 					if(dayStockMessage.getStatus().intValue() == 200) {
 						result = result + dayStockMessage.getMessage() + "\n";
 					}
@@ -1087,7 +1158,8 @@ public class ReaderSchedulePlan {
 	 * <br> По сути проверка по дням!
 	 * @return
 	 */
-	private ResultMethod checkNumProductHasStock(Order order, Product product, DateRange dateRange) {
+	private ResultMethod checkNumProductHasStockFromDay(Order order, Product product, DateRange dateRange) {
+		
 		String message = null;
 		User user = getThisUser();
 		Role role = user.getRoles().stream().findFirst().get();			
@@ -1121,6 +1193,18 @@ public class ReaderSchedulePlan {
 			LocalDate dateNow = LocalDate.now();
 			Period period = Period.between(product.getDateUnload().toLocalDate(), dateNow);
 			if(product.getDateUnload() != null && period.getDays()<2) {
+				
+//				Date date = Date.valueOf(LocalDate.now());
+//				try {
+//					System.err.println("!!!!!!!");
+//					System.err.println(get325AndParam(date.toString(), stockParameters.get(1700), product.getCodeProduct().toString()));
+//					
+//					
+//					
+//				} catch (ParseException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
 
 				switch (getTrueStock(order)) {
 				case "1700":
@@ -1401,6 +1485,104 @@ public class ReaderSchedulePlan {
 		private static double roundВouble(double value, int places) {
 			double scale = Math.pow(10, places);
 			return Math.round(value * scale) / scale;
+		}
+		
+		
+		/**
+		 * Метод, котвечает за запрос и получение 325 отчёта по конкретному коду товара. Отдаёт суммированный результат по заданным складам
+		 * @param date
+		 * @param stock
+		 * @return
+		 * @throws ParseException
+		 */
+		@TimedExecution
+		public MarketDataFor325Responce get325AndParam(String date, String stock, String code) throws ParseException {
+			String whatBaseStr = "11,21";
+			String str = "{\"CRC\": \"\", \"Packet\": {\"MethodName\": \"SpeedLogist.Report325Get\", \"Data\": "
+					+ "{\"DateFrom\": \""+date+"\", "
+					+ "\"DateTo\": \""+date+"\", "
+					+ "\"WarehouseId\": ["+stock+"], "
+					+ "\"WhatBase\": ["+whatBaseStr+"], "
+					+ "\"GoodsId\": ["+code+"]}}}";
+			Map<String, Object> response = new HashMap<>();
+			List<MarketDataFor325Responce> marketDataFor325Responcies = new ArrayList<MarketDataFor325Responce>();
+			try {
+				mainRestController.checkJWT(mainRestController.marketUrl);
+			} catch (Exception e) {
+				System.err.println("Ошибка получения jwt токена");
+			}
+			JSONParser parser = new JSONParser();
+			JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+			String marketPacketDtoStr = jsonMainObject.get("Packet") != null ? jsonMainObject.get("Packet").toString() : null;
+			JSONObject jsonMainObject2 = (JSONObject) parser.parse(marketPacketDtoStr);
+			String marketDataFor398RequestStr = jsonMainObject2.get("Data") != null ? jsonMainObject2.get("Data").toString() : null;
+			JSONObject jsonMainObjectTarget = (JSONObject) parser.parse(marketDataFor398RequestStr);
+
+			JSONArray warehouseIdArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("WarehouseId").toString());
+			JSONArray goodsIdArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("GoodsId").toString());
+			JSONArray whatBaseArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("WhatBase").toString());
+
+			String dateForm = jsonMainObjectTarget.get("DateFrom") == null ? null : jsonMainObjectTarget.get("DateFrom").toString();
+			String dateTo = jsonMainObjectTarget.get("DateTo") == null ? null : jsonMainObjectTarget.get("DateTo").toString();
+			Object[] warehouseId = warehouseIdArray.toArray();
+			Object[] goodsId = goodsIdArray.toArray();
+			Object[] whatBase = whatBaseArray.toArray();
+
+			MarketDataFor325Request for325Request = new MarketDataFor325Request(dateForm, dateTo, warehouseId, goodsId, whatBase);
+			MarketPacketDto marketPacketDto = new MarketPacketDto(mainRestController.marketJWT, "SpeedLogist.Report325Get", mainRestController.serviceNumber, for325Request);
+			MarketRequestDto requestDto = new MarketRequestDto("", marketPacketDto);
+
+			java.util.Date t1 = new java.util.Date();
+			String marketOrder2 = mainRestController.postRequest(mainRestController.marketUrl, gson.toJson(requestDto));
+			java.util.Date t2 = new java.util.Date();
+			
+//			System.err.println(marketOrder2);
+
+			if(marketOrder2.equals("503")) { // означает что связь с маркетом потеряна
+				//в этом случае проверяем бд
+				System.err.println("Связь с маркетом потеряна");
+				response.put("status", "503");
+				response.put("payload responce", marketOrder2);
+				response.put("message", "Связь с маркетом потеряна");
+				return null;
+
+			}else{//если есть связь с маркетом
+				JSONObject jsonResponceMainObject = (JSONObject) parser.parse(marketOrder2);
+				JSONArray jsonResponceTable = (JSONArray) parser.parse(jsonResponceMainObject.get("Table").toString());
+				for (Object obj : jsonResponceTable) {
+		        	marketDataFor325Responcies.add(new MarketDataFor325Responce(obj.toString())); // парсин json засунул в конструктор
+		        }
+
+			}
+			
+			if(marketDataFor325Responcies.isEmpty()) {
+				return null;
+			}
+			
+			if(marketDataFor325Responcies.size() > 1) {
+				System.out.println("Пришло " + marketDataFor325Responcies.size() + " объектов");
+				MarketDataFor325Responce summDataFor325Responce = new MarketDataFor325Responce();
+				Double summ = 0.0;
+				for (MarketDataFor325Responce dataFor325Responce : marketDataFor325Responcies) {
+					summ = summ + dataFor325Responce.getRestWithOrderSale();
+				}
+				summDataFor325Responce.setGoodsId(marketDataFor325Responcies.get(0).getGoodsId());
+				summDataFor325Responce.setGoodsName(marketDataFor325Responcies.get(0).getGoodsName());
+				summDataFor325Responce.setRestWithOrderSale(summ);
+				System.out.println("time get325AndParam ---->  " + (t2.getTime() - t1.getTime()) + " ms");
+//				
+//				System.err.println("request -->  " + str);
+//				System.err.println("responce -->  " +marketOrder2);
+				return summDataFor325Responce;
+			}else {
+				System.out.println("Пришел 1 объект");
+				System.out.println("time get325AndParam ---->" + (t2.getTime() - t1.getTime()) + " ms");
+//				
+//				System.err.println("request -->  " + str);
+//				System.err.println("responce -->  " +marketOrder2);
+				return marketDataFor325Responcies.get(0);
+			}
+					
 		}
 		
 		/**

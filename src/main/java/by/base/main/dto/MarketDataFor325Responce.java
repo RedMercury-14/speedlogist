@@ -74,6 +74,8 @@ public class MarketDataFor325Responce {
      */
     private String userNameFul;
     
+    public MarketDataFor325Responce() {}
+    
 	/**
 	 * 
 	 */
@@ -207,6 +209,10 @@ public class MarketDataFor325Responce {
 		this.orderSaleQuantity = wrderSaleQuantity;
 	}
 
+	/**
+	 * балансовый остаток (ед.)
+	 * @return
+	 */
 	public Double getRestWithOrderSale() {
 		return restWithOrderSale;
 	}

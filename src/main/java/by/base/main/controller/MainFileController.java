@@ -333,6 +333,7 @@ public class MainFileController {
             OrderProduct orderORL;
             Integer intOrderORL;
             if(order.getDateOrderOrl() != null) {
+            	reportRow.setDateOrderORL(order.getDateOrderOrl());
                Date dateTarget = Date.valueOf(order.getDateOrderOrl().toLocalDate().minusDays(1)); 
                Map<Integer, OrderProduct> mapOrderProductTarget = mapOrderProduct.get(dateTarget.toString());
 
@@ -374,6 +375,7 @@ public class MainFileController {
             reportRow.setAcceptedUnits(data330.getQuantity().intValue());
             reportRow.setStock(data330.getWarehouseId().toString());
             reportRow.setDateUnload(data330.getDate3());
+            
             
             //тут блок расчёта процентов для каждой строки и всяких разниц
             /*
@@ -450,7 +452,7 @@ public class MainFileController {
 			//проверяем на наличие сообщений об ошибке со стороны маркета
 			if(marketOrder2.contains("Error")) {
 				MarketErrorDto errorMarket = gson.fromJson(marketOrder2, MarketErrorDto.class);
-				System.err.println("Error: " + errorMarket);
+				System.err.println("Error: " + marketOrder2);
 				throw new MarketConnectionException("Error: " + errorMarket, 500);
 //				return null;
 			}

@@ -162,6 +162,7 @@ import by.base.main.service.UserService;
 import by.base.main.service.util.CheckOrderNeeds;
 import by.base.main.service.util.CustomJSONParser;
 import by.base.main.service.util.MailService;
+import by.base.main.service.util.ORLExcelException;
 import by.base.main.service.util.OrderCreater;
 import by.base.main.service.util.PDFWriter;
 import by.base.main.service.util.POIExcel;
@@ -3065,8 +3066,11 @@ public class MainRestController {
 		Map<Integer, OrderProduct> mapOrderProduct = new HashMap<Integer, OrderProduct>();
 		try {
 			mapOrderProduct = poiExcel.loadNeedExcel2(file1, dateStr);
-		} catch (InvalidFormatException | IOException | java.text.ParseException | ServiceException e) {
-			// TODO Auto-generated catch block
+		} catch (ORLExcelException e) {
+			response.put("status", "100");
+			response.put("message", e.getMessage());
+			return response;
+		}catch (InvalidFormatException | IOException | java.text.ParseException | ServiceException e) {
 			e.printStackTrace();
 		}
 

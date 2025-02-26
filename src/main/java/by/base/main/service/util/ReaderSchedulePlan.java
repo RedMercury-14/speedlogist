@@ -748,16 +748,20 @@ public class ReaderSchedulePlan {
 					int zaq = quantityOrderAll.intValue(); // СУММА заказов по периоду
 					int singleZaq = orderLine.getQuantityOrder().intValue(); //Заказ по ордеру (не суммированный)
 					int orlZaq;
+					int orlZaqMax;
 					OrderProduct orderProductTarget = orderProductORL.get(0);
 					switch (factStock) {
 				    case 1700:
 				        orlZaq = orderProductTarget.getQuantity1700() != null ? orderProductORL.get(0).getQuantity1700() : 0;
+				        orlZaqMax = orderProductTarget.getQuantity1700Max() != null ? orderProductORL.get(0).getQuantity1700Max() : 0;
 				        break;
 				    case 1800:
 				        orlZaq = orderProductTarget.getQuantity1800() != null ? orderProductORL.get(0).getQuantity1800() : 0;
+				        orlZaqMax = orderProductTarget.getQuantity1800Max() != null ? orderProductORL.get(0).getQuantity1800Max() : 0;
 				        break;
 				    default:
 				        orlZaq = orderProductTarget.getQuantity() != null ? orderProductORL.get(0).getQuantity() : 0;
+				        orlZaqMax = orderProductTarget.getQuantityMax() != null ? orderProductORL.get(0).getQuantityMax() : 0;
 				        break;
 					}
 
@@ -766,7 +770,8 @@ public class ReaderSchedulePlan {
 					// если заказ меньше 80% от того что заказал ОРЛ - проверяем другие заказы
 					if (singleZaq < 0.8 * orlZaq) {
 						//далее проверяем суммарный заказ. А суммарный звказ - это сумма заказов относящихся к дню расчётов и складу.
-						if(zaq > orlZaq*1.1) {
+//						if(zaq > orlZaq*1.1) {
+						if(zaq > orlZaqMax) {
 							result = result +"<span style=\"color: red;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + zaq + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + orlZaq + " шт.</span>\n";	
 							ResultMethod dayStockMessage =  checkNumProductHasStockFromDay(order, product, dateRange); // проверяем по стокам относительно одного продукта (дни остатка)
 							if(dayStockMessage.getStatus().intValue() == 200) {
@@ -809,11 +814,14 @@ public class ReaderSchedulePlan {
 						             isMistakeZAQ = true;						             
 						         }
 							}
+						}else if(zaq > orlZaq*1.1 && zaq < orlZaqMax) {//больше чем заказали ОРЛ но меньше чем макс значение заказа #bbaa00
+							result = result +"<span style=\"color: #bbaa00;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + zaq + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + orlZaq + " шт. Максимальное значение: "+orlZaqMax+"шт.</span>\n";
 						}else {//всё хорошо, в пределах нормы
 							result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + zaq + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + orlZaq + " шт.\n";													
 						}
 					}else {	// если заказ БОЛЬШЕ чем 80% от того что заказал ОРЛ		
-						if(singleZaq > orlZaq*1.1) {
+//						if(singleZaq > orlZaq*1.1) {
+						if(zaq > orlZaqMax) {
 							result = result +"<span style=\"color: red;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + singleZaq + " шт. из " + orlZaq + " шт.</span>\n";	
 							ResultMethod dayStockMessage =  checkNumProductHasStockFromDay(order, product, dateRange); // проверяем по стокам относительно одного продукта
 							if(dayStockMessage.getStatus().intValue() == 200) {
@@ -857,6 +865,8 @@ public class ReaderSchedulePlan {
 						             isMistakeZAQ = true;						             
 						         }
 							}
+						}else if(zaq > orlZaq*1.1 && zaq < orlZaqMax) {//больше чем заказали ОРЛ но меньше чем макс значение заказа #bbaa00
+							result = result +"<span style=\"color: #bbaa00;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + zaq + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + orlZaq + " шт. Максимальное значение: "+orlZaqMax+"шт.</span>\n";	
 						}else {
 							result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + singleZaq + " шт. из " + orlZaq + " шт.\n";													
 						}

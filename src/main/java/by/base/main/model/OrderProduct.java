@@ -54,6 +54,9 @@ public class OrderProduct {
     
     @Column(name = "market_contract_type")
     private String marketContractType;
+    
+    @Column(name = "quantity_max")
+    private Integer quantityMax;
 
     @ManyToOne
     @JoinColumn(name = "product_idproduct", nullable = false)
@@ -65,6 +68,14 @@ public class OrderProduct {
 	@JoinColumn(name = "order_calculation_idorder_calculation")
 	@JsonBackReference
 	private OrderCalculation orderCalculation;
+
+	public Integer getQuantityMax() {
+		return quantityMax;
+	}
+
+	public void setQuantityMax(Integer quantityMax) {
+		this.quantityMax = quantityMax;
+	}
 
 	public OrderCalculation getOrderCalculation() {
 		return orderCalculation;

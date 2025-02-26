@@ -3109,14 +3109,15 @@ public class POIExcel {
                 
                 Integer maxQuantity = null;
                 if(row.getCell(5) != null) {
-                	maxQuantity = (int) roundВouble(row.getCell(5).getNumericCellValue(), 0);
+                	int otherQuantity =  (int) roundВouble(row.getCell(5).getNumericCellValue(), 0);
+                	maxQuantity = quantity + otherQuantity;
                 }else {
                 	maxQuantity = quantity;
                 }
                 
-                if(maxQuantity<quantity) {
-                	throw new ORLExcelException("Типичная ошибка отдела ОРЛ: максимальное значение заказа меньше чем его базовое значение. Код товара: " + code);
-                }
+//                if(maxQuantity<quantity) {
+//                	throw new ORLExcelException("Типичная ошибка отдела ОРЛ: максимальное значение заказа меньше чем его базовое значение. Код товара: " + code);
+//                }
 
                 OrderProduct orderProduct = null;
                 if(orderMap.containsKey(code)) {

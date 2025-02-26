@@ -301,7 +301,6 @@
 										<a class="dropdown-item" href="<spring:url value="/main/analytics?pageName=changeMatrix" />">Изменения матрицы</a>
 										<a class="dropdown-item" href="<spring:url value="/main/analytics?pageName=slots" />">Аналитика Слотов</a>
 									</div>
-									</div>
 								</li>
 							</c:when>
 							<c:when test="${roles == '[ROLE_STOCKSUPPORT]'}">

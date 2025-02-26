@@ -340,23 +340,6 @@ public class MainRestController {
 
 	@Autowired
     private ServletContext servletContext;
-	
-	@GetMapping("/jwt/get")
-	public Map<String, Object>  testJWT(){
-		Map<String, Object> result = new HashMap<>();
-		MarketTableDto marketTableDto = testRequestJWT(marketUrl);
-		result.put("status", "200");
-		result.put("responce", marketTableDto);
-		return result;		
-	}
-	
-	@GetMapping("/jwt/now")
-	public Map<String, Object>  testJWTNow(){
-		Map<String, Object> result = new HashMap<>();
-		result.put("status", "200");
-		result.put("responce", marketJWT);
-		return result;		
-	}
 
 	@GetMapping("/logistics/documentflow/documentlist/{dateStart}&{dateEnd}")
 	public Map<String, Object>  documentListGet(@PathVariable String dateStart, @PathVariable String dateEnd) {
@@ -4227,6 +4210,23 @@ public class MainRestController {
 		return MainChat.messegeList.size() + "";		
 	}
 	
+//	@GetMapping("/market/jwt/get")
+//	public Map<String, Object>  testJWT(){
+//		Map<String, Object> result = new HashMap<>();
+//		MarketTableDto marketTableDto = testRequestJWT(marketUrl);
+//		result.put("status", "200");
+//		result.put("responce", marketTableDto);
+//		return result;		
+//	}
+	
+	@GetMapping("/market/jwt/now")
+	public Map<String, Object>  testJWTNow(){
+		Map<String, Object> result = new HashMap<>();
+		result.put("status", "200");
+		result.put("responce", marketJWT);
+		return result;		
+	}
+	
 	@GetMapping("/market/clearjwt/{param}")
 	public Map<String, Object> getJWTnull(HttpServletRequest request, @PathVariable String param) {
 		Map<String, Object> response = new HashMap<String, Object>();
@@ -4239,7 +4239,7 @@ public class MainRestController {
 		return response;		
 	}
 	
-	@GetMapping("/market/nulljwt")
+	@GetMapping("/market/jwt/null")
 	public Map<String, Object> getJWTNull(HttpServletRequest request) {
 		Map<String, Object> response = new HashMap<String, Object>();
 		marketJWT = null;		
@@ -4249,7 +4249,7 @@ public class MainRestController {
 		return response;		
 	}
 	
-	@GetMapping("/market/getjwt")
+	@GetMapping("/market/jwt/get")
 	public Map<String, Object> getJWT(HttpServletRequest request) {
 		Map<String, Object> response = new HashMap<String, Object>();
 		MarketDataForLoginDto dataDto = new MarketDataForLoginDto(loginMarket, passwordMarket, "101");

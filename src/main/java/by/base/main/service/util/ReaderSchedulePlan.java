@@ -815,7 +815,7 @@ public class ReaderSchedulePlan {
 						         }
 							}
 						}else if(zaq > orlZaq*1.1 && zaq < orlZaqMax) {//больше чем заказали ОРЛ но меньше чем макс значение заказа #bbaa00
-							result = result +"<span style=\"color: #bbaa00;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + zaq + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + orlZaq + " шт. Максимальное значение: "+orlZaqMax+"шт.</span>\n";
+							result = result +"<span style=\"color: #bbaa00;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + zaq + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + orlZaq + " шт. Максимальное значение: "+orlZaqMax+" шт.</span>\n";
 						}else {//всё хорошо, в пределах нормы
 							result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + zaq + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + orlZaq + " шт.\n";													
 						}
@@ -866,7 +866,7 @@ public class ReaderSchedulePlan {
 						         }
 							}
 						}else if(zaq > orlZaq*1.1 && zaq < orlZaqMax) {//больше чем заказали ОРЛ но меньше чем макс значение заказа #bbaa00
-							result = result +"<span style=\"color: #bbaa00;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + zaq + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + orlZaq + " шт. Максимальное значение: "+orlZaqMax+"шт.</span>\n";	
+							result = result +"<span style=\"color: #bbaa00;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + zaq + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + orlZaq + " шт. Максимальное значение: "+orlZaqMax+" шт.</span>\n";	
 						}else {
 							result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + singleZaq + " шт. из " + orlZaq + " шт.\n";													
 						}

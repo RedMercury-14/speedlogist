@@ -3115,7 +3115,7 @@ public class POIExcel {
                 }
                 
                 if(maxQuantity<quantity) {
-                	throw new ORLExcelException("Типичная ошибка отдела ОРЛ: максимальное значение заказа меньше чем его базовое значение");
+                	throw new ORLExcelException("Типичная ошибка отдела ОРЛ: максимальное значение заказа меньше чем его базовое значение. Код товара: " + code);
                 }
 
                 OrderProduct orderProduct = null;

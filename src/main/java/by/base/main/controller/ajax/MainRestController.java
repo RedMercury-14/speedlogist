@@ -3067,7 +3067,7 @@ public class MainRestController {
 		try {
 			mapOrderProduct = poiExcel.loadNeedExcel2(file1, dateStr);
 		} catch (ORLExcelException e) {
-			response.put("status", "100");
+			response.put("status", "105");
 			response.put("message", e.getMessage());
 			return response;
 		}catch (InvalidFormatException | IOException | java.text.ParseException | ServiceException e) {

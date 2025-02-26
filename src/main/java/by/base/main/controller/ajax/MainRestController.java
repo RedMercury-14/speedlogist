@@ -4219,6 +4219,16 @@ public class MainRestController {
 //		return result;		
 //	}
 	
+	@GetMapping("/market/jwt/help")
+	public Map<String, Object>  jwtHelp(){
+		Map<String, Object> result = new HashMap<>();
+		
+		
+		result.put("status", "200");
+		result.put("/market/jwt/now", "Возвращает текущий JWT");
+		return result;		
+	}
+	
 	@GetMapping("/market/jwt/now")
 	public Map<String, Object>  testJWTNow(){
 		Map<String, Object> result = new HashMap<>();
@@ -4313,7 +4323,11 @@ public class MainRestController {
 		}else{//если есть связь с маркетом
 			//проверяем на наличие сообщений об ошибке со стороны маркета
 			if(marketOrder2.contains("Error")) {
-				MarketErrorDto errorMarket = gson.fromJson(marketOrder2, MarketErrorDto.class);
+				//тут избавляемся от мусора в json
+				String str2 = marketOrder2.split("\\[", 2)[1];
+				String str3 = str2.substring(0, str2.length()-2);
+				MarketErrorDto errorMarket = gson.fromJson(str3, MarketErrorDto.class);
+//				System.out.println("JSON -> "+str3);
 //				System.out.println(errorMarket);
 				if(errorMarket.getError().equals("99")) {//обработка случая, когда в маркете номера нет, а в бд есть.
 					Order orderFromDB = orderService.getOrderByMarketNumber(idMarket);
@@ -4326,12 +4340,14 @@ public class MainRestController {
 						response.put("status", "100");
 						response.put("message", errorMarket.getErrorDescription());
 						response.put("info", errorMarket.getErrorDescription());
+						response.put("objectFromMarket", errorMarket);
 						return response;
 					}
 				}
 				response.put("status", "100");
 				response.put("message", errorMarket.getErrorDescription());
 				response.put("info", errorMarket.getErrorDescription());
+				response.put("objectFromMarket", errorMarket);
 				return response;
 			}
 			

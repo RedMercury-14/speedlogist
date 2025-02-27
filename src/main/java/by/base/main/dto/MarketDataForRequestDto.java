@@ -17,7 +17,7 @@ public class MarketDataForRequestDto {
 		super();
 		OrderBuyGroupId = orderBuyGroupId;
 	}
-
+	
 	public String getOrderBuyGroupId() {
 		return OrderBuyGroupId;
 	}

@@ -162,6 +162,7 @@ import by.base.main.service.UserService;
 import by.base.main.service.util.CheckOrderNeeds;
 import by.base.main.service.util.CustomJSONParser;
 import by.base.main.service.util.MailService;
+import by.base.main.service.util.ORLExcelException;
 import by.base.main.service.util.OrderCreater;
 import by.base.main.service.util.PDFWriter;
 import by.base.main.service.util.POIExcel;
@@ -339,23 +340,6 @@ public class MainRestController {
 
 	@Autowired
     private ServletContext servletContext;
-	
-	@GetMapping("/jwt/get")
-	public Map<String, Object>  testJWT(){
-		Map<String, Object> result = new HashMap<>();
-		MarketTableDto marketTableDto = testRequestJWT(marketUrl);
-		result.put("status", "200");
-		result.put("responce", marketTableDto);
-		return result;		
-	}
-	
-	@GetMapping("/jwt/now")
-	public Map<String, Object>  testJWTNow(){
-		Map<String, Object> result = new HashMap<>();
-		result.put("status", "200");
-		result.put("responce", marketJWT);
-		return result;		
-	}
 
 	@GetMapping("/logistics/documentflow/documentlist/{dateStart}&{dateEnd}")
 	public Map<String, Object>  documentListGet(@PathVariable String dateStart, @PathVariable String dateEnd) {
@@ -3065,8 +3049,11 @@ public class MainRestController {
 		Map<Integer, OrderProduct> mapOrderProduct = new HashMap<Integer, OrderProduct>();
 		try {
 			mapOrderProduct = poiExcel.loadNeedExcel2(file1, dateStr);
-		} catch (InvalidFormatException | IOException | java.text.ParseException | ServiceException e) {
-			// TODO Auto-generated catch block
+		} catch (ORLExcelException e) {
+			response.put("status", "105");
+			response.put("message", e.getMessage());
+			return response;
+		}catch (InvalidFormatException | IOException | java.text.ParseException | ServiceException e) {
 			e.printStackTrace();
 		}
 
@@ -4223,6 +4210,33 @@ public class MainRestController {
 		return MainChat.messegeList.size() + "";		
 	}
 	
+//	@GetMapping("/market/jwt/get")
+//	public Map<String, Object>  testJWT(){
+//		Map<String, Object> result = new HashMap<>();
+//		MarketTableDto marketTableDto = testRequestJWT(marketUrl);
+//		result.put("status", "200");
+//		result.put("responce", marketTableDto);
+//		return result;		
+//	}
+	
+	@GetMapping("/market/jwt/help")
+	public Map<String, Object>  jwtHelp(){
+		Map<String, Object> result = new HashMap<>();
+		
+		
+		result.put("status", "200");
+		result.put("/market/jwt/now", "Возвращает текущий JWT");
+		return result;		
+	}
+	
+	@GetMapping("/market/jwt/now")
+	public Map<String, Object>  testJWTNow(){
+		Map<String, Object> result = new HashMap<>();
+		result.put("status", "200");
+		result.put("responce", marketJWT);
+		return result;		
+	}
+	
 	@GetMapping("/market/clearjwt/{param}")
 	public Map<String, Object> getJWTnull(HttpServletRequest request, @PathVariable String param) {
 		Map<String, Object> response = new HashMap<String, Object>();
@@ -4235,7 +4249,7 @@ public class MainRestController {
 		return response;		
 	}
 	
-	@GetMapping("/market/nulljwt")
+	@GetMapping("/market/jwt/null")
 	public Map<String, Object> getJWTNull(HttpServletRequest request) {
 		Map<String, Object> response = new HashMap<String, Object>();
 		marketJWT = null;		
@@ -4245,7 +4259,7 @@ public class MainRestController {
 		return response;		
 	}
 	
-	@GetMapping("/market/getjwt")
+	@GetMapping("/market/jwt/get")
 	public Map<String, Object> getJWT(HttpServletRequest request) {
 		Map<String, Object> response = new HashMap<String, Object>();
 		MarketDataForLoginDto dataDto = new MarketDataForLoginDto(loginMarket, passwordMarket, "101");
@@ -4309,7 +4323,11 @@ public class MainRestController {
 		}else{//если есть связь с маркетом
 			//проверяем на наличие сообщений об ошибке со стороны маркета
 			if(marketOrder2.contains("Error")) {
-				MarketErrorDto errorMarket = gson.fromJson(marketOrder2, MarketErrorDto.class);
+				//тут избавляемся от мусора в json
+				String str2 = marketOrder2.split("\\[", 2)[1];
+				String str3 = str2.substring(0, str2.length()-2);
+				MarketErrorDto errorMarket = gson.fromJson(str3, MarketErrorDto.class);
+//				System.out.println("JSON -> "+str3);
 //				System.out.println(errorMarket);
 				if(errorMarket.getError().equals("99")) {//обработка случая, когда в маркете номера нет, а в бд есть.
 					Order orderFromDB = orderService.getOrderByMarketNumber(idMarket);
@@ -4322,12 +4340,14 @@ public class MainRestController {
 						response.put("status", "100");
 						response.put("message", errorMarket.getErrorDescription());
 						response.put("info", errorMarket.getErrorDescription());
+						response.put("objectFromMarket", errorMarket);
 						return response;
 					}
 				}
 				response.put("status", "100");
 				response.put("message", errorMarket.getErrorDescription());
 				response.put("info", errorMarket.getErrorDescription());
+				response.put("objectFromMarket", errorMarket);
 				return response;
 			}
 			

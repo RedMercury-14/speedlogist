@@ -3097,6 +3097,7 @@ public class POIExcel {
                 Integer code = (int) row.getCell(1).getNumericCellValue();
                 String nameProduct = row.getCell(2).getStringCellValue();
                 int quantity = (int) roundВouble(row.getCell(3).getNumericCellValue(), 0);
+                                
                 String codeContract;
 
                 if(row.getCell(4) != null) {
@@ -3105,6 +3106,18 @@ public class POIExcel {
                 }else {
                 	codeContract = null;
                 }
+                
+                Integer maxQuantity = null;
+                if(row.getCell(5) != null) {
+                	int otherQuantity =  (int) roundВouble(row.getCell(5).getNumericCellValue(), 0);
+                	maxQuantity = quantity + otherQuantity;
+                }else {
+                	maxQuantity = quantity;
+                }
+                
+//                if(maxQuantity<quantity) {
+//                	throw new ORLExcelException("Типичная ошибка отдела ОРЛ: максимальное значение заказа меньше чем его базовое значение. Код товара: " + code);
+//                }
 
                 OrderProduct orderProduct = null;
                 if(orderMap.containsKey(code)) {
@@ -3116,14 +3129,17 @@ public class POIExcel {
                 switch (numStock) {
 				case 1700:
 					orderProduct.setQuantity1700(quantity);
+					orderProduct.setQuantity1700Max(maxQuantity);					
 					break;
 					
 				case 1800:
 					orderProduct.setQuantity1800(quantity);
+					orderProduct.setQuantity1800Max(maxQuantity);
 					break;
 
 				default:
 					orderProduct.setQuantity(quantity);
+					orderProduct.setQuantityMax(maxQuantity);
 					break;
 				}    
                 orderProduct.setNameProduct(nameProduct);

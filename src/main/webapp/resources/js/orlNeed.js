@@ -205,6 +205,11 @@ function sendExcelFormHandler(e) {
 				snackbar.show(res.message)
 				return
 			}
+
+			if (res.status === '105') {
+				res.message && showMessageModal(res.message)
+				return
+			}
 		},
 		errorCallback: () => bootstrap5overlay.hideOverlay()
 	})
@@ -232,4 +237,10 @@ function prevDate(dateInput) {
 
 	dateInput.value = prevDate
 	dateInput.dispatchEvent(new Event("change"))
+}
+
+function showMessageModal(message) {
+	const messageContainer = document.querySelector('#messageContainer')
+	messageContainer.innerHTML = message
+	$('#displayMessageModal').modal('show')
 }

@@ -777,6 +777,9 @@ public class ReaderSchedulePlan {
 							if(dayStockMessage.getStatus().intValue() == 200) {
 								result = result + dayStockMessage.getMessage() + "\n";
 							}
+							if(dayStockMessage.getStatus().intValue() == 100) {
+								result = result + dayStockMessage.getMessage();
+							}
 							//пошла проверка балансов
 							
 							Product balanceProduct;
@@ -827,6 +830,9 @@ public class ReaderSchedulePlan {
 							if(dayStockMessage.getStatus().intValue() == 200) {
 								result = result + dayStockMessage.getMessage() + "\n";
 							}
+							if(dayStockMessage.getStatus().intValue() == 100) {
+								result = result + dayStockMessage.getMessage();
+							}
 							//пошла проверка балансов
 							if(getTrueStock(order).equals("1700") || getTrueStock(order).equals("1800")) {
 								Product balanceProduct;
@@ -876,6 +882,9 @@ public class ReaderSchedulePlan {
 					ResultMethod dayStockMessage =  checkNumProductHasStockFromDay(order, product, dateRange); // проверяем по стокам относительно одного продукта
 					if(dayStockMessage.getStatus().intValue() == 200) {
 						result = result + dayStockMessage.getMessage() + "\n";
+					}
+					if(dayStockMessage.getStatus().intValue() == 100) {
+						result = result + dayStockMessage.getMessage();
 					}
 					 
 					result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - отсутствует в плане заказа (Заказы поставщика от ОРЛ)\n";
@@ -1173,7 +1182,7 @@ public class ReaderSchedulePlan {
 		String message = null;
 		User user = getThisUser();
 		Role role = user.getRoles().stream().findFirst().get();			
-		Double balanceStockAndReserves; // остаток в днях на таргетном складе
+		Double balanceStockAndReserves = null; // остаток в днях на таргетном складе
 		
 		
 //		if(role.getIdRole() == 1 || role.getIdRole() == 2 || role.getIdRole() == 3) { // тут мы говорим что если это логист или админ - в проверке не нуждаемся
@@ -1192,7 +1201,7 @@ public class ReaderSchedulePlan {
 		
 		String [] numProductMass = order.getNumProduct().split("\\^");
 		Integer numStock = Integer.parseInt(getTrueStock(order));
-		
+		String referenceInformation = "";
 		
 		
 		//реализация проверки, когда нужно проверить только один продукт
@@ -1204,42 +1213,61 @@ public class ReaderSchedulePlan {
 			Period period = Period.between(product.getDateUnload().toLocalDate(), dateNow);
 			if(product.getDateUnload() != null && period.getDays()<2) {
 				
-//				Date date = Date.valueOf(LocalDate.now());
-//				try {
-//					System.err.println("!!!!!!!");
-//					System.err.println(get325AndParam(date.toString(), stockParameters.get(1700), product.getCodeProduct().toString()));
-//					
-//					
-//					
-//				} catch (ParseException e) {
-//					// TODO Auto-generated catch block
-//					e.printStackTrace();
-//				}
-
-				switch (getTrueStock(order)) {
-				case "1700":
-					balanceStockAndReserves = product.getBalanceStockAndReserves1700();
-					break;
-				case "1800":
-					balanceStockAndReserves = product.getBalanceStockAndReserves1800();
-					break;
-
-				default:
-					balanceStockAndReserves = product.getBalanceStockAndReserves();
-					break;
+				Date date = Date.valueOf(LocalDate.now());
+				MarketDataFor325Responce dataFor325Responce = null;
+				Double quantityFrom325 = 0.0;
+				Double calculatedPerDay = 0.0;
+				
+				try {
+					switch (getTrueStock(order)) {
+					case "1700":
+						dataFor325Responce = get325AndParam(date.toString(), stockParameters.get(1700), product.getCodeProduct().toString());
+						if(dataFor325Responce != null) {
+							quantityFrom325 = dataFor325Responce.getRestWithOrderSale();
+							calculatedPerDay = product.getСalculatedPerDay() != null ? product.getСalculatedPerDay() : 0.0;
+							balanceStockAndReserves = roundВouble(quantityFrom325 / calculatedPerDay, 0);
+						}						
+						break;
+					case "1800":
+						dataFor325Responce = get325AndParam(date.toString(), stockParameters.get(1800), product.getCodeProduct().toString());
+						if(dataFor325Responce != null) {
+							quantityFrom325 = dataFor325Responce.getRestWithOrderSale();
+							calculatedPerDay = product.getСalculatedPerDay() != null ? product.getСalculatedPerDay() : 0.0;
+							balanceStockAndReserves = roundВouble(quantityFrom325 / calculatedPerDay, 0);
+						}						
+						break;
+					case "1200":
+						dataFor325Responce = get325AndParam(date.toString(), stockParameters.get(1200), product.getCodeProduct().toString());
+						if(dataFor325Responce != null) {
+							quantityFrom325 = dataFor325Responce.getRestWithOrderSale();
+							calculatedPerDay = product.getСalculatedPerDay() != null ? product.getСalculatedPerDay() : 0.0;
+							balanceStockAndReserves = roundВouble(quantityFrom325 / calculatedPerDay, 0);
+						}						
+						break;
+					case "1250":
+						dataFor325Responce = get325AndParam(date.toString(), stockParameters.get(1250), product.getCodeProduct().toString());
+						if(dataFor325Responce != null) {
+							quantityFrom325 = dataFor325Responce.getRestWithOrderSale();
+							calculatedPerDay = product.getСalculatedPerDay() != null ? product.getСalculatedPerDay() : 0.0;
+							balanceStockAndReserves = roundВouble(quantityFrom325 / calculatedPerDay, 0);
+						}						
+						break;	
+					}
+				
+				} catch (ParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
 				
-				if(balanceStockAndReserves == null) {
-					return new ResultMethod("<span style=\"color: #bbaa00;\">Данные по потребностям " + product.getName() + " (" + product.getCodeProduct()+") не прогружены!.", 200);
+				if(dataFor325Responce == null) {
+					return new ResultMethod("<span style=\"color: #bbaa00;\"><strong>Проверка по стокам не проводилась!</strong> Данные по потребностям " + product.getName() + " (" + product.getCodeProduct()+") не найдены в 325 отчёте!.</span>", 200);
 //					return null;
 				}
-//				if(product.getOrderProducts() != null && !product.getOrderProducts().isEmpty()) {
-//					return null;
-//				}
-				if(balanceStockAndReserves == 9999.0) {
-					return new ResultMethod("<span style=\"color: #bbaa00;\">Данные по потребностям " + product.getName() + " (" + product.getCodeProduct()+") равны 9999!.", 200);
-//					return null;
+				if(balanceStockAndReserves <= 0.0) {
+					return new ResultMethod("<span style=\"color: #bbaa00;\">Данные по статкам на складах " 
+							+ product.getName() + " (" + product.getCodeProduct()+") равны "+balanceStockAndReserves+". Данные по 325 отчёту :" + quantityFrom325 + " шт, расчётная реализация в сутки: " + calculatedPerDay + " шт.</span>", 200);
 				}
+				
 				
 				//считаем разницу в днях сегодняшнеего дня и непосредственно записи
 				LocalDateTime start = order.getTimeDelivery().toLocalDateTime();
@@ -1256,7 +1284,11 @@ public class ReaderSchedulePlan {
 					summOstPallets = product.getOstInPallets1700() + product.getOstInPallets1800();
 				}else {
 					summOstPallets = product.getOstInPallets();
-				}				
+				}
+				referenceInformation = "Стоки " + product.getCodeProduct() + " ("+product.getName()+")" + ": " + quantityFrom325 + " (из 325) / " + calculatedPerDay + " (из файла потребности) = "
+						+balanceStockAndReserves+ " дн;\n";
+				
+				
 				switch (numStock) {
 				case 1700:
 					if(product.getOstInPallets1700() == null || product.getBalanceStockAndReserves1700() == null) {
@@ -1266,30 +1298,21 @@ public class ReaderSchedulePlan {
 					System.err.println("("+product.getOstInPallets1700() + " + " + product.getOstInPallets1800() + ") < " + "4");
 					if(summOstPallets < 4.0) {
 						return new ResultMethod("Остаток на 1700 и 1800 складах, в паллетах, суммарно составляет меньше чем 4 паллеты (" + roundВouble(summOstPallets, 0) + ").  Проверки по остаткам не проводилось.", 200);
-//						return null;
 					}
 					
-//					if(product.getOstInPallets1700() < 15.0) { //если в паллетах товара меньшге чем 33 - то пропускаем
-//						return null;
-//					}
-					
-					
-//					Double trueBalance1700 = roundВouble(product.getBalanceStockAndReserves1700() + currentDate, 0);//баланс на таргетном складе
-					Double trueBalance1700 = roundВouble(product.getBalanceStockAndReserves() + currentDate, 0);//суммарный баланс
-					System.err.println("Код продукта: " + product.getCodeProduct() + " -> " + trueBalance1700 + "(trueBalance1700)" + " > " + dateRange.stock + "(dateRange.stock)");
+//					System.err.println("Код продукта: " + product.getCodeProduct() + " -> " + balanceStockAndReserves + "(trueBalance1700)" + " > " + dateRange.stock + "(dateRange.stock)");
 					if(!product.getIsException()) {
-//						System.out.println(trueBalance + " > " + dateRange.stock);
-						if(trueBalance1700 > dateRange.stock) {
+//						System.out.println(balanceStockAndReserves + " > " + dateRange.stock);
+						if(balanceStockAndReserves > dateRange.stock) {
 							//считаем сколько дней нужно прибавить, чтобы заказать товар
-							Long deltDate = (long) (trueBalance1700 - dateRange.stock );
+							Long deltDate = (long) (balanceStockAndReserves - dateRange.stock );
 							if(message == null) {
-								message = "Товара " + product.getCodeProduct() + " ("+product.getName()+")" + " суммарно на 1700 и 1800 хранится на <strong>" + trueBalance1700 + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней."
-										+" Ближайшая дата на которую можно доставить данный товар: <strong>" + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy")) + ";</strong>\n";
+								message = "Товара " + product.getCodeProduct() + " ("+product.getName()+")" + " суммарно на 1700 и 1800 хранится на <strong>" + balanceStockAndReserves + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней."
+										+" Ближайшая дата на которую можно доставить данный товар: <strong>" + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy")) + ";</strong>\n" + referenceInformation;
 							}else {
-								message = message + "\nТовара " + product.getCodeProduct() + " ("+product.getName()+")" + " суммарно на 1700 и 1800 хранится на <strong>" + trueBalance1700 + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней. "
-										+" Ближайшая дата на которую можно доставить данный товар: <strong>" + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy"))+ ";</strong>\n";
-							}
-							 
+								message = message + "\nТовара " + product.getCodeProduct() + " ("+product.getName()+")" + " суммарно на 1700 и 1800 хранится на <strong>" + balanceStockAndReserves + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней. "
+										+" Ближайшая дата на которую можно доставить данный товар: <strong>" + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy"))+ ";</strong>\n" + referenceInformation;
+							}							 
 						}
 					}
 					break;
@@ -1300,27 +1323,21 @@ public class ReaderSchedulePlan {
 //						return null;
 					}
 					
-					System.err.println("("+product.getOstInPallets1700() + " + " + product.getOstInPallets1800() + ") < " + "4");
+//					System.err.println("("+product.getOstInPallets1700() + " + " + product.getOstInPallets1800() + ") < " + "4");
 					if(summOstPallets < 4.0) {
 						return new ResultMethod("Остаток на 1700 и 1800 складах, в паллетах, суммарно составляет меньше чем 4 паллеты (" + roundВouble(summOstPallets, 0) + ").  Проверки по остаткам не проводилось.", 200);
-//						return null;
 					}
-//					if(product.getOstInPallets1800() < 15.0) { //если в паллетах товара меньшге чем 33 - то пропускаем
-//						return null;
-//					}
-//					Double trueBalance1800 = roundВouble(product.getBalanceStockAndReserves1800() + currentDate, 0);//баланс на таргетном складе
-					Double trueBalance1800 = roundВouble(product.getBalanceStockAndReserves() + currentDate, 0);//суммарный баланс
-					System.err.println("Код продукта: " + product.getCodeProduct() + " -> " + trueBalance1800 + "(trueBalance1700)" + " > " + dateRange.stock + "(dateRange.stock)");
+//					System.err.println("Код продукта: " + product.getCodeProduct() + " -> " + balanceStockAndReserves + "(trueBalance1700)" + " > " + dateRange.stock + "(dateRange.stock)");
 					if(!product.getIsException()) {
-						if(trueBalance1800 > dateRange.stock) {
+						if(balanceStockAndReserves > dateRange.stock) {
 							//считаем сколько дней нужно прибавить, чтобы заказать товар
-							Long deltDate = (long) (trueBalance1800 - dateRange.stock );
+							Long deltDate = (long) (balanceStockAndReserves - dateRange.stock );
 							if(message == null) {
-								message = "Товара " + product.getCodeProduct() + " ("+product.getName()+")" + " суммарно на 1700 и 1800 хранится на <strong>" + trueBalance1800 + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней."
-										+" Ближайшая дата на которую можно доставить данный товар: <strong>" + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy")) + ";</strong>\n";
+								message = "Товара " + product.getCodeProduct() + " ("+product.getName()+")" + " суммарно на 1700 и 1800 хранится на <strong>" + balanceStockAndReserves + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней."
+										+" Ближайшая дата на которую можно доставить данный товар: <strong>" + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy")) + ";</strong>\n" + referenceInformation;
 							}else {
-								message = message + "\nТовара " + product.getCodeProduct() + " ("+product.getName()+")" + " суммарно на 1700 и 1800 хранится на <strong>" + trueBalance1800 + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней. "
-										+" Ближайшая дата на которую можно доставить данный товар: <strong>" + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy"))+ ";</strong>\n";
+								message = message + "\nТовара " + product.getCodeProduct() + " ("+product.getName()+")" + " суммарно на 1700 и 1800 хранится на <strong>" + balanceStockAndReserves + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней. "
+										+" Ближайшая дата на которую можно доставить данный товар: <strong>" + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy"))+ ";</strong>\n" + referenceInformation;
 							}
 							 
 						}
@@ -1337,18 +1354,17 @@ public class ReaderSchedulePlan {
 						return new ResultMethod("Остаток на "+numStock+" складе , в паллетах, суммарно составляет меньше чем 4 паллеты (" + roundВouble(summOstPallets, 0) + ").  Проверки по остаткам не проводилось.", 200);
 //						return null;
 					}
-					Double trueBalanceDefault = roundВouble(product.getBalanceStockAndReserves() + currentDate, 0);
 					if(!product.getIsException()) {
 //						System.out.println(trueBalance + " > " + dateRange.stock);
-						if(trueBalanceDefault > dateRange.stock) {
+						if(balanceStockAndReserves > dateRange.stock) {
 							//считаем сколько дней нужно прибавить, чтобы заказать товар
-							Long deltDate = (long) (trueBalanceDefault - dateRange.stock );
+							Long deltDate = (long) (balanceStockAndReserves - dateRange.stock );
 							if(message == null) {
-								message = "Товара " + product.getCodeProduct() + " ("+product.getName()+")" + " на складе хранится на <strong>" + trueBalanceDefault + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней."
-										+" Ближайшая дата на которую можно доставить данный товар: <strong>" + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy")) + ";</strong>\n";
+								message = "Товара " + product.getCodeProduct() + " ("+product.getName()+")" + " на складе хранится на <strong>" + balanceStockAndReserves + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней."
+										+" Ближайшая дата на которую можно доставить данный товар: <strong>" + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy")) + ";</strong>\n" + referenceInformation;
 							}else {
-								message = message + "\nТовара " + product.getCodeProduct() + " ("+product.getName()+")" + " на складе хранится на <strong>" + trueBalanceDefault + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней. "
-										+" Ближайшая дата на которую можно доставить данный товар: <strong>" + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy"))+ ";</strong>\n";
+								message = message + "\nТовара " + product.getCodeProduct() + " ("+product.getName()+")" + " на складе хранится на <strong>" + balanceStockAndReserves + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней. "
+										+" Ближайшая дата на которую можно доставить данный товар: <strong>" + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy"))+ ";</strong>\n" + referenceInformation;
 							}
 							 
 						}
@@ -1356,130 +1372,13 @@ public class ReaderSchedulePlan {
 					break;
 				}
 			}else {
-//				System.err.println("Данные по остаткам (потребностям если с точки зрения ОРЛ) устаревшие! Дата последней прогрузки :" + product.getDateUnload());
 				return new ResultMethod("<span style=\"color: #bbaa00;\">Данные по потребностям " + product.getName() + " (" + product.getCodeProduct()+") устаревшие!.  Дата последней прогрузки: " + product.getDateUnload().toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + "</span>", 200);
 			}
-			
-			
-		}else { // реализация проверкиЮ когда нужно проверить все продукты, через цикл, которые указангы в заказе
-			System.err.println("Удалённая реализация роверки, когда Product = null");
-//			for (String string : numProductMass) {
-//				Product productTarget = productService.getProductByCode(Integer.parseInt(string)); // на оптимизацию! используется в цикле!
-//				
-//				if(productTarget != null) {
-//					if(productTarget.getBalanceStockAndReserves() == null) {
-//						continue;
-//					}
-////					if(product.getOrderProducts() != null && !product.getOrderProducts().isEmpty()) {
-////						continue;
-////					}
-//					if(productTarget.getBalanceStockAndReserves() == 9999.0) {
-//						continue;
-//					}
-//					
-//					//считаем разницу в днях сегодняшнеего дня и непосредственно записи
-//					LocalDateTime start = order.getTimeDelivery().toLocalDateTime();
-//					LocalDateTime end = LocalDateTime.of(productTarget.getDateUnload().toLocalDate(), LocalTime.now());
-//					
-//					Duration duration = Duration.between(start, end);
-//					Double currentDate = (double) duration.toDays();
-//					
-//					switch (numStock) {
-//					case 1700:
-//						if(productTarget.getOstInPallets1700() == null || productTarget.getBalanceStockAndReserves1700() == null) {
-//							continue;
-//						}
-//						if(productTarget.getOstInPallets1700() < 15.0) { //если в паллетах товара меньшге чем 33 - то пропускаем
-//							continue;
-//						}
-//						
-//						// считаем правильный остаток на текущий день
-//						Double trueBalance1700 = roundВouble(productTarget.getBalanceStockAndReserves1700() + currentDate, 0);
-//						
-//						if(!productTarget.getIsException()) {
-////							System.out.println(trueBalance + " > " + dateRange.stock);
-//							if(trueBalance1700 > dateRange.stock) {
-//								//считаем сколько дней нужно прибавить, чтобы заказать товар
-//								Long deltDate = (long) (trueBalance1700 - dateRange.stock );
-//								if(message == null) {
-//									message = "Товара " + productTarget.getCodeProduct() + " ("+productTarget.getName()+")" + " на складе хранится на <strong>" + trueBalance1700 + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней."
-//											+" Ближайшая дата на которую можно доставить данный товар: <strong>" + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy")) + ";</strong>\n";
-//								}else {
-//									message = message + "\nТовара " + productTarget.getCodeProduct() + " ("+productTarget.getName()+")" + " на складе хранится на <strong>" + trueBalance1700 + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней. "
-//											+" Ближайшая дата на которую можно доставить данный товар: <strong>" + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy"))+ ";</strong>\n";
-//								}
-//								 
-//							}
-//						}
-//						break;
-//						
-//					case 1800:
-//						
-//						if(productTarget.getOstInPallets1800() == null || productTarget.getBalanceStockAndReserves1800() == null) {
-//							continue;
-//						}
-//						if(productTarget.getOstInPallets1800() < 15.0) { //если в паллетах товара меньшге чем 33 - то пропускаем
-//							continue;
-//						}
-//						
-//						// считаем правильный остаток на текущий день
-//						Double trueBalance1800 = roundВouble(productTarget.getBalanceStockAndReserves1800() + currentDate, 0);
-//						
-//						if(!productTarget.getIsException()) {
-////							System.out.println(trueBalance + " > " + dateRange.stock);
-//							if(trueBalance1800 > dateRange.stock) {
-//								//считаем сколько дней нужно прибавить, чтобы заказать товар
-//								Long deltDate = (long) (trueBalance1800 - dateRange.stock );
-//								if(message == null) {
-//									message = "Товара " + productTarget.getCodeProduct() + " ("+productTarget.getName()+")" + " на складе хранится на <strong>" + trueBalance1800 + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней."
-//											+" Ближайшая дата на которую можно доставить данный товар: <strong>" + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy")) + ";</strong>\n";
-//								}else {
-//									message = message + "\nТовара " + productTarget.getCodeProduct() + " ("+productTarget.getName()+")" + " на складе хранится на <strong>" + trueBalance1800 + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней. "
-//											+" Ближайшая дата на которую можно доставить данный товар: <strong>" + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy"))+ ";</strong>\n";
-//								}
-//								 
-//							}
-//						}
-//						break;
-//
-//					default:
-//						if(productTarget.getOstInPallets() == null || productTarget.getBalanceStockAndReserves() == null) {
-//							continue;
-//						}
-//						if(productTarget.getOstInPallets() < 15.0) { //если в паллетах товара меньшге чем 33 - то пропускаем
-//							continue;
-//						}
-//						
-//						// считаем правильный остаток на текущий день
-//						Double trueBalanceDefault = roundВouble(productTarget.getBalanceStockAndReserves() + currentDate, 0);
-//						
-//						if(!productTarget.getIsException()) {
-////							System.out.println(trueBalance + " > " + dateRange.stock);
-//							if(trueBalanceDefault > dateRange.stock) {
-//								//считаем сколько дней нужно прибавить, чтобы заказать товар
-//								Long deltDate = (long) (trueBalanceDefault - dateRange.stock );
-//								if(message == null) {
-//									message = "Товара " + productTarget.getCodeProduct() + " ("+productTarget.getName()+")" + " на складе хранится на <strong>" + trueBalanceDefault + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней."
-//											+" Ближайшая дата на которую можно доставить данный товар: <strong>" + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy")) + ";</strong>\n";
-//								}else {
-//									message = message + "\nТовара " + productTarget.getCodeProduct() + " ("+productTarget.getName()+")" + " на складе хранится на <strong>" + trueBalanceDefault + "</strong> дней. Ограничение стока (<u>на дату постановки слота</u>), по данному товару: <strong>" + dateRange.stock + "</strong> дней. "
-//											+" Ближайшая дата на которую можно доставить данный товар: <strong>" + start.toLocalDate().plusDays(deltDate).format(DateTimeFormatter.ofPattern("dd.MM.yyy"))+ ";</strong>\n";
-//								}
-//								 
-//							}
-//						}
-//						break;
-//					}
-//					
-//					
-//					
-//				}
-//			}
 		}
 		if(message!=null){
 			return new ResultMethod(message, 0);
 		}else {
-			return new ResultMethod(message, 100);
+			return new ResultMethod(referenceInformation, 100);
 		}
 		
 //		return message;
@@ -1580,16 +1479,10 @@ public class ReaderSchedulePlan {
 				summDataFor325Responce.setGoodsName(marketDataFor325Responcies.get(0).getGoodsName());
 				summDataFor325Responce.setRestWithOrderSale(summ);
 				System.out.println("time get325AndParam ---->  " + (t2.getTime() - t1.getTime()) + " ms");
-//				
-//				System.err.println("request -->  " + str);
-//				System.err.println("responce -->  " +marketOrder2);
 				return summDataFor325Responce;
 			}else {
 				System.out.println("Пришел 1 объект");
 				System.out.println("time get325AndParam ---->" + (t2.getTime() - t1.getTime()) + " ms");
-//				
-//				System.err.println("request -->  " + str);
-//				System.err.println("responce -->  " +marketOrder2);
 				return marketDataFor325Responcies.get(0);
 			}
 					

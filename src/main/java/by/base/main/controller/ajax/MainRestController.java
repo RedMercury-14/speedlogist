@@ -821,6 +821,7 @@ public class MainRestController {
 
 		Date dateFrom = Date.valueOf(dateStart);
 		Date dateTo = Date.valueOf(dateFinish);
+		
 
 		List<OrderCalculation> orderCalculations = orderCalculationService.getOrderCalculationsForPeriod(dateFrom, dateTo);
 
@@ -4449,6 +4450,8 @@ public class MainRestController {
 				response.put("objectFromMarket", errorMarket);
 				return response;
 			}
+			
+			System.out.println(marketOrder2);
 			
 			//тут избавляемся от мусора в json
 			String str2 = marketOrder2.split("\\[", 2)[1];

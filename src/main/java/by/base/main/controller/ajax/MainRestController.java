@@ -555,7 +555,7 @@ public class MainRestController {
 
 		if(marketOrder2.equals("503")) { // означает что связь с маркетом потеряна
 			//в этом случае проверяем бд
-			System.err.println("Связь с маркетом потеряна");
+			System.err.println("Связь с маркетом потеряна  -> " + marketOrder2);
 			response.put("status", "503");
 			response.put("payload responce", marketOrder2);
 			response.put("message", "Связь с маркетом потеряна");
@@ -10659,7 +10659,7 @@ public class MainRestController {
             }
         } catch (IOException e) {
             System.out.println("MainRestController.postRequest: Подключение недоступно - 503");
-//            e.printStackTrace();
+            e.printStackTrace();
             return "503";
         }
     }

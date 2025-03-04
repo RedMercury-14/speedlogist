@@ -1268,6 +1268,10 @@ public class ReaderSchedulePlan {
 					e.printStackTrace();
 				}
 				
+				if(calculatedPerDay == 0.0) {
+					return new ResultMethod("<span style=\"color: #bbaa00;\"><strong>Проверка по стокам не проводилась!</strong> Расчётная реализация товара " + product.getName() + " (" + product.getCodeProduct()+") равна 0.0 !.</span>", 200);
+				}
+				
 				if(dataFor325Responce == null) {
 					return new ResultMethod("<span style=\"color: #bbaa00;\"><strong>Проверка по стокам не проводилась!</strong> Данные по потребностям " + product.getName() + " (" + product.getCodeProduct()+") не найдены в 325 отчёте!.</span>", 200);
 //					return null;

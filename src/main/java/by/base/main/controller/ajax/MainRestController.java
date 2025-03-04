@@ -3447,6 +3447,7 @@ public class MainRestController {
 		schedule.setMachineMultiplicity(jsonMainObject.get("machineMultiplicity") == null || jsonMainObject.get("machineMultiplicity").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("machineMultiplicity").toString()));
 		schedule.setConnectionSupply(jsonMainObject.get("connectionSupply") == null || jsonMainObject.get("connectionSupply").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("connectionSupply").toString()));
 		schedule.setIsNotCalc(false);
+		schedule.setIsImport(false);
 		schedule.setStatus(10);
 		
 		schedule.setIsDayToDay(false);
@@ -3564,6 +3565,7 @@ public class MainRestController {
 		schedule.setMachineMultiplicity(jsonMainObject.get("machineMultiplicity") == null || jsonMainObject.get("machineMultiplicity").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("machineMultiplicity").toString()));
 		schedule.setConnectionSupply(jsonMainObject.get("connectionSupply") == null || jsonMainObject.get("connectionSupply").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("connectionSupply").toString()));
 		schedule.setIsNotCalc(false);
+		schedule.setIsImport(false);
 //		schedule.setStatus(10);
 		schedule.setStatus(jsonMainObject.get("status") == null || jsonMainObject.get("status").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("status").toString()));
 		
@@ -3907,6 +3909,11 @@ public class MainRestController {
 		if (jsonMainObject.get("isDayToDay") != null && !jsonMainObject.get("isDayToDay").toString().isEmpty()) {
 		    schedule.setIsDayToDay("true".equals(jsonMainObject.get("isDayToDay").toString()));
 		}
+		
+		if (jsonMainObject.get("isImport") != null && !jsonMainObject.get("isImport").toString().isEmpty()) {
+		    schedule.setIsNotCalc("true".equals(jsonMainObject.get("isImport").toString()));
+		}
+		
 		schedule.setDateLastChanging(Date.valueOf(LocalDate.now()));
 
 		
@@ -4046,6 +4053,33 @@ public class MainRestController {
 		response.put("body", schedule);
 		response.put("info", "Статус расчёта графика поставок "+schedule.getName()+" изменен");
 		response.put("message", "Статус расчёта графика поставок "+schedule.getName()+" изменен");
+		return response;		
+	}
+	
+	@GetMapping("/slots/delivery-schedule/changeIsImport/{idSchedule}")
+	public Map<String, Object> getChangeIsImport(HttpServletRequest request, @PathVariable String idSchedule) {
+		Map<String, Object> response = new HashMap<String, Object>();	
+		Schedule schedule = scheduleService.getScheduleById(Integer.parseInt(idSchedule.trim()));
+		
+		if(schedule == null) {
+			response.put("status", "100");
+			response.put("info", "Не найден график поставок с id " + idSchedule);
+			response.put("message", "Не найден график поставок с id " + idSchedule);
+			return response;
+		}
+		User user = getThisUser();
+		schedule.setIsImport(!schedule.getIsImport());
+		String history = user.getSurname() + " " + user.getName() + ";" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")) + ";changeIsImport="+schedule.getIsNotCalc()+"\n"; 
+		
+		schedule.setHistory((schedule.getHistory() != null ? schedule.getHistory() : "") + history);
+		schedule.setDateLastChanging(Date.valueOf(LocalDate.now()));
+		
+		scheduleService.updateSchedule(schedule);
+		
+		response.put("status", "200");
+		response.put("body", schedule);
+		response.put("info", "Статус импорта "+schedule.getName()+" изменен");
+		response.put("message", "Статус импорта "+schedule.getName()+" изменен");
 		return response;		
 	}
 	

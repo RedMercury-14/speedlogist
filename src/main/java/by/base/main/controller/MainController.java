@@ -331,6 +331,11 @@ public class MainController {
 		return "main";		
 	}
 	
+	@GetMapping("/main/reviews")
+	public String getReviews(Model model, HttpServletRequest request) {
+		return "reviewsForm";
+	}
+	
 	@GetMapping("/main/procurement/permission/list")
 	public String getPermissionList(Model model, HttpServletRequest request) {
 		return "permissionList";
@@ -355,6 +360,11 @@ public class MainController {
 	public String getMainReportsPage(Model model, HttpServletRequest request) {
 		return "mainReports";
 	}
+	@GetMapping("/main/procurement/reports/mainReports")
+	public String getProcurementMainReportsPage(Model model, HttpServletRequest request) {
+		return "mainReports";
+	}
+	
 	@GetMapping("/main/logistics-delivery/route-handler")
 	public String getlogisticsDeliveryRouteHandlerPage(Model model, HttpServletRequest request) {
 		return "logisticsDeliveryRouteHandler";

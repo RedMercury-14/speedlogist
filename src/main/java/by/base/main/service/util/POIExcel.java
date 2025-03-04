@@ -705,192 +705,193 @@ public class POIExcel {
 	public String exportToExcelDrafts(List<Schedule> schedules, String filePath) throws FileNotFoundException, IOException {
 
 		Map<Long, List<Schedule>> currentSchedules = new HashMap<>();
-		for (Schedule schedule : schedules) {
-			Long code = schedule.getCounterpartyContractCode();
-			if (currentSchedules.containsKey(code)) {
-				List<Schedule> sch = currentSchedules.get(code);
-				sch.add(schedule);
-				currentSchedules.put(code, sch);
-			} else {
-				List<Schedule> sch = new ArrayList<>();
-				sch.add(schedule);
-				currentSchedules.put(code, sch);
- 			}
-		}
+	    for (Schedule schedule : schedules) {
+	       Long code = schedule.getCounterpartyContractCode();
+	       if (currentSchedules.containsKey(code)) {
+	          List<Schedule> sch = currentSchedules.get(code);
+	          sch.add(schedule);
+	          currentSchedules.put(code, sch);
+	       } else {
+	          List<Schedule> sch = new ArrayList<>();
+	          sch.add(schedule);
+	          currentSchedules.put(code, sch);
+	          }
+	    }
 
-		LocalDate today = LocalDate.now();
+	    LocalDate today = LocalDate.now();
 
-		// Заголовки колонок
-		String[] headers = {
-				"По коду / По номеру контракта", "Код / Номер контракта", "Склады куда", "Период расходов с", "Период расходов по", "Условия поставки",
-				"Дней в остатках (делитель)", "Точка заказа (дней)", "Макс. запас (дней)", "Дата поставки", "Дата крайней поставки",
-				"Проверить репликацию", "Учитывать только типы расходов 11,21,22", "Добавить последний приход", "Оставить кол-во заказа > 0", "Контролировать планограмму",
-				"Для СП", "Учитывать пр.заказы поставщикам", "Учитывать «В пути на склад»", "Учитывать «Зарезервировано»", "Учитывать «Заказы в EMark»",
-				"Потолок заказа (дней)", "Точка заказа для параметра «Зал»", "Создавать пустые заказы"
+	    // Заголовки колонок
+	    String[] headers = {
+	          "По коду / По номеру контракта", "Код / Номер контракта", "Склады куда", "Период расходов с", "Период расходов по", "Условия поставки",
+	          "Дней в остатках (делитель)", "Точка заказа (дней)", "Макс. запас (дней)", "Дата поставки", "Дата крайней поставки",
+	          "Проверить репликацию", "Учитывать только типы расходов 11,21,22", "Добавить последний приход", "Оставить кол-во заказа > 0", "Контролировать планограмму",
+	          "Для СП", "Учитывать пр.заказы поставщикам", "Учитывать «В пути на склад»", "Учитывать «Зарезервировано»", "Учитывать «Заказы в EMark»",
+	          "Потолок заказа (дней)", "Точка заказа для параметра «Зал»", "Создавать пустые заказы"
 
-		};
+	    };
 
-		String[] checkHeaders = {
-				"Номер контракта", "Номер ТО", "Статус", "Время действия"
-		};
+	    String[] checkHeaders = {
+	          "Номер контракта", "Номер ТО", "Статус", "Время действия"
+	    };
 
-		String[] duplicateHeaders = {
-				"Номер контракта", "Наименование контрагента", "Номер ТО"
-		};
-
-
-		for (Long counterpartyContractCode: currentSchedules.keySet()) {
-
-			if(schedules.isEmpty()) {
-				return null;
-			}
-
-			Workbook workbook = new XSSFWorkbook();
-			Sheet sheet = workbook.createSheet("Лист 1");
-			Sheet checkSheet = workbook.createSheet("Проверочный");
-			Sheet duplicatesSheet = workbook.createSheet("Дубликаты");
-
-			// Создаем строку заголовков
-			Row headerRow = sheet.createRow(2);
-			for (int i = 0; i < headers.length; i++) {
-				Cell cell = headerRow.createCell(i);
-				cell.setCellValue(headers[i]);
-			}
-
-			// Создаем строку заголовков
-			Row checkHeaderRow = checkSheet.createRow(0);
-			for (int i = 0; i < checkHeaders.length; i++) {
-				Cell cell = checkHeaderRow.createCell(i);
-				cell.setCellValue(checkHeaders[i]);
-			}
-
-			Row duplicatesHeaderRow = duplicatesSheet.createRow(0);
-			for (int i = 0; i < duplicateHeaders.length; i++) {
-				Cell cell = duplicatesHeaderRow.createCell(i);
-				cell.setCellValue(duplicateHeaders[i]);
-			}
-
-			for (int i = 0; i < headers.length; i++) {
-				sheet.autoSizeColumn(i);
-			}
-
-			for (int i = 0; i < checkHeaders.length; i++) {
-				checkSheet.autoSizeColumn(i);
-			}
-
-			for (int i = 0; i < duplicateHeaders.length; i++) {
-				duplicatesSheet.autoSizeColumn(i);
-			}
-
-			boolean isSheetEmpty = true;
-			// Заполняем данные
-
-			int rowNum = 3;
-			int checkRowNum = 1;
-			int duplicatesRowNum = 1;
-			List<Schedule> s = currentSchedules.get(counterpartyContractCode);
-			//List<Schedule> currentSchedules = schedules.stream().filter(sch -> sch.getCounterpartyContractCode().equals(counterpartyContractCode)).collect(Collectors.toList());
-
-			Map <String, Schedule> map = new HashMap<>();
-
-			for (Schedule schedule : s) {
-				if(schedule.getIsNotCalc() != null && schedule.getIsNotCalc()) {
-					continue;
-				}
-
-				List<LocalDate> supplyDates = checkSchedule(schedule, today);
-
-				if (!supplyDates.isEmpty()) {
-					isSheetEmpty = false;
-					rowNum = fillRow(sheet, supplyDates, today, schedule.getCounterpartyContractCode(), schedule.getNumStock(), rowNum);
-
-					Row checkRow = checkSheet.createRow(checkRowNum++);
-
-					checkRow.createCell(0).setCellValue(schedule.getCounterpartyContractCode());
-					checkRow.createCell(1).setCellValue(schedule.getNumStock());
-					checkRow.createCell(2).setCellValue(schedule.getStatus());
-					checkRow.createCell(3).setCellValue(schedule.getStartDateTemp() == null ? null : schedule.getStartDateTemp().toString());
-				}
-
-				String key = schedule.getNumStock().toString() + schedule.getCounterpartyContractCode().toString();
-				if (map.containsKey(key)){
-					Row duplicatesRow = duplicatesSheet.createRow(duplicatesRowNum++);
-					duplicatesRow.createCell(0).setCellValue(schedule.getCounterpartyContractCode());
-					duplicatesRow.createCell(1).setCellValue(schedule.getName());
-					duplicatesRow.createCell(2).setCellValue(schedule.getNumStock());
-
-				} else {
-					map.put(key, schedule);
-				}
+	    String[] duplicateHeaders = {
+	          "Номер контракта", "Наименование контрагента", "Номер ТО"
+	    };
 
 
-			}
-			String fullFilePath = filePath + "Шаблон(МС) Прямые на ТО " + counterpartyContractCode + ".xlsx";
+	    for (Long counterpartyContractCode: currentSchedules.keySet()) {
 
-			if(!isSheetEmpty) {
-				try (FileOutputStream fileOut = new FileOutputStream(fullFilePath)) {
-					workbook.write(fileOut);
-				}// Сохраняем файл
-			}
+	       if(schedules.isEmpty()) {
+	          return null;
+	       }
 
-			workbook.close();
+	       Workbook workbook = new XSSFWorkbook();
+	       Sheet sheet = workbook.createSheet("Лист 1");
+	       Sheet checkSheet = workbook.createSheet("Проверочный");
+	       Sheet duplicatesSheet = workbook.createSheet("Дубликаты");
 
-		}
+	       // Создаем строку заголовков
+	       Row headerRow = sheet.createRow(2);
+	       for (int i = 0; i < headers.length; i++) {
+	          Cell cell = headerRow.createCell(i);
+	          cell.setCellValue(headers[i]);
+	       }
 
-        //начало для виртуального склада
+	       // Создаем строку заголовков
+	       Row checkHeaderRow = checkSheet.createRow(0);
+	       for (int i = 0; i < checkHeaders.length; i++) {
+	          Cell cell = checkHeaderRow.createCell(i);
+	          cell.setCellValue(checkHeaders[i]);
+	       }
 
-		List<Schedule> schedulesCold = schedules.stream()
-				.filter(sch -> sch.getToType().equals("холодный"))
-				.sorted(Comparator.comparingLong(Schedule::getCounterpartyContractCode))
-				.collect(Collectors.toList());
+	       Row duplicatesHeaderRow = duplicatesSheet.createRow(0);
+	       for (int i = 0; i < duplicateHeaders.length; i++) {
+	          Cell cell = duplicatesHeaderRow.createCell(i);
+	          cell.setCellValue(duplicateHeaders[i]);
+	       }
 
-		XSSFWorkbook workbookVirtual = new XSSFWorkbook();
-		Sheet sheetVirtual = workbookVirtual.createSheet("Лист 1");
+	       for (int i = 0; i < headers.length; i++) {
+	          sheet.autoSizeColumn(i);
+	       }
 
-		// Создаем строку заголовков
-		Row headerRow = sheetVirtual.createRow(2);
-		for (int i = 0; i < headers.length; i++) {
-			Cell cell = headerRow.createCell(i);
-			cell.setCellValue(headers[i]);
-		}
+	       for (int i = 0; i < checkHeaders.length; i++) {
+	          checkSheet.autoSizeColumn(i);
+	       }
 
-		boolean isSheetEmpty = true;
+	       for (int i = 0; i < duplicateHeaders.length; i++) {
+	          duplicatesSheet.autoSizeColumn(i);
+	       }
 
-		// Заполняем данные
-		int rowNum = 3;
-		long oldCode = 0L;
+	       boolean isSheetEmpty = true;
+	       // Заполняем данные
 
-		for (Schedule schedule: schedulesCold) {
+	       int rowNum = 3;
+	       int checkRowNum = 1;
+	       int duplicatesRowNum = 1;
+	       List<Schedule> s = currentSchedules.get(counterpartyContractCode);
+	       //List<Schedule> currentSchedules = schedules.stream().filter(sch -> sch.getCounterpartyContractCode().equals(counterpartyContractCode)).collect(Collectors.toList());
 
-			List<LocalDate> supplyDates = checkSchedule(schedule, today);
-			Long currentCode = schedule.getCounterpartyContractCode();
+	       Map <String, Schedule> map = new HashMap<>();
 
-			if (!supplyDates.isEmpty()){
-				if (oldCode != currentCode) {
-					isSheetEmpty = false;
+	           String codeName = null;
+	       for (Schedule schedule : s) {
+	          if(schedule.getIsNotCalc() != null && schedule.getIsNotCalc()) {
+	             continue;
+	          }
 
-					List<LocalDate> uniqueSchedule = new ArrayList<>();
-					uniqueSchedule.add(today.plusDays(1));
-					rowNum = fillRow(sheetVirtual, uniqueSchedule, today, schedule.getCounterpartyContractCode(), 671, rowNum);
+	          List<LocalDate> supplyDates = checkSchedule(schedule, today);
 
-					oldCode = currentCode;
-				}
-			}
-        }
+	          if (!supplyDates.isEmpty()) {
+	             isSheetEmpty = false;
+	             rowNum = fillRow(sheet, supplyDates, today, schedule.getCounterpartyContractCode(), schedule.getNumStock(), rowNum);
 
-		String fullFilePath  = filePath + "Шаблон(МС) Прямые на ТО виртуальный.xlsx";
+	             Row checkRow = checkSheet.createRow(checkRowNum++);
 
-		if(!isSheetEmpty) {
-			try (FileOutputStream fileOut = new FileOutputStream(fullFilePath)) {
-				workbookVirtual.write(fileOut);
-			}
-		}
+	             checkRow.createCell(0).setCellValue(schedule.getCounterpartyContractCode());
+	             checkRow.createCell(1).setCellValue(schedule.getNumStock());
+	             checkRow.createCell(2).setCellValue(schedule.getStatus());
+	             checkRow.createCell(3).setCellValue(schedule.getStartDateTemp() == null ? null : schedule.getStartDateTemp().toString());
+	          }
 
-		workbookVirtual.close();
+	          String key = schedule.getNumStock().toString() + schedule.getCounterpartyContractCode().toString();
+	          if (map.containsKey(key)){
+	             Row duplicatesRow = duplicatesSheet.createRow(duplicatesRowNum++);
+	             duplicatesRow.createCell(0).setCellValue(schedule.getCounterpartyContractCode());
+	             duplicatesRow.createCell(1).setCellValue(schedule.getName());
+	             duplicatesRow.createCell(2).setCellValue(schedule.getNumStock());
 
-		//конец для виртуального склада
+	          } else {
+	             map.put(key, schedule);
+	          }
 
-		return filePath;
+	               codeName = schedule.getCodeNameOfQuantumCounterparty() == null ? "" : schedule.getCodeNameOfQuantumCounterparty();
+	       }
+	       String fullFilePath = filePath + "Шаблон(МС) Прямые на ТО " + counterpartyContractCode + " " + codeName + ".xlsx";
+
+	       if(!isSheetEmpty) {
+	          try (FileOutputStream fileOut = new FileOutputStream(fullFilePath)) {
+	             workbook.write(fileOut);
+	          }// Сохраняем файл
+	       }
+
+	       workbook.close();
+
+	    }
+
+	       //начало для виртуального склада
+
+	    List<Schedule> schedulesCold = schedules.stream()
+	          .filter(sch -> sch.getToType().equals("холодный"))
+	          .sorted(Comparator.comparingLong(Schedule::getCounterpartyContractCode))
+	          .collect(Collectors.toList());
+
+	    XSSFWorkbook workbookVirtual = new XSSFWorkbook();
+	    Sheet sheetVirtual = workbookVirtual.createSheet("Лист 1");
+
+	    // Создаем строку заголовков
+	    Row headerRow = sheetVirtual.createRow(2);
+	    for (int i = 0; i < headers.length; i++) {
+	       Cell cell = headerRow.createCell(i);
+	       cell.setCellValue(headers[i]);
+	    }
+
+	    boolean isSheetEmpty = true;
+
+	    // Заполняем данные
+	    int rowNum = 3;
+	    long oldCode = 0L;
+
+	    for (Schedule schedule: schedulesCold) {
+
+	       List<LocalDate> supplyDates = checkSchedule(schedule, today);
+	       Long currentCode = schedule.getCounterpartyContractCode();
+
+	       if (!supplyDates.isEmpty()){
+	          if (oldCode != currentCode) {
+	             isSheetEmpty = false;
+
+	             List<LocalDate> uniqueSchedule = new ArrayList<>();
+	             uniqueSchedule.add(today.plusDays(1));
+	             rowNum = fillRow(sheetVirtual, uniqueSchedule, today, schedule.getCounterpartyContractCode(), 671, rowNum);
+
+	             oldCode = currentCode;
+	          }
+	       }
+	       }
+
+	    String fullFilePath  = filePath + "Шаблон(МС) Прямые на ТО виртуальный.xlsx";
+
+	    if(!isSheetEmpty) {
+	       try (FileOutputStream fileOut = new FileOutputStream(fullFilePath)) {
+	          workbookVirtual.write(fileOut);
+	       }
+	    }
+
+	    workbookVirtual.close();
+
+	    //конец для виртуального склада
+
+	    return filePath;
 	}
 
 	/**

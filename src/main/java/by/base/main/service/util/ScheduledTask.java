@@ -434,7 +434,7 @@ public class ScheduledTask {
 	             for (String key: draftLists.keySet()){
 
 	                for (String draftNumber: draftLists.get(key)){
-	                   String regEx = " " + draftNumber + ".";
+	                   String regEx = " " + draftNumber + " ";
 
 	                   if (fileName.contains(regEx)){
 	                      draftFilesMap.get(key).add(file);

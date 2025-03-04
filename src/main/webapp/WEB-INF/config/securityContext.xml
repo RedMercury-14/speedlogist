@@ -14,6 +14,7 @@
 		<security:form-login login-page="/main/signin" 
 			login-processing-url="/main/signinpost"	username-parameter="login"	password-parameter="password" default-target-url="/main" always-use-default-target="true" />
 			<security:logout logout-url="/logout" logout-success-url="/main/signin?logout=true" />			
+			<security:intercept-url pattern="/main/reviews" access="hasAnyRole('ROLE_ANONYMOUS', 'ROLE_CARRIER')"/>
 			<security:intercept-url pattern="/main/signin"	access="hasRole('ROLE_ANONYMOUS')" />
 			<security:intercept-url pattern="/main/registration" access="hasAnyRole('ROLE_ANONYMOUS', 'ROLE_ADMIN')" />	
 			<security:intercept-url pattern="/main" access="hasAnyRole('ROLE_ANONYMOUS', 'ROLE_ADMIN', 'ROLE_MANAGER','ROLE_TOPMANAGER', 'ROLE_SHOP', 'ROLE_CARRIER', 'ROLE_STOCK', 'ROLE_PROCUREMENT', 'ROLE_ORDERSUPPORT', 'ROLE_STOCKSUPPORT', 'ROLE_SLOTOBSERVER', 'ROLE_ANALYTICS', 'ROLE_STOCKPROCUREMENT', 'ROLE_ORL', 'ROLE_LOGISTDELIVERY', 'ROLE_SHOW')" />	

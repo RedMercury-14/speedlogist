@@ -1213,6 +1213,10 @@ public class ReaderSchedulePlan {
 			Period period = Period.between(product.getDateUnload().toLocalDate(), dateNow);
 			if(product.getDateUnload() != null && period.getDays()<2) {
 				
+				if(product.getСalculatedPerDay() == null || product.getСalculatedPerDay() == 0.0) {
+					return new ResultMethod("<span style=\"color: #bbaa00;\"><strong>Проверка по стокам не проводилась!</strong> Расчётная реализация товара " + product.getName() + " (" + product.getCodeProduct()+") равна 0.0 !.</span>", 200);
+				}
+				
 				Date date = Date.valueOf(LocalDate.now());
 				MarketDataFor325Responce dataFor325Responce = null;
 				Double quantityFrom325 = 0.0;
@@ -1256,8 +1260,10 @@ public class ReaderSchedulePlan {
 					
 					if(user.getLogin().equals("zaq") || user.getIdUser() == 1) {
 						System.out.println("vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv ");
+						System.out.println(product.getCodeProduct());
+						System.out.println(getTrueStock(order) + " <- stock");
 						System.out.println(quantityFrom325 + " <-quantityFrom325");
-						System.out.println(calculatedPerDay + " <-calculatedPerDay");
+						System.out.println(calculatedPerDay + " <-calculatedPerDay -> " + product.getСalculatedPerDay());
 						System.out.println(balanceStockAndReserves + " <-balanceStockAndReserves ("+quantityFrom325+"/"+calculatedPerDay+")");
 						System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ");
 					}
@@ -1266,10 +1272,6 @@ public class ReaderSchedulePlan {
 				} catch (ParseException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
-				}
-				
-				if(calculatedPerDay == 0.0) {
-					return new ResultMethod("<span style=\"color: #bbaa00;\"><strong>Проверка по стокам не проводилась!</strong> Расчётная реализация товара " + product.getName() + " (" + product.getCodeProduct()+") равна 0.0 !.</span>", 200);
 				}
 				
 				if(dataFor325Responce == null) {

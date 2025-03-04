@@ -1253,6 +1253,15 @@ public class ReaderSchedulePlan {
 						}						
 						break;	
 					}
+					
+					if(user.getLogin().equals("zaq") || user.getIdUser() == 1) {
+						System.out.println("vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv ");
+						System.out.println(quantityFrom325 + " <-quantityFrom325");
+						System.out.println(calculatedPerDay + " <-calculatedPerDay");
+						System.out.println(balanceStockAndReserves + " <-balanceStockAndReserves ("+quantityFrom325+"/"+calculatedPerDay+")");
+						System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ");
+					}
+					
 				
 				} catch (ParseException e) {
 					// TODO Auto-generated catch block

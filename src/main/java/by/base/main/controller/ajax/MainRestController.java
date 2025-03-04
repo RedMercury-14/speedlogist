@@ -4269,8 +4269,18 @@ public class MainRestController {
 		MarketRequestDto requestDto = new MarketRequestDto("", packetDto);
 		//запрашиваем jwt
 		String str = postRequest(marketUrl, gson.toJson(requestDto));
-		MarketTableDto marketRequestDto = gson.fromJson(str, MarketTableDto.class);
-		marketJWT = marketRequestDto.getTable()[0].toString().split("=")[1].split("}")[0];		
+		System.out.println(str);
+		try {
+			MarketTableDto marketRequestDto = gson.fromJson(str, MarketTableDto.class);
+			marketJWT = marketRequestDto.getTable()[0].toString().split("=")[1].split("}")[0];	
+		} catch (Exception e) {
+			response.put("status SpeedLogist", "500");
+//			response.put("jwt", marketJWT);
+			response.put("json", str);
+			System.out.println(str);
+			return response;
+		}
+			
 		response.put("status", "200");
 		response.put("jwt", marketJWT);
 		response.put("message", "JWT обновлён");

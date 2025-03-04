@@ -331,6 +331,11 @@ public class MainController {
 		return "main";		
 	}
 	
+	@GetMapping("/main/reviews")
+	public String getReviews(Model model, HttpServletRequest request) {
+		return "reviewsForm";
+	}
+	
 	@GetMapping("/main/procurement/permission/list")
 	public String getPermissionList(Model model, HttpServletRequest request) {
 		return "permissionList";

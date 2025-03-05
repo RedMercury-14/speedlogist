@@ -189,6 +189,9 @@ html, body {
 .eventInfo::-webkit-scrollbar-thumb:hover {
 	background: #555;
 }
+.event-info__status p {
+	color: cadetblue;
+}
 #eventInfoBtns .btn {
 	/* background-color: #9fa5aa; */
 	border-radius: 0;

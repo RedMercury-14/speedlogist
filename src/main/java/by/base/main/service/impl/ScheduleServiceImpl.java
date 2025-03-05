@@ -3,6 +3,8 @@ package by.base.main.service.impl;
 import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.transaction.Transactional;
 
@@ -140,46 +142,24 @@ public class ScheduleServiceImpl implements ScheduleService{
 		return scheduleDAO.updateScheduleBycounterpartyCodeHascodeNameOfQuantumCounterparty(counterpartyCode, codeNameOfQuantumCounterparty);
 	}
 
-	/**
-	 * @author Ira
-	 * @param contract
-	 * <br>Возвращает список всех графиков на ТО по номеру контракта - и временных, и постоянных</br>
-	 * @return
-	 */
 	@Transactional
 	@Override
 	public List<Schedule> getSchedulesListTOContractWithTemp(Long contract) {
 		return scheduleDAO.getSchedulesListTOContractWithTemp(contract);
-
 	}
 
-	/**
-	 * @author Ira
-	 * <br>Возвращает список только актуальных графиков на ТО - либо временных, либо постоянных</br>
-	 * @return
-	 */
 	@Transactional
 	@Override
 	public List<Schedule> getSchedulesListTOWithTemp() {
 		return scheduleDAO.getSchedulesListTOWithTemp();
 	}
 
-	/**
-	 * @author Ira
-	 * <br>Возвращает список графиков на ТО по номеру контракта и номеру ТО - и временных, и постоянных</br>
-	 * @return
-	 */
 	@Transactional
 	@Override
 	public List<Schedule> getScheduleByNumContractAndNUmStockWithTemp(Long num, Integer numStock) {
 		return scheduleDAO.getScheduleByNumContractAndNUmStockWithTemp(num, numStock);
 	}
 
-	/**
-	 * @author Ira
-	 * <br>Проверяет создаваемый график на пересечение временных границ с существующими графиками</br>
-	 * @return
-	 */
 	@Transactional
 	@Override
 	public boolean checkScheduleIntersection(List<Schedule> existingSchedules, Schedule newSchedule){
@@ -197,27 +177,14 @@ public class ScheduleServiceImpl implements ScheduleService{
 			}
 		}
 		return true;
-
 	}
 
-	/**
-	 * @author Ira
-	 * <br>Возвращает список графиков по типу ТО - и временных, и постоянных</br>
-	 * @param toType
-	 * @return
-	 */
 	@Transactional
 	@Override
 	public List<Schedule> getSchedulesByTOTypeWithTemp(String toType) {
 		return scheduleDAO.getSchedulesByTOTypeWithTemp(toType);
 	}
 
-	/**
-	 * @author Ira
-	 * <br>Получает на вход лист графиков, фильтрует, возвращает только графики, действующие на текущий момент</br>
-	 * @param allSchedules
-	 * @return
-	 */
 	@Transactional
 	@Override
 	public List<Schedule> getSchedulesListTOOnlyActual(List<Schedule> allSchedules){
@@ -230,7 +197,6 @@ public class ScheduleServiceImpl implements ScheduleService{
 				actualSchedules.removeIf(sch -> sch.getCounterpartyContractCode() == counterpartyContractNumber
 						&& sch.getNumStock() == numStock
 						&& sch.getStartDateTemp() == null);
-
 			}
 		}
 		return actualSchedules;
@@ -264,5 +230,11 @@ public class ScheduleServiceImpl implements ScheduleService{
 	@Override
 	public ScheduleCountOrderDTO getCountScheduleOrderHasWeek() {
 		return scheduleDAO.getCountScheduleOrderHasWeek();
+	}
+
+	@Transactional
+	@Override
+	public Map<Long, Schedule> getSchedulesRCbyContractNums(Set<Long> contractNums) {
+		return scheduleDAO.getSchedulesRCbyContractNums(contractNums);
 	}
 }

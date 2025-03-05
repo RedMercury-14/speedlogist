@@ -20,6 +20,8 @@ public class AmountOfPalletsDto {
 
     private Date deliveryDate;
 
+    private Integer logShoulder;
+
     public long getCounterpartyCode() {
         return counterpartyCode;
     }
@@ -66,5 +68,13 @@ public class AmountOfPalletsDto {
 
     public void setDeliveryDate(Date deliveryDate) {
         this.deliveryDate = deliveryDate;
+    }
+
+    public Integer getLogShoulder() {
+        return logShoulder;
+    }
+
+    public void setLogShoulder(Integer logShoulder) {
+        this.logShoulder = logShoulder;
     }
 }

@@ -1,4 +1,5 @@
 import { ajaxUtils } from "./ajaxUtils.js"
+import { saveMainchatMessageUrl } from "./globalConstants/urls.js"
 
 const audio = new Audio('/speedlogist/resources/audio/notification.mp3')
 
@@ -77,7 +78,7 @@ function addClickLinkListner(toast, token, message) {
 function saveMessage(token, message) {
 	delete message.idMessage
 	ajaxUtils.postJSONdata({
-		url: "/speedlogist/api/mainchat/massage/add",
+		url: saveMainchatMessageUrl,
 		token: token,
 		data: message
 	})

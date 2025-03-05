@@ -12,23 +12,24 @@ import {
 	unconfirmScheduleItem
 } from './deliverySchedule/utils.js'
 import { checkScheduleData, isValidScheduleValues, getFormErrorMessage } from './deliverySchedule/validation.js'
+import {
+	addScheduleRCItemUrl,
+	changeIsImportBaseUrl,
+	changeIsNotCalcBaseUrl,
+	downloadReportBaseUrl,
+	editScheduleRCItemUrl,
+	getScheduleNumContractBaseUrl,
+	getScheduleRCUrl,
+	loadRCExcelUrl,
+	sendScheduleRCDataToMailUrl
+} from './globalConstants/urls.js'
 import { snackbar } from "./snackbar/snackbar.js"
 import { uiIcons } from './uiIcons.js'
 import {
-	blurActiveElem,
-	changeGridTableMarginTop, debounce, disableButton, enableButton,
+	blurActiveElem, debounce, disableButton, enableButton,
 	getData, getScheduleStatus, hideLoadingSpinner, isAdmin,
 	isOrderSupport, showLoadingSpinner
 } from './utils.js'
-
-const loadExcelUrl = '../../api/slots/delivery-schedule/loadRC'
-const getScheduleUrl = '../../api/slots/delivery-schedule/getListRC'
-const addScheduleItemUrl = '../../api/slots/delivery-schedule/createRC'
-const editScheduleItemUrl = '../../api/slots/delivery-schedule/editRC'
-const getScheduleNumContractBaseUrl = '../../api/slots/delivery-schedule/getScheduleNumContract/'
-
-const changeIsNotCalcBaseUrl = '../../api/slots/delivery-schedule/changeIsNotCalc/'
-const sendScheduleDataToMailUrl = '../../api/orl/sendEmail'
 
 const PAGE_NAME = 'deliverySchedule'
 const LOCAL_STORAGE_KEY = `AG_Grid_settings_to_${PAGE_NAME}`
@@ -90,6 +91,13 @@ const columnDefs = [
 		editable: isAdmin(role) || login === 'romashkok%!dobronom.by',
 		onCellValueChanged: onIsNotCalcCahngeHandler,
 	},
+	{
+		headerName: 'Импорт', field: 'isImport',
+		cellClass: 'px-1 py-0 text-center font-weight-bold grid-checkbox',
+		width: 100,
+		editable: isAdmin(role) || login === 'romashkok%!dobronom.by',
+		onCellValueChanged: onIsImportChangeHandler,
+	},
 ]
 
 // доболнительные колонки для админа
@@ -143,6 +151,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 	// форма редактирования графика поставки
 	const editScheduleItemForm = document.querySelector('#editScheduleItemForm')
 	editScheduleItemForm && editScheduleItemForm.addEventListener('submit', editScheduleItemFormHandler)
+	// форма скачивания отчета
+	const downloadReportForm = document.querySelector('#downloadReportForm')
+	downloadReportForm.addEventListener('submit', downloadReportFormSubmitHandler)
 
 	// выпадающий список выбора отображаемого склада
 	const numStockSelect = document.querySelector("#numStockSelect")
@@ -228,7 +239,7 @@ function renderTable(gridDiv, gridOptions) {
 async function updateTable(gridOptions, data) {
 	const res = data
 		? { body: data }
-		: await getData(getScheduleUrl)
+		: await getData(getScheduleRCUrl)
 
 	scheduleData = res.body
 
@@ -352,6 +363,13 @@ async function onIsNotCalcCahngeHandler(params) {
 	const rowNode = params.node
 	await changeIsNotCalc(idSchedule, rowNode)
 }
+// обработчик изменения значения "Импорт"
+async function onIsImportChangeHandler(params) {
+	const data = params.data
+	const idSchedule = data.idSchedule
+	const rowNode = params.node
+	await changeIsImport(idSchedule, rowNode)
+}
 
 // запрос на изменение значения "Не учитывать в расчете ОРЛ"
 async function changeIsNotCalc(idSchedule, rowNode) {
@@ -362,8 +380,28 @@ async function changeIsNotCalc(idSchedule, rowNode) {
 	bootstrap5overlay.hideOverlay()
 
 	if (res && res.status === '200') {
-
+		// изменение обрабатывается таблицей
 	} else {
+		// обновляем данные с сервера
+		updateTable()
+		console.log(res)
+		const message = res && res.message ? res.message : 'Неизвестная ошибка'
+		snackbar.show(message)
+	}
+}
+
+// запрос на изменение значения "Импорт"
+async function changeIsImport(idSchedule, rowNode) {
+	if (!isAdmin(role) && login !== 'romashkok%!dobronom.by') return
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
+	const res = await getData(`${changeIsImportBaseUrl}${idSchedule}`)
+	clearTimeout(timeoutId)
+	bootstrap5overlay.hideOverlay()
+
+	if (res && res.status === '200') {
+		// изменение обрабатывается таблицей
+	} else {
+		// обновляем данные с сервера
 		updateTable()
 		console.log(res)
 		const message = res && res.message ? res.message : 'Неизвестная ошибка'
@@ -396,7 +434,7 @@ async function sendScheduleDataToMail(e) {
 	btn.disabled = true
 
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 0)
-	const res = await getData(sendScheduleDataToMailUrl)
+	const res = await getData(sendScheduleRCDataToMailUrl)
 	clearTimeout(timeoutId)
 	bootstrap5overlay.hideOverlay()
 	btn.disabled = false
@@ -422,7 +460,7 @@ function sendExcelFormHandler(e) {
 	showLoadingSpinner(submitButton)
 
 	ajaxUtils.postMultipartFformData({
-		url: loadExcelUrl,
+		url: loadRCExcelUrl,
 		token: token,
 		data: file,
 		successCallback: (res) => {
@@ -463,7 +501,7 @@ function addScheduleItemFormHandler(e) {
 	}
 
 	ajaxUtils.postJSONdata({
-		url: addScheduleItemUrl,
+		url: addScheduleRCItemUrl,
 		token: token,
 		data: data,
 		successCallback: (res) => {
@@ -526,7 +564,7 @@ function editScheduleItemFormHandler(e) {
 	}
 
 	ajaxUtils.postJSONdata({
-		url: editScheduleItemUrl,
+		url: editScheduleRCItemUrl,
 		token: token,
 		data: data,
 		successCallback: (res) => {
@@ -553,6 +591,51 @@ function editScheduleItemFormHandler(e) {
 			enableButton(e.submitter)
 		}
 	})
+}
+
+function downloadReportFormSubmitHandler(e) {
+	e.preventDefault()
+
+	const formData = new FormData(e.target)
+	const dateStart = formData.get('dateStart')
+	const dateEnd = formData.get('dateEnd')
+
+	disableButton(e.submitter)
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 300)
+
+	fetch(`${downloadReportBaseUrl}${dateStart}&${dateEnd}`)
+		.then(res => res.status === 200 ? res.blob() : Promise.reject('Ошибка: статус ответа не 200'))
+		.then(blob => {
+			const url = window.URL.createObjectURL(blob)
+			const a = document.createElement('a')
+			a.style.display = 'none'
+			a.href = url
+			a.download = `report_${dateStart}_${dateEnd}.xlsx`
+			document.body.appendChild(a)
+			a.click()
+			window.URL.revokeObjectURL(url)
+			document.body.removeChild(a)
+			snackbar.show('Скачивание файла...')
+		})
+		.catch((e) => {
+			console.error('Ошибка при скачивании файла:', e)
+
+			// Резервный метод: скачивание через ссылку
+			const a = document.createElement('a')
+			a.style.display = 'none'
+			a.href = `${downloadReportBaseUrl}${dateStart}&${dateEnd}`
+			a.download = `report_${dateStart}_${dateEnd}.xlsx`
+			document.body.appendChild(a)
+			a.click()
+			document.body.removeChild(a)
+			snackbar.show('Файл скачивается через резервный метод...')
+		})
+		.finally(() => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+			enableButton(e.submitter)
+			$('#downloadReportModal').modal('hide')
+		})
 }
 
 // форматирование данных графика поставки для отправки на сервер

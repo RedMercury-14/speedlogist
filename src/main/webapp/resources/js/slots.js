@@ -708,7 +708,7 @@ function setOldMarketInfo(order, oldValue, gridOption) {
 
 // функции для модального окна обновлений в слотах
 function showSlotNewsModal() {
-	const value = cookieHelper.getCookie('_slotNews4')
+	const value = cookieHelper.getCookie('_slotNews5')
 	if (value) return 
 	setSlotNewsCookie('ок')
 	$('#slotNewsModal').modal('show')
@@ -716,5 +716,5 @@ function showSlotNewsModal() {
 function setSlotNewsCookie(value) {
 	let date = new Date(Date.now() + 31562e7)
 	date = date.toUTCString()
-	cookieHelper.setCookie('_slotNews4', value, { expires: date, })
+	cookieHelper.setCookie('_slotNews5', value, { expires: date, })
 }

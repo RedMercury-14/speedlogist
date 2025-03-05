@@ -1,3 +1,5 @@
+import { addPointsUrl } from './globalConstants/urls.js';
+
 var numPoint = 1;
 var token = $("meta[name='_csrf']").attr("content");
 //var flag = document.querySelector('#flag').value;
@@ -164,7 +166,7 @@ document.querySelector("#next").addEventListener("mousedown", () => {
 		console.log(arr);
 		$.ajax({
 			type: "POST",
-			url: "../../../api/route/addpoints",
+			url: addPointsUrl,
 			headers: { "X-CSRF-TOKEN": token },
 			data: JSON.stringify(arr),
 			contentType: 'application/json',

@@ -53,6 +53,9 @@
 			</c:choose>
 			<c:choose>
 				<c:when test="${roles == '[ROLE_ADMIN]' || login == 'romashkok%!dobronom.by'}">
+					<button type="button" class="btn tools-btn font-weight-bold text-muted" data-toggle="modal" data-target="#downloadReportModal">
+						Скачать отчёт
+					</button>
 					<button type="button" id="sendScheduleDataToMail" class="btn tools-btn font-weight-bold text-muted ml-auto">
 						Отправить данные
 					</button>
@@ -546,6 +549,48 @@
 			</div>
 		</div>
 	</div>
+
+
+	<!-- модальное окно формы скачивания отчёта -->
+	<div class="modal fade" id="downloadReportModal" tabindex="-1" aria-labelledby="downloadReportModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h1 class="modal-title fs-5 mt-0" id="downloadReportModalLabel">Скачать отчёт</h1>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<form id="downloadReportForm" action="">
+					<div class="modal-body">
+						<div class="inputs-container">
+							<div class="mb-3">
+								<label class="sr-only" for="dateStart">Получить данные за период времени</label>
+								<div class="input-group">
+									<div class="input-group-prepend">
+										<div class="input-group-text">Получить данные за период времени</div>
+									</div>
+									<div class="input-group-prepend">
+										<div class="input-group-text">с</div>
+									</div>
+									<input type="date" class="form-control" name="dateStart" id="dateStart" required>
+									<div class="input-group-prepend">
+										<div class="input-group-text">по</div>
+									</div>
+									<input type="date" class="form-control" name="dateEnd" id="dateEnd" required>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">Отменить</button>
+						<button type="submit" class="btn btn-primary">Скачать отчёт</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
 
 	<!-- Список опций для графика -->
 	<datalist id="scheduleOptions"></datalist>

@@ -12,6 +12,8 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<redis.version>1.3.5.RELEASE</redis.version>
+		<maven.compiler.source>17</maven.compiler.source>
+		<maven.compiler.target>17</maven.compiler.target>
 	</properties>
 
 	<url>http://maven.apache.org</url>
@@ -349,11 +351,6 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.7.0</version>
-				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
-					<compileSourceRoots>src/main/java</compileSourceRoots>
-				</configuration>
 			</plugin>
 		</plugins>
 	</build>

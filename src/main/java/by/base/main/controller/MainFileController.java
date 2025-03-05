@@ -7,15 +7,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Type;
 import java.sql.Date;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -110,6 +106,116 @@ public class MainFileController {
 				}
             })
             .create();
+
+
+	/**
+	 * @param request
+	 * @param response
+	 * @param dateStart
+	 * @param dateFinish
+	 * @throws IOException
+	 * @throws ParseException
+	 * Метод для создания и скачивания excel-файла с информацией по статистике ордеров
+	 * по дням недели и общей за заданный период времени
+	 * @author Ira
+	 */
+	@RequestMapping("/get-order-statistic/{dateStart}&{dateFinish}")
+	public void getOrderStatistic(HttpServletRequest request, HttpServletResponse response,
+												 @PathVariable String dateStart,
+												 @PathVariable String dateFinish) throws IOException, ParseException {
+		Map<String, Object> responseMap = new HashMap<>();
+		Date dateFrom = Date.valueOf(dateStart);
+		Date dateTo = Date.valueOf(dateFinish);
+		List<Order> orders = orderService.getOrderByTimeDelivery(dateFrom, dateTo);
+		Map<Long, List<Order>> ordersByContract = new HashMap<>();
+
+		for (Order order: orders) {
+			if (order.getMarketContractType() != null && !order.getMarketContractType().equals("0")) {
+				Long counterpartyContractCode = Long.valueOf(order.getMarketContractType());
+				if (ordersByContract.containsKey(counterpartyContractCode)){
+					ordersByContract.get(counterpartyContractCode).add(order);
+				} else {
+					List<Order> orderList = new ArrayList<>();
+					orderList.add(order);
+					ordersByContract.put(counterpartyContractCode, orderList);
+				}
+			}
+		}
+
+		Map<List<String>, Map<DayOfWeek, Integer>> dailyStatistic = new HashMap<>();
+
+		for (Map.Entry<Long, List<Order>> entry: ordersByContract.entrySet()) {
+			Map<DayOfWeek, Integer> mapForContract = new TreeMap<>();
+			mapForContract.put(DayOfWeek.MONDAY, null);
+			mapForContract.put(DayOfWeek.TUESDAY, null);
+			mapForContract.put(DayOfWeek.WEDNESDAY, null);
+			mapForContract.put(DayOfWeek.THURSDAY, null);
+			mapForContract.put(DayOfWeek.FRIDAY, null);
+			mapForContract.put(DayOfWeek.SATURDAY, null);
+			mapForContract.put(DayOfWeek.SUNDAY, null);
+			Set<LocalDate> checkedDates = new HashSet<>();
+			List<String> key = new ArrayList<>();
+			key.add(entry.getKey().toString());
+			for (Order order: entry.getValue()) {
+				DayOfWeek currentDay = order.getTimeDelivery().toLocalDateTime().getDayOfWeek();
+				LocalDate date = order.getTimeDelivery()
+						.toInstant()
+						.atZone(ZoneId.systemDefault())
+						.toLocalDate();
+				if (!checkedDates.contains(date)) {
+					int counter = mapForContract.get(currentDay) == null ? 0 : mapForContract.get(currentDay);
+					counter++;
+					mapForContract.put(currentDay, counter);
+					checkedDates.add(date);
+				}
+				key.add(order.getCounterparty());
+			}
+
+			dailyStatistic.put(key, mapForContract);
+		}
+
+
+		Map <List<String>, Integer> ordersCount = new HashMap<>();
+		for (Map.Entry<Long, List<Order>> entry: ordersByContract.entrySet()) {
+			Set<LocalDate> checkedDates = new HashSet<>();
+			int count = 0;
+			List<String> key = new ArrayList<>();
+			key.add(entry.getKey().toString());
+			for(Order order: entry.getValue()) {
+				LocalDate date = order.getTimeDelivery()
+						.toInstant()
+						.atZone(ZoneId.systemDefault())
+						.toLocalDate();
+				if (!checkedDates.contains(date)) {
+					count++;
+					checkedDates.add(date);
+				}
+				key.add(order.getCounterparty());
+
+			}
+			ordersCount.put(key, count);
+		}
+
+		poiExcel.createExcelOrderStatistic(dateFrom, dateTo, ordersCount, dailyStatistic);
+
+		String appPath = request.getServletContext().getRealPath("");
+
+		response.setHeader("content-disposition", "attachment;filename="+"order-statistic.xlsx");
+		response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        try (FileInputStream in = new FileInputStream(appPath + "resources/others/order-statistic.xlsx"); OutputStream out = response.getOutputStream()) {
+            // Прочтите файл, который нужно загрузить, и сохраните его во входном потоке файла
+            //  Создать выходной поток
+            //  Создать буфер
+            byte buffer[] = new byte[1024];
+            int len = 0;
+            //  Прочитать содержимое входного потока в буфер в цикле
+            while ((len = in.read(buffer)) > 0) {
+                out.write(buffer, 0, len);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+	}
 	
     @RequestMapping(value="/echo", method=RequestMethod.GET)
     public @ResponseBody String handleFileUpload(HttpServletRequest request) throws IOException{

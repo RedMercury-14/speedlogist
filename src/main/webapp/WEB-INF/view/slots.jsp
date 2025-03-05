@@ -196,10 +196,14 @@
 							<input type="radio" name="options" id="eventInfoBtn" checked>Слоты
 						</label>
 						<label class="btn btn-light font-weight-bold">
+							<input type="radio" name="options" id="routesInfoBtn">Логистика
+						</label>
+						<label class="btn btn-light font-weight-bold">
 							<input type="radio" name="options" id="yardInfoBtn">Двор
 						</label>
 					</div>
 					<div id="eventInfo" class="eventInfo"></div>
+					<div id="routesInfo" class="eventInfo none"></div>
 					<div id="yardInfo" class="eventInfo none"></div>
 				</div>
 				<div class="modal-footer">
@@ -312,29 +316,24 @@
 					<h3 class="modal-title text-center" id="slotNewsModalLabel">Что нового</h3>
 				</div>
 				<div class="modal-body">
-					<h5 class="text-center text-muted font-weight-bold">Добавлена кнопка <strong>Помощь</strong></h5>
+					<h5 class="text-center text-muted font-weight-bold">Рампа 6 на 1700 складе закрывается</h5>
 					<p class="text-justify">
-						В правом верхнем углу появилась кнопка помощь. Эта кнопка открывает окно помощи.
-						В данный момент там находится список доступных инструкций к Слотам.
+						<b>Рампа 6 на 1700 складе</b> будет закрыта с <b>8 марта 2025 года</b>. Устанавливать заказы с указанной 
+						даты на эту рампу запрещено. Заказы, которые уже установлены на эту рампу, убирать не нужно. 
+						До указанной даты рампа будет в работе без изменений.
 					</p>
-					<div class="text-center px-5">
-						<img src="${pageContext.request.contextPath}/resources/img/slotNews/helpButton.png"
-							alt="кнопка Помощь"
-							class="img-fluid mb-3" style="max-width: 100%; height: auto;">
-					</div>
-					<div class="text-center px-5">
-						<img src="${pageContext.request.contextPath}/resources/img/slotNews/helpModal.png"
-							alt="модальное окно Помощь"
-							class="img-fluid mb-3" style="max-width: 100%; height: auto;">
-					</div>
+					<p class="text-justify">
+						<b>7 марта 2025 года</b> на <b>1800 складе</b> будет открыта <b>рампа 5</b>.
+					</p>
 					<br>
 					<br>
-					<h5 class="text-center text-muted font-weight-bold">Отображение кнопки с информацией о слоте</h5>
+					<h5 class="text-center text-muted font-weight-bold">Добавлена информация о маршрутах</h5>
 					<p class="text-justify">
-						Кнопка с информацией о конкретном слоте теперь отображается при наведении курсора на слот.
+						В окне <b>Информация о слоте</b> (открывается нажатием на кнопку <b>(i)</b>) появилась новая 
+						вкладка - <b>Логистика</b>. Эта вкладка содержит информацию о маршрутах по заказу.
 					</p>
 					<div class="text-center px-5">
-						<img src="${pageContext.request.contextPath}/resources/img/slotNews/eventHovered.gif"
+						<img src="${pageContext.request.contextPath}/resources/img/slotNews/routesInfo.gif"
 							alt="кнопка Помощь"
 							class="img-fluid mb-3" style="max-width: 100%; height: auto;">
 					</div>
@@ -346,7 +345,7 @@
 		</div>
 	</div>
 
-	<!-- Модальное окно отображения изменений в слотах -->
+	<!-- Модальное окно отображения инструкций -->
 	<div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
 		<div class="modal-dialog modal-lg">
 			<div class="modal-content">

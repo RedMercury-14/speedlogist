@@ -1,6 +1,5 @@
+import { getRoutesHasOrderBaseUrl } from "./globalConstants/urls.js"
 import { dateHelper, getData } from "./utils.js"
-
-const getRoutesHasOrderBaseUrl = `../../../api/manager/getRoutesHasOrder/`
 
 const routeStatusText = {
 	0:'Тендер ожидает подтверждения на бирже',

@@ -2,13 +2,7 @@ package by.base.main.dao.impl;
 
 import java.sql.Date;
 import java.time.DayOfWeek;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
-
-import javax.transaction.Transactional;
+import java.util.*;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -21,6 +15,8 @@ import com.dto.CounterpartyDTO;
 import by.base.main.dao.ScheduleDAO;
 import by.base.main.dto.ScheduleCountOrderDTO;
 import by.base.main.model.Schedule;
+
+import javax.transaction.Transactional;
 
 @Repository
 public class ScheduleDAOImpl implements ScheduleDAO{
@@ -460,4 +456,28 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 
 
 
+	/**
+	 * @author Ira
+	 * <br>Возвращает список графиков по списку кодов контрактов</br>
+	 * @param contractNums
+	 * @return
+	 */
+	private static final String queryGetSchedulesRCByContractNums = "from Schedule s where s.counterpartyContractCode in (:codes)";
+	@Transactional
+	@Override
+	public Map<Long, Schedule> getSchedulesRCbyContractNums(Set<Long> contractNums) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Schedule> theObject = currentSession.createQuery(queryGetSchedulesRCByContractNums, Schedule.class);
+		theObject.setParameterList("codes", contractNums);
+		Set<Schedule> schedules = new HashSet<>(theObject.getResultList());
+
+		Map<Long, Schedule> result = new HashMap<>();
+		schedules.forEach(s->{
+			result.put(s.getCounterpartyContractCode(), s);
+		});
+		if(result.isEmpty()) {
+			return null;
+		}
+		return result;
+	}
 }

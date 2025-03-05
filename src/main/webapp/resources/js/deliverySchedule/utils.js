@@ -1,9 +1,8 @@
 import { BtnCellRenderer, ResetStateToolPanel } from "../AG-Grid/ag-grid-utils.js"
 import { bootstrap5overlay } from "../bootstrap5overlay/bootstrap5overlay.js"
+import { changeScheduleStatusBaseUrl } from "../globalConstants/urls.js"
 import { snackbar } from "../snackbar/snackbar.js"
 import { dateHelper, getData, getScheduleStatus, isAdmin, isOrderSupport, isORL } from "../utils.js"
-
-const changeScheduleStatusBaseUrl = '../../api/slots/delivery-schedule/changeStatus/'
 
 export const SUPPLY_REG = /(понедельник|вторник|среда|четверг|пятница|суббота|воскресенье)/
 export const SUPPLY_REG_GLOBAL = /(понедельник|вторник|среда|четверг|пятница|суббота|воскресенье)/g

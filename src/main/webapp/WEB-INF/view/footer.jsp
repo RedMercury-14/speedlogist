@@ -26,7 +26,7 @@
             <div class="container">
                 <div class="row">
                     <div class="col-md-6">
-                        <div class="copyright"><p>Доброном © 2024</p></div>
+                        <div class="copyright"><p>Доброном © 2025</p></div>
                     </div>
                     <div class="col-md-6">
                         <ul class="footer-nav">

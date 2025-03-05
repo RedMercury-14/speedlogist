@@ -1,3 +1,4 @@
+import { getOrderByIdBaseUrl } from "./globalConstants/urls.js"
 import { getOrderStatusByStockDelivery } from "./globalRules/ordersRules.js"
 import { cutToInteger, dateHelper, getData, removeSingleQuotes } from "./utils.js"
 
@@ -266,7 +267,6 @@ function getCustomsAddress(orderWay, form) {
 export async function getOrderForForm(formType) {
 	const urlParams = new URLSearchParams(window.location.search)
 	const orderId = urlParams.get('idOrder')
-	const getOrderByIdBaseUrl = `../../../api/procurement/getOrderById/`
 	const res = await getData(`${getOrderByIdBaseUrl}${orderId}`)
 	const order = res.body
 

@@ -2,6 +2,7 @@ var idRoute = document.querySelector('input[name=id]').value;
 changeCost();
 import { ajaxUtils } from './ajaxUtils.js';
 import { ws } from './global.js';
+import { getInfoParticipantsMessageBaseUrl, getInfoRouteMessageBaseUrl, getRouteBaseUrl, setTenderCostFromCarrierUrl } from './globalConstants/urls.js';
 const token = $("meta[name='_csrf']").attr("content")
 ws.onopen = () => onOpenSock();
 ws.onmessage = (e) => onMessage(JSON.parse(e.data));
@@ -40,7 +41,7 @@ function sendCostPOST() {
 		status: "1"
 	}
 	ajaxUtils.postJSONdata({
-		url: `../../../api/carrier/cost`,
+		url: setTenderCostFromCarrierUrl,
 		token: token,
 		data: data,
 		successCallback: (res) => {
@@ -70,7 +71,7 @@ function cancelCostPOST() {
 		status: "1"
 	}
 	ajaxUtils.postJSONdata({
-		url: `../../../api/carrier/cost`,
+		url: setTenderCostFromCarrierUrl,
 		token: token,
 		data: data,
 		successCallback: (res) => {
@@ -119,9 +120,9 @@ function sendMessage(message) {
 	ws.send(JSON.stringify(message));
 }
 function changeCost() {
-	$.getJSON(`../../../api/info/message/routes/${idRoute}`, function(data) {
+	$.getJSON(`${getInfoRouteMessageBaseUrl}${idRoute}`, function(data) {
 		if (data.length == 0) {
-			$.getJSON(`../../../api/route/${idRoute}`, function(data) {
+			$.getJSON(`${getRouteBaseUrl}${idRoute}`, function(data) {
 				try {
 					const lastCost = document.querySelector('.lastCost');
 					const raz2 = document.querySelector('.raz2');
@@ -147,7 +148,7 @@ function changeCost() {
 		}
 
 	});
-	fetch(`../../../api/info/message/participants/${idRoute}`).then(function(response) {
+	fetch(`${getInfoParticipantsMessageBaseUrl}${idRoute}`).then(function(response) {
 		response.text().then(function(text) {
 			try {
 				document.querySelector('.numUsers').innerText = text;

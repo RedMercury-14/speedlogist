@@ -2,6 +2,8 @@ package by.base.main.service;
 
 import java.sql.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import com.dto.CounterpartyDTO;
 
@@ -165,18 +167,26 @@ public interface ScheduleService {
 	List<CounterpartyDTO> getСounterpartyListRCNameOnly();
 
 	/**
-	 * <br>Возвращает список графиков по номеру контракта и номеру склада
+	 * <br>Возвращает список графиков по номеру контракта и номеру склада</br>
 	 * @param num
 	 * @param shock
 	 * @return
 	 * @author Ira
 	 */
 	List<Schedule> getAllSchedulesByNumContractAndNumStock(Long num, Integer shock);
-	
+
 	/**
 	 * Возвращает DTO с кол-вом графиков поставок по дням, отнисительно <b>заказа</b>
 	 * @return
 	 */
 	ScheduleCountOrderDTO getCountScheduleOrderHasWeek();
+
+	/**
+	 * @author Ira
+	 * <br>Возвращает список графиков по списку кодов контрактов</br>
+	 * @param contractNums
+	 * @return
+	 */
+	Map<Long, Schedule> getSchedulesRCbyContractNums(Set<Long> contractNums);
 }
 

@@ -2,6 +2,8 @@ package by.base.main.dao;
 
 import java.sql.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import com.dto.CounterpartyDTO;
 
@@ -152,8 +154,6 @@ public interface ScheduleDAO {
 	 * @return
 	 */
 	public List<Schedule> getSchedulesListTOContractOnlyTemp(Long num);
-	
-	
 
 	/**
 	 * <br>Возвращает список графиков по номеру контракта и номеру склада
@@ -163,11 +163,19 @@ public interface ScheduleDAO {
 	 * @author Ira
 	 */
 	List<Schedule> getAllSchedulesByNumContractAndNumStock(Long num, Integer shock);
-	
+
 	/**
 	 * Возвращает DTO с кол-вом графиков поставок по дням, отнисительно <b>заказа</b>
 	 * <br>Реализовано SQL запросом
 	 * @return
 	 */
 	ScheduleCountOrderDTO getCountScheduleOrderHasWeek();
+
+	/**
+	 * @author Ira
+	 * <br>Возвращает список графиков для РЦ по списку кодов контрактов</br>
+	 * @param contractNums
+	 * @return
+	 */
+	Map<Long, Schedule> getSchedulesRCbyContractNums(Set<Long> contractNums);
 }

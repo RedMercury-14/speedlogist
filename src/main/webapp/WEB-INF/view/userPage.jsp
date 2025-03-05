@@ -26,7 +26,7 @@
 	<div class="container my-container">
 		<c:choose>
 			<c:when test="${department}">
-				<h3><a href="<spring:url value="/main/userpage/userlist" />">Мой персонал</a></h3>
+				<!-- <h3><a href="<spring:url value="/main/userpage/userlist" />">Мой персонал</a></h3> -->
 			</c:when>
 		</c:choose>
 		<h3><a href="<spring:url value="/main/userpage/edit" />">Настройки</a></h3>

@@ -27,30 +27,28 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
@@ -76,8 +74,6 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFCellStyle;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -89,10 +85,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.core.userdetails.User.UserBuilder;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -170,7 +162,6 @@ import by.base.main.service.util.PDFWriter;
 import by.base.main.service.util.POIExcel;
 import by.base.main.service.util.PropertiesUtils;
 import by.base.main.service.util.ReaderSchedulePlan;
-import by.base.main.service.util.ScheduledTask;
 import by.base.main.service.util.ServiceLevel;
 import by.base.main.util.ChatEnpoint;
 import by.base.main.util.MainChat;
@@ -187,6 +178,7 @@ import by.base.main.util.hcolossus.pojo.Solution;
 import by.base.main.util.hcolossus.pojo.VehicleWay;
 import by.base.main.util.hcolossus.service.LogicAnalyzer;
 import by.base.main.util.hcolossus.service.MatrixMachine;
+import scala.util.parsing.combinator.testing.Str;
 
 @RestController
 @RequestMapping(path = "api", produces = "application/json")
@@ -320,6 +312,10 @@ public class MainRestController {
 
 	@Autowired
 	private OrderCalculationService orderCalculationService;
+
+	@Autowired
+	private ReviewService reviewService;
+
 	private static String classLog;
 	public static String marketJWT;
 	//в отдельный файл
@@ -405,6 +401,115 @@ public class MainRestController {
 		responseMap.put("object", scheduleService.getCountScheduleOrderHasWeek());
 		return responseMap;
     }
+
+//	@GetMapping("/test")
+//	public Map<String, Object> test(){
+//		Map<String, Object> result = new HashMap<>();
+//
+//		result.put("done", "done");
+//		return result;
+//	}
+
+	/**
+	 * <br>Метод для создания объекта обратной связи</br>.
+	 * @param request
+	 * @param str
+	 * @throws IOException
+	 * @throws ParseException
+	 * @author Ira
+	 */
+
+	@PostMapping("/reviews/create")
+	public Map<String, Object> createReview(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+		Map<String, Object> response = new HashMap<>();
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		//Long idAct = jsonMainObject.get("idAct") != null ? Long.valueOf(jsonMainObject.get("idAct").toString()) : null;
+		String sender = jsonMainObject.get("sender") == null ? null : jsonMainObject.get("sender").toString();
+		Boolean needReply = jsonMainObject.get("needReply") == null ? null : Boolean.parseBoolean(jsonMainObject.get("needReply").toString());
+		String email = jsonMainObject.get("email").equals("") ? null : jsonMainObject.get("email").toString();
+		String topic = jsonMainObject.get("topic") == null ? null : jsonMainObject.get("topic").toString();
+		String reviewBody = jsonMainObject.get("reviewBody") == null ? null : jsonMainObject.get("reviewBody").toString();
+		Timestamp reviewDate = Timestamp.valueOf(LocalDateTime.now());
+
+		Review review = new Review();
+		review.setSender(sender);
+		review.setNeedReply(needReply);
+		review.setEmail(email);
+		review.setReviewDate(reviewDate);
+		review.setTopic(topic);
+		review.setReviewBody(reviewBody);
+		review.setStatus(10);
+
+		reviewService.saveOrUpdateReview(review);
+
+		response.put("status", "200");
+		return response;
+	}
+
+	/**
+	 * <br>Метод для обновления объекта обратной связи</br>.
+	 * @param request
+	 * @param str
+	 * @throws IOException
+	 * @throws ParseException
+	 * @author Ira
+	 */
+
+	@PostMapping("/reviews/update-review")
+	public Map<String, Object> updateReview(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+
+		Map<String, Object> responseMap = new HashMap<>();
+		User user = getThisUser();
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+
+		Long idReview = jsonMainObject.get("idReview") != null ? Long.valueOf(jsonMainObject.get("idReview").toString()) : null;
+		String replyBody = jsonMainObject.get("replyBody") == null ? null : jsonMainObject.get("replyBody").toString();
+		String comment = jsonMainObject.get("comment") == null ? null : jsonMainObject.get("comment").toString();
+		Timestamp replyDate = Timestamp.valueOf(LocalDateTime.now());
+		Review review = reviewService.getReviewById(idReview);
+		String replyAuthor = user.getSurname() + " " + user.getName();
+
+		if (replyBody != null && !replyBody.equals(review.getReplyBody())) {
+			review.setReplyBody(replyBody);
+			review.setStatus(20);
+			review.setReplyDate(replyDate);
+			review.setReplyAuthor(replyAuthor);
+			String appPath = request.getServletContext().getRealPath("");
+			List<String> emails = new ArrayList<>();
+			emails.add("NikolaevaI@dobronom.by");
+			emails.add("qlcixbtmdvjencyzgfecjxl@gmail.com");
+			mailService.sendEmailToUsers(request, "Ответ на обратную связь", replyBody, emails);
+		}
+
+		String currentComment = review.getComment();
+		if ((comment != null && !comment.equals(currentComment)) || (comment == null && currentComment != null)) {
+			review.setComment(comment);
+		}
+		reviewService.saveOrUpdateReview(review);
+
+		responseMap.put("status", "200");
+		responseMap.put("object", review);
+		return responseMap;
+
+	}
+
+	/**
+	 * <br>Метод для получения списка объектов обратной связи за указанный период</br>.
+	 * @param dateStart
+	 * @param dateEnd
+	 * @author Ira
+	 */
+
+	@GetMapping("/reviews/get-reviews/{dateStart}&{dateEnd}")
+	public Map<String, Object> getReviews(@PathVariable String dateStart, @PathVariable String dateEnd){
+		Map<String, Object> response = new HashMap<>();
+		Date dateFrom = Date.valueOf(dateStart);
+		Date dateTo = Date.valueOf(dateEnd);
+		response.put("reviews", reviewService.getReviewsByDates(dateFrom, dateTo));
+		return response;
+	}
 
 	@GetMapping("/logistics/documentflow/documentlist/{dateStart}&{dateEnd}")
 	public Map<String, Object>  documentListGet(@PathVariable String dateStart, @PathVariable String dateEnd) {
@@ -620,7 +725,7 @@ public class MainRestController {
 
 		if(marketOrder2.equals("503")) { // означает что связь с маркетом потеряна
 			//в этом случае проверяем бд
-			System.err.println("Связь с маркетом потеряна  -> " + marketOrder2);
+			System.err.println("Связь с маркетом потеряна");
 			response.put("status", "503");
 			response.put("payload responce", marketOrder2);
 			response.put("message", "Связь с маркетом потеряна");
@@ -865,14 +970,13 @@ public class MainRestController {
 	}
 
 	/**
-
 	 * @param request
 	 * @param response
 	 * @param dateStart
 	 * @param dateFinish
 	 * @throws IOException
 	 * @throws ParseException
-	 * Метод передаёт на фронт информацию о количестве паллет
+	 * Метод передаёт на фронт информацию о количестве паллет и логистические плечи
 	 * для каждого кода контракта за указанный диапазон дат.
 	 * @author Ira
 	 */
@@ -883,11 +987,8 @@ public class MainRestController {
 												  @PathVariable String dateStart,
 												  @PathVariable String dateFinish) throws IOException, ParseException {
 		Map<String, Object> responseMap = new HashMap<>();
-
 		Date dateFrom = Date.valueOf(dateStart);
 		Date dateTo = Date.valueOf(dateFinish);
-		
-
 		List<OrderCalculation> orderCalculations = orderCalculationService.getOrderCalculationsForPeriod(dateFrom, dateTo);
 
 		Set <Integer> stocks = new HashSet<>();
@@ -896,18 +997,21 @@ public class MainRestController {
 			stocks.add(orderCalculation.getNumStock());
 			counterpartyContractCodes.add(orderCalculation.getCounterpartyContractCode());
 		}
+
+		Map<Long, Schedule> schedules = scheduleService.getSchedulesRCbyContractNums(counterpartyContractCodes);
 		List<AmountOfPalletsDto> amountOfPalletsDtos = new ArrayList<>();
+
 		for (Long counterpartyContractCode: counterpartyContractCodes) {
 			for (Integer stock: stocks) {
-
 				Date temp = dateFrom;
 
 				while (temp.before(dateTo)) {
 					boolean addDto = false;
 					AmountOfPalletsDto amountOfPalletsDto = new AmountOfPalletsDto();
 					int amountOfPalletsTotal = 0;
-					for (OrderCalculation orderCalculation: orderCalculations) {
+					int logShoulder = 0;
 
+					for (OrderCalculation orderCalculation: orderCalculations) {
 						if (Objects.equals(orderCalculation.getCounterpartyContractCode(), counterpartyContractCode)
 								&& (Objects.equals(orderCalculation.getNumStock(), stock))
 								&& (Objects.equals(orderCalculation.getDeliveryDate(), temp))) {
@@ -915,34 +1019,129 @@ public class MainRestController {
 							amountOfPalletsTotal += orderCalculation.getQuantityOfPallets();
 							amountOfPalletsDto.setCounterpartyCode(orderCalculation.getCounterpartyCode());
 							amountOfPalletsDto.setCounterpartyName(orderCalculation.getCounterpartyName());
-
+							logShoulder = gelLogShoulder(orderCalculation, schedules.get(orderCalculation.getCounterpartyContractCode()));
 						}
 					}
 					amountOfPalletsDto.setCounterpartyContractCode(counterpartyContractCode);
 					amountOfPalletsDto.setNumStock(stock);
 					amountOfPalletsDto.setAmountOfPallets(amountOfPalletsTotal);
 					amountOfPalletsDto.setDeliveryDate(temp);
+					amountOfPalletsDto.setLogShoulder(logShoulder);
+
 					if (addDto) {
 						amountOfPalletsDtos.add(amountOfPalletsDto);
 					}
+
 					temp = Date.valueOf(temp.toLocalDate().plusDays(1));
 				}
 			}
 		}
-
 		responseMap.put("body", amountOfPalletsDtos);
 		return responseMap;
-
 	}
 
+	/**
+	 * @param orderCalculation
+	 * @param schedule
+	 * Считает логистическое плечо для order calculation по графику либо по истории
+	 * @author Ira
+	 */
+	public static int gelLogShoulder(OrderCalculation orderCalculation, Schedule schedule) {
+		int logShoulder = 0;
+		Date supplyDate = orderCalculation.getDeliveryDate();
+		LocalDate date = supplyDate.toLocalDate();
+		DayOfWeek supplyDay = date.getDayOfWeek();
 
+		String forSearch = switch (supplyDay) {
+			case MONDAY -> schedule.getMonday();
+			case TUESDAY -> schedule.getTuesday();
+			case WEDNESDAY -> schedule.getWednesday();
+			case THURSDAY -> schedule.getThursday();
+			case FRIDAY -> schedule.getFriday();
+			case SATURDAY -> schedule.getSaturday();
+			case SUNDAY -> schedule.getSunday();
+		};
+
+		String result = null;
+		int orderDay = 0;
+
+		if (forSearch != null && forSearch.contains("понедельник")) {
+			result = schedule.getMonday();
+			orderDay = 1;
+		}
+		if (forSearch != null && forSearch.contains("вторник")) {
+			result = schedule.getTuesday();
+			orderDay = 2;
+		}
+		if (forSearch != null && forSearch.contains("среда")) {
+			result = schedule.getWednesday();
+			orderDay = 3;
+		}
+		if (forSearch != null && forSearch.contains("четверг")) {
+			result = schedule.getThursday();
+			orderDay = 4;
+		}
+		if (forSearch != null && forSearch.contains("пятница")) {
+			result = schedule.getFriday();
+			orderDay = 5;
+		}
+		if (forSearch != null && forSearch.contains("суббота")) {
+			result = schedule.getSaturday();
+			orderDay = 6;
+		}
+		if (forSearch != null && forSearch.contains("воскресенье")) {
+			result = schedule.getSunday();
+			orderDay = 7;
+		}
+
+		//подсчёт плеча на основании графика
+		if (forSearch != null){
+			int week = 0;
+
+			if (forSearch.contains("н10")) {
+				week = 10 * 7;
+			} else {
+				for (int x = 1; x <= 9; x++) {
+					String weekStr = "н" + x;
+					int weeks;
+
+					if (forSearch.contains(weekStr)) {
+						weeks = x;
+						week = weeks * 7;
+						break;
+					}
+				}
+			}
+
+			if (orderDay > supplyDay.getValue()) {
+				week -= 7;
+			}
+
+			logShoulder += week;
+			int diff = (supplyDay.getValue() - orderDay + 7) % 7 + 1;
+			logShoulder += diff ;
+			//подсчёт плеча на основании истории, если не удалось посчитать по графику
+        } else {
+			String history = orderCalculation.getHistory();
+			Pattern pattern = Pattern.compile("(\\d{4}-\\d{2}-\\d{2})");
+			LocalDate orderLocalDate = null;
+			Matcher matcher = pattern.matcher(history);
+
+			if (matcher.find()) {  // Проверяем, есть ли совпадение
+				String dateString = matcher.group(1);
+				orderLocalDate = LocalDate.parse(dateString, DateTimeFormatter.ISO_LOCAL_DATE);
+			} else {
+				return 0;
+			}
+
+			logShoulder = (int) ChronoUnit.DAYS.between(orderLocalDate, date) + 1;
+        }
+        return logShoulder;
+    }
 
 	private static final Integer dayBef = 30;
 	private static final Integer dayAft = 30;
 
-
-
-	
 	public static boolean deleteFolder(File folder) {
 	    if (folder.isDirectory()) {
 	        File[] files = folder.listFiles();
@@ -2874,7 +3073,7 @@ public class MainRestController {
 	@GetMapping("/orl/sendEmailTO")
 	public Map<String, Object> getSendEmailTO(HttpServletRequest request) {
 		Map<String, Object> response = new HashMap<String, Object>();
-	       
+
 	       System.out.println("Start --- sendSchedulesTOHasORL");
 	       // Получаем текущую дату для имени файла
 	       LocalDate currentTime = LocalDate.now();
@@ -2989,11 +3188,11 @@ public class MainRestController {
 	       mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на TO " + currentTimeString, "Ручная отправка отправка графиков поставок на ТО\nВерсия с макросом выделений (Ctr+t)", filesZipSupportDepartment, emailsSupportDepartment);
 
 	       System.out.println("Finish --- sendSchedulesHasTOORL");
-	       
+
 	        response.put("status", "200");
 	       response.put("message", "Сообщение отправлено");
-	       
-	       return response;      		
+
+	       return response;
 	}
 		
 	/**
@@ -3974,11 +4173,11 @@ public class MainRestController {
 		if (jsonMainObject.get("isDayToDay") != null && !jsonMainObject.get("isDayToDay").toString().isEmpty()) {
 		    schedule.setIsDayToDay("true".equals(jsonMainObject.get("isDayToDay").toString()));
 		}
-		
+
 		if (jsonMainObject.get("isImport") != null && !jsonMainObject.get("isImport").toString().isEmpty()) {
 		    schedule.setIsNotCalc("true".equals(jsonMainObject.get("isImport").toString()));
 		}
-		
+
 		schedule.setDateLastChanging(Date.valueOf(LocalDate.now()));
 
 		
@@ -4120,12 +4319,12 @@ public class MainRestController {
 		response.put("message", "Статус расчёта графика поставок "+schedule.getName()+" изменен");
 		return response;		
 	}
-	
+
 	@GetMapping("/slots/delivery-schedule/changeIsImport/{idSchedule}")
 	public Map<String, Object> getChangeIsImport(HttpServletRequest request, @PathVariable String idSchedule) {
-		Map<String, Object> response = new HashMap<String, Object>();	
+		Map<String, Object> response = new HashMap<String, Object>();
 		Schedule schedule = scheduleService.getScheduleById(Integer.parseInt(idSchedule.trim()));
-		
+
 		if(schedule == null) {
 			response.put("status", "100");
 			response.put("info", "Не найден график поставок с id " + idSchedule);
@@ -4134,20 +4333,20 @@ public class MainRestController {
 		}
 		User user = getThisUser();
 		schedule.setIsImport(!schedule.getIsImport());
-		String history = user.getSurname() + " " + user.getName() + ";" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")) + ";changeIsImport="+schedule.getIsNotCalc()+"\n"; 
-		
+		String history = user.getSurname() + " " + user.getName() + ";" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")) + ";changeIsImport="+schedule.getIsNotCalc()+"\n";
+
 		schedule.setHistory((schedule.getHistory() != null ? schedule.getHistory() : "") + history);
 		schedule.setDateLastChanging(Date.valueOf(LocalDate.now()));
-		
+
 		scheduleService.updateSchedule(schedule);
-		
+
 		response.put("status", "200");
 		response.put("body", schedule);
 		response.put("info", "Статус импорта "+schedule.getName()+" изменен");
 		response.put("message", "Статус импорта "+schedule.getName()+" изменен");
-		return response;		
+		return response;
 	}
-	
+
 	
 	@GetMapping("/slots/delivery-schedule/changeDayToDay/{idSchedule}")
 	public Map<String, Object> getChangeDayToDay(HttpServletRequest request, @PathVariable String idSchedule) {
@@ -4371,7 +4570,7 @@ public class MainRestController {
 		System.out.println(str);
 		try {
 			MarketTableDto marketRequestDto = gson.fromJson(str, MarketTableDto.class);
-			marketJWT = marketRequestDto.getTable()[0].toString().split("=")[1].split("}")[0];	
+			marketJWT = marketRequestDto.getTable()[0].toString().split("=")[1].split("}")[0];
 		} catch (Exception e) {
 			response.put("status SpeedLogist", "500");
 //			response.put("jwt", marketJWT);
@@ -4379,7 +4578,7 @@ public class MainRestController {
 			System.out.println(str);
 			return response;
 		}
-			
+
 		response.put("status", "200");
 		response.put("jwt", marketJWT);
 		response.put("message", "JWT обновлён");
@@ -4461,20 +4660,20 @@ public class MainRestController {
 				response.put("objectFromMarket", errorMarket);
 				return response;
 			}
-			
+
 			//тут избавляемся от мусора в json
 			String str2 = marketOrder2.split("\\[", 2)[1];
 			String str3 = str2.substring(0, str2.length()-2);
-			
+
 			//создаём свой парсер и парсим json в объекты, с которыми будем работать.
 			CustomJSONParser customJSONParser = new CustomJSONParser();
-			
+
 			//создаём OrderBuyGroup
 			OrderBuyGroupDTO orderBuyGroupDTO = customJSONParser.parseOrderBuyGroupFromJSON(str3);
-						
+
 			//создаём Order, записываем в бд и возвращаем или сам ордер или ошибку (тот же ордер, только с отрицательным id)
-			Order order = orderCreater.create(orderBuyGroupDTO);		
-			
+			Order order = orderCreater.create(orderBuyGroupDTO);
+
 			if(order.getIdOrder() < 0) {
 				response.put("status", "100");
 				response.put("message", order.getMessage());
@@ -4487,29 +4686,29 @@ public class MainRestController {
 				response.put("order", order);
 				return response;
 			}
-		}	
+		}
 	}
-	
+
 	@GetMapping("/manager/getMarketOrders/{idMarket}")
-	public Map<String, Object> getMarketOrders(HttpServletRequest request, @PathVariable String idMarket) {		
+	public Map<String, Object> getMarketOrders(HttpServletRequest request, @PathVariable String idMarket) {
 //		String str = "{\"CRC\": \"\", \"Packet\": {\"MethodName\": \"SpeedLogist.OrderBuyArrayInfoGet\", \"Data\": {\"OrderBuyGroupIdArray\": ["+idMarket+"]}}}";
-		try {			
-			checkJWT(marketUrl);			
+		try {
+			checkJWT(marketUrl);
 		} catch (Exception e) {
 			System.err.println("Ошибка получения jwt токена");
 		}
-		
+
 		Map<String, Object> response = new HashMap<String, Object>();
 		Object[] goodsId = idMarket.split(",");
 		MarketDataArrayForRequestDto dataDto3 = new MarketDataArrayForRequestDto(goodsId);
 		MarketPacketDto packetDto3 = new MarketPacketDto(marketJWT, "SpeedLogist.OrderBuyArrayInfoGet", serviceNumber, dataDto3);
 		MarketRequestDto requestDto3 = new MarketRequestDto("", packetDto3);
 		String marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto3));
-		
+
 		System.out.println("request -> " + gson.toJson(requestDto3));
-		
+
 //		System.out.println(marketOrder2);
-		
+
 		if(marketOrder2.equals("503")) { // означает что связь с маркетом потеряна
 			//в этом случае проверяем бд
 			System.err.println("Связь с маркетом потеряна");
@@ -4527,7 +4726,7 @@ public class MainRestController {
 				response.put("info", "Заказ с номером " + idMarket + " в базе данных SL не найден. Связь с Маркетом отсутствует. Обратитесь в отдел ОСиУЗ");
 				return response;
 			}
-			
+
 		}else{//если есть связь с маркетом
 			//проверяем на наличие сообщений об ошибке со стороны маркета
 			if(marketOrder2.contains("Error")) {
@@ -4561,7 +4760,7 @@ public class MainRestController {
 			}
 			
 			System.out.println(marketOrder2);
-			
+
 			//тут избавляемся от мусора в json
 			String str2 = marketOrder2.split("\\[", 2)[1];
 			String str3 = str2.substring(0, str2.length()-2);

@@ -7,6 +7,7 @@ import { snackbar } from "./snackbar/snackbar.js"
 import { uiIcons } from "./uiIcons.js"
 import { bootstrap5overlay } from "./bootstrap5overlay/bootstrap5overlay.js"
 import { ajaxUtils } from "./ajaxUtils.js"
+import { getMemoryRouteMessageBaseUrl, getNumMessageBaseUrl, getProposalBaseUrl, getRoutesBaseUrl, routeUpdateBaseUrl } from "./globalConstants/urls.js"
 
 const token = $("meta[name='_csrf']").attr("content")
 const PAGE_NAME = 'internationalManagerNew'
@@ -15,10 +16,6 @@ const DATES_KEY = `searchDates_to_${PAGE_NAME}`
 const ROW_INDEX_KEY = `AG_Grid_rowIndex_to_${PAGE_NAME}`
 const role = document.querySelector('#role').value
 
-const getRouteBaseUrl = '../../api/manager/getRouteForInternational/'
-const getRouteMessageBaseUrl = `../../api/info/message/numroute/`
-
-const getProposalBaseUrl = `../../api/logistics/getProposal/`
 
 export const rowClassRules = {
 	'finishRow': params => params.data && params.data.statusRoute === '4',
@@ -358,7 +355,7 @@ async function updateTable(gridOptions, searchForm, data) {
 
 	const routes = data
 		? data
-		: await getData(`${getRouteBaseUrl}${dateStart}&${dateEnd}`)
+		: await getData(`${getRoutesBaseUrl}${dateStart}&${dateEnd}`)
 
 	if (!routes || !routes.length) {
 		gridOptions.api.setRowData([])
@@ -387,7 +384,7 @@ async function getMappingData(data) {
 		const statusRouteToView = getRouteStatus(route.statusRoute)
 		const counterparty = getCounterparty(route)
 		const offerCount = route.statusRoute === '1'
-			? await getData(getRouteMessageBaseUrl + idRoute)
+			? await getData(getNumMessageBaseUrl + idRoute)
 			: 0
 
 		const isSavedRow = false
@@ -575,7 +572,7 @@ function idOrderRenderer(params) {
 
 // асинхронное обновление количества предложений для конкретного маршрута
 async function updateOfferCount(idRoute) {
-	const offerCount = await getData(getRouteMessageBaseUrl + idRoute)
+	const offerCount = await getData(getNumMessageBaseUrl + idRoute)
 	const rowNode = gridOptions.api.getRowNode(idRoute)
 	if(!rowNode) return
 	const item = rowNode.data
@@ -655,7 +652,7 @@ function displayTenderOffer(idRoute, status) {
 }
 function sendTender(idRoute, routeDirection) {
 	const newStatus = '1'
-	const url = `../../api/logistics/routeUpdate/${idRoute}&${newStatus}`
+	const url = `${routeUpdateBaseUrl}${idRoute}&${newStatus}`
 	const columnName = 'statusRoute'
 
 	const headMessage = {
@@ -702,7 +699,7 @@ async function completeRoute(idRoute) {
 	const columnName = 'statusRoute'
 	const newValue = '6'
 
-	const routeFinishInfo = await getData(`/speedlogist/api/memory/message/routes/${idRoute}`)
+	const routeFinishInfo = await getData(`${getMemoryRouteMessageBaseUrl}${idRoute}`)
 
 	if (!routeFinishInfo) return
 
@@ -727,7 +724,7 @@ async function completeRoute(idRoute) {
 }
 function cancelTender(idRoute) {
 	const newStatus = '5'
-	const url = `../../api/logistics/routeUpdate/${idRoute}&${newStatus}`
+	const url = `${routeUpdateBaseUrl}${idRoute}&${newStatus}`
 	const columnName = 'statusRoute'
 
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 500)

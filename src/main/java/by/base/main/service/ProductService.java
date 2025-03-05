@@ -24,7 +24,7 @@ public interface ProductService {
 	void updateProduct(Product product);
 	
 	/**
-	 * Отдаёт мапу где ключ-это кода продуката, значение - Product.
+	 * Отдаёт мапу где ключ-это кода продукта, значение - Product.
 	 * <br>Значение - это Product
 	 * @param codes
 	 * @return

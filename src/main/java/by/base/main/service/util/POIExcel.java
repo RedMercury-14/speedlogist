@@ -50,6 +50,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.PropertyTemplate;
+import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFCreationHelper;
@@ -2878,7 +2879,7 @@ public class POIExcel {
             schedule.setToType(toType);
             schedule.setIsNotCalc(false);
             schedule.setIsImport(false);
-            
+
             
             //прогрузка чётных и нечётных столбцов
             Cell cell21 = row.getCell(30);
@@ -4883,6 +4884,86 @@ public class POIExcel {
 		row.createCell(3).setCellValue(orderLine.getQuantityOrder());
 
 	}
+
+    public void createExcelOrderStatistic(Date from, Date to, Map<List<String>, Integer> orderMap, Map<List<String>, Map<DayOfWeek, Integer>> dailySatistic) {
+
+        String appPath = servletContext.getRealPath("/");
+        String filePath = appPath+"resources/others/order-statistic.xlsx";
+
+        Workbook workbook = new SXSSFWorkbook();
+
+        Sheet sheet1 = workbook.createSheet("Общее кол-во ордеров");
+        ((SXSSFSheet) sheet1).trackAllColumnsForAutoSizing();
+        String[] headers1 = { "Коды контрактов", "Контрагенты", "Кол-во ордеров" };
+        Row datesRow1 = sheet1.createRow(0);
+        datesRow1.createCell(0).setCellValue("Отчёт за " + from.toString() + " - " + to.toString());
+        Row headerRow1 = sheet1.createRow(1);
+        for (int i = 0; i < headers1.length; i++) {
+            Cell cell = headerRow1.createCell(i);
+            cell.setCellValue(headers1[i]);
+        }
+
+        int rowCounter = 2;
+        for (Map.Entry<List<String>, Integer> entry: orderMap.entrySet()) {
+            Row row = sheet1.createRow(rowCounter);
+            row.createCell(0).setCellValue(entry.getKey().get(0));
+            row.createCell(1).setCellValue(entry.getKey().get(1));
+            row.createCell(2).setCellValue(entry.getValue());
+            rowCounter++;
+        }
+
+        Sheet sheet2 = workbook.createSheet("Кол-во ордеров по дням");
+        ((SXSSFSheet) sheet2).trackAllColumnsForAutoSizing();
+
+        String[] headers2 = { "Коды контрактов", "Контрагент", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье" };
+        Row datesRow2 = sheet2.createRow(0);
+        datesRow2.createCell(0).setCellValue("Отчёт за " + from.toString() + " - " + to.toString());
+        Row headerRow2 = sheet2.createRow(1);
+        for (int i = 0; i < headers2.length; i++) {
+            Cell cell = headerRow2.createCell(i);
+            cell.setCellValue(headers2[i]);
+        }
+
+        List<String> days = new LinkedList<>();
+
+        int rowCounter2 = 2;
+
+        for (Map.Entry<List<String>, Map<DayOfWeek, Integer>> entry: dailySatistic.entrySet()) {
+            Row row2 = sheet2.createRow(rowCounter2);
+
+            Cell cellWithCounterpartyCode = row2.createCell(0);
+            cellWithCounterpartyCode.setCellValue(entry.getKey().get(0));
+            Cell cellWithCounterPartyName = row2.createCell(1);
+            cellWithCounterPartyName.setCellValue(entry.getKey().get(1));
+            int cellCounter = 2;
+            for(Map.Entry<DayOfWeek, Integer> entry2: entry.getValue().entrySet()) {
+                Cell cell2 = row2.createCell(cellCounter);
+                if (entry2.getValue() != null) {
+                    cell2.setCellValue(entry2.getValue());
+                }
+                cellCounter++;
+            }
+            rowCounter2++;
+        }
+
+        for (int i = 0; i < headers1.length; i++) {
+            sheet1.autoSizeColumn(i);
+        }
+        for (int i = 0; i < headers2.length; i++) {
+            sheet2.autoSizeColumn(i);
+        }
+        sheet1.setColumnWidth(1, 30 * 256);
+        sheet2.setColumnWidth(1, 30 * 256);
+
+
+        try {
+            File file = new File(filePath);
+            workbook.write(new FileOutputStream(file));
+            workbook.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
 
 

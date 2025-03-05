@@ -9,15 +9,12 @@ import {
 import { debounce, getData, dateHelper, isAdmin, isOrderSupport, } from './utils.js'
 import { ajaxUtils } from './ajaxUtils.js'
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
+import { changeExceptionBaseUrl, getStockRemainderUrl, setMaxDayBaseUrl, setNewBalanceBaseUrl } from './globalConstants/urls.js'
 
 const token = $("meta[name='_csrf']").attr("content")
 const PAGE_NAME = 'skuControl'
 const LOCAL_STORAGE_KEY = `AG_Grid_settings_to_${PAGE_NAME}`
 
-const getStockRemainderUrl = '../../api/order-support/getStockRemainder'
-const setNewBalanceBaseUrl = '../../api/order-support/setNewBalance/'
-const setMaxDayBaseUrl = '../../api/order-support/setMaxDay/'
-const changeExceptionBaseUrl = '../../api/order-support/changeException/'
 
 const cellClassRules = {
 	"productSurplus": params => params.value

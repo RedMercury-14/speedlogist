@@ -368,6 +368,14 @@ public class MainRestController {
 	@Autowired
     private ServletContext servletContext;
 	
+	@GetMapping("/delivery-schedule/getCountScheduleOrderHasWeek")
+    public Map<String, Object> getCountScheduleOrderHasWeek(HttpServletRequest request, HttpServletResponse response) throws IOException{
+		Map<String, Object> responseMap = new HashMap<>();
+		responseMap.put("status", "200");
+		responseMap.put("object", scheduleService.getCountScheduleOrderHasWeek());
+		return responseMap;
+    }
+	
 	@GetMapping("/market/getParam")
     public Map<String, Object> getMarket(HttpServletRequest request, HttpServletResponse response) throws IOException{
 		Map<String, Object> responseMap = new HashMap<>();
@@ -394,6 +402,7 @@ public class MainRestController {
 		responseMap.put("message", "echo");
 		responseMap.put("type", "Anonymous".toUpperCase());
 		responseMap.put("time", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")));
+		responseMap.put("object", scheduleService.getCountScheduleOrderHasWeek());
 		return responseMap;
     }
 

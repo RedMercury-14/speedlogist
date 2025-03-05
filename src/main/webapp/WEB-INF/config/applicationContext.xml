@@ -19,6 +19,9 @@
         http://www.springframework.org/schema/task/spring-task.xsd
         http://www.springframework.org/schema/aop
         http://www.springframework.org/schema/aop/spring-aop.xsd">
+        
+        <!-- Подключаем application.properties -->
+    <context:property-placeholder location="classpath:application.properties"/>
 	
 	<context:component-scan base-package="by.base.main" />
 	<mvc:annotation-driven/>	
@@ -86,7 +89,7 @@
     <aop:aspectj-autoproxy />
 
     <!-- Регистрация аспекта -->
-    <bean id="performanceAspect" class="by.base.main.aspect.PerformanceAspect" />
+    <bean id="performanceAspect" class="by.base.main.aspect.PerformanceAspect" />   
     
     <mvc:resources location="/resources/" mapping="/resources/**"/>
 </beans>

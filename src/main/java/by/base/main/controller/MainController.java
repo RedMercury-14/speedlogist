@@ -33,6 +33,7 @@ import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -209,6 +210,9 @@ public class MainController {
 	private static boolean isBlockTender = false;
 	private int numOfMessage = 50;
 	
+	@Value("${telegramm.bot.run}")
+	private boolean isRunTelegrammBot;
+	
 	//параметры филттрации маршрутов от большей дате к меньшей, для использования с Collections.sort
 	class RouteComparatorForDate implements Comparator<Route>{
 		@Override
@@ -280,13 +284,16 @@ public class MainController {
 		}
 		
 		//телеграмм бот!
-//		if(telegramBot.isRunning == false) {
-//			new BotInitializer(telegramBot).init();
-//			new BotInitializer(telegramBotRouting).initRoutingBot();
-//		}
+		if(isRunTelegrammBot) {
+			if(telegramBot.isRunning == false) {
+				new BotInitializer(telegramBot).init();
+				new BotInitializer(telegramBotRouting).initRoutingBot();
+				System.err.println("БОТЫ ЗАПУЩЕНЫ");	
+			}
+		}else {
+			System.err.println("ТЕЛЕГРАММ БОТ ОТКЛЮЧЕН!");	
+		}
 		
-		
-		System.err.println("ТЕЛЕГРАММ БОТ ОТКЛЮЧЕН!");	
 //		new BotInitializer(telegramBotRoutingTEST).initRoutingBotTEST();
 		
 		try {
@@ -3255,13 +3262,14 @@ public class MainController {
 	}
 	@RequestMapping("/main/userpage/userlist")
 	public String getUserListHasCarrier(Model model, HttpServletRequest request) {
-		User boss = getThisUser();
-		List <User> workers = new ArrayList<User>();
-		userService.getCarrierList().stream()
-			.filter(u-> u.getNumYNP().equals(boss.getNumYNP()) && !u.getDepartment().equals("Директор"))
-			.forEach(u-> workers.add(u));
-		request.setAttribute("userlist", workers);
-		request.setAttribute("department", true);
+		//метод кладёт прод
+//		User boss = getThisUser();
+//		List <User> workers = new ArrayList<User>();
+//		userService.getCarrierList().stream()
+//			.filter(u-> u.getNumYNP().equals(boss.getNumYNP()) && !u.getDepartment().equals("Директор"))
+//			.forEach(u-> workers.add(u));
+//		request.setAttribute("userlist", workers);
+//		request.setAttribute("department", true);
 		return "userList";
 	}
 	

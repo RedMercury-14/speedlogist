@@ -30,6 +30,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
@@ -62,6 +63,7 @@ public class YardManagementRestController {
 	UserService userService;
 	
 	@Autowired
+	@Qualifier("csrfTokenRepository") // <-- Указываем нужный бин
 	CsrfTokenRepository csrfTokenRepository;
 	
 	@Autowired

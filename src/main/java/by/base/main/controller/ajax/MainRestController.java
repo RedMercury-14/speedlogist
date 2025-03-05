@@ -85,6 +85,7 @@ import org.json.simple.parser.ParseException;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -325,10 +326,22 @@ public class MainRestController {
 //	public static final String serviceNumber = "BB7617FD-D103-4724-B634-D655970C7EC0";
 //	public static final String loginMarket = "191178504_SpeedLogist";
 //	public static final String passwordMarket = "SL!2024D@2005";
-	public static final String marketUrl = "https://api.dobronom.by:10896/Json";
-	public static final String serviceNumber = "CD6AE87C-2477-4852-A4E7-8BA5BD01C156";
-	public static final String loginMarket = "191178504_SpeedLogist";
-	public static final String passwordMarket = "SL!2024D@2005";
+//	public static final String marketUrl = "https://api.dobronom.by:10896/Json";
+//	public static final String serviceNumber = "CD6AE87C-2477-4852-A4E7-8BA5BD01C156";
+//	public static final String loginMarket = "191178504_SpeedLogist";
+//	public static final String passwordMarket = "SL!2024D@2005";
+	
+	@Value("${market.marketUrl}")
+	public String marketUrl;
+	
+	@Value("${market.serviceNumber}")
+	public String serviceNumber;
+	
+	@Value("${market.loginMarket}")
+	public String loginMarket;
+	
+	@Value("${market.passwordMarket}")
+	public String passwordMarket;
 	
 
 	public static final Comparator<Address> comparatorAddressId = (Address e1, Address e2) -> (e1.getIdAddress() - e2.getIdAddress());
@@ -340,6 +353,35 @@ public class MainRestController {
 
 	@Autowired
     private ServletContext servletContext;
+	
+	@GetMapping("/market/getParam")
+    public Map<String, Object> getMarket(HttpServletRequest request, HttpServletResponse response) throws IOException{
+		Map<String, Object> responseMap = new HashMap<>();
+		responseMap.put("status", "200");
+		responseMap.put("marketUrl", marketUrl);
+		responseMap.put("serviceNumber", serviceNumber);
+		responseMap.put("loginMarket", loginMarket);
+		responseMap.put("passwordMarket", passwordMarket);
+		return responseMap;
+    }
+	
+	@GetMapping("/echo")
+    public Map<String, Object> getEcho(HttpServletRequest request, HttpServletResponse response) throws IOException{
+		Map<String, Object> responseMap = new HashMap<>();
+		responseMap.put("status", "200");
+		responseMap.put("message", "echo");
+		responseMap.put("time", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")));
+		return responseMap;
+    }
+	@GetMapping("/echo2")
+    public Map<String, Object> getEcho2(HttpServletRequest request, HttpServletResponse response) throws IOException{
+		Map<String, Object> responseMap = new HashMap<>();
+		responseMap.put("status", "200");
+		responseMap.put("message", "echo");
+		responseMap.put("type", "Anonymous".toUpperCase());
+		responseMap.put("time", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")));
+		return responseMap;
+    }
 
 	@GetMapping("/logistics/documentflow/documentlist/{dateStart}&{dateEnd}")
 	public Map<String, Object>  documentListGet(@PathVariable String dateStart, @PathVariable String dateEnd) {
@@ -10016,15 +10058,13 @@ public class MainRestController {
 
 	/**
 	 * Отдаёт всех перевозчиков
-	 * 
+	 * закрыт от греха подальше. Вроде метод ок, но на всякий случай закрою
 	 * @return
 	 */
-	@GetMapping("/manager/getAllCarrier")
-	public Set<User> getAllCarrier() {
-		Set<User> carriers = userService.getCarrierListV2().stream().collect(Collectors.toSet());
-//		carriers.forEach(c -> System.out.println(c.getTrucks().size()));
-		return userService.getCarrierListV2().stream().collect(Collectors.toSet());
-	}
+//	@GetMapping("/manager/getAllCarrier")
+//	public Set<User> getAllCarrier() {
+//		return userService.getCarrierListV2().stream().collect(Collectors.toSet());
+//	}
 
 	/**
 	 * Блокирует и разблокирует перевозчиков GET запрос

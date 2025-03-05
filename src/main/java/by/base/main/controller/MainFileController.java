@@ -241,6 +241,7 @@ public class MainFileController {
          /*
           * ключ - дата, значение - мапа с кодом товара и значением (как в методе orderProductService.getOrderProductMapHasDate(dateTarget))
           */
+         
          Map<String, Map<Integer, OrderProduct>> mapOrderProduct = orderProductService.getOrderProductMapHasDateList(datesOrderORL);
 
          System.out.println("В мапе объектов : " + mapOrderProduct.size());

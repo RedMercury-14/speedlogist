@@ -363,6 +363,11 @@ public class MainController {
 		return "counterpartiesList";
 	}
 	
+	@GetMapping("/main/admin/reviews/list")
+	public String getMainReviewsList(Model model, HttpServletRequest request) {
+		return "reviewsList";
+	}
+	
 	@GetMapping("/main/admin/reports/mainReports")
 	public String getMainReportsPage(Model model, HttpServletRequest request) {
 		return "mainReports";

@@ -56,6 +56,7 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import javax.annotation.PostConstruct;
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageWriteParam;
@@ -331,17 +332,30 @@ public class MainRestController {
 //	public static final String loginMarket = "191178504_SpeedLogist";
 //	public static final String passwordMarket = "SL!2024D@2005";
 	
+	public static String marketUrl;
+	public static String serviceNumber;
+	public static String loginMarket;
+	public static String passwordMarket;
+	
 	@Value("${market.marketUrl}")
-	public String marketUrl;
+	public String marketUrlProp;
 	
 	@Value("${market.serviceNumber}")
-	public String serviceNumber;
+	public String serviceNumberProp;
 	
 	@Value("${market.loginMarket}")
-	public String loginMarket;
+	public String loginMarketProp;
 	
 	@Value("${market.passwordMarket}")
-	public String passwordMarket;
+	public String passwordMarketProp;
+	
+	@PostConstruct
+    public void init() {
+		marketUrl = marketUrlProp;
+		serviceNumberProp = serviceNumber;
+		loginMarketProp = loginMarket;
+		passwordMarketProp = passwordMarket;
+    }
 	
 
 	public static final Comparator<Address> comparatorAddressId = (Address e1, Address e2) -> (e1.getIdAddress() - e2.getIdAddress());

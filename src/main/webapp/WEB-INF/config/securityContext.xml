@@ -25,8 +25,7 @@
 	<security:http pattern="/fusion/**" create-session="stateless" entry-point-ref="restAuthenticationEntryPoint">
 	    <security:csrf disabled="true"/>
 	    <security:intercept-url pattern="/fusion/login" access="permitAll"/>
-	    <security:intercept-url pattern="/fusion/**" access="isAuthenticated()"/>
-	    
+	    <security:intercept-url pattern="/fusion/**" access="isAuthenticated()"/>	    
 	    <security:custom-filter before="BEARER_TOKEN_AUTH_FILTER" ref="jwtAuthenticationFilter"/>
 	</security:http>
 
@@ -40,7 +39,6 @@
 	    <security:intercept-url pattern="/api/user/isexists" access="permitAll"/>
 	    <security:intercept-url pattern="/api/user/isexistsUNP" access="permitAll"/>
 	    <security:intercept-url pattern="/api/**" access="isAuthenticated()" />
-<!-- 	    <security:http-basic/> -->
 	</security:http>
 	
 	

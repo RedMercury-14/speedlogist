@@ -1,5 +1,6 @@
 var token = $("meta[name='_csrf']").attr("content");
 import { ws } from './global.js';
+import { addRoutePatternConformBaseUrl, getRouteBaseUrl, getRouteShowBaseUrl } from './globalConstants/urls.js';
 
 
 //$.ajax({
@@ -66,7 +67,7 @@ if (document.querySelector('select[id=pattern]') != null) {
 
 	document.querySelector('select[id=pattern]').addEventListener('change', (event) => {
 		let idRoute = event.target.value;
-		$.getJSON(`/speedlogist/api/route/${idRoute}`, function(route) {
+		$.getJSON(`${getRouteBaseUrl}${idRoute}`, function(route) {
 			console.log(route.roteHasShop[0]);
 			let num = route.roteHasShop.length;
 			document.querySelector('#contentRoute').innerHTML = `
@@ -143,7 +144,7 @@ function button(idRoute) {
 		} else {
 			let date = document.querySelector('input[name=date]').value;
 			let timeOfLoad = document.querySelector('input[name=timeOfLoad]').value;
-			var url = `/speedlogist/main/logistics/international/addRoutePattern/confrom?idRoute=${idRoute}&date=${date}&timeOfLoad=${timeOfLoad}`
+			var url = `${addRoutePatternConformBaseUrl}?idRoute=${idRoute}&date=${date}&timeOfLoad=${timeOfLoad}`
 			window.location.href = url;
 		}
 
@@ -153,7 +154,7 @@ var idRoute = document.querySelector('#idRoute').value;
 var xhr = new XMLHttpRequest()
 xhr.open(
   'GET',
-  `../../../api/logistics/international/routeShow&${idRoute}`,
+  `${getRouteShowBaseUrl}&${idRoute}`,
   true
 )
 xhr.send()

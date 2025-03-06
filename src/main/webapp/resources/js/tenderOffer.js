@@ -1,6 +1,7 @@
 import { ajaxUtils } from './ajaxUtils.js';
 import { ws } from './global.js';
 import { wsHead } from './global.js';
+import { checkOrderForStatusBaseUrl, getInfoRouteMessageBaseUrl, getMemoryRouteMessageBaseUrl, nbrbExratesRatesBaseUrl } from './globalConstants/urls.js';
 ws.onmessage = (e) => onMessage(JSON.parse(e.data));
 let idRoute = document.querySelector('#idRoute').value;
 let routeDirection = document.querySelector('#routeDirection').value;
@@ -9,7 +10,7 @@ import { EUR } from './global.js';
 import { USD } from './global.js';
 import { RUB } from './global.js';
 import { KZT } from './global.js';
-$.getJSON(`../../../api/info/message/routes/${idRoute}`, function(data) {
+$.getJSON(`${getInfoRouteMessageBaseUrl}${idRoute}`, function(data) {
 	if (data.length == 0) {
 		history();
 	}
@@ -37,7 +38,7 @@ $.getJSON(`../../../api/info/message/routes/${idRoute}`, function(data) {
 			td4.className = val.text;
 		}
 		if (val.currency == 'KZT') {
-			fetch(`https://www.nbrb.by/api/exrates/rates/${KZT}`).then((response) => {
+			fetch(`${nbrbExratesRatesBaseUrl}${KZT}`).then((response) => {
 				response.json().then((text) => {
 					td4.innerText = "по курсу НБРБ: " + Math.round(text.Cur_OfficialRate * val.text / text.Cur_Scale) + " BYN";
 					td4.className = Math.round(text.Cur_OfficialRate * val.text / text.Cur_Scale);
@@ -45,7 +46,7 @@ $.getJSON(`../../../api/info/message/routes/${idRoute}`, function(data) {
 			});
 		}
 		if (val.currency == 'RUB') {
-			fetch(`https://www.nbrb.by/api/exrates/rates/${RUB}`).then((response) => {
+			fetch(`${nbrbExratesRatesBaseUrl}${RUB}`).then((response) => {
 				response.json().then((text) => {
 					td4.innerText = "по курсу НБРБ: " + Math.round(text.Cur_OfficialRate * val.text / text.Cur_Scale) + " BYN";
 					td4.className = Math.round(text.Cur_OfficialRate * val.text / text.Cur_Scale);
@@ -53,7 +54,7 @@ $.getJSON(`../../../api/info/message/routes/${idRoute}`, function(data) {
 			});
 		}
 		if (val.currency == 'EUR') {
-			fetch(`https://www.nbrb.by/api/exrates/rates/${EUR}`).then((response) => {
+			fetch(`${nbrbExratesRatesBaseUrl}${EUR}`).then((response) => {
 				response.json().then((text) => {
 					td4.innerText = "по курсу НБРБ: " + Math.round(text.Cur_OfficialRate * val.text / text.Cur_Scale) + " BYN";
 					td4.className = Math.round(text.Cur_OfficialRate * val.text / text.Cur_Scale);
@@ -61,7 +62,7 @@ $.getJSON(`../../../api/info/message/routes/${idRoute}`, function(data) {
 			});
 		}
 		if (val.currency == 'USD') {
-			fetch(`https://www.nbrb.by/api/exrates/rates/${USD}`).then((response) => {
+			fetch(`${nbrbExratesRatesBaseUrl}${USD}`).then((response) => {
 				response.json().then((text) => {
 					td4.innerText = "по курсу НБРБ: " + Math.round(text.Cur_OfficialRate * val.text / text.Cur_Scale) + " BYN";
 					td4.className = Math.round(text.Cur_OfficialRate * val.text / text.Cur_Scale);
@@ -132,7 +133,7 @@ function onMessage(msg) {
 			td4.className = msg.text;
 		}
 		if (msg.currency == 'KZT') {
-			fetch(`https://www.nbrb.by/api/exrates/rates/${KZT}`).then((response) => {
+			fetch(`${nbrbExratesRatesBaseUrl}${KZT}`).then((response) => {
 				response.json().then((text) => {
 					td4.innerText = "по курсу НБРБ: " + Math.round(text.Cur_OfficialRate * msg.text / text.Cur_Scale) + " BYN";
 					td4.className = Math.round(text.Cur_OfficialRate * msg.text / text.Cur_Scale);
@@ -140,7 +141,7 @@ function onMessage(msg) {
 			});
 		}
 		if (msg.currency == 'RUB') {
-			fetch(`https://www.nbrb.by/api/exrates/rates/${RUB}`).then((response) => {
+			fetch(`${nbrbExratesRatesBaseUrl}${RUB}`).then((response) => {
 				response.json().then((text) => {
 					td4.innerText = "по курсу НБРБ: " + Math.round(text.Cur_OfficialRate * msg.text / text.Cur_Scale) + " BYN";
 					td4.className = Math.round(text.Cur_OfficialRate * msg.text / text.Cur_Scale);
@@ -148,7 +149,7 @@ function onMessage(msg) {
 			});
 		}
 		if (msg.currency == 'EUR') {
-			fetch(`https://www.nbrb.by/api/exrates/rates/${EUR}`).then((response) => {
+			fetch(`${nbrbExratesRatesBaseUrl}${EUR}`).then((response) => {
 				response.json().then((text) => {
 					td4.innerText = "по курсу НБРБ: " + Math.round(text.Cur_OfficialRate * msg.text / text.Cur_Scale) + " BYN";
 					td4.className = Math.round(text.Cur_OfficialRate * msg.text / text.Cur_Scale);
@@ -156,7 +157,7 @@ function onMessage(msg) {
 			});
 		}
 		if (msg.currency == 'USD') {
-			fetch(`https://www.nbrb.by/api/exrates/rates/${USD}`).then((response) => {
+			fetch(`${nbrbExratesRatesBaseUrl}${USD}`).then((response) => {
 				response.json().then((text) => {
 					td4.innerText = "по курсу НБРБ: " + Math.round(text.Cur_OfficialRate * msg.text / text.Cur_Scale) + " BYN";
 					td4.className = Math.round(text.Cur_OfficialRate * msg.text / text.Cur_Scale);
@@ -355,7 +356,7 @@ function sendOneUser(idRoute, login, cost, currency) {
 
 
 function history() {
-	$.getJSON(`../../../api/memory/message/routes/${idRoute}`, function(data) {
+	$.getJSON(`${getMemoryRouteMessageBaseUrl}${idRoute}`, function(data) {
 		let Trow = document.createElement("tr");
 		Trow.innerHTML = 'История предложений';
 		document.querySelector("#sort").appendChild(Trow);
@@ -375,7 +376,7 @@ function history() {
 				td4.className = val.text;
 			}
 			if (val.currency == 'KZT') {
-				fetch(`https://www.nbrb.by/api/exrates/rates/${KZT}`).then((response) => {
+				fetch(`${nbrbExratesRatesBaseUrl}${KZT}`).then((response) => {
 					response.json().then((text) => {
 						td4.innerText = "по курсу НБРБ, на сегодняшний день: " + Math.round(text.Cur_OfficialRate * val.text / text.Cur_Scale) + " BYN";
 						td4.className = Math.round(text.Cur_OfficialRate * val.text / text.Cur_Scale);
@@ -383,7 +384,7 @@ function history() {
 				});
 			}
 			if (val.currency == 'RUB') {
-				fetch(`https://www.nbrb.by/api/exrates/rates/${RUB}`).then((response) => {
+				fetch(`${nbrbExratesRatesBaseUrl}${RUB}`).then((response) => {
 					response.json().then((text) => {
 						td4.innerText = "по курсу НБРБ, на сегодняшний день: " + Math.round(text.Cur_OfficialRate * val.text / text.Cur_Scale) + " BYN";
 						td4.className = Math.round(text.Cur_OfficialRate * val.text / text.Cur_Scale);
@@ -391,7 +392,7 @@ function history() {
 				});
 			}
 			if (val.currency == 'EUR') {
-				fetch(`https://www.nbrb.by/api/exrates/rates/${EUR}`).then((response) => {
+				fetch(`${nbrbExratesRatesBaseUrl}${EUR}`).then((response) => {
 					response.json().then((text) => {
 						td4.innerText = "по курсу НБРБ, на сегодняшний день: " + Math.round(text.Cur_OfficialRate * val.text / text.Cur_Scale) + " BYN";
 						td4.className = Math.round(text.Cur_OfficialRate * val.text / text.Cur_Scale);
@@ -399,7 +400,7 @@ function history() {
 				});
 			}
 			if (val.currency == 'USD') {
-				fetch(`https://www.nbrb.by/api/exrates/rates/${USD}`).then((response) => {
+				fetch(`${nbrbExratesRatesBaseUrl}${USD}`).then((response) => {
 					response.json().then((text) => {
 						td4.innerText = "по курсу НБРБ, на сегодняшний день: " + Math.round(text.Cur_OfficialRate * val.text / text.Cur_Scale) + " BYN";
 						td4.className = Math.round(text.Cur_OfficialRate * val.text / text.Cur_Scale);
@@ -520,7 +521,7 @@ proof();
 
 function checkOrderForStatus(idRoute) {
 	ajaxUtils.get({
-		url: `../../../api/logistics/checkOrderForStatus/${idRoute}`,
+		url: `${checkOrderForStatusBaseUrl}${idRoute}`,
 		successCallback: (data) => {
 			if (data.status === '200') {
 				orderStatusHandler(data)

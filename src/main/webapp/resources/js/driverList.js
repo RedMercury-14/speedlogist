@@ -4,10 +4,7 @@ import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 import { dateHelper, getData, getDocumentValues } from './utils.js'
 import { ajaxUtils } from './ajaxUtils.js'
 import { uiIcons } from './uiIcons.js'
-
-const getDriversUrl ='../../../api/carrier/getMyDrivers'
-const saveNewDriverUrl = '../../../api/carrier/saveNewDriver'
-const updateDriverUrl ='../../../api/carrier/editDriver'
+import { deleteDriverBaseUrl, getDriversUrl, saveNewDriverUrl, updateDriverUrl } from './globalConstants/urls.js'
 
 const token = $("meta[name='_csrf']").attr("content")
 
@@ -186,7 +183,7 @@ function editDriver(data) {
 }
 function deleteDriver(idUser) {
 	if (!(confirm('Вы действительно хотите удалить водителя?'))) return false
-	fetch(`driverlist/delete?driverId=${idUser}`)
+	fetch(`${deleteDriverBaseUrl}?driverId=${idUser}`)
 		.then(res => {
 			if (res.ok) {
 				updateTable()

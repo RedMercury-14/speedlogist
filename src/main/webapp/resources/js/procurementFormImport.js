@@ -1,5 +1,6 @@
 import { ajaxUtils } from './ajaxUtils.js'
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
+import { addNewAhoOrderUrl, addNewOrderHasMarketUrl, addNewOrderUrl, getInternalMovementShopsUrl, getMarketOrderBaseUrl } from './globalConstants/urls.js'
 import { getOrderStatusByStockDelivery } from './globalRules/ordersRules.js'
 import { getOrderData } from './procurementFormDataUtils.js'
 import {
@@ -40,9 +41,6 @@ import { snackbar } from "./snackbar/snackbar.js"
 import { disableButton, enableButton, getData, isObserver, isStockProcurement, setInputValue, } from './utils.js'
 
 const redirectUrl = (orderStatus) => orderStatus === 20 || disableSlotRedirect ? "orders" : "../slots"
-const getInternalMovementShopsUrl = "../../api/manager/getInternalMovementShops"
-// const getOrderHasMarketNumberBaseUrl = "../../api/procurement/getOrderHasMarketNumber/"
-const getMarketOrderBaseUrl = `../../api/manager/getMarketOrder/`
 
 const token = $("meta[name='_csrf']").attr("content")
 const role = document.querySelector('#role').value
@@ -138,10 +136,10 @@ window.onload = async () => {
 // метод получения ссылки для отправки формы
 function getAddNewProcurementUrl(orderStatus, orderWay) {
 	// АХО
-	if (orderWay === 'АХО') return "../../api/manager/addNewProcurementByMaintenance"
+	if (orderWay === 'АХО') return addNewAhoOrderUrl
 	return orderStatus === 20
-		? "../../api/manager/addNewProcurement"
-		: "../../api/manager/addNewProcurementHasMarket"
+		? addNewOrderUrl
+		: addNewOrderHasMarketUrl
 }
 
 // превращение формы в форму внутренних перевозок

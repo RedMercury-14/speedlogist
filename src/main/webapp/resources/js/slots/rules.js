@@ -1,5 +1,5 @@
-import { dateHelper, getData, isAdmin, isLogist, isObserver, isSlotsObserver} from "../utils.js"
-import { adminLogins, checkScheduleBaseUrl, userMessages } from "./constants.js"
+import { dateHelper, isAdmin, isLogist, isObserver, isSlotsObserver} from "../utils.js"
+import { adminLogins } from "./constants.js"
 import {
 	getMinUnloadDateForLogist,
 	getMinUnloadDateForManager,
@@ -346,6 +346,44 @@ export function isOverlapWithInternalMovementTimeForLogists(info, internalMoveme
 	return true
 }
 
+// проверка установки слота Импорта в зону для Импорта
+export function isOverlapWithNoImportTime(info, restrictStockIds, restrictTimes) {
+	if(!restrictTimes || restrictTimes.length < 2) return false
+	if(!restrictStockIds || restrictStockIds.length === 0) return false
+
+	const { event: fcEvent } = info
+	const order = fcEvent.extendedProps.data
+	const isImport = order.way === 'Импорт' || order.isImport
+
+	if (!isImport) return false
+
+	const rampId = fcEvent._def.resourceIds[0]
+	const stockId = rampId.slice(0,-2)
+
+	if (!restrictStockIds.includes(stockId)) return false
+
+	const currentDate = new Date(fcEvent.startStr)
+	const eventStartMs = new Date(fcEvent.start).getTime()
+	const eventEndMs = new Date(fcEvent.end).getTime()
+	const [ SH1startH, SH1startM ] = restrictTimes[0].split(':')
+	const [ SH1endH, SH1endM ] = restrictTimes[1].split(':')
+
+	// время начала и конца промежутка для ВП
+	const restrictionTimeStartMs = currentDate.setUTCHours(SH1startH, SH1startM,0, 0)
+	const restrictionTimeEndMs = currentDate.setUTCHours(SH1endH, SH1endM,0, 0)
+
+	// если ивент начинается раньше и заканчивается до начала промежутка
+	if (
+		eventStartMs < restrictionTimeStartMs
+		&& eventEndMs <= restrictionTimeStartMs
+	) return false
+
+	// если ивент начинается после промежутка
+	if (eventStartMs >= restrictionTimeEndMs) return false
+
+	return true
+}
+
 // проверка паллетовместимости склада
 export function checkPallCount(info, pallCount, maxPall, currentStock) {
 	const { event: fcEvent } = info
@@ -442,45 +480,6 @@ export function hasOrderInYard(order) {
 
 export function isBackgroundEvent(fcEvent) {
 	return fcEvent.display === 'background'
-}
-
-// проверка совпадения заказа с графика поставок
-export async function checkSchedule(order, eventDateStr) {
-	const isInternalMovement = order.isInternalMovement
-	if (isInternalMovement === 'true') return {
-		flag: true,
-		message: null,
-		body: null
-	}
-	const num = order.marketContractType
-	if (!num) return {
-		flag: true,
-		message: userMessages.contractCodeNotFound,
-		body: null
-	}
-	const scheduleData = await getData(`${checkScheduleBaseUrl}${num}&${eventDateStr}`)
-	if (!scheduleData) {
-		return {
-			flag: true,
-			message: userMessages.errorReadingSchedule,
-			body: null
-		}
-	}
-	if (!scheduleData.body) {
-		return {
-			flag: true,
-			message: userMessages.contractCodeIsMissing,
-			body: null
-		}
-	}
-	if (!scheduleData.flag) {
-		return {
-			...scheduleData,
-			message: userMessages.isScheduleNotMatch,
-		}
-	}
-
-	return scheduleData
 }
 
 // ограничения по постановке слота в новогодний период

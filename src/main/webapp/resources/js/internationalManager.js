@@ -1,3 +1,15 @@
+import {
+	getMemoryRouteMessageBaseUrl,
+	getNumMessageBaseUrl,
+	getRoutesReportBaseUrl,
+	nbrbExratesRatesBaseUrl,
+	routeUpdateBaseUrl,
+	sendMessageToCarriersBaseUrl,
+	tenderOfferBaseUrl,
+	toEditRouteBaseUrl,
+	toRouteEndBaseUrl,
+	toRouteShowBaseUrl
+} from './globalConstants/urls.js';
 contextMenu();
 onNumberMessage();
 var route;
@@ -22,7 +34,7 @@ async function downloadExcelReport() {
 	bootstrap5overlay.showOverlay()
 	const dateStart = document.querySelector("input[name=dateStart]").value
 	const dateFinish = document.querySelector("input[name=dateFinish]").value
-	const url = `../../api/manager/getReport/${dateStart}&${dateFinish}`
+	const url = `${getRoutesReportBaseUrl}${dateStart}&${dateFinish}`
 
 	const res = await fetch(url)
 	const data = await res.json()
@@ -103,7 +115,7 @@ function onMessage(msg) {
 };
 
 function getNumMessege(idRoute, coll, routeItemI) {
-	fetch(`../../api/info/message/numroute/${idRoute}`).then(function(response) {
+	fetch(`${getNumMessageBaseUrl}${idRoute}`).then(function(response) {
 		response.text().then(function(text) {
 			if(coll) coll.innerText = "(" + text + ")";
 			if (text >= 1) {
@@ -235,13 +247,13 @@ function contextMenu() {
 
 
 		document.querySelector("#l1").addEventListener("click", () => {
-			var url = `./international/tenderOffer?idRoute=${route}`;
+			var url = `${tenderOfferBaseUrl}?idRoute=${route}`;
 			localStorage.setItem("mouseX", mouseX);
 			localStorage.setItem("mouseY", mouseY);
 			window.location.href = url;
 		}, false);
 		document.querySelector("#l2").addEventListener("click", () => {
-			var url = `../../api/logistics/routeUpdate/${route}&1`
+			var url = `${routeUpdateBaseUrl}${route}&1`
 			fetch(url)
 				.then(res => {
 					if (!res.ok) {
@@ -254,19 +266,19 @@ function contextMenu() {
 				fromUser: "logist",
 				toUser: "international",
 				text: 'Маршрут ' + routeDirection + ' доступен для торгов.',
-				url: `/speedlogist/main/carrier/tender/tenderpage?routeId=${route}`,
+				url: `${sendMessageToCarriersBaseUrl}?routeId=${route}`,
 				idRoute: route,
 				status: "1"
 			})
 		}, false);
 		document.querySelector("#l3").addEventListener("click", () => {
-			var url = `../logistics/international/routeShow?idRoute=${route}`;
+			var url = `${toRouteShowBaseUrl}?idRoute=${route}`;
 			localStorage.setItem("mouseX", mouseX);
 			localStorage.setItem("mouseY", mouseY);
 			window.location.href = url;
 		}, false);
 		document.querySelector("#l4").addEventListener("click", () => {
-			var url = `/speedlogist/main/logistics/international/editRoute?idRoute=${route}`;
+			var url = `${toEditRouteBaseUrl}?idRoute=${route}`;
 				localStorage.setItem("mouseX", mouseX);
 				localStorage.setItem("mouseY", mouseY);
 				window.location.href = url;
@@ -282,7 +294,7 @@ function contextMenu() {
 
 		}, false);
 		document.querySelector("#l5").addEventListener("click", () => {
-			fetch(`/speedlogist/api/memory/message/routes/${route}`).then(function(response) {
+			fetch(`${getMemoryRouteMessageBaseUrl}${route}`).then(function(response) {
 				response.json().then(function(text) {
 					var flag = false;
 					text.forEach(function(element) {
@@ -291,7 +303,7 @@ function contextMenu() {
 						}
 					})
 					if (flag) {
-						var url = `/speedlogist/main/logistics/international/routeEnd?idRoute=${route}`;
+						var url = `${toRouteEndBaseUrl}?idRoute=${route}`;
 						window.location.href = url;
 					} else {
 						alert('Маршрут не может быть завершен, т.к. авто не прибыло на место разгрузки.')
@@ -306,7 +318,7 @@ function contextMenu() {
 		// 	window.location.href = url;
 		// }, false);
 		document.querySelector("#l7").addEventListener("click", () => {
-			var url = `../../api/logistics/routeUpdate/${route}&5`
+			var url = `${routeUpdateBaseUrl}${route}&5`
 			fetch(url)
 				.then(res => {
 					if (!res.ok) {
@@ -588,7 +600,7 @@ function delta() {
 
 
 	function parceCostTD(cur, routeItemTarget) {
-		fetch(`https://www.nbrb.by/api/exrates/rates/${cur}`).then((response) => {
+		fetch(`${nbrbExratesRatesBaseUrl}${cur}`).then((response) => {
 			response.json().then((text) => {
 				var econ = routeItemTarget.querySelector('#economy');
 				var finishCost = routeItemTarget.querySelector('#finishCost');

@@ -1,5 +1,6 @@
 import { createToast, playNewToastSound } from './Toast.js'
 import { wsHead } from './global.js'
+import { getMessagesByLoginBaseUrl } from './globalConstants/urls.js'
 import { getData } from './utils.js'
 
 const token = $("meta[name='_csrf']").attr("content")
@@ -17,7 +18,7 @@ if (role === '[ROLE_CARRIER]') {
 async function showUnreadMessages() {
 	if (!login) return
 
-	const unreadMessages = await getData(`/speedlogist/api/mainchat/messagesList&${login}`)
+	const unreadMessages = await getData(`${getMessagesByLoginBaseUrl}&${login}`)
 
 	if (!unreadMessages || unreadMessages.length === 0) return
 

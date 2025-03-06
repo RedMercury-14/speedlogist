@@ -4,11 +4,7 @@ import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 import { dateHelper, getData } from './utils.js'
 import { ajaxUtils } from './ajaxUtils.js'
 import { uiIcons } from './uiIcons.js'
-
-const getCarsUrl ='../../../api/carrier/getMyCar/'
-const isContainTruckBaseUrl ='../../../api/carrier/isContainCar/'
-const saveNewTruckUrl ='../../../api/carrier/saveNewTruck'
-const updateTruckUrl ='../../../api/carrier/editTruck'
+import { deleteTruckBaseUrl, editTruckUrl, getThisCarrierCarsUrl, isContainTruckBaseUrl, saveNewTruckUrl } from './globalConstants/urls.js'
 
 const token = $("meta[name='_csrf']").attr("content")
 const viewportWidth = window.innerWidth
@@ -83,7 +79,7 @@ const gridOptions = {
 window.onload = async () => {
 	const gridDiv = document.querySelector('#myGrid')
 
-	const trucks = await getData(getCarsUrl)
+	const trucks = await getData(getThisCarrierCarsUrl)
 
 	renderTable(gridDiv, gridOptions, trucks)
 
@@ -124,7 +120,7 @@ function renderTable(gridDiv, gridOptions, data) {
 async function updateTable() {
 	gridOptions.api.showLoadingOverlay()
 
-	const trucks = await getData(getCarsUrl)
+	const trucks = await getData(getThisCarrierCarsUrl)
 
 	if (!trucks || !trucks.length) {
 		gridOptions.api.setRowData([])
@@ -224,7 +220,7 @@ function editTruck(data) {
 }
 function deleteTruck(idTruck) {
 	if (!(confirm('Вы действительно хотите удалить машину?'))) return false
-	fetch(`trucklist/delete?truckId=${idTruck}`)
+	fetch(`${deleteTruckBaseUrl}?truckId=${idTruck}`)
 		.then(res => {
 			if (res.ok) {
 				updateTable()
@@ -292,7 +288,7 @@ function updateTruckFormCallback(e) {
 	console.log(data)
 
 	ajaxUtils.postMultipartFformData({
-		url: updateTruckUrl,
+		url: editTruckUrl,
 		token: token,
 		data: updatedFormData,
 		successCallback: (response) => {

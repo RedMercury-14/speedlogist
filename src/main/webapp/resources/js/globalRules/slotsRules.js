@@ -13,6 +13,9 @@ export const slotsSettings = {
 
 	MOVE_ORDERS_DATE_START_FACTOR: 2,    // изменение начальной даты от сегодня для отчета по перемещениям слотов между 1700 и 1800
 	MOVE_ORDERS_DATE_END_FACTOR: 3,    // изменение конечной даты от сегодня для отчета по перемещениям слотов между 1700 и 1800
+
+	NO_IMPORT_STOCK_IDS: [],    // номера складов (String), для которых будет применяться ограничение по времени установки слота Импорта
+	NO_IMPORT_TIMES: ['09:00', '20:00'],    // начало и конец промежутка времени, в котором будет применяться ограничение по времени установки слота Импорта
 }
 
 // причины переноса слота
@@ -28,6 +31,23 @@ export const reasonForUpdate = [
 
 // фоновые зоны в слотах
 export const backgroundEvents = [
+	// закрытая 6 рампа на 1700 складе
+	// {
+	// 	id: `closedRamp170006`,
+	// 	resourceId: `170006`,
+	// 	display: 'background',
+	// 	startTime: '00:00',
+	// 	endTime: '23:59',
+	// 	eventOverlap: true,
+	// 	title: '',
+	// 	backgroundColor: '#ff0000',
+	// 	extendedProps: {
+	// 		data: {
+	// 			pall: 0,
+	// 		}
+	// 	},
+	// },
+
 	// зона внутренних перемещений
 	{
 		id: `internalMovementZone1700`,

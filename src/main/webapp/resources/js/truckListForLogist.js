@@ -4,11 +4,7 @@ import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 import { dateHelper, getData } from './utils.js'
 import { ajaxUtils } from './ajaxUtils.js'
 import { uiIcons } from './uiIcons.js'
-
-const getTrucksBaseUrl ='../../api/carrier/getCarByIdUser/'
-const verifyTruckBaseUrl = '../../api/manager/changeVertCar/'
-const updateTruckUrl ='../../api/carrier/editTruck'
-const isContainTruckBaseUrl ='../../api/carrier/isContainCar/'
+import { editTruckUrl, getCarByIdUserBaseUrl, isContainTruckBaseUrl, verifyCarBaseUrl } from './globalConstants/urls.js'
 
 const token = $("meta[name='_csrf']").attr("content")
 const viewportWidth = window.innerWidth
@@ -55,7 +51,7 @@ const gridOptions = {
 
 window.onload = async () => {
 	const gridDiv = document.querySelector('#myGrid')
-	const trucks = await getData(getTrucksBaseUrl + idCarrier)
+	const trucks = await getData(getCarByIdUserBaseUrl + idCarrier)
 
 	renderTable(gridDiv, gridOptions, trucks)
 
@@ -97,7 +93,7 @@ function renderTable(gridDiv, gridOptions, data) {
 async function updateTable() {
 	gridOptions.api.showLoadingOverlay()
 
-	const trucks = await getData(getTrucksBaseUrl + idCarrier)
+	const trucks = await getData(getCarByIdUserBaseUrl + idCarrier)
 
 	if (!trucks || !trucks.length) {
 		gridOptions.api.setRowData([])
@@ -177,7 +173,7 @@ async function verifyOneTruck(truckId, isVerify) {
 	const successMessage = isVerify
 		? 'Подтверждение отменено'
 		: `Подтверждение прошло успешно!`
-	const res = await getData(verifyTruckBaseUrl+truckId)
+	const res = await getData(verifyCarBaseUrl+truckId)
 
 	if (res && res.status === '200') {
 		snackbar.show(successMessage)
@@ -190,7 +186,7 @@ async function verifyOneTruck(truckId, isVerify) {
 function verifyTrucks(idList) {
 	try {
 		const request = idList.map(id => {
-			fetch(verifyTruckBaseUrl+id)
+			fetch(verifyCarBaseUrl+id)
 		})
 	
 		Promise.allSettled(request)
@@ -236,7 +232,7 @@ function updateTruckFormCallback(e) {
 	console.log(data)
 
 	ajaxUtils.postMultipartFformData({
-		url: updateTruckUrl,
+		url: editTruckUrl,
 		token: token,
 		data: updatedFormData,
 		successCallback: (response) => {

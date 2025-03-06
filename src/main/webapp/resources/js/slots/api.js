@@ -1,23 +1,26 @@
 import { ajaxUtils } from "../ajaxUtils.js"
 import { bootstrap5overlay } from "../bootstrap5overlay/bootstrap5overlay.js"
+import {
+	checkBookingBaseUrl,
+	checkScheduleBaseUrl,
+	checkSlotBaseUrl,
+	confirmSlotUrl,
+	deleteOrderUrl,
+	editMarketInfoBaseUrl,
+	getBalanceBaseUrl,
+	getMarketOrderBaseUrl,
+	getRoutesHasOrderBaseUrl,
+	loadOrderUrl,
+	preloadOrderUrl,
+	setOrderLinkingUrl,
+	updateOrderUrl
+} from "../globalConstants/urls.js"
 import { slotStocks } from "../globalRules/ordersRules.js"
 import { snackbar } from "../snackbar/snackbar.js"
 import { getData, isLogist } from "../utils.js"
 import { updateTableData } from "./agGridUtils.js"
 import { errorHandler_100status, errorHandler_105status, getMultiplicity, hideEventInfoPopup, showMessageModal } from "./calendarUtils.js"
-import {
-	checkBookingBaseUrl,
-	checkSlotBaseUrl,
-	confirmSlotUrl,
-	deleteOrderUrl,
-	editMarketInfoBaseUrl,
-	getMarketOrderUrl,
-	loadOrderUrl,
-	preloadOrderUrl,
-	setOrderLinkingUrl,
-	updateOrderUrl,
-	userMessages
-} from "./constants.js"
+import { userMessages } from "./constants.js"
 import { getMoveOrdersReportDates, getOrderDataForAjax } from "./dataUtils.js"
 import { renderOrderCalendar } from "./deliveryCalendar.js"
 import { updateOrderAndEvent } from "./eventControlMethods.js"
@@ -399,7 +402,7 @@ export function getOrderFromMarket(marketNumber, eventContainer, successCallback
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
 
 	ajaxUtils.get({
-		url: getMarketOrderUrl + marketNumber,
+		url: getMarketOrderBaseUrl + marketNumber,
 		successCallback: (data) => {
 			clearTimeout(timeoutId)
 			bootstrap5overlay.hideOverlay()
@@ -604,5 +607,50 @@ export function getMoveOrdersReport(action) {
 	const todayMs = new Date().setHours(0, 0, 0, 0)
 	const { date1, date2 } = getMoveOrdersReportDates(todayMs)
 	const stoctId = action === '1700to1800' ? '1700' : '1800'
-	window.open(`../api/balance2/${date1}&${date2}&${stoctId}`, '_blank')
+	window.open(`${getBalanceBaseUrl}${date1}&${date2}&${stoctId}`, '_blank')
+}
+
+// получение маршрутов для конкретного заказа
+export async function getRoutesInfo(idOrder) {
+	const routes = await getData(getRoutesHasOrderBaseUrl + idOrder)
+	return routes
+}
+
+// проверка совпадения заказа с графика поставок
+export async function checkSchedule(order, eventDateStr) {
+	const isInternalMovement = order.isInternalMovement
+	if (isInternalMovement === 'true') return {
+		flag: true,
+		message: null,
+		body: null
+	}
+	const num = order.marketContractType
+	if (!num) return {
+		flag: true,
+		message: userMessages.contractCodeNotFound,
+		body: null
+	}
+	const scheduleData = await getData(`${checkScheduleBaseUrl}${num}&${eventDateStr}`)
+	if (!scheduleData) {
+		return {
+			flag: true,
+			message: userMessages.errorReadingSchedule,
+			body: null
+		}
+	}
+	if (!scheduleData.body) {
+		return {
+			flag: true,
+			message: userMessages.contractCodeIsMissing,
+			body: null
+		}
+	}
+	if (!scheduleData.flag) {
+		return {
+			...scheduleData,
+			message: userMessages.isScheduleNotMatch,
+		}
+	}
+
+	return scheduleData
 }

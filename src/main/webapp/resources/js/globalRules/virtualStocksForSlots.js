@@ -77,7 +77,7 @@ export const stocks = [
 			{ id: "170003", title: "Рампа 3", businessHours: { startTime: '00:00', endTime: '24:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
 			{ id: "170004", title: "Рампа 4", businessHours: { startTime: '00:00', endTime: '24:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
 			{ id: "170005", title: "Рампа 5", businessHours: { startTime: '00:00', endTime: '24:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
-			{ id: "170006", title: "Рампа 6 (Резерв)", businessHours: { startTime: '00:00', endTime: '24:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
+			{ id: "170006", title: "Рампа 6 (ЗАКРЫТА с 8 марта)", businessHours: { startTime: '00:00', endTime: '24:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
 		],
 		events: [],
 	},
@@ -140,7 +140,7 @@ export const stocks = [
 		internaMovementsTimes: [],
 		internalMovementsRamps: [],
 		maxPall: {
-			externalMovement: 70, // редактировать ПОСТОЯННУЮ паллетовместимость ЗДЕСЬ
+			externalMovement: 60, // редактировать ПОСТОЯННУЮ паллетовместимость ЗДЕСЬ
 			internalMovement: 500, // паллетовместимость внутренних перевозок
 		},
 		weekends: [],

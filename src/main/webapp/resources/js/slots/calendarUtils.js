@@ -1,6 +1,7 @@
 import { snackbar } from "../snackbar/snackbar.js"
 import { dateHelper } from "../utils.js"
-import { eventColors, userMessages } from "./constants.js"
+import { getRoutesInfo } from "./api.js"
+import { eventColors, routeStatusColor, routeStatusText, userMessages } from "./constants.js"
 import { convertToDDMMYYYY, convertToDayMonthTime, getEventBGColor, getSlotStatus, getSlotStatusYard, stockAndDayIsVisible, stockIsVisible } from "./dataUtils.js"
 import { editableRulesToConfirmBtn, hasOrderInYard, isAnotherUser, isBackgroundEvent, removeDraggableElementRules } from "./rules.js"
 import { store } from "./store.js"
@@ -79,9 +80,16 @@ function createSingleSlotHTML(order) {
 	const [h,m] = order.timeUnload.split(":")
 	const dateDelivery = convertToDDMMYYYY(order.dateDelivery)
 
+	const importLabel = order.way === "Импорт" || order.isImport
+		? '<span class="text-danger">Импорт</span>'
+		: ''
+
 	return `
 		<div class="single-slot">
-			<div class="single-slot__id">ID: ${order.idOrder}</div>
+			<div class="d-flex justify-content-between">
+				<div class="single-slot__id">ID: ${order.idOrder}</div>
+				${importLabel}
+			</div>
 			<div class="single-slot__marketNumber">№: ${order.marketNumber}</div>
 			<div class="single-slot__marketNumber">Склад: ${order.numStockDelivery}</div>
 			<div class="single-slot__dateDelivery">Дата доставки: ${dateDelivery}</div>
@@ -105,6 +113,10 @@ export function createEventElement(info) {
 		return eventElem
 	}
 
+	const importLabel = order.way === "Импорт" || order.isImport
+		? '<span class="text-danger">Импорт</span>'
+		: ''
+
 	// жирная граница ивента для статусов Двора
 	eventElem.className = hasOrderInYard(order) ? 'fc-event-main-frame boldBorder' : 'fc-event-main-frame'
 	eventElem.style.cursor = 'move'
@@ -112,6 +124,7 @@ export function createEventElement(info) {
 		<div class="fc-event-time">${timeText}</div>
 		<div class="fc-event-title-container">
 			<div class="fc-event-title fc-sticky">${id} ${title}</div>
+			${importLabel}
 		</div>
 	`
 	return eventElem
@@ -199,7 +212,7 @@ export function addTooltip(element, info) {
 }
 
 // отображение модального окна с информацией об ивенте
-export function showEventInfoPopup(fcEvent, currentLogin, currentRole) {
+export async function showEventInfoPopup(fcEvent, currentLogin, currentRole) {
 	const { extendedProps } = fcEvent
 	const { data } = extendedProps
 	const status = data.status
@@ -209,10 +222,15 @@ export function showEventInfoPopup(fcEvent, currentLogin, currentRole) {
 	const isNotAnimated = isConfirmedSlot || isAnotherUser(orderLogin, currentLogin)
 	const action = isConfirmedSlot ? 'unSave' : 'save'
 
+	const withRoutes = status >= 30 && status <= 70
+	const routes = withRoutes ? await getRoutesInfo(data.idOrder) : []
+
 	const eventInfo = document.querySelector('#eventInfo')
+	const routesInfo = document.querySelector('#routesInfo')
 	const yardInfo = document.querySelector('#yardInfo')
 	const confirmSlotBtn = document.querySelector('#confirmSlot')
 	eventInfo.innerHTML = createEventInfoHTML(fcEvent)
+	routesInfo.innerHTML = createRoutesInfoHTML(routes)
 	yardInfo.innerHTML = createYardInfoHTML(fcEvent)
 	confirmSlotBtn.innerText = text
 	confirmSlotBtn.className = isNotAnimated ? 'btn btn-secondary' : 'btn btn-secondary animation__small-pulse'
@@ -238,26 +256,65 @@ function createEventInfoHTML(fcEvent) {
 	const dateDeliveryView = convertToDDMMYYYY(dateDelivery)
 	const eventStartDate = convertToDayMonthTime(fcEvent.startStr)
 
-
 	return `
 		<div class="event-info__status">
 			<p class="mb-1 font-weight-bold">Статус заказа: ${statusToView}</p>
 		</div>
 		${slotInfo && `<div class="event-info__slotInfo font-weight-bold">${slotInfo}</div>`}
 		<div class="event-info__ramp">
-			Склад: ${stock}
-			Рампа: ${ramp}
+			<span class="text-muted font-weight-bold">Склад:</span> ${stock}
+			<span class="text-muted font-weight-bold">Рампа:</span> ${ramp}
 		</div>
-		<div class="event-info__start">Начало выгрузки: ${eventStartDate}</div>
-		<div class="event-info__duration">Длительность выгрузки: ${h} ч ${m} мин</div>
-		<div class="event-info__id">ID заявки: ${idOrder}</div>
-		<div class="event-info__marketNumber">Номер из Маркета: ${marketNumber}</div>
-		<div class="event-info__dateDelivery">Дата доставки: ${dateDeliveryView}</div>
-		<div class="event-info__counterparty">Контрагент: ${counterparty}</div>
-		<div class="event-info__cargo">Груз: ${cargo}</div>
-		<div class="event-info__pall">Паллеты: ${pall}</div>
-		<div class="event-info__manager">Менеджер: ${loginManager}</div>
-		<div class="event-info__manager">Информация (из Маркета): ${marketInfo}</div>
+		<div><span class="text-muted font-weight-bold">Начало выгрузки:</span> ${eventStartDate}</div>
+		<div><span class="text-muted font-weight-bold">Длительность выгрузки:</span> ${h} ч ${m} мин</div>
+		<div><span class="text-muted font-weight-bold">ID заявки:</span> ${idOrder}</div>
+		<div><span class="text-muted font-weight-bold">Номер из Маркета:</span> ${marketNumber}</div>
+		<div><span class="text-muted font-weight-bold">Дата доставки:</span> ${dateDeliveryView}</div>
+		<div><span class="text-muted font-weight-bold">Контрагент:</span> ${counterparty}</div>
+		<div><span class="text-muted font-weight-bold">Груз:</span> ${cargo}</div>
+		<div><span class="text-muted font-weight-bold">Паллеты:</span> ${pall}</div>
+		<div><span class="text-muted font-weight-bold">Менеджер:</span> ${loginManager}</div>
+		<div><span class="text-muted font-weight-bold">Информация (из Маркета):</span> ${marketInfo}</div>
+	`
+}
+function createRoutesInfoHTML(routes) {
+	if (!routes || routes.length === 0) {
+		return `
+			<div class="event-info__status">
+				<p class="mb-1 font-weight-bold">Маршруты не найдены</p>
+			</div>
+		`
+	}
+
+	const sortedRoutes = routes.sort((a,b) => b.idRoute - a.idRoute)
+	const [ actualRoute, ...oldRoutes ] = sortedRoutes
+	const { idRoute, routeDirection, user, logistInfo, statusRoute } = actualRoute
+	const carrier = user && user.companyName ? user.companyName : ''
+	const statusText = routeStatusText[statusRoute]
+
+	const oldRoutesInfo = oldRoutes
+		.map(route => {
+			const date = dateHelper.getFormatDate(route.createDate)
+			const timeToView = route.createTime ? `, ${route.createTime.slice(0, 5)}` : ''
+			const textColor = routeStatusColor[route.statusRoute]
+			return `
+				<li class="mb-1 p-1" style="background-color: ${textColor};">
+					Маршрут ${route.routeDirection} от ${date}${timeToView}  — ${routeStatusText[route.statusRoute]}
+				</li>
+			`
+		})
+		.join('')
+
+	return `
+		<div class="event-info__status">
+			<p class="mb-1 font-weight-bold">Статус маршрута: ${statusText}</p>
+		</div>
+		<div><span class="text-muted font-weight-bold">Номер маршрута:</span> ${idRoute}</div>
+		<div><span class="text-muted font-weight-bold">Название маршрута:</span> ${routeDirection}</div>
+		<div><span class="text-muted font-weight-bold">Перевозчик:</span> ${carrier}</div>
+		<div><span class="text-muted font-weight-bold">Логист:</span> ${logistInfo}</div>
+		<div><span class="text-muted font-weight-bold">Старые маршруты:</span> </div>
+		<ul class="ml-4">${oldRoutesInfo}</ul>
 	`
 }
 function createYardInfoHTML(fcEvent) {
@@ -274,13 +331,13 @@ function createYardInfoHTML(fcEvent) {
 		<div class="event-info__status">
 			<p class="mb-1 font-weight-bold">Статус во Дворе: ${statusYard}</p>
 		</div>
-		<div class="event-info__marketNumber">Номер из Маркета: ${order.marketNumber}</div>
-		<div class="event-info__arrivalFactYard">Прибытие на склад: ${arrivalFactYard}</div>
-		<div class="event-info__registrationFactYard">Регистрация: ${registrationFactYard}</div>
-		<div class="event-info__unloadStartYard">Начало выгрузки (факт): ${unloadStartYard}</div>
-		<div class="event-info__unloadFinishYard">Конец выгрузки (факт): ${unloadFinishYard}</div>
-		<div class="event-info__pallFactYard">Зарегистрировано паллет: ${pallFactYard}</div>
-		<div class="event-info__weightFactYard">Масса груза: ${weightFactYard}</div>
+		<div><span class="text-muted font-weight-bold">Номер из Маркета:</span> ${order.marketNumber}</div>
+		<div><span class="text-muted font-weight-bold">Прибытие на склад:</span> ${arrivalFactYard}</div>
+		<div><span class="text-muted font-weight-bold">Регистрация:</span> ${registrationFactYard}</div>
+		<div><span class="text-muted font-weight-bold">Начало выгрузки (факт):</span> ${unloadStartYard}</div>
+		<div><span class="text-muted font-weight-bold">Конец выгрузки (факт):</span> ${unloadFinishYard}</div>
+		<div><span class="text-muted font-weight-bold">Зарегистрировано паллет:</span> ${pallFactYard}</div>
+		<div><span class="text-muted font-weight-bold">Масса груза:</span> ${weightFactYard}</div>
 	`
 }
 

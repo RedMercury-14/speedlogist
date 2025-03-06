@@ -29,9 +29,8 @@ import {
 	getTnvdHTML,
 } from "./procurementFormHtmlUtils.js";
 import { bootstrap5overlay } from "./bootstrap5overlay/bootstrap5overlay.js"
+import { editOrderUrl, getInternalMovementShopsUrl } from "./globalConstants/urls.js"
 
-const editProcurement = "../../../api/manager/editProcurement"
-const getInternalMovementShopsUrl = "../../../api/manager/getInternalMovementShops"
 const token = $("meta[name='_csrf']").attr("content")
 const role = document.querySelector('#role').value
 
@@ -108,7 +107,7 @@ function orderFormSubmitHandler(e) {
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
 
 	ajaxUtils.postJSONdata({
-		url: editProcurement,
+		url: editOrderUrl,
 		token: token,
 		data: updatedData,
 		successCallback: (res) => {

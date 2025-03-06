@@ -4,6 +4,7 @@ import { snackbar } from './snackbar/snackbar.js'
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js';
 import { dateHelper } from './utils.js';
 import { ajaxUtils } from './ajaxUtils.js';
+import { saveNewDriverUrl, saveNewTruckUrl } from './globalConstants/urls.js';
 
 let error = false
 
@@ -64,8 +65,8 @@ window.onload = function() {
 		createDriverForm.removeClass('was-validated')
 	})
 
-	createTruckForm.on('submit', (e) => onSubmitFormCallback(e, '../../api/carrier/saveNewTruck', token, truckSelects))
-	createDriverForm.on('submit', (e) => onSubmitFormCallback(e, '../../api/carrier/saveNewDriver', token, driverSelects))
+	createTruckForm.on('submit', (e) => onSubmitFormCallback(e, saveNewTruckUrl, token, truckSelects))
+	createDriverForm.on('submit', (e) => onSubmitFormCallback(e, saveNewDriverUrl, token, driverSelects))
 
 	truckImgInput.addEventListener("change", (e) => addImgToView(e, truckImgContainer))
 	driverImgInput.addEventListener("change", (e) => addImgToView(e, driverImgContainer))

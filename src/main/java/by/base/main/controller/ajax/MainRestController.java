@@ -62,6 +62,7 @@ import javax.imageio.ImageIO;
 import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
 import javax.imageio.stream.ImageOutputStream;
+import javax.mail.AuthenticationFailedException;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -320,6 +321,10 @@ public class MainRestController {
 
 	@Autowired
 	private OrderCalculationService orderCalculationService;
+	
+	@Autowired
+	private ReviewService reviewService;
+	
 	private static String classLog;
 	public static String marketJWT;
 	//в отдельный файл
@@ -367,6 +372,112 @@ public class MainRestController {
 
 	@Autowired
     private ServletContext servletContext;
+	
+	/**
+	 * <br>Метод для получения списка объектов обратной связи за указанный период</br>.
+	 * @param dateStart
+	 * @param dateEnd
+	 * @author Ira
+	 */
+	@GetMapping("/reviews/get-reviews/{dateStart}&{dateEnd}")
+	public Map<String, Object> getReviews(@PathVariable String dateStart, @PathVariable String dateEnd){
+		Map<String, Object> response = new HashMap<>();
+		Date dateFrom = Date.valueOf(dateStart);
+		Date dateTo = Date.valueOf(dateEnd);
+		response.put("reviews", reviewService.getReviewsByDates(dateFrom, dateTo));
+		response.put("status", "200");
+		return response;
+	}
+	
+	/**
+	 * <br>Метод для обновления объекта обратной связи</br>.
+	 * @param request
+	 * @param str
+	 * @throws IOException
+	 * @throws ParseException
+	 * @author Ira
+	 */
+	@PostMapping("/reviews/update-review")
+	public Map<String, Object> updateReview(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+
+		Map<String, Object> responseMap = new HashMap<>();
+		User user = getThisUser();
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+
+		Long idReview = jsonMainObject.get("idReview") != null ? Long.valueOf(jsonMainObject.get("idReview").toString()) : null;
+		String replyBody = jsonMainObject.get("replyBody") == null ? null : jsonMainObject.get("replyBody").toString();
+		String comment = jsonMainObject.get("comment") == null ? null : jsonMainObject.get("comment").toString();
+		Timestamp replyDate = Timestamp.valueOf(LocalDateTime.now());
+		Review review = reviewService.getReviewById(idReview);
+		String replyAuthor = user.getSurname() + " " + user.getName();
+
+		if (replyBody != null && !replyBody.equals(review.getReplyBody())) {
+			review.setReplyBody(replyBody);
+			review.setStatus(20);
+			review.setReplyDate(replyDate);
+			review.setReplyAuthor(replyAuthor);
+			String appPath = request.getServletContext().getRealPath("");
+			List<String> emails = new ArrayList<>();
+			emails.add(review.getEmail());
+			emails.add(user.geteMail());
+			if(!mailService.sendEmailToUsers(request, "Ответ на обратную связь", replyBody, emails)) {
+				responseMap.put("status", "100");
+				responseMap.put("message", "Сообщение не удалось отправить.");
+				return responseMap;
+			}			
+			
+		}
+
+		String currentComment = review.getComment();
+		if ((comment != null && !comment.equals(currentComment)) || (comment == null && currentComment != null)) {
+			review.setComment(comment);
+		}
+		reviewService.updateReview(review);
+
+		responseMap.put("status", "200");
+		responseMap.put("object", review);
+		return responseMap;
+
+	}
+	
+	/**
+	 * <br>Метод для создания объекта обратной связи</br>.
+	 * @param request
+	 * @param str
+	 * @throws IOException
+	 * @throws ParseException
+	 * @author Ira
+	 */
+	@PostMapping("/reviews/create")
+	public Map<String, Object> createReview(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+		Map<String, Object> response = new HashMap<>();
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		//Long idAct = jsonMainObject.get("idAct") != null ? Long.valueOf(jsonMainObject.get("idAct").toString()) : null;
+		String sender = jsonMainObject.get("sender") == null ? null : jsonMainObject.get("sender").toString();
+		Boolean needReply = jsonMainObject.get("needReply") == null ? null : Boolean.parseBoolean(jsonMainObject.get("needReply").toString());
+		String email = jsonMainObject.get("email").equals("") ? null : jsonMainObject.get("email").toString();
+		String topic = jsonMainObject.get("topic") == null ? null : jsonMainObject.get("topic").toString();
+		String reviewBody = jsonMainObject.get("reviewBody") == null ? null : jsonMainObject.get("reviewBody").toString();
+		Timestamp reviewDate = Timestamp.valueOf(LocalDateTime.now());
+
+		Review review = new Review();
+		review.setSender(sender);
+		review.setNeedReply(needReply);
+		review.setEmail(email);
+		review.setReviewDate(reviewDate);
+		review.setTopic(topic);
+		review.setReviewBody(reviewBody);
+		review.setStatus(10);
+
+		Long id = reviewService.saveReview(review);
+		review.setIdReview(id);
+
+		response.put("status", "200");
+		response.put("object", review);
+		return response;
+	}
 	
 	@GetMapping("/delivery-schedule/getCountScheduleOrderHasWeek")
     public Map<String, Object> getCountScheduleOrderHasWeek(HttpServletRequest request, HttpServletResponse response) throws IOException{

@@ -1,3 +1,5 @@
+import { setRouteTemperatureUrl, setRouteTimeLoadPreviouslyUrl, setRouteTimeUrl, setRouteTypeTrailerUrl, setRouteUserCommentsUrl, toRouadUpdateUrl, toTenderpageUrl } from './globalConstants/urls.js'
+
 var token = $("meta[name='_csrf']").attr("content");
 let currentElem = null;
 let idRoute; // даёт id по наведению!
@@ -90,12 +92,12 @@ sort.onmouseout = function(event) {
 	}, false);
 
 	document.querySelector("#l1").addEventListener("click", () => {
-		var url = `../logistics/rouadUpdate?id=${route}&statStock=1`
+		var url = `${toRouadUpdateUrl}?id=${route}&statStock=1`
 		alert("Временно заблокировано");
 		//window.location.href = url;
 	}, false);
 	document.querySelector("#l2").addEventListener("click", () => {
-		var url = `../logistics/rouadUpdate?id=${route}&statRoute=1`
+		var url = `${toRouadUpdateUrl}?id=${route}&statRoute=1`
 		window.location.href = url;
 		var routeDirection = document.getElementById(route).querySelector('#routeDirection').innerHTML;
 		sendMessage({
@@ -107,7 +109,7 @@ sort.onmouseout = function(event) {
 		})
 	}, false);
 	document.querySelector("#l3").addEventListener("click", () => {
-		var url = `../carrier/tender/tenderpage?routeId=${route}`
+		var url = `${toTenderpageUrl}?routeId=${route}`
 		window.location.href = url;
 	}, false);
 	document.querySelector("#l4").addEventListener("click", () => {
@@ -132,7 +134,7 @@ for (var i = 0; i < tds.length; i++) {
 			var jsonData = { idRoute: targetIdRoute, temperature: this.value };
 			$.ajax({
 				type: "POST",
-				url: "../../api/route/temperature",
+				url: setRouteTemperatureUrl,
 				headers: { "X-CSRF-TOKEN": token },
 				data: JSON.stringify(jsonData),
 				contentType: 'application/json',
@@ -165,7 +167,7 @@ for (var i = 0; i < timeLoadPreviously.length; i++) {
 			var jsonData = { idRoute: targetIdRoute, timeLoadPreviously: this.value };
 			$.ajax({
 				type: "POST",
-				url: "../../api/route/timeLoadPreviously",
+				url: setRouteTimeLoadPreviouslyUrl,
 				headers: { "X-CSRF-TOKEN": token },
 				data: JSON.stringify(jsonData),
 				contentType: 'application/json',
@@ -198,7 +200,7 @@ for (var i = 0; i < userComments.length; i++) {
 			var jsonData = { idRoute: targetIdRoute, userComments: this.value };
 			$.ajax({
 				type: "POST",
-				url: "../../api/route/userComments",
+				url: setRouteUserCommentsUrl,
 				headers: { "X-CSRF-TOKEN": token },
 				data: JSON.stringify(jsonData),
 				contentType: 'application/json',
@@ -225,7 +227,7 @@ for (var i = 0; i < typeTrailer.length; i++) {
 			var jsonData = { idRoute: targetIdRoute, typeTrailer: event.target.value };
 			$.ajax({
 				type: "POST",
-				url: "../../api/route/typeTrailer",
+				url: setRouteTypeTrailerUrl,
 				headers: { "X-CSRF-TOKEN": token },
 				data: JSON.stringify(jsonData),
 				contentType: 'application/json',
@@ -258,7 +260,7 @@ for (var i = 0; i < time.length; i++) {
 			var jsonData = { idRoute: targetIdRoute, time: this.value };
 			$.ajax({
 				type: "POST",
-				url: "../../api/route/time",
+				url: setRouteTimeUrl,
 				headers: { "X-CSRF-TOKEN": token },
 				data: JSON.stringify(jsonData),
 				contentType: 'application/json',

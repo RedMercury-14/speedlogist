@@ -31,24 +31,24 @@ let systemMessage = new Set();
 let allMessage = new Set();
 let regionalAllMessage = new Set();
 
-fetch(`/speedlogist/api/mainchat/messagesList&${login}`).then(function(response) {
-	response.json().then(function(text) {
-		text.forEach(function(item) {
-			switchHasMessageToArray(item);
-		});
-		if (role == '[ROLE_ADMIN]' || role == '[ROLE_MANAGER]' || role == '[ROLE_TOPMANAGER]') {
-			switchHasRole(role, systemMessage);
-		} else if (role == '[ROLE_CARRIER]') {
-			//для внутренних перевозок используется проверка на check
-			if (sessionCheck == '') {
-				switchHasRole(role, regionalAllMessage);
-			} else {
-				switchHasRole(role, allMessage);
-			}
-		}
-	});
+// fetch(`/speedlogist/api/mainchat/messagesList&${login}`).then(function(response) {
+// 	response.json().then(function(text) {
+// 		text.forEach(function(item) {
+// 			switchHasMessageToArray(item);
+// 		});
+// 		if (role == '[ROLE_ADMIN]' || role == '[ROLE_MANAGER]' || role == '[ROLE_TOPMANAGER]') {
+// 			switchHasRole(role, systemMessage);
+// 		} else if (role == '[ROLE_CARRIER]') {
+// 			//для внутренних перевозок используется проверка на check
+// 			if (sessionCheck == '') {
+// 				switchHasRole(role, regionalAllMessage);
+// 			} else {
+// 				switchHasRole(role, allMessage);
+// 			}
+// 		}
+// 	});
 
-});
+// });
 
 function onMessage(mes) {
 	switchHasMessageToArray(mes)

@@ -1,8 +1,7 @@
 import { AG_GRID_LOCALE_RU } from './AG-Grid/ag-grid-locale-RU.js'
 import { debounce, getData } from './utils.js';
 import { dateComparator, gridFilterLocalState } from './AG-Grid/ag-grid-utils.js';
-
-const getTenderHistoryUrl = `../../../api/carrier/getStatusTenderForMe`
+import { getTenderHistoryUrl } from './globalConstants/urls.js';
 
 const LOCAL_STORAGE_KEY = 'tenderHistory_page'
 

@@ -4,32 +4,48 @@ import { addNewStockOption } from "./calendarUtils.js"
 import { addOnClickToMenuItemListner, closeSidebar } from "./sidebar.js"
 
 export function slotInfoListners() {
-	const eventInfoBtn = document.querySelector('#eventInfoBtn')
-	const yardInfoBtn = document.querySelector('#yardInfoBtn')
+	const eventInfoBtns = document.querySelector('#eventInfoBtns')
 	const eventInfo = document.querySelector('#eventInfo')
+	const routesInfo = document.querySelector('#routesInfo')
 	const yardInfo = document.querySelector('#yardInfo')
 
-	eventInfoBtn.addEventListener('click', (e) => {
-		eventInfo.classList.remove('none')
-		yardInfo.classList.add('none')
-	})
-	yardInfoBtn.addEventListener('click', (e) => {
-		yardInfo.classList.remove('none')
-		eventInfo.classList.add('none')
+	eventInfoBtns.addEventListener('click', (e) => {
+		const btn = e.target
+		const btnId = btn.id
+
+		if (btnId === 'eventInfoBtn') {
+			eventInfo.classList.remove('none')
+			routesInfo.classList.add('none')
+			yardInfo.classList.add('none')
+		}
+		if (btnId === 'routesInfoBtn') {
+			eventInfo.classList.add('none')
+			routesInfo.classList.remove('none')
+			yardInfo.classList.add('none')
+		}
+		if (btnId === 'yardInfoBtn') {
+			eventInfo.classList.add('none')
+			routesInfo.classList.add('none')
+			yardInfo.classList.remove('none')
+		}
 	})
 }
 
 export function eventInfoModalClosedListner() {
 	$('#eventInfoModal').on('hidden.bs.modal', (e) => {
 		const eventInfoBtn = document.querySelector('#eventInfoBtn')
+		const routesInfoBtn = document.querySelector('#routesInfoBtn')
 		const yardInfoBtn = document.querySelector('#yardInfoBtn')
 		const eventInfo = document.querySelector('#eventInfo')
+		const routesInfo = document.querySelector('#routesInfo')
 		const yardInfo = document.querySelector('#yardInfo')
 
 		yardInfoBtn.parentElement.classList.remove('active')
+		routesInfoBtn.parentElement.classList.remove('active')
 		eventInfoBtn.parentElement.classList.add('active')
 		eventInfo.classList.remove('none')
 		yardInfo.classList.add('none')
+		routesInfo.classList.add('none')
 	})
 }
 

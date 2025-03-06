@@ -2,9 +2,7 @@ import { ws } from './global.js';
 import { AG_GRID_LOCALE_RU } from '../js/AG-Grid/ag-grid-locale-RU.js'
 import { cookieHelper, dateHelper, debounce, getData, isMobileDevice } from './utils.js';
 import { dateComparator, gridFilterLocalState } from './AG-Grid/ag-grid-utils.js';
-
-const getActiveTendersUrl = `../../api/carrier/getActiveInternationalTenders`
-const getMessagesBaseUrl = `../../api/info/message/routes/`
+import { getActiveTendersUrl, getInfoRouteMessageBaseUrl, getThisUserUrl } from './globalConstants/urls.js';
 
 const LOCAL_STORAGE_KEY = 'tenders_page'
 
@@ -173,8 +171,8 @@ window.onload = async () => {
 	const gridDiv = document.querySelector('#myGrid')
 	const filterTextBox = document.querySelector('#filterTextBox')
 	const tenders = await getData(getActiveTendersUrl)
-	const myMessages = await getData(getMessagesBaseUrl + 'from_me')
-	const user = await getData('../../api/getThisUser')
+	const myMessages = await getData(getInfoRouteMessageBaseUrl + 'from_me')
+	const user = await getData(getThisUserUrl)
 
 	await renderTable(gridDiv, gridOptions, tenders, myMessages, user)
 
@@ -244,7 +242,7 @@ async function getMappingData(data, messages, user) {
 			.map((point, i) => `${i + 1}) ${point.address}`)
 			.join(' ')
 
-		const routeMessages = await getData(getMessagesBaseUrl + idRoute)
+		const routeMessages = await getData(getInfoRouteMessageBaseUrl + idRoute)
 
 		const price = routeMessages && routeMessages.length !== 0
 			? `${routeMessages[0].text} ${routeMessages[0].currency}`

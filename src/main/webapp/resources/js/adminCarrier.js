@@ -2,11 +2,10 @@ import { AG_GRID_LOCALE_RU } from '../js/AG-Grid/ag-grid-locale-RU.js'
 import { gridColumnLocalState, gridFilterSessionState } from './AG-Grid/ag-grid-utils.js'
 import { ajaxUtils } from './ajaxUtils.js'
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
+import { changeIsBlockedBaseUrl, changeNumContractUrl } from './globalConstants/urls.js'
 import { snackbar } from './snackbar/snackbar.js'
-import { changeGridTableMarginTop, debounce, getData, isObserver } from './utils.js'
+import { debounce, isObserver } from './utils.js'
 
-const changeNumContractUrl = `../../api/manager/changeNumDocument`
-const changeIsBlockedBaseUrl = `../../api/manager/blockCarrier/`
 const PAGE_NAME = 'adminCarrier'
 const LOCAL_STORAGE_KEY = `AG_Grid_setting_to_${PAGE_NAME}`
 const token = $("meta[name='_csrf']").attr("content")

@@ -1,10 +1,7 @@
 import { ajaxUtils } from "./ajaxUtils.js"
+import { send487ReportUrl, send490ReportUrl, sendTempSchedulesReportUrl } from "./globalConstants/urls.js"
 import { hideLoadingSpinner, showLoadingSpinner } from "./utils.js"
 
-const send487ReportUrl = `../../api/order-support/control/487`
-const send490ReportUrl = `../../api/order-support/control/490`
-// const sendPromotionsReportUrl = `../../api/order-support/control/promotions`
-const sendTempSchedulesReportUrl = `../../api/order-support/control/loadSchedules`
 const token = $("meta[name='_csrf']").attr("content")
 
 window.addEventListener('load', () => {

@@ -9,6 +9,7 @@ import {
 	inputEditBan,
 	isInvalidPointForms,
 	isValidPallCount,
+	isValidPallWeight,
 	isValidTnvdValue,
 	orderCargoInputOnChangeHandler,
 	orderPallInputOnChangeHandler,
@@ -31,7 +32,7 @@ import {
 	getTnvdHTML,
 } from "./procurementFormHtmlUtils.js"
 import { getOrderData, getOrderForForm } from "./procurementFormDataUtils.js"
-import { getOrderStatusByStockDelivery, getStockAddress } from "./globalRules/ordersRules.js"
+import { getOrderStatusByStockDelivery, getStockAddress, MAX_ONE_PALL_WEIGHT_KG } from "./globalRules/ordersRules.js"
 import { addNewAhoOrderUrl, addNewOrderHasMarketUrl, addNewOrderUrl, getInternalMovementShopsUrl, getMarketOrderBaseUrl } from "./globalConstants/urls.js"
 
 const redirectUrl = (orderStatus) => orderStatus === 20 || disableSlotRedirect ? "../orders" : "../../slots"
@@ -175,6 +176,11 @@ function isInvalidForm(data) {
 
 	if (!isValidTnvdValue(data)) {
 		snackbar.show('Неверное значение кода ТН ВЭД!')
+		return true
+	}
+
+	if (!isValidPallWeight(data)) {
+		snackbar.show(`Масса одной паллеты не должна превышать ${MAX_ONE_PALL_WEIGHT_KG} кг!`)
 		return true
 	}
 

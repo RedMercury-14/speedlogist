@@ -1,7 +1,7 @@
 import { autocomplete } from './autocomplete/autocomplete.js'
 import { countries } from './global.js'
 import { RULES_FOR_MIN_UNLOAD_TIME } from './globalRules/minUnloadTimeRules.js'
-import { INCOTERMS_INSURANCE_LIST } from './globalRules/ordersRules.js'
+import { INCOTERMS_INSURANCE_LIST, MAX_ONE_PALL_WEIGHT_KG, MAX_PALL_COUNT_FOR_AHO_ORDER } from './globalRules/ordersRules.js'
 import { dateHelper, inputBan, setInputValue } from './utils.js'
 
 
@@ -331,7 +331,7 @@ export function isValidPallCount(order) {
 		.reduce((acc, point) => acc + Number(point.pall), 0)
 
 	// для АХО
-	if (way === 'АХО') return pallCount <= 20
+	if (way === 'АХО') return pallCount <= MAX_PALL_COUNT_FOR_AHO_ORDER
 
 	return true
 }
@@ -348,6 +348,17 @@ export function isValidTnvdValue(order) {
 		if (!tnvd) return true
 		return regex.test(tnvd)
 	})
+}
+
+// проверка превышения массы одной паллеты
+export function isValidPallWeight(order) {
+	const points = order.points
+	if (!points) return true
+	return points.every(point => {
+		const pallCount = Number(point.pall)
+		const weight = point.weight ? Number(point.weight) : 0
+		return weight / pallCount <= MAX_ONE_PALL_WEIGHT_KG
+	}) 
 }
 
 // обработчик изменения значения поля Опасный груз

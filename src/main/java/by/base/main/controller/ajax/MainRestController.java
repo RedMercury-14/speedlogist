@@ -373,6 +373,14 @@ public class MainRestController {
 	@Autowired
     private ServletContext servletContext;
 	
+	@GetMapping("/delivery-schedule/getCountScheduleDeliveryHasWeek")
+	public Map<String, Object> getCountScheduleDeliveryHasWeek(HttpServletRequest request, HttpServletResponse response) throws IOException{
+	    Map<String, Object> responseMap = new HashMap<>();
+	    responseMap.put("status", "200");
+	    responseMap.put("object", scheduleService.getCountScheduleDeliveryHasWeek());
+	    return responseMap;
+	}
+	
 	/**
 	 * <br>Метод для получения списка объектов обратной связи за указанный период</br>.
 	 * @param dateStart

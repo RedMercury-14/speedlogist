@@ -27,7 +27,6 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -37,14 +36,11 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -62,7 +58,6 @@ import javax.imageio.ImageIO;
 import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
 import javax.imageio.stream.ImageOutputStream;
-import javax.mail.AuthenticationFailedException;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -77,8 +72,6 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFCellStyle;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -90,10 +83,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.core.userdetails.User.UserBuilder;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -171,7 +160,6 @@ import by.base.main.service.util.PDFWriter;
 import by.base.main.service.util.POIExcel;
 import by.base.main.service.util.PropertiesUtils;
 import by.base.main.service.util.ReaderSchedulePlan;
-import by.base.main.service.util.ScheduledTask;
 import by.base.main.service.util.ServiceLevel;
 import by.base.main.util.ChatEnpoint;
 import by.base.main.util.MainChat;
@@ -372,7 +360,16 @@ public class MainRestController {
 
 	@Autowired
     private ServletContext servletContext;
-	
+
+	@GetMapping("/test")
+	public Map<String, Object> test() {
+
+		Map<String, Object> result = new HashMap<>();
+		ScheduleCountOrderDTO scheduleCountOrderDTO = scheduleService.getCountScheduleDeliveryHasWeek();
+		result.put("scheduleCountOrderDTO", scheduleCountOrderDTO);
+		return result;
+	}
+
 	/**
 	 * <br>Метод для получения списка объектов обратной связи за указанный период</br>.
 	 * @param dateStart
@@ -486,6 +483,14 @@ public class MainRestController {
 		responseMap.put("object", scheduleService.getCountScheduleOrderHasWeek());
 		return responseMap;
     }
+
+	@GetMapping("/delivery-schedule/getCountScheduleDeliveryHasWeek")
+	public Map<String, Object> getCountScheduleDeliveryHasWeek(HttpServletRequest request, HttpServletResponse response) throws IOException{
+		Map<String, Object> responseMap = new HashMap<>();
+		responseMap.put("status", "200");
+		responseMap.put("object", scheduleService.getCountScheduleDeliveryHasWeek());
+		return responseMap;
+	}
 	
 	@GetMapping("/market/getParam")
     public Map<String, Object> getMarket(HttpServletRequest request, HttpServletResponse response) throws IOException{
@@ -603,19 +608,19 @@ public class MainRestController {
 		return response;
 	}
 
-	@GetMapping("/test")
-	@TimedExecution
-	public Map<String, Object> getTEST(HttpServletRequest request) throws ParseException {
-		String code = "1231325, 156845";
-		String str = "{\"CRC\": \"\", \"Packet\": {\"MethodName\": \"SpeedLogist.GetOrderBuyInfo\", \"Data\": "
-				+ "{\"OrderBuyGroupId\": ["+code+"]}}}";
-		Map<String, Object> response = new HashMap<>();
-		
-		
-		response.put("status", "200");
-		return response;
-				
-	}
+//	@GetMapping("/test")
+//	@TimedExecution
+//	public Map<String, Object> getTEST(HttpServletRequest request) throws ParseException {
+//		String code = "1231325, 156845";
+//		String str = "{\"CRC\": \"\", \"Packet\": {\"MethodName\": \"SpeedLogist.GetOrderBuyInfo\", \"Data\": "
+//				+ "{\"OrderBuyGroupId\": ["+code+"]}}}";
+//		Map<String, Object> response = new HashMap<>();
+//
+//
+//		response.put("status", "200");
+//		return response;
+//
+//	}
 	
 	/**
 	 * GPT

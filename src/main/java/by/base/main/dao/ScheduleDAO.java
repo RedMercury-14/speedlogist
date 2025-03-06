@@ -10,8 +10,6 @@ import com.dto.CounterpartyDTO;
 import by.base.main.dto.ScheduleCountOrderDTO;
 import by.base.main.model.Schedule;
 
-import javax.transaction.Transactional;
-
 public interface ScheduleDAO {
 
 	Schedule getScheduleById(Integer id);
@@ -171,7 +169,9 @@ public interface ScheduleDAO {
 	 */
 	ScheduleCountOrderDTO getCountScheduleOrderHasWeek();
 
-	/**
+    ScheduleCountOrderDTO getCountScheduleDeliveryHasWeek();
+
+    /**
 	 * @author Ira
 	 * <br>Возвращает список графиков для РЦ по списку кодов контрактов</br>
 	 * @param contractNums

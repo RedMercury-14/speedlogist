@@ -232,6 +232,13 @@ public class ScheduleServiceImpl implements ScheduleService{
 		return scheduleDAO.getCountScheduleOrderHasWeek();
 	}
 
+
+	@Transactional
+	@Override
+	public ScheduleCountOrderDTO getCountScheduleDeliveryHasWeek() {
+		return scheduleDAO.getCountScheduleDeliveryHasWeek();
+	}
+
 	@Transactional
 	@Override
 	public Map<Long, Schedule> getSchedulesRCbyContractNums(Set<Long> contractNums) {

@@ -181,6 +181,7 @@ public interface ScheduleService {
 	 */
 	ScheduleCountOrderDTO getCountScheduleOrderHasWeek();
 
+	ScheduleCountOrderDTO getCountScheduleDeliveryHasWeek();
 	/**
 	 * @author Ira
 	 * <br>Возвращает список графиков по списку кодов контрактов</br>

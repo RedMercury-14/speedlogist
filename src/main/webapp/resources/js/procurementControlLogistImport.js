@@ -24,16 +24,21 @@ import { checkCombineRoutes, excelStyles, mapCallbackForProcurementControl, merg
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 import { getAddressHTML, getAddressInfoHTML, getCargoInfoHTML, getCustomsAddressHTML, getDateHTML, getTimeHTML, getTnvdHTML } from './procurementFormHtmlUtils.js'
 import { getComment, getPointsData } from './procurementFormDataUtils.js'
+import {
+	createAhoRouteUrl,
+	createRouteUrl,
+	getDataHasOrderBaseUrl,
+	getOrdersForLogistBaseUrl,
+	getOrdersHasCounterpartyUrl,
+	getOrdersLinksBaseUrl
+} from './globalConstants/urls.js'
 
 const token = $("meta[name='_csrf']").attr("content")
 const PAGE_NAME = 'ProcurementControlLogist'
 const LOCAL_STORAGE_KEY = `AG_Grid_settings_to_${PAGE_NAME}`
 const DATES_KEY = `searchDates_to_${PAGE_NAME}`
-const getOrderBaseUrl ='../../api/manager/getOrdersForLogist/'
-const getSearchOrderBaseUrl ='../../api/manager/getOrdersHasCounterparty/'
-const createRouteUrl = (way) => way === 'АХО' ? '../../api/manager/maintenance/add' : '../../api/manager/createNewRoute'
-const getDataHasOrderBaseUrl ='../../api/manager/getDataHasOrder2/'
-const getOrdersLinksBaseUrl = `../../api/logistics/getOrdersLinks/`
+
+const createRouteLocalUrl = (way) => way === 'АХО' ? createAhoRouteUrl : createRouteUrl
 
 const role = document.querySelector('#role').value
 
@@ -324,8 +329,8 @@ async function updateTable(gridOptions, searchForm, data) {
 	const dateEnd = searchForm.date_to.value
 	const counterparty = searchForm.searchName.value
 	const getOrderUrl = counterparty.length
-		? `${getSearchOrderBaseUrl}${dateStart}&${dateEnd}&${counterparty}`
-		: `${getOrderBaseUrl}${dateStart}&${dateEnd}`
+		? `${getOrdersHasCounterpartyUrl}${dateStart}&${dateEnd}&${counterparty}`
+		: `${getOrdersForLogistBaseUrl}${dateStart}&${dateEnd}`
 
 	const orders = data
 		? data
@@ -656,7 +661,7 @@ function routeFormSubmitHandler(e) {
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
 
 	ajaxUtils.postJSONdata({
-		url: createRouteUrl(data.way),
+		url: createRouteLocalUrl(data.way),
 		token: token,
 		data: data,
 		successCallback: (res) => {

@@ -56,11 +56,13 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import javax.annotation.PostConstruct;
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
 import javax.imageio.stream.ImageOutputStream;
+import javax.mail.AuthenticationFailedException;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -85,6 +87,7 @@ import org.json.simple.parser.ParseException;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -318,6 +321,10 @@ public class MainRestController {
 
 	@Autowired
 	private OrderCalculationService orderCalculationService;
+	
+	@Autowired
+	private ReviewService reviewService;
+	
 	private static String classLog;
 	public static String marketJWT;
 	//в отдельный файл
@@ -325,10 +332,35 @@ public class MainRestController {
 //	public static final String serviceNumber = "BB7617FD-D103-4724-B634-D655970C7EC0";
 //	public static final String loginMarket = "191178504_SpeedLogist";
 //	public static final String passwordMarket = "SL!2024D@2005";
-	public static final String marketUrl = "https://api.dobronom.by:10896/Json";
-	public static final String serviceNumber = "CD6AE87C-2477-4852-A4E7-8BA5BD01C156";
-	public static final String loginMarket = "191178504_SpeedLogist";
-	public static final String passwordMarket = "SL!2024D@2005";
+//	public static final String marketUrl = "https://api.dobronom.by:10896/Json";
+//	public static final String serviceNumber = "CD6AE87C-2477-4852-A4E7-8BA5BD01C156";
+//	public static final String loginMarket = "191178504_SpeedLogist";
+//	public static final String passwordMarket = "SL!2024D@2005";
+	
+	public static String marketUrl;
+	public static String serviceNumber;
+	public static String loginMarket;
+	public static String passwordMarket;
+	
+	@Value("${market.marketUrl}")
+	public String marketUrlProp;
+	
+	@Value("${market.serviceNumber}")
+	public String serviceNumberProp;
+	
+	@Value("${market.loginMarket}")
+	public String loginMarketProp;
+	
+	@Value("${market.passwordMarket}")
+	public String passwordMarketProp;
+	
+	@PostConstruct
+    public void init() {
+		marketUrl = marketUrlProp;
+		serviceNumber = serviceNumberProp;
+		loginMarket = loginMarketProp;
+		passwordMarket = passwordMarketProp;
+    }
 	
 
 	public static final Comparator<Address> comparatorAddressId = (Address e1, Address e2) -> (e1.getIdAddress() - e2.getIdAddress());
@@ -340,6 +372,150 @@ public class MainRestController {
 
 	@Autowired
     private ServletContext servletContext;
+	
+	/**
+	 * <br>Метод для получения списка объектов обратной связи за указанный период</br>.
+	 * @param dateStart
+	 * @param dateEnd
+	 * @author Ira
+	 */
+	@GetMapping("/reviews/get-reviews/{dateStart}&{dateEnd}")
+	public Map<String, Object> getReviews(@PathVariable String dateStart, @PathVariable String dateEnd){
+		Map<String, Object> response = new HashMap<>();
+		Date dateFrom = Date.valueOf(dateStart);
+		Date dateTo = Date.valueOf(dateEnd);
+		response.put("reviews", reviewService.getReviewsByDates(dateFrom, dateTo));
+		response.put("status", "200");
+		return response;
+	}
+	
+	/**
+	 * <br>Метод для обновления объекта обратной связи</br>.
+	 * @param request
+	 * @param str
+	 * @throws IOException
+	 * @throws ParseException
+	 * @author Ira
+	 */
+	@PostMapping("/reviews/update-review")
+	public Map<String, Object> updateReview(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+
+		Map<String, Object> responseMap = new HashMap<>();
+		User user = getThisUser();
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+
+		Long idReview = jsonMainObject.get("idReview") != null ? Long.valueOf(jsonMainObject.get("idReview").toString()) : null;
+		String replyBody = jsonMainObject.get("replyBody") == null ? null : jsonMainObject.get("replyBody").toString();
+		String comment = jsonMainObject.get("comment") == null ? null : jsonMainObject.get("comment").toString();
+		Timestamp replyDate = Timestamp.valueOf(LocalDateTime.now());
+		Review review = reviewService.getReviewById(idReview);
+		String replyAuthor = user.getSurname() + " " + user.getName();
+
+		if (replyBody != null && !replyBody.equals(review.getReplyBody())) {
+			review.setReplyBody(replyBody);
+			review.setStatus(20);
+			review.setReplyDate(replyDate);
+			review.setReplyAuthor(replyAuthor);
+			String appPath = request.getServletContext().getRealPath("");
+			List<String> emails = new ArrayList<>();
+			emails.add(review.getEmail());
+			emails.add(user.geteMail());
+			if(!mailService.sendEmailToUsers(request, "Ответ на обратную связь", replyBody, emails)) {
+				responseMap.put("status", "100");
+				responseMap.put("message", "Сообщение не удалось отправить.");
+				return responseMap;
+			}			
+			
+		}
+
+		String currentComment = review.getComment();
+		if ((comment != null && !comment.equals(currentComment)) || (comment == null && currentComment != null)) {
+			review.setComment(comment);
+		}
+		reviewService.updateReview(review);
+
+		responseMap.put("status", "200");
+		responseMap.put("object", review);
+		return responseMap;
+
+	}
+	
+	/**
+	 * <br>Метод для создания объекта обратной связи</br>.
+	 * @param request
+	 * @param str
+	 * @throws IOException
+	 * @throws ParseException
+	 * @author Ira
+	 */
+	@PostMapping("/reviews/create")
+	public Map<String, Object> createReview(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+		Map<String, Object> response = new HashMap<>();
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		//Long idAct = jsonMainObject.get("idAct") != null ? Long.valueOf(jsonMainObject.get("idAct").toString()) : null;
+		String sender = jsonMainObject.get("sender") == null ? null : jsonMainObject.get("sender").toString();
+		Boolean needReply = jsonMainObject.get("needReply") == null ? null : Boolean.parseBoolean(jsonMainObject.get("needReply").toString());
+		String email = jsonMainObject.get("email").equals("") ? null : jsonMainObject.get("email").toString();
+		String topic = jsonMainObject.get("topic") == null ? null : jsonMainObject.get("topic").toString();
+		String reviewBody = jsonMainObject.get("reviewBody") == null ? null : jsonMainObject.get("reviewBody").toString();
+		Timestamp reviewDate = Timestamp.valueOf(LocalDateTime.now());
+
+		Review review = new Review();
+		review.setSender(sender);
+		review.setNeedReply(needReply);
+		review.setEmail(email);
+		review.setReviewDate(reviewDate);
+		review.setTopic(topic);
+		review.setReviewBody(reviewBody);
+		review.setStatus(10);
+
+		Long id = reviewService.saveReview(review);
+		review.setIdReview(id);
+
+		response.put("status", "200");
+		response.put("object", review);
+		return response;
+	}
+	
+	@GetMapping("/delivery-schedule/getCountScheduleOrderHasWeek")
+    public Map<String, Object> getCountScheduleOrderHasWeek(HttpServletRequest request, HttpServletResponse response) throws IOException{
+		Map<String, Object> responseMap = new HashMap<>();
+		responseMap.put("status", "200");
+		responseMap.put("object", scheduleService.getCountScheduleOrderHasWeek());
+		return responseMap;
+    }
+	
+	@GetMapping("/market/getParam")
+    public Map<String, Object> getMarket(HttpServletRequest request, HttpServletResponse response) throws IOException{
+		Map<String, Object> responseMap = new HashMap<>();
+		responseMap.put("status", "200");
+		responseMap.put("marketUrl", marketUrl);
+		responseMap.put("serviceNumber", serviceNumber);
+		responseMap.put("loginMarket", loginMarket);
+		responseMap.put("passwordMarket", passwordMarket);
+		return responseMap;
+    }
+	
+	@GetMapping("/echo")
+    public Map<String, Object> getEcho(HttpServletRequest request, HttpServletResponse response) throws IOException{
+		Map<String, Object> responseMap = new HashMap<>();
+		responseMap.put("status", "200");
+		responseMap.put("message", "echo");
+		responseMap.put("time", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")));
+		return responseMap;
+    }
+	@GetMapping("/echo2")
+    public Map<String, Object> getEcho2(HttpServletRequest request, HttpServletResponse response) throws IOException{
+		Map<String, Object> responseMap = new HashMap<>();
+		responseMap.put("status", "200");
+		responseMap.put("message", "echo");
+		responseMap.put("type", "Anonymous".toUpperCase());
+		responseMap.put("time", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")));
+		responseMap.put("object", scheduleService.getCountScheduleOrderHasWeek());
+		return responseMap;
+    }
 
 	@GetMapping("/logistics/documentflow/documentlist/{dateStart}&{dateEnd}")
 	public Map<String, Object>  documentListGet(@PathVariable String dateStart, @PathVariable String dateEnd) {
@@ -3447,6 +3623,7 @@ public class MainRestController {
 		schedule.setMachineMultiplicity(jsonMainObject.get("machineMultiplicity") == null || jsonMainObject.get("machineMultiplicity").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("machineMultiplicity").toString()));
 		schedule.setConnectionSupply(jsonMainObject.get("connectionSupply") == null || jsonMainObject.get("connectionSupply").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("connectionSupply").toString()));
 		schedule.setIsNotCalc(false);
+		schedule.setIsImport(false);
 		schedule.setStatus(10);
 		
 		schedule.setIsDayToDay(false);
@@ -3564,6 +3741,7 @@ public class MainRestController {
 		schedule.setMachineMultiplicity(jsonMainObject.get("machineMultiplicity") == null || jsonMainObject.get("machineMultiplicity").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("machineMultiplicity").toString()));
 		schedule.setConnectionSupply(jsonMainObject.get("connectionSupply") == null || jsonMainObject.get("connectionSupply").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("connectionSupply").toString()));
 		schedule.setIsNotCalc(false);
+		schedule.setIsImport(false);
 //		schedule.setStatus(10);
 		schedule.setStatus(jsonMainObject.get("status") == null || jsonMainObject.get("status").toString().isEmpty() ? null : Integer.parseInt(jsonMainObject.get("status").toString()));
 		
@@ -3907,6 +4085,11 @@ public class MainRestController {
 		if (jsonMainObject.get("isDayToDay") != null && !jsonMainObject.get("isDayToDay").toString().isEmpty()) {
 		    schedule.setIsDayToDay("true".equals(jsonMainObject.get("isDayToDay").toString()));
 		}
+		
+		if (jsonMainObject.get("isImport") != null && !jsonMainObject.get("isImport").toString().isEmpty()) {
+		    schedule.setIsNotCalc("true".equals(jsonMainObject.get("isImport").toString()));
+		}
+		
 		schedule.setDateLastChanging(Date.valueOf(LocalDate.now()));
 
 		
@@ -4046,6 +4229,33 @@ public class MainRestController {
 		response.put("body", schedule);
 		response.put("info", "Статус расчёта графика поставок "+schedule.getName()+" изменен");
 		response.put("message", "Статус расчёта графика поставок "+schedule.getName()+" изменен");
+		return response;		
+	}
+	
+	@GetMapping("/slots/delivery-schedule/changeIsImport/{idSchedule}")
+	public Map<String, Object> getChangeIsImport(HttpServletRequest request, @PathVariable String idSchedule) {
+		Map<String, Object> response = new HashMap<String, Object>();	
+		Schedule schedule = scheduleService.getScheduleById(Integer.parseInt(idSchedule.trim()));
+		
+		if(schedule == null) {
+			response.put("status", "100");
+			response.put("info", "Не найден график поставок с id " + idSchedule);
+			response.put("message", "Не найден график поставок с id " + idSchedule);
+			return response;
+		}
+		User user = getThisUser();
+		schedule.setIsImport(!schedule.getIsImport());
+		String history = user.getSurname() + " " + user.getName() + ";" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")) + ";changeIsImport="+schedule.getIsNotCalc()+"\n"; 
+		
+		schedule.setHistory((schedule.getHistory() != null ? schedule.getHistory() : "") + history);
+		schedule.setDateLastChanging(Date.valueOf(LocalDate.now()));
+		
+		scheduleService.updateSchedule(schedule);
+		
+		response.put("status", "200");
+		response.put("body", schedule);
+		response.put("info", "Статус импорта "+schedule.getName()+" изменен");
+		response.put("message", "Статус импорта "+schedule.getName()+" изменен");
 		return response;		
 	}
 	
@@ -9982,15 +10192,13 @@ public class MainRestController {
 
 	/**
 	 * Отдаёт всех перевозчиков
-	 * 
+	 * закрыт от греха подальше. Вроде метод ок, но на всякий случай закрою
 	 * @return
 	 */
-	@GetMapping("/manager/getAllCarrier")
-	public Set<User> getAllCarrier() {
-		Set<User> carriers = userService.getCarrierListV2().stream().collect(Collectors.toSet());
-//		carriers.forEach(c -> System.out.println(c.getTrucks().size()));
-		return userService.getCarrierListV2().stream().collect(Collectors.toSet());
-	}
+//	@GetMapping("/manager/getAllCarrier")
+//	public Set<User> getAllCarrier() {
+//		return userService.getCarrierListV2().stream().collect(Collectors.toSet());
+//	}
 
 	/**
 	 * Блокирует и разблокирует перевозчиков GET запрос

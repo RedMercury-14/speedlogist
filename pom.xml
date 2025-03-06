@@ -18,6 +18,14 @@
 
 	<dependencies>
 		
+		<!-- https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt -->
+<dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt</artifactId>
+    <version>0.12.6</version>
+</dependency>
+
+		
 		<!-- https://mvnrepository.com/artifact/com.zaxxer/HikariCP -->
 <dependency>
     <groupId>com.zaxxer</groupId>

@@ -9,6 +9,7 @@ import {
 	inputEditBan,
 	isInvalidPointForms,
 	isValidPallCount,
+	isValidPallWeight,
 	isValidTnvdValue,
 	orderCargoInputOnChangeHandler,
 	orderPallInputOnChangeHandler,
@@ -29,9 +30,9 @@ import {
 	getTnvdHTML,
 } from "./procurementFormHtmlUtils.js";
 import { bootstrap5overlay } from "./bootstrap5overlay/bootstrap5overlay.js"
+import { editOrderUrl, getInternalMovementShopsUrl } from "./globalConstants/urls.js"
+import { MAX_ONE_PALL_WEIGHT_KG } from "./globalRules/ordersRules.js"
 
-const editProcurement = "../../../api/manager/editProcurement"
-const getInternalMovementShopsUrl = "../../../api/manager/getInternalMovementShops"
 const token = $("meta[name='_csrf']").attr("content")
 const role = document.querySelector('#role').value
 
@@ -108,7 +109,7 @@ function orderFormSubmitHandler(e) {
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
 
 	ajaxUtils.postJSONdata({
-		url: editProcurement,
+		url: editOrderUrl,
 		token: token,
 		data: updatedData,
 		successCallback: (res) => {
@@ -141,6 +142,11 @@ function isInvalidForm(data) {
 
 	if (!isValidTnvdValue(data)) {
 		snackbar.show('Неверное значение кода ТН ВЭД!')
+		return true
+	}
+
+	if (!isValidPallWeight(data)) {
+		snackbar.show(`Масса одной паллеты не должна превышать ${MAX_ONE_PALL_WEIGHT_KG} кг!`)
 		return true
 	}
 

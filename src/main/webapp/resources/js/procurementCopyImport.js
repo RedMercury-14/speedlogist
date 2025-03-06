@@ -9,6 +9,7 @@ import {
 	inputEditBan,
 	isInvalidPointForms,
 	isValidPallCount,
+	isValidPallWeight,
 	isValidTnvdValue,
 	orderCargoInputOnChangeHandler,
 	orderPallInputOnChangeHandler,
@@ -31,12 +32,10 @@ import {
 	getTnvdHTML,
 } from "./procurementFormHtmlUtils.js"
 import { getOrderData, getOrderForForm } from "./procurementFormDataUtils.js"
-import { getOrderStatusByStockDelivery, getStockAddress } from "./globalRules/ordersRules.js"
+import { getOrderStatusByStockDelivery, getStockAddress, MAX_ONE_PALL_WEIGHT_KG } from "./globalRules/ordersRules.js"
+import { addNewAhoOrderUrl, addNewOrderHasMarketUrl, addNewOrderUrl, getInternalMovementShopsUrl, getMarketOrderBaseUrl } from "./globalConstants/urls.js"
 
 const redirectUrl = (orderStatus) => orderStatus === 20 || disableSlotRedirect ? "../orders" : "../../slots"
-const getInternalMovementShopsUrl = "../../../api/manager/getInternalMovementShops"
-// const getOrderHasMarketNumberBaseUrl = "../../../api/procurement/getOrderHasMarketNumber/"
-const getMarketOrderBaseUrl = `../../../api/manager/getMarketOrder/`
 
 const token = $("meta[name='_csrf']").attr("content")
 const role = document.querySelector('#role').value
@@ -109,10 +108,10 @@ window.onload = async () => {
 // метод получения ссылки для отправки формы
 function getAddNewProcurementUrl(orderStatus, orderWay) {
 	// АХО
-	if (orderWay === 'АХО') return "../../../api/manager/addNewProcurementByMaintenance"
+	if (orderWay === 'АХО') return addNewAhoOrderUrl
 	return orderStatus === 20
-		? "../../../api/manager/addNewProcurement"
-		: "../../../api/manager/addNewProcurementHasMarket"
+		? addNewOrderUrl
+		: addNewOrderHasMarketUrl
 }
 
 // обработчик отправки формы заказа
@@ -177,6 +176,11 @@ function isInvalidForm(data) {
 
 	if (!isValidTnvdValue(data)) {
 		snackbar.show('Неверное значение кода ТН ВЭД!')
+		return true
+	}
+
+	if (!isValidPallWeight(data)) {
+		snackbar.show(`Масса одной паллеты не должна превышать ${MAX_ONE_PALL_WEIGHT_KG} кг!`)
 		return true
 	}
 

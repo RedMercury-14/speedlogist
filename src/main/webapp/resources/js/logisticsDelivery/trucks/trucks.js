@@ -30,6 +30,7 @@ import {
 import { uiIcons } from '../../uiIcons.js'
 import { ajaxUtils } from '../../ajaxUtils.js'
 import { bootstrap5overlay } from '../../bootstrap5overlay/bootstrap5overlay.js'
+import { getTGTrucksUrl, loadTruckListUrl, loadTruckUrl } from '../../globalConstants/urls.js'
 
 
 const freeTrucksColumnDefs = [
@@ -137,7 +138,7 @@ async function init() {
 	wsSlot.onmessage = (e) => wsSlotOnMessageHandler(e, freeTrucksGridOptions, selectedTrucksGridOptions)
 
 	// данные о машинах
-	const response = await getData('../../api/logistics/deliveryShops/getTGTrucks')
+	const response = await getData(getTGTrucksUrl)
 	const trucksData = response.status === '200'
 		? response.body ? response.body : []
 		: []
@@ -379,7 +380,7 @@ function loadTruck(truck, nameList, action) {
 	const truckData = getTruckDateForAjax([truck], nameList, action)
 
 	ajaxUtils.postJSONdata({
-		url: `../../api/logistics/deliveryShops/update`,
+		url: loadTruckUrl,
 		token: store.getToken(),
 		data: truckData[0],
 		successCallback: (res) => {
@@ -424,7 +425,7 @@ function loadTruckList(trucks, nameList, action, deleteList) {
 	const truckData = getTruckDateForAjax(trucks, nameList, action)
 
 	ajaxUtils.postJSONdata({
-		url: `../../api/logistics/deliveryShops/updateList`,
+		url: loadTruckListUrl,
 		token: store.getToken(),
 		data: truckData,
 		successCallback: (res) => {

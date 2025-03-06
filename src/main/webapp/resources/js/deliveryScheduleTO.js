@@ -13,28 +13,27 @@ import {
 	showMessageModal, unconfirmScheduleItem
 } from './deliverySchedule/utils.js'
 import { checkScheduleData, getFormErrorMessage, isValidScheduleValues } from './deliverySchedule/validation.js'
+import {
+	addScheduleTOItemUrl,
+	changeIsDayToDayBaseUrl,
+	deleteAllTempSchedulesBaseUrl,
+	downloadScheduleTOFaqUrl,
+	editScheduleTOItemUrl,
+	editTOByCounterpartyContractCodeOnlyUrl,
+	getScheduleTOByContractBaseUrl,
+	getScheduleTOByCounterpartyBaseUrl,
+	getScheduleTOUrl,
+	loadTOExcelUrl,
+	sendScheduleTODataToMailUrl,
+	setCodeNameBaseUrl
+} from './globalConstants/urls.js'
 import { snackbar } from "./snackbar/snackbar.js"
 import { uiIcons } from './uiIcons.js'
 import {
-	blurActiveElem,
-	changeGridTableMarginTop, cookieHelper, dateHelper, debounce, disableButton, enableButton,
+	blurActiveElem, cookieHelper, dateHelper, debounce, disableButton, enableButton,
 	getData, getScheduleStatus, hideLoadingSpinner, isAdmin,
 	isObserver, isOrderSupport, isORL, showLoadingSpinner
 } from './utils.js'
-
-const loadExcelUrl = '../../api/slots/delivery-schedule/loadTO'
-
-const getAllScheduleUrl = '../../api/slots/delivery-schedule/getListTO'
-const getScheduleByContractBaseUrl = '../../api/slots/delivery-schedule/getListTOContract/'
-const getScheduleByCounterpartyBaseUrl = '../../api/slots/delivery-schedule/getListTOСounterparty/'
-const addScheduleItemUrl = '../../api/slots/delivery-schedule/createTO'
-const editScheduleItemUrl = '../../api/slots/delivery-schedule/editTOByCounterpartyAndShop'
-const changeIsDayToDayBaseUrl = '../../api/slots/delivery-schedule/changeDayToDay/'
-const editTOByCounterpartyContractCodeOnlyUrl = '../../api/slots/delivery-schedule/editTOByCounterpartyContractCodeOnly'
-const deleteAllTempSchedulesBaseUrl = '../../api/slots/delivery-schedule/delScheduleByNumContract/'
-const setCodeNameBaseUrl = '../../api/slots/delivery-schedule/changeNameOfQuantum/'
-const downloadFaqUrl = '../../file/delivery-schedule-to/downdoad/instruction-trading-objects'
-const sendScheduleDataToMailUrl = '../../api/orl/sendEmailTO'
 
 const PAGE_NAME = 'deliveryScheduleTO'
 const LOCAL_STORAGE_KEY = `AG_Grid_settings_to_${PAGE_NAME}`
@@ -254,7 +253,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 	// кнопка скачивания файла с инструкцией
 	const downloadFAQBtn = document.querySelector('#downloadFAQ')
-	downloadFAQBtn.addEventListener('click', () => window.open(downloadFaqUrl, '_blank'))
+	downloadFAQBtn.addEventListener('click', () => window.open(downloadScheduleTOFaqUrl, '_blank'))
 	// отмена мигания кнопки через 10 сек
 	setTimeout(() => downloadFAQBtn.classList.remove('softGreenBlink'), 10000)
 
@@ -743,8 +742,8 @@ async function searchDataFormHandler(e) {
 	disableButton(submitButton)
 	// определяем тип данных формы поиска - номер или наименование
 	 getScheduleUrl = !isNaN(searchValue)
-		? `${getScheduleByContractBaseUrl}${searchValue}`
-		: `${getScheduleByCounterpartyBaseUrl}${searchValue}`
+		? `${getScheduleTOByContractBaseUrl}${searchValue}`
+		: `${getScheduleTOByCounterpartyBaseUrl}${searchValue}`
 
 	await loadScheduleData(getScheduleUrl)
 	hideLoadingSpinner(submitButton, btnText)
@@ -758,7 +757,7 @@ async function loadAllDataBtnClickHandler(e) {
 	const btnText = btn.textContent.trim()
 	showLoadingSpinner(btn)
 	disableButton(btn)
-	getScheduleUrl = getAllScheduleUrl
+	getScheduleUrl = getScheduleTOUrl
 	await loadScheduleData(getScheduleUrl)
 	hideLoadingSpinner(btn, btnText)
 	enableButton(btn)
@@ -793,7 +792,7 @@ async function sendScheduleDataToMail(e) {
 	btn.disabled = true
 
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 0)
-	const res = await getData(sendScheduleDataToMailUrl)
+	const res = await getData(sendScheduleTODataToMailUrl)
 	clearTimeout(timeoutId)
 	bootstrap5overlay.hideOverlay()
 	btn.disabled = false
@@ -818,13 +817,13 @@ function sendExcelFormHandler(e) {
 	showLoadingSpinner(submitButton)
 
 	ajaxUtils.postMultipartFformData({
-		url: loadExcelUrl,
+		url: loadTOExcelUrl,
 		token: token,
 		data: file,
 		successCallback: async (res) => {
 			snackbar.show(res[200])
 			// получаем обновленные данные и обновляем таблицу
-			getScheduleUrl = getAllScheduleUrl
+			getScheduleUrl = getScheduleTOUrl
 			await getScheduleData(getScheduleUrl)
 			updateTable(gridOptions, scheduleData)
 			$(`#sendExcelModal`).modal('hide')
@@ -871,7 +870,7 @@ async function addScheduleItemFormHandler(e) {
 	const isExistCounterpartyContractCode = counterpartyContractCodeList.includes(counterpartyContractCode)
 	if (isExistCounterpartyContractCode) {
 		// делаем запрос для получения данных
-		const scheduleData = await getScheduleData(`${getScheduleByContractBaseUrl}${counterpartyContractCode}`)
+		const scheduleData = await getScheduleData(`${getScheduleTOByContractBaseUrl}${counterpartyContractCode}`)
 		if (!scheduleData) return
 		const schedule = scheduleData[0]
 		data.isDayToDay = schedule.isDayToDay
@@ -882,7 +881,7 @@ async function addScheduleItemFormHandler(e) {
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 500)
 
 	ajaxUtils.postJSONdata({
-		url: addScheduleItemUrl,
+		url: addScheduleTOItemUrl,
 		token: token,
 		data: data,
 		successCallback: async (res) => {
@@ -896,7 +895,7 @@ async function addScheduleItemFormHandler(e) {
 				// получаем обновленные данные и обновляем таблицу
 				getScheduleUrl = getScheduleUrl
 					? getScheduleUrl
-					: `${getScheduleByContractBaseUrl}${data.counterpartyContractCode}`
+					: `${getScheduleTOByContractBaseUrl}${data.counterpartyContractCode}`
 				await getScheduleData(getScheduleUrl)
 				updateTable(gridOptions, scheduleData)
 				return
@@ -956,7 +955,7 @@ function editScheduleItemFormHandler(e) {
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 500)
 
 	ajaxUtils.postJSONdata({
-		url: editScheduleItemUrl,
+		url: editScheduleTOItemUrl,
 		token: token,
 		data: data,
 		successCallback: async (res) => {
@@ -1027,7 +1026,7 @@ function createTempScheduleItemFormHandler(e) {
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 500)
 
 	ajaxUtils.postJSONdata({
-		url: addScheduleItemUrl,
+		url: addScheduleTOItemUrl,
 		token: token,
 		data: data,
 		successCallback: async (res) => {
@@ -1153,7 +1152,7 @@ function editTOByCounterpartyContractCodeOnly(data) {
 function addScheduleByContractAndShops(data) {
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
 	ajaxUtils.postJSONdata({
-		url: addScheduleItemUrl,
+		url: addScheduleTOItemUrl,
 		token: token,
 		data: data,
 		successCallback: async (res) => {
@@ -1164,7 +1163,7 @@ function addScheduleByContractAndShops(data) {
 				// получаем обновленные данные и обновляем таблицу
 				getScheduleUrl = getScheduleUrl
 					? getScheduleUrl
-					: `${getScheduleByContractBaseUrl}${data.counterpartyContractCode}`
+					: `${getScheduleTOByContractBaseUrl}${data.counterpartyContractCode}`
 				await getScheduleData(getScheduleUrl)
 				updateTable(gridOptions, scheduleData)
 				return

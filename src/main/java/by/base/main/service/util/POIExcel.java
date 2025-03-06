@@ -2299,6 +2299,7 @@ public class POIExcel {
 	            schedule.setEndDateTemp(dateEnd);			
 	            schedule.setDateLoadExcel(Timestamp.valueOf(LocalDateTime.now()));
 	            schedule.setIsNotCalc(false);
+	            schedule.setIsImport(false);
 	            schedule.setType("ТО"); //кирилица
 	            schedule.setNameStock(getCellValue(cellAddressStock));
 				scheduleService.saveSchedule(schedule);
@@ -2330,6 +2331,7 @@ public class POIExcel {
 			            schedule.setEndDateTemp(dateEnd);			
 			            schedule.setDateLoadExcel(Timestamp.valueOf(LocalDateTime.now()));
 			            schedule.setIsNotCalc(false);
+			            schedule.setIsImport(false);
 			            schedule.setType("ТО"); //кирилица
 			            schedule.setNameStock(getCellValue(cellAddressStock));
 						scheduleService.updateSchedule(schedule);
@@ -2875,6 +2877,7 @@ public class POIExcel {
             schedule.setIsDayToDay(getCellValue(row.getCell(35)) == null ? false : getCellValue(row.getCell(35)).trim().toLowerCase().equals("сегодня"));
             schedule.setToType(toType);
             schedule.setIsNotCalc(false);
+            schedule.setIsImport(false);
             
             
             //прогрузка чётных и нечётных столбцов

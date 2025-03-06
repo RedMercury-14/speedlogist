@@ -1,6 +1,5 @@
-/**
- * 
- */
+import { getArchiveRoutesBaseUrl } from "./globalConstants/urls.js";
+
 // остановился тут дописать и проверить рест контроллер доделать таблички
 var dateStart = document.querySelector('#dateStart');
 var dateFinish = document.querySelector('#dateFinish');
@@ -45,7 +44,7 @@ function getRoute() {
 	var xhr = new XMLHttpRequest();
 	xhr.open(
 		'GET',
-		`../../../api/carrier/getroutes&${dateStart.value}&${dateFinish.value}`,
+		`${getArchiveRoutesBaseUrl}&${dateStart.value}&${dateFinish.value}`,
 		true
 	)
 	xhr.send();

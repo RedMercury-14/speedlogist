@@ -1,11 +1,10 @@
 import { AG_GRID_LOCALE_RU } from "./AG-Grid/ag-grid-locale-RU.js"
 import { ajaxUtils } from "./ajaxUtils.js"
 import { bootstrap5overlay } from "./bootstrap5overlay/bootstrap5overlay.js"
+import { getOrlNeedBaseUrl, loadOrlNeedExcelUrl } from "./globalConstants/urls.js"
 import { snackbar } from "./snackbar/snackbar.js"
 import { dateHelper, getData, hideLoadingSpinner, isObserver, showLoadingSpinner } from "./utils.js"
 
-const getOrlNeedBaseUrl = `../../api/orl/need/getNeed/`
-const excelUrl = `../../api/orl/need/load`
 const token = $("meta[name='_csrf']").attr("content")
 const role = document.querySelector('#role').value
 
@@ -28,13 +27,18 @@ const columnDefs = [
 		cellClass: 'px-1 py-0 text-center',
 		flex: 5,
 	},
+	// {
+	// 	headerName: 'Колличество в поддоне', field: 'quantityInPallet',
+	// 	cellClass: 'px-1 py-0 text-center',
+	// 	flex: 2,
+	// },
 	{
-		headerName: 'Колличество в поддоне', field: 'quantityInPallet',
+		headerName: 'Заказ (остальные склады)', field: 'quantity',
 		cellClass: 'px-1 py-0 text-center',
 		flex: 2,
 	},
 	{
-		headerName: 'Заказ (остальные склады)', field: 'quantity',
+		headerName: 'Увеличенный заказ (остальные склады)', field: 'quantityMax',
 		cellClass: 'px-1 py-0 text-center',
 		flex: 2,
 	},
@@ -188,7 +192,7 @@ function sendExcelFormHandler(e) {
 	bootstrap5overlay.showOverlay()
 
 	ajaxUtils.postMultipartFformData({
-		url: excelUrl,
+		url: loadOrlNeedExcelUrl,
 		token: token,
 		data: formData,
 		successCallback: (res) => {

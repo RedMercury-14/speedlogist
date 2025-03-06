@@ -5,14 +5,12 @@ import { snackbar } from './snackbar/snackbar.js'
 import { ajaxUtils } from './ajaxUtils.js'
 import { uiIcons } from './uiIcons.js'
 import { excelStyles, getPointToView, pointSorting, procurementExcelExportParams } from './procurementControlUtils.js';
+import { addUnloadPointUrl, getOrderForStockSupportBaseUrl, getOrdersHasCounterpartyUrl } from './globalConstants/urls.js'
 
 const token = $("meta[name='_csrf']").attr("content")
 const PAGE_NAME = 'BashkirovTable'
 const LOCAL_STORAGE_KEY = `AG_Grid_settings_to_${PAGE_NAME}`
 const DATES_KEY = `searchDates_to_${PAGE_NAME}`
-const getOrderBaseUrl ='../../api/stock-support/getOrders/'
-const getSearchOrderBaseUrl ='../../api/manager/getOrdersHasCounterparty/'
-const addUnloadPointUrl = '../../api/stock-support/addAdress'
 
 const MIN_UNLOAD_DATE_FACTOR = 0
 
@@ -184,7 +182,7 @@ window.onload = async () => {
 	const gridDiv = document.querySelector('#myGrid')
 
 	const { dateStart, dateEnd } = dateHelper.getDatesToFetch(DATES_KEY)
-	const orders = await getData(`${getOrderBaseUrl}${dateStart}&${dateEnd}`)
+	const orders = await getData(`${getOrderForStockSupportBaseUrl}${dateStart}&${dateEnd}`)
 
 	// отрисовка таблицы
 	renderTable(gridDiv, gridOptions, orders)
@@ -240,8 +238,8 @@ async function updateTable() {
 	const counterparty = orderSearchForm.searchName.value
 
 	const orders = counterparty.length
-		? await getData(`${getSearchOrderBaseUrl}${dateStart}&${dateEnd}&${counterparty}`)
-		: await getData(`${getOrderBaseUrl}${dateStart}&${dateEnd}`)
+		? await getData(`${getOrdersHasCounterpartyUrl}${dateStart}&${dateEnd}&${counterparty}`)
+		: await getData(`${getOrderForStockSupportBaseUrl}${dateStart}&${dateEnd}`)
 
 	if (!orders || !orders.length) {
 		gridOptions.api.setRowData([])

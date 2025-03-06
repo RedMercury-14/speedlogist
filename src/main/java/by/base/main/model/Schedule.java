@@ -122,6 +122,18 @@ public class Schedule{
 	
 	@Column(name = "date_load_excel")
 	private Timestamp dateLoadExcel;
+	
+	@Column(name = "is_import")
+	private Boolean isImport;
+
+	
+	public Boolean getIsImport() {
+		return isImport;
+	}
+
+	public void setIsImport(Boolean isImport) {
+		this.isImport = isImport;
+	}
 
 	public Date getStartDateTemp() {
 		return startDateTemp;

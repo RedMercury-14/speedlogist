@@ -256,13 +256,16 @@ public class MailService {
 	/**
 	 * Отправляет email нескольким пользователям
 	 * <br> Основной метод для отправки сообщения нескольким юзерам
+	 * При удачной отправке возвращает true. При ошибке -false
 	 * @param servletContext
 	 * @param subject
 	 * @param text
 	 * @param files
 	 * @param emailsToUsers
+	 * @return 
+	 * @throws Exception 
 	 */
-	public void sendEmailToUsers(HttpServletRequest request, String subject, String text, List<String> emailsToUsers) {
+	public boolean sendEmailToUsers(HttpServletRequest request, String subject, String text, List<String> emailsToUsers) {
 		String appPath = request.getServletContext().getRealPath("");
 	    try {
 	        if (properties == null) {
@@ -302,7 +305,9 @@ public class MailService {
 	        transport.close();
 	    } catch (Exception e) {
 	        e.printStackTrace();
+	        return false;
 	    }
+		return true;
 	}
 	
 	/**

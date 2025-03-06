@@ -19,6 +19,7 @@ import org.springframework.stereotype.Repository;
 import com.dto.CounterpartyDTO;
 
 import by.base.main.dao.ScheduleDAO;
+import by.base.main.dto.ScheduleCountOrderDTO;
 import by.base.main.model.Schedule;
 
 @Repository
@@ -422,5 +423,41 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 
 		return schedules;
 	}
+	
+	
+	@Override
+	public ScheduleCountOrderDTO getCountScheduleOrderHasWeek() {
+	    String sqlQuery = "SELECT " +
+	            "COALESCE(SUM(CASE WHEN monday LIKE ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
+	            "COALESCE(SUM(CASE WHEN tuesday LIKE ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
+	            "COALESCE(SUM(CASE WHEN wednesday LIKE ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
+	            "COALESCE(SUM(CASE WHEN thursday LIKE ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
+	            "COALESCE(SUM(CASE WHEN friday LIKE ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
+	            "COALESCE(SUM(CASE WHEN saturday LIKE ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
+	            "COALESCE(SUM(CASE WHEN sunday LIKE ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0) " +
+	            "FROM schedule";
+
+	    Session currentSession = sessionFactory.getCurrentSession();
+	    Query query = currentSession.createNativeQuery(sqlQuery);
+
+	    // Устанавливаем параметры для LIKE
+	    for (int i = 1; i <= 7; i++) {
+	        query.setParameter(i, "%з%");
+	    }
+
+	    Object[] result = (Object[]) query.getSingleResult();
+
+	    return new ScheduleCountOrderDTO(
+	            ((Number) result[0]).longValue(),
+	            ((Number) result[1]).longValue(),
+	            ((Number) result[2]).longValue(),
+	            ((Number) result[3]).longValue(),
+	            ((Number) result[4]).longValue(),
+	            ((Number) result[5]).longValue(),
+	            ((Number) result[6]).longValue()
+	    );
+	}
+
+
 
 }

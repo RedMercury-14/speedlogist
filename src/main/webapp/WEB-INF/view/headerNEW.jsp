@@ -104,11 +104,13 @@
 										<a class="dropdown-item" href="<spring:url value="/main/analytics?pageName=changeMatrix" />">Изменения матрицы</a>
 										<a class="dropdown-item" href="<spring:url value="/main/analytics?pageName=slots" />">Аналитика Слотов</a>
 										<a class="dropdown-item" href="<spring:url value="/main/analytics?pageName=serviceLvl" />">Сервис Lvl</a>
-										<a class="dropdown-item" href="<spring:url value="/main/admin/reports/mainReports" />">Таблица заявок</a>
+										<a class="dropdown-item" href="<spring:url value="/main/admin/reports/mainReports" />">Поиск заявок по коду товара</a>
 									</div>
 								</li>
 								
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/admin" />">Администрация</a></li>
+								<li><a class="nav-item nav-link" href="<spring:url value="/main/reviews"/>">Обратная связь</a></li>
+								<li><a class="nav-item nav-link" href="<spring:url value="/main/admin/reviews/list"/>">Список отзывов</a></li>
 							</c:when>	
 							<c:when test="${roles == '[ROLE_SHOW]'}">
 								<li class="dropdown">
@@ -152,7 +154,6 @@
 										<!-- <a class="dropdown-item" href="<spring:url value="/main/orl/report/398" />">398 отчёт</a> -->
 									</div>
 								</li>
-								
 								<li class="dropdown">
 									<a href="#" class="nav-item nav-link" data-toggle="dropdown">Аналитика</a>
 									<div class="dropdown-menu">
@@ -161,6 +162,7 @@
 										<a class="dropdown-item" href="<spring:url value="/main/analytics?pageName=zero" />">Аналитика нулей</a>
 										<a class="dropdown-item" href="<spring:url value="/main/analytics?pageName=changeMatrix" />">Изменения матрицы</a>
 										<a class="dropdown-item" href="<spring:url value="/main/analytics?pageName=slots" />">Аналитика Слотов</a>
+										<a class="dropdown-item" href="<spring:url value="/main/procurement/ordersBalance" />">Остаток товара</a>
 									</div>
 								</li>
 							</c:when>	
@@ -265,6 +267,7 @@
 									</div>
 								</li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/carrier/exchange"/>">О бирже</a></li>
+								<!-- <li><a class="nav-item nav-link" href="<spring:url value="/main/reviews"/>">Обратная связь</a></li> -->
 							</c:when>
 							<c:when test="${roles == '[ROLE_ORDERSUPPORT]'}">
 								<li class="dropdown">
@@ -300,6 +303,7 @@
 										<a class="dropdown-item" href="<spring:url value="/main/analytics?pageName=rc" />">Нехватка товаров на РЦ</a>
 										<a class="dropdown-item" href="<spring:url value="/main/analytics?pageName=changeMatrix" />">Изменения матрицы</a>
 										<a class="dropdown-item" href="<spring:url value="/main/analytics?pageName=slots" />">Аналитика Слотов</a>
+										<a class="dropdown-item" href="<spring:url value="/main/procurement/reports/mainReports" />">Поиск заявок по коду товара</a>
 									</div>
 								</li>
 							</c:when>
@@ -323,8 +327,12 @@
 										<a class="dropdown-item" href="<spring:url value="/main/slots/delivery-schedule" />">Графики поставок на РЦ</a>
 										<a class="dropdown-item" href="<spring:url value="/main/slots/delivery-schedule-to" />">Графики поставок на ТО</a>
 										<a class="dropdown-item" href="<spring:url value="/main/procurement/ordersBalance" />">Остаток товара</a>
-										<!-- <a class="dropdown-item" href="<spring:url value="/main/procurement/calculated" />">Приход паллет</a> -->
-										<!-- <a class="dropdown-item" href="<spring:url value="/main/orl/report/398" />">398 отчёт</a> -->
+									</div>
+								</li>
+								<li class="dropdown">
+									<a href="#" class="nav-item nav-link" data-toggle="dropdown">Аналитика</a>
+									<div class="dropdown-menu">
+										<a class="dropdown-item" href="<spring:url value="/main/procurement/reports/mainReports" />">Поиск заявок по коду товара</a>
 									</div>
 								</li>
 							</c:when>
@@ -344,6 +352,7 @@
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/logistics-delivery/router" />">Маршрутизатор</a></li>
 							</c:when>
 							<c:otherwise>
+								<!-- <li><a class="nav-item nav-link" href="<spring:url value="/main/reviews"/>">Обратная связь</a></li> -->
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/registration" />">Регистрация</a></li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/signin"/>">Вход в систему</a></li>
 							</c:otherwise>

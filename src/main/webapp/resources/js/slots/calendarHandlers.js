@@ -1,3 +1,4 @@
+import { slotsSettings } from "../globalRules/slotsRules.js"
 import { snackbar } from "../snackbar/snackbar.js"
 import { isAdmin, isLogist } from "../utils.js"
 import { checkBooking, checkSlot, deleteOrder, loadOrder, preloadOrder, updateOrder } from "./api.js"
@@ -26,6 +27,7 @@ import {
 	isLogistEditableStatuses,
 	isMatchNumStockDelivery,
 	isOldSupplierOrder,
+	isOverlapWithNoImportTime,
 	isOverlapWithInternalMovementTime,
 	isOverlapWithInternalMovementTimeForLogists,
 	isOverlapWithShiftChange,
@@ -136,19 +138,20 @@ export async function eventDropHandler(info) {
 		return
 	}
 
-	// // запрет установки слота с 09:00 10.01.2025 по 11:00 10.01.2025
-	// const restrictionProps = {
-	// 	startDateTimeStr: '2025-01-10T09:00:00',
-	// 	endDateTimeStr: '2025-01-10T11:00:00',
-	// 	stockId: '1700'
-	// }
-	// if (customRestrictions(fcEvent, currentStock, restrictionProps)) {
-	// 	info.revert()
-	// 	snackbar.show(
-	// 		'Запрещено устанавливать слоты с 09:00 10.01.2025 по 11:00 10.01.2025'
-	// 	)
-	// 	return
-	// }
+	// запрет установки слота на 170006 рампу с 8 марта
+	const rampId = fcEvent._def.resourceIds[0]
+	const restrictionProps = {
+		startDateTimeStr: '2025-03-08T00:00:00',
+		endDateTimeStr: '2026-03-10T00:00:00',
+		stockId: '1700'
+	}
+	if (rampId === '170006' && customRestrictions(fcEvent, currentStock, restrictionProps)) {
+		info.revert()
+		snackbar.show(
+			'Рампа 6 на 1700 складе закрыта для установки слотов. Она будет удалена'
+		)
+		return
+	}
 
 	// проверка пересечения со временем для внутренних перемещений
 	const internaMovementsTimes = currentStock.internaMovementsTimes
@@ -157,6 +160,13 @@ export async function eventDropHandler(info) {
 	if (isOverlapWithInternalMovementTimeForLogists(info, internaMovementsTimes, internalMovementsRamps, role)) {
 		info.revert()
 		alert(userMessages.internalMovementTimeForLogistError(currentStock))
+		return
+	}
+
+	// проверка пересечения с зоной не для Импорта
+	if (isOverlapWithNoImportTime(info, slotsSettings.NO_IMPORT_STOCK_IDS, slotsSettings.NO_IMPORT_TIMES)) {
+		info.revert()
+		snackbar.show(userMessages.noImportOverlapMessage(noImportTimes))
 		return
 	}
 
@@ -209,19 +219,20 @@ export async function eventReceiveHandler(info, orderDateClickHandler) {
 		return
 	}
 
-	// // запрет установки слота с 09:00 10.01.2025 по 11:00 10.01.2025
-	// const restrictionProps = {
-	// 	startDateTimeStr: '2025-01-10T09:00:00',
-	// 	endDateTimeStr: '2025-01-10T11:00:00',
-	// 	stockId: '1700'
-	// }
-	// if (customRestrictions(fcEvent, currentStock, restrictionProps)) {
-	// 	info.revert()
-	// 	snackbar.show(
-	// 		'Запрещено устанавливать слоты с 09:00 10.01.2025 по 11:00 10.01.2025'
-	// 	)
-	// 	return
-	// }
+	// запрет установки слота на 170006 рампу с 8 марта
+	const rampId = fcEvent._def.resourceIds[0]
+	const restrictionProps = {
+		startDateTimeStr: '2025-03-08T00:00:00',
+		endDateTimeStr: '2026-03-10T00:00:00',
+		stockId: '1700'
+	}
+	if (rampId === '170006' && customRestrictions(fcEvent, currentStock, restrictionProps)) {
+		info.revert()
+		snackbar.show(
+			'Рампа 6 на 1700 складе закрыта для установки слотов. Она будет удалена'
+		)
+		return
+	}
 
 	// проверка совпадения склада из Маркета и текущего склада
 	const numStockDelivery = order.numStockDelivery
@@ -242,6 +253,13 @@ export async function eventReceiveHandler(info, orderDateClickHandler) {
 	// время для внутренних перемещений отдано для установки слотов логистами ВНЕ ОЧЕРЕДИ
 	if (isOverlapWithInternalMovementTimeForLogists(info, internaMovementsTimes, internalMovementsRamps, role)) {
 		alert(userMessages.internalMovementTimeForLogistError(currentStock))
+		return
+	}
+
+	// проверка пересечения с зоной не для Импорта
+	if (isOverlapWithNoImportTime(info, slotsSettings.NO_IMPORT_STOCK_IDS, slotsSettings.NO_IMPORT_TIMES)) {
+		info.revert()
+		snackbar.show(userMessages.noImportOverlapMessage(noImportTimes))
 		return
 	}
 

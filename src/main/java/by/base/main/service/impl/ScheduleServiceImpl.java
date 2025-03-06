@@ -13,6 +13,7 @@ import com.dto.CounterpartyDTO;
 
 import by.base.main.aspect.TimedExecution;
 import by.base.main.dao.ScheduleDAO;
+import by.base.main.dto.ScheduleCountOrderDTO;
 import by.base.main.model.Schedule;
 import by.base.main.service.ScheduleService;
 
@@ -257,5 +258,11 @@ public class ScheduleServiceImpl implements ScheduleService{
 	@Override
 	public List<Schedule> getAllSchedulesByNumContractAndNumStock(Long num, Integer shock) {
 		return scheduleDAO.getAllSchedulesByNumContractAndNumStock(num, shock);
+	}
+
+	@Transactional
+	@Override
+	public ScheduleCountOrderDTO getCountScheduleOrderHasWeek() {
+		return scheduleDAO.getCountScheduleOrderHasWeek();
 	}
 }

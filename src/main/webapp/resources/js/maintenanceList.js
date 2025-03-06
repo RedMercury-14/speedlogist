@@ -18,6 +18,22 @@ import { uiIcons } from "./uiIcons.js"
 import { bootstrap5overlay } from "./bootstrap5overlay/bootstrap5overlay.js"
 import { isInvalidPointForms } from "./procurementFormUtils.js"
 import { ajaxUtils } from "./ajaxUtils.js"
+import {
+	addCarrierBaseUrl,
+	clearCarrierBaseUrl,
+	clearFinishPriceBaseUrl,
+	clearMileageBaseUrl,
+	clearMileageForCarrierBaseUrl,
+	closeRouteBaseUrl,
+	editRHSUrl,
+	getAhoRouteBaseUrl,
+	getAhoRouteForCarrierBaseUrl,
+	getDriverByCarrierBaseUrl,
+	getTrucksByCarrierBaseUrl,
+	setFinishPriceBaseUrl,
+	setMileageBaseUrl,
+	setMileageForCarrierBaseUrl
+} from "./globalConstants/urls.js"
 
 const PAGE_NAME = 'maintenanceList'
 const LOCAL_STORAGE_KEY = `AG_Grid_settings_to_${PAGE_NAME}`
@@ -26,20 +42,10 @@ const ROW_INDEX_KEY = `AG_Grid_rowIndex_to_${PAGE_NAME}`
 
 const token = $("meta[name='_csrf']").attr("content")
 const role = document.querySelector('#role').value
-const methodBase = isCarrier(role) ? 'carrier' : 'logistics'
-const getAhoRouteBaseUrl = `../../api/${methodBase}/getMaintenanceList/`
-const addCarrierBaseUrl = `../../api/logistics/maintenance/setCarrier/`
-const clearCarrierBaseUrl = `../../api/logistics/maintenance/clearCarrier/`
-const setMileageBaseUrl = `../../api/${methodBase}/maintenance/setMileage/`
-const clearMileageBaseUrl = `../../api/${methodBase}/maintenance/clearMileage/`
-const setFinishPriceBaseUrl = `../../api/logistics/maintenance/setCost/`
-const clearFinishPriceBaseUrl = `../../api/logistics/maintenance/clearCost/`
-const closeRouteBaseUrl = `../../api/logistics/maintenance/closeRoute/`
-const editRHSUrl = `../../api/logistics/editRouteHasShop`
 
-const getAllCarrierUrl = `../../api/manager/getAllCarrier`
-const getTrucksByCarrierBaseUrl =`../../api/carrier/getCarByIdUser/`
-const getDriverByCarrierBaseUrl =`../../api/carrier/getDriverByIdUser/`
+const getAhoRouteByRoleBaseUrl = isCarrier(role) ? getAhoRouteForCarrierBaseUrl : getAhoRouteBaseUrl
+const setMileageByRoleBaseUrl = isCarrier(role) ? setMileageForCarrierBaseUrl : setMileageBaseUrl
+const clearMileageByRoleBaseUrl = isCarrier(role) ? clearMileageForCarrierBaseUrl : clearMileageBaseUrl
 
 export const rowClassRules = {
 	'activRow': params => params.node.data.statusRoute === '200',
@@ -469,7 +475,7 @@ async function updateTable(gridOptions, data) {
 
 	const res = data
 		? { body: data }
-		: await getData(`${getAhoRouteBaseUrl}${dateStart}&${dateEnd}`)
+		: await getData(`${getAhoRouteByRoleBaseUrl}${dateStart}&${dateEnd}`)
 
 	ahoRouteData = res.body
 
@@ -810,7 +816,7 @@ async function removeCarrier(idRoute) {
 	}
 }
 async function setMileage(idRoute, mileage) {
-	const url = `${setMileageBaseUrl}${idRoute}&${mileage}`
+	const url = `${setMileageByRoleBaseUrl}${idRoute}&${mileage}`
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
 	const res = await getData(url)
 
@@ -829,7 +835,7 @@ async function setMileage(idRoute, mileage) {
 }
 async function removeMileage(idRoute) {
 	if (isCarrier(role)) return
-	const url = `${clearMileageBaseUrl}${idRoute}`
+	const url = `${clearMileageByRoleBaseUrl}${idRoute}`
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
 	const res = await getData(url)
 

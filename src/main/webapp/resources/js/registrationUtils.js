@@ -1,8 +1,4 @@
-const registrationUserUrl = "../api/user/registration"
-const sendFileAgreeUrl = "../file/sendFileAgree"
-const sendContractUrl = "../file/sendContract"
-const checkLoginUrl = "../api/user/isexists"
-const checkNumYnpUrl = "../api/user/isexistsUNP"
+import { checkLoginUrl, checkNumYnpUrl, registrationUserUrl, sendContractUrl, sendFileAgreeUrl } from "./globalConstants/urls.js"
 
 let error = false
 

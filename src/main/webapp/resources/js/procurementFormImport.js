@@ -1,6 +1,7 @@
 import { ajaxUtils } from './ajaxUtils.js'
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
-import { getOrderStatusByStockDelivery } from './globalRules/ordersRules.js'
+import { addNewAhoOrderUrl, addNewOrderHasMarketUrl, addNewOrderUrl, getInternalMovementShopsUrl, getMarketOrderBaseUrl } from './globalConstants/urls.js'
+import { getOrderStatusByStockDelivery, MAX_ONE_PALL_WEIGHT_KG } from './globalRules/ordersRules.js'
 import { getOrderData } from './procurementFormDataUtils.js'
 import {
 	getAddressHTML,
@@ -22,6 +23,7 @@ import {
 	inputEditBan,
 	isInvalidPointForms,
 	isValidPallCount,
+	isValidPallWeight,
 	isValidTnvdValue,
 	orderCargoInputOnChangeHandler,
 	orderPallInputOnChangeHandler,
@@ -40,9 +42,6 @@ import { snackbar } from "./snackbar/snackbar.js"
 import { disableButton, enableButton, getData, isObserver, isStockProcurement, setInputValue, } from './utils.js'
 
 const redirectUrl = (orderStatus) => orderStatus === 20 || disableSlotRedirect ? "orders" : "../slots"
-const getInternalMovementShopsUrl = "../../api/manager/getInternalMovementShops"
-// const getOrderHasMarketNumberBaseUrl = "../../api/procurement/getOrderHasMarketNumber/"
-const getMarketOrderBaseUrl = `../../api/manager/getMarketOrder/`
 
 const token = $("meta[name='_csrf']").attr("content")
 const role = document.querySelector('#role').value
@@ -138,10 +137,10 @@ window.onload = async () => {
 // метод получения ссылки для отправки формы
 function getAddNewProcurementUrl(orderStatus, orderWay) {
 	// АХО
-	if (orderWay === 'АХО') return "../../api/manager/addNewProcurementByMaintenance"
+	if (orderWay === 'АХО') return addNewAhoOrderUrl
 	return orderStatus === 20
-		? "../../api/manager/addNewProcurement"
-		: "../../api/manager/addNewProcurementHasMarket"
+		? addNewOrderUrl
+		: addNewOrderHasMarketUrl
 }
 
 // превращение формы в форму внутренних перевозок
@@ -474,6 +473,11 @@ function isInvalidOrderForm(data) {
 
 	if (!isValidTnvdValue(data)) {
 		snackbar.show('Неверное значение кода ТН ВЭД!')
+		return true
+	}
+
+	if (!isValidPallWeight(data)) {
+		snackbar.show(`Масса одной паллеты не должна превышать ${MAX_ONE_PALL_WEIGHT_KG} кг!`)
 		return true
 	}
 

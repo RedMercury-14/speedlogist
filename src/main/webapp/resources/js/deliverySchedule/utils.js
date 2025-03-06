@@ -1,15 +1,23 @@
 import { BtnCellRenderer, ResetStateToolPanel } from "../AG-Grid/ag-grid-utils.js"
 import { bootstrap5overlay } from "../bootstrap5overlay/bootstrap5overlay.js"
+import { changeScheduleStatusBaseUrl } from "../globalConstants/urls.js"
 import { snackbar } from "../snackbar/snackbar.js"
 import { dateHelper, getData, getScheduleStatus, isAdmin, isOrderSupport, isORL } from "../utils.js"
-
-const changeScheduleStatusBaseUrl = '../../api/slots/delivery-schedule/changeStatus/'
 
 export const SUPPLY_REG = /(понедельник|вторник|среда|четверг|пятница|суббота|воскресенье)/
 export const SUPPLY_REG_GLOBAL = /(понедельник|вторник|среда|четверг|пятница|суббота|воскресенье)/g
 export const ORDER_REG = /^з$|з\//
 export const WEEK_INDEX_REG = /(?<=н)\d+/g
 
+export const dayNameTranslateDict = {
+	monday: "понедельник",
+	tuesday: "вторник",
+	wednesday: "среда",
+	thursday: "четверг",
+	friday: "пятница",
+	saturday: "суббота",
+	sunday: "воскресенье",
+}
 
 // опции для графика без пометки "неделя"
 export const defaultOptions = [

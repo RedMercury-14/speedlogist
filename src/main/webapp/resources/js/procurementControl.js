@@ -6,15 +6,11 @@ import { uiIcons } from './uiIcons.js'
 import { checkCombineOrders, excelStyles, mapCallbackForProcurementControl, procurementExcelExportParams } from "./procurementControlUtils.js"
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 import { ajaxUtils } from './ajaxUtils.js'
+import { getChangeOrderStatusBaseUrl, getOrderBaseUrl, getOrdersForStockProcurementBaseUrl, getOrdersHasCounterpartyUrl, setOrderLinkingUrl } from './globalConstants/urls.js'
 
 const PAGE_NAME = 'ProcurementControl'
 const LOCAL_STORAGE_KEY = `AG_Grid_settings_to_${PAGE_NAME}`
 const DATES_KEY = `searchDates_to_${PAGE_NAME}`
-const getDefaultOrderBaseUrl ='../../api/manager/getOrders/'
-const getOrdersForStockProcurementBaseUrl ='../../api/manager/getOrdersForStockProcurement/'
-const getSearchOrderBaseUrl ='../../api/manager/getOrdersHasCounterparty/'
-const getChangeOrderStatusBaseUrl ='../../api/manager/changeOrderStatus/'
-const setOrderLinkingUrl = '../../api/slots/order-linking/set'
 
 const token = $("meta[name='_csrf']").attr("content")
 
@@ -22,7 +18,7 @@ const debouncedSaveColumnState = debounce(saveColumnState, 300)
 const debouncedSaveFilterState = debounce(saveFilterState, 300)
 
 const role = document.querySelector('#role').value
-const getOrderBaseUrl = isStockProcurement(role) ? getOrdersForStockProcurementBaseUrl : getDefaultOrderBaseUrl
+const getSearchOrderBaseUrl = isStockProcurement(role) ? getOrdersForStockProcurementBaseUrl : getOrderBaseUrl
 
 const columnDefs = [
 	{
@@ -409,8 +405,8 @@ async function searchFormSubmitHandler(e) {
 	const counterparty = data.searchName
 
 	const orders = counterparty.length
-		? await getData(`${getSearchOrderBaseUrl}${dateStart}&${dateEnd}&${counterparty}`)
-		: await getData(`${getOrderBaseUrl}${dateStart}&${dateEnd}`)
+		? await getData(`${getOrdersHasCounterpartyUrl}${dateStart}&${dateEnd}&${counterparty}`)
+		: await getData(`${getSearchOrderBaseUrl}${dateStart}&${dateEnd}`)
 
 	updateTable(gridOptions, orders)
 	gridOptions.api.hideOverlay()

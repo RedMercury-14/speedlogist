@@ -1,4 +1,7 @@
+import { getCountScheduleOrderHasWeekUrl } from "../globalConstants/urls.js"
+import { getData } from "../utils.js"
 import {
+	dayNameTranslateDict,
 	defaultOptions,
 	getScheduleArrayFromScheduleObj,
 	ORDER_REG, showMessageModal,
@@ -14,6 +17,8 @@ const errorMessages = {
 	isNotSuppliesEqualToOrders: 'Количество поставок и заказов не совпадает',
 	isNotValidSuppliesNumber: 'Указанное количество поставок не совпадает с фактическим',
 	isNotValidExeption_MHP: 'Для МИНСКХЛЕБПРОМа: если заказ в пятницу, то поставка в субботу, воскресенье и понедельник может быть только с пятницы',
+	checkScheduleOrderRatingError: 'Ошибка проверки рейтинга заказов',
+	isNotValidOrderDays: (validDaysToView) => `Неправильно указаны дни заказа. Доступные дни заказа: ${validDaysToView}`
 }
 
 // отображение графиков с ошибками 
@@ -220,4 +225,62 @@ function checkValidException_MHP(data) {
 	}
 
 	return true
+}
+
+// проверка дней заказа по рейтингу
+export async function checkScheduleOrderRating(scheduleItem, getOrderRating) {
+	const ratingDayNames = [
+		"monday",
+		"tuesday",
+		"wednesday",
+		"thursday",
+		"friday",
+		// "saturday",
+		// "sunday",
+	]
+
+	const schedule = {
+		monday: scheduleItem.monday ? scheduleItem.monday : null,
+		tuesday: scheduleItem.tuesday ? scheduleItem.tuesday : null,
+		wednesday: scheduleItem.wednesday ? scheduleItem.wednesday : null,
+		thursday: scheduleItem.thursday ? scheduleItem.thursday : null,
+		friday: scheduleItem.friday ? scheduleItem.friday : null,
+		saturday: scheduleItem.saturday ? scheduleItem.saturday : null,
+		sunday: scheduleItem.sunday ? scheduleItem.sunday : null,
+	}
+
+	const result = {
+		isValid: false,
+		message: errorMessages.checkScheduleOrderRatingError
+	}
+
+	const ratingByDay = await getOrderRating()
+	if (!ratingByDay) return result
+
+	const rating = Object.keys(ratingByDay)
+		.filter(key => ratingDayNames.includes(key))
+		.map(day => ({ day, orderCount: ratingByDay[day] }))
+		.sort((a,b) => a.orderCount - b.orderCount)
+	
+	const orderDays = Object.keys(schedule)
+		.map(day => ({ day, value: schedule[day] }))
+		.filter(el => ORDER_REG.test(el.value))
+		.map(item => item.day)
+
+	const orderDaysCount = Math.max(2, orderDays.length)
+	const validDays = rating
+		.slice(0, orderDaysCount)
+		.map(item => item.day)
+
+	const isValid = orderDays.every(item => validDays.includes(item))
+
+	if (!isValid) {
+		const validDaysToView = validDays.map(dayName => dayNameTranslateDict[dayName]).join(', ')
+		return {
+			isValid: false,
+			message: errorMessages.isNotValidOrderDays(validDaysToView)
+		}
+	}
+
+	return { isValid: true, message: '' }
 }

@@ -10,11 +10,43 @@
 
 	<bean
 		class="org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler" />
+		
+		<!-- Определяем бин для CSRF -->
+	<bean id="csrfTokenRepository"
+	      class="org.springframework.security.web.csrf.CookieCsrfTokenRepository"
+	      factory-method="withHttpOnlyFalse"/>
+	      
+	      <!-- Определяем обработчик аутентификации -->
+	<bean id="restAuthenticationEntryPoint"
+	      class="by.base.main.security.RestAuthenticationEntryPoint"/>
+	      
+	<bean id="jwtAuthenticationFilter" class="by.base.main.security.JwtAuthenticationFilter"/>
+	      
+	<security:http pattern="/fusion/**" create-session="stateless" entry-point-ref="restAuthenticationEntryPoint">
+	    <security:csrf disabled="true"/>
+	    <security:intercept-url pattern="/fusion/login" access="permitAll"/>
+	    <security:intercept-url pattern="/fusion/**" access="isAuthenticated()"/>	    
+	    <security:custom-filter before="BEARER_TOKEN_AUTH_FILTER" ref="jwtAuthenticationFilter"/>
+	</security:http>
+
+	
+	      
+<!-- 	<security:http pattern="/api/**" create-session="stateless" entry-point-ref="restAuthenticationEntryPoint">  не используем сессии для аутентификации!-->
+	<security:http pattern="/api/**" entry-point-ref="restAuthenticationEntryPoint">
+		<security:csrf disabled="true"/>  <!-- Отключаем CSRF для REST API -->
+	    <security:intercept-url pattern="/api/market/getParam" access="hasRole('ROLE_ADMIN')"/>
+	    <security:intercept-url pattern="/api/echo2" access="permitAll"/>
+	    <security:intercept-url pattern="/api/user/isexists" access="permitAll"/>
+	    <security:intercept-url pattern="/api/user/isexistsUNP" access="permitAll"/>
+	    <security:intercept-url pattern="/api/**" access="isAuthenticated()" />
+	</security:http>
+	
+	
 	<security:http auto-config="true" use-expressions="true" >
 		<security:form-login login-page="/main/signin" 
 			login-processing-url="/main/signinpost"	username-parameter="login"	password-parameter="password" default-target-url="/main" always-use-default-target="true" />
 			<security:logout logout-url="/logout" logout-success-url="/main/signin?logout=true" />			
-			<security:intercept-url pattern="/main/reviews" access="hasAnyRole('ROLE_ANONYMOUS', 'ROLE_CARRIER')"/>
+			<security:intercept-url pattern="/main/reviews" access="hasAnyRole('ROLE_ANONYMOUS', 'ROLE_ADMIN', 'ROLE_MANAGER','ROLE_TOPMANAGER', 'ROLE_SHOP', 'ROLE_CARRIER', 'ROLE_STOCK', 'ROLE_PROCUREMENT', 'ROLE_ORDERSUPPORT', 'ROLE_STOCKSUPPORT', 'ROLE_SLOTOBSERVER', 'ROLE_ANALYTICS', 'ROLE_STOCKPROCUREMENT', 'ROLE_ORL', 'ROLE_LOGISTDELIVERY', 'ROLE_SHOW')"/>
 			<security:intercept-url pattern="/main/signin"	access="hasRole('ROLE_ANONYMOUS')" />
 			<security:intercept-url pattern="/main/registration" access="hasAnyRole('ROLE_ANONYMOUS', 'ROLE_ADMIN')" />	
 			<security:intercept-url pattern="/main" access="hasAnyRole('ROLE_ANONYMOUS', 'ROLE_ADMIN', 'ROLE_MANAGER','ROLE_TOPMANAGER', 'ROLE_SHOP', 'ROLE_CARRIER', 'ROLE_STOCK', 'ROLE_PROCUREMENT', 'ROLE_ORDERSUPPORT', 'ROLE_STOCKSUPPORT', 'ROLE_SLOTOBSERVER', 'ROLE_ANALYTICS', 'ROLE_STOCKPROCUREMENT', 'ROLE_ORL', 'ROLE_LOGISTDELIVERY', 'ROLE_SHOW')" />	
@@ -36,11 +68,13 @@
 			<security:intercept-url pattern="/main/depot/**" access="hasAnyRole('ROLE_ADMIN', 'ROLE_STOCK', 'ROLE_MANAGER', 'ROLE_TOPMANAGER', 'ROLE_SHOW')"/>
 			<security:intercept-url pattern="/main/registration/**" access="hasAnyRole('ROLE_ANONYMOUS', 'ROLE_ADMIN', 'ROLE_SHOW')" />	
 			<security:intercept-url pattern="/main/userpage/**" access="!isAnonymous()" />			
-			<security:intercept-url pattern="/api/map/**" access="!isAnonymous()" />			
+<!-- 			<security:intercept-url pattern="/api/map/**" access="!isAnonymous()" />			 -->
+<!-- 			<security:intercept-url pattern="/api/**" access="!isAnonymous()" />			 -->
 			<security:intercept-url pattern="/main/**" access="hasRole('ROLE_ADMIN')" />
 <!-- 			<security:csrf disabled="true"/> -->
 	</security:http>
 	
+		
 
 	<security:authentication-manager
 		alias="authenticationManager">
@@ -49,6 +83,9 @@
 			<security:password-encoder ref="encoder"></security:password-encoder>
 		</security:authentication-provider>
 	</security:authentication-manager>
+      
+	
+	
 
 	<bean id="userDetailsServiceImpl"
 		class="by.base.main.service.impl.UserDetailsServiceImpl">

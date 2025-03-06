@@ -10,11 +10,17 @@ public interface ReviewService {
 
     /**
      * @param review
-     * <br>Метод сохраняет или обновляет объект обратной связи</br>
+     * <br>Метод сохраняет объект обратной связи</br>
      * @author Ira
      */
-    @Transactional
-    void saveOrUpdateReview(Review review);
+    Long saveReview(Review review);
+
+    /**
+     * @param review
+     * <br>Метод обновляет объект обратной связи</br>
+     * @author Ira
+     */
+    void updateReview(Review review);
 
     /**
      * @param dateStart
@@ -22,7 +28,6 @@ public interface ReviewService {
      * <br>Метод получает список объектов обратной связи за указанный период</br>
      * @author Ira
      */
-    @Transactional
     List<Review> getReviewsByDates(Date dateStart, Date dateEnd);
 
     /**

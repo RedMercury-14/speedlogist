@@ -16,19 +16,26 @@ public class ReviewServiceImpl implements ReviewService {
     @Autowired
     private ReviewDAO reviewDAO;
 
-    @Transactional
     @Override
-    public void saveOrUpdateReview(Review review) {
-        reviewDAO.saveOrUpdateReview(review);
+    @Transactional
+    public Long saveReview(Review review) {
+        return reviewDAO.saveReview(review);
     }
 
-    @Transactional
     @Override
+    @Transactional
+    public void updateReview(Review review) {
+        reviewDAO.updateReview(review);
+    }
+
+    @Override
+    @Transactional
     public List<Review> getReviewsByDates(Date dateStart, Date dateEnd){
         return reviewDAO.getReviewsByDates(dateStart, dateEnd);
     }
 
     @Override
+    @Transactional
     public Review getReviewById(Long id) {
         return reviewDAO.getReviewById(id);
     }

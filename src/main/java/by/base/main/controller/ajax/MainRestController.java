@@ -441,9 +441,11 @@ public class MainRestController {
 		review.setReviewBody(reviewBody);
 		review.setStatus(10);
 
-		reviewService.saveOrUpdateReview(review);
+		Long id = reviewService.saveReview(review);
+		review.setIdReview(id);
 
 		response.put("status", "200");
+		response.put("object", review);
 		return response;
 	}
 
@@ -478,8 +480,8 @@ public class MainRestController {
 			review.setReplyAuthor(replyAuthor);
 			String appPath = request.getServletContext().getRealPath("");
 			List<String> emails = new ArrayList<>();
-			emails.add("NikolaevaI@dobronom.by");
-			emails.add("qlcixbtmdvjencyzgfecjxl@gmail.com");
+			emails.add(review.getEmail());
+			emails.add(user.geteMail());
 			mailService.sendEmailToUsers(request, "Ответ на обратную связь", replyBody, emails);
 		}
 
@@ -487,7 +489,7 @@ public class MainRestController {
 		if ((comment != null && !comment.equals(currentComment)) || (comment == null && currentComment != null)) {
 			review.setComment(comment);
 		}
-		reviewService.saveOrUpdateReview(review);
+		reviewService.updateReview(review);
 
 		responseMap.put("status", "200");
 		responseMap.put("object", review);
@@ -508,6 +510,7 @@ public class MainRestController {
 		Date dateFrom = Date.valueOf(dateStart);
 		Date dateTo = Date.valueOf(dateEnd);
 		response.put("reviews", reviewService.getReviewsByDates(dateFrom, dateTo));
+		response.put("status", "200");
 		return response;
 	}
 
@@ -1019,7 +1022,7 @@ public class MainRestController {
 							amountOfPalletsTotal += orderCalculation.getQuantityOfPallets();
 							amountOfPalletsDto.setCounterpartyCode(orderCalculation.getCounterpartyCode());
 							amountOfPalletsDto.setCounterpartyName(orderCalculation.getCounterpartyName());
-							logShoulder = gelLogShoulder(orderCalculation, schedules.get(orderCalculation.getCounterpartyContractCode()));
+							logShoulder = orderCalculationService.gelLogShoulder(orderCalculation, schedules.get(orderCalculation.getCounterpartyContractCode()));
 						}
 					}
 					amountOfPalletsDto.setCounterpartyContractCode(counterpartyContractCode);
@@ -1039,105 +1042,6 @@ public class MainRestController {
 		responseMap.put("body", amountOfPalletsDtos);
 		return responseMap;
 	}
-
-	/**
-	 * @param orderCalculation
-	 * @param schedule
-	 * Считает логистическое плечо для order calculation по графику либо по истории
-	 * @author Ira
-	 */
-	public static int gelLogShoulder(OrderCalculation orderCalculation, Schedule schedule) {
-		int logShoulder = 0;
-		Date supplyDate = orderCalculation.getDeliveryDate();
-		LocalDate date = supplyDate.toLocalDate();
-		DayOfWeek supplyDay = date.getDayOfWeek();
-
-		String forSearch = switch (supplyDay) {
-			case MONDAY -> schedule.getMonday();
-			case TUESDAY -> schedule.getTuesday();
-			case WEDNESDAY -> schedule.getWednesday();
-			case THURSDAY -> schedule.getThursday();
-			case FRIDAY -> schedule.getFriday();
-			case SATURDAY -> schedule.getSaturday();
-			case SUNDAY -> schedule.getSunday();
-		};
-
-		String result = null;
-		int orderDay = 0;
-
-		if (forSearch != null && forSearch.contains("понедельник")) {
-			result = schedule.getMonday();
-			orderDay = 1;
-		}
-		if (forSearch != null && forSearch.contains("вторник")) {
-			result = schedule.getTuesday();
-			orderDay = 2;
-		}
-		if (forSearch != null && forSearch.contains("среда")) {
-			result = schedule.getWednesday();
-			orderDay = 3;
-		}
-		if (forSearch != null && forSearch.contains("четверг")) {
-			result = schedule.getThursday();
-			orderDay = 4;
-		}
-		if (forSearch != null && forSearch.contains("пятница")) {
-			result = schedule.getFriday();
-			orderDay = 5;
-		}
-		if (forSearch != null && forSearch.contains("суббота")) {
-			result = schedule.getSaturday();
-			orderDay = 6;
-		}
-		if (forSearch != null && forSearch.contains("воскресенье")) {
-			result = schedule.getSunday();
-			orderDay = 7;
-		}
-
-		//подсчёт плеча на основании графика
-		if (forSearch != null){
-			int week = 0;
-
-			if (forSearch.contains("н10")) {
-				week = 10 * 7;
-			} else {
-				for (int x = 1; x <= 9; x++) {
-					String weekStr = "н" + x;
-					int weeks;
-
-					if (forSearch.contains(weekStr)) {
-						weeks = x;
-						week = weeks * 7;
-						break;
-					}
-				}
-			}
-
-			if (orderDay > supplyDay.getValue()) {
-				week -= 7;
-			}
-
-			logShoulder += week;
-			int diff = (supplyDay.getValue() - orderDay + 7) % 7 + 1;
-			logShoulder += diff ;
-			//подсчёт плеча на основании истории, если не удалось посчитать по графику
-        } else {
-			String history = orderCalculation.getHistory();
-			Pattern pattern = Pattern.compile("(\\d{4}-\\d{2}-\\d{2})");
-			LocalDate orderLocalDate = null;
-			Matcher matcher = pattern.matcher(history);
-
-			if (matcher.find()) {  // Проверяем, есть ли совпадение
-				String dateString = matcher.group(1);
-				orderLocalDate = LocalDate.parse(dateString, DateTimeFormatter.ISO_LOCAL_DATE);
-			} else {
-				return 0;
-			}
-
-			logShoulder = (int) ChronoUnit.DAYS.between(orderLocalDate, date) + 1;
-        }
-        return logShoulder;
-    }
 
 	private static final Integer dayBef = 30;
 	private static final Integer dayAft = 30;

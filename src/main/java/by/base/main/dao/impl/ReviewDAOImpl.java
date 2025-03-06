@@ -24,26 +24,20 @@ public class ReviewDAOImpl implements ReviewDAO {
     @Autowired
     private SessionFactory sessionFactory;
 
-    /**
-     * @param review
-     * <br>Метод сохраняет или обновляет объект обратной связи</br>
-     * @author Ira
-     */
-    @Transactional
     @Override
-    public void saveOrUpdateReview(Review review) {
+    public Long saveReview(Review review) {
         Session currentSession = sessionFactory.getCurrentSession();
-        currentSession.saveOrUpdate(review);
+        currentSession.save(review);
+        return Long.parseLong(currentSession.getIdentifier(review).toString());
+    }
 
+    @Override
+    public void updateReview(Review review) {
+        Session currentSession = sessionFactory.getCurrentSession();
+        currentSession.update(review);
     }
 
     private static final String queryGetObjByIdOrder = "from Review where idReview=:idReview";
-    /**
-     * @param id
-     * <br>Метод получает объект обратной связи по id</br>
-     * @author Ira
-     */
-    @Transactional
     @Override
     public Review getReviewById(Long id) {
         Session currentSession = sessionFactory.getCurrentSession();
@@ -57,13 +51,6 @@ public class ReviewDAOImpl implements ReviewDAO {
     }
 
     private static final String queryGetReviewByReviewDate = "from Review r where r.reviewDate BETWEEN :dateStart and :dateEnd";
-    /**
-     * @param dateStart
-     * @param dateEnd
-     * <br>Метод получает список объектов обратной связи за указанный период</br>
-     * @author Ira
-     */
-    @Transactional
     @Override
     public List<Review> getReviewsByDates(Date dateStart, Date dateEnd){
         Session currentSession = sessionFactory.getCurrentSession();

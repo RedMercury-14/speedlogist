@@ -2,6 +2,7 @@ package by.base.main.model;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
+import java.util.Objects;
 
 @Entity
 @Table(name = "review")
@@ -140,4 +141,38 @@ public class Review {
         this.comment = comment;
     }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(idReview);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        Review other = (Review) obj;
+        return Objects.equals(idReview, other.idReview);
+    }
+
+    @Override
+    public String toString() {
+        return "Review{" +
+                "idReview=" + idReview +
+                ", sender='" + sender + '\'' +
+                ", needReply=" + needReply +
+                ", email='" + email + '\'' +
+                ", reviewDate=" + reviewDate +
+                ", topic='" + topic + '\'' +
+                ", reviewBody='" + reviewBody + '\'' +
+                ", replyDate=" + replyDate +
+                ", replyBody='" + replyBody + '\'' +
+                ", replyAuthor='" + replyAuthor + '\'' +
+                ", status=" + status +
+                ", comment='" + comment + '\'' +
+                '}';
+    }
 }

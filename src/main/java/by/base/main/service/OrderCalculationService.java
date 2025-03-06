@@ -1,6 +1,7 @@
 package by.base.main.service;
 
 import by.base.main.model.OrderCalculation;
+import by.base.main.model.Schedule;
 
 import java.sql.Date;
 import java.util.List;
@@ -42,4 +43,7 @@ public interface OrderCalculationService {
      * @author Ira
      */
     OrderCalculation getOrderCalculatiionByContractNumStockGoodIdAndDeliveryDate(Long contract, Integer numStock, Date date, Long goodId);
+
+
+    int gelLogShoulder(OrderCalculation orderCalculation, Schedule schedule);
 }

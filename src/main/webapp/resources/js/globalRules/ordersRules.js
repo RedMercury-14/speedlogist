@@ -1,3 +1,6 @@
+export const MAX_ONE_PALL_WEIGHT_KG = 1067
+export const MAX_PALL_COUNT_FOR_AHO_ORDER = 20
+
 
 // список условий поставки, для которых нужно предлагать оформить страхование
 export const INCOTERMS_INSURANCE_LIST = [

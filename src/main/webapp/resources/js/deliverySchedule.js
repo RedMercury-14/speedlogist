@@ -11,13 +11,14 @@ import {
 	editScheduleItem,getSupplies, onNoteChangeHandler, showMessageModal,
 	unconfirmScheduleItem
 } from './deliverySchedule/utils.js'
-import { checkScheduleData, isValidScheduleValues, getFormErrorMessage } from './deliverySchedule/validation.js'
+import { checkScheduleData, isValidScheduleValues, getFormErrorMessage, checkScheduleOrderRating } from './deliverySchedule/validation.js'
 import {
 	addScheduleRCItemUrl,
 	changeIsImportBaseUrl,
 	changeIsNotCalcBaseUrl,
 	downloadReportBaseUrl,
 	editScheduleRCItemUrl,
+	getCountScheduleOrderHasWeekUrl,
 	getScheduleNumContractBaseUrl,
 	getScheduleRCUrl,
 	loadRCExcelUrl,
@@ -203,6 +204,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 		clearForm(e, sendExcelForm)
 		blurActiveElem(e)
 	})
+
+	// рейтинг дней заказов
+	$('#showRatingBtn').popover({
+		html: true,
+		content: 'Загрузка...'
+	}).on('shown.bs.popover', getOrderRatingContent)
 
 	// отображение стартовых данных
 	if (window.initData) {
@@ -390,6 +397,13 @@ async function changeIsNotCalc(idSchedule, rowNode) {
 	}
 }
 
+// получение рейтинга дней заказов по дням недели
+async function getOrderRating() {
+	const response = await getData(getCountScheduleOrderHasWeekUrl)
+	if (!response || !response.object) return null
+	return response.object
+}
+
 // запрос на изменение значения "Импорт"
 async function changeIsImport(idSchedule, rowNode) {
 	if (!isAdmin(role) && login !== 'romashkok%!dobronom.by') return
@@ -474,7 +488,7 @@ function sendExcelFormHandler(e) {
 }
 
 // обработчик отправки формы создания графика поставки
-function addScheduleItemFormHandler(e) {
+async function addScheduleItemFormHandler(e) {
 	e.preventDefault()
 
 	disableButton(e.submitter)
@@ -496,6 +510,13 @@ function addScheduleItemFormHandler(e) {
 	const errorMessage = getFormErrorMessage(data, error)
 	if (errorMessage) {
 		snackbar.show(errorMessage)
+		enableButton(e.submitter)
+		return
+	}
+
+	const orderRatingValidResult = await checkScheduleOrderRating(data, getOrderRating)
+	if (!orderRatingValidResult.isValid) {
+		snackbar.show(orderRatingValidResult.message)
 		enableButton(e.submitter)
 		return
 	}
@@ -531,7 +552,7 @@ function addScheduleItemFormHandler(e) {
 }
 
 // обработчик отправки формы редактирования графика поставки
-function editScheduleItemFormHandler(e) {
+async function editScheduleItemFormHandler(e) {
 	e.preventDefault()
 
 	disableButton(e.submitter)
@@ -741,4 +762,22 @@ function saveFilterState() {
 }
 function restoreFilterState() {
 	gridFilterLocalState.restoreState(gridOptions, LOCAL_STORAGE_KEY)
+}
+
+// получение контента для отображения рейтинга дней заказов
+async function getOrderRatingContent() {
+	const ratingByDay = await getOrderRating()
+
+	if (!ratingByDay) {
+		$('.popover-body').html('Ошибка загрузки данных.')
+		return
+	}
+
+	$('.popover-body').html(
+		`<div>понедельник: ${ratingByDay.monday}</div>`
+		+ `<div>вторник: ${ratingByDay.tuesday}</div>`
+		+ `<div>среда: ${ratingByDay.wednesday}</div>`
+		+ `<div>четверг: ${ratingByDay.thursday}</div>`
+		+ `<div>пятница: ${ratingByDay.friday}</div>`
+	)
 }

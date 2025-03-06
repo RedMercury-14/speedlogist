@@ -1,4 +1,4 @@
-import { getStockAddress } from "./globalRules/ordersRules.js"
+import { getStockAddress, MAX_ONE_PALL_WEIGHT_KG } from "./globalRules/ordersRules.js"
 import { dateHelper, getInputValue } from "./utils.js"
 
 export function getDateHTML({ isInternalMovement, pointType, way, pointIndex, value }) {
@@ -122,6 +122,8 @@ export function getCargoInfoHTML({ order, isInternalMovement, way, pointIndex, p
 	const { pallRequiredAttr, weightRequiredAttr, volumeRequiredAttr } = getRequiredAttrs(way)
 	let { pointCargo, pall, weight, volume } = getCargoInfo(order, way, pointIndex, pointData, pointType)
 
+	const weightTooltipText = `Масса одной паллеты не должна превышать ${MAX_ONE_PALL_WEIGHT_KG} кг`
+
 	// const ahoReadonlyAttr = way === 'АХО' ? 'readonly' : ''
 	const ahoReadonlyAttr = ''
 	const ahoMaxPallAttr = way === 'АХО' ? 20 : ''
@@ -141,7 +143,11 @@ export function getCargoInfoHTML({ order, isInternalMovement, way, pointIndex, p
 				<input type='number' class='form-control' name='pall' id='pall_${pointIndex}' placeholder='Паллеты, шт' min='0' step="1" max='${ahoMaxPallAttr}' value='${pall}' ${pallRequiredAttr} ${pallReadonlyAttr}>
 			</div>
 			<div class='cargoWeight'>
-				<label for='weight_${pointIndex}' class='col-form-label text-muted font-weight-bold'>Масса, кг</label>
+				<label for='weight_${pointIndex}' class='col-form-label text-muted font-weight-bold custom-tooltip'>
+					Масса, кг
+					<sup class="px-1 font-weight-bold text-danger">?</sup>
+					<span class="tooltiptext">${weightTooltipText}</span>
+				</label>
 				<input type='number' class='form-control' name='weight' id='weight_${pointIndex}' placeholder='Масса, кг' min='0' step="1" value='${weight}' ${ahoReadonlyAttr} ${weightRequiredAttr}>
 			</div>
 			<div class='cargoVolume ${ahoNoneClassName}'>

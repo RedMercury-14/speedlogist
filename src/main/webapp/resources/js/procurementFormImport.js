@@ -1,7 +1,7 @@
 import { ajaxUtils } from './ajaxUtils.js'
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 import { addNewAhoOrderUrl, addNewOrderHasMarketUrl, addNewOrderUrl, getInternalMovementShopsUrl, getMarketOrderBaseUrl } from './globalConstants/urls.js'
-import { getOrderStatusByStockDelivery } from './globalRules/ordersRules.js'
+import { getOrderStatusByStockDelivery, MAX_ONE_PALL_WEIGHT_KG } from './globalRules/ordersRules.js'
 import { getOrderData } from './procurementFormDataUtils.js'
 import {
 	getAddressHTML,
@@ -23,6 +23,7 @@ import {
 	inputEditBan,
 	isInvalidPointForms,
 	isValidPallCount,
+	isValidPallWeight,
 	isValidTnvdValue,
 	orderCargoInputOnChangeHandler,
 	orderPallInputOnChangeHandler,
@@ -472,6 +473,11 @@ function isInvalidOrderForm(data) {
 
 	if (!isValidTnvdValue(data)) {
 		snackbar.show('Неверное значение кода ТН ВЭД!')
+		return true
+	}
+
+	if (!isValidPallWeight(data)) {
+		snackbar.show(`Масса одной паллеты не должна превышать ${MAX_ONE_PALL_WEIGHT_KG} кг!`)
 		return true
 	}
 

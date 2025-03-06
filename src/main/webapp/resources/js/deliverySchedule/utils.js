@@ -9,6 +9,15 @@ export const SUPPLY_REG_GLOBAL = /(понедельник|вторник|сре�
 export const ORDER_REG = /^з$|з\//
 export const WEEK_INDEX_REG = /(?<=н)\d+/g
 
+export const dayNameTranslateDict = {
+	monday: "понедельник",
+	tuesday: "вторник",
+	wednesday: "среда",
+	thursday: "четверг",
+	friday: "пятница",
+	saturday: "суббота",
+	sunday: "воскресенье",
+}
 
 // опции для графика без пометки "неделя"
 export const defaultOptions = [

@@ -9,6 +9,7 @@ import {
 	inputEditBan,
 	isInvalidPointForms,
 	isValidPallCount,
+	isValidPallWeight,
 	isValidTnvdValue,
 	orderCargoInputOnChangeHandler,
 	orderPallInputOnChangeHandler,
@@ -30,6 +31,7 @@ import {
 } from "./procurementFormHtmlUtils.js";
 import { bootstrap5overlay } from "./bootstrap5overlay/bootstrap5overlay.js"
 import { editOrderUrl, getInternalMovementShopsUrl } from "./globalConstants/urls.js"
+import { MAX_ONE_PALL_WEIGHT_KG } from "./globalRules/ordersRules.js"
 
 const token = $("meta[name='_csrf']").attr("content")
 const role = document.querySelector('#role').value
@@ -140,6 +142,11 @@ function isInvalidForm(data) {
 
 	if (!isValidTnvdValue(data)) {
 		snackbar.show('Неверное значение кода ТН ВЭД!')
+		return true
+	}
+
+	if (!isValidPallWeight(data)) {
+		snackbar.show(`Масса одной паллеты не должна превышать ${MAX_ONE_PALL_WEIGHT_KG} кг!`)
 		return true
 	}
 

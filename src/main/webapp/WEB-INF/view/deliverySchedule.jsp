@@ -17,6 +17,7 @@
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/bootstrap5overlay.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/deliverySchedule.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/tooltip.css">
+	<script src='${pageContext.request.contextPath}/resources/js/popper/popper.js'></script>
 </head>
 <body>
 	<jsp:include page="headerNEW.jsp" />
@@ -61,6 +62,9 @@
 					</button>
 				</c:when>
 			</c:choose>
+			<button type="button" id="showRatingBtn" class="btn tools-btn font-weight-bold text-muted" data-container="body" data-toggle="popover" data-placement="bottom">
+				Рейтинг дней заказов
+			</button>
 		</div>
 		<div id="myGrid" class="ag-theme-alpine"></div>
 		<div id="snackbar"></div>

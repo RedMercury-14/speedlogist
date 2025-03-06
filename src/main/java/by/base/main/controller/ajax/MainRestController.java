@@ -352,9 +352,9 @@ public class MainRestController {
 	@PostConstruct
     public void init() {
 		marketUrl = marketUrlProp;
-		serviceNumberProp = serviceNumber;
-		loginMarketProp = loginMarket;
-		passwordMarketProp = passwordMarket;
+		serviceNumber = serviceNumberProp;
+		loginMarket = loginMarketProp;
+		passwordMarket = passwordMarketProp;
     }
 	
 

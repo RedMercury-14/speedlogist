@@ -1,6 +1,6 @@
 import { snackbar } from "./snackbar/snackbar.js"
 import { store } from "./slots/store.js"
-import { eventColors, userMessages } from "./slots/constants.js"
+import { backgroundEvents, eventColors, userMessages } from "./slots/constants.js"
 import { gridOptions, renderTable, showInternalMovementOrders, updateTableData, updateTableRow } from "./slots/agGridUtils.js"
 import {
 	isMobileDevice,
@@ -79,7 +79,7 @@ import {
 	resourcesHandler
 } from "./slots/calendarHandlers.js"
 import { checkCombineOrders } from "./procurementControlUtils.js"
-import { backgroundEvents, slotsSettings } from "./globalRules/slotsRules.js"
+import { slotsSettings } from "./globalRules/slotsRules.js"
 
 
 const LOCAL_STORAGE_KEY = 'AG_Grid_column_settings_to_Slots'

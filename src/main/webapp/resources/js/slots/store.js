@@ -1,5 +1,5 @@
 import { dateHelper } from "../utils.js"
-import { eventColors } from "./constants.js"
+import { eventColors, stocks24h } from "./constants.js"
 import { getEndTime, getEventBGColor, getEventBorderColor, groupeByNumStockDelyvery } from "./dataUtils.js"
 import { editableRules, colorRules } from "./rules.js"
 import { stocks } from "../globalRules/virtualStocksForSlots.js"
@@ -288,10 +288,10 @@ export const store = {
 				backgroundColor: bgColor,
 				borderColor: getEventBorderColor(order),
 				textColor: 'black',
-				// constraint: stockId === '1700' ? null : 'businessHours',
+				constraint: stocks24h.includes(stockId) ? null : 'businessHours',
 			}
 
-			if (stockId !== '1700' && stockId !== '1800') event.constraint = 'businessHours'
+			// if (stockId !== '1700' && stockId !== '1800') event.constraint = 'businessHours'
 
 			stock.events.push(event)
 		})
@@ -366,10 +366,12 @@ export const store = {
 			backgroundColor: bgColor,
 			borderColor: getEventBorderColor(updatedOrder),
 			textColor: 'black',
-			// constraint: stockId === '1700' ? null : 'businessHours',
+			constraint: stocks24h.includes(stockId) ? null : 'businessHours',
 		}
 
-		if (stockId !== '1700') newEvent.constraint = 'businessHours'
+		// if (stockId !== '1700' && stockId !== '1800') newEvent.constraint = 'businessHours'
+
+		console.log(newEvent)
 
 		const index = this._state.stocks.findIndex(stock => stock.id === stockId)
 		this._state.stocks[index].events.push(newEvent)
@@ -399,10 +401,12 @@ export const store = {
 			backgroundColor: bgColor,
 			borderColor: getEventBorderColor(updatedOrder),
 			textColor: 'black',
-			// constraint: stockId === '1700' ? null : 'businessHours',
+			constraint: stocks24h.includes(stockId) ? null : 'businessHours',
 		}
 
-		if (stockId !== '1700') this._state.stocks[stockIndex].events[eventIndex].constraint = 'businessHours'
+		// if (stockId !== '1700' && stockId !== '1800') {
+		// 	this._state.stocks[stockIndex].events[eventIndex].constraint = 'businessHours'
+		// }
 
 		this._callSubscriber(this._state)
 	},

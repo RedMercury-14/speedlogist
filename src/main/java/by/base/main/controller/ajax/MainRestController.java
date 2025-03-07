@@ -10200,13 +10200,12 @@ public class MainRestController {
 
 	/**
 	 * Отдаёт всех перевозчиков
-	 * закрыт от греха подальше. Вроде метод ок, но на всякий случай закрою
 	 * @return
 	 */
-//	@GetMapping("/manager/getAllCarrier")
-//	public Set<User> getAllCarrier() {
-//		return userService.getCarrierListV2().stream().collect(Collectors.toSet());
-//	}
+	@GetMapping("/manager/getAllCarrier")
+	public Set<User> getAllCarrier() {
+		return userService.getCarrierListV2().stream().collect(Collectors.toSet());
+	}
 
 	/**
 	 * Блокирует и разблокирует перевозчиков GET запрос

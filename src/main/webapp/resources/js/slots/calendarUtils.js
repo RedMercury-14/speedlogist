@@ -1,7 +1,7 @@
 import { snackbar } from "../snackbar/snackbar.js"
 import { dateHelper } from "../utils.js"
 import { getRoutesInfo } from "./api.js"
-import { eventColors, routeStatusColor, routeStatusText, userMessages } from "./constants.js"
+import { eventColors, routeStatusColor, routeStatusText, stocks24h, userMessages } from "./constants.js"
 import { convertToDDMMYYYY, convertToDayMonthTime, getEventBGColor, getSlotStatus, getSlotStatusYard, stockAndDayIsVisible, stockIsVisible } from "./dataUtils.js"
 import { editableRulesToConfirmBtn, hasOrderInYard, isAnotherUser, isBackgroundEvent, removeDraggableElementRules } from "./rules.js"
 import { store } from "./store.js"
@@ -60,7 +60,7 @@ export function createDraggableElement(container, order, login, currentStock) {
 		textColor: 'black',
 	}
 
-	if (stockId !== '1700' || stockId != '1800') event.constraint = 'businessHours'
+	if (!stocks24h.includes(stockId)) event.constraint = 'businessHours'
 
 	new FullCalendar.Draggable(
 		singleSlotElem,
@@ -123,8 +123,7 @@ export function createEventElement(info) {
 	eventElem.innerHTML = `
 		<div class="fc-event-time">${timeText}</div>
 		<div class="fc-event-title-container">
-			<div class="fc-event-title fc-sticky">${id} ${title}</div>
-			${importLabel}
+			<div class="fc-event-title fc-sticky">${id} ${title} ${importLabel}</div>
 		</div>
 	`
 	return eventElem

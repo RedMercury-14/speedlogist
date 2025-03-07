@@ -63,7 +63,7 @@
 				</c:when>
 			</c:choose>
 			<button type="button" id="showRatingBtn" class="btn tools-btn font-weight-bold text-muted" data-container="body" data-toggle="popover" data-placement="bottom">
-				Рейтинг дней заказов
+				Рейтинг заказов/поставок
 			</button>
 		</div>
 		<div id="myGrid" class="ag-theme-alpine"></div>

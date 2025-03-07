@@ -18,6 +18,7 @@ import {
 	changeIsNotCalcBaseUrl,
 	downloadReportBaseUrl,
 	editScheduleRCItemUrl,
+	getCountScheduleDeliveryHasWeekUrl,
 	getCountScheduleOrderHasWeekUrl,
 	getScheduleNumContractBaseUrl,
 	getScheduleRCUrl,
@@ -208,7 +209,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 	// рейтинг дней заказов
 	$('#showRatingBtn').popover({
 		html: true,
-		content: 'Загрузка...'
+		content: 'ㅤㅤЗагрузка...ㅤㅤ'
 	}).on('shown.bs.popover', getOrderRatingContent)
 
 	// отображение стартовых данных
@@ -400,6 +401,13 @@ async function changeIsNotCalc(idSchedule, rowNode) {
 // получение рейтинга дней заказов по дням недели
 async function getOrderRating() {
 	const response = await getData(getCountScheduleOrderHasWeekUrl)
+	if (!response || !response.object) return null
+	return response.object
+}
+
+// получение рейтинга дней поставок по дням недели
+async function getDeliveryRating() {
+	const response = await getData(getCountScheduleDeliveryHasWeekUrl)
 	if (!response || !response.object) return null
 	return response.object
 }
@@ -766,18 +774,21 @@ function restoreFilterState() {
 
 // получение контента для отображения рейтинга дней заказов
 async function getOrderRatingContent() {
-	const ratingByDay = await getOrderRating()
+	const orderRating = await getOrderRating()
+	const deliveryRating = await getDeliveryRating()
 
-	if (!ratingByDay) {
+	if (!orderRating && !deliveryRating) {
 		$('.popover-body').html('Ошибка загрузки данных.')
 		return
 	}
 
 	$('.popover-body').html(
-		`<div>понедельник: ${ratingByDay.monday}</div>`
-		+ `<div>вторник: ${ratingByDay.tuesday}</div>`
-		+ `<div>среда: ${ratingByDay.wednesday}</div>`
-		+ `<div>четверг: ${ratingByDay.thursday}</div>`
-		+ `<div>пятница: ${ratingByDay.friday}</div>`
+		`<div>понедельник: ${orderRating.monday || 'н/д'}/${deliveryRating.monday || 'н/д'}</div>`
+		+ `<div>вторник: ${orderRating.tuesday || 'н/д'}/${deliveryRating.tuesday || 'н/д'}</div>`
+		+ `<div>среда: ${orderRating.wednesday || 'н/д'}/${deliveryRating.wednesday || 'н/д'}</div>`
+		+ `<div>четверг: ${orderRating.thursday || 'н/д'}/${deliveryRating.thursday || 'н/д'}</div>`
+		+ `<div>пятница: ${orderRating.friday || 'н/д'}/${deliveryRating.friday || 'н/д'}</div>`
+		+ `<div>суббота: ${orderRating.saturday || 'н/д'}/${deliveryRating.saturday || 'н/д'}</div>`
+		+ `<div>воскресенье: ${orderRating.sunday || 'н/д'}/${deliveryRating.sunday || 'н/д'}</div>`
 	)
 }

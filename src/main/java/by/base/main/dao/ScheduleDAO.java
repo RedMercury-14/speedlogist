@@ -170,4 +170,11 @@ public interface ScheduleDAO {
 	 * @return
 	 */
 	ScheduleCountOrderDTO getCountScheduleOrderHasWeek();
+	
+	/**
+	 * Возвращает DTO с кол-вом графиков поставок по дням, отнисительно <b>поставок</b>
+	 * <br>Реализовано SQL запросом
+	 * @return
+	 */
+	ScheduleCountOrderDTO getCountScheduleDeliveryHasWeek();
 }

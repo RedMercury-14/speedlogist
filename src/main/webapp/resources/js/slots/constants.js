@@ -21,7 +21,9 @@ export const userMessages = {
 	noImportOverlapMessage: (noImportTimes) => `Невозможно установить заказ на это время! Импортные заказы запрещено устанавливать с ${noImportTimes[0]} до ${noImportTimes[1]}!`
 }
 
-export const slotStocks = ['1700','1200','1230','1214', '1240','1250','1100']
+export const slotStocks = ['1700', '1800', '1200','1230','1214', '1240','1250','1100']
+
+export const stocks24h = ['1700', '1800']
 
 export const eventColors = {
 	disabled: '#65979f',
@@ -91,3 +93,114 @@ export const routeStatusColor = {
 	225:'#c4ffe1db',
 	230:'#9ee9ffdb',
 }
+
+// фоновые зоны в слотах
+export const backgroundEvents = [
+	// зона внутренних перемещений
+	{
+		id: `internalMovementZone1700`,
+		resourceId: `170001`,
+		display: 'background',
+		startTime: '09:00',
+		endTime: '20:00',
+		eventOverlap: true,
+		title: '',
+		extendedProps: {
+			data: {
+				pall: 0,
+			}
+		},
+	},
+	{
+		id: `internalMovementZone1800`,
+		resourceId: `180001`,
+		display: 'background',
+		startTime: '09:00',
+		endTime: '20:00',
+		eventOverlap: true,
+		title: '',
+		extendedProps: {
+			data: {
+				pall: 0,
+			}
+		},
+	},
+
+
+	// зона отмены проверки паллетовместимости
+	{
+		id: `extraPallZone180001`,
+		resourceId: `180001`,
+		display: 'background',
+		startTime: '00:00',
+		endTime: '07:00',
+		eventOverlap: true,
+		title: '',
+		backgroundColor: '#03A9F4',
+		extendedProps: {
+			data: {
+				pall: 0,
+			}
+		},
+	},
+	{
+		id: `extraPallZone180002`,
+		resourceId: `180002`,
+		display: 'background',
+		startTime: '00:00',
+		endTime: '07:00',
+		eventOverlap: true,
+		title: '',
+		backgroundColor: '#03A9F4',
+		extendedProps: {
+			data: {
+				pall: 0,
+			}
+		},
+	},
+	{
+		id: `extraPallZone180003`,
+		resourceId: `180003`,
+		display: 'background',
+		startTime: '00:00',
+		endTime: '07:00',
+		eventOverlap: true,
+		title: '',
+		backgroundColor: '#03A9F4',
+		extendedProps: {
+			data: {
+				pall: 0,
+			}
+		},
+	},
+	{
+		id: `extraPallZone180004`,
+		resourceId: `180004`,
+		display: 'background',
+		startTime: '00:00',
+		endTime: '07:00',
+		eventOverlap: true,
+		title: '',
+		backgroundColor: '#03A9F4',
+		extendedProps: {
+			data: {
+				pall: 0,
+			}
+		},
+	},
+	{
+		id: `extraPallZone180005`,
+		resourceId: `180005`,
+		display: 'background',
+		startTime: '00:00',
+		endTime: '07:00',
+		eventOverlap: true,
+		title: '',
+		backgroundColor: '#03A9F4',
+		extendedProps: {
+			data: {
+				pall: 0,
+			}
+		},
+	},
+]

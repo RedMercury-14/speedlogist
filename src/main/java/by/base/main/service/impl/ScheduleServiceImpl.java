@@ -265,4 +265,10 @@ public class ScheduleServiceImpl implements ScheduleService{
 	public ScheduleCountOrderDTO getCountScheduleOrderHasWeek() {
 		return scheduleDAO.getCountScheduleOrderHasWeek();
 	}
+
+	@Transactional
+	@Override
+	public ScheduleCountOrderDTO getCountScheduleDeliveryHasWeek() {
+		return scheduleDAO.getCountScheduleDeliveryHasWeek();
+	}
 }

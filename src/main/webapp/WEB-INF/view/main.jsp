@@ -11,6 +11,34 @@
         .sb-thumb {
             border: 4px solid #795548;
         }
+        #feedback-popup {
+            position: fixed;
+            top: 50px;
+            left: 50px;
+            z-index: 1100;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        #feedback-popup .close {
+            font-size: 30px;
+            padding: 8px 12px;
+        }
+        @media (max-width: 576px) {
+            #feedback-popup {
+                font-size: 18px;
+                padding: 15px 30px 15px 15px;
+                top: auto;
+                left: 0;
+                right: 0;
+                bottom: 30px;
+                display: block;
+            }
+            .feedback-link {
+                display: block;
+                padding: 5px 0;
+            }
+        }
     </style>
 	<head>
 		<meta charset="UTF-8">
@@ -45,6 +73,15 @@
     <!-- PRELOADER END -->
     
     <jsp:include page="headerNEW.jsp" />
+
+    <div id="feedback-popup" class="alert alert-primary alert-dismissible fade show left-auto m-3 shadow-lg" role="alert">
+        <strong>Мы хотим вас услышать!</strong>
+        Нам важно ваше мнение.
+        <a href="/speedlogist/main/reviews" class="feedback-link font-weight-bold text-primary ml-2">Оставить отзыв</a>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
 
     <!--SLIDER START-->
     <div class="home-slider dot-hide">

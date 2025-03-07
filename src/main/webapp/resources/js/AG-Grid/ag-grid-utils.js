@@ -326,3 +326,14 @@ export class BtnCellRenderer {
 		this.eGui.removeEventListener("click", this.btnClickedHandler)
 	}
 }
+
+// автоматическое выделение значения в поте фильтрации по колонке (коллбек на открытие фильтра)
+export function autoSelectFilerValue(params) {
+	setTimeout(() => {
+		const input = params.api.getFilterInstance(params.column.getColId())?.getGui()?.querySelector('input');
+		if (input) {
+			input.focus();
+			requestAnimationFrame(() => input.select());
+		}
+	}, 0);
+}

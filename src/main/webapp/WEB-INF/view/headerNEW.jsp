@@ -109,7 +109,7 @@
 								</li>
 								
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/admin" />">Администрация</a></li>
-								<li><a class="nav-item nav-link" href="<spring:url value="/main/reviews"/>">Обратная связь</a></li>
+								<!-- <li><a class="nav-item nav-link" href="<spring:url value="/main/reviews"/>">Обратная связь</a></li> -->
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/admin/reviews/list"/>">Список отзывов</a></li>
 							</c:when>	
 							<c:when test="${roles == '[ROLE_SHOW]'}">

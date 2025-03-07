@@ -188,4 +188,19 @@ export const backgroundEvents = [
 			}
 		},
 	},
+	{
+		id: `extraPallZone180005`,
+		resourceId: `180005`,
+		display: 'background',
+		startTime: '00:00',
+		endTime: '07:00',
+		eventOverlap: true,
+		title: '',
+		backgroundColor: '#03A9F4',
+		extendedProps: {
+			data: {
+				pall: 0,
+			}
+		},
+	},
 ]

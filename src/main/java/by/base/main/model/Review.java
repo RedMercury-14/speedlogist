@@ -44,8 +44,20 @@ public class Review {
 
     @Column(name = "comment")
     private String comment;
+    
+    @Column(name = "ip_address")
+    private String ipAddress;
 
-    public void setIdReview(Long idReview) {
+    
+    public String getIpAddress() {
+		return ipAddress;
+	}
+
+	public void setIpAddress(String ipAddress) {
+		this.ipAddress = ipAddress;
+	}
+
+	public void setIdReview(Long idReview) {
         this.idReview = idReview;
     }
 

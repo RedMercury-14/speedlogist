@@ -478,6 +478,36 @@ public class MainRestController {
 		review.setTopic(topic);
 		review.setReviewBody(reviewBody);
 		review.setStatus(10);
+		
+		String stock = jsonMainObject.get("stock") == null ? null : jsonMainObject.get("stock").toString();
+		if(stock != null && !stock.isEmpty()) {
+			switch (stock) {
+			case "1":
+				review.setReviewBody(review.getReviewBody() + "\n" + "Отправлено с Распределительный центр №1 <Склад 1700 Прилесье>");
+				review.setTopic("Склад 1700 Прилесье Распределительный центр №1");
+				break;
+			case "2":
+				review.setReviewBody(review.getReviewBody() + "\n" + "Отправлено с Распределительный центр №2 <Склад 1200 Таборы>");
+				review.setTopic("Склад 1200 Таборы Распределительный центр №2");
+				break;
+			case "3":
+				review.setReviewBody(review.getReviewBody() + "\n" + "Отправлено с Распределительный центр №3 <Склад 1250>");
+				review.setTopic("Склад 1250 Распределительный центр №3");
+				break;
+			case "4":
+				review.setReviewBody(review.getReviewBody() + "\n" + "Отправлено с Распределительный центр №4 <Склад 1100 Таборы>");
+				review.setTopic("Склад 1100 Таборы Распределительный центр №4");
+				break;
+			case "5":
+				review.setReviewBody(review.getReviewBody() + "\n" + "Отправлено с Распределительный центр №5 <Склад 1800 Прилесье>");
+				review.setTopic("Склад 1800 Прилесье Распределительный центр №5");
+				break;
+
+			default:
+				break;
+			}
+		}
+		review.setIpAddress(request.getRemoteAddr());
 
 		Long id = reviewService.saveReview(review);
 		review.setIdReview(id);

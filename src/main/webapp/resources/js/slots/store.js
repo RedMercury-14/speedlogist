@@ -291,8 +291,6 @@ export const store = {
 				constraint: stocks24h.includes(stockId) ? null : 'businessHours',
 			}
 
-			// if (stockId !== '1700' && stockId !== '1800') event.constraint = 'businessHours'
-
 			stock.events.push(event)
 		})
 	},
@@ -369,10 +367,6 @@ export const store = {
 			constraint: stocks24h.includes(stockId) ? null : 'businessHours',
 		}
 
-		// if (stockId !== '1700' && stockId !== '1800') newEvent.constraint = 'businessHours'
-
-		console.log(newEvent)
-
 		const index = this._state.stocks.findIndex(stock => stock.id === stockId)
 		this._state.stocks[index].events.push(newEvent)
 		this._callSubscriber(this._state)
@@ -403,10 +397,6 @@ export const store = {
 			textColor: 'black',
 			constraint: stocks24h.includes(stockId) ? null : 'businessHours',
 		}
-
-		// if (stockId !== '1700' && stockId !== '1800') {
-		// 	this._state.stocks[stockIndex].events[eventIndex].constraint = 'businessHours'
-		// }
 
 		this._callSubscriber(this._state)
 	},

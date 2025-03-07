@@ -101,7 +101,7 @@ export const stocks = [
 			{ id: "180002", title: "Рампа 2", businessHours: { startTime: '00:00', endTime: '24:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
 			{ id: "180003", title: "Рампа 3", businessHours: { startTime: '00:00', endTime: '24:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
 			{ id: "180004", title: "Рампа 4", businessHours: { startTime: '00:00', endTime: '24:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
-			// { id: "180005", title: "Рампа 5", businessHours: { startTime: '00:00', endTime: '24:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
+			{ id: "180005", title: "Рампа 5", businessHours: { startTime: '00:00', endTime: '24:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
 			// { id: "180006", title: "Рампа 6 (Резерв)", businessHours: { startTime: '00:00', endTime: '24:00' , daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6 ]}, },
 		],
 		events: [],

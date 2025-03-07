@@ -391,7 +391,7 @@ export function checkPallCount(info, pallCount, maxPall, currentStock) {
 	const orderType = getOrderType(order)
 
 	//---------------------------------------------------------
-	// ДЛЯ 1700 И 1800 не проверять паллетовместимость в период с 00:00 по 07:00
+	// ДЛЯ  1800 не проверять паллетовместимость в период с 00:00 по 07:00
 	if (orderType === 'externalMovement' && currentStock.id === '1800') {
 		const startHours = fcEvent.start.getUTCHours()
 		const endHours = fcEvent.end.getUTCHours()
@@ -415,7 +415,7 @@ export function checkPallCountForComingDates(info, pallCount, maxPall, currentSt
 	const orderType = getOrderType(order)
 
 	//---------------------------------------------------------
-	// ДЛЯ 1700 И 1800 не разрешать переносить слот с периода с 00:00 по 07:00 при перелимите
+	// ДЛЯ 1800 не разрешать переносить слот с периода с 00:00 по 07:00 при перелимите
 	if (orderType === 'externalMovement' && currentStock.id === '1800') {
 		const endHours = fcEvent.end.getUTCHours()
 		const oldEventStartHours = oldEvent.start.getUTCHours()

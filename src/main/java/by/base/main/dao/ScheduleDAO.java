@@ -10,6 +10,8 @@ import com.dto.CounterpartyDTO;
 import by.base.main.dto.ScheduleCountOrderDTO;
 import by.base.main.model.Schedule;
 
+import javax.transaction.Transactional;
+
 public interface ScheduleDAO {
 
 	Schedule getScheduleById(Integer id);
@@ -152,6 +154,8 @@ public interface ScheduleDAO {
 	 * @return
 	 */
 	public List<Schedule> getSchedulesListTOContractOnlyTemp(Long num);
+	
+	
 
 	/**
 	 * <br>Возвращает список графиков по номеру контракта и номеру склада
@@ -161,13 +165,20 @@ public interface ScheduleDAO {
 	 * @author Ira
 	 */
 	List<Schedule> getAllSchedulesByNumContractAndNumStock(Long num, Integer shock);
-
+	
 	/**
 	 * Возвращает DTO с кол-вом графиков поставок по дням, отнисительно <b>заказа</b>
 	 * <br>Реализовано SQL запросом
 	 * @return
 	 */
 	ScheduleCountOrderDTO getCountScheduleOrderHasWeek();
+
+	/**
+	 * Возвращает DTO с кол-вом графиков поставок по дням, отнисительно <b>поставок</b>
+	 * <br>Реализовано SQL запросом
+	 * @return
+	 */
+	ScheduleCountOrderDTO getCountScheduleDeliveryHasWeek();
 
     ScheduleCountOrderDTO getCountScheduleDeliveryHasWeek();
 

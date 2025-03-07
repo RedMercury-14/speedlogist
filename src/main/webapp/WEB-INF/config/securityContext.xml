@@ -38,6 +38,7 @@
 	    <security:intercept-url pattern="/api/echo2" access="permitAll"/>
 	    <security:intercept-url pattern="/api/user/isexists" access="permitAll"/>
 	    <security:intercept-url pattern="/api/user/isexistsUNP" access="permitAll"/>
+	    <security:intercept-url pattern="/api/reviews/create" access="permitAll"/>
 	    <security:intercept-url pattern="/api/**" access="isAuthenticated()" />
 	</security:http>
 

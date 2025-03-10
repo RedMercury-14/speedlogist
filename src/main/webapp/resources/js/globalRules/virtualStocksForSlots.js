@@ -117,8 +117,10 @@ export const stocks = [
 		internaMovementsTimes: [],
 		internalMovementsRamps: [],
 		maxPall: {
-			externalMovement: 600, // редактировать ПОСТОЯННУЮ паллетовместимость ЗДЕСЬ
-			internalMovement: 500, // паллетовместимость внутренних перевозок
+//			externalMovement: 600, // редактировать ПОСТОЯННУЮ паллетовместимость ЗДЕСЬ
+//			internalMovement: 500, // паллетовместимость внутренних перевозок
+			externalMovement: 400, // редактировать ПОСТОЯННУЮ паллетовместимость ЗДЕСЬ
+			internalMovement: 400, // паллетовместимость внутренних перевозок
 		},
 		weekends: [],
 		ramps: [

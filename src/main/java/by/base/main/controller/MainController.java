@@ -3016,7 +3016,7 @@ public class MainController {
 			User userHasCarrier = userService.getUserByLogin(login);
 			String message = "На маршрут "+route.getRouteDirection()+" принят единственный заявившийся перевозчик: " + userHasCarrier.getCompanyName() 
 					+ ". Заявленная стоимость перевозки составляет "+ route.getFinishPrice() + " "+ route.getStartCurrency() + ". \nОптимальная стоимость составляет " + route.getOptimalCost()+" BYN";
-			mailService.sendSimpleEmail(appPath, "Подтверждение единственного перевозчика", message, "YakubovE@dobronom.by");
+//			mailService.sendSimpleEmail(appPath, "Подтверждение единственного перевозчика", message, "YakubovE@dobronom.by"); //отключен по просьбе Рожнова Д. от 03.03.2025 (в почте)
 		}
 		List<Message> messages = new ArrayList<Message>();		
 		chatEnpoint.internationalMessegeList.stream()
@@ -3081,7 +3081,7 @@ public class MainController {
 //				User userHasCarrier = userService.getUserByLogin(login.trim());
 				String message = "На маршрут "+route.getRouteDirection()+" принят единственный заявившийся перевозчик: " + user.getCompanyName() 
 						+ ". Заявленная стоимость перевозки составляет "+ route.getFinishPrice() + " "+ route.getStartCurrency() + ". \nОптимальная стоимость составляет " + route.getOptimalCost()+" BYN";
-				mailService.sendSimpleEmail(appPath, "Подтверждение единственного перевозчика", message, "YakubovE@dobronom.by");
+//				mailService.sendSimpleEmail(appPath, "Подтверждение единственного перевозчика", message, "YakubovE@dobronom.by"); //отключен по просьбе Рожнова Д. от 03.03.2025 (в почте)
 			}
 			List<Message> messages = new ArrayList<Message>();		
 			chatEnpoint.internationalMessegeList.stream()

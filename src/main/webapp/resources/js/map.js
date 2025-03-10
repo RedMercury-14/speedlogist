@@ -93,26 +93,29 @@ import { getTruckLists, groupTrucksByDate } from "./logisticsDelivery/trucks/tru
 import { bootstrap5overlay } from "./bootstrap5overlay/bootstrap5overlay.js"
 import { addListnersToPallTextarea, calcPallets } from "./map/calcPallets.js"
 import { createGrid } from "./map/createGrid.js"
-import {
-	checkNamePolygonBaseUrl,
-	deletePolygonBaseUrl,
-	getAllPolygonsUrl,
-	getMapStackTraceUrl,
-	getRouterParamsUrl,
-	getRoutingListUrl,
-	getTrucksByCarrierBaseUrl,
-	mapOptimization3Url,
-	mapOptimization5Url,
-	sendGeojsonDataUrl,
-	sendMapExcelFileUrl,
-	sendMapExcelFileWithReportUrl,
-	setRouterParamsUrl
-} from "./globalConstants/urls.js"
+
+const apiUrl = isLogisticsDeliveryPage() ? '../../api/' : '../api/'
 
 const optimizationUrlDict = {
-	v3: mapOptimization3Url,
-	v5: mapOptimization5Url,
+	v3: `${apiUrl}map/myoptimization3`,
+	v5: `${apiUrl}map/myoptimization5`,
 }
+
+const saveOptimizeRouteParamsUrl = `${apiUrl}map/set`
+
+const getAllShopsUrl = `${apiUrl}manager/getAllShops`
+const getAllPolygonsUrl = `${apiUrl}map/getAllPolygons`
+const sendGeojsonDataUrl = `${apiUrl}map/savePolygon`
+const deletePolygonBaseUrl = `${apiUrl}map/delPolygon/`
+const checkNamePolygonBaseUrl = `${apiUrl}map/checkNamePolygon/`
+const getRouterParamsUrl = `${apiUrl}map/getDefaultParameters`
+const setRouterParamsUrl = `${apiUrl}map/setDefaultParameters`
+const getRoutingListUrl = `${apiUrl}map/way/4`
+const getServerMessageUrl = `${apiUrl}map/getStackTrace`
+const sendExcelFileUrl = `${apiUrl}map/5`
+const sendExcelFileWithReportUrl = `${apiUrl}map/6`
+
+const getTrucksBaseUrl = `${apiUrl}logistics/deliveryShops/getTGTrucks`
 
 const token = $("meta[name='_csrf']").attr("content")
 
@@ -558,7 +561,7 @@ async function initStartData(currentDateInput) {
 	// полигоны
 	const allPolygons = await getData(getAllPolygonsUrl)
 	// получение машин для оптимизатора
-	const response = await getData(getTrucksByCarrierBaseUrl)
+	const response = await getData(getTrucksBaseUrl)
 	const trucksData = response.status === '200'
 		? response.body ? response.body : []
 		: []
@@ -751,7 +754,7 @@ function distanceControlFormHandler(e, gridDiv) {
 	const submitButtonText = submitButton.innerText
 	const submitButtonId = submitButton.id
 	const withReport = submitButtonId === 'withReport'
-	const actionUrl = withReport ? sendMapExcelFileWithReportUrl : sendMapExcelFileUrl
+	const actionUrl = withReport ? sendExcelFileWithReportUrl : sendExcelFileUrl
 	const file = new FormData(e.target)
 
 	showLoadingSpinner(submitButton)
@@ -773,7 +776,7 @@ function distanceControlFormHandler(e, gridDiv) {
 			}
 
 			hideLoadingSpinner(submitButton, submitButtonText)
-			getData(getMapStackTraceUrl).then(message => {
+			getData(getServerMessageUrl).then(message => {
 				setTimeout(() => {
 					alert(message.comment)
 				}, 500)

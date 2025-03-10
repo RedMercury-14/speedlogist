@@ -165,10 +165,12 @@ public class POIExcel {
 	
 	/**
 	 * Главный метод создания екселя ReportRow или сервис левел по приходу
+	 * v 1.0
 	 * @param reportRows
 	 * @param filePath
 	 * @throws IOException
 	 */
+	@Deprecated (since = "1.2")
 	public static void generateExcelReport(List<ReportRow> reportRows, String filePath) throws IOException {
         // Создаем рабочую книгу и лист
         Workbook workbook = new XSSFWorkbook();
@@ -396,6 +398,310 @@ public class POIExcel {
         // Второй параметр: количество фиксированных строк (2 строки)
         sheet.createFreezePane(0, 2);
         
+        // Сохраняем файл
+        try (FileOutputStream fileOut = new FileOutputStream(filePath)) {
+            workbook.write(fileOut);
+        }
+
+        // Закрываем рабочую книгу
+        workbook.close();
+
+        System.out.println("Excel файл успешно создан: " + filePath);
+    }
+	
+	/**
+	 * Главный метод создания екселя ReportRow или сервис левел по приходу
+	 * v 1.2
+	 * @param reportRows
+	 * @param filePath
+	 * @throws IOException
+	 */
+	public static void generateExcelReportV1_2(List<ReportRow> reportRows, String filePath) throws IOException {
+        // Создаем рабочую книгу и лист
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Отчет");
+
+        // Первая строка заголовка (объединенные ячейки)
+        Row headerRow1 = sheet.createRow(0);
+        headerRow1.createCell(0).setCellValue("Все поставщики из ЦЗ");
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 5)); // Объединение первых 5 ячеек
+//        headerRow1.createCell(6).setCellValue("56 404 524");
+//        headerRow1.createCell(7).setCellValue("36 083 729");
+//        headerRow1.createCell(8).setCellValue("64%");
+//        headerRow1.createCell(9).setCellValue("20 320 796");
+//        headerRow1.createCell(10).setCellValue("114 250 588");
+//        headerRow1.createCell(10).setCellValue("66 694 280");
+//        headerRow1.createCell(11).setCellValue("58%");
+//        headerRow1.createCell(12).setCellValue("47 556 309");
+
+        /*
+         * первый хедер с итогами
+         * делается с помощью формул
+         */
+        headerRow1.createCell(7).setCellFormula("SUM(H3:H" + (reportRows.size() + 2) + ")");
+        headerRow1.createCell(8).setCellFormula("SUM(I3:I" + (reportRows.size() + 2) + ")");
+        headerRow1.createCell(9).setCellFormula("SUM(J3:J" + (reportRows.size() + 2) + ")");
+        headerRow1.createCell(10).setCellFormula("J1/I1*100");
+
+        // Вторая строка заголовка
+        Row headerRow2 = sheet.createRow(1);
+        String[] headers = {
+                "Наименование поставщика", //0
+                "Номер заказа из маркета", //1
+                "Период поставки заказа (неделя)", //2
+                "Дата факт.выгрузки", // 3
+                "Склад", // 4
+                "Наименование товара", //5
+                "Код товара", // 6
+                "Заказано ОРЛ ед", // 7
+                "Заказано факт ед", // 8
+                "Принято ед", // 9
+                "Выполнения заказа, ед%", // 10
+                "% факт.заказанного от ОРЛ", //11
+                "Расхождение кол-во", // 12
+//                "Заказано руб", // 11
+//                "Принято руб", // 12
+//                "% выполнения заказа руб без НДС", // 13
+//                "Расхождение (БЕЗ НДС)", // 14
+                "Комментарий при подготовке отчёта", // 13
+                "Дата расчёт ОРЛ (из слотов)" // 14
+        };
+
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow2.createCell(i);
+            cell.setCellValue(headers[i]);
+
+            // Стиль для заголовков
+            CellStyle headerStyle = workbook.createCellStyle();
+            Font font = workbook.createFont();
+            font.setBold(true);
+            headerStyle.setFont(font);
+            cell.setCellStyle(headerStyle);
+        }
+
+        //флаги для спец строк
+        String nameCounterparty = null;
+        int indexNameCounterpartyStart = 3;
+        int indexNameCounterpartyFinish = 0;
+
+        //флаги для недельных периодов
+        String week = null;
+        int indexWeekStart = 3;
+        int indexWeekFinish = 0;
+
+        // Устанавливаем группировку снизу вверх
+        sheet.setRowSumsBelow(false);
+
+        // Заполняем данные
+        int rowNum = 2; // Данные начинаются со строки 3
+        int k = 0;
+
+        //билдеры для формированиф формул подсчёта итогов
+        StringBuilder builderORL = new StringBuilder();
+        StringBuilder builderManager = new StringBuilder();
+        StringBuilder builderAccepted = new StringBuilder();
+        StringBuilder builderDiscrepancy = new StringBuilder();
+
+        List<Integer> rowsList = new ArrayList<>();
+        for (ReportRow row : reportRows) {
+//
+            //тут групируем по названию конрагента
+            if (nameCounterparty == null) {
+                //создаём итоговую строку по названию контрагента
+                Row conclusionRow = sheet.createRow(rowNum++);
+                conclusionRow.createCell(0).setCellValue(row.getCounterpartyName() + " Итог");
+                nameCounterparty = row.getCounterpartyName();
+                indexNameCounterpartyStart = rowNum;
+
+                //дальше создаём данные с неделей
+                Row weekRow = sheet.createRow(rowNum++);
+                weekRow.createCell(0).setCellValue(row.getCounterpartyName());
+                weekRow.createCell(2).setCellValue(getWeekRange(row.getDateUnload()) + " Итог");
+                week = getWeekRange(row.getDateUnload());
+                indexWeekStart = rowNum;
+
+            } else {
+                if (!nameCounterparty.equals(row.getCounterpartyName())) { // следим за сменой контрагента
+                    Row conclusionRow = sheet.createRow(rowNum++);
+                    conclusionRow.createCell(0).setCellValue(row.getCounterpartyName() + " Итог");
+                    indexNameCounterpartyFinish = rowNum - 2;
+                    indexWeekFinish = rowNum - 2;
+                    String formulaORL = "SUM(H" + (indexWeekStart + 1) + ":H" + (indexWeekFinish + 1) + ")";
+                    String formulaManager = "SUM(I" + (indexWeekStart + 1) + ":I" + (indexWeekFinish + 1) + ")";
+                    String formulaAccepted = "SUM(J" + (indexWeekStart + 1) + ":J" + (indexWeekFinish + 1) + ")";
+                    String formulaDiscrepancy = "SUM(M" + (indexWeekStart + 1) + ":M" + (indexWeekFinish + 1) + ")";
+                    rowsList.add(indexWeekFinish);
+
+                    builderORL.append(formulaORL);
+                    builderManager.append(formulaManager);
+                    builderAccepted.append(formulaAccepted);
+                    builderDiscrepancy.append(formulaDiscrepancy);
+
+                    sheet.groupRow(indexNameCounterpartyStart, indexNameCounterpartyFinish);
+                    sheet.setRowGroupCollapsed(indexNameCounterpartyStart, true);
+                    Row previousConclusionRow = sheet.getRow(indexNameCounterpartyStart - 1);
+                    previousConclusionRow.createCell(7).setCellFormula(builderORL.toString());
+                    previousConclusionRow.createCell(8).setCellFormula(builderManager.toString());
+                    previousConclusionRow.createCell(9).setCellFormula(builderAccepted.toString());
+
+                    StringBuilder percentFormula = new StringBuilder("IFERROR(AVERAGE(");
+                    int i = 0;
+                    while (i < rowsList.size() - 1) {
+                        percentFormula.append("L").append(rowsList.get(i) + 1).append(":L");
+                        i++;
+                        percentFormula.append(rowsList.get(i) + 1).append(", ");
+                        i++;
+                    }
+                    percentFormula.deleteCharAt(percentFormula.length() - 1);
+                    percentFormula.deleteCharAt(percentFormula.length() - 1);
+                    percentFormula.append("),\"Не было заказаОРЛ\")");
+                    rowsList.clear();
+                    Cell cell11counterparty = previousConclusionRow.createCell(11);
+                    cell11counterparty.setCellFormula(percentFormula.toString());
+                    CellStyle percentStyle = workbook.createCellStyle();
+                    percentStyle.setDataFormat(workbook.createDataFormat().getFormat("0.00%"));
+                    cell11counterparty.setCellStyle(percentStyle);
+                    previousConclusionRow.createCell(12).setCellFormula(builderDiscrepancy.toString());
+
+                    builderORL = new StringBuilder();
+                    builderManager = new StringBuilder();
+                    builderAccepted = new StringBuilder();
+                    builderDiscrepancy = new StringBuilder();
+
+                    nameCounterparty = row.getCounterpartyName();
+                    indexNameCounterpartyStart = rowNum;
+
+                    sheet.groupRow(indexWeekStart, indexWeekFinish);//закрываем прошлые даты
+                    // sheet.setRowGroupCollapsed(indexWeekStart, true); //не знаю почему, но именно эта строка не работает, т.е. не сворачивает
+
+                    Row previousWeekConclusionRow = sheet.getRow(indexWeekStart - 1);
+
+                    previousWeekConclusionRow.createCell(7).setCellFormula(formulaORL);
+                    previousWeekConclusionRow.createCell(8).setCellFormula(formulaManager);
+                    previousWeekConclusionRow.createCell(9).setCellFormula(formulaAccepted);
+
+                    Cell cell11 = previousWeekConclusionRow.createCell(11);
+                    String str = "IFERROR(AVERAGE(L" + (indexWeekStart + 1) + ":L" + (indexWeekFinish + 1) + "),\"Не было заказа ОРЛ\")";
+                    cell11.setCellFormula(str);
+//                    CellStyle percentStyle = workbook.createCellStyle();
+                    percentStyle.setDataFormat(workbook.createDataFormat().getFormat("0.00%"));
+                    percentStyle.setAlignment(HorizontalAlignment.RIGHT);
+                    cell11.setCellStyle(percentStyle);
+                    previousWeekConclusionRow.createCell(12).setCellFormula(formulaDiscrepancy);
+
+
+                    builderORL.append("+");
+                    builderManager.append("+");
+                    builderAccepted.append("+");
+                    builderDiscrepancy.append("+");
+                    Row weekRow = sheet.createRow(rowNum++);
+                    weekRow.createCell(0).setCellValue(row.getCounterpartyName());
+                    weekRow.createCell(2).setCellValue(getWeekRange(row.getDateUnload()) + " Итог");
+                    week = getWeekRange(row.getDateUnload());
+                    indexWeekStart = rowNum;
+                    rowsList.add(indexWeekStart);
+
+                }
+                if (nameCounterparty.equals(row.getCounterpartyName()) && !week.equals(getWeekRange(row.getDateUnload()))) { // следим за сменой недели
+                    Row weekRow = sheet.createRow(rowNum++);
+                    Row previousWeekConclusionRow = sheet.getRow(indexWeekStart - 1);
+
+                    weekRow.createCell(0).setCellValue(row.getCounterpartyName());
+                    weekRow.createCell(2).setCellValue(getWeekRange(row.getDateUnload()) + " Итог");
+                    indexWeekFinish = rowNum - 2;
+                    String formulaORL = "SUM(H" + (indexWeekStart + 1) + ":H" + (indexWeekFinish + 1) + ")";
+                    String formulaManager = "SUM(I" + (indexWeekStart + 1) + ":I" + (indexWeekFinish + 1) + ")";
+                    String formulaAccepted = "SUM(J" + (indexWeekStart + 1) + ":J" + (indexWeekFinish + 1) + ")";
+                    String formulaDiscrepancy = "SUM(M" + (indexWeekStart + 1) + ":M" + (indexWeekFinish + 1) + ")";
+                    builderORL.append(formulaORL);
+                    builderManager.append(formulaManager);
+                    builderAccepted.append(formulaAccepted);
+                    builderDiscrepancy.append(formulaDiscrepancy);
+                    previousWeekConclusionRow.createCell(7).setCellFormula(formulaORL);
+                    previousWeekConclusionRow.createCell(8).setCellFormula(formulaManager);
+
+                    previousWeekConclusionRow.createCell(9).setCellFormula(formulaAccepted);
+                    Cell cell11 = previousWeekConclusionRow.createCell(11);
+                    String str = "IFERROR(AVERAGE(L" + (indexWeekStart + 1) + ":L" + (indexWeekFinish + 1) + "),\"Не было заказа ОРЛ\")";
+                    cell11.setCellFormula(str);
+                    CellStyle percentStyle = workbook.createCellStyle();
+                    percentStyle.setDataFormat(workbook.createDataFormat().getFormat("0.00%"));
+                    percentStyle.setAlignment(HorizontalAlignment.RIGHT);
+                    // Применяем стиль к ячейке
+                    cell11.setCellStyle(percentStyle);
+                    previousWeekConclusionRow.createCell(12).setCellFormula(formulaDiscrepancy);
+
+                    rowsList.add(indexWeekStart);
+                    rowsList.add(indexWeekFinish);
+                    builderORL.append("+");
+                    builderManager.append("+");
+                    builderAccepted.append("+");
+                    builderDiscrepancy.append("+");
+
+                    sheet.groupRow(indexWeekStart, indexWeekFinish);
+                    sheet.setRowGroupCollapsed(indexWeekStart, true);
+                    week = getWeekRange(row.getDateUnload());
+                    indexWeekStart = rowNum;
+                    rowsList.add(indexWeekStart);
+
+                }
+            }
+            Row excelRow = sheet.createRow(rowNum++);
+            excelRow.createCell(0).setCellValue(row.getCounterpartyName());
+            excelRow.createCell(1).setCellValue(row.getMarketNumber()); // Номер заказа из маркета
+            excelRow.createCell(2).setCellValue(getWeekRange(row.getDateUnload()));
+            excelRow.createCell(3).setCellValue(row.getDateUnload().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")));
+            excelRow.createCell(4).setCellValue(row.getStock());
+            excelRow.createCell(5).setCellValue(row.getProductName());
+            excelRow.createCell(6).setCellValue(row.getProductCode() != null ? row.getProductCode() : 0);
+            excelRow.createCell(7).setCellValue(row.getOrderedUnitsORL() != null ? row.getOrderedUnitsORL() : 0);
+            excelRow.createCell(8).setCellValue(row.getOrderedUnitsManager() != null ? row.getOrderedUnitsManager() : 0);
+            excelRow.createCell(9).setCellValue(row.getAcceptedUnits() != null ? row.getAcceptedUnits() : 0);
+            excelRow.createCell(10).setCellValue(row.getPrecentOrderFulfillment() != null ? row.getPrecentOrderFulfillment() + "%" : "0.0");
+            if (excelRow.getCell(7).getNumericCellValue() == 0) {
+                Cell cell11 = excelRow.createCell(11);
+                CellStyle style = workbook.createCellStyle();
+                style.setAlignment(HorizontalAlignment.RIGHT);
+                cell11.setCellStyle(style);
+                cell11.setCellValue("Не было заказа ОРЛ");
+            } else {
+                Cell cell11 = excelRow.createCell(11);
+                cell11.setCellFormula("I" + rowNum + "/H" + rowNum);
+                CellStyle percentStyle = workbook.createCellStyle();
+                percentStyle.setDataFormat(workbook.createDataFormat().getFormat("0.00%"));
+                // Применяем стиль к ячейке
+                cell11.setCellStyle(percentStyle);
+            }
+            excelRow.createCell(12).setCellValue(row.getDiscrepancyQuantity() != null ? row.getDiscrepancyQuantity() : 0);
+//            excelRow.createCell(11).setCellValue(row.getOrderedRUB() != null ? row.getOrderedRUB() : 0.0);
+//            excelRow.createCell(12).setCellValue(row.getAcceptedRUB() != null ? row.getAcceptedRUB() : 0.0);
+//            excelRow.createCell(13).setCellValue(row.getPrecentOrderCompletionNotNDS() != null ? row.getPrecentOrderCompletionNotNDS() : 0.0);
+//            excelRow.createCell(14).setCellValue(row.getDiscrepancyNotNDS() != null ? row.getDiscrepancyNotNDS() : 0.0);
+            excelRow.createCell(13).setCellValue(row.getComment() != null ? row.getComment() : null);
+            excelRow.createCell(14).setCellValue(row.getDateOrderORL() != null ? row.getDateOrderORL().toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) : null);
+
+            //создаём последжнюю группу
+            if (k == reportRows.size() - 1) {
+                sheet.groupRow(indexNameCounterpartyStart, sheet.getLastRowNum()); // остановился тут. Последняя строка не групперуется.
+                sheet.setRowGroupCollapsed(indexNameCounterpartyStart, true);
+            }
+            k++;
+        }
+
+
+        // Автоматическая настройка ширины столбцов
+        for (int i = 0; i < headers.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+        // Устанавливаем фильтры на все столбцы
+        sheet.setAutoFilter(new CellRangeAddress(1, 1, 0, headers.length - 1));
+
+        // Устанавливаем заморозку первых двух строк
+        // Первый параметр: количество фиксированных столбцов (0 — без заморозки столбцов)
+        // Второй параметр: количество фиксированных строк (2 строки)
+        sheet.createFreezePane(0, 2);
+
         // Сохраняем файл
         try (FileOutputStream fileOut = new FileOutputStream(filePath)) {
             workbook.write(fileOut);

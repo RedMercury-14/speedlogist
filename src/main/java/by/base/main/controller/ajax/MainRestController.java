@@ -27,7 +27,6 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -37,14 +36,11 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -62,7 +58,6 @@ import javax.imageio.ImageIO;
 import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
 import javax.imageio.stream.ImageOutputStream;
-import javax.mail.AuthenticationFailedException;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -77,8 +72,6 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFCellStyle;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -90,10 +83,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.core.userdetails.User.UserBuilder;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -171,7 +160,6 @@ import by.base.main.service.util.PDFWriter;
 import by.base.main.service.util.POIExcel;
 import by.base.main.service.util.PropertiesUtils;
 import by.base.main.service.util.ReaderSchedulePlan;
-import by.base.main.service.util.ScheduledTask;
 import by.base.main.service.util.ServiceLevel;
 import by.base.main.util.ChatEnpoint;
 import by.base.main.util.MainChat;
@@ -4639,9 +4627,16 @@ public class MainRestController {
 		}	
 	}
 	
-	@GetMapping("/manager/getMarketOrders/{idMarket}")
-	public Map<String, Object> getMarketOrders(HttpServletRequest request, @PathVariable String idMarket) {		
-//		String str = "{\"CRC\": \"\", \"Packet\": {\"MethodName\": \"SpeedLogist.OrderBuyArrayInfoGet\", \"Data\": {\"OrderBuyGroupIdArray\": ["+idMarket+"]}}}";
+	/**
+	 * ВОзвращает Order по группе номеров из маркета.
+	 * по сути тестовый метод
+	 * @param request
+	 * @param idMarket
+	 * @return
+	 * @throws ParseException
+	 */
+	@GetMapping("/manager/getMarketOrdersHasMap/{idMarket}")
+	public Map<String, Object> getMarketOrders(HttpServletRequest request, @PathVariable String idMarket) throws ParseException {		
 		try {			
 			checkJWT(marketUrl);			
 		} catch (Exception e) {
@@ -4711,31 +4706,25 @@ public class MainRestController {
 			
 			System.out.println(marketOrder2);
 			
-			//тут избавляемся от мусора в json
-			String str2 = marketOrder2.split("\\[", 2)[1];
-			String str3 = str2.substring(0, str2.length()-2);
-			
 			//создаём свой парсер и парсим json в объекты, с которыми будем работать.
 			CustomJSONParser customJSONParser = new CustomJSONParser();
 			
-			//создаём OrderBuyGroup
-			OrderBuyGroupDTO orderBuyGroupDTO = customJSONParser.parseOrderBuyGroupFromJSON(str3);
-						
-			//создаём Order, записываем в бд и возвращаем или сам ордер или ошибку (тот же ордер, только с отрицательным id)
-			Order order = orderCreater.create(orderBuyGroupDTO);		
-			
-			if(order.getIdOrder() < 0) {
-				response.put("status", "100");
-				response.put("message", order.getMessage());
-				response.put("info", order.getMessage());
-				return response;
-			}else {
-				response.put("status", "200");
-				response.put("message", order.getMessage());
-				response.put("info", order.getMessage());
-				response.put("order", order);
-				return response;
+			//создаём лист OrderBuyGroup
+			Map<Long, OrderBuyGroupDTO> OrderBuyGroupDTOMap = new HashMap<Long, OrderBuyGroupDTO>();
+			Map<String, Order> orderMap = new HashMap<String, Order>();
+			JSONParser parser = new JSONParser();
+			JSONObject jsonMainObject = (JSONObject) parser.parse(marketOrder2);
+			JSONArray numShopsJSON = (JSONArray) jsonMainObject.get("OrderBuyGroup");
+			for (Object object : numShopsJSON) {
+				//создаём OrderBuyGroup
+				OrderBuyGroupDTO orderBuyGroupDTO = customJSONParser.parseOrderBuyGroupFromJSON(object.toString());
+				OrderBuyGroupDTOMap.put(orderBuyGroupDTO.getOrderBuyGroupId(), orderBuyGroupDTO);
+				Order order = orderCreater.createSimpleOrder(orderBuyGroupDTO);
+				orderMap.put(order.getMarketNumber(), order);
 			}
+			response.put("status", "200");
+			response.put("orders", orderMap);
+			return response;
 		}	
 	}
 	

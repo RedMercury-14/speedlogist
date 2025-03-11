@@ -64,6 +64,7 @@ import by.base.main.model.Order;
 import by.base.main.model.OrderProduct;
 import by.base.main.model.Route;
 import by.base.main.model.Truck;
+import by.base.main.service.MarketAPI;
 import by.base.main.service.OrderProductService;
 import by.base.main.service.OrderService;
 import by.base.main.service.RouteService;
@@ -99,6 +100,9 @@ public class MainFileController {
 	
 	@Autowired
 	private OrderProductService orderProductService;
+	
+	@Autowired
+	private MarketAPI marketAPI;
 	
 	@Autowired
 	private OrderCreater orderCreater;
@@ -406,6 +410,324 @@ public class MainFileController {
           
           try {
             poiExcel.generateExcelReport(reportRows, folderPath);
+         } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+         }
+
+         servletResponse.setHeader("content-disposition", "attachment;filename="+"report330.xlsx");
+         servletResponse.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+
+         try (FileInputStream in = new FileInputStream(folderPath); OutputStream out = servletResponse.getOutputStream();){
+
+            byte buffer[] = new byte[1024];
+            int len = 0;
+            //  Прочитать содержимое входного потока в буфер в цикле
+            while ((len = in.read(buffer)) > 0) {
+               out.write(buffer, 0, len);
+            }
+
+         } catch (Exception e) {
+            e.printStackTrace();
+         }
+
+         return null;
+      }
+    
+    /**
+     * Метод отвечает за формирование и скачку 330 отчёта сервис левела
+     * <br>Разница в том, что запросы в маркет по заказам идут по списку, а не по одному
+     *  Версия 1.2 
+     * @param request
+     * @param servletResponse
+     * @param from
+     * @param to
+     * @param stock
+     * @param code
+     * @return
+     * @throws ParseException
+     * 
+     */
+    @GetMapping("/330V2/{from}&{to}&{stock}&{code}")
+    public Map<String, Object> get330AndParamV2(HttpServletRequest request, HttpServletResponse servletResponse,
+            @PathVariable String from,
+            @PathVariable String to,
+            @PathVariable String stock,
+            @PathVariable String code) throws ParseException {
+         String str = "{\"CRC\": \"\", \"Packet\": {\"MethodName\": \"SpeedLogist.GetReport330\", \"Data\": "
+               + "{\"DateFrom\": \""+from+"\", "
+               + "\"DateTo\": \""+to+"\", "
+               + "\"WarehouseId\": ["+stock+"], "
+               + "\"GoodsId\": ["+code+"]}}}";
+         Map<String, Object> response = new HashMap<>();
+         List<MarketDataFor330Responce> dataList330 = new ArrayList<MarketDataFor330Responce>();
+         List<ReportRow> reportRows = new ArrayList<ReportRow>();
+         try {
+            mainRestController.checkJWT(mainRestController.marketUrl);
+         } catch (Exception e) {
+            System.err.println("Ошибка получения jwt токена");
+         }
+         JSONParser parser = new JSONParser();
+         JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+         String marketPacketDtoStr = jsonMainObject.get("Packet") != null ? jsonMainObject.get("Packet").toString() : null;
+         JSONObject jsonMainObject2 = (JSONObject) parser.parse(marketPacketDtoStr);
+         String marketDataFor398RequestStr = jsonMainObject2.get("Data") != null ? jsonMainObject2.get("Data").toString() : null;
+         JSONObject jsonMainObjectTarget = (JSONObject) parser.parse(marketDataFor398RequestStr);
+
+         JSONArray warehouseIdArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("WarehouseId").toString());
+         JSONArray goodsIdArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("GoodsId").toString());
+
+         String dateForm = jsonMainObjectTarget.get("DateFrom") == null ? null : jsonMainObjectTarget.get("DateFrom").toString();
+         String dateTo = jsonMainObjectTarget.get("DateTo") == null ? null : jsonMainObjectTarget.get("DateTo").toString();
+         Object[] warehouseId = warehouseIdArray.toArray();
+         Object[] goodsId = goodsIdArray.toArray();
+
+         MarketDataFor330Request for330Request = new MarketDataFor330Request(dateForm, dateTo, warehouseId, goodsId);
+         MarketPacketDto marketPacketDto = new MarketPacketDto(mainRestController.marketJWT, "SpeedLogist.GetReport330", mainRestController.serviceNumber, for330Request);
+         MarketRequestDto requestDto = new MarketRequestDto("", marketPacketDto);
+
+         String market330JSON = mainRestController.postRequest(mainRestController.marketUrl, gson.toJson(requestDto));
+//         System.out.println(gson.toJson(requestDto));
+
+         if(market330JSON.equals("503")) { // означает что связь с маркетом потеряна
+            //в этом случае проверяем бд
+            System.err.println("Связь с маркетом потеряна");
+            response.put("status", "503");
+            response.put("payload responce", market330JSON);
+            response.put("message", "Связь с маркетом потеряна");
+            return response;
+
+         }else{//если есть связь с маркетом
+            JSONObject jsonResponceMainObject = (JSONObject) parser.parse(market330JSON);
+            JSONArray jsonResponceTable = (JSONArray) parser.parse(jsonResponceMainObject.get("Table").toString());
+            for (Object obj : jsonResponceTable) {
+                 dataList330.add(new MarketDataFor330Responce(obj.toString())); // парсин json засунул в конструктор
+              }
+
+         }
+
+         if(dataList330.isEmpty()) {
+        	 response.put("status", 100);
+        	 response.put("message", "Данные по 330 отчёту из маркета не найдены");
+        	 return response;
+         }
+
+//       for (MarketDataFor330Responce object : responces) {
+//          System.out.println(object);
+//       }
+
+         // Получаем номера заказов
+         List<String> uniqueOrderBuyGroupIds = dataList330.stream()
+                  .map(MarketDataFor330Responce::getOrderBuyGroupId) // Получаем значения
+                  .filter(id -> id != null) // Убираем null значения
+                  .map(String::valueOf) // Преобразуем Long в String
+                  .distinct() // Убираем дубликаты
+                  .collect(Collectors.toList()); // Преобразуем обратно в список
+
+         //получаем заказы по списку
+         Map<String, Order> ordersFromMyDB = orderService.getOrdersByListMarketNumber(uniqueOrderBuyGroupIds);
+         
+         //тут делаем массовый запрос в маркет
+         String uniqueOrderFromMarket = String.join(",", uniqueOrderBuyGroupIds);
+         
+         //спрашиваем у маркета целый пулл заказов
+         Map<String, Order> ordersFromMarket = marketAPI.getMarketOrders(uniqueOrderFromMarket);
+         
+//         ordersFromMarket.forEach((k,v) -> System.out.println(k + " - " + v));
+
+         //получаем даты заказов ОРЛ которые нам понадобятся
+         List<Date> datesOrderORL = ordersFromMyDB.values().stream()
+                  .map(Order::getDateOrderOrl) // Получаем значения getDateOrderOrl
+                  .filter(Objects::nonNull)   // Исключаем null
+                  .map(date -> new java.sql.Date(date.getTime() - 86400000)) // Уменьшаем на 1 день
+                  .distinct()                 // Убираем дубликаты
+                  .collect(Collectors.toList()); // Сохраняем в список
+         //получаем мапу с заказами орл
+         /*
+          * ключ - дата, значение - мапа с кодом товара и значением (как в методе orderProductService.getOrderProductMapHasDate(dateTarget))
+          */
+         
+         Map<String, Map<Integer, OrderProduct>> mapOrderProduct = orderProductService.getOrderProductMapHasDateList(datesOrderORL);
+
+         System.out.println("В мапе объектов : " + mapOrderProduct.size());
+         mapOrderProduct.forEach((k,v)-> System.out.println("Для даты :" + k + " -> " + v.size() + " значений"));
+
+
+         //подгатавливаем строку (собираем все нужные столбцы)
+         for (MarketDataFor330Responce data330 : dataList330) {
+            ReportRow reportRow = new ReportRow();
+            reportRow.setProductName(data330.getGoodsName());
+            reportRow.setProductCode(data330.getGoodsId());
+
+            String period = Date.valueOf(from).toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + " - " + Date.valueOf(to).toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+            reportRow.setPeriodOrderDelivery(period);
+            reportRow.setOrderedUnitsORL(null); //сколько заказано ОРЛ
+
+            if(data330.getOrderBuyGroupId() == null) { // ПОТОМ ОБРАБОТАТЬ КОГДА НЕТУ КОДА ИЗ МАРКЕТА В 330 ОТЧЁТЕ
+               continue;
+            }
+
+            Order order = ordersFromMyDB.get(data330.getOrderBuyGroupId().toString());
+            if(order == null) {
+               System.err.println("Заказа с номером " + data330.getOrderBuyGroupId() + "в базе данных не найдено!");
+               order = ordersFromMarket.get(data330.getOrderBuyGroupId().toString());
+               if(order == null) {
+					reportRow.setComment("Заказ отсутствует в БД маркета и в БД Speedlogist");
+					reportRow.setMarketNumber(data330.getOrderBuyGroupId().toString());
+		            reportRow.setDateStart(Date.valueOf(from));
+		            reportRow.setDateFinish(Date.valueOf(to));
+		            reportRow.setCounterpartyName(data330.getContractorNameShort());
+		            reportRow.setAcceptedUnits(data330.getQuantity().intValue());
+		            reportRow.setStock(data330.getWarehouseId().toString());
+		            reportRow.setDateUnload(data330.getDate3());
+		            reportRow.setPrecentOrderFulfillment(0.0);
+		            reportRow.setDiscrepancyQuantity(0);
+					reportRows.add(reportRow);
+					continue; // пропускаем остальные данные этого товара
+               }
+               
+//               try {
+//            	   order = getMarketOrder(request, data330.getOrderBuyGroupId().toString()); // тянем простой ордер из маркета ТУТ ЗАПРОС В МАРКЕТ!!!!
+//				} catch (MarketConnectionException e) {
+//					if(e.getStatus() == 503) { // связь с маркетом потеряна
+//						response.put("status", 100);
+//	                    response.put("message", e.getMessage());
+//	                    return response;
+//					}else { // значит что общая ошибка
+//						reportRow.setComment(e.getMessage());
+//						reportRow.setMarketNumber(data330.getOrderBuyGroupId().toString());
+//			            reportRow.setDateStart(Date.valueOf(from));
+//			            reportRow.setDateFinish(Date.valueOf(to));
+//			            reportRow.setCounterpartyName(data330.getContractorNameShort());
+//			            reportRow.setAcceptedUnits(data330.getQuantity().intValue());
+//			            reportRow.setStock(data330.getWarehouseId().toString());
+//			            reportRow.setDateUnload(data330.getDate3());
+//			            reportRow.setPrecentOrderFulfillment(0.0);
+//			            reportRow.setDiscrepancyQuantity(0);
+//						reportRows.add(reportRow);
+//						continue; // пропускаем остальные данные этого товара
+//					}
+//				}
+
+	        }
+
+            Map<Long, Double> productHasOrder = order.getOrderLinesMap();
+//          System.out.println("---> Хочу взять: " + data330.getGoodsId() + " из заказа " + data330.getOrderBuyGroupId());
+            if(!productHasOrder.containsKey(data330.getGoodsId())) {
+               System.err.println("Отсутствует товар " + data330.getGoodsId() + " ("+ data330.getGoodsName()+ ") в заказе " + data330.getOrderBuyGroupId());
+            }
+            Long longGoodIdHas330 = data330.getGoodsId();
+            Integer orderProductHasOrderManager;
+            if(!productHasOrder.containsKey(longGoodIdHas330)) {
+               Order orderFromMarket;
+               if(order.getIdOrder() == null) { // если id == null это значит что ордер уже вытянут из маркета
+                  orderFromMarket = order;
+               }else {
+            	   orderFromMarket = ordersFromMarket.get(data330.getOrderBuyGroupId().toString());
+//                  try {
+//                     orderFromMarket = getMarketOrder(request, data330.getOrderBuyGroupId().toString());
+//                  } catch (MarketConnectionException e) {
+//                     response.put("status", 100);
+//                     response.put("message", e.getMessage());
+//                     return response;
+//                  }
+               }
+
+               if (orderFromMarket == null) {
+                  System.err.println("orderFromMarket == null. Возможно, связь с макетом была потеряна.");
+                  response.put("message", "Возможно, связь с маркетом потеряна. Попробуйте создать отчёт ещё раз.");
+                  return response;
+               }
+               
+               if(!orderFromMarket.getOrderLinesMap().containsKey(longGoodIdHas330)) { // если и в заказе из маркета нет и в заказе из SL нет - записываем коммент
+                  reportRow.setComment("Товара нет в базе данных SpeedLogist и Маркета.");
+                  orderProductHasOrderManager = 0;
+               }else {
+                  orderProductHasOrderManager = orderFromMarket.getOrderLinesMap().get(longGoodIdHas330).intValue();
+                  System.out.println("Товара " +data330.getGoodsName() + " ("+ data330.getGoodsId() + ") не было в заказе, который хранится в базе данных SpeedLogist. Однако был в заказе базы данных Маркета" );
+                  reportRow.setComment("Товара не было в заказе, который хранится в базе данных SpeedLogist. Однако был в заказе базы данных Маркета");
+               }
+               
+            }else {
+               orderProductHasOrderManager = productHasOrder.get(longGoodIdHas330).intValue();
+            }
+            reportRow.setOrderedUnitsManager(orderProductHasOrderManager); // сколько заказано менеджером
+            
+            OrderProduct orderORL;
+            Integer intOrderORL;
+            if(order.getDateOrderOrl() != null) {
+            	reportRow.setDateOrderORL(order.getDateOrderOrl());
+               Date dateTarget = Date.valueOf(order.getDateOrderOrl().toLocalDate().minusDays(1)); 
+               Map<Integer, OrderProduct> mapOrderProductTarget = mapOrderProduct.get(dateTarget.toString());
+
+//             mapOrderProduct.forEach((k,v)-> System.out.println("Для даты :" + k + " -> " + k.toString().equals(dateTarget.toString()) + " значений"));
+               orderORL = mapOrderProductTarget.get(data330.getGoodsId().intValue()) != null ? mapOrderProductTarget.get(data330.getGoodsId().intValue()) : null;
+               if(dateTarget.toLocalDate().isBefore(LocalDate.parse("2024-12-08")) && orderORL!= null) {//тут искллючения на прошлые даты, когда не было двух складов
+                  intOrderORL = orderORL.getQuantity();
+               }else {
+                  if(orderORL!= null) {
+                     switch (data330.getWarehouseId().toString()) {
+                     case "1700":
+                        intOrderORL = orderORL.getQuantity1700();
+                        break;
+                     case "1800":
+                        intOrderORL = orderORL.getQuantity1800();
+                        break;
+                     default:
+                        intOrderORL = orderORL.getQuantity();
+                        break;
+                     }
+                  }else {
+                     intOrderORL = 0;
+                  }
+               }        
+               reportRow.setOrderedUnitsORL(intOrderORL);// сколько заказано ОРЛ
+            }else {
+               if(order.getIdOrder() != null) {
+                  reportRow.setComment("В заказе не стоит дата расчёта ОРЛ");
+               }else {
+                  reportRow.setComment("Заказ не найден в базе данных SpeedLogist. Расчёт заказа ОРЛ невозможен");
+               }
+               
+            }
+            
+            reportRow.setMarketNumber(data330.getOrderBuyGroupId().toString());
+            reportRow.setDateStart(Date.valueOf(from));
+            reportRow.setDateFinish(Date.valueOf(to));
+            reportRow.setCounterpartyName(data330.getContractorNameShort());
+            reportRow.setAcceptedUnits(data330.getQuantity().intValue());
+            reportRow.setStock(data330.getWarehouseId().toString());
+            reportRow.setDateUnload(data330.getDate3());
+            
+            
+            //тут блок расчёта процентов для каждой строки и всяких разниц
+            /*
+             * Рассчитываем % Выполнения заказа
+             */
+//          Double precentOrderFulfillment = (reportRow.getOrderedUnitsManager().doubleValue()/reportRow.getAcceptedUnits().doubleValue()*100);
+            Double precentOrderFulfillment;
+            if(reportRow.getOrderedUnitsManager().doubleValue() == 0) {
+               precentOrderFulfillment = 9999.0;
+            }else {
+               precentOrderFulfillment = (reportRow.getAcceptedUnits().doubleValue()/reportRow.getOrderedUnitsManager().doubleValue()*100);
+            }
+             
+            reportRow.setPrecentOrderFulfillment(roundВouble(precentOrderFulfillment, 2));       
+               
+            /*
+             * рассчитываем Расхождение кол-во
+             */
+            reportRow.setDiscrepancyQuantity(reportRow.getOrderedUnitsManager()-reportRow.getAcceptedUnits());
+            
+            reportRows.add(reportRow);
+         }
+         
+         //записываем строки в ексель
+         String appPath = request.getServletContext().getRealPath("");
+          String folderPath = appPath + "resources/others/report330.xlsx";
+          
+          try {
+            poiExcel.generateExcelReportV1_2(reportRows, folderPath);
          } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

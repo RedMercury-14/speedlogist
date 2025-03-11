@@ -62,8 +62,8 @@ public class MarketAPIImpl implements MarketAPI{
 		MarketRequestDto requestDto3 = new MarketRequestDto("", packetDto3);
 		String marketOrder2 = mainRestController.postRequest(mainRestController.marketUrl, gson.toJson(requestDto3));
 		
-		System.out.println("request -> " + gson.toJson(requestDto3));
-		System.out.println("responce -> " + marketOrder2);
+//		System.out.println("request -> " + gson.toJson(requestDto3));
+//		System.out.println("responce -> " + marketOrder2);
 		
 //		System.out.println(marketOrder2);
 		

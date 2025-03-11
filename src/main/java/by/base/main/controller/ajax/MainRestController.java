@@ -410,7 +410,7 @@ public class MainRestController {
 		Review review = reviewService.getReviewById(idReview);
 		String replyAuthor = user.getSurname() + " " + user.getName();
 
-		if (replyBody != null && !replyBody.equals(review.getReplyBody())) {
+		if (replyBody != null && !replyBody.equals(review.getReplyBody()) && review.getStatus() == 10) {
 			review.setReplyBody(replyBody);
 			review.setStatus(20);
 			review.setReplyDate(replyDate);
@@ -419,7 +419,11 @@ public class MainRestController {
 			List<String> emails = new ArrayList<>();
 			emails.add(review.getEmail());
 			emails.add(user.geteMail());
-			if(!mailService.sendEmailToUsers(request, "Ответ на обратную связь", replyBody, emails)) {
+			String messageText = "Тема: " + review.getTopic() + "\n\n"
+				+ "Сообщение: " + review.getReviewBody() + "\n\n"
+				+ "Ответ: " + review.getReplyBody() + "\n\n\n"
+				+ "С уважением команда ЗАО \"Доброном\"";
+			if(!mailService.sendEmailToUsers(request, "Ответ на обратную связь ЗАО \"Доброном\"", messageText, emails)) {
 				responseMap.put("status", "100");
 				responseMap.put("message", "Сообщение не удалось отправить.");
 				return responseMap;
@@ -5693,6 +5697,7 @@ public class MainRestController {
 				response.put("status", "200");
 				response.put("timeDelivery", order.getTimeDelivery());
 				response.put("planResponce", planResponce);
+//				System.out.println(planResponce);
 				java.util.Date t2 = new java.util.Date();
 				System.out.println(t2.getTime()-t1.getTime() + " ms - preload" );
 				return response;	

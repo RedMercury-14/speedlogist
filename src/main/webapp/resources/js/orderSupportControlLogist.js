@@ -77,6 +77,7 @@ const columnDefs = [
 	},
 	{ headerName: "Реализация расчётная в день для 1700", field: "calculatedPerDay1700", },
 	{ headerName: "Реализация расчётная в день для 1800", field: "calculatedPerDay1800", },
+	{ headerName: "Реализация расчётная в день (общая)", field: "сalculatedPerDay", },
 	{
 		headerName: "Мин. кол-во дней", field: "dayMax",
 		cellClass: "px-1 text-center font-weight-bold",

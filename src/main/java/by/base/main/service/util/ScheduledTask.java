@@ -539,8 +539,11 @@ public class ScheduledTask {
 		
 		Task task = taskService.getLastTaskFor398();
 		String stock = task.getStocks();
-		String from = task.getFromDate().toString();
-		String to = task.getToDate().toString();
+//		String from = task.getFromDate().toString();
+//		String to = task.getToDate().toString();
+		
+		String from = LocalDate.now().minusDays(2).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+		String to = LocalDate.now().minusDays(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 		
 		java.util.Date t1 = new java.util.Date();
 		Integer maxShopCoint = 40; // максимальное кол-во магазинов в запросе

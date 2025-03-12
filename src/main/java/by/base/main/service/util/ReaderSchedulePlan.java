@@ -763,7 +763,14 @@ public class ReaderSchedulePlan {
 //						if(zaq > orlZaq*1.1) {
 						if(zaq > orlZaqMax) {
 							result = result +"<span style=\"color: red;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + zaq + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + orlZaq + " шт.</span>\n";	
-							ResultMethod dayStockMessage =  checkNumProductHasStockFromDay(order, product, dateRange); // проверяем по стокам относительно одного продукта (дни остатка)
+							ResultMethod stockInDayInTruckMessage = checkStockInDayInTruck(order, product, dateRange);
+							if(stockInDayInTruckMessage.getStatus().intValue() == 0) {
+					             result = stockInDayInTruckMessage.getMessage()+"\n" + result;
+//					             createPermission(order, stockInDayInTruckMessage.getMessage());					             
+					             isMistakeZAQ = true;						             
+					         }
+							
+							ResultMethod dayStockMessage = checkNumProductHasStockFromDay(order, product, dateRange); // проверяем по стокам относительно одного продукта (дни остатка)
 							if(dayStockMessage.getStatus().intValue() == 200) {
 								result = result + dayStockMessage.getMessage() + "\n";
 							}
@@ -808,7 +815,7 @@ public class ReaderSchedulePlan {
 						         }
 							}
 						}else if(zaq > orlZaq*1.1 && zaq < orlZaqMax) {//больше чем заказали ОРЛ но меньше чем макс значение заказа #bbaa00
-							result = result +"<span style=\"color: #bbaa00;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + zaq + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + orlZaq + " шт. Максимальное значение: "+orlZaqMax+" шт.</span>\n";
+							result = result +"<span style=\"color: #bbaa00;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + zaq + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + orlZaq + " шт.</span>\n";
 						}else {//всё хорошо, в пределах нормы
 							result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + zaq + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + orlZaq + " шт.\n";													
 						}
@@ -816,6 +823,12 @@ public class ReaderSchedulePlan {
 //						if(singleZaq > orlZaq*1.1) {
 						if(zaq > orlZaqMax) {
 							result = result +"<span style=\"color: red;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + singleZaq + " шт. из " + orlZaq + " шт.</span>\n";	
+							ResultMethod stockInDayInTruckMessage = checkStockInDayInTruck(order, product, dateRange);
+							if(stockInDayInTruckMessage.getStatus().intValue() == 0) {
+					             result = stockInDayInTruckMessage.getMessage()+"\n" + result;
+//					             createPermission(order, stockInDayInTruckMessage.getMessage());					             
+					             isMistakeZAQ = true;						             
+					         }
 							ResultMethod dayStockMessage =  checkNumProductHasStockFromDay(order, product, dateRange); // проверяем по стокам относительно одного продукта
 							if(dayStockMessage.getStatus().intValue() == 200) {
 								result = result + dayStockMessage.getMessage() + "\n";
@@ -862,13 +875,19 @@ public class ReaderSchedulePlan {
 						         }
 							}
 						}else if(zaq > orlZaq*1.1 && zaq < orlZaqMax) {//больше чем заказали ОРЛ но меньше чем макс значение заказа #bbaa00
-							result = result +"<span style=\"color: #bbaa00;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + zaq + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + orlZaq + " шт. Максимальное значение: "+orlZaqMax+" шт.</span>\n";	
+							result = result +"<span style=\"color: #bbaa00;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + zaq + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + orlZaq + " шт.</span>\n";	
 						}else {
 							result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + singleZaq + " шт. из " + orlZaq + " шт.\n";													
 						}
 					}
 					
 				}else { // если отсутствует заказ ОРЛ
+					ResultMethod stockInDayInTruckMessage = checkStockInDayInTruck(order, product, dateRange);
+					if(stockInDayInTruckMessage.getStatus().intValue() == 0) {
+			             result = stockInDayInTruckMessage.getMessage()+"\n" + result;
+//			             createPermission(order, stockInDayInTruckMessage.getMessage());					             
+			             isMistakeZAQ = true;						             
+			         }
 					ResultMethod dayStockMessage =  checkNumProductHasStockFromDay(order, product, dateRange); // проверяем по стокам относительно одного продукта
 					if(dayStockMessage.getStatus().intValue() == 200) {
 						result = result + dayStockMessage.getMessage() + "\n";
@@ -1165,7 +1184,7 @@ public class ReaderSchedulePlan {
      * @param order
      * @return
      */
-    public ResultMethod checkStickInDayInTruck(Order order, Product product, DateRange dateRange) {
+    public ResultMethod checkStockInDayInTruck(Order order, Product product, DateRange dateRange) {
     	
     	String message = null;
 		User user = getThisUser();		
@@ -1188,7 +1207,7 @@ public class ReaderSchedulePlan {
 					Period period = Period.between(product.getDateUnload().toLocalDate(), dateNow);
 					if(product.getDateUnload() != null && period.getDays()<2) {
 						
-						Double quantityInOrder = order.getOrderLinesMap().get(product.getCodeProduct());
+						Double quantityInOrder = order.getOrderLinesMap().get(product.getCodeProduct().longValue());
 						Double calculatedPerDay = 0.0;
 						
 						Date date = Date.valueOf(LocalDate.now());
@@ -1214,29 +1233,33 @@ public class ReaderSchedulePlan {
 								System.out.println(getTrueStock(order) + " <- склад на который устанавливают слот");
 								System.out.println(quantityInOrder + " <- штук товара в машине");
 								System.out.println(calculatedPerDay + " <-calculatedPerDay -> " + product.getСalculatedPerDay());
-								System.out.println(balanceTruck + " <-balanceStockAndReserves ("+quantityInOrder+"/"+calculatedPerDay+")");
+								System.out.println(roundВouble(quantityInOrder / calculatedPerDay, 0) + " <-balanceStockAndReserves ("+quantityInOrder+"/"+calculatedPerDay+")");
 								System.out.println(dateRange.stock + " <-dateRange.stock (доступный баланс)");
 								System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
 							}
 							
 							if(calculatedPerDay>0.0) {
-								balanceTruck = quantityInOrder / calculatedPerDay;
+								balanceTruck = roundВouble(quantityInOrder / calculatedPerDay, 0);
 							}else {
 								return new ResultMethod("<span style=\"color: #bbaa00;\"><strong>Проверка по кол-ву в авто не проводилась!</strong> Расчётная реализация товара " + product.getName() + " (" + product.getCodeProduct()+") равна 0.0 !</span>", 200);
 							}
 							
 							if(balanceTruck > dateRange.stock) {
 								// остановился тут
+								return new ResultMethod("<span style=\"color: red;\">Запрещено, т.к. товара " + product.getName() + " (" + product.getCodeProduct()+") в машине на "+balanceTruck+" дней.  Сток согласно графику поставок составляет: " + dateRange.stock + " дн.</span>", 0);
 							}else {
+								return new ResultMethod("<span>Инфо: товара " + product.getName() + " (" + product.getCodeProduct()+") в машине на "+balanceTruck+" дней.  Сток согласно графику поставок составляет: " + dateRange.stock + "дн.</span>", 200);
 								// остановился тут
 							}
 						
 					}else {
 						return new ResultMethod("<span style=\"color: #bbaa00;\">Данные по потребностям " + product.getName() + " (" + product.getCodeProduct()+") устаревшие!.  Дата последней прогрузки: " + product.getDateUnload().toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + "</span>", 200);
 					}
+				}else {
+					return new ResultMethod("<span>Инфо: товар для проверки отсутствует</span>", 100);
 				}
     	    	
-		return null;    	
+		    	
     }
     
     /**

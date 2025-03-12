@@ -638,13 +638,18 @@ public class MainRestController {
 	@GetMapping("/test")
 	@TimedExecution
 	public Map<String, Object> getTEST(HttpServletRequest request) throws ParseException {
-		String code = "1231325, 156845";
-		String str = "{\"CRC\": \"\", \"Packet\": {\"MethodName\": \"SpeedLogist.GetOrderBuyInfo\", \"Data\": "
-				+ "{\"OrderBuyGroupId\": ["+code+"]}}}";
 		Map<String, Object> response = new HashMap<>();
+		Task task = taskService.getLastTaskFor398();
+		String stock = task.getStocks();
+		String from = task.getFromDate().toString();
+		String to = task.getToDate().toString();
+		String from2 = LocalDate.now().minusDays(2).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+		String to2 = LocalDate.now().minusDays(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 		
-		
-		response.put("status", "200");
+		response.put("from", from);
+		response.put("from2", from2);
+		response.put("to", to);
+		response.put("to2", to2);
 		return response;
 				
 	}
@@ -1932,6 +1937,12 @@ public class MainRestController {
 		return response;
 	}
 
+	/**
+	 * Принудительная выгрузки 398 отчёта ТОЛЬКО ПО ЗАДАНИЮ!
+	 * @param request
+	 * @return
+	 * @throws ParseException
+	 */
 	@TimedExecution
 	@GetMapping("/398/get")
 	public Map<String, Object> get398AndStock(HttpServletRequest request) throws ParseException {

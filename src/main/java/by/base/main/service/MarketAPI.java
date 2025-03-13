@@ -13,7 +13,8 @@ public interface MarketAPI {
 	 * @param idMarket
 	 * @return
 	 * @throws ParseException
+	 * @throws Exception 
 	 */
-	public Map<String, Order> getMarketOrders(String idMarket) throws ParseException;
+	public Map<String, Order> getMarketOrders(String idMarket) throws ParseException, Exception;
 
 }

@@ -536,139 +536,144 @@ public class ScheduledTask {
     
     @Scheduled(cron = "0 00 06 * * ?") // каждый день в 06:00
     public void get398() throws ParseException {
-		
-		Task task = taskService.getLastTaskFor398();
-		String stock = task.getStocks();
-//		String from = task.getFromDate().toString();
-//		String to = task.getToDate().toString();
-		
-		String from = LocalDate.now().minusDays(2).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-		String to = LocalDate.now().minusDays(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-		
-		java.util.Date t1 = new java.util.Date();
-		Integer maxShopCoint = 40; // максимальное кол-во магазинов в запросе
-		
-		//сначала определяыем кол-во магазов и делим их на массивы запросов
-		 String [] mass = stock.split(",");
-		 Integer shopAllCoint = mass.length;
-		 
-		 System.out.println("Всего магазинов: " + shopAllCoint);
-		 
-		 List<String> shopsList = new ArrayList<String>();
-		 
-		 if(shopAllCoint > maxShopCoint) {
-			 int i = 1;
-			 String row = null;
-			 for (String string : mass) {
-				 if(i % maxShopCoint == 0) {
-					 shopsList.add(row); 
-					 row = null;
-					 System.out.println("записываем строку");
-				 }
-				if(row == null) {
-					row = string;
-				}else {
-					row = row + "," + string;
-				}
-				i++;
-			}
-			 if (row != null) {
-				    shopsList.add(row);
-				    System.out.println("Записываем последнюю строку");
-				}
-		 }else {
-			 shopsList.add(stock);
-		 }
-		 System.out.println("Запросов будет : " + shopsList.size());
-		 /*
-		  * Основной метод: проходимсмя по листу и формируем сексели по всем запросам
-		  */
-		String appPath = servletContext.getRealPath("/");
-		String pathFolder = appPath + "resources/others/398/";
-		//сначала удаляем мусор что есть в этой папке
-		
-		// Проверяем, существует ли папка
-	    File folder = new File(pathFolder);
-	    if (!folder.exists()) {
-	        System.out.println("Папка не существует. Создаем: " + pathFolder);
-	        folder.mkdirs();
-	    } else {
-	        // Если папка существует, удаляем все файлы внутри нее
-	        File[] files = folder.listFiles();
-	        if (files != null) {
-	            for (File file : files) {
-	                if (file.isFile()) {
-	                    System.out.println("Удаляем файл: " + file.getName());
-	                    file.delete();
-	                }
-	            }
-	        }
-	    }
-		 
-		 
-		 Integer j = 0;
-		 for (String stockStr : shopsList) {
-			 j++;
-			 String str = "{\"CRC\": \"\", \"Packet\": {\"MethodName\": \"SpeedLogist.GetReport398\", \"Data\": {\"DateFrom\": \""+from+"\", \"DateTo\": \""+to+"\", \"WarehouseId\": "
-						+ "["+stockStr+"],"
-						+ " \"WhatBase\": [11,12]}}}";
-				try {			
-					checkJWT(mainRestController.marketUrl);			
-				} catch (Exception e) {
-					System.err.println("Ошибка получения jwt токена");
-				}
-				Integer finalJ = j;
-				JSONParser parser = new JSONParser();
-				JSONObject jsonMainObject = (JSONObject) parser.parse(str);
-				String marketPacketDtoStr = jsonMainObject.get("Packet") != null ? jsonMainObject.get("Packet").toString() : null;
-				JSONObject jsonMainObject2 = (JSONObject) parser.parse(marketPacketDtoStr);
-				String marketDataFor398RequestStr = jsonMainObject2.get("Data") != null ? jsonMainObject2.get("Data").toString() : null;
-				JSONObject jsonMainObjectTarget = (JSONObject) parser.parse(marketDataFor398RequestStr);
-				
-				JSONArray warehouseIdArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("WarehouseId").toString());
-				JSONArray whatBaseArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("WhatBase").toString());
-				
-				String dateForm = jsonMainObjectTarget.get("DateFrom") == null ? null : jsonMainObjectTarget.get("DateFrom").toString();
-				String dateTo = jsonMainObjectTarget.get("DateTo") == null ? null : jsonMainObjectTarget.get("DateTo").toString();
-				Object[] warehouseId = warehouseIdArray.toArray();
-				Object[] whatBase = whatBaseArray.toArray();
-				
-				MarketDataFor398Request for398Request = new MarketDataFor398Request(dateForm, dateTo, warehouseId, whatBase);		
-				MarketPacketDto marketPacketDto = new MarketPacketDto(mainRestController.marketJWT, "SpeedLogist.GetReport398", mainRestController.serviceNumber, for398Request);		
-				MarketRequestDto requestDto = new MarketRequestDto("", marketPacketDto);
-				
-				String marketOrder2 = postRequest(mainRestController.marketUrl, gson.toJson(requestDto));
-				System.out.println("Размер: " + getStringSizeInMegabytes(marketOrder2) + " мб");
-								
-				JSONObject jsonTable = (JSONObject) parser.parse(marketOrder2);	
-				
-				
-				new Thread(new Runnable() {			
-					@Override
-					public void run() {
-						try {
-							poiExcel.createExcel398(jsonTable.get("Table").toString(), pathFolder, finalJ, stockStr, from, to);
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}				
+		try {
+			Task task = taskService.getLastTaskFor398();
+			String stock = task.getStocks();
+//			String from = task.getFromDate().toString();
+//			String to = task.getToDate().toString();
+			
+			String from = LocalDate.now().minusDays(2).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+			String to = LocalDate.now().minusDays(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+			
+			java.util.Date t1 = new java.util.Date();
+			Integer maxShopCoint = 40; // максимальное кол-во магазинов в запросе
+			
+			//сначала определяыем кол-во магазов и делим их на массивы запросов
+			 String [] mass = stock.split(",");
+			 Integer shopAllCoint = mass.length;
+			 
+			 System.out.println("Всего магазинов: " + shopAllCoint);
+			 
+			 List<String> shopsList = new ArrayList<String>();
+			 
+			 if(shopAllCoint > maxShopCoint) {
+				 int i = 1;
+				 String row = null;
+				 for (String string : mass) {
+					 if(i % maxShopCoint == 0) {
+						 shopsList.add(row); 
+						 row = null;
+						 System.out.println("записываем строку");
+					 }
+					if(row == null) {
+						row = string;
+					}else {
+						row = row + "," + string;
 					}
-				}).start();
-				
+					i++;
+				}
+				 if (row != null) {
+					    shopsList.add(row);
+					    System.out.println("Записываем последнюю строку");
+					}
+			 }else {
+				 shopsList.add(stock);
+			 }
+			 System.out.println("Запросов будет : " + shopsList.size());
+			 /*
+			  * Основной метод: проходимсмя по листу и формируем сексели по всем запросам
+			  */
+			String appPath = servletContext.getRealPath("/");
+			String pathFolder = appPath + "resources/others/398/";
+			//сначала удаляем мусор что есть в этой папке
+			
+			// Проверяем, существует ли папка
+		    File folder = new File(pathFolder);
+		    if (!folder.exists()) {
+		        System.out.println("Папка не существует. Создаем: " + pathFolder);
+		        folder.mkdirs();
+		    } else {
+		        // Если папка существует, удаляем все файлы внутри нее
+		        File[] files = folder.listFiles();
+		        if (files != null) {
+		            for (File file : files) {
+		                if (file.isFile()) {
+		                    System.out.println("Удаляем файл: " + file.getName());
+		                    file.delete();
+		                }
+		            }
+		        }
+		    }
+			 
+			 
+			 Integer j = 0;
+			 for (String stockStr : shopsList) {
+				 j++;
+				 String str = "{\"CRC\": \"\", \"Packet\": {\"MethodName\": \"SpeedLogist.GetReport398\", \"Data\": {\"DateFrom\": \""+from+"\", \"DateTo\": \""+to+"\", \"WarehouseId\": "
+							+ "["+stockStr+"],"
+							+ " \"WhatBase\": [11,12]}}}";
+					try {			
+						checkJWT(mainRestController.marketUrl);			
+					} catch (Exception e) {
+						System.err.println("Ошибка получения jwt токена");
+					}
+					Integer finalJ = j;
+					JSONParser parser = new JSONParser();
+					JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+					String marketPacketDtoStr = jsonMainObject.get("Packet") != null ? jsonMainObject.get("Packet").toString() : null;
+					JSONObject jsonMainObject2 = (JSONObject) parser.parse(marketPacketDtoStr);
+					String marketDataFor398RequestStr = jsonMainObject2.get("Data") != null ? jsonMainObject2.get("Data").toString() : null;
+					JSONObject jsonMainObjectTarget = (JSONObject) parser.parse(marketDataFor398RequestStr);
+					
+					JSONArray warehouseIdArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("WarehouseId").toString());
+					JSONArray whatBaseArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("WhatBase").toString());
+					
+					String dateForm = jsonMainObjectTarget.get("DateFrom") == null ? null : jsonMainObjectTarget.get("DateFrom").toString();
+					String dateTo = jsonMainObjectTarget.get("DateTo") == null ? null : jsonMainObjectTarget.get("DateTo").toString();
+					Object[] warehouseId = warehouseIdArray.toArray();
+					Object[] whatBase = whatBaseArray.toArray();
+					
+					MarketDataFor398Request for398Request = new MarketDataFor398Request(dateForm, dateTo, warehouseId, whatBase);		
+					MarketPacketDto marketPacketDto = new MarketPacketDto(mainRestController.marketJWT, "SpeedLogist.GetReport398", mainRestController.serviceNumber, for398Request);		
+					MarketRequestDto requestDto = new MarketRequestDto("", marketPacketDto);
+					
+					String marketOrder2 = postRequest(mainRestController.marketUrl, gson.toJson(requestDto));
+					System.out.println("Размер: " + getStringSizeInMegabytes(marketOrder2) + " мб");
+									
+					JSONObject jsonTable = (JSONObject) parser.parse(marketOrder2);	
+					
+					
+					new Thread(new Runnable() {			
+						@Override
+						public void run() {
+							try {
+								poiExcel.createExcel398(jsonTable.get("Table").toString(), pathFolder, finalJ, stockStr, from, to);
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}				
+						}
+					}).start();
+					
+			}
+			java.util.Date t2 = new java.util.Date();
+			List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.398");
+//			List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+			
+			long time = t2.getTime()-t1.getTime();
+			
+			String text = "Принято магазинов: " + mass.length + "\n"
+					+ "С " + from + " по " + to + "\n"
+					+ "Вид расходов : 11,12" + "\n"
+					+ "Всего файлов: " + j + "\n"
+					+ "Время работы: " + time + " мс";
+			
+			mailService.sendEmailToUsers(servletContext, "Автоматическая выгрузка : 398", text, emailsORL);
+		} catch (Exception e) {
+			List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.admin");
+			mailService.sendEmailToUsers(servletContext, "Ошибка автоматической выгрузки : 398", e.toString(), emailsAdmins);
 		}
-		java.util.Date t2 = new java.util.Date();
-		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.398");
-//		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
 		
-		long time = t2.getTime()-t1.getTime();
-		
-		String text = "Принято магазинов: " + mass.length + "\n"
-				+ "С " + from + " по " + to + "\n"
-				+ "Вид расходов : 11,12" + "\n"
-				+ "Всего файлов: " + j + "\n"
-				+ "Время работы: " + time + " мс";
-		
-		mailService.sendEmailToUsers(servletContext, "Автоматическая выгрузка : 398", text, emailsORL);
     }
     
     /**

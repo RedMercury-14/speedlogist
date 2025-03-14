@@ -38,6 +38,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -122,6 +123,9 @@ public class ReaderSchedulePlan {
 	
 	@Autowired
 	private MainRestController mainRestController;
+	
+	@Value("${slot.chech.minPercentStockInDayInTruckMessage}")
+	public Double minPercentStockInDayInTruckMessage;
 	
 	private static final Map<String, DayOfWeek> RUSSIAN_DAYS = new HashMap<>();
 	/*
@@ -1186,6 +1190,8 @@ public class ReaderSchedulePlan {
         return 0;
     }
     
+    
+    
     /**
      * Метод, который проверяет кол-во товарав машине (в днях). Если оно больше чем до Y-ой поставки - то низя!
      * 
@@ -1221,10 +1227,9 @@ public class ReaderSchedulePlan {
 						Double calculatedPerDay = 0.0;
 						
 						Date date = Date.valueOf(LocalDate.now());
-						
 							switch (getTrueStock(order)) {
 							case "1700":
-								if(product.getPercent1700()*100<=10.0){
+								if(product.getPercent1700()*100<= minPercentStockInDayInTruckMessage){
 									calculatedPerDay = product.getCalculatedPerDay1700() != null ? product.getCalculatedPerDay1700() : 0.0;	
 								}else{
 									return new ResultMethod("<span style=\"color: #bbaa00;\">Проверки по кол-ву в авто не проводилась. Процент магазинов с остатками меньше,чем на 2 дня больше 10% (" 
@@ -1232,7 +1237,7 @@ public class ReaderSchedulePlan {
 								}												
 								break;
 							case "1800":
-								if(product.getPercent1800()*100<=10.0) {
+								if(product.getPercent1800()*100<= minPercentStockInDayInTruckMessage) {
 									calculatedPerDay = product.getCalculatedPerDay1800() != null ? product.getCalculatedPerDay1800() : 0.0;
 								}else {
 									return new ResultMethod("<span style=\"color: #bbaa00;\">Проверки по кол-ву в авто не проводилась. Процент магазинов с остатками меньше,чем на 2 дня больше 10% (" 
@@ -1240,7 +1245,7 @@ public class ReaderSchedulePlan {
 								}															
 								break;
 							case "1200":
-								if(product.getPercent()*100<=10.0) {
+								if(product.getPercent()*100<= minPercentStockInDayInTruckMessage) {
 									calculatedPerDay = product.getСalculatedPerDay() != null ? product.getСalculatedPerDay() : 0.0;					
 								}else {
 									return new ResultMethod("<span style=\"color: #bbaa00;\">Проверки по кол-ву в авто не проводилась. Процент магазинов с остатками меньше,чем на 2 дня больше 10% (" 
@@ -1248,7 +1253,7 @@ public class ReaderSchedulePlan {
 								}
 								break;
 							case "1250":
-								if(product.getPercent()*100<=10.0) {
+								if(product.getPercent()*100<= minPercentStockInDayInTruckMessage) {
 									calculatedPerDay = product.getСalculatedPerDay() != null ? product.getСalculatedPerDay() : 0.0;					
 								}else {
 									return new ResultMethod("<span style=\"color: #bbaa00;\">Проверки по кол-ву в авто не проводилась. Процент магазинов с остатками меньше,чем на 2 дня больше 10% (" 

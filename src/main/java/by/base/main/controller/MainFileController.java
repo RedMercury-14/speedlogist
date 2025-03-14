@@ -191,7 +191,12 @@ public class MainFileController {
          MarketPacketDto marketPacketDto = new MarketPacketDto(mainRestController.marketJWT, "SpeedLogist.GetReport330", mainRestController.serviceNumber, for330Request);
          MarketRequestDto requestDto = new MarketRequestDto("", marketPacketDto);
 
-         String marketOrder2 = mainRestController.postRequest(mainRestController.marketUrl, gson.toJson(requestDto));
+         String marketOrder2 = null;
+		try {
+			marketOrder2 = mainRestController.postRequest(mainRestController.marketUrl, gson.toJson(requestDto));
+		} catch (Exception e) {
+			e.printStackTrace(); // тут просто выводим стектрейс. Продумать обработку с выводом на фронт! 
+		}
          System.out.println(gson.toJson(requestDto));
 
          if(marketOrder2.equals("503")) { // означает что связь с маркетом потеряна
@@ -486,7 +491,12 @@ public class MainFileController {
          MarketPacketDto marketPacketDto = new MarketPacketDto(mainRestController.marketJWT, "SpeedLogist.GetReport330", mainRestController.serviceNumber, for330Request);
          MarketRequestDto requestDto = new MarketRequestDto("", marketPacketDto);
 
-         String market330JSON = mainRestController.postRequest(mainRestController.marketUrl, gson.toJson(requestDto));
+         String market330JSON = null;
+		try {
+			market330JSON = mainRestController.postRequest(mainRestController.marketUrl, gson.toJson(requestDto));
+		} catch (Exception e) {
+			e.printStackTrace(); // тут просто выводим стектрейс. Продумать обработку с выводом на фронт! 
+		}
 //         System.out.println(gson.toJson(requestDto));
 
          if(market330JSON.equals("503")) { // означает что связь с маркетом потеряна
@@ -531,7 +541,12 @@ public class MainFileController {
          String uniqueOrderFromMarket = String.join(",", uniqueOrderBuyGroupIds);
          
          //спрашиваем у маркета целый пулл заказов
-         Map<String, Order> ordersFromMarket = marketAPI.getMarketOrders(uniqueOrderFromMarket);
+         Map<String, Order> ordersFromMarket = null;
+		try {
+			ordersFromMarket = marketAPI.getMarketOrders(uniqueOrderFromMarket);
+		} catch (Exception e) {
+			e.printStackTrace(); // тут просто выводим стектрейс. Продумать обработку с выводом на фронт! 
+		}
          
 //         ordersFromMarket.forEach((k,v) -> System.out.println(k + " - " + v));
 
@@ -764,7 +779,12 @@ public class MainFileController {
 		MarketDataForRequestDto dataDto3 = new MarketDataForRequestDto(idMarket);
 		MarketPacketDto packetDto3 = new MarketPacketDto(mainRestController.marketJWT, "SpeedLogist.GetOrderBuyInfo", mainRestController.serviceNumber, dataDto3);
 		MarketRequestDto requestDto3 = new MarketRequestDto("", packetDto3);
-		String marketOrder2 = mainRestController.postRequest(mainRestController.marketUrl, gson.toJson(requestDto3));
+		String marketOrder2 = null;
+		try {
+			marketOrder2 = mainRestController.postRequest(mainRestController.marketUrl, gson.toJson(requestDto3));
+		} catch (Exception e) {
+			e.printStackTrace(); // тут просто выводим стектрейс. Продумать обработку с выводом на фронт! 
+		}
 		
 //		System.out.println(marketOrder2);
 		

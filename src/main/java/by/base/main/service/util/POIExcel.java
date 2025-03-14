@@ -416,7 +416,7 @@ public class POIExcel {
 	 * @throws IOException
 	 */
 	public static void generateExcelReportV1_2(List<ReportRow> reportRows, String filePath) throws IOException {
-		// Создаем рабочую книгу и лист
+        // Создаем рабочую книгу и лист
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Отчет");
 
@@ -520,8 +520,6 @@ public class POIExcel {
                 indexWeekStart = rowNum;
                 rowsList.add(indexWeekStart);
 
-
-
             } else {
                 if (!nameCounterparty.equals(row.getCounterpartyName())) { // следим за сменой контрагента
                     Row conclusionRow = sheet.createRow(rowNum++);
@@ -557,7 +555,7 @@ public class POIExcel {
                     }
                     percentFormula.deleteCharAt(percentFormula.length() - 1);
                     percentFormula.deleteCharAt(percentFormula.length() - 1);
-                    percentFormula.append("),\"Не было заказа ОРЛ\")");
+                    percentFormula.append("),\"Не было заказаОРЛ\")");
                     rowsList.clear();
                     Cell cell11counterparty = previousConclusionRow.createCell(11);
                     cell11counterparty.setCellFormula(percentFormula.toString());
@@ -593,7 +591,6 @@ public class POIExcel {
                     percentStyle.setAlignment(HorizontalAlignment.RIGHT);
                     cell11.setCellStyle(percentStyle);
                     previousWeekConclusionRow.createCell(12).setCellFormula(formulaDiscrepancy);
-
 
                     builderORL.append("+");
                     builderManager.append("+");
@@ -636,7 +633,6 @@ public class POIExcel {
                     cell11.setCellStyle(percentStyle);
                     previousWeekConclusionRow.createCell(12).setCellFormula(formulaDiscrepancy);
 
-                    //rowsList.add(indexWeekStart);
                     rowsList.add(indexWeekFinish);
                     builderORL.append("+");
                     builderManager.append("+");
@@ -648,7 +644,6 @@ public class POIExcel {
                     week = getWeekRange(row.getDateUnload());
                     indexWeekStart = rowNum;
                     rowsList.add(indexWeekStart);
-
                 }
             }
             Row excelRow = sheet.createRow(rowNum++);
@@ -692,8 +687,7 @@ public class POIExcel {
             }
             k++;
         }
-
-
+        
         // Автоматическая настройка ширины столбцов
         for (int i = 0; i < headers.length; i++) {
             sheet.autoSizeColumn(i);
@@ -705,8 +699,8 @@ public class POIExcel {
         // Устанавливаем заморозку первых двух строк
         // Первый параметр: количество фиксированных столбцов (0 — без заморозки столбцов)
         // Второй параметр: количество фиксированных строк (2 строки)
-        sheet.createFreezePane(0, 2);
-
+        sheet.createFreezePane(1, 2);
+        
         // Сохраняем файл
         try (FileOutputStream fileOut = new FileOutputStream(filePath)) {
             workbook.write(fileOut);

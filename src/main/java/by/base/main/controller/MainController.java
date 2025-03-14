@@ -337,7 +337,7 @@ public class MainController {
 		}	
 		return "main";		
 	}
-	
+		
 	@GetMapping("/main/reviews/")
 	public String getReviewsRC(Model model, HttpServletRequest request,
 			@RequestParam("stock") String stock) {

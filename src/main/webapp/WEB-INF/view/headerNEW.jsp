@@ -154,6 +154,7 @@
 										<!-- <a class="dropdown-item" href="<spring:url value="/main/orl/report/398" />">398 отчёт</a> -->
 									</div>
 								</li>
+								<li><a class="nav-item nav-link" href="<spring:url value="/main/admin/reviews/list"/>">Список отзывов</a></li>
 								<li class="dropdown">
 									<a href="#" class="nav-item nav-link" data-toggle="dropdown">Аналитика</a>
 									<div class="dropdown-menu">

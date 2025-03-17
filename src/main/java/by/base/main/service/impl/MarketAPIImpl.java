@@ -8,7 +8,6 @@ import java.util.Map;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -48,7 +47,7 @@ public class MarketAPIImpl implements MarketAPI{
             .create();
 
 	@Override
-	public Map<String, Order> getMarketOrders(String idMarket) throws ParseException {
+	public Map<String, Order> getMarketOrders(String idMarket) throws Exception {
 		try {			
 			mainRestController.checkJWT(mainRestController.marketUrl);			
 		} catch (Exception e) {

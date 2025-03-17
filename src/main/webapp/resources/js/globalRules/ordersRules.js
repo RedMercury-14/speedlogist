@@ -22,7 +22,12 @@ export const slotStocks = [
 	'1214',
 	// '1240',
 	'1250',
-	'1100'
+	'1100',
+	'1712',
+	'1721',
+	'1812',
+	'1820',
+	'1120'
 ]
 
 
@@ -37,6 +42,11 @@ export function getStockAddress(stockNumber) {
 		// case '1240': return 'Склад 1250, 223050, Минская обл., Минский р-н, 9-ый км Московского шоссе'
 		case '1250': return 'Склад 1250, 223050, Минская обл., Минский р-н, 9-ый км Московского шоссе'
 		case '1100': return 'Склад 1100, 223039, Минская обл., Минский р-н, Хатежинский с/с, 1'
+		case '1712': return 'Склад 1712 (виртуальный), 223039, Минская обл., Минский р-н, Хатежинский с/с, 1'
+		case '1721': return 'Склад 1721 (виртуальный), 223039, Минская обл., Минский р-н, Хатежинский с/с, 1'
+		case '1812': return 'Склад 1812 (виртуальный), 223039, Минская обл., Минский р-н, Хатежинский с/с, 1'
+		case '1820': return 'Склад 1820 (виртуальный), 223039, Минская обл., Минский р-н, Хатежинский с/с, 1'
+		case '1120': return 'Склад 1120 (виртуальный), 223039, Минская обл., Минский р-н, Хатежинский с/с, 1'
 		default: return ''
 	}
 }
@@ -53,6 +63,11 @@ export function getOrderStatusByStockDelivery(numStockDelivery) {
 		// case '1240':
 		case '1250':
 		case '1100':
+		case '1712':
+		case '1721':
+		case '1812':
+		case '1820':
+		case '1120':
 		case 1800:
 		case 1700:
 		case 1200:
@@ -61,6 +76,11 @@ export function getOrderStatusByStockDelivery(numStockDelivery) {
 		// case 1240:
 		case 1250:
 		case 1100:
+		case 1712:
+		case 1721:
+		case 1812:
+		case 1820:
+		case 1120:
 			return 6 // нуждается в слотах
 		default:
 			return 20 // не нуждается в слотах, можно создавать маршрут
@@ -72,8 +92,12 @@ export function getOrderStatusByStockDelivery(numStockDelivery) {
 export function getVirtualStockId(stockId) {
 	switch (stockId) {
 		case '1800':
+		case '1820':
+		case '1812':
 			return '1800'
 		case '1700':
+		case '1721':
+		case '1712':
 			return '1700'
 		case '1200':
 		case '1230':
@@ -83,6 +107,7 @@ export function getVirtualStockId(stockId) {
 		case '1250':
 			return '1250'
 		case '1100':
+		case '1120':
 			return '1100'
 	}
 }

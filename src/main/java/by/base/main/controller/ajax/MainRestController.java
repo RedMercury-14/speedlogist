@@ -153,6 +153,8 @@ import by.base.main.service.TGUserService;
 import by.base.main.service.TaskService;
 import by.base.main.service.TruckService;
 import by.base.main.service.UserService;
+import by.base.main.service.impl.MarketException;
+import by.base.main.service.impl.MarketExceptionBuilder;
 import by.base.main.service.util.CheckOrderNeeds;
 import by.base.main.service.util.CustomJSONParser;
 import by.base.main.service.util.MailService;
@@ -410,7 +412,7 @@ public class MainRestController {
 		Review review = reviewService.getReviewById(idReview);
 		String replyAuthor = user.getSurname() + " " + user.getName();
 
-		if (replyBody != null && !replyBody.equals(review.getReplyBody())) {
+		if (replyBody != null && !replyBody.equals(review.getReplyBody()) && review.getStatus() == 10) {
 			review.setReplyBody(replyBody);
 			review.setStatus(20);
 			review.setReplyDate(replyDate);
@@ -419,7 +421,11 @@ public class MainRestController {
 			List<String> emails = new ArrayList<>();
 			emails.add(review.getEmail());
 			emails.add(user.geteMail());
-			if(!mailService.sendEmailToUsers(request, "Ответ на обратную связь", replyBody, emails)) {
+			String messageText = "Тема: " + review.getTopic() + "\n\n"
+				+ "Сообщение: " + review.getReviewBody() + "\n\n"
+				+ "Ответ: " + review.getReplyBody() + "\n\n\n"
+				+ "С уважением команда ЗАО \"Доброном\"";
+			if(!mailService.sendEmailToUsers(request, "Ответ на обратную связь ЗАО \"Доброном\"", messageText, emails)) {
 				responseMap.put("status", "100");
 				responseMap.put("message", "Сообщение не удалось отправить.");
 				return responseMap;
@@ -514,15 +520,7 @@ public class MainRestController {
 		responseMap.put("object", scheduleService.getCountScheduleOrderHasWeek());
 		return responseMap;
     }
-
-	@GetMapping("/delivery-schedule/getCountScheduleDeliveryHasWeek")
-	public Map<String, Object> getCountScheduleDeliveryHasWeek(HttpServletRequest request, HttpServletResponse response) throws IOException{
-		Map<String, Object> responseMap = new HashMap<>();
-		responseMap.put("status", "200");
-		responseMap.put("object", scheduleService.getCountScheduleDeliveryHasWeek());
-		return responseMap;
-	}
-
+	
 	@GetMapping("/market/getParam")
     public Map<String, Object> getMarket(HttpServletRequest request, HttpServletResponse response) throws IOException{
 		Map<String, Object> responseMap = new HashMap<>();
@@ -639,19 +637,24 @@ public class MainRestController {
 		return response;
 	}
 
-//	@GetMapping("/test")
-//	@TimedExecution
-//	public Map<String, Object> getTEST(HttpServletRequest request) throws ParseException {
-//		String code = "1231325, 156845";
-//		String str = "{\"CRC\": \"\", \"Packet\": {\"MethodName\": \"SpeedLogist.GetOrderBuyInfo\", \"Data\": "
-//				+ "{\"OrderBuyGroupId\": ["+code+"]}}}";
-//		Map<String, Object> response = new HashMap<>();
-//
-//
-//		response.put("status", "200");
-//		return response;
-//
-//	}
+	@GetMapping("/test")
+	@TimedExecution
+	public Map<String, Object> getTEST(HttpServletRequest request) throws ParseException {
+		Map<String, Object> response = new HashMap<>();
+		Task task = taskService.getLastTaskFor398();
+		String stock = task.getStocks();
+		String from = task.getFromDate().toString();
+		String to = task.getToDate().toString();
+		String from2 = LocalDate.now().minusDays(2).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+		String to2 = LocalDate.now().minusDays(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+
+		response.put("from", from);
+		response.put("from2", from2);
+		response.put("to", to);
+		response.put("to2", to2);
+		return response;
+				
+	}
 	
 	/**
 	 * GPT
@@ -760,27 +763,25 @@ public class MainRestController {
 		MarketRequestDto requestDto = new MarketRequestDto("", marketPacketDto);
 
 		java.util.Date t1 = new java.util.Date();
-		String marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto));
-		java.util.Date t2 = new java.util.Date();
-		
-//		System.err.println(marketOrder2);
-
-		if(marketOrder2.equals("503")) { // означает что связь с маркетом потеряна
-			//в этом случае проверяем бд
-			System.err.println("Связь с маркетом потеряна  -> " + marketOrder2);
-			response.put("status", "503");
-			response.put("payload responce", marketOrder2);
-			response.put("message", "Связь с маркетом потеряна");
+		String marketOrder2;
+		try {
+			marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto));
+		} catch (Exception e) {
+			e.printStackTrace();
+			response.put("status", "100");
+			response.put("exception", e.toString());
+			response.put("message", "Ошибка запроса к Маркету");
+			response.put("info", "Ошибка запроса к Маркету");
 			return response;
-
-		}else{//если есть связь с маркетом
-			JSONObject jsonResponceMainObject = (JSONObject) parser.parse(marketOrder2);
-			JSONArray jsonResponceTable = (JSONArray) parser.parse(jsonResponceMainObject.get("Table").toString());
-			for (Object obj : jsonResponceTable) {
-	        	responces.add(new MarketDataFor325Responce(obj.toString())); // парсин json засунул в конструктор
-	        }
-
 		}
+		java.util.Date t2 = new java.util.Date();
+
+		JSONObject jsonResponceMainObject = (JSONObject) parser.parse(marketOrder2);
+		JSONArray jsonResponceTable = (JSONArray) parser.parse(jsonResponceMainObject.get("Table").toString());
+		for (Object obj : jsonResponceTable) {
+        	responces.add(new MarketDataFor325Responce(obj.toString())); // парсин json засунул в конструктор
+        }
+
 		response.put("status", "200");
 		response.put("request", str);
 		response.put("responce", responces);
@@ -1855,227 +1856,181 @@ public class MainRestController {
 		MarketPacketDto marketPacketDto = new MarketPacketDto(marketJWT, "SpeedLogist.GetReport398", serviceNumber, for398Request);		
 		MarketRequestDto requestDto = new MarketRequestDto("", marketPacketDto);
 		
-		String marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto));
+		String marketOrder2 = null;
+		try {
+			marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto));
+		} catch (Exception e) {
+			e.printStackTrace();
+			response.put("status", "100");
+			response.put("exception", e.toString());
+			response.put("message", "Ошибка запроса к Маркету");
+			response.put("info", "Ошибка запроса к Маркету");
+			return response;
+		}
 		System.out.println(gson.toJson(requestDto));
-		
-//		System.out.println(marketOrder2);
-		
-//		if(marketOrder2.equals("503")) { // означает что связь с маркетом потеряна
-//			//в этом случае проверяем бд
-//			System.err.println("Связь с маркетом потеряна");
-//			Order order = orderService.getOrderByMarketNumber(idMarket);
-//			marketJWT = null; // сразу говорим что jwt устарел
-//			if(order != null) {
-//				response.put("status", "200");
-//				response.put("message", "Заказ загружен из локальной базы данных SL. Связь с маркетом отсутствует");
-//				response.put("info", "Заказ загружен из локальной базы данных SL. Связь с маркетом отсутствует");
-//				response.put("order", order);
-//				return response;
-//			}else {
-//				response.put("status", "100");
-//				response.put("message", "Заказ с номером " + idMarket + " в базе данных SL не найден. Связь с Маркетом отсутствует. Обратитесь в отдел ОСиУЗ");
-//				response.put("info", "Заказ с номером " + idMarket + " в базе данных SL не найден. Связь с Маркетом отсутствует. Обратитесь в отдел ОСиУЗ");
-//				return response;
-//			}
-//			
-//		}else{//если есть связь с маркетом
-//			//проверяем на наличие сообщений об ошибке со стороны маркета
-//			if(marketOrder2.contains("Error")) {
-//				MarketErrorDto errorMarket = gson.fromJson(marketOrder2, MarketErrorDto.class);
-////				System.out.println(errorMarket);
-//				if(errorMarket.getError().equals("99")) {//обработка случая, когда в маркете номера нет, а в бд есть.
-//					Order orderFromDB = orderService.getOrderByMarketNumber(idMarket);
-//					if(orderFromDB !=null) {
-//						response.put("status", "100");
-//						response.put("message", "Заказ " + idMarket + " не найден в маркете. Данные из SL устаревшие. Обновите данные в Маркете");
-//						response.put("info", "Заказ " + idMarket + " не найден в маркете. Данные из SL устаревшие. Обновите данные в Маркете");
-//						return response;
-//					}else {
-//						response.put("status", "100");
-//						response.put("message", errorMarket.getErrorDescription());
-//						response.put("info", errorMarket.getErrorDescription());
-//						return response;
-//					}
-//				}
-//				response.put("status", "100");
-//				response.put("message", errorMarket.getErrorDescription());
-//				response.put("info", errorMarket.getErrorDescription());
-//				return response;
-//			}
-//			
-//			//тут избавляемся от мусора в json
-//			String str2 = marketOrder2.split("\\[", 2)[1];
-//			String str3 = str2.substring(0, str2.length()-2);
-//			
-//			//создаём свой парсер и парсим json в объекты, с которыми будем работать.
-//			CustomJSONParser customJSONParser = new CustomJSONParser();
-//			
-//			//создаём OrderBuyGroup
-//			OrderBuyGroupDTO orderBuyGroupDTO = customJSONParser.parseOrderBuyGroupFromJSON(str3);
-//						
-//			//создаём Order, записываем в бд и возвращаем или сам ордер или ошибку (тот же ордер, только с отрицательным id)
-//			Order order = orderCreater.create(orderBuyGroupDTO);		
-//			
-//			if(order.getIdOrder() < 0) {
-//				response.put("status", "100");
-//				response.put("message", order.getMessage());
-//				response.put("info", order.getMessage());
-//				return response;
-//			}else {
-//				response.put("status", "200");
-//				response.put("message", order.getMessage());
-//				response.put("info", order.getMessage());
-//				response.put("order", order);
-//				System.out.println(checkOrderNeeds.check(order)); // тестовая проверка 
-//				return response;
-//			}
-//		}	
+
 		response.put("status", "200");
 		response.put("payload responce", marketOrder2);
 		response.put("json request", requestDto);
 		return response;
 	}
 
+	/**
+	 * Принудительная выгрузки 398 отчёта ТОЛЬКО ПО ЗАДАНИЮ!
+	 * @param request
+	 * @return
+	 * @throws ParseException
+	 */
 	@TimedExecution
 	@GetMapping("/398/get")
 	public Map<String, Object> get398AndStock(HttpServletRequest request) throws ParseException {
-
-		Task task = taskService.getLastTaskFor398();
-		String stock = task.getStocks();
-		String from = task.getFromDate().toString();
-		String to = task.getToDate().toString();
-
-		java.util.Date t1 = new java.util.Date();
-		Integer maxShopCoint = 40; // максимальное кол-во магазинов в запросе
 		Map<String, Object> response = new HashMap<>();
+		try {
+			Task task = taskService.getLastTaskFor398();
+			String stock = task.getStocks();
+			String from = task.getFromDate().toString();
+			String to = task.getToDate().toString();
 
-		//сначала определяыем кол-во магазов и делим их на массивы запросов
-		 String [] mass = stock.split(",");
-		 Integer shopAllCoint = mass.length;
-
-		 System.out.println("Всего магазинов: " + shopAllCoint);
-
-		 List<String> shopsList = new ArrayList<String>();
-
-		 if(shopAllCoint > maxShopCoint) {
-			 int i = 1;
-			 String row = null;
-			 for (String string : mass) {
-				 if(i % maxShopCoint == 0) {
-					 shopsList.add(row);
-					 row = null;
-					 System.out.println("записываем строку");
-				 }
-				if(row == null) {
-					row = string;
-				}else {
-					row = row + "," + string;
-				}
-				i++;
-			}
-			 if (row != null) {
-				    shopsList.add(row);
-				    System.out.println("Записываем последнюю строку");
-				}
-		 }else {
-			 shopsList.add(stock);
-		 }
-		 System.out.println("Запросов будет : " + shopsList.size());
-		 /*
-		  * Основной метод: проходимсмя по листу и формируем сексели по всем запросам
-		  */
-		 String appPath = servletContext.getRealPath("/");
-		String pathFolder = appPath + "resources/others/398/";
-		//сначала удаляем мусор что есть в этой папке
-
-		// Проверяем, существует ли папка
-	    File folder = new File(pathFolder);
-	    if (!folder.exists()) {
-	        System.out.println("Папка не существует. Создаем: " + pathFolder);
-	        folder.mkdirs();
-	    } else {
-	        // Если папка существует, удаляем все файлы внутри нее
-	        File[] files = folder.listFiles();
-	        if (files != null) {
-	            for (File file : files) {
-	                if (file.isFile()) {
-	                    System.out.println("Удаляем файл: " + file.getName());
-	                    file.delete();
-	                }
-	            }
-	        }
-	    }
+			java.util.Date t1 = new java.util.Date();
+			Integer maxShopCoint = 40; // максимальное кол-во магазинов в запросе
 
 
-		 Integer j = 0;
-		 for (String stockStr : shopsList) {
-			 j++;
-			 String str = "{\"CRC\": \"\", \"Packet\": {\"MethodName\": \"SpeedLogist.GetReport398\", \"Data\": {\"DateFrom\": \""+from+"\", \"DateTo\": \""+to+"\", \"WarehouseId\": "
-						+ "["+stockStr+"],"
-						+ " \"WhatBase\": [11,12]}}}";
-				try {
-					checkJWT(marketUrl);
-				} catch (Exception e) {
-					System.err.println("Ошибка получения jwt токена");
-				}
-				Integer finalJ = j;
-				JSONParser parser = new JSONParser();
-				JSONObject jsonMainObject = (JSONObject) parser.parse(str);
-				String marketPacketDtoStr = jsonMainObject.get("Packet") != null ? jsonMainObject.get("Packet").toString() : null;
-				JSONObject jsonMainObject2 = (JSONObject) parser.parse(marketPacketDtoStr);
-				String marketDataFor398RequestStr = jsonMainObject2.get("Data") != null ? jsonMainObject2.get("Data").toString() : null;
-				JSONObject jsonMainObjectTarget = (JSONObject) parser.parse(marketDataFor398RequestStr);
+			//сначала определяыем кол-во магазов и делим их на массивы запросов
+			 String [] mass = stock.split(",");
+			 Integer shopAllCoint = mass.length;
 
-				JSONArray warehouseIdArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("WarehouseId").toString());
-				JSONArray whatBaseArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("WhatBase").toString());
+			 System.out.println("Всего магазинов: " + shopAllCoint);
 
-				String dateForm = jsonMainObjectTarget.get("DateFrom") == null ? null : jsonMainObjectTarget.get("DateFrom").toString();
-				String dateTo = jsonMainObjectTarget.get("DateTo") == null ? null : jsonMainObjectTarget.get("DateTo").toString();
-				Object[] warehouseId = warehouseIdArray.toArray();
-				Object[] whatBase = whatBaseArray.toArray();
-//				String warehouseId = jsonMainObjectTarget.get("WarehouseId") == null ? null : jsonMainObjectTarget.get("WarehouseId").toString();
-//				String whatBase = jsonMainObjectTarget.get("WhatBase") == null ? null : jsonMainObjectTarget.get("WhatBase").toString();
+			 List<String> shopsList = new ArrayList<String>();
 
-				MarketDataFor398Request for398Request = new MarketDataFor398Request(dateForm, dateTo, warehouseId, whatBase);
-				MarketPacketDto marketPacketDto = new MarketPacketDto(marketJWT, "SpeedLogist.GetReport398", serviceNumber, for398Request);
-				MarketRequestDto requestDto = new MarketRequestDto("", marketPacketDto);
-
-				String marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto));
-//				System.out.println(gson.toJson(requestDto));
-				System.out.println("Размер: " + getStringSizeInMegabytes(marketOrder2) + " мб");
-
-				JSONObject jsonTable = (JSONObject) parser.parse(marketOrder2);
-
-				new Thread(new Runnable() {
-					@Override
-					public void run() {
-						try {
-							poiExcel.createExcel398(jsonTable.get("Table").toString(), pathFolder, finalJ, stockStr, from, to);
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
+			 if(shopAllCoint > maxShopCoint) {
+				 int i = 1;
+				 String row = null;
+				 for (String string : mass) {
+					 if(i % maxShopCoint == 0) {
+						 shopsList.add(row);
+						 row = null;
+						 System.out.println("записываем строку");
+					 }
+					if(row == null) {
+						row = string;
+					}else {
+						row = row + "," + string;
 					}
-				}).start();
+					i++;
+				}
+				 if (row != null) {
+					    shopsList.add(row);
+					    System.out.println("Записываем последнюю строку");
+					}
+			 }else {
+				 shopsList.add(stock);
+			 }
+			 System.out.println("Запросов будет : " + shopsList.size());
+			 /*
+			  * Основной метод: проходимсмя по листу и формируем сексели по всем запросам
+			  */
+			 String appPath = servletContext.getRealPath("/");
+			String pathFolder = appPath + "resources/others/398/";
+			//сначала удаляем мусор что есть в этой папке
 
+			// Проверяем, существует ли папка
+		    File folder = new File(pathFolder);
+		    if (!folder.exists()) {
+		        System.out.println("Папка не существует. Создаем: " + pathFolder);
+		        folder.mkdirs();
+		    } else {
+		        // Если папка существует, удаляем все файлы внутри нее
+		        File[] files = folder.listFiles();
+		        if (files != null) {
+		            for (File file : files) {
+		                if (file.isFile()) {
+		                    System.out.println("Удаляем файл: " + file.getName());
+		                    file.delete();
+		                }
+		            }
+		        }
+		    }
+
+
+			 Integer j = 0;
+			 for (String stockStr : shopsList) {
+				 j++;
+				 String str = "{\"CRC\": \"\", \"Packet\": {\"MethodName\": \"SpeedLogist.GetReport398\", \"Data\": {\"DateFrom\": \""+from+"\", \"DateTo\": \""+to+"\", \"WarehouseId\": "
+							+ "["+stockStr+"],"
+							+ " \"WhatBase\": [11,12]}}}";
+					try {
+						checkJWT(marketUrl);
+					} catch (Exception e) {
+						System.err.println("Ошибка получения jwt токена");
+					}
+					Integer finalJ = j;
+					JSONParser parser = new JSONParser();
+					JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+					String marketPacketDtoStr = jsonMainObject.get("Packet") != null ? jsonMainObject.get("Packet").toString() : null; // тут не правильный запрос
+					JSONObject jsonMainObject2 = (JSONObject) parser.parse(marketPacketDtoStr);
+					String marketDataFor398RequestStr = jsonMainObject2.get("Data") != null ? jsonMainObject2.get("Data").toString() : null;
+					JSONObject jsonMainObjectTarget = (JSONObject) parser.parse(marketDataFor398RequestStr);
+
+					JSONArray warehouseIdArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("WarehouseId").toString());
+					JSONArray whatBaseArray = (JSONArray) parser.parse(jsonMainObjectTarget.get("WhatBase").toString());
+
+					String dateForm = jsonMainObjectTarget.get("DateFrom") == null ? null : jsonMainObjectTarget.get("DateFrom").toString();
+					String dateTo = jsonMainObjectTarget.get("DateTo") == null ? null : jsonMainObjectTarget.get("DateTo").toString();
+					Object[] warehouseId = warehouseIdArray.toArray();
+					Object[] whatBase = whatBaseArray.toArray();
+//					String warehouseId = jsonMainObjectTarget.get("WarehouseId") == null ? null : jsonMainObjectTarget.get("WarehouseId").toString();
+//					String whatBase = jsonMainObjectTarget.get("WhatBase") == null ? null : jsonMainObjectTarget.get("WhatBase").toString();
+
+					MarketDataFor398Request for398Request = new MarketDataFor398Request(dateForm, dateTo, warehouseId, whatBase);
+					MarketPacketDto marketPacketDto = new MarketPacketDto(marketJWT, "SpeedLogist.GetReport398", serviceNumber, for398Request);
+					MarketRequestDto requestDto = new MarketRequestDto("", marketPacketDto);
+
+					String marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto));
+//					System.out.println(gson.toJson(requestDto));
+					System.out.println("Размер: " + getStringSizeInMegabytes(marketOrder2) + " мб");
+
+					JSONObject jsonTable = (JSONObject) parser.parse(marketOrder2);
+
+					new Thread(new Runnable() {
+						@Override
+						public void run() {
+							try {
+								poiExcel.createExcel398(jsonTable.get("Table").toString(), pathFolder, finalJ, stockStr, from, to);
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						}
+					}).start();
+
+			}
+			java.util.Date t2 = new java.util.Date();
+			List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.398");
+//			List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+
+			long time = t2.getTime()-t1.getTime();
+
+			String text = "Принято магазинов: " + mass.length + "\n"
+					+ "С " + from + " по " + to + "\n"
+					+ "Вид расходов : 11,12" + "\n"
+					+ "Всего файлов: " + j + "\n"
+					+ "Время работы: " + time + " мс";
+
+			mailService.sendEmailToUsers(request, "Автоматическая выгрузка : 398", text, emailsORL);
+
+			response.put("status", "200");
+			return response;
+		} catch (Exception e) {
+			List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.admin");
+			mailService.sendEmailToUsers(servletContext, "Ошибка автоматической выгрузки : 398", e.toString(), emailsAdmins);
+			e.printStackTrace();
+			response.put("status", "100");
+			response.put("Exception", e.toString());
+			return response;
 		}
-		java.util.Date t2 = new java.util.Date();
-		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.398");
-//		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
 
-		long time = t2.getTime()-t1.getTime();
 
-		String text = "Принято магазинов: " + mass.length + "\n"
-				+ "С " + from + " по " + to + "\n"
-				+ "Вид расходов : 11,12" + "\n"
-				+ "Всего файлов: " + j + "\n"
-				+ "Время работы: " + time + " мс";
-
-		mailService.sendEmailToUsers(request, "Автоматическая выгрузка : 398", text, emailsORL);
-
-		response.put("status", "200");
-
-		return response;
 	}
 
 	@TimedExecution
@@ -2178,7 +2133,17 @@ public class MainRestController {
 				MarketPacketDto marketPacketDto = new MarketPacketDto(marketJWT, "SpeedLogist.GetReport398", serviceNumber, for398Request);
 				MarketRequestDto requestDto = new MarketRequestDto("", marketPacketDto);
 
-				String marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto));
+				String marketOrder2;
+				try {
+					marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto));
+				} catch (Exception e) {
+					e.printStackTrace();
+					response.put("status", "100");
+					response.put("exception", e.toString());
+					response.put("message", "Ошибка запроса к Маркету");
+					response.put("info", "Ошибка запроса к Маркету");
+					return response;
+				}
 //				System.out.println(gson.toJson(requestDto));
 				System.out.println("Размер: " + getStringSizeInMegabytes(marketOrder2) + " мб");
 
@@ -2264,25 +2229,24 @@ public class MainRestController {
 		MarketPacketDto marketPacketDto = new MarketPacketDto(marketJWT, "SpeedLogist.GetReport330", serviceNumber, for330Request);
 		MarketRequestDto requestDto = new MarketRequestDto("", marketPacketDto);
 
-		String marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto));
-		System.out.println(gson.toJson(requestDto));
-
-		if(marketOrder2.equals("503")) { // означает что связь с маркетом потеряна
-			//в этом случае проверяем бд
-			System.err.println("Связь с маркетом потеряна");
-			response.put("status", "503");
-			response.put("payload responce", marketOrder2);
-			response.put("message", "Связь с маркетом потеряна");
+		String marketOrder2;
+		try {
+			marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto));
+		} catch (Exception e) {
+			e.printStackTrace();
+			response.put("status", "100");
+			response.put("exception", e.toString());
+			response.put("message", "Ошибка запроса к Маркету");
+			response.put("info", "Ошибка запроса к Маркету");
 			return response;
-
-		}else{//если есть связь с маркетом
-			JSONObject jsonResponceMainObject = (JSONObject) parser.parse(marketOrder2);
-			JSONArray jsonResponceTable = (JSONArray) parser.parse(jsonResponceMainObject.get("Table").toString());
-			for (Object obj : jsonResponceTable) {
-	        	responces.add(new MarketDataFor330Responce(obj.toString())); // парсин json засунул в конструктор
-	        }
-
 		}
+
+		JSONObject jsonResponceMainObject = (JSONObject) parser.parse(marketOrder2);
+		JSONArray jsonResponceTable = (JSONArray) parser.parse(jsonResponceMainObject.get("Table").toString());
+		for (Object obj : jsonResponceTable) {
+        	responces.add(new MarketDataFor330Responce(obj.toString())); // парсин json засунул в конструктор
+        }
+
 		response.put("status", "200");
 		response.put("payload request", marketOrder2);
 		response.put("responce", responces);
@@ -2327,25 +2291,22 @@ public class MainRestController {
 		MarketPacketDto marketPacketDto = new MarketPacketDto(marketJWT, "SpeedLogist.GetReport330", serviceNumber, for330Request);
 		MarketRequestDto requestDto = new MarketRequestDto("", marketPacketDto);
 
-		String marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto));
-		System.out.println(gson.toJson(requestDto));
-
-		if(marketOrder2.equals("503")) { // означает что связь с маркетом потеряна
-			//в этом случае проверяем бд
-			System.err.println("Связь с маркетом потеряна");
-			response.put("status", "503");
-			response.put("payload responce", marketOrder2);
-			response.put("message", "Связь с маркетом потеряна");
+		String marketOrder2;
+		try {
+			marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto));
+		} catch (Exception e) {
+			e.printStackTrace();
+			response.put("status", "100");
+			response.put("exception", e.toString());
+			response.put("message", "Ошибка запроса к Маркету");
+			response.put("info", "Ошибка запроса к Маркету");
 			return response;
-
-		}else{//если есть связь с маркетом
-			JSONObject jsonResponceMainObject = (JSONObject) parser.parse(marketOrder2);
-			JSONArray jsonResponceTable = (JSONArray) parser.parse(jsonResponceMainObject.get("Table").toString());
-			for (Object obj : jsonResponceTable) {
-	        	responces.add(new MarketDataFor330Responce(obj.toString())); // парсин json засунул в конструктор
-	        }
-
 		}
+		JSONObject jsonResponceMainObject = (JSONObject) parser.parse(marketOrder2);
+		JSONArray jsonResponceTable = (JSONArray) parser.parse(jsonResponceMainObject.get("Table").toString());
+		for (Object obj : jsonResponceTable) {
+        	responces.add(new MarketDataFor330Responce(obj.toString())); // парсин json засунул в конструктор
+        }
 		response.put("status", "200");
 		response.put("payload request", marketOrder2);
 		response.put("responce", responces);
@@ -4456,15 +4417,7 @@ public class MainRestController {
 	public String test(HttpServletRequest request) {
 		return MainChat.messegeList.size() + "";		
 	}
-	
-//	@GetMapping("/market/jwt/get")
-//	public Map<String, Object>  testJWT(){
-//		Map<String, Object> result = new HashMap<>();
-//		MarketTableDto marketTableDto = testRequestJWT(marketUrl);
-//		result.put("status", "200");
-//		result.put("responce", marketTableDto);
-//		return result;		
-//	}
+
 	
 	@GetMapping("/market/jwt/help")
 	public Map<String, Object>  jwtHelp(){
@@ -4490,7 +4443,17 @@ public class MainRestController {
 		MarketDataForClear dataDto = new MarketDataForClear(Integer.parseInt(param));
 		MarketPacketDto packetDto = new MarketPacketDto(marketJWT, "CleanToken", serviceNumber, dataDto);
 		MarketRequestDto requestDto = new MarketRequestDto("", packetDto);
-		String str = postRequest(marketUrl, gson.toJson(requestDto));
+		String str;
+		try {
+			str = postRequest(marketUrl, gson.toJson(requestDto));
+		} catch (Exception e) {
+			e.printStackTrace();
+			response.put("status", "100");
+			response.put("exception", e.toString());
+			response.put("message", "Ошибка запроса к Маркету");
+			response.put("info", "Ошибка запроса к Маркету");
+			return response;
+		}
 		response.put("status", "200");
 		response.put("message", str);
 		return response;		
@@ -4514,7 +4477,17 @@ public class MainRestController {
 		MarketPacketDto packetDto = new MarketPacketDto("null", "GetJWT", serviceNumber, dataDto);
 		MarketRequestDto requestDto = new MarketRequestDto("", packetDto);
 		//запрашиваем jwt
-		String str = postRequest(marketUrl, gson.toJson(requestDto));
+		String str;
+		try {
+			str = postRequest(marketUrl, gson.toJson(requestDto));
+		} catch (Exception e) {
+			e.printStackTrace();
+			response.put("status", "100");
+			response.put("exception", e.toString());
+			response.put("message", "Ошибка запроса к Маркету");
+			response.put("info", "Ошибка запроса к Маркету");
+			return response;
+		}
 		System.out.println(str);
 		try {
 			MarketTableDto marketRequestDto = gson.fromJson(str, MarketTableDto.class);
@@ -4533,6 +4506,111 @@ public class MainRestController {
 		return response;		
 	}
 	
+//	/**
+//	     СТАРЫЙ МЕТОД 100% РАБОЧИЙ НОВЫЙ НИЖЕ
+//	 * Главный метод запроса ордера из маркета.
+//	 * Если в маркете есть - он обнавляет его в бд.
+//	 * Если связи с маркетом нет - берет из бд.
+//	 * Если нет в бд и связи с маркетом нет - выдаёт ошибку
+//	 * ордер из маркета
+//	 * @param request
+//	 * @param idMarket
+//	 * @return
+//	 */
+//	@GetMapping("/manager/getMarketOrder/{idMarket}")
+//	public Map<String, Object> getMarketOrder(HttpServletRequest request, @PathVariable String idMarket) {
+//		try {
+//			checkJWT(marketUrl);
+//		} catch (Exception e) {
+//			System.err.println("Ошибка получения jwt токена");
+//		}
+//
+//		Map<String, Object> response = new HashMap<String, Object>();
+//		MarketDataForRequestDto dataDto3 = new MarketDataForRequestDto(idMarket);
+//		MarketPacketDto packetDto3 = new MarketPacketDto(marketJWT, "SpeedLogist.GetOrderBuyInfo", serviceNumber, dataDto3);
+//		MarketRequestDto requestDto3 = new MarketRequestDto("", packetDto3);
+//		String marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto3));
+//
+////		System.out.println(marketOrder2);
+//
+//		if(marketOrder2.equals("503")) { // означает что связь с маркетом потеряна
+//			//в этом случае проверяем бд
+//			System.err.println("Связь с маркетом потеряна");
+//			Order order = orderService.getOrderByMarketNumber(idMarket);
+//			marketJWT = null; // сразу говорим что jwt устарел
+//			if(order != null) {
+//				response.put("status", "200");
+//				response.put("message", "Заказ загружен из локальной базы данных SL. Связь с маркетом отсутствует");
+//				response.put("info", "Заказ загружен из локальной базы данных SL. Связь с маркетом отсутствует");
+//				response.put("order", order);
+//				return response;
+//			}else {
+//				response.put("status", "100");
+//				response.put("message", "Заказ с номером " + idMarket + " в базе данных SL не найден. Связь с Маркетом отсутствует. Обратитесь в отдел ОСиУЗ");
+//				response.put("info", "Заказ с номером " + idMarket + " в базе данных SL не найден. Связь с Маркетом отсутствует. Обратитесь в отдел ОСиУЗ");
+//				return response;
+//			}
+//
+//		}else{//если есть связь с маркетом
+//			//проверяем на наличие сообщений об ошибке со стороны маркета
+//			if(marketOrder2.contains("Error")) {
+//				//тут избавляемся от мусора в json
+////				System.err.println(marketOrder2);
+////				String str2 = marketOrder2.split("\\[", 2)[1];
+////				String str3 = str2.substring(0, str2.length()-2);
+//				MarketErrorDto errorMarket = gson.fromJson(marketOrder2, MarketErrorDto.class);
+////				System.out.println("JSON -> "+str3);
+////				System.out.println(errorMarket);
+//				if(errorMarket.getError().equals("99")) {//обработка случая, когда в маркете номера нет, а в бд есть.
+//					Order orderFromDB = orderService.getOrderByMarketNumber(idMarket);
+//					if(orderFromDB !=null) {
+//						response.put("status", "100");
+//						response.put("message", "Заказ " + idMarket + " не найден в маркете. Данные из SL устаревшие. Обновите данные в Маркете");
+//						response.put("info", "Заказ " + idMarket + " не найден в маркете. Данные из SL устаревшие. Обновите данные в Маркете");
+//						return response;
+//					}else {
+//						response.put("status", "100");
+//						response.put("message", errorMarket.getErrorDescription());
+//						response.put("info", errorMarket.getErrorDescription());
+//						response.put("objectFromMarket", errorMarket);
+//						return response;
+//					}
+//				}
+//				response.put("status", "100");
+//				response.put("message", errorMarket.getErrorDescription());
+//				response.put("info", errorMarket.getErrorDescription());
+//				response.put("objectFromMarket", errorMarket);
+//				return response;
+//			}
+//
+//			//тут избавляемся от мусора в json
+//			String str2 = marketOrder2.split("\\[", 2)[1];
+//			String str3 = str2.substring(0, str2.length()-2);
+//
+//			//создаём свой парсер и парсим json в объекты, с которыми будем работать.
+//			CustomJSONParser customJSONParser = new CustomJSONParser();
+//
+//			//создаём OrderBuyGroup
+//			OrderBuyGroupDTO orderBuyGroupDTO = customJSONParser.parseOrderBuyGroupFromJSON(str3);
+//
+//			//создаём Order, записываем в бд и возвращаем или сам ордер или ошибку (тот же ордер, только с отрицательным id)
+//			Order order = orderCreater.create(orderBuyGroupDTO);
+//
+//			if(order.getIdOrder() < 0) {
+//				response.put("status", "100");
+//				response.put("message", order.getMessage());
+//				response.put("info", order.getMessage());
+//				return response;
+//			}else {
+//				response.put("status", "200");
+//				response.put("message", order.getMessage());
+//				response.put("info", order.getMessage());
+//				response.put("order", order);
+//				return response;
+//			}
+//		}
+//	}
+
 	/**
 	 * Главный метод запроса ордера из маркета.
 	 * Если в маркете есть - он обнавляет его в бд.
@@ -4555,86 +4633,76 @@ public class MainRestController {
 		MarketDataForRequestDto dataDto3 = new MarketDataForRequestDto(idMarket);
 		MarketPacketDto packetDto3 = new MarketPacketDto(marketJWT, "SpeedLogist.GetOrderBuyInfo", serviceNumber, dataDto3);
 		MarketRequestDto requestDto3 = new MarketRequestDto("", packetDto3);
-		String marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto3));
-		
-//		System.out.println(marketOrder2);
-		
-		if(marketOrder2.equals("503")) { // означает что связь с маркетом потеряна
-			//в этом случае проверяем бд
-			System.err.println("Связь с маркетом потеряна");
-			Order order = orderService.getOrderByMarketNumber(idMarket);
-			marketJWT = null; // сразу говорим что jwt устарел
-			if(order != null) {
-				response.put("status", "200");
-				response.put("message", "Заказ загружен из локальной базы данных SL. Связь с маркетом отсутствует");
-				response.put("info", "Заказ загружен из локальной базы данных SL. Связь с маркетом отсутствует");
-				response.put("order", order);
-				return response;
-			}else {
-				response.put("status", "100");
-				response.put("message", "Заказ с номером " + idMarket + " в базе данных SL не найден. Связь с Маркетом отсутствует. Обратитесь в отдел ОСиУЗ");
-				response.put("info", "Заказ с номером " + idMarket + " в базе данных SL не найден. Связь с Маркетом отсутствует. Обратитесь в отдел ОСиУЗ");
-				return response;
-			}
-			
-		}else{//если есть связь с маркетом
-			//проверяем на наличие сообщений об ошибке со стороны маркета
-			if(marketOrder2.contains("Error")) {
-				//тут избавляемся от мусора в json
-//				System.err.println(marketOrder2);
-//				String str2 = marketOrder2.split("\\[", 2)[1];
-//				String str3 = str2.substring(0, str2.length()-2);
-				MarketErrorDto errorMarket = gson.fromJson(marketOrder2, MarketErrorDto.class);
-//				System.out.println("JSON -> "+str3);
-//				System.out.println(errorMarket);
-				if(errorMarket.getError().equals("99")) {//обработка случая, когда в маркете номера нет, а в бд есть.
-					Order orderFromDB = orderService.getOrderByMarketNumber(idMarket);
-					if(orderFromDB !=null) {
-						response.put("status", "100");
-						response.put("message", "Заказ " + idMarket + " не найден в маркете. Данные из SL устаревшие. Обновите данные в Маркете");
-						response.put("info", "Заказ " + idMarket + " не найден в маркете. Данные из SL устаревшие. Обновите данные в Маркете");
-						return response;
-					}else {
-						response.put("status", "100");
-						response.put("message", errorMarket.getErrorDescription());
-						response.put("info", errorMarket.getErrorDescription());
-						response.put("objectFromMarket", errorMarket);
-						return response;
-					}
-				}
-				response.put("status", "100");
-				response.put("message", errorMarket.getErrorDescription());
-				response.put("info", errorMarket.getErrorDescription());
-				response.put("objectFromMarket", errorMarket);
-				return response;
-			}
-			
+		String marketOrder2;
+		try {
+			marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto3));
+		} catch (Exception e) {
+			e.printStackTrace();
+			response.put("status", "100");
+			response.put("exception", e.toString());
+			response.put("message", "Ошибка запроса к Маркету");
+			response.put("info", "Ошибка запроса к Маркету");
+			List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.admin");
+			mailService.sendEmailToUsers(servletContext, "Ошибка getMarketOrder!", e.toString(), emailsAdmins);
+			return response;
+		}
+
+		//проверяем на наличие сообщений об ошибке со стороны маркета
+		if(marketOrder2.contains("Error")) {
 			//тут избавляемся от мусора в json
-			String str2 = marketOrder2.split("\\[", 2)[1];
-			String str3 = str2.substring(0, str2.length()-2);
-			
-			//создаём свой парсер и парсим json в объекты, с которыми будем работать.
-			CustomJSONParser customJSONParser = new CustomJSONParser();
-			
-			//создаём OrderBuyGroup
-			OrderBuyGroupDTO orderBuyGroupDTO = customJSONParser.parseOrderBuyGroupFromJSON(str3);
-						
-			//создаём Order, записываем в бд и возвращаем или сам ордер или ошибку (тот же ордер, только с отрицательным id)
-			Order order = orderCreater.create(orderBuyGroupDTO);		
-			
-			if(order.getIdOrder() < 0) {
-				response.put("status", "100");
-				response.put("message", order.getMessage());
-				response.put("info", order.getMessage());
-				return response;
-			}else {
-				response.put("status", "200");
-				response.put("message", order.getMessage());
-				response.put("info", order.getMessage());
-				response.put("order", order);
-				return response;
+//			System.err.println(marketOrder2);
+//			String str2 = marketOrder2.split("\\[", 2)[1];
+//			String str3 = str2.substring(0, str2.length()-2);
+			MarketErrorDto errorMarket = gson.fromJson(marketOrder2, MarketErrorDto.class);
+//			System.out.println("JSON -> "+str3);
+//			System.out.println(errorMarket);
+			if(errorMarket.getError().equals("99")) {//обработка случая, когда в маркете номера нет, а в бд есть.
+				Order orderFromDB = orderService.getOrderByMarketNumber(idMarket);
+				if(orderFromDB !=null) {
+					response.put("status", "100");
+					response.put("message", "Заказ " + idMarket + " не найден в маркете. Данные из SL устаревшие. Обновите данные в Маркете");
+					response.put("info", "Заказ " + idMarket + " не найден в маркете. Данные из SL устаревшие. Обновите данные в Маркете");
+					return response;
+				}else {
+					response.put("status", "100");
+					response.put("message", errorMarket.getErrorDescription());
+					response.put("info", errorMarket.getErrorDescription());
+					response.put("objectFromMarket", errorMarket);
+					return response;
+				}
 			}
-		}	
+			response.put("status", "100");
+			response.put("message", errorMarket.getErrorDescription());
+			response.put("info", errorMarket.getErrorDescription());
+			response.put("objectFromMarket", errorMarket);
+			return response;
+		}
+
+		//тут избавляемся от мусора в json
+		String str2 = marketOrder2.split("\\[", 2)[1];
+		String str3 = str2.substring(0, str2.length()-2);
+
+		//создаём свой парсер и парсим json в объекты, с которыми будем работать.
+		CustomJSONParser customJSONParser = new CustomJSONParser();
+
+		//создаём OrderBuyGroup
+		OrderBuyGroupDTO orderBuyGroupDTO = customJSONParser.parseOrderBuyGroupFromJSON(str3);
+
+		//создаём Order, записываем в бд и возвращаем или сам ордер или ошибку (тот же ордер, только с отрицательным id)
+		Order order = orderCreater.create(orderBuyGroupDTO);
+
+		if(order.getIdOrder() < 0) {
+			response.put("status", "100");
+			response.put("message", order.getMessage());
+			response.put("info", order.getMessage());
+			return response;
+		}else {
+			response.put("status", "200");
+			response.put("message", order.getMessage());
+			response.put("info", order.getMessage());
+			response.put("order", order);
+			return response;
+		}
 	}
 	
 	/**
@@ -4658,84 +4726,71 @@ public class MainRestController {
 		MarketDataArrayForRequestDto dataDto3 = new MarketDataArrayForRequestDto(goodsId);
 		MarketPacketDto packetDto3 = new MarketPacketDto(marketJWT, "SpeedLogist.OrderBuyArrayInfoGet", serviceNumber, dataDto3);
 		MarketRequestDto requestDto3 = new MarketRequestDto("", packetDto3);
-		String marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto3));
-		
-		System.out.println("request -> " + gson.toJson(requestDto3));
-		
-//		System.out.println(marketOrder2);
-		
-		if(marketOrder2.equals("503")) { // означает что связь с маркетом потеряна
-			//в этом случае проверяем бд
-			System.err.println("Связь с маркетом потеряна");
-			Order order = orderService.getOrderByMarketNumber(idMarket);
-			marketJWT = null; // сразу говорим что jwt устарел
-			if(order != null) {
-				response.put("status", "200");
-				response.put("message", "Заказ загружен из локальной базы данных SL. Связь с маркетом отсутствует");
-				response.put("info", "Заказ загружен из локальной базы данных SL. Связь с маркетом отсутствует");
-				response.put("order", order);
-				return response;
-			}else {
-				response.put("status", "100");
-				response.put("message", "Заказ с номером " + idMarket + " в базе данных SL не найден. Связь с Маркетом отсутствует. Обратитесь в отдел ОСиУЗ");
-				response.put("info", "Заказ с номером " + idMarket + " в базе данных SL не найден. Связь с Маркетом отсутствует. Обратитесь в отдел ОСиУЗ");
-				return response;
-			}
-			
-		}else{//если есть связь с маркетом
-			//проверяем на наличие сообщений об ошибке со стороны маркета
-			if(marketOrder2.contains("Error")) {
-				//тут избавляемся от мусора в json
-				System.out.println(marketOrder2);
-//				String str2 = marketOrder2.split("\\[", 2)[1];
-//				String str3 = str2.substring(0, str2.length()-2);
-				MarketErrorDto errorMarket = gson.fromJson(marketOrder2, MarketErrorDto.class);
-//				System.out.println("JSON -> "+str3);
-//				System.out.println(errorMarket);
-				if(errorMarket.getError().equals("99")) {//обработка случая, когда в маркете номера нет, а в бд есть.
-					Order orderFromDB = orderService.getOrderByMarketNumber(idMarket);
-					if(orderFromDB !=null) {
-						response.put("status", "100");
-						response.put("message", "Заказ " + idMarket + " не найден в маркете. Данные из SL устаревшие. Обновите данные в Маркете");
-						response.put("info", "Заказ " + idMarket + " не найден в маркете. Данные из SL устаревшие. Обновите данные в Маркете");
-						return response;
-					}else {
-						response.put("status", "100");
-						response.put("message", errorMarket.getErrorDescription());
-						response.put("info", errorMarket.getErrorDescription());
-						response.put("objectFromMarket", errorMarket);
-						return response;
-					}
-				}
-				response.put("status", "100");
-				response.put("message", errorMarket.getErrorDescription());
-				response.put("info", errorMarket.getErrorDescription());
-				response.put("objectFromMarket", errorMarket);
-				return response;
-			}
-			
-			System.out.println(marketOrder2);
-			
-			//создаём свой парсер и парсим json в объекты, с которыми будем работать.
-			CustomJSONParser customJSONParser = new CustomJSONParser();
-			
-			//создаём лист OrderBuyGroup
-			Map<Long, OrderBuyGroupDTO> OrderBuyGroupDTOMap = new HashMap<Long, OrderBuyGroupDTO>();
-			Map<String, Order> orderMap = new HashMap<String, Order>();
-			JSONParser parser = new JSONParser();
-			JSONObject jsonMainObject = (JSONObject) parser.parse(marketOrder2);
-			JSONArray numShopsJSON = (JSONArray) jsonMainObject.get("OrderBuyGroup");
-			for (Object object : numShopsJSON) {
-				//создаём OrderBuyGroup
-				OrderBuyGroupDTO orderBuyGroupDTO = customJSONParser.parseOrderBuyGroupFromJSON(object.toString());
-				OrderBuyGroupDTOMap.put(orderBuyGroupDTO.getOrderBuyGroupId(), orderBuyGroupDTO);
-				Order order = orderCreater.createSimpleOrder(orderBuyGroupDTO);
-				orderMap.put(order.getMarketNumber(), order);
-			}
-			response.put("status", "200");
-			response.put("orders", orderMap);
+		String marketOrder2;
+		try {
+			marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto3));
+		} catch (Exception e) {
+			e.printStackTrace();
+			response.put("status", "100");
+			response.put("exception", e.toString());
+			response.put("message", "Ошибка запроса к Маркету");
+			response.put("info", "Ошибка запроса к Маркету");
 			return response;
-		}	
+		}
+
+		System.out.println("request -> " + gson.toJson(requestDto3));
+		//проверяем на наличие сообщений об ошибке со стороны маркета
+		if(marketOrder2.contains("Error")) {
+			//тут избавляемся от мусора в json
+			System.out.println(marketOrder2);
+//			String str2 = marketOrder2.split("\\[", 2)[1];
+//			String str3 = str2.substring(0, str2.length()-2);
+			MarketErrorDto errorMarket = gson.fromJson(marketOrder2, MarketErrorDto.class);
+//			System.out.println("JSON -> "+str3);
+//			System.out.println(errorMarket);
+			if(errorMarket.getError().equals("99")) {//обработка случая, когда в маркете номера нет, а в бд есть.
+				Order orderFromDB = orderService.getOrderByMarketNumber(idMarket);
+				if(orderFromDB !=null) {
+					response.put("status", "100");
+					response.put("message", "Заказ " + idMarket + " не найден в маркете. Данные из SL устаревшие. Обновите данные в Маркете");
+					response.put("info", "Заказ " + idMarket + " не найден в маркете. Данные из SL устаревшие. Обновите данные в Маркете");
+					return response;
+				}else {
+					response.put("status", "100");
+					response.put("message", errorMarket.getErrorDescription());
+					response.put("info", errorMarket.getErrorDescription());
+					response.put("objectFromMarket", errorMarket);
+					return response;
+				}
+			}
+			response.put("status", "100");
+			response.put("message", errorMarket.getErrorDescription());
+			response.put("info", errorMarket.getErrorDescription());
+			response.put("objectFromMarket", errorMarket);
+			return response;
+		}
+
+		System.out.println(marketOrder2);
+
+		//создаём свой парсер и парсим json в объекты, с которыми будем работать.
+		CustomJSONParser customJSONParser = new CustomJSONParser();
+
+		//создаём лист OrderBuyGroup
+		Map<Long, OrderBuyGroupDTO> OrderBuyGroupDTOMap = new HashMap<Long, OrderBuyGroupDTO>();
+		Map<String, Order> orderMap = new HashMap<String, Order>();
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(marketOrder2);
+		JSONArray numShopsJSON = (JSONArray) jsonMainObject.get("OrderBuyGroup");
+		for (Object object : numShopsJSON) {
+			//создаём OrderBuyGroup
+			OrderBuyGroupDTO orderBuyGroupDTO = customJSONParser.parseOrderBuyGroupFromJSON(object.toString());
+			OrderBuyGroupDTOMap.put(orderBuyGroupDTO.getOrderBuyGroupId(), orderBuyGroupDTO);
+			Order order = orderCreater.createSimpleOrder(orderBuyGroupDTO);
+			orderMap.put(order.getMarketNumber(), order);
+		}
+		response.put("status", "200");
+		response.put("orders", orderMap);
+		return response;
 	}
 	
 	/**
@@ -4756,97 +4811,86 @@ public class MainRestController {
 		MarketDataForRequestDto dataDto3 = new MarketDataForRequestDto(idMarket);
 		MarketPacketDto packetDto3 = new MarketPacketDto(marketJWT, "SpeedLogist.GetOrderBuyInfo", serviceNumber, dataDto3);
 		MarketRequestDto requestDto3 = new MarketRequestDto("", packetDto3);
-		String marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto3));
-		
-//		System.out.println(marketOrder2);
-		
-		if(marketOrder2.equals("503")) { // означает что связь с маркетом потеряна
-			//в этом случае проверяем бд
-			System.err.println("Связь с маркетом потеряна");
-			Order order = orderService.getOrderByMarketNumber(idMarket);
-			marketJWT = null; // сразу говорим что jwt устарел
-			if(order != null) {
-				response.put("status", "200");
-				response.put("info", "Заказ загружен из локальной базы данных SL. Связь с маркетом отсутствует");
-				response.put("order", order);
-				return response;
-			}else {
-				response.put("status", "100");
-				response.put("info", "Заказ с номером " + idMarket + " в базе данных SL не найден. Связь с Маркетом отсутствует. Обратитесь в отдел ОСиУЗ");
-				return response;
-			}
-			
-		}else{//если есть связь с маркетом
-			//проверяем на наличие сообщений об ошибке со стороны маркета
-			if(marketOrder2.contains("Error")) {
-				MarketErrorDto errorMarket = gson.fromJson(marketOrder2, MarketErrorDto.class);
-//				System.out.println(errorMarket);
-				if(errorMarket.getError().equals("99")) {//обработка случая, когда в маркете номера нет, а в бд есть.
-					Order orderFromDB = orderService.getOrderByMarketNumber(idMarket);
-					if(orderFromDB !=null) {
-						response.put("status", "100");
-						response.put("info", "Заказ " + idMarket + " не найден в маркете. Данные из SL устаревшие. Обновите данные в Маркете");
-						return response;
-					}else {
-						response.put("status", "100");
-						response.put("info", errorMarket.getErrorDescription());
-						return response;
-					}
-				}
-				response.put("status", "100");
-				response.put("info", errorMarket.getErrorDescription());
-				return response;
-			}
-			
-			//тут избавляемся от мусора в json
-			String str2 = marketOrder2.split("\\[", 2)[1];
-			String str3 = str2.substring(0, str2.length()-2);
-			
-			//создаём свой парсер и парсим json в объекты, с которыми будем работать.
-			CustomJSONParser customJSONParser = new CustomJSONParser();
-			
-			//создаём OrderBuyGroup
-			OrderBuyGroupDTO orderBuyGroupDTO = customJSONParser.parseOrderBuyGroupFromJSON(str3);
-						
-			//создаём Order, записываем в бд и возвращаем или сам ордер или ошибку (тот же ордер, только с отрицательным id)
-			Order order = orderCreater.create(orderBuyGroupDTO);
-			
-//			System.out.println(order);
-			
-			if(order.getIdOrder() < 0) {
-				if(order.getMarketInfo() != null) {
-					switch (order.getMarketInfo()) {
-					case "0":
-						response.put("status", "105");
-						response.put("info", "Реальынй статус из маркета - ЧЕРНОВИК");
-						return response;
-						
-					case "-1":
-						response.put("status", "105");
-						response.put("info", "Статус маркет = null");
-						response.put("orderDTO", orderBuyGroupDTO);
-						return response;
-
-					default:
-						response.put("status", "200");
-						response.put("info", "Заказ не в 50 статусе но и не в 0 статусе");
-						return response;
-					}
+		String marketOrder2;
+		try {
+			marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto3));
+		} catch (Exception e) {
+			e.printStackTrace();
+			response.put("status", "100");
+			response.put("exception", e.toString());
+			response.put("message", "Ошибка запроса к Маркету");
+			response.put("info", "Ошибка запроса к Маркету");
+			return response;
+		}
+		//проверяем на наличие сообщений об ошибке со стороны маркета
+		if(marketOrder2.contains("Error")) {
+			MarketErrorDto errorMarket = gson.fromJson(marketOrder2, MarketErrorDto.class);
+//			System.out.println(errorMarket);
+			if(errorMarket.getError().equals("99")) {//обработка случая, когда в маркете номера нет, а в бд есть.
+				Order orderFromDB = orderService.getOrderByMarketNumber(idMarket);
+				if(orderFromDB !=null) {
+					response.put("status", "100");
+					response.put("info", "Заказ " + idMarket + " не найден в маркете. Данные из SL устаревшие. Обновите данные в Маркете");
+					return response;
 				}else {
-					Order orderInBase = orderService.getOrderByMarketNumber(idMarket);
-					response.put("status", "105");
-					response.put("info", "Заказ в Маркете в статусе: " + orderBuyGroupDTO.getCheckx() + ". Сообщение системы: " + order.getMessage()+"\n"
-							+"Паллеты в SL = " + orderInBase.getPall() + "  -  паллеты из маркета = " + order.getPall());
+					response.put("status", "100");
+					response.put("info", errorMarket.getErrorDescription());
 					return response;
 				}
-				
-				
+			}
+			response.put("status", "100");
+			response.put("info", errorMarket.getErrorDescription());
+			return response;
+		}
+
+		//тут избавляемся от мусора в json
+		String str2 = marketOrder2.split("\\[", 2)[1];
+		String str3 = str2.substring(0, str2.length()-2);
+
+		//создаём свой парсер и парсим json в объекты, с которыми будем работать.
+		CustomJSONParser customJSONParser = new CustomJSONParser();
+
+		//создаём OrderBuyGroup
+		OrderBuyGroupDTO orderBuyGroupDTO = customJSONParser.parseOrderBuyGroupFromJSON(str3);
+
+		//создаём Order, записываем в бд и возвращаем или сам ордер или ошибку (тот же ордер, только с отрицательным id)
+		Order order = orderCreater.create(orderBuyGroupDTO);
+
+//		System.out.println(order);
+
+		if(order.getIdOrder() < 0) {
+			if(order.getMarketInfo() != null) {
+				switch (order.getMarketInfo()) {
+				case "0":
+					response.put("status", "105");
+					response.put("info", "Реальынй статус из маркета - ЧЕРНОВИК");
+					return response;
+
+				case "-1":
+					response.put("status", "105");
+					response.put("info", "Статус маркет = null");
+					response.put("orderDTO", orderBuyGroupDTO);
+					return response;
+
+				default:
+					response.put("status", "200");
+					response.put("info", "Заказ не в 50 статусе но и не в 0 статусе");
+					return response;
+				}
 			}else {
-				response.put("status", "200");
-				response.put("info", "Заказ в 50 статусе");
-//				System.out.println(checkOrderNeeds.check(order)); // тестовая проверка 
+				Order orderInBase = orderService.getOrderByMarketNumber(idMarket);
+				response.put("status", "105");
+				response.put("info", "Заказ в Маркете в статусе: " + orderBuyGroupDTO.getCheckx() + ". Сообщение системы: " + order.getMessage()+"\n"
+						+"Паллеты в SL = " + orderInBase.getPall() + "  -  паллеты из маркета = " + order.getPall());
 				return response;
 			}
+
+
+		}else {
+			response.put("status", "200");
+			response.put("info", "Заказ в 50 статусе");
+//			System.out.println(checkOrderNeeds.check(order)); // тестовая проверка
+			return response;
 		}		
 				
 	}
@@ -4862,7 +4906,12 @@ public class MainRestController {
 		MarketRequestDto requestDto = new MarketRequestDto("", packetDto);
 		if(marketJWT == null){
 			//запрашиваем jwt
-			String str = postRequest(url, gson.toJson(requestDto));
+			String str = null;
+			try {
+				str = postRequest(url, gson.toJson(requestDto));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			MarketTableDto marketRequestDto = gson.fromJson(str, MarketTableDto.class);
 			marketJWT = marketRequestDto.getTable()[0].toString().split("=")[1].split("}")[0];
 			System.err.println("Пришел такой JWT (marketRequestDto): " + marketRequestDto);
@@ -4870,22 +4919,7 @@ public class MainRestController {
 		}
 	}
 	
-	public MarketTableDto testRequestJWT(String url) {
-		MarketDataForLoginDto dataDto = new MarketDataForLoginDto(loginMarket, passwordMarket, "101");
-//		MarketDataForLoginDtoTEST dataDto = new MarketDataForLoginDtoTEST("SpeedLogist", "12345678", 101);
-		MarketPacketDto packetDto = new MarketPacketDto("null", "GetJWT", serviceNumber, dataDto);
-		MarketRequestDto requestDto = new MarketRequestDto("", packetDto);
-		MarketTableDto marketRequestDto = null;
-		//запрашиваем jwt
-		String str = postRequest(url, gson.toJson(requestDto));
-		System.out.println("Запрос в Маркет: " + gson.toJson(requestDto));
-		marketRequestDto = gson.fromJson(str, MarketTableDto.class);
-		System.err.println("Пришел такой JWT (marketRequestDto): " + marketRequestDto);
-		marketJWT = marketRequestDto.getTable()[0].toString().split("=")[1].split("}")[0];
-		System.err.println("Пришел такой JWT (распарсил): " + marketJWT);		
-		return marketRequestDto;
-	}
-	
+
 	/**
 	 * Метод редактирования поля "Информация" в заявке, для таблицы слотов.
 	 * @param request
@@ -5701,6 +5735,7 @@ public class MainRestController {
 				response.put("status", "200");
 				response.put("timeDelivery", order.getTimeDelivery());
 				response.put("planResponce", planResponce);
+//				System.out.println(planResponce);
 				java.util.Date t2 = new java.util.Date();
 				System.out.println(t2.getTime()-t1.getTime() + " ms - preload" );
 				return response;	
@@ -10874,12 +10909,14 @@ public class MainRestController {
 	/**
 	 * Метод отправки POST запросов 
 	 * сделан для запросов в маркет
+	 *
+	 * <br>При наличии в ответе слова Error генерит ошибку.
 	 * @param url
 	 * @param payload
 	 * @return
 	 */
 	@TimedExecution
-	public String postRequest(String url, String payload) {
+	public String postRequest(String url, String payload) throws Exception{
         try {
             URL urlForPost = new URL(url);
             HttpURLConnection connection = (HttpURLConnection) urlForPost.openConnection();
@@ -10905,16 +10942,33 @@ public class MainRestController {
                     }
                     in.close();
                 }	           
-//            	System.out.println(connection.getContentType());
-//            	System.err.println(response.toString());
+            	//проверяем, есть ли в ответе слово Error
+            	if(response.toString().contains("Error") && !response.toString().contains("\"Error\":99")) {
+            		throw new MarketExceptionBuilder()
+            			.setMessage(response.toString())
+            			.setDescription("Ответ от маркета пришел, подключение есть, см саму ошибку")
+            			.setResponseCode(getResponseCode+"")
+            			.setRequest(payload)
+            			.build();
+            	}
                 return response.toString();
             } else {
-                return null;
+            	throw new MarketExceptionBuilder()
+    			.setMessage("ResponseCode: " + getResponseCode)
+    			.setDescription("Ответ от маркета (статус) не равег 200!")
+    			.setResponseCode(getResponseCode+"")
+    			.setRequest(payload)
+    			.build();
             }
         } catch (IOException e) {
             System.out.println("MainRestController.postRequest: Подключение недоступно - 503");
             e.printStackTrace();
-            return "503";
+            throw new MarketExceptionBuilder()
+			.setMessage(e.getStackTrace().toString())
+			.setDescription("Общая ошибка метода postRequest. См. стектрейс")
+			.setResponseCode("ResponseCode отсутствует")
+			.setRequest(payload)
+			.build();
         }
     }
 	

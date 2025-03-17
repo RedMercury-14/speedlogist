@@ -180,8 +180,6 @@ public interface ScheduleDAO {
 	 */
 	ScheduleCountOrderDTO getCountScheduleDeliveryHasWeek();
 
-    ScheduleCountOrderDTO getCountScheduleDeliveryHasWeek();
-
     /**
 	 * @author Ira
 	 * <br>Возвращает список графиков для РЦ по списку кодов контрактов</br>

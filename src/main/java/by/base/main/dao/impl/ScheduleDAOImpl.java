@@ -487,42 +487,6 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 		);
 	}
 
-	@Override
-	public ScheduleCountOrderDTO getCountScheduleDeliveryHasWeek() {
-		String sqlQuery = "SELECT " +
-		          "COALESCE(SUM(CASE WHEN monday REGEXP ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
-		          "COALESCE(SUM(CASE WHEN tuesday REGEXP ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
-		          "COALESCE(SUM(CASE WHEN wednesday REGEXP ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
-		          "COALESCE(SUM(CASE WHEN thursday REGEXP ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
-		          "COALESCE(SUM(CASE WHEN friday REGEXP ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
-		          "COALESCE(SUM(CASE WHEN saturday REGEXP ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
-		          "COALESCE(SUM(CASE WHEN sunday REGEXP ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0) " +
-		          "FROM schedule";
-
-		    Session currentSession = sessionFactory.getCurrentSession();
-		    Query query = currentSession.createNativeQuery(sqlQuery);
-
-		    // Устанавливаем параметры для REGEXP
-		    for (int i = 1; i <= 7; i++) {
-		       query.setParameter(i, ".*понедельник|вторник|среда|четверг|пятница|суббота|воскресенье.*");
-		    }
-
-		    Object[] result = (Object[]) query.getSingleResult();
-
-		    return new ScheduleCountOrderDTO(
-		          ((Number) result[0]).longValue(),
-		          ((Number) result[1]).longValue(),
-		          ((Number) result[2]).longValue(),
-		          ((Number) result[3]).longValue(),
-		          ((Number) result[4]).longValue(),
-		          ((Number) result[5]).longValue(),
-		          ((Number) result[6]).longValue()
-		    );
-	}
-
-
-
-
 	/**
 	 * @author Ira
 	 * <br>Возвращает список графиков по списку кодов контрактов</br>

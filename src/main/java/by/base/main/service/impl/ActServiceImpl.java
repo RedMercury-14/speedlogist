@@ -1,6 +1,7 @@
 package by.base.main.service.impl;
 
 import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +10,8 @@ import org.springframework.stereotype.Service;
 import by.base.main.dao.ActDAO;
 import by.base.main.model.Act;
 import by.base.main.service.ActService;
+
+import javax.transaction.Transactional;
 
 @Service
 public class ActServiceImpl implements ActService{
@@ -47,4 +50,9 @@ public class ActServiceImpl implements ActService{
 		return actDAO.getActBySecretCode(code);
 	}
 
+	@Override
+	@Transactional
+	public List<Act> getActsByRouteId(String id, LocalDate startDate, LocalDate finishDate) {
+		return actDAO.getActsByRouteId(id,startDate, finishDate);
+	}
 }

@@ -1,6 +1,7 @@
 package by.base.main.service;
 
 import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 import by.base.main.model.Act;
@@ -14,4 +15,13 @@ public interface ActService {
 	List<Act> getActBySecretCode(String code);
 	List<Act> getActListAsDate(Date dateStart, Date dateFinish);
 
+	/**
+	 * <br>Возвращает список актов по указанному id и за указанный диапазон времени</br>
+	 * @param id
+	 * @param startDate
+	 * @param finishDate
+	 * @return
+	 * @author Ira
+	 */
+	List<Act> getActsByRouteId(String id, LocalDate startDate, LocalDate finishDate);
 }

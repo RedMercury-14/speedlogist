@@ -19,23 +19,21 @@ import java.util.zip.ZipOutputStream;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.Part;
 
+import by.base.main.dto.*;
+import by.base.main.model.*;
+import by.base.main.service.*;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -48,24 +46,6 @@ import com.google.gson.JsonSerializer;
 
 import by.base.main.aspect.TimedExecution;
 import by.base.main.controller.ajax.MainRestController;
-import by.base.main.dto.MarketDataFor330Request;
-import by.base.main.dto.MarketDataFor330Responce;
-import by.base.main.dto.MarketDataForRequestDto;
-import by.base.main.dto.MarketErrorDto;
-import by.base.main.dto.MarketPacketDto;
-import by.base.main.dto.MarketRequestDto;
-import by.base.main.dto.OrderBuyGroupDTO;
-import by.base.main.dto.ReportRow;
-import by.base.main.model.Order;
-import by.base.main.model.OrderProduct;
-import by.base.main.model.Route;
-import by.base.main.model.Truck;
-import by.base.main.service.MarketAPI;
-import by.base.main.service.OrderProductService;
-import by.base.main.service.OrderService;
-import by.base.main.service.RouteService;
-import by.base.main.service.ServiceException;
-import by.base.main.service.TruckService;
 import by.base.main.service.util.CustomJSONParser;
 import by.base.main.service.util.MailService;
 import by.base.main.service.util.OrderCreater;
@@ -102,6 +82,10 @@ public class MainFileController {
 	
 	@Autowired
 	private OrderCreater orderCreater;
+
+    @Autowired
+    private ActService actService;
+
 	private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(Date.class, new JsonSerializer<Date>() {
 				@Override
@@ -111,6 +95,132 @@ public class MainFileController {
             })
             .create();
 
+
+    /**
+     * @param request
+     * @param response
+     * @param dateStart
+     * @param dateFinish
+     * @throws IOException
+     * @throws ParseException
+     * Метод для создания и скачивания excel-файла транспортного отчёта
+     * за заданный период времени
+     * @author Ira
+     */
+    @RequestMapping("/get-road-tarnsport-report/{dateStart}&{dateFinish}")
+    @TimedExecution
+    public void getRoadTransportReport(HttpServletRequest request, HttpServletResponse response,
+                                  @PathVariable String dateStart,
+                                  @PathVariable String dateFinish) throws IOException, ParseException {
+        Date dateFrom = Date.valueOf(dateStart);
+        Date dateTo = Date.valueOf(dateFinish);
+        LocalDate startDate = dateFrom.toLocalDate();
+        LocalDate finishDate = dateTo.toLocalDate();
+ // формат
+
+        List <Route> routes = routeService.getRouteListByDatesCreate(dateFrom, dateTo);
+        List<String> idRoutes = new ArrayList<>();
+        for (Route route : routes) {
+            idRoutes.add(route.getIdRoute().toString());
+        }
+        Map<String, List<Message>> messageMap = routeService.routesWithMessages(idRoutes);
+//        List<Act> acts = actService.getActByRouteIds(idRoutes);
+        List<RoadTransportDTO> roadTransportDTOList = new ArrayList<>();
+        for (Route route : routes) {
+            RoadTransportDTO roadTransportDTO = new RoadTransportDTO();
+
+            List<Act> acts = actService.getActsByRouteId(route.getIdRoute().toString(), startDate, finishDate);
+            if (!acts.isEmpty() && acts.get(0).getDocumentsArrived() != null) {
+                roadTransportDTO.setDocumentsArrived(acts.get(0).getDocumentsArrived());
+            }
+            if (route.getWay().equals("Импортный") || route.getWay().equals("Импорт") || route.getWay().equals("РБ")) {
+                roadTransportDTO.setImportOrExport("Импорт");
+            } else if (route.getWay().equals("Экспортный") || route.getWay().equals("Экспорт")) {
+                roadTransportDTO.setImportOrExport("Экспорт");
+            } else if (route.getWay().equals("АХО")) {
+                roadTransportDTO.setImportOrExport("АХО");
+            }
+            roadTransportDTO.setRouteId(route.getIdRoute().toString());
+
+            if(route.getOrders().size() > 1) {
+                int d = 0;
+            }
+            if (!route.getOrders().isEmpty()){
+                Set<Order> orders = route.getOrders();
+                List<String> requestIDs = new ArrayList<>();
+                StringBuilder builder = new StringBuilder();
+
+                Integer warehouse = null;
+                for (Order order : orders) {
+                    requestIDs.add(order.getIdOrder().toString());
+                }
+                builder.append(String.join(", ", requestIDs));
+                roadTransportDTO.setRequestID(builder.toString());
+                roadTransportDTO.setSupplier(route.getOrders().stream().toList().get(0).getCounterparty());
+                roadTransportDTO.setRequestInitiator(route.getOrders().stream().toList().get(0).getManager().split(";")[0]);
+                roadTransportDTO.setDateRequestReceiving(route.getOrders().stream().toList().get(0).getDateCreate());
+                roadTransportDTO.setCargoReadiness(route.getOrders().stream().toList().get(0).getFirstLoadSlot());
+                roadTransportDTO.setLoadingOnRequest(route.getOrders().stream().toList().get(0).getFirstLoadSlot());
+                roadTransportDTO.setUKZ(route.getOrders().stream().toList().get(0).getControl() ? "Необходима сверка УКЗ" : "Нет");
+                Set<RouteHasShop> routeHasShops = route.getRoteHasShop();
+                for (RouteHasShop routeHasShop : routeHasShops) {
+                    if(routeHasShop.getPosition().contains("Выгрузка")){
+                        roadTransportDTO.setUnloadingWarehouse(routeHasShop.getAddress());
+                    }
+                }
+            }
+
+            roadTransportDTO.setResponsibleLogist(route.getLogistInfo());
+
+            roadTransportDTO.setActualLoading(route.getDateLoadActually());
+
+            roadTransportDTO.setCarrier(route.getUser() == null ? null : route.getUser().getCompanyName());
+            roadTransportDTO.setTenderParticipants(messageMap.get(route.getIdRoute().toString()) == null ? "0" : String.valueOf(messageMap.get(route.getIdRoute().toString()).size()));
+
+            if (messageMap.get(route.getIdRoute().toString()) != null) {
+                for (Message message : messageMap.get(route.getIdRoute().toString())) {
+                    if (message.getStatus().equals("1") && message.getIdRoute() != null && message.getCurrency() != null) {
+                        roadTransportDTO.setBid(message.getText());
+                        roadTransportDTO.setBidCurrency(message.getCurrency());
+                        roadTransportDTO.setBidComment(message.getComment());
+                        break;
+                    }
+                }
+            }
+
+            roadTransportDTO.setTruckNumber(route.getTruck() == null ? null : route.getTruck().getNumTruck());
+            roadTransportDTO.setTruckType(route.getTruck() == null ? null : route.getTruck().getTypeTrailer());
+            roadTransportDTO.setTemperature(route.getTemperature());
+            roadTransportDTO.setWeight(route.getTotalCargoWeight());
+            roadTransportDTOList.add(roadTransportDTO);
+        }
+        String appPath = request.getServletContext().getRealPath("");
+        String folderPath = appPath + "resources/others/roadTransportReport.xlsx";
+
+        try {
+            poiExcel.generateRoadTransportReport(roadTransportDTOList, folderPath);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        response.setHeader("content-disposition", "attachment;filename="+"roadTransportReport.xlsx");
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        try (FileInputStream in = new FileInputStream(appPath + "resources/others/roadTransportReport.xlsx"); OutputStream out = response.getOutputStream()) {
+            // Прочтите файл, который нужно загрузить, и сохраните его во входном потоке файла
+            //  Создать выходной поток
+            //  Создать буфер
+            byte buffer[] = new byte[1024];
+            int len = 0;
+            //  Прочитать содержимое входного потока в буфер в цикле
+            while ((len = in.read(buffer)) > 0) {
+                out.write(buffer, 0, len);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
 
 	/**
 	 * @param request

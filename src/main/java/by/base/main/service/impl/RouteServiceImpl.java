@@ -3,11 +3,7 @@ package by.base.main.service.impl;
 import java.sql.Date;
 import java.sql.Time;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.*;
 
 import javax.transaction.Transactional;
 
@@ -297,5 +293,15 @@ public class RouteServiceImpl implements RouteService{
 		return routes;
 	}
 
-	
+	@Transactional
+	@Override
+	public List<Route> getRouteListByDatesCreate(Date dateStart, Date dateFinish) {
+		return routeDAO.getRouteListByDatesCreate(dateStart, dateFinish);
+	}
+
+	@Transactional
+	@Override
+	public Map<String, List<Message>> routesWithMessages(List<String> routesId) {
+		return routeDAO.routesWithMessages(routesId);
+	}
 }

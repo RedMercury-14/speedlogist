@@ -125,9 +125,9 @@ public class MainFileController {
         }
         Map<String, List<Message>> messageMap = routeService.routesWithMessages(idRoutes);
 //        List<Act> acts = actService.getActByRouteIds(idRoutes);
-        List<RoadTransportDTO> roadTransportDTOList = new ArrayList<>();
+        List<RoadTransportDto> roadTransportDTOList = new ArrayList<>();
         for (Route route : routes) {
-            RoadTransportDTO roadTransportDTO = new RoadTransportDTO();
+            RoadTransportDto roadTransportDTO = new RoadTransportDto();
 
             List<Act> acts = actService.getActsByRouteId(route.getIdRoute().toString(), startDate, finishDate);
             if (!acts.isEmpty() && acts.get(0).getDocumentsArrived() != null) {
@@ -155,7 +155,7 @@ public class MainFileController {
                     requestIDs.add(order.getIdOrder().toString());
                 }
                 builder.append(String.join(", ", requestIDs));
-                roadTransportDTO.setRequestID(builder.toString());
+                roadTransportDTO.setRequestId(builder.toString());
                 roadTransportDTO.setSupplier(route.getOrders().stream().toList().get(0).getCounterparty());
                 roadTransportDTO.setRequestInitiator(route.getOrders().stream().toList().get(0).getManager().split(";")[0]);
                 roadTransportDTO.setDateRequestReceiving(route.getOrders().stream().toList().get(0).getDateCreate());

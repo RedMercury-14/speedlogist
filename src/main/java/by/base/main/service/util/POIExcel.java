@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 
-import by.base.main.dto.RoadTransportDTO;
+import by.base.main.dto.RoadTransportDto;
 import by.base.main.model.*;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
@@ -145,7 +145,7 @@ public class POIExcel {
 
 
 
-    public void generateRoadTransportReport(List<RoadTransportDTO> roadTransportDTOList, String filePath) throws IOException {
+    public void generateRoadTransportReport(List<RoadTransportDto> roadTransportDTOList, String filePath) throws IOException {
 
         String dateFormat = "dd.MM.yyyy";
         java.text.SimpleDateFormat dateFormatter = new SimpleDateFormat(dateFormat);
@@ -193,42 +193,42 @@ public class POIExcel {
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
         int rowNum = 1;
-        for (RoadTransportDTO roadTransportDTO: roadTransportDTOList) {
+        for (RoadTransportDto roadTransportDto: roadTransportDTOList) {
             Row row = sheet.createRow(rowNum);
             row.createCell(0).setCellValue(rowNum); //№
-            row.createCell(1).setCellValue(roadTransportDTO.getDocumentsArrived() == null ? null : dateFormatter.format(roadTransportDTO.getDocumentsArrived())); //Дата приёма документов на оплату
-            row.createCell(2).setCellValue(roadTransportDTO.getImportOrExport()); //Импорт/Экспорт
-            row.createCell(3).setCellValue(roadTransportDTO.getRouteId()); //ID маршрута
-            row.createCell(4).setCellValue(roadTransportDTO.getRequestID()); //ID заявки - id order???
-            row.createCell(5).setCellValue(roadTransportDTO.getSupplier()); //взять counterpartyName
-            row.createCell(6).setCellValue(roadTransportDTO.getRequestInitiator()); //order - manager
-            row.createCell(7).setCellValue(roadTransportDTO.getResponsibleLogist()); //
-            row.createCell(8).setCellValue(roadTransportDTO.getDateRequestReceiving() == null ? null : dateFormatter.format(roadTransportDTO.getDateRequestReceiving()));
-            row.createCell(9).setCellValue(roadTransportDTO.getCargoReadiness() == null ? "" : dateFormatter.format(roadTransportDTO.getCargoReadiness()));
-            row.createCell(10).setCellValue(roadTransportDTO.getLoadingOnRequest()  == null ? "" : dateFormatter.format(roadTransportDTO.getLoadingOnRequest()));
-            row.createCell(11).setCellValue(roadTransportDTO.getActualLoading() == null ? null : localDateFormatter.format(roadTransportDTO.getActualLoading())); //Погрузка фактическая - вообще непонятно что брать
+            row.createCell(1).setCellValue(roadTransportDto.getDocumentsArrived() == null ? null : dateFormatter.format(roadTransportDto.getDocumentsArrived())); //Дата приёма документов на оплату
+            row.createCell(2).setCellValue(roadTransportDto.getImportOrExport()); //Импорт/Экспорт
+            row.createCell(3).setCellValue(roadTransportDto.getRouteId()); //ID маршрута
+            row.createCell(4).setCellValue(roadTransportDto.getRequestId()); //ID заявки - id order???
+            row.createCell(5).setCellValue(roadTransportDto.getSupplier()); //взять counterpartyName
+            row.createCell(6).setCellValue(roadTransportDto.getRequestInitiator()); //order - manager
+            row.createCell(7).setCellValue(roadTransportDto.getResponsibleLogist()); //
+            row.createCell(8).setCellValue(roadTransportDto.getDateRequestReceiving() == null ? null : dateFormatter.format(roadTransportDto.getDateRequestReceiving()));
+            row.createCell(9).setCellValue(roadTransportDto.getCargoReadiness() == null ? "" : dateFormatter.format(roadTransportDto.getCargoReadiness()));
+            row.createCell(10).setCellValue(roadTransportDto.getLoadingOnRequest()  == null ? "" : dateFormatter.format(roadTransportDto.getLoadingOnRequest()));
+            row.createCell(11).setCellValue(roadTransportDto.getActualLoading() == null ? null : localDateFormatter.format(roadTransportDto.getActualLoading())); //Погрузка фактическая - вообще непонятно что брать
             row.createCell(12); //Маршрут
             row.createCell(13); //Страна отправления/погрузки
             row.createCell(14); //Место загрузки (Область)
-            row.createCell(15).setCellValue(roadTransportDTO.getCarrier()); //Экспедитор/Перевозчи - order
-            row.createCell(16).setCellValue(roadTransportDTO.getTenderParticipants()); //Участники тендера
-            row.createCell(17).setCellValue(roadTransportDTO.getBid()); //Ставка
-            row.createCell(18).setCellValue(roadTransportDTO.getBidCurrency()); //Валюта
-            row.createCell(19).setCellValue(roadTransportDTO.getBidComment()); //Коммент. к ставке
+            row.createCell(15).setCellValue(roadTransportDto.getCarrier()); //Экспедитор/Перевозчи - order
+            row.createCell(16).setCellValue(roadTransportDto.getTenderParticipants()); //Участники тендера
+            row.createCell(17).setCellValue(roadTransportDto.getBid()); //Ставка
+            row.createCell(18).setCellValue(roadTransportDto.getBidCurrency()); //Валюта
+            row.createCell(19).setCellValue(roadTransportDto.getBidComment()); //Коммент. к ставке
             row.createCell(20); //Доп. расходы.
             row.createCell(21); //Валюта доп. расх
             row.createCell(22); //Коментарий к доп расх.
-            row.createCell(23).setCellValue(roadTransportDTO.getTruckNumber()); //Номер ТС
-            row.createCell(24).setCellValue(roadTransportDTO.getTruckType()); //Тип ТС
-            row.createCell(25).setCellValue(roadTransportDTO.getTemperature()); //Темп. режим
-            row.createCell(26).setCellValue(roadTransportDTO.getUKZ()); //УКЗ
+            row.createCell(23).setCellValue(roadTransportDto.getTruckNumber()); //Номер ТС
+            row.createCell(24).setCellValue(roadTransportDto.getTruckType()); //Тип ТС
+            row.createCell(25).setCellValue(roadTransportDto.getTemperature()); //Темп. режим
+            row.createCell(26).setCellValue(roadTransportDto.getUKZ()); //УКЗ
             row.createCell(27); //ADR (класс)
-            row.createCell(28).setCellValue(roadTransportDTO.getWeight()); //Вес, тонн
+            row.createCell(28).setCellValue(roadTransportDto.getWeight()); //Вес, тонн
             row.createCell(29); //Стоимость груза, BYN
             row.createCell(30); //Страхование груза (да/нет)
             row.createCell(31); //Вид доставки
             row.createCell(32); //Дата прибытия на ПТО
-            row.createCell(33).setCellValue(roadTransportDTO.getUnloadingWarehouse()); //Склад выгрузки
+            row.createCell(33).setCellValue(roadTransportDto.getUnloadingWarehouse()); //Склад выгрузки
             row.createCell(34); //Комментарии иные
             if (rowNum % 2 == 0) {
                 for (Cell cell : row) {

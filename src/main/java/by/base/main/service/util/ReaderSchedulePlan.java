@@ -653,6 +653,7 @@ public class ReaderSchedulePlan {
 	 */
 	public PlanResponce process(Order order) {
 		initStockParameters();
+		User user = getThisUser();
 		 Set<OrderLine> lines = order.getOrderLines(); // строки в заказе
 //		 List<Product> products = new ArrayList<Product>(); 
 		 Map<Integer,Product> products = new HashMap<Integer, Product>(); 
@@ -725,11 +726,13 @@ public class ReaderSchedulePlan {
 		 
 		 HashMap<Long, ProductDouble> map = calculateQuantityOrderSum(orders); // тут я получил мапу с кодами товаров и суммой заказа за период.
 //		 map.forEach((k,v)->System.out.println(k + " -- " + v));
-		
+		 
+		 /*
+		  * Сначала цикл балансира, отдельно проверяем баланс между двумя скаладами
+		  */
 		 for (OrderLine orderLine : lines) {
 			Double quantityOrderAll = map.get(orderLine.getGoodsId()).num;
 			Product product = products.get(orderLine.getGoodsId().intValue());
-							
 			if(product!=null) {
 				//старый метод
 				List<OrderProduct> orderProductORL = new ArrayList<OrderProduct>();
@@ -765,103 +768,110 @@ public class ReaderSchedulePlan {
 					// если заказ меньше 80% от того что заказал ОРЛ - проверяем другие заказы
 					if (singleZaq < 0.8 * orlZaq) {
 						//далее проверяем суммарный заказ. А суммарный звказ - это сумма заказов относящихся к дню расчётов и складу.
-//						if(zaq > orlZaq*1.1) {
 						if(zaq > orlZaqMax) {
-							result.append("<span style=\"color: red;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + zaq + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + orlZaq + " шт.</span>\n");	
-							//остановился тут
-							ResultMethod stockInDayInTruckMessage = checkStockInDayInTruck(order, product, dateRange, isMistakeZAQ, result); // проверяем по стокам в машине
-							
-							
-							ResultMethod dayStockMessage = checkNumProductHasStockFromDay(order, product, dateRange, isMistakeZAQ, result); // проверяем по стокам относительно одного продукта (дни остатка)
-														
 							//пошла проверка балансов
-							checkBalanceHasStock(balance, product, order, orderLine, isMistakeZAQ, isBalanceMistake, result);
-							
-						}else if(zaq > orlZaq*1.1 && zaq < orlZaqMax) {//больше чем заказали ОРЛ но меньше чем макс значение заказа #bbaa00
-							result.append("<span style=\"color: #bbaa00;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + zaq + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + orlZaq + " шт.</span>\n");
-						}else {//всё хорошо, в пределах нормы
-							result.append(orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + zaq + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + orlZaq + " шт.\n");													
+							ResultMethod checkBalanceHasStock = checkBalanceHasStock(balance, product, order, orderLine, isMistakeZAQ, isBalanceMistake, result, user);
 						}
-					}else {	// если заказ БОЛЬШЕ чем 80% от того что заказал ОРЛ		
-//						if(singleZaq > orlZaq*1.1) {
+					}else {	// если заказ БОЛЬШЕ чем 80% от того что заказал ОРЛ
 						if(zaq > orlZaqMax) {
-							result.append("<span style=\"color: red;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + singleZaq + " шт. из " + orlZaq + " шт.</span>\n");	
-							ResultMethod stockInDayInTruckMessage = checkStockInDayInTruck(order, product, dateRange, isMistakeZAQ, result); // проверяем по стокам в машине							
-							
-							ResultMethod dayStockMessage = checkNumProductHasStockFromDay(order, product, dateRange, isMistakeZAQ, result); // проверяем по стокам относительно одного продукта (дни остатка)
-														
 							//пошла проверка балансов
-							checkBalanceHasStock(balance, product, order, orderLine, isMistakeZAQ, isBalanceMistake, result);
-							
-						}else if(zaq > orlZaq*1.1 && zaq < orlZaqMax) {//больше чем заказали ОРЛ но меньше чем макс значение заказа #bbaa00
-							result = result +"<span style=\"color: #bbaa00;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + zaq + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + orlZaq + " шт.</span>\n";	
-						}else {
-							result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + singleZaq + " шт. из " + orlZaq + " шт.\n";													
+							ResultMethod checkBalanceHasStock = checkBalanceHasStock(balance, product, order, orderLine, isMistakeZAQ, isBalanceMistake, result, user);
 						}
 					}
 					
 				}else { // если отсутствует заказ ОРЛ
-					ResultMethod stockInDayInTruckMessage = checkStockInDayInTruck(order, product, dateRange);
-					if(stockInDayInTruckMessage.getStatus().intValue() == 0) {
-			             result = stockInDayInTruckMessage.getMessage()+"\n" + result;
-//			             createPermission(order, stockInDayInTruckMessage.getMessage());					             
-			             isMistakeZAQ = true;						             
-			         }else {
-			        	 result = result + stockInDayInTruckMessage.getMessage() + "\n";
-			         }
-					ResultMethod dayStockMessage =  checkNumProductHasStockFromDay(order, product, dateRange); // проверяем по стокам относительно одного продукта
-					if(dayStockMessage.getStatus().intValue() == 200) {
-						result = result + dayStockMessage.getMessage() + "\n";
-					}
-					if(dayStockMessage.getStatus().intValue() == 100) {
-						result = result + dayStockMessage.getMessage();
-					}
-					 
-					result = result +orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - отсутствует в плане заказа (Заказы поставщика от ОРЛ)\n";
-					//пошла проверка балансов
-					if(getTrueStock(order).equals("1700") || getTrueStock(order).equals("1800")) {
-//						Product balanceProduct = balance.stream().filter(b-> b.getCodeProduct().equals(product.getCodeProduct())).findFirst().orElse(null);
-						Product balanceProduct;
-						if(balance == null || balance.isEmpty()) {
-							balanceProduct = null;
-						}else {
-							balanceProduct = balance.stream().filter(b-> b.getCodeProduct().equals(product.getCodeProduct())).findFirst().orElse(null);
-						}
-						if(balanceProduct != null) {
-							result = result +"<span style=\"color: red;\"> Запасы на складах "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") с учётом слотов : 1700 = "+balanceProduct.getCalculatedDayStock1700()
-								+" дн; 1800 = "+ balanceProduct.getCalculatedDayStock1800() +" дн;</span>\n("+balanceProduct.getCalculatedHistory()+")\n";
-							if(getTrueStock(order).equals("1700")) {
-								if(balanceProduct.getCalculatedDayStock1700() > balanceProduct.getCalculatedDayMax()) {
-									if(balanceProduct.getCalculatedDayStock1700() > balanceProduct.getCalculatedDayStock1800()) {
-										result = result +"Необходимо доставить товар "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") на <b>1800 склад</b>, т.к. остаток товаров в днях меньше чем на текущем складе;\n\n";
-										isBalanceMistake = true;
-									}
-								}
-							}else {
-								if(balanceProduct.getCalculatedDayStock1800() > balanceProduct.getCalculatedDayMax()) {
-									if(balanceProduct.getCalculatedDayStock1800() > balanceProduct.getCalculatedDayStock1700()) {
-										result = result +"Необходимо доставить товар "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") на <b>1700 склад</b>, т.к. остаток товаров в днях меньше чем на текущем складе;\n\n";
-										isBalanceMistake = true;
-									}
-								}
-							}
-						}
-					}
-					//закончилась проверка балансов
-					if(isBalanceMistake.get()) {
-						isMistakeZAQ = true;
-					}else {
-						//закончилась проверка балансов
-						 if(dayStockMessage.getStatus().intValue() == 0) {
-				             result = dayStockMessage.getMessage()+"\n" + result;
-//				             createPermission(order, dayStockMessage.getMessage());
-				             isMistakeZAQ = true;						             
-				         }
-					}
+					ResultMethod checkBalanceHasStock = checkBalanceHasStock(balance, product, order, orderLine, isMistakeZAQ, isBalanceMistake, result, user);
 				}
 			}
-			result.append("______________________________\n");
-		} // ===========================конец цикла
+			
+		 } // закончили проверку относительно балансира
+		
+		 /*
+		  * Далее идёт проверка по стокам
+		  * и начинается она, если проверка по балансам прошла успешно!
+		  */
+		 if(!isBalanceMistake.get()) {			 
+			 for (OrderLine orderLine : lines) {
+				 Double quantityOrderAll = map.get(orderLine.getGoodsId()).num;
+				 Product product = products.get(orderLine.getGoodsId().intValue());
+				 
+				 if(product!=null) {
+					 //старый метод
+					 List<OrderProduct> orderProductORL = new ArrayList<OrderProduct>();
+					 //берем только за день, который укажут в ОРЛ
+					 if(order.getDateOrderOrl() != null) {
+						 orderProductORL.add(product.getOrderProductsHasDateTarget(Date.valueOf(order.getDateOrderOrl().toLocalDate().minusDays(1))));						
+					 }
+					 
+					 if(orderProductORL != null && !orderProductORL.isEmpty() && orderProductORL.get(0) !=null) {//если есть заказ ОРЛ
+						 //проверяем на какой склад хотят поставить заказ и берем данные именно этого склада
+						 int zaq = quantityOrderAll.intValue(); // СУММА заказов по периоду
+						 int singleZaq = orderLine.getQuantityOrder().intValue(); //Заказ по ордеру (не суммированный)
+						 int orlZaq;
+						 int orlZaqMax;
+						 OrderProduct orderProductTarget = orderProductORL.get(0);
+						 switch (factStock) {
+						 case 1700:
+							 orlZaq = orderProductTarget.getQuantity1700() != null ? orderProductORL.get(0).getQuantity1700() : 0;
+							 orlZaqMax = orderProductTarget.getQuantity1700Max() != null ? orderProductORL.get(0).getQuantity1700Max() : 0;
+							 break;
+						 case 1800:
+							 orlZaq = orderProductTarget.getQuantity1800() != null ? orderProductORL.get(0).getQuantity1800() : 0;
+							 orlZaqMax = orderProductTarget.getQuantity1800Max() != null ? orderProductORL.get(0).getQuantity1800Max() : 0;
+							 break;
+						 default:
+							 orlZaq = orderProductTarget.getQuantity() != null ? orderProductORL.get(0).getQuantity() : 0;
+							 orlZaqMax = orderProductTarget.getQuantityMax() != null ? orderProductORL.get(0).getQuantityMax() : 0;
+							 break;
+						 }
+						 
+						 
+						 // реализация специальной логики: если заказ от менеджера больше или равен заказу от ОРЛ - берем только его заказ
+						 // если заказ меньше 80% от того что заказал ОРЛ - проверяем другие заказы
+						 if (singleZaq < 0.8 * orlZaq) {
+							 //далее проверяем суммарный заказ. А суммарный звказ - это сумма заказов относящихся к дню расчётов и складу.
+//						if(zaq > orlZaq*1.1) {
+							 if(zaq > orlZaqMax) {
+								 result.append("<span style=\"color: red;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + zaq + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + orlZaq + " шт.</span>\n");	
+								 							 
+								 ResultMethod stockInDayInTruckMessage = checkStockInDayInTruck(order, product, dateRange, isMistakeZAQ, result); // проверяем по стокам в машине 
+								 
+								 ResultMethod dayStockMessage = checkNumProductHasStockFromDay(order, product, dateRange, isMistakeZAQ, result); // проверяем по стокам относительно одного продукта (дни остатка)
+								 
+							 }else if(zaq > orlZaq*1.1 && zaq < orlZaqMax) {//больше чем заказали ОРЛ но меньше чем макс значение заказа #bbaa00
+								 result.append("<span style=\"color: #bbaa00;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + zaq + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + orlZaq + " шт.</span>\n");
+							 }else {//всё хорошо, в пределах нормы
+								 result.append(orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + zaq + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + orlZaq + " шт.\n");													
+							 }
+						 }else {	// если заказ БОЛЬШЕ чем 80% от того что заказал ОРЛ		
+//						if(singleZaq > orlZaq*1.1) {
+							 if(zaq > orlZaqMax) {
+								 result.append("<span style=\"color: red;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + singleZaq + " шт. из " + orlZaq + " шт.</span>\n");	
+								 ResultMethod stockInDayInTruckMessage = checkStockInDayInTruck(order, product, dateRange, isMistakeZAQ, result); // проверяем по стокам в машине							
+								 System.err.println(result);
+								 ResultMethod dayStockMessage = checkNumProductHasStockFromDay(order, product, dateRange, isMistakeZAQ, result); // проверяем по стокам относительно одного продукта (дни остатка)
+								 System.err.println(result);
+								 
+							 }else if(zaq > orlZaq*1.1 && zaq < orlZaqMax) {//больше чем заказали ОРЛ но меньше чем макс значение заказа #bbaa00
+								 result.append("<span style=\"color: #bbaa00;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + zaq + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + orlZaq + " шт.</span>\n");	
+							 }else {
+								 result.append(orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + singleZaq + " шт. из " + orlZaq + " шт.\n");													
+							 }
+						 }
+						 
+					 }else { // если отсутствует заказ ОРЛ
+						 ResultMethod stockInDayInTruckMessage = checkStockInDayInTruck(order, product, dateRange, isMistakeZAQ, result); // проверяем по стокам в машине
+						 
+						 ResultMethod dayStockMessage = checkNumProductHasStockFromDay(order, product, dateRange, isMistakeZAQ, result); // проверяем по стокам относительно одного продукта (дни остатка)
+						 
+						 
+						 result.append(orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - отсутствует в плане заказа (Заказы поставщика от ОРЛ)\n");
+						 
+					 }
+				 }
+				 result.append("______________________________\n");
+			 } // ===========================конец цикла
+		 }
 		 
 		 
 		 
@@ -871,7 +881,7 @@ public class ReaderSchedulePlan {
 			 return new PlanResponce(0, "<b>Действие заблокировано!</b>\n"+result);
 			 
 		 }else {
-			 return new PlanResponce(200, result);
+			 return new PlanResponce(200, result.toString());
 		 }		 
 	}
 	
@@ -886,19 +896,24 @@ public class ReaderSchedulePlan {
 	 * @param result
 	 * @return
 	 */
-	private ResultMethod checkBalanceHasStock(List<Product> balance, Product product, Order order, OrderLine orderLine, AtomicBoolean isMistakeZAQ, AtomicBoolean isBalanceMistake, StringBuilder result) {
+	private ResultMethod checkBalanceHasStock(List<Product> balance, Product product, Order order, OrderLine orderLine, AtomicBoolean isMistakeZAQ, AtomicBoolean isBalanceMistake, StringBuilder result, User user) {
 		Product balanceProduct;
 		if(balance == null || balance.isEmpty()) {
 			balanceProduct = null;
 		}else {
 			balanceProduct = balance.stream().filter(b-> b.getCodeProduct().equals(product.getCodeProduct())).findFirst().orElse(null); // считаем текущий баланс на складе
 		}								
-		if(balanceProduct != null) {
-			result.append("<span style=\"color: red;\"> Запасы на складах "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") с учётом слотов : 1700 = "+balanceProduct.getCalculatedDayStock1700()
-			+" дн; 1800 = "+ balanceProduct.getCalculatedDayStock1800() +" дн;</span>\n("+balanceProduct.getCalculatedHistory()+")\n");
+		if(balanceProduct != null) {			
+			//тут вставить сообщение для админа
+			if(user.getRoles().stream().findFirst().get().getIdRole() == 1) {
+				result.append("Инфа для админа: Запасы на складах "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") с учётом слотов : 1700 = "+balanceProduct.getCalculatedDayStock1700()
+				+" дн; 1800 = "+ balanceProduct.getCalculatedDayStock1800() +" дн;\n("+balanceProduct.getCalculatedHistory()+")\n");
+			}
 			if(order.getIdRamp().toString().substring(0, 4).equals("1700")) {
 				if(balanceProduct.getCalculatedDayStock1700() > balanceProduct.getCalculatedDayMax()) {
 					if(balanceProduct.getCalculatedDayStock1700() > balanceProduct.getCalculatedDayStock1800()) {
+						result.append("<span style=\"color: red;\"> Запасы на складах "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") с учётом слотов : 1700 = "+balanceProduct.getCalculatedDayStock1700()
+						+" дн; 1800 = "+ balanceProduct.getCalculatedDayStock1800() +" дн;</span>\n("+balanceProduct.getCalculatedHistory()+")\n");
 						result.append("Необходимо доставить товар "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") на <b>1800 склад</b>, т.к. остаток товаров в днях меньше чем на текущем складе;\n\n");
 						isBalanceMistake.set(true);
 						isMistakeZAQ.set(true);
@@ -908,6 +923,8 @@ public class ReaderSchedulePlan {
 			}else {
 				if(balanceProduct.getCalculatedDayStock1800() > balanceProduct.getCalculatedDayMax()) {
 					if(balanceProduct.getCalculatedDayStock1800() > balanceProduct.getCalculatedDayStock1700()) {
+						result.append("<span style=\"color: red;\"> Запасы на складах "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") с учётом слотов : 1700 = "+balanceProduct.getCalculatedDayStock1700()
+						+" дн; 1800 = "+ balanceProduct.getCalculatedDayStock1800() +" дн;</span>\n("+balanceProduct.getCalculatedHistory()+")\n");
 						result.append("Необходимо доставить товар "+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") на <b>1700 склад</b>, т.к. остаток товаров в днях меньше чем на текущем складе;\n\n");
 						isBalanceMistake.set(true);
 						isMistakeZAQ.set(true);
@@ -1263,12 +1280,12 @@ public class ReaderSchedulePlan {
 							}
 						
 					}else {
-						result.append("<span style=\"color: #bbaa00;\">Данные по потребностям " + product.getName() + " (" + product.getCodeProduct()+") устаревшие!.  Дата последней прогрузки: " + product.getDateUnload().toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + "</span>");
-						return new ResultMethod("<span style=\"color: #bbaa00;\">Данные по потребностям " + product.getName() + " (" + product.getCodeProduct()+") устаревшие!.  Дата последней прогрузки: " + product.getDateUnload().toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + "</span>", 200);
+						result.append("<span style=\"color: #bbaa00;\">Проверка стоков в заказе не проводилась, т.к. данные по потребностям " + product.getName() + " (" + product.getCodeProduct()+") устаревшие!.  Дата последней прогрузки: " + product.getDateUnload().toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + "</span>\n");
+						return new ResultMethod("<span style=\"color: #bbaa00;\">Проверка стоков в заказе не проводилась, т.к. данные по потребностям " + product.getName() + " (" + product.getCodeProduct()+") устаревшие!.  Дата последней прогрузки: " + product.getDateUnload().toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + "</span>\n", 200);
 					}
 				}else {
-					result.append("<span>Инфо: товар для проверки отсутствует</span>");
-					return new ResultMethod("<span>Инфо: товар для проверки отсутствует</span>", 100);
+					result.append("<span>Инфо: товар для проверки отсутствует</span>\n");
+					return new ResultMethod("<span>Инфо: товар для проверки отсутствует</span>\n", 100);
 				}
     	    	
     }
@@ -1493,8 +1510,8 @@ public class ReaderSchedulePlan {
 					break;
 				}
 			}else {
-				result.append("<span style=\"color: #bbaa00;\">Данные по потребностям " + product.getName() + " (" + product.getCodeProduct()+") устаревшие!.  Дата последней прогрузки: " + product.getDateUnload().toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + "</span>");
-				return new ResultMethod("<span style=\"color: #bbaa00;\">Данные по потребностям " + product.getName() + " (" + product.getCodeProduct()+") устаревшие!.  Дата последней прогрузки: " + product.getDateUnload().toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + "</span>", 200);
+				result.append("<span style=\"color: #bbaa00;\">Проверка по стокам на складе не проводилась, т.к. данные по потребностям " + product.getName() + " (" + product.getCodeProduct()+") устаревшие!.  Дата последней прогрузки: " + product.getDateUnload().toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + "</span>\n");
+				return new ResultMethod("<span style=\"color: #bbaa00;\">Проверка по стокам на складе не проводилась, т.к. данные по потребностям " + product.getName() + " (" + product.getCodeProduct()+") устаревшие!.  Дата последней прогрузки: " + product.getDateUnload().toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + "</span>\n", 200);
 			}
 		}
 		if(message!=null){

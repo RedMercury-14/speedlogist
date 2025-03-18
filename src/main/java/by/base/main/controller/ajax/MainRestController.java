@@ -5058,7 +5058,7 @@ public class MainRestController {
 			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false") && !checkDeepImport(order, request)) {
 				
 				//тут проверка поплану
-				PlanResponce planResponce = readerSchedulePlan.process(order);
+				PlanResponce planResponce = readerSchedulePlan.process(order, request);
 				if(planResponce.getStatus() == 0) {
 					infoCheck = planResponce.getMessage();
 					response.put("status", "105");
@@ -5096,7 +5096,7 @@ public class MainRestController {
 		case 7: // сакмовывоз			
 			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false") && !checkDeepImport(order, request)) {
 				//тут проверка по плану
-				PlanResponce planResponce = readerSchedulePlan.process(order);
+				PlanResponce planResponce = readerSchedulePlan.process(order, request);
                 if(planResponce.getStatus() == 0) {
                     infoCheck = planResponce.getMessage();
                     response.put("status", "105");
@@ -5343,7 +5343,7 @@ public class MainRestController {
 		if(!checkDeepImport(order, request)) {
 			if(!isLogist) { // если это не логист, то проверяем. Если логист - не проверяем при перемещении
 				if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {			
-					PlanResponce planResponce = readerSchedulePlan.process(order);
+					PlanResponce planResponce = readerSchedulePlan.process(order, request);
 					if(planResponce.getStatus() == 0) {
 						infoCheck = planResponce.getMessage();
 						response.put("status", "105");
@@ -5434,7 +5434,7 @@ public class MainRestController {
 		
 		if(!checkDeepImport(order, request)) {
 				if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {			
-					PlanResponce planResponce = readerSchedulePlan.process(order);
+					PlanResponce planResponce = readerSchedulePlan.process(order, request);
 					if(planResponce.getStatus() == 0) {
 						infoCheck = planResponce.getMessage();
 						response.put("status", "105");
@@ -5598,7 +5598,7 @@ public class MainRestController {
 		String infoCheck = null;	
 		if(!checkDeepImport(order, request)) {
 			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {			
-				PlanResponce planResponce = readerSchedulePlan.process(order);
+				PlanResponce planResponce = readerSchedulePlan.process(order, request);
 				if(planResponce.getStatus() == 0) {
 					infoCheck = planResponce.getMessage();
 					response.put("status", "105");

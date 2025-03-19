@@ -279,4 +279,12 @@ public interface OrderService {
 	List<Order> getOrderProductNotJOIN(Long goodsIds);
 
 	List<Order> getSpecialOrdersByListGoodId(List<Long> goodsIds);
+
+	/**
+	 * @param orderId
+	 * @return
+	 * <br>Устанавливает статус 5 и null для idRamp, timeDelivery, slotMessageHistory, firstLoadSlot, loginManager</br>
+	 * @author Ira
+	 */
+	Order deleteSlot(Integer orderId);
 }

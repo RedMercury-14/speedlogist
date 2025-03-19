@@ -6,6 +6,7 @@ package by.base.main.service.util;
 import java.util.ArrayList;
 import java.util.List;
 
+import by.base.main.dto.OrderCheckPalletsDto;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -72,5 +73,17 @@ public class CustomJSONParser {
 			e.printStackTrace();
 		}		
 		return orderBuyGroupDTO;		
+	}
+
+	public OrderCheckPalletsDto parseOrderFromJSON(String key, JSONObject jsonObject) throws ParseException {
+		OrderCheckPalletsDto dto = new OrderCheckPalletsDto();
+
+		dto.setIdOrder(Integer.parseInt(key));
+		dto.setMarketNumber(jsonObject.get("marketNumber") != null ? jsonObject.get("marketNumber").toString() : null);
+		dto.setPallets(jsonObject.get("pall") != null ? Integer.parseInt(jsonObject.get("pall").toString()) : null);
+		dto.setStatus(jsonObject.get("status") != null ? Integer.parseInt(jsonObject.get("status").toString()) : null);
+		dto.setLoginManager(jsonObject.get("loginManager") != null ? jsonObject.get("loginManager").toString() : null);
+
+		return dto;
 	}
 }

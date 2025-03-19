@@ -8,8 +8,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.transaction.Transactional;
-
 import by.base.main.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -501,4 +499,15 @@ public class OrderServiceImpl implements OrderService {
 		return orderDAO.getSpecialOrdersByListGoodId(goodsIds);
 	}
 
+	@Override
+	public Order deleteSlot(Integer orderId) {
+		Order order = orderDAO.getOrderById(orderId);
+		order.setStatus(5);
+		order.setTimeDelivery(null);
+		order.setSlotMessageHistory(null);
+		order.setFirstLoadSlot(null);
+		order.setLoginManager(null);
+		orderDAO.updateOrder(order);
+		return order;
+	}
 }

@@ -16,8 +16,6 @@ import by.base.main.dao.ScheduleDAO;
 import by.base.main.dto.ScheduleCountOrderDTO;
 import by.base.main.model.Schedule;
 
-import javax.transaction.Transactional;
-
 @Repository
 public class ScheduleDAOImpl implements ScheduleDAO{
 
@@ -424,13 +422,13 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	@Override
 	public ScheduleCountOrderDTO getCountScheduleOrderHasWeek() {
 	    String sqlQuery = "SELECT " +
-	            "COALESCE(SUM(CASE WHEN monday LIKE ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
-	            "COALESCE(SUM(CASE WHEN tuesday LIKE ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
-	            "COALESCE(SUM(CASE WHEN wednesday LIKE ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
-	            "COALESCE(SUM(CASE WHEN thursday LIKE ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
-	            "COALESCE(SUM(CASE WHEN friday LIKE ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
-	            "COALESCE(SUM(CASE WHEN saturday LIKE ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
-	            "COALESCE(SUM(CASE WHEN sunday LIKE ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0) " +
+	            "COALESCE(SUM(CASE WHEN status = 20 AND monday LIKE ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
+	            "COALESCE(SUM(CASE WHEN status = 20 AND tuesday LIKE ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
+	            "COALESCE(SUM(CASE WHEN status = 20 AND wednesday LIKE ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
+	            "COALESCE(SUM(CASE WHEN status = 20 AND thursday LIKE ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
+	            "COALESCE(SUM(CASE WHEN status = 20 AND friday LIKE ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
+	            "COALESCE(SUM(CASE WHEN status = 20 AND saturday LIKE ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
+	            "COALESCE(SUM(CASE WHEN status = 20 AND sunday LIKE ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0) " +
 	            "FROM schedule";
 
 	    Session currentSession = sessionFactory.getCurrentSession();
@@ -454,37 +452,38 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	    );
 	}
 
+
 	@Override
 	public ScheduleCountOrderDTO getCountScheduleDeliveryHasWeek() {
 		String sqlQuery = "SELECT " +
-				"COALESCE(SUM(CASE WHEN monday REGEXP ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
-				"COALESCE(SUM(CASE WHEN tuesday REGEXP ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
-				"COALESCE(SUM(CASE WHEN wednesday REGEXP ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
-				"COALESCE(SUM(CASE WHEN thursday REGEXP ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
-				"COALESCE(SUM(CASE WHEN friday REGEXP ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
-				"COALESCE(SUM(CASE WHEN saturday REGEXP ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
-				"COALESCE(SUM(CASE WHEN sunday REGEXP ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0) " +
-				"FROM schedule";
+		          "COALESCE(SUM(CASE WHEN status = 20 AND monday REGEXP ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
+		          "COALESCE(SUM(CASE WHEN status = 20 AND tuesday REGEXP ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
+		          "COALESCE(SUM(CASE WHEN status = 20 AND wednesday REGEXP ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
+		          "COALESCE(SUM(CASE WHEN status = 20 AND thursday REGEXP ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
+		          "COALESCE(SUM(CASE WHEN status = 20 AND friday REGEXP ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
+		          "COALESCE(SUM(CASE WHEN status = 20 AND saturday REGEXP ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0), " +
+		          "COALESCE(SUM(CASE WHEN status = 20 AND sunday REGEXP ? AND type = 'РЦ' THEN 1 ELSE 0 END), 0) " +
+		          "FROM schedule";
 
-		Session currentSession = sessionFactory.getCurrentSession();
-		Query query = currentSession.createNativeQuery(sqlQuery);
+		    Session currentSession = sessionFactory.getCurrentSession();
+		    Query query = currentSession.createNativeQuery(sqlQuery);
 
-		// Устанавливаем параметры для REGEXP
-		for (int i = 1; i <= 7; i++) {
-			query.setParameter(i, ".*понедельник|вторник|среда|четверг|пятница|суббота|воскресенье.*");
-		}
+		    // Устанавливаем параметры для REGEXP
+		    for (int i = 1; i <= 7; i++) {
+		       query.setParameter(i, ".*понедельник|вторник|среда|четверг|пятница|суббота|воскресенье.*");
+		    }
 
-		Object[] result = (Object[]) query.getSingleResult();
+		    Object[] result = (Object[]) query.getSingleResult();
 
-		return new ScheduleCountOrderDTO(
-				((Number) result[0]).longValue(),
-				((Number) result[1]).longValue(),
-				((Number) result[2]).longValue(),
-				((Number) result[3]).longValue(),
-				((Number) result[4]).longValue(),
-				((Number) result[5]).longValue(),
-				((Number) result[6]).longValue()
-		);
+		    return new ScheduleCountOrderDTO(
+		          ((Number) result[0]).longValue(),
+		          ((Number) result[1]).longValue(),
+		          ((Number) result[2]).longValue(),
+		          ((Number) result[3]).longValue(),
+		          ((Number) result[4]).longValue(),
+		          ((Number) result[5]).longValue(),
+		          ((Number) result[6]).longValue()
+		    );
 	}
 
 	/**

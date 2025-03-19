@@ -365,6 +365,17 @@ public class MainRestController {
 	@Autowired
     private ServletContext servletContext;
 	
+	@GetMapping("/orderproof/approve")
+	public Map<String, Object> getApproveOrder(HttpServletRequest request, HttpServletResponse response) throws IOException{
+	    Map<String, Object> responseMap = new HashMap<>();
+	    User user = getThisUser();
+	    System.out.println(user);
+	    responseMap.put("status", "100");
+	    responseMap.put("user", user);
+	    
+	    return responseMap;
+	}
+	
 	@GetMapping("/delivery-schedule/getCountScheduleDeliveryHasWeek")
 	public Map<String, Object> getCountScheduleDeliveryHasWeek(HttpServletRequest request, HttpServletResponse response) throws IOException{
 	    Map<String, Object> responseMap = new HashMap<>();
@@ -5026,7 +5037,7 @@ public class MainRestController {
 	}
 	
 	@PostMapping("/slot/save")
-	public Map<String, String> postSlotSave(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+	public Map<String, String> postSlotSave(HttpServletRequest request, @RequestBody String str) throws Exception {
 		java.util.Date t1 = new java.util.Date();
 		User user = getThisUser();
 		String role = user.getRoles().stream().findFirst().get().getAuthority();
@@ -5264,11 +5275,10 @@ public class MainRestController {
 	 * @param request
 	 * @param str
 	 * @return
-	 * @throws ParseException
-	 * @throws IOException 
+	 * @throws Exception 
 	 */
 	@PostMapping("/slot/update")
-	public Map<String, Object> postSlotUpdate(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+	public Map<String, Object> postSlotUpdate(HttpServletRequest request, @RequestBody String str) throws Exception {
 		java.util.Date t1 = new java.util.Date();
 		
 		String appPath = request.getServletContext().getRealPath("");
@@ -5402,11 +5412,10 @@ public class MainRestController {
 	 * @param request
 	 * @param idOrder
 	 * @return
-	 * @throws ParseException
-	 * @throws IOException
+	 * @throws Exception 
 	 */
 	@GetMapping("/slot/getTest/{idOrder}")
-	public Map<String, String> getSlotTest(HttpServletRequest request, @PathVariable String idOrder) throws ParseException, IOException {
+	public Map<String, String> getSlotTest(HttpServletRequest request, @PathVariable String idOrder) throws Exception {
 		java.util.Date t1 = new java.util.Date();
 		
 		Map<String, String> response = new HashMap<String, String>();
@@ -5514,11 +5523,10 @@ public class MainRestController {
 	 * @param request
 	 * @param str
 	 * @return
-	 * @throws ParseException
-	 * @throws IOException 
+	 * @throws Exception 
 	 */
 	@PostMapping("/slot/load")
-	public Map<String, Object> postSlotLoad(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+	public Map<String, Object> postSlotLoad(HttpServletRequest request, @RequestBody String str) throws Exception {
 		java.util.Date t1 = new java.util.Date();
 		
 		String appPath = request.getServletContext().getRealPath("");

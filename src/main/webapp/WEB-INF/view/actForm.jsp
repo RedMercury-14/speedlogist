@@ -144,7 +144,7 @@
 							<c:choose>
 								<c:when test="${route.truck.numTruck != null}">
 									<td>
-										<textarea type="text" name="numTruckAndTrailer"
+										<input type="text" name="numTruckAndTrailer"
 											id="numTruckAndTrailer_route${loop.count}"
 											placeholder="Номер тягача и прицепа"
 											value="${route.truck.numTruck} / ${route.truck.numTrailer}"

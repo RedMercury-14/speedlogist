@@ -129,8 +129,17 @@ public class ReaderSchedulePlan {
 	@Autowired 
 	private MailService mailService;
 	
+	@Autowired
+	private AESCryptoUtil aesCryptoUtil;
+	
 	@Value("${slot.chech.minPercentStockInDayInTruckMessage}")
 	public Double minPercentStockInDayInTruckMessage;
+	
+	@Value("${url.order.approve}")
+	public String urlApprove;
+	
+	@Value("${url.order.reject}")
+	public String urlReject;
 	
 	private final Integer minDayFromUnloadFile = 3;
 	
@@ -629,6 +638,7 @@ public class ReaderSchedulePlan {
 	 * @return Объект {@link PlanResponce}, содержащий статус, сообщение о результатах обработки заказа.
 	 *         Возвращает ответ с ошибкой, если номер контракта не найден или если 
 	 *         имеются ошибки в количестве заказанных товаров.
+	 * @throws Exception 
 	 *
 	 * @throws NullPointerException если переданный заказ равен null.
 	 * 
@@ -657,7 +667,7 @@ public class ReaderSchedulePlan {
 	 * когда конфликт балансира решен - если есть проблемы со стоками заказа - создаётся объект разрешения и высылается письмо.
 	 * даже если вне графика поставок
 	 */
-	public PlanResponce process(Order order, HttpServletRequest request) {
+	public PlanResponce process(Order order, HttpServletRequest request) throws Exception {
 		initStockParameters();
 		User user = getThisUser();
 		List<ResultMethod> resultMethods = new ArrayList<ReaderSchedulePlan.ResultMethod>();
@@ -911,6 +921,7 @@ public class ReaderSchedulePlan {
 	 * Метод формирования HTML таблицы для сообщения в почту
 	 * @param resultMethods
 	 * @return
+	 * @throws Exception 
 	 */
 //	private String htmlTableFormatter(List<ResultMethod> resultMethods) {
 //	    if (resultMethods == null || resultMethods.isEmpty()) {
@@ -972,105 +983,153 @@ public class ReaderSchedulePlan {
 //	    sb.append("</tbody></table>");
 //	    return sb.toString();
 //	}
-    private String htmlTableFormatter(List<ResultMethod> resultMethods) {
-        if (resultMethods == null || resultMethods.isEmpty()) {
-            return "<p>Нет данных</p>";
-        }
-        StringBuilder sb = new StringBuilder();
+	private String htmlTableFormatter(List<ResultMethod> resultMethods, Integer id) throws Exception {
+	    if (resultMethods == null || resultMethods.isEmpty()) {
+	        return "<p>Нет данных</p>";
+	    }
+	    StringBuilder sb = new StringBuilder();
 
-        List<String> headers = Arrays.asList(
-                "Код продукта",
-                "Наименование продукта",
-                "Текущий сток на складе, дн",
-                "Сток в заказе, дн",
-                "Сток согласно графику, дн",
-                "Информация по расчёту стока на складе"
-        );
+	    List<String> headers = Arrays.asList(
+	            "Код продукта",
+	            "Наименование продукта",
+	            "Текущий сток на складе, дн",
+	            "Сток в заказе, дн",
+	            "Сток согласно графику, дн",
+	            "Информация по расчёту стока на складе"
+	    );
 
-        sb.append("<table border='1' style='border-collapse: collapse; width: 100%; text-align: left; font-family: Arial, sans-serif;'>");
+	    sb.append("<table border='1' style='border-collapse: collapse; width: 100%; text-align: left; font-family: Arial, sans-serif;'>");
 
-        // Заголовки таблицы
-        sb.append("<thead><tr style='background-color: #f2f2f2; font-weight: bold; text-align: center;'>");
-        for (String header : headers) {
-            sb.append("<th style='padding: 10px; border: 1px solid #ddd;'>")
-                    .append(header)
-                    .append("</th>");
-        }
-        sb.append("</tr></thead><tbody>");
+	    // Заголовки таблицы
+	    sb.append("<thead><tr style='background-color: #f2f2f2; font-weight: bold; text-align: center;'>");
+	    for (String header : headers) {
+	        sb.append("<th style='padding: 10px; border: 1px solid #ddd;'>")
+	                .append(header)
+	                .append("</th>");
+	    }
+	    sb.append("</tr></thead><tbody>");
 
-        // Объединяем строки с одинаковым codeProduct
-        Map<Integer, ResultMethodAggregated> aggregatedResults = new HashMap<>();
+	    // Объединяем строки с одинаковым codeProduct
+	    Map<Integer, ResultMethodAggregated> aggregatedResults = new HashMap<>();
 
-        for (ResultMethod result : resultMethods) {
-            int code = result.getCodeProduct();
+	    for (ResultMethod result : resultMethods) {
+	        int code = result.getCodeProduct();
 
-            // Если продукт уже есть в карте - обновляем данные
-            if (aggregatedResults.containsKey(code)) {
-                ResultMethodAggregated aggregated = aggregatedResults.get(code);
+	        if (aggregatedResults.containsKey(code)) {
+	            ResultMethodAggregated aggregated = aggregatedResults.get(code);
 
-                if (result.getReferenceInformation() != null) {
-                    aggregated.setStockSchedule(result.getBalanceTruck()); // Сток согласно графику
-                    aggregated.setStockCurrent(result.getBalanceTruck()); // Сток согласно графику
-                    aggregated.setReferenceInformation(result.getReferenceInformation()); // Информация по стоку
-                } else {
-                    aggregated.setStockInTruck(result.getBalanceTruck()); // Сток в машине
-                    aggregated.setStock(result.getStock()); // справочный сток
-                }
-            } else {
-                // Если продукта нет - добавляем новый объект
-                ResultMethodAggregated aggregated = new ResultMethodAggregated(
-                        result.getCodeProduct(),
-                        result.getNameProduct(),
-                        (result.getReferenceInformation() != null) ? result.getBalanceTruck() : null, // это сток на складе stockCurrent 
-                        (result.getReferenceInformation() == null) ? result.getBalanceTruck() : null, // это сток в машине stockInTruck 
-                        (result.getReferenceInformation() != null) ? result.getBalanceTruck() : null, // временно
-                        result.getBaseStock(),
-                        result.getReferenceInformation(),
-                        result.getStock()
-                );
-                aggregatedResults.put(code, aggregated);
-            }
-        }
+	            if (result.getReferenceInformation() != null) {
+	                aggregated.setStockSchedule(result.getBalanceTruck()); // Сток согласно графику
+	                aggregated.setStockCurrent(result.getBalanceTruck()); // Сток согласно графику
+	                aggregated.setReferenceInformation(result.getReferenceInformation()); // Информация по стоку
+	            } else {
+	                aggregated.setStockInTruck(result.getBalanceTruck()); // Сток в машине
+	                aggregated.setStock(result.getStock()); // справочный сток
+	            }
+	        } else {
+	            // Если продукта нет - добавляем новый объект
+	            ResultMethodAggregated aggregated = new ResultMethodAggregated(
+	                    result.getCodeProduct(),
+	                    result.getNameProduct(),
+	                    (result.getReferenceInformation() != null) ? result.getBalanceTruck() : null, // это сток на складе stockCurrent 
+	                    (result.getReferenceInformation() == null) ? result.getBalanceTruck() : null, // это сток в машине stockInTruck 
+	                    (result.getReferenceInformation() != null) ? result.getBalanceTruck() : null, // временно
+	                    result.getBaseStock(),
+	                    result.getReferenceInformation(),
+	                    result.getStock()
+	            );
+	            aggregatedResults.put(code, aggregated);
+	        }
+	    }
 
-        // Заполняем таблицу объединёнными данными
-     // Заполняем таблицу объединёнными данными
-        for (ResultMethodAggregated aggregated : aggregatedResults.values()) {
-            sb.append("<tr style='text-align: center;'>");
+	    // Заполняем таблицу объединёнными данными
+	    for (ResultMethodAggregated aggregated : aggregatedResults.values()) {
+	        sb.append("<tr style='text-align: center;'>");
 
-            sb.append("<td style='padding: 10px; border: 1px solid #ddd;'>").append(aggregated.getCodeProduct()).append("</td>"); // Код продукта
-            sb.append("<td style='padding: 10px; border: 1px solid #ddd;'>").append(aggregated.getNameProduct()).append("</td>"); // Код продукта
+	        sb.append("<td style='padding: 10px; border: 1px solid #ddd;'>").append(aggregated.getCodeProduct()).append("</td>"); // Код продукта
+	        sb.append("<td style='padding: 10px; border: 1px solid #ddd;'>").append(aggregated.getNameProduct()).append("</td>"); // Наименование продукта
 
-            // Текущий сток на складе, дн
-            if (aggregated.getStockCurrent() != null) {
-                sb.append("<td style='padding: 10px; border: 1px solid #ddd; color: red;'>").append(aggregated.getStockCurrent()).append("</td>");
-            } else {
-//                sb.append("<td style='padding: 10px; border: 1px solid #ddd;'>По стокам проходит на склад</td>");
-            	sb.append("<td style='padding: 10px; border: 1px solid #ddd; color: green;'>").append(aggregated.getStock()!=null ? aggregated.getStock() : "Проверка по стокам не проводилась! Отсутствуют данные в 325 отчёте").append("</td>");
-            }
+	        // Текущий сток на складе, дн
+	        if (aggregated.getStockCurrent() != null) {
+	            sb.append("<td style='padding: 10px; border: 1px solid #ddd; color: red;'>").append(aggregated.getStockCurrent()).append("</td>");
+	        } else {
+	            sb.append("<td style='padding: 10px; border: 1px solid #ddd; color: green;'>").append(aggregated.getStock()!=null ? aggregated.getStock() : "Проверка по стокам не проводилась! Отсутствуют данные в 325 отчёте").append("</td>");
+	        }
 
-            // Сток в машине, дн
-            if (aggregated.getStockInTruck() != null) {
-                sb.append("<td style='padding: 10px; border: 1px solid #ddd; color: red;'>").append(aggregated.getStockInTruck()).append("</td>");
-            } else {
-                sb.append("<td style='padding: 10px; border: 1px solid #ddd;'>В пределах нормы</td>");
-            }
+	        // Сток в машине, дн
+	        if (aggregated.getStockInTruck() != null) {
+	            sb.append("<td style='padding: 10px; border: 1px solid #ddd; color: red;'>").append(aggregated.getStockInTruck()).append("</td>");
+	        } else {
+	            sb.append("<td style='padding: 10px; border: 1px solid #ddd;'>В пределах нормы</td>");
+	        }
 
-            // Сток согласно графику, дн (всегда черный + жирный)
-            sb.append("<td style='padding: 10px; border: 1px solid #ddd; font-weight: bold;'>").append(aggregated.getBaseStock()).append("</td>");
+	        // Сток согласно графику, дн (всегда черный + жирный)
+	        sb.append("<td style='padding: 10px; border: 1px solid #ddd; font-weight: bold;'>").append(aggregated.getBaseStock()).append("</td>");
 
-            // Информация по текущему стоку
-            if (aggregated.getReferenceInformation() != null) {
-                sb.append("<td style='padding: 10px; border: 1px solid #ddd;'>").append(aggregated.getReferenceInformation()).append("</td>");
-            } else {
-                sb.append("<td style='padding: 10px; border: 1px solid #ddd;'>По стокам проходит на склад</td>");
-            }
+	        // Информация по текущему стоку
+	        if (aggregated.getReferenceInformation() != null) {
+	            sb.append("<td style='padding: 10px; border: 1px solid #ddd;'>").append(aggregated.getReferenceInformation()).append("</td>");
+	        } else {
+	            sb.append("<td style='padding: 10px; border: 1px solid #ddd;'>По стокам проходит на склад</td>");
+	        }
 
-            sb.append("</tr>");
-        }
+	        sb.append("</tr>");
+	    }
 
-        sb.append("</tbody></table>");
-        return sb.toString();
-    }
+	    sb.append("</tbody></table>");
+
+	    // Добавляем кнопки под таблицей
+//	    sb.append("<table width='100%' style='margin-top: 20px; font-family: Arial, sans-serif; font-size: 16px;'>");
+//	    sb.append("<tr>");
+//
+//	    // "Согласовано" слева (кликабельное слово)
+//	    sb.append("<td align='left'>");
+//	    sb.append("✅ <a href='https://example.com/approve' style='color: green; text-decoration: underline; font-weight: bold;'>Согласовано</a>");
+//	    sb.append("</td>");
+//
+//	    // "Не согласовано" справа (кликабельное слово)
+//	    sb.append("<td align='right'>");
+//	    sb.append("❌ <a href='https://example.com/reject' style='color: red; text-decoration: underline; font-weight: bold;'>Не согласовано</a>");
+//	    sb.append("</td>");
+//
+//	    sb.append("</tr>");
+//	    sb.append("</table>");
+	    sb.append("<table width='100%' style='margin-top: 20px; font-family: Arial, sans-serif; font-size: 16px;'>");
+	    sb.append("<tr>");
+
+	    // "Согласовано" слева (зелёная кнопка)
+	    sb.append("<td align='left'>");
+	    sb.append("<table role='presentation' cellspacing='0' cellpadding='0' border='0' style='display: inline-block;'>");
+	    sb.append("<tr><td align='center' bgcolor='#28a745' style='border-radius: 5px;'>");
+	    sb.append("<a href='"+urlApprove+"?code="	
+	    		+ aesCryptoUtil.encrypt(id.toString())
+	    		+"' target='_blank' "
+	            + "style='display: inline-block; font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; "
+	            + "color: white; text-decoration: none; padding: 10px 20px; background-color: #28a745; "
+	            + "border-radius: 5px; border: 1px solid #28a745;'>Согласовано</a>");
+	    sb.append("</td></tr></table>");
+	    sb.append("</td>");
+
+	    // "Не согласовано" справа (красная кнопка)
+	    sb.append("<td align='right'>");
+	    sb.append("<table role='presentation' cellspacing='0' cellpadding='0' border='0' style='display: inline-block;'>");
+	    sb.append("<tr><td align='center' bgcolor='#dc3545' style='border-radius: 5px;'>");
+	    sb.append("<a href='"+urlReject+"?code="
+	    		+ aesCryptoUtil.encrypt(id.toString())
+	    		+"' target='_blank' "
+	            + "style='display: inline-block; font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; "
+	            + "color: white; text-decoration: none; padding: 10px 20px; background-color: #dc3545; "
+	            + "border-radius: 5px; border: 1px solid #dc3545;'>Не согласовано</a>");
+	    sb.append("</td></tr></table>");
+	    sb.append("</td>");
+
+	    sb.append("</tr>");
+	    sb.append("</table>");
+
+
+
+	    return sb.toString();
+	}
 	
 	/**
 	 * Метод, который проверяет баланс и даёт сообщение. Если проверка прохзодит то возвращает 200 статус
@@ -1132,8 +1191,9 @@ public class ReaderSchedulePlan {
 	 * <br> возвращает true усли создано новое согласовение, false если уже имеется
 	 * @param order
 	 * @param dayStockMessage
+	 * @throws Exception 
 	 */
-	private boolean createPermission(Order order, HttpServletRequest request, List<ResultMethod> resultMethods, User user) {
+	private boolean createPermission(Order order, HttpServletRequest request, List<ResultMethod> resultMethods, User user) throws Exception {
 		String text = "Требуется согласование на размещение заказа <b>" + order.getMarketNumber() + "</b> "
 				 + order.getCounterparty() + " менеджером " + user.getSurname()+ " " + user.getName() + " на <b>" 
 				 + order.getTimeDelivery().toLocalDateTime().toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + "</b>.<br>"
@@ -1149,13 +1209,13 @@ public class ReaderSchedulePlan {
         permission.setNameUserInitiator(user.getSurname() + " " + user.getName());
         permission.setEmailUserInitiator(user.geteMail());
         permission.setTelUserInitiator(user.getTelephone());
-        permission.setCommentUserInitiator(text+htmlTableFormatter(resultMethods));
+        permission.setCommentUserInitiator(text+htmlTableFormatter(resultMethods, 123));
         if(!permissionService.checkPermission(permission)) {
-       	 permissionService.savePermission(permission);       	 
+       	 Integer id = permissionService.savePermission(permission);       	 
        	 // сюда вставляем отправку сообщения
-	       	List<String> email = Arrays.asList("GrushevskiyD@dobronom.by");		 // тут подтягивать адреса автоматически останвился тут	 
+	       	List<String> email = Arrays.asList("GrushevskiyD@dobronom.by", "RomashkoK@dobronom.by");		 // тут подтягивать адреса автоматически останвился тут	 
 			 mailService.sendEmailToUsersHTMLContent(request, "Согласование размещения заказа " + order.getMarketNumber(), 
-					 text+htmlTableFormatter(resultMethods)+footer, email);
+					 text+htmlTableFormatter(resultMethods, id), email);
 			 return true;
         }else {
         	return false;

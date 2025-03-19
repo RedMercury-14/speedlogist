@@ -331,7 +331,7 @@ public class MailService {
 	        transport.connect(properties.getProperty("mail.smtps.user"), properties.getProperty("mail.smtps.password"));
 
 	        MimeMessage message = new MimeMessage(mailSession);
-	        message.setSubject(subject, "UTF-8"); // Добавил кодировку UTF-8
+	        message.setSubject(subject, "UTF-8");
 
 	        // Добавляем всех получателей
 	        for (String emailToUser : emailsToUsers) {
@@ -341,13 +341,15 @@ public class MailService {
 
 	        message.setSentDate(new Date());
 
-	        // Создаем HTML-контент письма
-	        MimeBodyPart mailBody = new MimeBodyPart();
-	        mailBody.setContent(htmlContent, "text/html; charset=UTF-8"); // <-- ВАЖНО! Теперь это HTML
+	        // Создаем альтернативное представление письма
+	        Multipart multipart = new MimeMultipart("alternative");
 
-	        // Добавляем в Multipart
-	        Multipart multipart = new MimeMultipart();
-	        multipart.addBodyPart(mailBody);
+	        // HTML-контент письма
+	        MimeBodyPart htmlPart = new MimeBodyPart();
+	        htmlPart.setContent(htmlContent, "text/html; charset=UTF-8");
+
+	        // Добавляем HTML-часть
+	        multipart.addBodyPart(htmlPart);
 	        message.setContent(multipart);
 
 	        // Отправляем сообщение

@@ -116,41 +116,48 @@ public class MainFileController {
         Date dateTo = Date.valueOf(dateFinish);
         LocalDate startDate = dateFrom.toLocalDate();
         LocalDate finishDate = dateTo.toLocalDate();
- // формат
 
+        java.util.Date routeService1 = new java.util.Date();
         List <Route> routes = routeService.getRouteListByDatesCreate(dateFrom, dateTo);
+        java.util.Date routeService2 = new java.util.Date();
+        System.out.println(routeService2.getTime() - routeService1.getTime() + " ms - get route list");
+
         List<String> idRoutes = new ArrayList<>();
         for (Route route : routes) {
             idRoutes.add(route.getIdRoute().toString());
         }
         Map<String, List<Message>> messageMap = routeService.routesWithMessages(idRoutes);
-//        List<Act> acts = actService.getActByRouteIds(idRoutes);
         List<RoadTransportDto> roadTransportDTOList = new ArrayList<>();
+
+        java.util.Date forRoute1 = new java.util.Date();
         for (Route route : routes) {
             RoadTransportDto roadTransportDTO = new RoadTransportDto();
 
+//            java.util.Date actService1 = new java.util.Date();
+
             List<Act> acts = actService.getActsByRouteId(route.getIdRoute().toString(), startDate, finishDate);
+//            java.util.Date actService2 = new java.util.Date();
+//            System.out.println(actService2.getTime() - actService1.getTime() + " ms - act service");
             if (!acts.isEmpty() && acts.get(0).getDocumentsArrived() != null) {
                 roadTransportDTO.setDocumentsArrived(acts.get(0).getDocumentsArrived());
             }
-            if (route.getWay().equals("Импортный") || route.getWay().equals("Импорт") || route.getWay().equals("РБ")) {
-                roadTransportDTO.setImportOrExport("Импорт");
-            } else if (route.getWay().equals("Экспортный") || route.getWay().equals("Экспорт")) {
-                roadTransportDTO.setImportOrExport("Экспорт");
-            } else if (route.getWay().equals("АХО")) {
-                roadTransportDTO.setImportOrExport("АХО");
+            if (route.getWay() != null) {
+                if (route.getWay().equals("Импортный") || route.getWay().equals("Импорт") || route.getWay().equals("РБ")) {
+                    roadTransportDTO.setImportOrExport("Импорт");
+                } else if (route.getWay().equals("Экспортный") || route.getWay().equals("Экспорт")) {
+                    roadTransportDTO.setImportOrExport("Экспорт");
+                } else if (route.getWay().equals("АХО")) {
+                    roadTransportDTO.setImportOrExport("АХО");
+                }
             }
+
             roadTransportDTO.setRouteId(route.getIdRoute().toString());
 
-            if(route.getOrders().size() > 1) {
-                int d = 0;
-            }
             if (!route.getOrders().isEmpty()){
                 Set<Order> orders = route.getOrders();
                 List<String> requestIDs = new ArrayList<>();
                 StringBuilder builder = new StringBuilder();
 
-                Integer warehouse = null;
                 for (Order order : orders) {
                     requestIDs.add(order.getIdOrder().toString());
                 }
@@ -170,10 +177,8 @@ public class MainFileController {
                 }
             }
 
-            roadTransportDTO.setResponsibleLogist(route.getLogistInfo());
-
+            roadTransportDTO.setResponsibleLogist(route.getLogistInfo() != null ? route.getLogistInfo().split(";")[0] : null);
             roadTransportDTO.setActualLoading(route.getDateLoadActually());
-
             roadTransportDTO.setCarrier(route.getUser() == null ? null : route.getUser().getCompanyName());
             roadTransportDTO.setTenderParticipants(messageMap.get(route.getIdRoute().toString()) == null ? "0" : String.valueOf(messageMap.get(route.getIdRoute().toString()).size()));
 
@@ -194,8 +199,13 @@ public class MainFileController {
             roadTransportDTO.setWeight(route.getTotalCargoWeight());
             roadTransportDTOList.add(roadTransportDTO);
         }
+        java.util.Date forRoute2 = new java.util.Date();
+        System.out.println(forRoute2.getTime() - forRoute1.getTime() + " ms - routes filling for");
+
         String appPath = request.getServletContext().getRealPath("");
         String folderPath = appPath + "resources/others/roadTransportReport.xlsx";
+
+        java.util.Date poiexcel1 = new java.util.Date();
 
         try {
             poiExcel.generateRoadTransportReport(roadTransportDTOList, folderPath);
@@ -203,6 +213,10 @@ public class MainFileController {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+        java.util.Date poiexcel2 = new java.util.Date();
+        System.out.println(poiexcel2.getTime() - poiexcel1.getTime() + " ms - excel");
+
+        java.util.Date write1 = new java.util.Date();
 
         response.setHeader("content-disposition", "attachment;filename="+"roadTransportReport.xlsx");
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
@@ -219,6 +233,9 @@ public class MainFileController {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        java.util.Date write2 = new java.util.Date();
+        System.out.println(write2.getTime() - write1.getTime() + " ms - write");
+
 
     }
 

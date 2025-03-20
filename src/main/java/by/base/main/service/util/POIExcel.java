@@ -170,23 +170,19 @@ public class POIExcel {
         Font font = workbook.createFont();
         font.setColor(IndexedColors.WHITE.getIndex());
         font.setBold(true);
-        // Устанавливаем цвет заливки
         headerStyle.setFillForegroundColor(color);
         headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         headerStyle.setWrapText(true);
         headerStyle.setAlignment(HorizontalAlignment.CENTER);
         headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
         headerStyle.setBorderBottom(BorderStyle.MEDIUM);
-        headerStyle.setFont(font);// Установка толстой нижней границы
-
- // Устанавливаем синий цвет текста
+        headerStyle.setFont(font);
 
         for (int i = 0; i < headers.length; i++) {
             Cell cell = headerRow.createCell(i);
             cell.setCellValue(headers[i]);
             cell.setCellStyle(headerStyle);
         }
-
 
         CellStyle style = workbook.createCellStyle();
         style.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex()); // Цвет фона
@@ -237,11 +233,6 @@ public class POIExcel {
             }
             rowNum++;
 
-        }
-
-//         Автоматическая настройка ширины столбцов
-        for (int i = 0; i < headers.length; i++) {
-            sheet.autoSizeColumn(i);
         }
 
         List<Integer> widths = new ArrayList<>();

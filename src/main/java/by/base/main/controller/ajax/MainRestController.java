@@ -317,6 +317,7 @@ public class MainRestController {
 	@Autowired
 	private ReviewService reviewService;
 	
+	
 	private static String classLog;
 	public static String marketJWT;
 	//в отдельный файл
@@ -4701,7 +4702,7 @@ public class MainRestController {
 		OrderBuyGroupDTO orderBuyGroupDTO = customJSONParser.parseOrderBuyGroupFromJSON(str3);
 		
 		//создаём Order, записываем в бд и возвращаем или сам ордер или ошибку (тот же ордер, только с отрицательным id)
-		Order order = orderCreater.create(orderBuyGroupDTO);		
+		Order order = orderCreater.create(orderBuyGroupDTO);	
 		
 		if(order.getIdOrder() < 0) {
 			response.put("status", "100");
@@ -4709,6 +4710,8 @@ public class MainRestController {
 			response.put("info", order.getMessage());
 			return response;
 		}else {
+			//тут я удаляю все согласования, т.к. заказ обновлён
+			permissionService.deletePermissionByIdObject(order.getIdOrder());
 			response.put("status", "200");
 			response.put("message", order.getMessage());
 			response.put("info", order.getMessage());

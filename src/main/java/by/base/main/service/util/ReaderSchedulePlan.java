@@ -902,14 +902,18 @@ public class ReaderSchedulePlan {
 					 result.append("______________________________\n");
 				 } // ===========================конец цикла
 			 }else {
-				 switch (permission.getStatusApproval().toString()) {
-				case "true":
-					result.append("<b>Постановка согласована. Проверок не проводилось.</b>\n");
-					break;
-				case "false":
-					result.append("Постановка данного заказа не согласована.\n");
-					return new PlanResponce(0, "<b>Действие заблокировано!\nПостановка данного заказа не согласована.</b>\n");
-				}
+				 if(permission.getStatusApproval() != null) {
+					 switch (permission.getStatusApproval().toString()) {
+						case "true":
+							result.append("<b>Постановка согласована. Проверок не проводилось.</b>\n");
+							break;
+						case "false":
+							result.append("Постановка данного заказа не согласована.\n");
+							return new PlanResponce(0, "<b>Действие заблокировано!\nПостановка данного заказа не согласована.</b>\n");
+						} 
+				 }else {
+					 return new PlanResponce(0, "<b>Действие заблокировано! Постановка этого слота на согласовании.</b>\n"+result);
+				 }
 			 }
 		 }
 		 

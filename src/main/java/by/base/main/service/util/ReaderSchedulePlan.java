@@ -747,6 +747,10 @@ public class ReaderSchedulePlan {
 		 HashMap<Long, ProductDouble> map = calculateQuantityOrderSum(orders); // тут я получил мапу с кодами товаров и суммой заказа за период.
 //		 map.forEach((k,v)->System.out.println(k + " -- " + v));
 		 
+		 System.out.println("VVVVVVVVVVVVVVVVVVVVVVVV");
+		 map.forEach((k,v)-> System.err.println(k + " -> " + v));
+		 System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^");
+		 
 		 /*
 		  * Сначала цикл балансира, отдельно проверяем баланс между двумя скаладами
 		  */
@@ -817,7 +821,7 @@ public class ReaderSchedulePlan {
 				 for (OrderLine orderLine : lines) {
 					 Double quantityOrderAll = map.get(orderLine.getGoodsId()).num;
 					 Product product = products.get(orderLine.getGoodsId().intValue());
-					 
+					 					 
 					 if(product!=null) {
 						 //старый метод
 						 List<OrderProduct> orderProductORL = new ArrayList<OrderProduct>();
@@ -854,7 +858,7 @@ public class ReaderSchedulePlan {
 							 if (singleZaq < 0.8 * orlZaq) {
 								 //далее проверяем суммарный заказ. А суммарный звказ - это сумма заказов относящихся к дню расчётов и складу.
 //							if(zaq > orlZaq*1.1) {
-								 if(zaq > orlZaqMax) {
+								 if(zaq > orlZaqMax) {									 
 									 result.append("<span style=\"color: red;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + zaq + " шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + orlZaq + " шт.</span>\n");	
 									 							 
 									 ResultMethod stockInDayInTruckMessage = checkStockInDayInTruck(order, product, dateRange, isMistakeZAQ, result); // проверяем по стокам в машине 
@@ -872,7 +876,7 @@ public class ReaderSchedulePlan {
 							 }else {	// если заказ БОЛЬШЕ чем 80% от того что заказал ОРЛ		
 //							if(singleZaq > orlZaq*1.1) {
 								 if(zaq > orlZaqMax) {
-									 result.append("<span style=\"color: red;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + singleZaq + " шт. из " + orlZaq + " шт.</span>\n");	
+									 result.append("<span style=\"color: red;\">"+orderLine.getGoodsName()+"("+orderLine.getGoodsId()+") - всего заказано " + zaq +" шт. ("+map.get(orderLine.getGoodsId()).orderHistory+") из " + orlZaq + " шт.</span>\n");	
 									 ResultMethod stockInDayInTruckMessage = checkStockInDayInTruck(order, product, dateRange, isMistakeZAQ, result); // проверяем по стокам в машине							
 									 
 									 ResultMethod dayStockMessage = checkNumProductHasStockFromDay(order, product, dateRange, isMistakeZAQ, result); // проверяем по стокам относительно одного продукта (дни остатка)

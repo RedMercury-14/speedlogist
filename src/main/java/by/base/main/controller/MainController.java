@@ -354,8 +354,13 @@ public class MainController {
 			@RequestParam("code") String id) throws Exception {
 		User user = getThisUser();
 		Permission permission = permissionService.getPermissionById(Integer.parseInt(aesCryptoUtil.decrypt(id)));
+		if(permission == null) {
+			System.out.println("permission == null");
+			return "orderProof";
+		}
 		
 		if(permission.getStatusApproval() != null) {
+			System.out.println("permission.getStatusApproval() != null");
 			return "orderProof";
 		}
 		
@@ -367,7 +372,7 @@ public class MainController {
 		permission.setStatusApproval(true);
 		permission.setDateTimeApproval(Timestamp.valueOf(LocalDateTime.now()));
 		permissionService.updatePermission(permission);		
-		
+		String appPath = request.getServletContext().getRealPath("");
 		new Thread(new Runnable() {			
 			@Override
 			public void run() {
@@ -375,9 +380,10 @@ public class MainController {
 				String text = "Постановка слота " + order.getMarketNumber() + " ("+order.getCounterparty()+") на " + permission.getDateValid().toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
 						+ " согласована.";
 				List<String> email = Arrays.asList(permission.getEmailUserInitiator());
-				mailService.sendEmailToUsers(request, "Согласование слота " + order.getMarketNumber(), text, email);			
+				System.err.println("approve email -> "+email);
+				mailService.sendEmailToUsers(appPath, "Согласование слота " + order.getMarketNumber(), text, email);			
 			}
-		}).start();		
+		}).start();	
 		return "orderProof";
 	}
 	
@@ -386,8 +392,13 @@ public class MainController {
 			@RequestParam("code") String id) throws Exception {
 		User user = getThisUser();
 		Permission permission = permissionService.getPermissionById(Integer.parseInt(aesCryptoUtil.decrypt(id)));
+		if(permission == null) {
+			System.out.println("permission == null");
+			return "orderProof";
+		}
 		
 		if(permission.getStatusApproval() != null) {
+			System.out.println("permission.getStatusApproval() != null");
 			return "orderProof";
 		}
 		
@@ -399,7 +410,7 @@ public class MainController {
 		permission.setStatusApproval(false);
 		permission.setDateTimeApproval(Timestamp.valueOf(LocalDateTime.now()));
 		permissionService.updatePermission(permission);
-		
+		String appPath = request.getServletContext().getRealPath("");
 		new Thread(new Runnable() {			
 			@Override
 			public void run() {
@@ -407,7 +418,7 @@ public class MainController {
 				String text = "Постановка слота " + order.getMarketNumber() + " ("+order.getCounterparty()+") на " + permission.getDateValid().toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
 						+ " не согласована. Обратитесь к руководителю за дополнительной информацией.";
 				List<String> email = Arrays.asList(permission.getEmailUserInitiator());
-				mailService.sendEmailToUsers(request, "Согласование слота " + order.getMarketNumber(), text, email);			
+				mailService.sendEmailToUsers(appPath, "Согласование слота " + order.getMarketNumber(), text, email);			
 			}
 		}).start();			
 		return "orderProof";

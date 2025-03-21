@@ -46,8 +46,12 @@ public class PermissionDAOImpl implements PermissionDAO{
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<Permission> theObject = currentSession.createQuery(queryGetPermissionById, Permission.class);
 		theObject.setParameter("idPermissions", id);
-		Permission permission = theObject.getSingleResult();
-		return permission;
+		List<Permission> permissionResult = theObject.getResultList();
+		if(!permissionResult.isEmpty()) {
+			return permissionResult.get(0);
+		}else {
+			return null;
+		}
 	}
 
 	@Override

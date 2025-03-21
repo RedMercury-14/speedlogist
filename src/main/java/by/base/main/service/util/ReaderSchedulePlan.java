@@ -745,11 +745,10 @@ public class ReaderSchedulePlan {
 		 }
 		 
 		 HashMap<Long, ProductDouble> map = calculateQuantityOrderSum(orders); // тут я получил мапу с кодами товаров и суммой заказа за период.
-//		 map.forEach((k,v)->System.out.println(k + " -- " + v));
 		 
-		 System.out.println("VVVVVVVVVVVVVVVVVVVVVVVV");
-		 map.forEach((k,v)-> System.err.println(k + " -> " + v));
-		 System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^");
+//		 System.out.println("VVVVVVVVVVVVVVVVVVVVVVVV");
+//		 map.forEach((k,v)-> System.err.println(k + " -> " + v));
+//		 System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^");
 		 
 		 /*
 		  * Сначала цикл балансира, отдельно проверяем баланс между двумя скаладами

@@ -440,65 +440,67 @@ public class OrderServiceImpl implements OrderService {
 		return orderDAO.getOrderByPeriodDeliveryAndCodeContractNotJOIN(dateStart, dateEnd, numContract);
 	}
 
-	@Override
-	
+	@Override	
 	public List<Order> getOrderByTimeDeliveryAndNumStock(Date dateStart, Date dateEnd, Integer numStock) {
 		return orderDAO.getOrderByTimeDeliveryAndNumStock(dateStart, dateEnd, numStock);
 	}
 
-	@Override
-	
+	@Override	
 	public List<Order> getOrderByFirstLoadSlotAndDateOrderOrlAndGoodsId(Date dateStart, Date dateEnd, List<Long> goodsIds, Date dateOrderOrl) {
 		return orderDAO.getOrderByFirstLoadSlotAndDateOrderOrlAndGoodsId(dateStart, dateEnd, goodsIds, dateOrderOrl);
 	}
 
-	@Override
-	
+	@Override	
 	public List<Order> getOrderByFirstLoadSlotAndDateOrderOrl(Date dateStart, Date dateEnd, Date dateOrderOrl) {
 		return orderDAO.getOrderByFirstLoadSlotAndDateOrderOrl(dateStart, dateEnd, dateOrderOrl);
 	}
 
 
-	@Override
-	
+	@Override	
 	public Map<String, Order> getOrdersByListMarketNumber(List<String> marketNumber) {
 		return orderDAO.getOrdersByListMarketNumber(marketNumber);
 	}
 
-	@Override
-	
+	@Override	
 	public List<Order> getOrderByDateOrderORLAndNumStock(Date dateOrderORL, Integer numStock) {
 		return orderDAO.getOrderByDateOrderORLAndNumStock(dateOrderORL, numStock);
 	}
 
-	@Override
-	
+	@Override	
 	public List<Order> getLastOrderByGoodId(Long goodsId) {
 		return  orderDAO.getLastOrderByGoodId(goodsId);
 	}
 
-	@Override
-	
+	@Override	
 	public List<Order> getOrdersByGoodId(Long goodsId) {
 		return orderDAO.getOrdersByGoodId(goodsId);
 	}
 
-	@Override
-	
+	@Override	
 	public java.util.Date getLastTime(Long goodsId){
 		return orderDAO.getLastTime(goodsId);
 	}
 
-	@Override
-	
+	@Override	
 	public List<Order> getOrderProductNotJOIN(Long goodsIds){
 		return  orderDAO.getOrderProductNotJOIN(goodsIds);
 	}
 
-	@Override
-	
+	@Override	
 	public List<Order> getSpecialOrdersByListGoodId(List<Long> goodsIds) {
 		return orderDAO.getSpecialOrdersByListGoodId(goodsIds);
 	}
+	
+	@Override
+    public Order deleteSlot(Integer orderId) {
+        Order order = orderDAO.getOrderById(orderId);
+        order.setStatus(5);
+        order.setTimeDelivery(null);
+        order.setSlotMessageHistory(null);
+        order.setFirstLoadSlot(null);
+        order.setLoginManager(null);
+        orderDAO.updateOrder(order);
+        return order;
+    }
 
 }

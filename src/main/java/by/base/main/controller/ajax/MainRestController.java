@@ -85,7 +85,8 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -155,6 +156,7 @@ import by.base.main.service.TGUserService;
 import by.base.main.service.TaskService;
 import by.base.main.service.TruckService;
 import by.base.main.service.UserService;
+import by.base.main.service.impl.MarketException;
 import by.base.main.service.impl.MarketExceptionBuilder;
 import by.base.main.service.util.CheckOrderNeeds;
 import by.base.main.service.util.CustomJSONParser;
@@ -318,6 +320,7 @@ public class MainRestController {
 	@Autowired
 	private ReviewService reviewService;
 	
+
 	private static String classLog;
 	public static String marketJWT;
 	//в отдельный файл
@@ -365,7 +368,7 @@ public class MainRestController {
 
 	@Autowired
     private ServletContext servletContext;
-
+	
 	@GetMapping("/orderproof/approve")
 	public Map<String, Object> getApproveOrder(HttpServletRequest request, HttpServletResponse response) throws IOException{
 	    Map<String, Object> responseMap = new HashMap<>();
@@ -373,14 +376,10 @@ public class MainRestController {
 	    System.out.println(user);
 	    responseMap.put("status", "100");
 	    responseMap.put("user", user);
-
+	    
 	    return responseMap;
 	}
-
-
-
-
-
+	
 	@GetMapping("/delivery-schedule/getCountScheduleDeliveryHasWeek")
 	public Map<String, Object> getCountScheduleDeliveryHasWeek(HttpServletRequest request, HttpServletResponse response) throws IOException{
 	    Map<String, Object> responseMap = new HashMap<>();
@@ -388,7 +387,7 @@ public class MainRestController {
 	    responseMap.put("object", scheduleService.getCountScheduleDeliveryHasWeek());
 	    return responseMap;
 	}
-
+	
 	/**
 	 * <br>Метод для получения списка объектов обратной связи за указанный период</br>.
 	 * @param dateStart
@@ -663,7 +662,7 @@ public class MainRestController {
 		String to = task.getToDate().toString();
 		String from2 = LocalDate.now().minusDays(2).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 		String to2 = LocalDate.now().minusDays(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-
+		
 		response.put("from", from);
 		response.put("from2", from2);
 		response.put("to", to);
@@ -791,13 +790,13 @@ public class MainRestController {
 			return response;
 		}
 		java.util.Date t2 = new java.util.Date();
-
+		
 		JSONObject jsonResponceMainObject = (JSONObject) parser.parse(marketOrder2);
 		JSONArray jsonResponceTable = (JSONArray) parser.parse(jsonResponceMainObject.get("Table").toString());
 		for (Object obj : jsonResponceTable) {
         	responces.add(new MarketDataFor325Responce(obj.toString())); // парсин json засунул в конструктор
         }
-
+		
 		response.put("status", "200");
 		response.put("request", str);
 		response.put("responce", responces);
@@ -1884,7 +1883,7 @@ public class MainRestController {
 			return response;
 		}
 		System.out.println(gson.toJson(requestDto));
-
+		
 		response.put("status", "200");
 		response.put("payload responce", marketOrder2);
 		response.put("json request", requestDto);
@@ -1899,7 +1898,7 @@ public class MainRestController {
 	 */
 	@TimedExecution
 	@GetMapping("/398/get")
-	public Map<String, Object> get398AndStock(HttpServletRequest request) throws ParseException {
+	public Map<String, Object> get398AndStock(HttpServletRequest request) throws ParseException {		
 		Map<String, Object> response = new HashMap<>();
 		try {
 			Task task = taskService.getLastTaskFor398();
@@ -1909,7 +1908,7 @@ public class MainRestController {
 
 			java.util.Date t1 = new java.util.Date();
 			Integer maxShopCoint = 40; // максимальное кол-во магазинов в запросе
-
+			
 
 			//сначала определяыем кол-во магазов и делим их на массивы запросов
 			 String [] mass = stock.split(",");
@@ -2045,7 +2044,7 @@ public class MainRestController {
 			response.put("Exception", e.toString());
 			return response;
 		}
-
+		
 
 	}
 
@@ -2256,13 +2255,13 @@ public class MainRestController {
 			response.put("info", "Ошибка запроса к Маркету");
 			return response;
 		}
-
+		
 		JSONObject jsonResponceMainObject = (JSONObject) parser.parse(marketOrder2);
 		JSONArray jsonResponceTable = (JSONArray) parser.parse(jsonResponceMainObject.get("Table").toString());
 		for (Object obj : jsonResponceTable) {
         	responces.add(new MarketDataFor330Responce(obj.toString())); // парсин json засунул в конструктор
         }
-
+		
 		response.put("status", "200");
 		response.put("payload request", marketOrder2);
 		response.put("responce", responces);
@@ -4529,27 +4528,27 @@ public class MainRestController {
 //	 * Если в маркете есть - он обнавляет его в бд.
 //	 * Если связи с маркетом нет - берет из бд.
 //	 * Если нет в бд и связи с маркетом нет - выдаёт ошибку
-//	 * ордер из маркета
+//	 * ордер из маркета 
 //	 * @param request
 //	 * @param idMarket
 //	 * @return
 //	 */
 //	@GetMapping("/manager/getMarketOrder/{idMarket}")
-//	public Map<String, Object> getMarketOrder(HttpServletRequest request, @PathVariable String idMarket) {
-//		try {
-//			checkJWT(marketUrl);
+//	public Map<String, Object> getMarketOrder(HttpServletRequest request, @PathVariable String idMarket) {		
+//		try {			
+//			checkJWT(marketUrl);			
 //		} catch (Exception e) {
 //			System.err.println("Ошибка получения jwt токена");
 //		}
-//
+//		
 //		Map<String, Object> response = new HashMap<String, Object>();
 //		MarketDataForRequestDto dataDto3 = new MarketDataForRequestDto(idMarket);
 //		MarketPacketDto packetDto3 = new MarketPacketDto(marketJWT, "SpeedLogist.GetOrderBuyInfo", serviceNumber, dataDto3);
 //		MarketRequestDto requestDto3 = new MarketRequestDto("", packetDto3);
 //		String marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto3));
-//
+//		
 ////		System.out.println(marketOrder2);
-//
+//		
 //		if(marketOrder2.equals("503")) { // означает что связь с маркетом потеряна
 //			//в этом случае проверяем бд
 //			System.err.println("Связь с маркетом потеряна");
@@ -4567,7 +4566,7 @@ public class MainRestController {
 //				response.put("info", "Заказ с номером " + idMarket + " в базе данных SL не найден. Связь с Маркетом отсутствует. Обратитесь в отдел ОСиУЗ");
 //				return response;
 //			}
-//
+//			
 //		}else{//если есть связь с маркетом
 //			//проверяем на наличие сообщений об ошибке со стороны маркета
 //			if(marketOrder2.contains("Error")) {
@@ -4599,20 +4598,20 @@ public class MainRestController {
 //				response.put("objectFromMarket", errorMarket);
 //				return response;
 //			}
-//
+//			
 //			//тут избавляемся от мусора в json
 //			String str2 = marketOrder2.split("\\[", 2)[1];
 //			String str3 = str2.substring(0, str2.length()-2);
-//
+//			
 //			//создаём свой парсер и парсим json в объекты, с которыми будем работать.
 //			CustomJSONParser customJSONParser = new CustomJSONParser();
-//
+//			
 //			//создаём OrderBuyGroup
 //			OrderBuyGroupDTO orderBuyGroupDTO = customJSONParser.parseOrderBuyGroupFromJSON(str3);
-//
+//						
 //			//создаём Order, записываем в бд и возвращаем или сам ордер или ошибку (тот же ордер, только с отрицательным id)
-//			Order order = orderCreater.create(orderBuyGroupDTO);
-//
+//			Order order = orderCreater.create(orderBuyGroupDTO);		
+//			
 //			if(order.getIdOrder() < 0) {
 //				response.put("status", "100");
 //				response.put("message", order.getMessage());
@@ -4625,9 +4624,9 @@ public class MainRestController {
 //				response.put("order", order);
 //				return response;
 //			}
-//		}
+//		}	
 //	}
-
+	
 	/**
 	 * Главный метод запроса ордера из маркета.
 	 * Если в маркете есть - он обнавляет его в бд.
@@ -4663,7 +4662,7 @@ public class MainRestController {
 			mailService.sendEmailToUsers(servletContext, "Ошибка getMarketOrder!", e.toString(), emailsAdmins);
 			return response;
 		}
-
+		
 		//проверяем на наличие сообщений об ошибке со стороны маркета
 		if(marketOrder2.contains("Error")) {
 			//тут избавляемся от мусора в json
@@ -4694,26 +4693,28 @@ public class MainRestController {
 			response.put("objectFromMarket", errorMarket);
 			return response;
 		}
-
+		
 		//тут избавляемся от мусора в json
 		String str2 = marketOrder2.split("\\[", 2)[1];
 		String str3 = str2.substring(0, str2.length()-2);
-
+		
 		//создаём свой парсер и парсим json в объекты, с которыми будем работать.
 		CustomJSONParser customJSONParser = new CustomJSONParser();
-
+		
 		//создаём OrderBuyGroup
 		OrderBuyGroupDTO orderBuyGroupDTO = customJSONParser.parseOrderBuyGroupFromJSON(str3);
-
+		
 		//создаём Order, записываем в бд и возвращаем или сам ордер или ошибку (тот же ордер, только с отрицательным id)
 		Order order = orderCreater.create(orderBuyGroupDTO);
-
+		
 		if(order.getIdOrder() < 0) {
 			response.put("status", "100");
 			response.put("message", order.getMessage());
 			response.put("info", order.getMessage());
 			return response;
 		}else {
+			//тут я удаляю все согласования, т.к. заказ обновлён
+			permissionService.deletePermissionByIdObject(order.getIdOrder());
 			response.put("status", "200");
 			response.put("message", order.getMessage());
 			response.put("info", order.getMessage());
@@ -4754,7 +4755,7 @@ public class MainRestController {
 			response.put("info", "Ошибка запроса к Маркету");
 			return response;
 		}
-
+		
 		System.out.println("request -> " + gson.toJson(requestDto3));
 		//проверяем на наличие сообщений об ошибке со стороны маркета
 		if(marketOrder2.contains("Error")) {
@@ -4786,12 +4787,12 @@ public class MainRestController {
 			response.put("objectFromMarket", errorMarket);
 			return response;
 		}
-
+		
 		System.out.println(marketOrder2);
-
+		
 		//создаём свой парсер и парсим json в объекты, с которыми будем работать.
 		CustomJSONParser customJSONParser = new CustomJSONParser();
-
+		
 		//создаём лист OrderBuyGroup
 		Map<Long, OrderBuyGroupDTO> OrderBuyGroupDTOMap = new HashMap<Long, OrderBuyGroupDTO>();
 		Map<String, Order> orderMap = new HashMap<String, Order>();
@@ -4807,7 +4808,7 @@ public class MainRestController {
 		}
 		response.put("status", "200");
 		response.put("orders", orderMap);
-		return response;
+		return response;	
 	}
 	
 	/**
@@ -4859,22 +4860,22 @@ public class MainRestController {
 			response.put("info", errorMarket.getErrorDescription());
 			return response;
 		}
-
+		
 		//тут избавляемся от мусора в json
 		String str2 = marketOrder2.split("\\[", 2)[1];
 		String str3 = str2.substring(0, str2.length()-2);
-
+		
 		//создаём свой парсер и парсим json в объекты, с которыми будем работать.
 		CustomJSONParser customJSONParser = new CustomJSONParser();
-
+		
 		//создаём OrderBuyGroup
 		OrderBuyGroupDTO orderBuyGroupDTO = customJSONParser.parseOrderBuyGroupFromJSON(str3);
-
+					
 		//создаём Order, записываем в бд и возвращаем или сам ордер или ошибку (тот же ордер, только с отрицательным id)
 		Order order = orderCreater.create(orderBuyGroupDTO);
-
+		
 //		System.out.println(order);
-
+		
 		if(order.getIdOrder() < 0) {
 			if(order.getMarketInfo() != null) {
 				switch (order.getMarketInfo()) {
@@ -4882,7 +4883,7 @@ public class MainRestController {
 					response.put("status", "105");
 					response.put("info", "Реальынй статус из маркета - ЧЕРНОВИК");
 					return response;
-
+					
 				case "-1":
 					response.put("status", "105");
 					response.put("info", "Статус маркет = null");
@@ -4901,12 +4902,12 @@ public class MainRestController {
 						+"Паллеты в SL = " + orderInBase.getPall() + "  -  паллеты из маркета = " + order.getPall());
 				return response;
 			}
-
-
+			
+			
 		}else {
 			response.put("status", "200");
 			response.put("info", "Заказ в 50 статусе");
-//			System.out.println(checkOrderNeeds.check(order)); // тестовая проверка
+//			System.out.println(checkOrderNeeds.check(order)); // тестовая проверка 
 			return response;
 		}		
 				
@@ -5280,7 +5281,7 @@ public class MainRestController {
 	 * @param request
 	 * @param str
 	 * @return
-	 * @throws Exception
+	 * @throws Exception 
 	 */
 	@PostMapping("/slot/update")
 	public Map<String, Object> postSlotUpdate(HttpServletRequest request, @RequestBody String str) throws Exception {
@@ -5417,7 +5418,7 @@ public class MainRestController {
 	 * @param request
 	 * @param idOrder
 	 * @return
-	 * @throws Exception
+	 * @throws Exception 
 	 */
 	@GetMapping("/slot/getTest/{idOrder}")
 	public Map<String, String> getSlotTest(HttpServletRequest request, @PathVariable String idOrder) throws Exception {
@@ -5528,7 +5529,7 @@ public class MainRestController {
 	 * @param request
 	 * @param str
 	 * @return
-	 * @throws Exception
+	 * @throws Exception 
 	 */
 	@PostMapping("/slot/load")
 	public Map<String, Object> postSlotLoad(HttpServletRequest request, @RequestBody String str) throws Exception {
@@ -10923,7 +10924,7 @@ public class MainRestController {
 	/**
 	 * Метод отправки POST запросов 
 	 * сделан для запросов в маркет
-	 *
+	 * 
 	 * <br>При наличии в ответе слова Error генерит ошибку.
 	 * @param url
 	 * @param payload

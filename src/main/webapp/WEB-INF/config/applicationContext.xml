@@ -88,7 +88,7 @@
     <!-- Включаем AOP -->
     <aop:aspectj-autoproxy />
 
-    <!-- Регистрация аспекта -->
+<!--     Регистрация аспекта -->
     <bean id="performanceAspect" class="by.base.main.aspect.PerformanceAspect" />   
     
     <mvc:resources location="/resources/" mapping="/resources/**"/>

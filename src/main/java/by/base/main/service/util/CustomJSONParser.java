@@ -14,6 +14,7 @@ import org.json.simple.parser.ParseException;
 
 import by.base.main.dto.OrderBuyDTO;
 import by.base.main.dto.OrderBuyGroupDTO;
+import by.base.main.dto.OrderCheckPalletsDto;
 
 /**
  * 
@@ -75,15 +76,21 @@ public class CustomJSONParser {
 		return orderBuyGroupDTO;		
 	}
 
+	/**
+	 * IRA
+	 * @param key - нуно для логики, потом исправить ИРА ПРВОЕРИТЬ
+	 * @param jsonObject
+	 * @return
+	 * @throws ParseException
+	 */
 	public OrderCheckPalletsDto parseOrderFromJSON(String key, JSONObject jsonObject) throws ParseException {
-		OrderCheckPalletsDto dto = new OrderCheckPalletsDto();
+        OrderCheckPalletsDto dto = new OrderCheckPalletsDto();
+        dto.setIdOrder(Integer.parseInt(key));
+        dto.setMarketNumber(jsonObject.get("marketNumber") != null ? jsonObject.get("marketNumber").toString() : null);
+        dto.setPallets(jsonObject.get("pall") != null ? Integer.parseInt(jsonObject.get("pall").toString()) : null);
+        dto.setStatus(jsonObject.get("status") != null ? Integer.parseInt(jsonObject.get("status").toString()) : null);
+        dto.setLoginManager(jsonObject.get("loginManager") != null ? jsonObject.get("loginManager").toString() : null);
+        return dto;
 
-		dto.setIdOrder(Integer.parseInt(key));
-		dto.setMarketNumber(jsonObject.get("marketNumber") != null ? jsonObject.get("marketNumber").toString() : null);
-		dto.setPallets(jsonObject.get("pall") != null ? Integer.parseInt(jsonObject.get("pall").toString()) : null);
-		dto.setStatus(jsonObject.get("status") != null ? Integer.parseInt(jsonObject.get("status").toString()) : null);
-		dto.setLoginManager(jsonObject.get("loginManager") != null ? jsonObject.get("loginManager").toString() : null);
-
-		return dto;
-	}
+    }
 }

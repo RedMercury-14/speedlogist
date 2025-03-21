@@ -3,6 +3,7 @@ package by.base.main.service;
 import java.sql.Date;
 import java.util.List;
 
+import by.base.main.model.Order;
 import by.base.main.model.Permission;
 
 public interface PermissionService {
@@ -43,5 +44,13 @@ public interface PermissionService {
 	void deletePermissionById(Integer id);
 	
 	void deletePermissionByIdObject(Integer id);
+	
+	/**
+	 * Метод который проверяет, есть ли разрешение на текущую дату или нет
+	 * <br>Возвращает само разрешение
+	 * @param order
+	 * @return
+	 */
+	Permission checkOrderForPermission (Order order);
 
 }

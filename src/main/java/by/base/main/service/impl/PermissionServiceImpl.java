@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import by.base.main.dao.PermissionDAO;
+import by.base.main.model.Order;
 import by.base.main.model.Permission;
 import by.base.main.service.PermissionService;
 
@@ -72,6 +73,12 @@ public class PermissionServiceImpl implements PermissionService{
 	public void deletePermissionByIdObject(Integer id) {
 		permissionDAO.deletePermissionByIdObject(id);
 		
+	}
+
+	@Transactional
+	@Override
+	public Permission checkOrderForPermission(Order order) {
+		return permissionDAO.checkOrderForPermission(order);
 	}
 
 }

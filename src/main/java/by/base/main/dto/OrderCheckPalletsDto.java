@@ -1,7 +1,11 @@
 package by.base.main.dto;
 
+import java.util.Objects;
+/**
+ * @author IRA
+ */
 public class OrderCheckPalletsDto {
-    Integer idOrder;
+	Integer idOrder;
     Integer status;
     Integer pallets;
     String marketNumber;
@@ -46,4 +50,30 @@ public class OrderCheckPalletsDto {
     public void setLoginManager(String loginManager) {
         this.loginManager = loginManager;
     }
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(idOrder, loginManager, marketNumber, pallets, status);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		OrderCheckPalletsDto other = (OrderCheckPalletsDto) obj;
+		return Objects.equals(idOrder, other.idOrder) && Objects.equals(loginManager, other.loginManager)
+				&& Objects.equals(marketNumber, other.marketNumber) && Objects.equals(pallets, other.pallets)
+				&& Objects.equals(status, other.status);
+	}
+
+	@Override
+	public String toString() {
+		return "OrderCheckPalletsDto [idOrder=" + idOrder + ", status=" + status + ", pallets=" + pallets
+				+ ", marketNumber=" + marketNumber + ", loginManager=" + loginManager + "]";
+	}
+
 }

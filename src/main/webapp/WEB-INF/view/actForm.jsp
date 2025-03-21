@@ -148,7 +148,7 @@
 											id="numTruckAndTrailer_route${loop.count}"
 											placeholder="Номер тягача и прицепа"
 											value="${route.truck.numTruck} / ${route.truck.numTrailer}"
-											required>
+											required></textarea>
 									</td>
 								</c:when>
 								<c:otherwise>
@@ -161,19 +161,20 @@
 								</c:otherwise>
 							</c:choose>
 							<td>
-								<input type="text" name="numWayList"
+<!-- 								<input type="text" name="numWayList" -->
+								<textarea type="text" name="numWayList"
 									id="numWayList_route${loop.count}"
 									placeholder="Путевой лист"
-									required>
+									required></textarea>
 							</td>
 							<td>
 								<textarea class="cmr" name="cmr" id="cmr_route${loop.count}" required></textarea>
 							</td>
 							<td>
-								<input type="text" name="сargoWeight"
+								<textarea type="text" name="сargoWeight"
 									id="сargoWeight_route${loop.count}"
 									placeholder="Вес по документам"
-									required>
+									required></textarea>
 							</td>
 							<c:choose>
 								<c:when test="${route.expeditionCost != null && route.expeditionCost != 0}">

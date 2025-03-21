@@ -9,11 +9,13 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.sql.Date;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -72,6 +74,7 @@ import by.base.main.model.Currency;
 import by.base.main.model.Feedback;
 import by.base.main.model.Message;
 import by.base.main.model.Order;
+import by.base.main.model.Permission;
 import by.base.main.model.Rates;
 import by.base.main.model.Role;
 import by.base.main.model.Route;
@@ -85,6 +88,7 @@ import by.base.main.service.ActService;
 import by.base.main.service.FeedbackService;
 import by.base.main.service.MessageService;
 import by.base.main.service.OrderService;
+import by.base.main.service.PermissionService;
 import by.base.main.service.RatesService;
 import by.base.main.service.RouteHasShopService;
 import by.base.main.service.RouteService;
@@ -93,6 +97,7 @@ import by.base.main.service.ShopService;
 import by.base.main.service.TGUserService;
 import by.base.main.service.TruckService;
 import by.base.main.service.UserService;
+import by.base.main.service.util.AESCryptoUtil;
 import by.base.main.service.util.CurrencyService;
 import by.base.main.service.util.MailService;
 import by.base.main.service.util.PDFWriter;
@@ -197,6 +202,12 @@ public class MainController {
 	
 	@Autowired
 	private TelegramBotRoutingTEST telegramBotRoutingTEST;
+	
+	@Autowired
+	private AESCryptoUtil aesCryptoUtil;
+	
+	@Autowired
+	private PermissionService permissionService;
 	
 	
 	public static final Map<String,String> distances = new HashMap<String, String>();
@@ -336,6 +347,81 @@ public class MainController {
 			}
 		}	
 		return "main";		
+	}
+	
+	@GetMapping("/main/orderproof/approve")
+	public String getApproveOrder(Model model, HttpServletRequest request,
+			@RequestParam("code") String id) throws Exception {
+		User user = getThisUser();
+		Permission permission = permissionService.getPermissionById(Integer.parseInt(aesCryptoUtil.decrypt(id)));
+		if(permission == null) {
+			System.out.println("permission == null");
+			return "orderProof";
+		}
+		
+		if(permission.getStatusApproval() != null) {
+			System.out.println("permission.getStatusApproval() != null");
+			return "orderProof";
+		}
+		
+		if(user!=null) {
+			permission.setIdUserApprover(user.getIdUser());
+			permission.setNameUserApprover(user.getSurname() + " " + user.getName());
+			permission.setEmailUserApprover(user.geteMail());			
+		}
+		permission.setStatusApproval(true);
+		permission.setDateTimeApproval(Timestamp.valueOf(LocalDateTime.now()));
+		permissionService.updatePermission(permission);		
+		String appPath = request.getServletContext().getRealPath("");
+		new Thread(new Runnable() {			
+			@Override
+			public void run() {
+				Order order = orderService.getOrderById(permission.getIdObjectApprover());
+				String text = "Постановка слота " + order.getMarketNumber() + " ("+order.getCounterparty()+") на " + permission.getDateValid().toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+						+ " согласована.";
+				List<String> email = Arrays.asList(permission.getEmailUserInitiator());
+				System.err.println("approve email -> "+email);
+				mailService.sendEmailToUsers(appPath, "Согласование слота " + order.getMarketNumber(), text, email);			
+			}
+		}).start();	
+		return "orderProof";
+	}
+	
+	@GetMapping("/main/orderproof/reject")
+	public String getRejectOrder(Model model, HttpServletRequest request,
+			@RequestParam("code") String id) throws Exception {
+		User user = getThisUser();
+		Permission permission = permissionService.getPermissionById(Integer.parseInt(aesCryptoUtil.decrypt(id)));
+		if(permission == null) {
+			System.out.println("permission == null");
+			return "orderProof";
+		}
+		
+		if(permission.getStatusApproval() != null) {
+			System.out.println("permission.getStatusApproval() != null");
+			return "orderProof";
+		}
+		
+		if(user!=null) {
+			permission.setIdUserApprover(user.getIdUser());
+			permission.setNameUserApprover(user.getSurname() + " " + user.getName());
+			permission.setEmailUserApprover(user.geteMail());			
+		}
+		permission.setStatusApproval(false);
+		permission.setDateTimeApproval(Timestamp.valueOf(LocalDateTime.now()));
+		permissionService.updatePermission(permission);
+		String appPath = request.getServletContext().getRealPath("");
+		new Thread(new Runnable() {			
+			@Override
+			public void run() {
+				Order order = orderService.getOrderById(permission.getIdObjectApprover());
+				String text = "Постановка слота " + order.getMarketNumber() + " ("+order.getCounterparty()+") на " + permission.getDateValid().toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+						+ " не согласована. Обратитесь к руководителю за дополнительной информацией.";
+				List<String> email = Arrays.asList(permission.getEmailUserInitiator());
+				mailService.sendEmailToUsers(appPath, "Согласование слота " + order.getMarketNumber(), text, email);			
+			}
+		}).start();			
+		return "orderProof";
 	}
 		
 	@GetMapping("/main/reviews/")

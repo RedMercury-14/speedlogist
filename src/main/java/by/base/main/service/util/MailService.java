@@ -257,13 +257,11 @@ public class MailService {
 	 * Отправляет email нескольким пользователям
 	 * <br> Основной метод для отправки сообщения нескольким юзерам
 	 * При удачной отправке возвращает true. При ошибке -false
-	 * @param servletContext
+	 * @param request
 	 * @param subject
 	 * @param text
-	 * @param files
 	 * @param emailsToUsers
-	 * @return 
-	 * @throws Exception 
+	 * @return
 	 */
 	public boolean sendEmailToUsers(HttpServletRequest request, String subject, String text, List<String> emailsToUsers) {
 		String appPath = request.getServletContext().getRealPath("");
@@ -308,6 +306,115 @@ public class MailService {
 	        return false;
 	    }
 		return true;
+	}
+	
+	/**
+	 * Отправляет email нескольким пользователям
+	 * <br> Основной метод для отправки сообщения нескольким юзерам
+	 * <br>При удачной отправке возвращает true. При ошибке -false
+	 * <br> Принимает строку appPath (String appPath = request.getServletContext().getRealPath("");)
+	 * @param appPath
+	 * @param subject
+	 * @param text
+	 * @param emailsToUsers
+	 * @return
+	 */
+	public boolean sendEmailToUsers(String appPath, String subject, String text, List<String> emailsToUsers) {
+	    try {
+	        if (properties == null) {
+	            FileInputStream fileInputStream = new FileInputStream(appPath + "resources/properties/mail.properties");
+	            properties = new Properties();
+	            properties.load(fileInputStream);
+	        }
+	        Session mailSession = Session.getDefaultInstance(properties);
+	        Transport transport = mailSession.getTransport();
+	        transport.connect(properties.getProperty("mail.smtps.user"), properties.getProperty("mail.smtps.password"));
+
+	        MimeMessage message = new MimeMessage(mailSession);
+	        message.setSubject(subject);
+	        
+	        // Добавляем всех получателей
+	        for (String emailToUser : emailsToUsers) {
+	            InternetAddress internetAddress = new InternetAddress(emailToUser);
+	            message.addRecipient(Message.RecipientType.TO, internetAddress);
+	        }
+	        
+	        message.setSentDate(new Date());
+
+	        // Создаем контент письма
+	        Multipart multipart = new MimeMultipart();
+	        
+	        // Добавляем текст письма
+	        MimeBodyPart mailBody = new MimeBodyPart();
+	        mailBody.setText(text);
+	        multipart.addBodyPart(mailBody);
+
+	        // Устанавливаем контент в сообщение
+	        message.setContent(multipart);
+
+	        // Отправляем сообщение
+	        transport.sendMessage(message, message.getAllRecipients());
+
+	        transport.close();
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return false;
+	    }
+		return true;
+	}
+	
+	/**
+	 * Отправляет email нескольким пользователям. <b>Отправляет в виде HTML формы!</b>
+	 * <br> Основной метод для отправки сообщения нескольким юзерам
+	 * При удачной отправке возвращает true. При ошибке -false
+	 * @param request
+	 * @param subject
+	 * @param htmlContent
+	 * @param emailsToUsers
+	 * @return
+	 */
+	public boolean sendEmailToUsersHTMLContent(HttpServletRequest request, String subject, String htmlContent, List<String> emailsToUsers) {
+	    String appPath = request.getServletContext().getRealPath("");
+	    try {
+	        if (properties == null) {
+	            FileInputStream fileInputStream = new FileInputStream(appPath + "resources/properties/mail.properties");
+	            properties = new Properties();
+	            properties.load(fileInputStream);
+	        }
+	        Session mailSession = Session.getDefaultInstance(properties);
+	        Transport transport = mailSession.getTransport();
+	        transport.connect(properties.getProperty("mail.smtps.user"), properties.getProperty("mail.smtps.password"));
+
+	        MimeMessage message = new MimeMessage(mailSession);
+	        message.setSubject(subject, "UTF-8");
+
+	        // Добавляем всех получателей
+	        for (String emailToUser : emailsToUsers) {
+	            InternetAddress internetAddress = new InternetAddress(emailToUser);
+	            message.addRecipient(Message.RecipientType.TO, internetAddress);
+	        }
+
+	        message.setSentDate(new Date());
+
+	        // Создаем альтернативное представление письма
+	        Multipart multipart = new MimeMultipart("alternative");
+
+	        // HTML-контент письма
+	        MimeBodyPart htmlPart = new MimeBodyPart();
+	        htmlPart.setContent(htmlContent, "text/html; charset=UTF-8");
+
+	        // Добавляем HTML-часть
+	        multipart.addBodyPart(htmlPart);
+	        message.setContent(multipart);
+
+	        // Отправляем сообщение
+	        transport.sendMessage(message, message.getAllRecipients());
+	        transport.close();
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return false;
+	    }
+	    return true;
 	}
 	
 	/**

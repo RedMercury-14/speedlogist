@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import by.base.main.dao.PermissionDAO;
+import by.base.main.model.Order;
 import by.base.main.model.Permission;
 
 @Repository
@@ -45,8 +46,12 @@ public class PermissionDAOImpl implements PermissionDAO{
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<Permission> theObject = currentSession.createQuery(queryGetPermissionById, Permission.class);
 		theObject.setParameter("idPermissions", id);
-		Permission permission = theObject.getSingleResult();
-		return permission;
+		List<Permission> permissionResult = theObject.getResultList();
+		if(!permissionResult.isEmpty()) {
+			return permissionResult.get(0);
+		}else {
+			return null;
+		}
 	}
 
 	@Override
@@ -106,6 +111,22 @@ public class PermissionDAOImpl implements PermissionDAO{
 				currentSession.createQuery(queryDeletePermissionByIdObject);
 		theQuery.setParameter("id", id);
 		theQuery.executeUpdate();
+	}
+
+	private static final String queryСheckOrderForPermission = "from Permission where dateValid =:dateValid AND idObjectApprover =:idObjectApprover";
+	@Override
+	public Permission checkOrderForPermission(Order order) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Permission> theObject = currentSession.createQuery(queryСheckOrderForPermission, Permission.class);
+		theObject.setParameter("dateValid", Date.valueOf(order.getTimeDelivery().toLocalDateTime().toLocalDate()), TemporalType.DATE);
+		theObject.setParameter("idObjectApprover", order.getIdOrder());
+		List<Permission> permissionResult = theObject.getResultList();
+		if(!permissionResult.isEmpty()) {
+			return permissionResult.get(0);
+		}else {
+			return null;
+		}
+		
 	}
 
 }

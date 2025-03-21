@@ -317,6 +317,7 @@ public class MainRestController {
 	@Autowired
 	private ReviewService reviewService;
 	
+	
 	private static String classLog;
 	public static String marketJWT;
 	//в отдельный файл
@@ -364,6 +365,17 @@ public class MainRestController {
 
 	@Autowired
     private ServletContext servletContext;
+	
+	@GetMapping("/orderproof/approve")
+	public Map<String, Object> getApproveOrder(HttpServletRequest request, HttpServletResponse response) throws IOException{
+	    Map<String, Object> responseMap = new HashMap<>();
+	    User user = getThisUser();
+	    System.out.println(user);
+	    responseMap.put("status", "100");
+	    responseMap.put("user", user);
+	    
+	    return responseMap;
+	}
 	
 	@GetMapping("/delivery-schedule/getCountScheduleDeliveryHasWeek")
 	public Map<String, Object> getCountScheduleDeliveryHasWeek(HttpServletRequest request, HttpServletResponse response) throws IOException{
@@ -4508,6 +4520,7 @@ public class MainRestController {
 	
 //	/**
 //	     СТАРЫЙ МЕТОД 100% РАБОЧИЙ НОВЫЙ НИЖЕ
+//			Новый метод проверка просиходит через try-catch (!!!)
 //	 * Главный метод запроса ордера из маркета.
 //	 * Если в маркете есть - он обнавляет его в бд.
 //	 * Если связи с маркетом нет - берет из бд.
@@ -4689,7 +4702,7 @@ public class MainRestController {
 		OrderBuyGroupDTO orderBuyGroupDTO = customJSONParser.parseOrderBuyGroupFromJSON(str3);
 		
 		//создаём Order, записываем в бд и возвращаем или сам ордер или ошибку (тот же ордер, только с отрицательным id)
-		Order order = orderCreater.create(orderBuyGroupDTO);		
+		Order order = orderCreater.create(orderBuyGroupDTO);	
 		
 		if(order.getIdOrder() < 0) {
 			response.put("status", "100");
@@ -4697,6 +4710,8 @@ public class MainRestController {
 			response.put("info", order.getMessage());
 			return response;
 		}else {
+			//тут я удаляю все согласования, т.к. заказ обновлён
+			permissionService.deletePermissionByIdObject(order.getIdOrder());
 			response.put("status", "200");
 			response.put("message", order.getMessage());
 			response.put("info", order.getMessage());
@@ -4709,7 +4724,7 @@ public class MainRestController {
 	 * ВОзвращает Order по группе номеров из маркета.
 	 * по сути тестовый метод
 	 * @param request
-	 * @param idMarket
+	 * @param idMarket Принимает строку 123,848,451
 	 * @return
 	 * @throws ParseException
 	 */
@@ -5025,7 +5040,7 @@ public class MainRestController {
 	}
 	
 	@PostMapping("/slot/save")
-	public Map<String, String> postSlotSave(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+	public Map<String, String> postSlotSave(HttpServletRequest request, @RequestBody String str) throws Exception {
 		java.util.Date t1 = new java.util.Date();
 		User user = getThisUser();
 		String role = user.getRoles().stream().findFirst().get().getAuthority();
@@ -5057,7 +5072,7 @@ public class MainRestController {
 			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false") && !checkDeepImport(order, request)) {
 				
 				//тут проверка поплану
-				PlanResponce planResponce = readerSchedulePlan.process(order);
+				PlanResponce planResponce = readerSchedulePlan.process(order, request);
 				if(planResponce.getStatus() == 0) {
 					infoCheck = planResponce.getMessage();
 					response.put("status", "105");
@@ -5095,7 +5110,7 @@ public class MainRestController {
 		case 7: // сакмовывоз			
 			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false") && !checkDeepImport(order, request)) {
 				//тут проверка по плану
-				PlanResponce planResponce = readerSchedulePlan.process(order);
+				PlanResponce planResponce = readerSchedulePlan.process(order, request);
                 if(planResponce.getStatus() == 0) {
                     infoCheck = planResponce.getMessage();
                     response.put("status", "105");
@@ -5263,11 +5278,10 @@ public class MainRestController {
 	 * @param request
 	 * @param str
 	 * @return
-	 * @throws ParseException
-	 * @throws IOException 
+	 * @throws Exception 
 	 */
 	@PostMapping("/slot/update")
-	public Map<String, Object> postSlotUpdate(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+	public Map<String, Object> postSlotUpdate(HttpServletRequest request, @RequestBody String str) throws Exception {
 		java.util.Date t1 = new java.util.Date();
 		
 		String appPath = request.getServletContext().getRealPath("");
@@ -5342,7 +5356,7 @@ public class MainRestController {
 		if(!checkDeepImport(order, request)) {
 			if(!isLogist) { // если это не логист, то проверяем. Если логист - не проверяем при перемещении
 				if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {			
-					PlanResponce planResponce = readerSchedulePlan.process(order);
+					PlanResponce planResponce = readerSchedulePlan.process(order, request);
 					if(planResponce.getStatus() == 0) {
 						infoCheck = planResponce.getMessage();
 						response.put("status", "105");
@@ -5401,11 +5415,10 @@ public class MainRestController {
 	 * @param request
 	 * @param idOrder
 	 * @return
-	 * @throws ParseException
-	 * @throws IOException
+	 * @throws Exception 
 	 */
 	@GetMapping("/slot/getTest/{idOrder}")
-	public Map<String, String> getSlotTest(HttpServletRequest request, @PathVariable String idOrder) throws ParseException, IOException {
+	public Map<String, String> getSlotTest(HttpServletRequest request, @PathVariable String idOrder) throws Exception {
 		java.util.Date t1 = new java.util.Date();
 		
 		Map<String, String> response = new HashMap<String, String>();
@@ -5433,7 +5446,7 @@ public class MainRestController {
 		
 		if(!checkDeepImport(order, request)) {
 				if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {			
-					PlanResponce planResponce = readerSchedulePlan.process(order);
+					PlanResponce planResponce = readerSchedulePlan.process(order, request);
 					if(planResponce.getStatus() == 0) {
 						infoCheck = planResponce.getMessage();
 						response.put("status", "105");
@@ -5513,11 +5526,10 @@ public class MainRestController {
 	 * @param request
 	 * @param str
 	 * @return
-	 * @throws ParseException
-	 * @throws IOException 
+	 * @throws Exception 
 	 */
 	@PostMapping("/slot/load")
-	public Map<String, Object> postSlotLoad(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+	public Map<String, Object> postSlotLoad(HttpServletRequest request, @RequestBody String str) throws Exception {
 		java.util.Date t1 = new java.util.Date();
 		
 		String appPath = request.getServletContext().getRealPath("");
@@ -5597,7 +5609,7 @@ public class MainRestController {
 		String infoCheck = null;	
 		if(!checkDeepImport(order, request)) {
 			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {			
-				PlanResponce planResponce = readerSchedulePlan.process(order);
+				PlanResponce planResponce = readerSchedulePlan.process(order, request);
 				if(planResponce.getStatus() == 0) {
 					infoCheck = planResponce.getMessage();
 					response.put("status", "105");

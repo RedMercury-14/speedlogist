@@ -1033,37 +1033,8 @@ public class ReaderSchedulePlan {
 	    sb.append("</tr></thead><tbody>");
 
 	    // Объединяем строки с одинаковым codeProduct
-	    Map<Integer, ResultMethodAggregated> aggregatedResults = new HashMap<>();
+	    Map<Integer, ResultMethodAggregated> aggregatedResults = linkRowForPermissoin(resultMethods);
 
-	    for (ResultMethod result : resultMethods) {
-	        int code = result.getCodeProduct();
-
-	        if (aggregatedResults.containsKey(code)) {
-	            ResultMethodAggregated aggregated = aggregatedResults.get(code);
-
-	            if (result.getReferenceInformation() != null) {
-	                aggregated.setStockSchedule(result.getBalanceTruck()); // Сток согласно графику
-	                aggregated.setStockCurrent(result.getBalanceTruck()); // Сток согласно графику
-	                aggregated.setReferenceInformation(result.getReferenceInformation()); // Информация по стоку
-	            } else {
-	                aggregated.setStockInTruck(result.getBalanceTruck()); // Сток в машине
-	                aggregated.setStock(result.getStock()); // справочный сток
-	            }
-	        } else {
-	            // Если продукта нет - добавляем новый объект
-	            ResultMethodAggregated aggregated = new ResultMethodAggregated(
-	                    result.getCodeProduct(),
-	                    result.getNameProduct(),
-	                    (result.getReferenceInformation() != null) ? result.getBalanceTruck() : null, // это сток на складе stockCurrent 
-	                    (result.getReferenceInformation() == null) ? result.getBalanceTruck() : null, // это сток в машине stockInTruck 
-	                    (result.getReferenceInformation() != null) ? result.getBalanceTruck() : null, // временно
-	                    result.getBaseStock(),
-	                    result.getReferenceInformation(),
-	                    result.getStock()
-	            );
-	            aggregatedResults.put(code, aggregated);
-	        }
-	    }
 
 	    // Заполняем таблицу объединёнными данными
 	    for (ResultMethodAggregated aggregated : aggregatedResults.values()) {
@@ -1155,6 +1126,46 @@ public class ReaderSchedulePlan {
 	}
 	
 	/**
+	 * Объединяем строки с одинаковым codeProduct
+	 * @param resultMethods
+	 * @return
+	 */
+	private Map<Integer, ResultMethodAggregated> linkRowForPermissoin(List<ResultMethod> resultMethods){
+		Map<Integer, ResultMethodAggregated> aggregatedResults = new HashMap<>();
+
+	    for (ResultMethod result : resultMethods) {
+	        int code = result.getCodeProduct();
+
+	        if (aggregatedResults.containsKey(code)) {
+	            ResultMethodAggregated aggregated = aggregatedResults.get(code);
+
+	            if (result.getReferenceInformation() != null) {
+	                aggregated.setStockSchedule(result.getBalanceTruck()); // Сток согласно графику
+	                aggregated.setStockCurrent(result.getBalanceTruck()); // Сток согласно графику
+	                aggregated.setReferenceInformation(result.getReferenceInformation()); // Информация по стоку
+	            } else {
+	                aggregated.setStockInTruck(result.getBalanceTruck()); // Сток в машине
+	                aggregated.setStock(result.getStock()); // справочный сток
+	            }
+	        } else {
+	            // Если продукта нет - добавляем новый объект
+	            ResultMethodAggregated aggregated = new ResultMethodAggregated(
+	                    result.getCodeProduct(),
+	                    result.getNameProduct(),
+	                    (result.getReferenceInformation() != null) ? result.getBalanceTruck() : null, // это сток на складе stockCurrent 
+	                    (result.getReferenceInformation() == null) ? result.getBalanceTruck() : null, // это сток в машине stockInTruck 
+	                    (result.getReferenceInformation() != null) ? result.getBalanceTruck() : null, // временно
+	                    result.getBaseStock(),
+	                    result.getReferenceInformation(),
+	                    result.getStock()
+	            );
+	            aggregatedResults.put(code, aggregated);
+	        }
+	    }
+		return aggregatedResults;
+	}
+	
+	/**
 	 * Метод, который проверяет баланс и даёт сообщение. Если проверка прохзодит то возвращает 200 статус
 	 * @param balance
 	 * @param product
@@ -1234,6 +1245,29 @@ public class ReaderSchedulePlan {
 	        permission.setEmailUserInitiator(user.geteMail());
 	        permission.setTelUserInitiator(user.getTelephone());
 	        permission.setCommentUserInitiator(text+htmlTableFormatter(resultMethods, 123));
+	        
+	        // Объединяем строки с одинаковым codeProduct
+		    Map<Integer, ResultMethodAggregated> aggregatedResults = linkRowForPermissoin(resultMethods);
+	        
+	        for (Map.Entry<Integer, ResultMethodAggregated> aggregated : aggregatedResults.entrySet()) {
+	        	permission.superSetCodeProduct(aggregated.getValue().codeProduct+"");
+	        	permission.superSetStockNormal(aggregated.getValue().baseStock.toString());
+	        	
+	        	// сток на складе 
+	        	if (aggregated.getValue().getStockCurrent() != null) {
+	        		permission.superSetStockWarehouse(aggregated.getValue().getStockCurrent().toString());
+		        } else {
+		        	permission.superSetStockWarehouse(aggregated.getValue().getStock()!=null ? aggregated.getValue().getStock()+"" : "Проверка по стокам не проводилась! Отсутствуют данные в 325 отчёте");
+		        }
+	        	
+	        	// Сток в машине, дн
+		        if (aggregated.getValue().getStockInTruck() != null) {
+		        	permission.superSetStockOrder(aggregated.getValue().getStockInTruck().toString());
+		        } else {
+		        	permission.superSetStockOrder("В пределах нормы");
+		        }	        	
+			}
+	        
 	        if(!permissionService.checkPermission(permission)) {
 	       	 Integer id = permissionService.savePermission(permission);       	 
 	       	 // сюда вставляем отправку сообщения

@@ -82,6 +82,21 @@ public class Permission {
 
     @Column(name = "time_valid")
     private Date timeValid; // Время, на которое действует это разрешение
+    
+    @Column(name = "stock_warehouse")
+    private String stockWarehouse; // сток на складе, на момент создания разрешения
+    
+    @Column(name = "stock_order")
+    private String stockOrder; // сток в машине / в ордере
+    
+    @Column(name = "stock_normal")
+    private String stockNormal; // нормальный максимальный сток из кграфика поставок
+    
+    @Column(name = "market_number")
+    private String marketNumber; // номер из маркета
+    
+    @Column(name = "code_product")
+    private String codeProduct; // код продукта
 
 	public int getIdPermissions() {
 		return idPermissions;
@@ -262,6 +277,100 @@ public class Permission {
 	public void setTimeValid(Date timeValid) {
 		this.timeValid = timeValid;
 	}
+
+	public String getStockWarehouse() {
+		return stockWarehouse;
+	}
+
+	/**
+	 * <b>записывает данные не перезаписывая прошлы е данные (разделитель ^)</b>
+	 * @param stockWarehouse
+	 */
+	public void superSetStockWarehouse(String stockWarehouse) {
+		if(this.stockWarehouse == null) {
+			this.stockWarehouse = stockWarehouse;
+		}else {
+			this.stockWarehouse = this.stockWarehouse+"^"+stockWarehouse;
+		}
+		
+	}
+
+	public String getStockOrder() {
+		return stockOrder;
+	}
+
+	/**
+	 * <b>записывает данные не перезаписывая прошлы е данные (разделитель ^)</b>
+	 * @param stockOrder
+	 */
+	public void superSetStockOrder(String stockOrder) {
+		if(this.stockOrder == null) {
+			this.stockOrder = stockOrder;
+		}else {
+			this.stockOrder = this.stockOrder+"^"+stockOrder;
+		}
+		
+	}
+
+	public String getStockNormal() {
+		return stockNormal;
+	}
+
+	/**
+	 * <b>записывает данные не перезаписывая прошлы е данные (разделитель ^)</b>
+	 * @param stockNormal
+	 */
+	public void superSetStockNormal(String stockNormal) {
+		if(this.stockNormal == null) {
+			this.stockNormal = stockNormal;
+		}else {
+			this.stockNormal = this.stockNormal + "^" + stockNormal;
+		}
+		
+	}
+	
+	public String getCodeProduct() {
+		return codeProduct;
+	}
+
+	/**
+	 * <b>записывает данные не перезаписывая прошлы е данные (разделитель ^)</b>
+	 * @param codeProduct
+	 */
+	public void superSetCodeProduct(String codeProduct) {
+		if(this.codeProduct == null) {
+			this.codeProduct = codeProduct;
+		}else {
+			this.codeProduct = this.codeProduct + "^" + codeProduct;
+		}
+		
+	}
+
+	public void setStockWarehouse(String stockWarehouse) {
+		this.stockWarehouse = stockWarehouse;
+	}
+
+	public void setStockOrder(String stockOrder) {
+		this.stockOrder = stockOrder;
+	}
+
+	public void setStockNormal(String stockNormal) {
+		this.stockNormal = stockNormal;
+	}
+
+	public void setCodeProduct(String codeProduct) {
+		this.codeProduct = codeProduct;
+	}
+
+	public String getMarketNumber() {
+		return marketNumber;
+	}
+
+	public void setMarketNumber(String marketNumber) {
+		this.marketNumber = marketNumber;
+	}
+
+	
 
 	@Override
 	public int hashCode() {

@@ -180,7 +180,7 @@ public class MainFileController {
             roadTransportDTO.setResponsibleLogist(route.getLogistInfo() != null ? route.getLogistInfo().split(";")[0] : null);
             roadTransportDTO.setActualLoading(route.getDateLoadActually());
             roadTransportDTO.setCarrier(route.getUser() == null ? null : route.getUser().getCompanyName());
-            roadTransportDTO.setTenderParticipants(messageMap.get(route.getIdRoute().toString()) == null ? "0" : String.valueOf(messageMap.get(route.getIdRoute().toString()).size()));
+            roadTransportDTO.setTenderParticipants(messageMap.get(route.getIdRoute().toString()) == null ? null : String.valueOf(messageMap.get(route.getIdRoute().toString()).size()));
 
             if (messageMap.get(route.getIdRoute().toString()) != null) {
                 for (Message message : messageMap.get(route.getIdRoute().toString())) {

@@ -558,6 +558,9 @@ public class ReaderSchedulePlan {
 			Double remainderInDay1800 = generalProduct.getBalanceStockAndReserves1800() !=null ? roundВouble(generalProduct.getBalanceStockAndReserves1800() +currentDate, 0) : null;// записываем остаток в днях по записи для 1800.
 			Double calculatedPerDay1700 = generalProduct.getCalculatedPerDay1700();  //расчётная реализация в день для 1700 склада
 			Double calculatedPerDay1800 = generalProduct.getCalculatedPerDay1800();  //расчётная реализация в день для 1700 склада
+			
+			if(remainderInDay1700 != null && remainderInDay1700 < 0) remainderInDay1700 = 0.0;
+			if(remainderInDay1800 != null && remainderInDay1800 < 0) remainderInDay1800 = 0.0;
 
 			if(generalProduct.getNumStock() == null) {
 				continue;

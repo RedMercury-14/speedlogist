@@ -8,16 +8,16 @@ export function lookupValue(mappings, key) {
 	return mappings[key];
 }
 export function lookupKey(mappings, name) {
-    const keys = Object.keys(mappings);
-  
-    for (let i = 0; i < keys.length; i++) {
-      const key = keys[i];
-  
-      if (mappings[key] === name) {
-        return key;
-      }
-    }
-  }
+	const keys = Object.keys(mappings);
+
+	for (let i = 0; i < keys.length; i++) {
+		const key = keys[i];
+
+		if (mappings[key] === name) {
+		return key;
+		}
+	}
+}
 
 // функции созранения, загрузки и сброса настроек колонок таблицы
 export const gridColumnLocalState = {

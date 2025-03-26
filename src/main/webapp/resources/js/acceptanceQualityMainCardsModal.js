@@ -75,7 +75,8 @@ async function getAcceptanceQualityCards(idAcceptanceQuality) {
         const data = await new Promise((resolve, reject) => {
             $.ajax({
                 type: "GET",
-                url: `${BASE_URL}${url}?idAcceptanceFoodQuality=${idAcceptanceQuality}`,
+//                url: `${BASE_URL}${url}?idAcceptanceFoodQuality=${idAcceptanceQuality}`,
+                url: `${BASE_URL}${url}${idAcceptanceQuality}`,
                 success: (res) => {
                     console.log(`Получены данные для статуса ${status}:`, res);
                     resolve(res); // Преобразуем результат в промис

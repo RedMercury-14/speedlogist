@@ -91,6 +91,8 @@
 										<a class="dropdown-item" href="<spring:url value="/main/orl/calculated" />">Приход паллет</a>
 										<a class="dropdown-item" href="<spring:url value="/main/orl/report/398" />">398 отчёт</a>
 										<a class="dropdown-item" href="<spring:url value="/main/procurement/permission/list" />">История решений по заказам</a>
+										
+										<a class="dropdown-item" href="<spring:url value="/main/acceptanceQuality" />">Подтверждение качества</a>
 									</div>
 								</li>
 								<!-- <li><a class="nav-item nav-link" href="<spring:url value="/main/shop" />">Магазин</a></li> -->

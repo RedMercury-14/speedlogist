@@ -59,7 +59,7 @@ const columnDefs = [
 		field: 'dateTimeInitiations', 
 		valueFormatter: dateTimeValueFormatter,
 		comparator: dateComparator,
-		filterParams: { valueFormatter: dateTimeValueFormatter, },		
+		filterParams: { valueFormatter: dateTimeValueFormatter, },
 	},
 	{ headerName: 'userApprover', field: 'userApprover', },
 	{ headerName: 'idUserApprover', field: 'idUserApprover', },
@@ -75,7 +75,7 @@ const columnDefs = [
 	{ headerName: 'idObjectApprover', field: 'idObjectApprover', },
 	{ 
 		headerName: 'dateValid', 
-		field: 'dateValid',  
+		field: 'dateValid',
 		valueFormatter: dateTimeValueFormatter,
 		comparator: dateComparator,
 		filterParams: { valueFormatter: dateTimeValueFormatter, },
@@ -182,7 +182,7 @@ async function initStartData() {
 async function getPermissionsData(dateStart, dateEnd) {
 	const url = `${getPermissionListBaseUrl}${dateStart}&${dateEnd}`
 	const res = await getData(url)
-	if (!res) return []	
+	if (!res) return []
 	return res.object ? res.object : []
 }
 
@@ -242,10 +242,9 @@ async function searchFormSubmitHandler(e) {
 		const permissions = await getPermissionsData(formData.get('dateFrom'), formData.get('dateTo'))
 		updateTable(gridOptions, permissions)
 		enableButton(submitter)
-	}catch(error){
+	} catch(error) {
 		snackbar.show('Ошибка получения данных')
 	}
-	
 }
 
 // функции управления состоянием колонок

@@ -1,5 +1,5 @@
 import { AG_GRID_LOCALE_RU } from './AG-Grid/ag-grid-locale-RU.js'
-import { cell, gridColumnLocalState, gridFilterLocalState, ResetStateToolPanel } from './AG-Grid/ag-grid-utils.js'
+import { gridColumnLocalState, gridFilterLocalState, ResetStateToolPanel } from './AG-Grid/ag-grid-utils.js'
 import { ajaxUtils } from './ajaxUtils.js'
 import { getReviewsBaseUrl, updateUserReviewUrl } from './globalConstants/urls.js'
 import { snackbar } from './snackbar/snackbar.js'
@@ -46,8 +46,8 @@ const columnDefs = [
 		cellEditorPopup: true,
 		onCellValueChanged: updateReview,
 		cellEditorParams: {
-        	maxLength: 10000000, // схуяли стояло 200 по дефолту?!
-    	},
+			maxLength: 10000000,
+		},
 	},
 	{ headerName: 'Автор ответа', field: 'replyAuthor', },
 	{
@@ -61,8 +61,8 @@ const columnDefs = [
 		cellEditorPopup: true,
 		onCellValueChanged: updateReview,
 		cellEditorParams: {
-        	maxLength: 10000000, // схуяли стояло 200 по дефолту?!
-    	},
+			maxLength: 10000000,
+		},
 	},
 ]
 

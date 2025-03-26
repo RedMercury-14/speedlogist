@@ -1,13 +1,15 @@
 package by.base.main.controller.ajax;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.awt.image.BufferedImage;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -15,33 +17,44 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import by.base.main.dto.yard.AcceptanceQualityFoodCardDTO;
+import by.base.main.model.yard.AcceptanceFoodQuality;
+import by.base.main.model.yard.AcceptanceQualityFoodCard;
+import by.base.main.model.yard.AcceptanceQualityFoodCardImageUrl;
+import by.base.main.model.yard.TtnIn;
+import by.base.main.service.yardService.AcceptanceFoodQualityService;
+import by.base.main.service.yardService.AcceptanceQualityFoodCardImageUrlService;
+import by.base.main.service.yardService.AcceptanceQualityFoodCardService;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.web.csrf.DefaultCsrfToken;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.google.gson.Gson;
 
@@ -68,11 +81,22 @@ public class YardManagementRestController {
 	
 	@Autowired
 	OrderService orderService;
-	
+
 	@Autowired
 	private SlotWebSocket slotWebSocket;
-	
+
+	@Autowired
+	private AcceptanceFoodQualityService acceptanceFoodQualityService;
+
+	@Autowired
+	private AcceptanceQualityFoodCardService acceptanceQualityFoodCardService;
+
+	@Autowired
+	private AcceptanceQualityFoodCardImageUrlService acceptanceQualityFoodCardImageUrlService;
+
 	private static final String staticToken = "3d075c53-4fd3-41c3-89fc-a5e5c4a0b25b";
+
+
 	
 	/*
 	 * тут данные которые определяют приоритетную рампу и время
@@ -201,7 +225,164 @@ public class YardManagementRestController {
 		});
 		return orders;
 	}
- 
+
+
+	/**
+	 * Получение всех записей контроля качества с неподтвержденным статусом.
+	 *
+	 * @author Lesha
+	 * @return Список объектов AcceptanceFoodQuality с статусом 0.
+	 */
+	@GetMapping("/unprocessedAcceptanceQuality")
+	public ResponseEntity<List<AcceptanceFoodQuality>> getAllAcceptanceFoodQualities() {
+		List<AcceptanceFoodQuality> allData = acceptanceFoodQualityService.getAllByStatus(0);
+		return ResponseEntity.ok(allData);
+	}
+
+
+	/**
+	 * Получение всех записей контроля качества в процессе обработки.
+	 *
+	 * @author Lesha
+	 * @return Список объектов AcceptanceFoodQuality с статусами 10 и 50.
+	 */
+	@GetMapping("/inProcessAcceptanceQuality")
+	public ResponseEntity<List<AcceptanceFoodQuality>> getInProcessAcceptanceFoodQualities() {
+		List<AcceptanceFoodQuality> allData = acceptanceFoodQualityService.getAllByStatuses(Arrays.asList(10, 50));
+		return ResponseEntity.ok(allData);
+	}
+
+	/**
+	 * Получение всех закрытых записей контроля качества за указанный период.
+	 *
+	 * @author Lesha
+	 * @param startDate Начальная дата периода (в формате ISO).
+	 * @param endDate Конечная дата периода (в формате ISO).
+	 * @return Список объектов AcceptanceFoodQuality с статусом 100.
+	 */
+	@GetMapping("/closedAcceptanceQuality")
+	public ResponseEntity<List<AcceptanceFoodQuality>> getClosedAcceptanceFoodQualities(
+			@RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+			@RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
+		List<AcceptanceFoodQuality> allData = acceptanceFoodQualityService
+				.getAllByStatusAndDates(100, startDate, endDate);
+
+		return ResponseEntity.ok(allData);
+	}
+
+
+	/**
+	 * Получение всех карточек контроля качества по идентификатору качества
+	 *
+	 * @author Lesha
+	 * @param idAcceptanceFoodQuality Идентификатор контроля качества питания.
+	 * @return Список объектов AcceptanceQualityFoodCardDTO.
+	 */
+	@GetMapping("/getAllAcceptanceQualityFoodCard")
+	public ResponseEntity<List<AcceptanceQualityFoodCardDTO>> getAllAcceptanceQualityFoodCard(HttpServletRequest request,
+			@RequestParam("idAcceptanceFoodQuality") Long idAcceptanceFoodQuality) {
+
+		List<AcceptanceQualityFoodCardDTO> acceptanceQualityFoodCardDTOList =
+				acceptanceQualityFoodCardService.getAllAcceptanceQualityFoodCard(idAcceptanceFoodQuality,request);
+
+		return ResponseEntity.ok(acceptanceQualityFoodCardDTOList);
+	}
+
+
+	/**
+	 * Загрузка файла по его идентификатору.
+	 *
+	 * @author Lesha
+	 * @param idFile Идентификатор файла.
+	 * @return Файл в формате Resource, если найден, иначе 404 Not Found.
+	 * @throws IOException В случае ошибки при работе с файлом.
+	 */
+	@GetMapping("files/{idFile}")
+	public ResponseEntity<Resource> getFile(@PathVariable Long idFile) throws IOException {
+		Resource resource = acceptanceQualityFoodCardImageUrlService.getFile(idFile);
+
+		if (resource == null || !resource.exists() || !resource.isReadable()) {
+			return ResponseEntity.notFound().build();
+		}
+
+		return ResponseEntity.ok()
+				.header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
+				.contentType(MediaType.IMAGE_JPEG)
+				.body(resource);
+	}
+
+	 
+//	@GetMapping("/files/{idFile}")
+//	public ResponseEntity<Resource> getFile(@PathVariable Long idFile) throws IOException {
+//		AcceptanceQualityFoodCardImageUrl acceptanceQualityFoodCardImageUrl = acceptanceQualityFoodCardImageUrlService.getByIdAcceptanceQualityFoodCardImageUrl(idFile);
+//
+//		if (acceptanceQualityFoodCardImageUrl == null) {
+//			return ResponseEntity.notFound().build();
+//		}
+//
+//		String urlPart = acceptanceQualityFoodCardImageUrl.getUrl();
+//
+//		if (urlPart == null || urlPart.isEmpty()) {
+//			return ResponseEntity.notFound().build();
+//		}
+//
+//		Path filePath = Paths.get(ROOT_DIRECTORY + urlPart);
+//
+//		if (!Files.exists(filePath) || !Files.isReadable(filePath)) {
+//			return ResponseEntity.notFound().build();
+//		}
+//
+//		// Информация о файле до сжатия
+//		long originalSize = Files.size(filePath);
+//
+//		BufferedImage image = ImageIO.read(filePath.toFile());
+//		if (image != null) {
+//		}
+//
+//		ByteArrayOutputStream compressedOutputStream = new ByteArrayOutputStream();
+//		Resource resource;
+//
+//		// Сжимаем, если размер больше 1 МБ (1_048_576 байт)
+//		if (originalSize > 1_048_576 && image != null) {
+//			try {
+//				ImageWriter writer = ImageIO.getImageWritersByFormatName("jpg").next();
+//				ImageOutputStream ios = ImageIO.createImageOutputStream(compressedOutputStream);
+//				writer.setOutput(ios);
+//
+//				ImageWriteParam param = writer.getDefaultWriteParam();
+//				param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+//				param.setCompressionQuality(0.7f); // 70% качество
+//
+//				writer.write(null, new IIOImage(image, null, null), param);
+//
+//				writer.dispose();
+//				ios.close();
+//
+//				byte[] compressedBytes = compressedOutputStream.toByteArray();
+//				resource = new ByteArrayResource(compressedBytes);
+//
+//			} catch (IOException e) {
+//				resource = new UrlResource(filePath.toUri());
+//			}
+//		} else {
+//			resource = new UrlResource(filePath.toUri());
+//		}
+//
+//		if (!resource.exists() || !resource.isReadable()) {
+//			return ResponseEntity.notFound().build();
+//		}
+//
+//		return ResponseEntity.ok()
+//				.header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filePath.getFileName() + "\"")
+//				.contentType(MediaType.IMAGE_JPEG)
+//				.body(resource);
+//	}
+
+
+
+
+
 	/**
 	 * Метод отдаёт csrf токен для пост методов от двора
 	 * важно что он принимает ключ от двора

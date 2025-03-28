@@ -6151,8 +6151,9 @@ public class MainRestController {
 		
 		List<Schedule> schedules = new ArrayList<Schedule>();
 		try {
-			schedules = poiExcel.loadDeliveryScheduleTO(file1, toType);
-		} catch (InvalidFormatException | IOException | java.text.ParseException | ServiceException e) {
+//			schedules = poiExcel.loadDeliveryScheduleTO(file1, toType);
+			poiExcel.loadScheduleExcel(file1, request);
+		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

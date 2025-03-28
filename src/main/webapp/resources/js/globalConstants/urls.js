@@ -433,3 +433,12 @@ export const verifyCarBaseUrl = '/speedlogist/api/manager/changeVertCar/'
 export const createUserReviewUrl = '/speedlogist/api/reviews/create'
 export const getReviewsBaseUrl = '/speedlogist/api/reviews/get-reviews/'
 export const updateUserReviewUrl = '/speedlogist/api/reviews/update-review'
+
+
+///////////////////////////////////////////////
+// Отдел качества
+///////////////////////////////////////////////
+export const getUnprocessedAcceptanceQualityUrl = '/speedlogist/tsd/unprocessedAcceptanceQuality'
+export const getInProcessAcceptanceQualityUrl = '/speedlogist/tsd/inProcessAcceptanceQuality'
+export const getClosedAcceptanceQualityBaseUrl = '/speedlogist/tsd/closedAcceptanceQuality'
+export const getAllAcceptanceQualityFoodCardUrl = '/speedlogist/tsd/getAllAcceptanceQualityFoodCard'

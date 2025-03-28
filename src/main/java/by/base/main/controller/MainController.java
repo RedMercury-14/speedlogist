@@ -349,6 +349,16 @@ public class MainController {
 		return "main";		
 	}
 	
+	/**
+	 * Переход на страницу с качеством (от двора)
+	 * @param request
+	 * @return
+	 */
+	@RequestMapping("/main/acceptanceQuality")
+	public String acceptanceQuality(HttpServletRequest request) {
+		return "acceptanceQuality";
+	}
+	
 	@GetMapping("/main/orderproof/approve")
 	public String getApproveOrder(Model model, HttpServletRequest request,
 			@RequestParam("code") String id) throws Exception {

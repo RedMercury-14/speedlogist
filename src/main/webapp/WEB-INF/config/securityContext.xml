@@ -73,6 +73,7 @@
 <!-- 			<security:intercept-url pattern="/api/**" access="!isAnonymous()" />			 -->
 			<security:intercept-url pattern="/main/reviews/**" access="permitAll"/>
 			<security:intercept-url pattern="/main/orderproof/**" access="permitAll"/>
+			<security:intercept-url pattern="/main/acceptanceQuality/**" access="permitAll"/>
 			<security:intercept-url pattern="/main/**" access="hasRole('ROLE_ADMIN')" />
 <!-- 			<security:csrf disabled="true"/> -->
 	</security:http>

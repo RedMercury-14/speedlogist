@@ -21,9 +21,6 @@ export const userMessages = {
 	noImportOverlapMessage: (noImportTimes) => `Невозможно установить заказ на это время! Импортные заказы запрещено устанавливать с ${noImportTimes[0]} до ${noImportTimes[1]}!`
 }
 
-//export const slotStocks = ['1700', '1800', '1200','1230','1214', '1240','1250','1100']
-export const slotStocks = ['1700', '1800', '1200','1230','1214', '1240','1250','1100','1712','1721','1812','1820','1120']
-
 export const stocks24h = ['1700', '1800']
 
 export const eventColors = {

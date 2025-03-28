@@ -148,7 +148,7 @@
 											id="numTruckAndTrailer_route${loop.count}"
 											placeholder="Номер тягача и прицепа"
 											value="${route.truck.numTruck} / ${route.truck.numTrailer}"
-											required></textarea>
+											required>
 									</td>
 								</c:when>
 								<c:otherwise>
@@ -161,7 +161,6 @@
 								</c:otherwise>
 							</c:choose>
 							<td>
-<!-- 								<input type="text" name="numWayList" -->
 								<textarea type="text" name="numWayList"
 									id="numWayList_route${loop.count}"
 									placeholder="Путевой лист"

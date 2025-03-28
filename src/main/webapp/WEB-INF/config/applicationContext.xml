@@ -47,6 +47,31 @@
 	    <!-- Включаем регистрацию MBeans -->
     	<property name="registerMbeans" value="true" />
 	</bean>
+	
+	<bean id="myDataSourceYard" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
+		<property name="driverClassName" value="com.mysql.cj.jdbc.Driver" />
+<!-- 		<property name="jdbcUrl" value="jdbc:mysql://localhost:3306/test?useSSL=false&amp;serverTimezone=Europe/Moscow&amp;characterEncoding=utf8" /> -->
+<!-- 		<property name="username" value="root" /> -->
+<!-- 		<property name="password" value="5001020" /> -->
+		<property name="jdbcUrl" value="jdbc:mysql://10.10.1.22:3306/test?useSSL=false&amp;serverTimezone=Europe/Moscow&amp;characterEncoding=utf8" />
+		<property name="username" value="speedlogist" />
+		<property name="password" value="eps6sh" />
+		
+<!-- 		<property name="jdbcUrl" value="jdbc:mysql://10.200.0.102:3306/test?useSSL=false&amp;serverTimezone=Europe/Moscow&amp;characterEncoding=utf8" /> -->
+<!-- 		<property name="username" value="speedlogist" /> -->
+<!-- 		<property name="password" value="eps6sh" /> -->
+		
+		<!-- Настройки пула -->
+		<property name="maximumPoolSize" value="30" />
+		<property name="minimumIdle" value="5" />
+		<property name="idleTimeout" value="300000" /> <!-- 300 секунд -->
+		<property name="connectionTimeout" value="30000" /> <!-- 30 секунд -->
+		<property name="maxLifetime" value="1800000" /> <!-- 30 минут -->
+		<property name="poolName" value="HikariCP-Pool" />
+
+		<!-- Включаем регистрацию MBeans -->
+		<property name="registerMbeans" value="true" />
+	</bean>
 
 	
 	<bean id="sessionFactory"
@@ -63,12 +88,30 @@
 		</property>
    </bean>	
    
+   <bean id="sessionFactoryYard"
+		  class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+		<property name="dataSource" ref="myDataSourceYard" />
+		<property name="packagesToScan" value="by.base.main.model" />
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+				<prop key="hibernate.show_sql">falce</prop>
+				<prop key="hibernate.connection.autocommit">false</prop> <!-- test -->
+				<prop key="hibernate.ddl-auto">update</prop>
+			</props>
+		</property>
+	</bean>
+   
    <bean id="XSSFilter" class="by.base.main.util.XSSFilter">
 	</bean>
 	
    <bean id="myTransactionManager" class="org.springframework.orm.hibernate5.HibernateTransactionManager">
         <property name="sessionFactory" ref="sessionFactory"/>
     </bean> 
+    
+    <bean id="myTransactionManagerYard" class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactoryYard"/>
+	</bean>
     
     
     <!-- for loader -->

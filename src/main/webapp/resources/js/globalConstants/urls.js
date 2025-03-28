@@ -442,4 +442,3 @@ export const getUnprocessedAcceptanceQualityUrl = '/speedlogist/tsd/unprocessedA
 export const getInProcessAcceptanceQualityUrl = '/speedlogist/tsd/inProcessAcceptanceQuality'
 export const getClosedAcceptanceQualityBaseUrl = '/speedlogist/tsd/closedAcceptanceQuality'
 export const getAllAcceptanceQualityFoodCardUrl = '/speedlogist/tsd/getAllAcceptanceQualityFoodCard'
-//export const getAllAcceptanceQualityFoodCardUrl = '/10.10.1.22:14000/quality/files/'

@@ -221,7 +221,19 @@
 					</div>
 
 				<div class="modal-footer">
-					<button type="button" id="successProduct" class="btn btn-success">Подтвердить приемку товара</button>
+					<form class="form-inline" id="cardActionForm">
+						<input type="hidden" name="idAcceptanceQualityFoodCard">
+						<div class="form-group mr-2">
+							<label for="cardAction" class="sr-only">Действие</label>
+							<select name="cardAction" class="form-control" required>
+								<option value="" selected hidden disabled>Выберите действие</option>
+								<option value="confirm">Принять товар</option>
+								<option value="rework">Отправить на переборку</option>
+								<option value="unconfirm">Не принимать товар</option>
+							</select>
+						</div>
+						<button type="submit" class="btn btn-primary">Подтвердить действие</button>
+					</form>
 					<button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
 				</div>
 			</div>

@@ -28,7 +28,7 @@ public class AcceptanceQualityFoodCardImageUrlServiceImpl implements AcceptanceQ
     private static final String ROOT_DIRECTORY = "D:/"; // в application
 //	private static final String ROOT_DIRECTORY = "//fs/Dobronom/СКЛАД ДОБРОНОМ/СКЛАД 1300/200ФРУКТЫ/Карточка товара/";
     
-    @Value("${yard.web.urlPart}")
+    @Value("${yard.web.urlMyApp}")
 	public String urlPart;
 
     @Autowired
@@ -53,7 +53,7 @@ public class AcceptanceQualityFoodCardImageUrlServiceImpl implements AcceptanceQ
 
         List<String> urlList = new ArrayList<>();
         acceptanceQualityFoodCardImageUrlList.forEach(item->{
-            urlList.add(urlPart + item.getIdAcceptanceQualityFoodCardImageUrl());
+            urlList.add(urlPart+"files/" + item.getIdAcceptanceQualityFoodCardImageUrl());
         });
 
 

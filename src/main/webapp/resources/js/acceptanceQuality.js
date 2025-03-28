@@ -1,5 +1,5 @@
 import { AG_GRID_LOCALE_RU } from './AG-Grid/ag-grid-locale-RU.js'
-import { BtnCellRenderer, gridColumnLocalState, gridFilterLocalState, ResetStateToolPanel } from './AG-Grid/ag-grid-utils.js'
+import { BtnCellRenderer, BtnsCellRenderer, gridColumnLocalState, gridFilterLocalState, ResetStateToolPanel } from './AG-Grid/ag-grid-utils.js'
 import { getAllAcceptanceQualityFoodCardUrl, getClosedAcceptanceQualityBaseUrl } from './globalConstants/urls.js'
 import { snackbar } from './snackbar/snackbar.js'
 import { dateHelper, debounce, getData } from './utils.js'
@@ -7,32 +7,8 @@ import PhotoSwipeLightbox from './photoSwipe/photoswipe-lightbox.esm.min.js'
 import PhotoSwipeDynamicCaption  from './photoSwipe/photoswipe-dynamic-caption-plugin.esm.js'
 import PhotoSwipe from './photoSwipe/photoswipe.esm.min.js'
 import { buttons, caption, thumbnails } from './photoSwipe/photoSwipeHelper.js'
-
-const first = [
-	"https://images.unsplash.com/photo-1609342122563-a43ac8917a3a?ixlib=rb-1.2.1&ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&auto=format&fit=crop&w=1600&q=80",
-	"https://images.unsplash.com/photo-1608481337062-4093bf3ed404?ixlib=rb-1.2.1&ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&auto=format&fit=crop&w=1600&q=80",
-	"https://images.unsplash.com/photo-1605973029521-8154da591bd7?ixlib=rb-1.2.1&ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&auto=format&fit=crop&w=1600&q=80",
-	"https://images.unsplash.com/photo-1526281216101-e55f00f0db7a?ixlib=rb-1.2.1&ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&auto=format&fit=crop&w=1600&q=80",
-	"https://images.unsplash.com/photo-1418065460487-3e41a6c84dc5?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=1600&q=80",
-	"https://images.unsplash.com/photo-1505820013142-f86a3439c5b2?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&auto=format&fit=crop&w=1600&q=80",
-	"https://images.unsplash.com/photo-1477322524744-0eece9e79640?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=1600&q=80",
-	"https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=1600&q=80",
-	"https://images.unsplash.com/photo-1585338447937-7082f8fc763d?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=1600&q=80",
-	"https://images.unsplash.com/photo-1476842384041-a57a4f124e2e?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&auto=format&fit=crop&w=1600&q=80",
-	"https://images.unsplash.com/photo-1465311530779-5241f5a29892?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=1600&q=80",
-	"https://images.unsplash.com/photo-1461301214746-1e109215d6d3?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=1600&q=80",
-	"https://images.unsplash.com/photo-1610448721566-47369c768e70?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=1600&q=80",
-	"https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&auto=format&fit=crop&w=1600&q=80",
-	"https://images.unsplash.com/photo-1539678050869-2b97c7c359fd?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&auto=format&fit=crop&w=1600&q=80",
-	"https://images.unsplash.com/photo-1446630073557-fca43d580fbe?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=1600&q=80",
-	"https://images.unsplash.com/photo-1596370743446-6a7ef43a36f9?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=1600&q=80",
-	"https://images.unsplash.com/photo-1464852045489-bccb7d17fe39?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=1600&q=80",
-	"https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=1600&q=80",
-	"https://images.unsplash.com/photo-1510011560141-62c7e8fc7908?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=1600&q=80",
-	"https://images.unsplash.com/photo-1471931452361-f5ff1faa15ad?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=2252&q=80",
-	"https://images.unsplash.com/photo-1508766206392-8bd5cf550d1c?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=1536&q=80",
-	"https://images.unsplash.com/photo-1586276393635-5ecd8a851acc?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=1600&q=80"
-]
+import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
+import { uiIcons } from './uiIcons.js'
 
 const PAGE_NAME = 'acceptanceQuality'
 const LOCAL_STORAGE_KEY = `AG_Grid_settings_to_${PAGE_NAME}`
@@ -43,22 +19,63 @@ const debouncedSaveFilterState = debounce(saveFilterState, 300)
 
 let lightbox
 
+// форма отправки действия по карточке для строк таблицы
+class cardActionCellRenderer {
+	init(params) {
+		this.params = params
+		this.cardAction = params.data.cardAction || ''
+
+		this.cardActionSpan = document.createElement('span')
+		this.cardActionSpan.textContent = this.cardAction
+
+		this.eGui = document.createElement("form")
+		this.eGui.className = 'form-inline'
+		this.eGui.innerHTML = `
+			<input type="hidden" name="idAcceptanceQualityFoodCard" value="${params.data.idAcceptanceQualityFoodCard}">
+			<div class="form-group mr-2">
+				<label for="cardAction" class="sr-only">Действие</label>
+				<select name="cardAction" class="form-control form-control-sm" required>
+					<option value="" selected hidden disabled>Выберите действие</option>
+					<option value="confirm">Принять товар</option>
+					<option value="rework">На переборку</option>
+					<option value="unconfirm">Не принимать товар</option>
+				</select>
+			</div>
+			<button type="submit" class="btn btn-primary btn-sm">${uiIcons.check}</button>
+		`
+
+		this.formSubmitHandler = this.formSubmitHandler.bind(this)
+		this.eGui.addEventListener("submit", this.formSubmitHandler)
+	}
+
+	getGui() {
+		return this.cardAction ? this.cardActionSpan : this.eGui
+	}
+
+	formSubmitHandler(event) {
+		this.params.onSubmit(event)
+	}
+
+	destroy() {
+		this.eGui.removeEventListener("submit", this.formSubmitHandler)
+	}
+}
+
 const detailColumnDefs = [
-	{ headerName: 'Продукт', field: 'productName', flex: 6, },
+	{ headerName: 'Продукт', field: 'productName', flex: 5, },
 	{
 		headerName: 'Выборка', field: 'sampleSize',
 		valueFormatter: (params) => `${params.value} кг`
 	},
-
 	{
-		headerName: 'ВД', field: 'totalInternalDefectPercentage',
+		headerName: 'ВД (вес/процент)', field: 'totalInternalDefectPercentage',
 		valueGetter: (params) => {
 			const data = params.data
 			return `${data.totalInternalDefectWeight} кг / ${data.totalInternalDefectPercentage}%`
 		},
 	},
 	{
-		headerName: 'Брак', field: 'totalDefectPercentage',
+		headerName: 'Брак (вес/процент/процент с ПК)', field: 'totalDefectPercentage',
 		flex: 3,
 		valueGetter: (params) => {
 			const data = params.data
@@ -66,31 +83,42 @@ const detailColumnDefs = [
 		},
 	},
 	{
-		headerName: 'ЛН', field: 'totalLightDefectPercentage',
+		headerName: 'ЛН (вес/процент)', field: 'totalLightDefectPercentage',
 		valueGetter: (params) => {
 			const data = params.data
 			return `${data.totalLightDefectWeight} кг / ${data.totalLightDefectPercentage}%`
 		},
 	},
 	{
-		headerName: 'Фото', field: 'images',
+		headerName: '', field: 'idAcceptanceQualityFoodCard',
 		cellClass: 'px-1 py-0 text-center small-row',
-		valueGetter: (params) => params.data.images ? 'Есть фото' : '',
-		cellRenderer: BtnCellRenderer,
+		minWidth: 100, flex: 1,
+		cellRenderer: BtnsCellRenderer,
 		cellRendererParams: {
-			onClick:  (params => showGalleryItems(params.data)),
-			label: 'Показать фото',
-			className: 'btn btn-light border btn-sm w-100 text-nowrap',
+			onClick: ((e, params) => {
+				if (e.buttonId === 'showImages') {
+					showGalleryItems(params.data)
+					return
+				}
+		
+				if (e.buttonId === 'showInfo') {
+					showCardModal(params.data)
+					return
+				}
+			}),
+			buttonList: [
+				{ className: 'btn btn-light border btn-sm', id: 'showImages', icon: uiIcons.images, title: 'Показать фото' },
+				{ className: 'btn btn-light border btn-sm', id: 'showInfo', icon: uiIcons.info, title: 'Подробнее' },
+			],
 		},
 	},
 	{
-		headerName: 'Подробнее', field: 'idAcceptanceQualityFoodCard',
+		headerName: 'Статус карточки', field: 'idAcceptanceQualityFoodCard',
 		cellClass: 'px-1 py-0 text-center small-row',
-		cellRenderer: BtnCellRenderer,
+		minWidth: 240, flex: 3,
+		cellRenderer: cardActionCellRenderer,
 		cellRendererParams: {
-			onClick: showCardModal,
-			label: 'Подробнее',
-			className: 'btn btn-light border btn-sm',
+			onSubmit: cardActionFormSubmitHandler
 		},
 	},
 ]
@@ -98,7 +126,7 @@ const detailGridOptions = {
 	columnDefs: detailColumnDefs,
 	defaultColDef: {
 		headerClass: 'px-1',
-		cellClass: 'px-2',
+		cellClass: 'px-2 text-center',
 		wrapText: true,
 		autoHeight: true,
 		resizable: true,
@@ -109,6 +137,7 @@ const detailGridOptions = {
 	},
 	enableBrowserTooltips: true,
 	localeText: AG_GRID_LOCALE_RU,
+	getContextMenuItems: getContextMenuItems,
 }
 
 const columnDefs = [
@@ -267,11 +296,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 	// листнер на отправку формы поиска заявок
 	orderSearchForm.addEventListener('submit', searchFormSubmitHandler)
-
-	$('#qualityCardModal').on('hidden.bs.modal', (e) => {
-		const showImagesBtnContainer = document.getElementById('showImagesBtnContainer')
-		showImagesBtnContainer.innerHTML = ''
-	})
+	// листнер на отправку формы установки статуса карточки
+	cardActionForm.addEventListener('submit', cardActionFormSubmitHandler)
 })
 
 
@@ -309,6 +335,8 @@ async function showGalleryItems(data) {
 		return
 	}
 
+	bootstrap5overlay.showOverlay()
+
 	const description = getCardDescriptionText(data)
 	const itemsWithSizes = await Promise.all(
 		galleryItems.map(async (src, i) => {
@@ -336,6 +364,7 @@ async function showGalleryItems(data) {
 		})
 	)
 
+	bootstrap5overlay.hideOverlay()
 	lightbox.loadAndOpen(0, itemsWithSizes)
 }
 
@@ -352,6 +381,14 @@ async function searchFormSubmitHandler(e) {
 		console.error(error)
 		snackbar.show('Ошибка получения данных')
 	}
+}
+// обработчик отправки формы статуса карточки
+function cardActionFormSubmitHandler(e) {
+	e.preventDefault()
+	const formData = new FormData(e.target)
+	const data = Object.fromEntries(formData)
+
+	console.log(data)
 }
 
 
@@ -371,7 +408,6 @@ async function getAcceptanceQualityData(dateStart, dateEnd) {
 async function getAcceptanceQualityCards(idAcceptanceQuality) {
 	try {
 		const url = `${getAllAcceptanceQualityFoodCardUrl}?idAcceptanceFoodQuality=${idAcceptanceQuality}`
-//		const url = `http://10.10.1.22:14000/quality/files/${idAcceptanceQuality}`
 		const res = await getData(url)
 		return res ? res : []
 	} catch (error) {
@@ -380,7 +416,7 @@ async function getAcceptanceQualityCards(idAcceptanceQuality) {
 	}
 }
 
-
+// методы таблицы
 function renderTable(gridDiv, gridOptions) {
 	new agGrid.Grid(gridDiv, gridOptions)
 	gridOptions.api.setRowData([])
@@ -441,6 +477,8 @@ function getContextMenuItems (params) {
 
 	return items
 }
+
+// получение данных карточек
 function getCardsData (params) {
 	const rowData = params.data
 	if (!rowData.cards) {
@@ -458,7 +496,6 @@ function getCardsData (params) {
 						}
 					})
 				}
-				console.log("🚀 ~ getCardsData ~ cards:", cards)
 				gridOptions.api.applyTransaction({ update: [{ ...rowData, cards }]})
 				params.successCallback(rowData.cards)
 			})
@@ -471,6 +508,7 @@ function getCardsData (params) {
 	}
 }
 
+// конверторы дат для таблицы
 function dateComparator(date1, date2) {
 	if (!date1 || !date2) return 0
 	const date1Value = new Date(date1).getTime()
@@ -499,6 +537,7 @@ function restoreFilterState() {
 	gridFilterLocalState.restoreState(gridOptions, LOCAL_STORAGE_KEY)
 }
 
+// статусы строк качества товара
 function getStatusToView(status) {
 	switch (status) {
 		case 0:
@@ -514,19 +553,27 @@ function getStatusToView(status) {
 	}
 }
 
+// отображение модального окна с сообщением
 function showMessageModal(message) {
 	const messageContainer = document.querySelector('#messageContainer')
 	messageContainer.innerHTML = message
 	$('#displayMessageModal').modal('show')
 }
 
-function showCardModal(params) {
-	const card = params.data
+// отображение модального окна с карточкой
+function showCardModal(card) {
 	if (!card) return
 
 	const formatDate = dateHelper.getFormatDateTime(card.dateCard)
 
+	// отображение формы действия по карточке
+	card.cardAction
+		? cardActionForm.classList.add('d-none')
+		: cardActionForm.classList.remove('d-none')
+	cardActionForm.reset()
+
 	// заполнение полей
+	cardActionForm.idAcceptanceQualityFoodCard.value = card.idAcceptanceQualityFoodCard
 	fillField('productName', card.productName)
 	fillField('dateCard', formatDate)
 	fillField('firmNameAccept', card.firmNameAccept)
@@ -560,12 +607,14 @@ function showCardModal(params) {
 	fillDefectsTable('#lightDefectsList', card.lightDefectsQualityCardList, ['weight', 'percentage', 'description'])
 	fillDefectsTable('#totalDefectsList', card.totalDefectQualityCardList, ['weight', 'percentage', 'percentageWithPC', 'description'])
 
+	// кнопка просмотра фото
 	const showImagesBtnContainer = document.getElementById('showImagesBtnContainer')
+	showImagesBtnContainer.innerHTML = ''
 	const showImagesBtn = document.createElement('button')
 	showImagesBtn.className = 'btn btn-secondary'
 	showImagesBtn.type = 'button'
 	showImagesBtn.textContent = 'Посмотреть фото'
-	showImagesBtn.onclick = () => showGalleryItems(card)
+	showImagesBtn.onclick = (e) => showGalleryItems(card)
 	showImagesBtnContainer.append(showImagesBtn)
 
 	$('#qualityCardModal').modal('show')
@@ -606,11 +655,13 @@ function roundNumber(num, fraction) {
 	return Math.round((Number(num) + Number.EPSILON) * fraction) / fraction
 }
 
+// заполнение элемента по id
 function fillField(fieldId, data) {
 	const field = document.getElementById(fieldId)
 	field.textContent = data
 }
 
+// заполнение таблицы дефектов
 function fillDefectsTable(tableId, defects, columns) {
 	const $tableBody = $(tableId)
 	$tableBody.empty()
@@ -626,6 +677,7 @@ function fillDefectsTable(tableId, defects, columns) {
 	})
 }
 
+// получение описания для изображений
 function getCardDescriptionText(card) {
 	return [
 		card.productName ? card.productName : '',
@@ -640,6 +692,7 @@ function getCardDescriptionText(card) {
 	].filter(Boolean).join('<br>')
 }
 
+// получение размера картинки
 function getImageSize(src) {
 	return new Promise((resolve, reject) => {
 		const img = new Image()

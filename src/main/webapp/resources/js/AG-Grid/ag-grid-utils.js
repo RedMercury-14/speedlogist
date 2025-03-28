@@ -327,6 +327,47 @@ export class BtnCellRenderer {
 	}
 }
 
+export class BtnsCellRenderer {
+	init(params) {
+		this.params = params
+		this.buttons = params.buttonList
+
+		this.emptyElem = document.createElement('span')
+		this.eGui = document.createElement("div")
+		this.eGui.style = "display: flex; gap: 5px; justify-content: center; align-items: center;"
+
+		this.buttons.forEach((button) => {
+			const btn = document.createElement("button")
+			btn.className = button.className || ''
+			btn.id = button.id || ''
+			btn.title = button.title || ''
+			btn.innerHTML = button.icon || button.label || button.dynamicLabel(this.params) || ''
+			this.eGui.appendChild(btn)
+		})
+
+		this.btnsClickedHandler = this.btnsClickedHandler.bind(this)
+		this.eGui.addEventListener("click", this.btnsClickedHandler)
+	}
+
+	getGui() {
+		return this.params.value ? this.eGui : this.emptyElem
+	}
+
+	btnsClickedHandler(e) {
+		const button = e.target.closest('button')
+		if (!button) return
+
+		this.params.onClick({
+			...e,
+			buttonId: button.id
+		}, this.params)
+	}
+
+	destroy() {
+		this.eGui.removeEventListener("click", this.btnsClickedHandler)
+	}
+}
+
 // автоматическое выделение значения в поте фильтрации по колонке (коллбек на открытие фильтра)
 export function autoSelectFilerValue(params) {
 	setTimeout(() => {
@@ -336,4 +377,93 @@ export function autoSelectFilerValue(params) {
 			requestAnimationFrame(() => input.select());
 		}
 	}, 0);
+}
+
+export class SubmitButtonTextEditor {
+	init(params) {
+		this.params = params
+		this.originalValue = params.value
+		this.currentValue = params.value
+
+		this.valueConfirmed = false
+
+		this.container = document.createElement('div')
+		this.container.style.display = 'flex'
+		this.container.style.flexDirection = 'column'
+		this.container.style.gap = '10px'
+		this.container.style.padding = '10px'
+		this.container.style.width = '500px'
+		this.container.style.height = '300px'
+		this.container.style.backgroundColor = 'white'
+
+		this.textarea = document.createElement('textarea')
+		this.textarea.value = this.currentValue
+		this.textarea.style.width = '100%'
+		this.textarea.style.height = '100%'
+		this.textarea.style.resize = 'none'
+
+		if (params.maxLength) {
+			this.textarea.maxLength = params.maxLength
+		}
+
+		this.textarea.addEventListener('keydown', this.keyDownListner.bind(this))
+
+		this.saveButton = document.createElement('button')
+		this.saveButton.textContent = 'Сохранить'
+		this.saveButton.style.alignSelf = 'flex-end'
+		this.saveButton.style.padding = '5px 15px'
+
+		this.saveButton.addEventListener('click', this.saveBtnClickListner.bind(this))
+
+		this.container.appendChild(this.textarea)
+		this.container.appendChild(this.saveButton)
+
+		setTimeout(() => {
+			this.textarea.focus()
+		}, 0)
+	}
+
+	getValue() {
+		return this.valueConfirmed ? this.currentValue : this.originalValue
+	}
+
+	isCancelAfterEnd() {
+		return !this.valueConfirmed
+	}
+
+	getGui() {
+		return this.container
+	}
+	
+	afterGuiAttached() {
+		this.textarea.focus()
+	}
+	
+	destroy() {
+		this.saveButton.removeEventListener('click', this.saveBtnClickListner)
+		this.textarea.removeEventListener('keydown', this.keyDownListner)
+	}
+
+	keyDownListner(event) {
+		if (event.key === 'Enter') {
+			if (event.shiftKey) {
+				event.preventDefault()
+				this.confirmAndClose()
+			} else {
+				event.stopPropagation()
+			}
+		}
+	}
+
+	saveBtnClickListner(event) {
+		this.currentValue = this.textarea.value
+		this.valueConfirmed = true
+		this.params.api.stopEditing()
+	}
+
+	confirmAndClose() {
+		this.currentValue = this.textarea.value
+		this.valueConfirmed = true
+		this.params.api.stopEditing()
+	}
 }

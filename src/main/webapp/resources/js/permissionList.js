@@ -1,7 +1,5 @@
 import { AG_GRID_LOCALE_RU } from './AG-Grid/ag-grid-locale-RU.js'
-import { BtnCellRenderer, gridColumnLocalState, gridFilterLocalState, ResetStateToolPanel } from './AG-Grid/ag-grid-utils.js'
-import { ajaxUtils } from './ajaxUtils.js'
-import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
+import { BtnCellRenderer, BtnsCellRenderer, gridColumnLocalState, gridFilterLocalState, ResetStateToolPanel } from './AG-Grid/ag-grid-utils.js'
 import { getPermissionListBaseUrl } from './globalConstants/urls.js'
 import { snackbar } from "./snackbar/snackbar.js"
 import { uiIcons } from './uiIcons.js'
@@ -19,7 +17,7 @@ const debouncedSaveFilterState = debounce(saveFilterState, 300)
 
 const columnDefs = [
 	{
-		headerName: 'id', field: 'idPermissions', sort: 'desc',
+		headerName: 'id', field: 'idPermissions', minWidth: 100, sort: 'desc',
 		cellRenderer: 'agGroupCellRenderer',
 		cellRendererParams: {
 			innerRenderer: permissionLinkRenderer,
@@ -48,39 +46,61 @@ const columnDefs = [
 	// },
 	// { headerName: 'Коммент', field: 'comment', },
 	// { headerName: 'Статус', field: 'status', },
-	{ headerName: 'nameMethod', field: 'nameMethod', },
-	{ headerName: 'userInitiator', field: 'userInitiator', },
-	{ headerName: 'idUserInitiator', field: 'idUserInitiator', },
-	{ headerName: 'nameUserInitiator', field: 'nameUserInitiator', },
-	{ headerName: 'emailUserInitiator', field: 'emailUserInitiator', },
-	{ headerName: 'telUserInitiator', field: 'telUserInitiator', },
+	//{ headerName: 'nameMethod', field: 'nameMethod', minWidth: 100},
+	{ headerName: 'Инициатор', field: 'userInitiator', minWidth: 150 },
+	{ headerName: 'ID инициатора', field: 'idUserInitiator', minWidth: 100},
+	{ headerName: 'ФИ инициатора', field: 'nameUserInitiator', minWidth: 150},
+	{ headerName: 'Email инициатора', field: 'emailUserInitiator', minWidth: 150},
+	{ headerName: 'Телефон инициатора', field: 'telUserInitiator', minWidth: 100},
 	{ 
-		headerName: 'dateTimeInitiations', 
-		field: 'dateTimeInitiations', 
+		headerName: 'Дата и время инициации',
+		field: 'dateTimeInitiations',
+		minWidth: 150,
 		valueFormatter: dateTimeValueFormatter,
 		comparator: dateComparator,
 		filterParams: { valueFormatter: dateTimeValueFormatter, },
 	},
-	{ headerName: 'userApprover', field: 'userApprover', },
-	{ headerName: 'idUserApprover', field: 'idUserApprover', },
-	{ headerName: 'nameUserApprover', field: 'nameUserApprover', },
-	{ headerName: 'emailUserApprover', field: 'emailUserApprover', },
-	{ headerName: 'telUserApprover', field: 'telUserApprover', },
-	{ headerName: 'statusApproval', field: 'statusApproval', },
-	{ headerName: 'dateTimeApproval', field: 'dateTimeApproval', },
-	{ headerName: 'status', field: 'status', },
-	{ headerName: 'commentUserInitiator', field: 'commentUserInitiator', },
-	{ headerName: 'commentUserApprover', field: 'commentUserApprover', },
-	{ headerName: 'history', field: 'history', },
-	{ headerName: 'idObjectApprover', field: 'idObjectApprover', },
+	{ headerName: 'Подтвердивший', field: 'userApprover', minWidth: 150},
+	{ headerName: 'ID подтвердившего', field: 'idUserApprover', minWidth: 100},
+	{ headerName: 'ФИ подтвердившего', field: 'nameUserApprover', minWidth: 150},
+	{ headerName: 'Email подтвердившего', field: 'emailUserApprover', minWidth: 150},
+	{ headerName: 'Телефон подтвердившего', field: 'telUserApprover', minWidth: 150},
+	{
+		headerName: 'Статус подтверждения', field: 'statusApproval',
+		cellClass: params => params.value ? 'px-2 text-success text-center' : 'px-2 text-danger text-center',
+		minWidth: 100,
+		valueFormatter: statusApprovalValueFormatter,
+	},
+	{
+		headerName: 'Дата и время подтверждения', field: 'dateTimeApproval',
+		minWidth: 150,
+		valueFormatter: dateTimeValueFormatter,
+		comparator: dateComparator,
+		filterParams: { valueFormatter: dateTimeValueFormatter, },
+	},
+	// { headerName: 'Статус', field: 'status', },
+	{
+		headerName: 'Комментарий инициатора', field: 'commentUserInitiator',
+		minWidth: 150,
+		cellRenderer: BtnCellRenderer,
+		cellRendererParams: {
+			onClick: (params => params.value && showMessageModal(params.value)),
+			label: 'Просмотр',
+			className: 'btn btn-light border btn-sm w-100 text-nowrap',
+		},
+	},
+	{ headerName: 'Комментарий подтвердившего', field: 'commentUserApprover', minWidth: 100},
+	{ headerName: 'История', field: 'history', },
+	{ headerName: 'ID объекта подтверждения', field: 'idObjectApprover', minWidth: 100},
 	{ 
-		headerName: 'dateValid', 
+		headerName: 'Действительно до(дата):',
 		field: 'dateValid',
+		minWidth: 150,
 		valueFormatter: dateTimeValueFormatter,
 		comparator: dateComparator,
 		filterParams: { valueFormatter: dateTimeValueFormatter, },
 	},
-	{ headerName: 'timeValid', field: 'timeValid', },
+	{ headerName: 'Действительно до(время):', field: 'timeValid', minWidth: 100},
 ]
 
 const gridOptions = {
@@ -287,4 +307,19 @@ function permissionLinkRenderer(params) {
 	const data = params.node.data
 	const link = `./control/?idPermissions=${data.idPermissions}`
 	return `<a class="text-primary" href="${link}">${params.value}</a>`
+}
+
+// отображение модального окна с сообщением
+function showMessageModal(message) {
+	const messageContainer = document.querySelector('#messageContainer')
+	messageContainer.innerHTML = message
+	$('#displayMessageModal').modal('show')
+}
+
+function statusApprovalValueFormatter(params) {
+	const status = params.value
+	if (status === false) return 'Не согласовано'
+	if (status === true) return 'Согласовано'
+	if (!status) return ''
+	return `Неизвестный статус (${status})`
 }

@@ -654,8 +654,8 @@ public class MainRestController {
 	 */
 	@GetMapping("/test")
     @TimedExecution
-    public Map<String, Object> getTEST(HttpServletRequest request) throws ParseException, IOException {
-       Map<String, Object> responseMap = new HashMap<>();
+    public Map<String, Order> getTEST(HttpServletRequest request) throws ParseException, IOException {
+       Map<String, Order> responseMap = new HashMap<>();
        java.util.Date t1 = new java.util.Date();
        System.err.println("ТАРАКАААААН");
        Date startDate = Date.valueOf(LocalDate.now());
@@ -664,9 +664,9 @@ public class MainRestController {
 
        List<Order> orders = getListOfOrdersFromBD(startDate,finishDate);
        
-       orders.forEach(o-> System.out.println("ТАРАКАААААН - 1 - " + o.getMarketNumber()));
-       System.out.println("ТАРАКАААААН - 1 - " + orders.size());
-       System.out.println("");
+//       orders.forEach(o-> System.out.println("ТАРАКАААААН - 1 - " + o.getMarketNumber()));
+//       System.out.println("ТАРАКАААААН - 1 - " + orders.size());
+//       System.out.println("");
 
        Map<String, Order> ordersFromBD = getCollectToMap(orders);
        
@@ -683,19 +683,23 @@ public class MainRestController {
 
        Object[] goodsId = result.split(",");
 
-       responseMap = requestToMarket(goodsId);
+       responseMap = requestToMarket(goodsId); // остановился тут
+       
+       responseMap.forEach((k,v)-> System.out.println("ТАРАКАААААН - 3 - " + k + " " + v));
+       System.out.println("ТАРАКАААААН - 3 - " + responseMap.size());
+       System.out.println("");
 
        if (responseMap.get("marketOrder2") == null) {
           return responseMap;
        }
 
-       String marketOrder2 = responseMap.get("marketOrder2").toString();
+//       String marketOrder2 = responseMap.get("marketOrder2").toString();
 
-       responseMap = parseJson(marketOrder2);
-       Map<String, OrderCheckPalletsDto> ordersFromMarket = (HashMap) responseMap.get("map");
+//       responseMap = parseJson(marketOrder2);
+       Map<String, OrderCheckPalletsDto> ordersFromMarket = (HashMap) responseMap;
        
-       ordersFromMarket.forEach((k,v)-> System.out.println("ТАРАКАААААН - 3 - " + k + " " + v));
-       System.out.println("ТАРАКАААААН - 3 - " + ordersFromMarket.size());
+       ordersFromMarket.forEach((k,v)-> System.out.println("ТАРАКАААААН - 4 - " + k + " " + v));
+       System.out.println("ТАРАКАААААН - 4 - " + ordersFromMarket.size());
        System.out.println("");
 
        //вычисляем косячные ордеры и раскладываем по соответствующим мапам
@@ -788,7 +792,7 @@ public class MainRestController {
        
        java.util.Date t3 = new java.util.Date();
        System.err.println(t3.getTime() - t1.getTime() + " ms");
-       responseMap.put("message", "emails sent successfully");
+//       responseMap.put("message", "emails sent successfully");
        return responseMap;
 	}
 	
@@ -807,7 +811,7 @@ public class MainRestController {
        List<Order> filteredOrders = orders.stream()
              .filter(o -> o.getMarketNumber() != null)
              .filter(o -> Optional.ofNullable(o.getWay()).stream().noneMatch("АХО"::equals))
-             .distinct().toList();
+             .distinct().collect(Collectors.toList()); // .toList()
 
        //создаём мапу marketNumber - order и заполняем лист с marketNumber
        Map<String, Order> ordersFromBD = new HashMap<>();
@@ -823,39 +827,66 @@ public class MainRestController {
      * @return
      * @throws ParseException
      */
-    public Map<String, Object> requestToMarket(Object[] goodsId) throws ParseException {
-        Map<String, Object> responseMap = new HashMap<>();
-        MarketDataArrayForRequestDto dataDto3 = new MarketDataArrayForRequestDto(goodsId);
-        MarketPacketDto packetDto3 = new MarketPacketDto(marketJWT, "SpeedLogist.OrderBuyArrayInfoGet", serviceNumber, dataDto3);
-        MarketRequestDto requestDto3 = new MarketRequestDto("", packetDto3);
-        String marketOrder2;
-        try {
-           marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto3));
-        } catch (Exception e) {
-//         e.printStackTrace();
-//         response.put("status", "100");
-//         response.put("exception", e.toString());
-//         response.put("message", "Ошибка запроса к Маркету");
-//         response.put("info", "Ошибка запроса к Маркету");
-           responseMap.put("message", "Не удалось получить marketOrder2");
-           responseMap.put("error", e.getMessage());
-           return responseMap;
-        }
-
-        System.out.println("request -> " + gson.toJson(requestDto3));
-        //проверяем на наличие сообщений об ошибке со стороны маркета
-        if(marketOrder2.contains("Error")) {
-           System.out.println(marketOrder2);
-
-           MarketErrorDto errorMarket = gson.fromJson(marketOrder2, MarketErrorDto.class);
-
-           responseMap.put("message", "ошибка в marketOrder2");
-           responseMap.put("error", errorMarket);
-           return responseMap;
-        }
-
-        responseMap.put("marketOrder2", marketOrder2);
-        return responseMap;
+    public Map<String, Order> requestToMarket(Object[] goodsId) throws ParseException {
+    	try {			
+			checkJWT(marketUrl);			
+		} catch (Exception e) {
+			System.err.println("Ошибка получения jwt токена");
+		}
+		
+		Map<String, Order> response = new HashMap<String, Order>();
+		MarketDataArrayForRequestDto dataDto3 = new MarketDataArrayForRequestDto(goodsId);
+		MarketPacketDto packetDto3 = new MarketPacketDto(marketJWT, "SpeedLogist.OrderBuyArrayInfoGet", serviceNumber, dataDto3);
+		MarketRequestDto requestDto3 = new MarketRequestDto("", packetDto3);
+		String marketOrder2 = null;
+		try {
+			marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto3));
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.err.println("ERROR : Ошибка запроса к Маркету");
+			System.err.println("marketOrder2 : "+marketOrder2);
+			System.err.println("ERROR DESCRIPTION - " + e.toString());
+			return null;
+		}
+		
+		System.out.println("request -> " + gson.toJson(requestDto3));
+		//проверяем на наличие сообщений об ошибке со стороны маркета
+		if(marketOrder2.contains("Error")) {
+			//тут избавляемся от мусора в json
+			System.out.println(marketOrder2);
+//			String str2 = marketOrder2.split("\\[", 2)[1];
+//			String str3 = str2.substring(0, str2.length()-2);
+			MarketErrorDto errorMarket = gson.fromJson(marketOrder2, MarketErrorDto.class);
+//			System.out.println("JSON -> "+str3);
+//			System.out.println(errorMarket);
+			if(errorMarket.getError().equals("99")) {//обработка случая, когда в маркете номера нет, а в бд есть.
+				
+			}
+			System.err.println("ERROR");
+			System.err.println(marketOrder2);
+			System.err.println("ERROR DESCRIPTION - " + errorMarket.getErrorDescription());
+			return null;
+		}
+		
+		System.out.println("Пришло из маркета: "+marketOrder2);
+		
+		//создаём свой парсер и парсим json в объекты, с которыми будем работать.
+		CustomJSONParser customJSONParser = new CustomJSONParser();
+		
+		//создаём лист OrderBuyGroup
+		Map<Long, OrderBuyGroupDTO> OrderBuyGroupDTOMap = new HashMap<Long, OrderBuyGroupDTO>();
+		Map<String, Order> orderMap = new HashMap<String, Order>();
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(marketOrder2);
+		JSONArray numShopsJSON = (JSONArray) jsonMainObject.get("OrderBuyGroup");
+		for (Object object : numShopsJSON) {
+			//создаём OrderBuyGroup
+			OrderBuyGroupDTO orderBuyGroupDTO = customJSONParser.parseOrderBuyGroupFromJSON(object.toString());
+			OrderBuyGroupDTOMap.put(orderBuyGroupDTO.getOrderBuyGroupId(), orderBuyGroupDTO);
+			Order order = orderCreater.createSimpleOrder(orderBuyGroupDTO);
+			orderMap.put(order.getMarketNumber(), order);
+		}
+		return orderMap;
      }
     
     public Map<String, Object> parseJson(String marketOrder2) throws ParseException {

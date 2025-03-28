@@ -5,6 +5,7 @@ import by.base.main.model.yard.AcceptanceQualityFoodCard;
 import by.base.main.model.yard.AcceptanceQualityFoodCardImageUrl;
 import by.base.main.service.yardService.AcceptanceQualityFoodCardImageUrlService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.ResponseEntity;
@@ -24,8 +25,11 @@ import javax.servlet.http.HttpServletRequest;
 @Service
 public class AcceptanceQualityFoodCardImageUrlServiceImpl implements AcceptanceQualityFoodCardImageUrlService {
 
-    private static final String ROOT_DIRECTORY = "D:/";
+    private static final String ROOT_DIRECTORY = "D:/"; // в application
 //	private static final String ROOT_DIRECTORY = "//fs/Dobronom/СКЛАД ДОБРОНОМ/СКЛАД 1300/200ФРУКТЫ/Карточка товара/";
+    
+    @Value("${yard.web.urlMyApp}")
+	public String urlPart;
 
     @Autowired
     private AcceptanceQualityFoodCardImageUrlDAO acceptanceQualityFoodCardImageUrlDAO;
@@ -44,14 +48,12 @@ public class AcceptanceQualityFoodCardImageUrlServiceImpl implements AcceptanceQ
     public List<String> getUrls(AcceptanceQualityFoodCard acceptanceQualityFoodCard, HttpServletRequest request) {
         List<AcceptanceQualityFoodCardImageUrl> acceptanceQualityFoodCardImageUrlList = getAllByAcceptanceQualityFoodCard(acceptanceQualityFoodCard);
 
-        String url = request.getRequestURL().toString();
-
-        System.err.println(url);
-        String urlPart = "http://localhost:8080/speedlogist_war/tsd/files/";
+//        String urlPart = "http://localhost:8080/speedlogist_war/tsd/files/";
+//        String urlPart = "http://10.10.1.22:14000/quality/files/";
 
         List<String> urlList = new ArrayList<>();
         acceptanceQualityFoodCardImageUrlList.forEach(item->{
-            urlList.add( urlPart + item.getIdAcceptanceQualityFoodCardImageUrl());
+            urlList.add(urlPart+"files/" + item.getIdAcceptanceQualityFoodCardImageUrl());
         });
 
 

@@ -42,6 +42,7 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -67,6 +68,12 @@ import by.base.main.service.OrderService;
 import by.base.main.service.UserService;
 import by.base.main.service.util.SocketClient;
 import by.base.main.util.SlotWebSocket;
+
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.*;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
 @RestController
 @RequestMapping(path = "tsd", produces = "application/json")
@@ -95,8 +102,41 @@ public class YardManagementRestController {
 	private AcceptanceQualityFoodCardImageUrlService acceptanceQualityFoodCardImageUrlService;
 
 	private static final String staticToken = "3d075c53-4fd3-41c3-89fc-a5e5c4a0b25b";
+	
+	private final RestTemplate restTemplate = new RestTemplate();
+	
+	@Value("${yard.web.urlPart}")
+	public String urlPart;
+	
 
+	@GetMapping("/files/{id}")
+    public ResponseEntity<Resource> getImage(@PathVariable("id") String id) {
+        // URL на внешний сервер
+//        String externalUrl = "http://178.163.235.66:14000/quality/files/" + id;
+        String externalUrl = urlPart + id;
 
+        // Выполняем GET-запрос
+        ResponseEntity<byte[]> response = restTemplate.exchange(
+                externalUrl,
+                HttpMethod.GET,
+                null,
+                byte[].class
+        );
+
+        if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+            ByteArrayResource resource = new ByteArrayResource(response.getBody());
+
+            // Возвращаем фото клиенту
+            return ResponseEntity.ok()
+                    .contentLength(response.getBody().length)
+                    .contentType(response.getHeaders().getContentType() != null ?
+                            response.getHeaders().getContentType() :
+                            MediaType.IMAGE_JPEG)
+                    .body(resource);
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
+        }
+    }
 	
 	/*
 	 * тут данные которые определяют приоритетную рампу и время
@@ -105,6 +145,8 @@ public class YardManagementRestController {
 	private static final Integer idRumpPriority1800 = 180001;
 	private static final LocalTime startTimePriority = LocalTime.of(9, 0, 0);
 	private static final LocalTime finishTimePriority = LocalTime.of(20, 0, 0);
+	
+	
 
 	@RequestMapping("/echo")
 	public Map<String, String> getEcho (HttpServletRequest request) {
@@ -290,27 +332,27 @@ public class YardManagementRestController {
 	}
 
 
-	/**
-	 * Загрузка файла по его идентификатору.
-	 *
-	 * @author Lesha
-	 * @param idFile Идентификатор файла.
-	 * @return Файл в формате Resource, если найден, иначе 404 Not Found.
-	 * @throws IOException В случае ошибки при работе с файлом.
-	 */
-	@GetMapping("files/{idFile}")
-	public ResponseEntity<Resource> getFile(@PathVariable Long idFile) throws IOException {
-		Resource resource = acceptanceQualityFoodCardImageUrlService.getFile(idFile);
-
-		if (resource == null || !resource.exists() || !resource.isReadable()) {
-			return ResponseEntity.notFound().build();
-		}
-
-		return ResponseEntity.ok()
-				.header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
-				.contentType(MediaType.IMAGE_JPEG)
-				.body(resource);
-	}
+//	/**
+//	 * Загрузка файла по его идентификатору.
+//	 *
+//	 * @author Lesha
+//	 * @param idFile Идентификатор файла.
+//	 * @return Файл в формате Resource, если найден, иначе 404 Not Found.
+//	 * @throws IOException В случае ошибки при работе с файлом.
+//	 */
+//	@GetMapping("files/{idFile}")
+//	public ResponseEntity<Resource> getFile(@PathVariable Long idFile) throws IOException {
+//		Resource resource = acceptanceQualityFoodCardImageUrlService.getFile(idFile);
+//
+//		if (resource == null || !resource.exists() || !resource.isReadable()) {
+//			return ResponseEntity.notFound().build();
+//		}
+//
+//		return ResponseEntity.ok()
+//				.header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
+//				.contentType(MediaType.IMAGE_JPEG)
+//				.body(resource);
+//	}
 
 	 
 //	@GetMapping("/files/{idFile}")

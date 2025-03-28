@@ -2551,8 +2551,8 @@ public class POIExcel {
 		XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
 		XSSFSheet sheet = wb.getSheetAt(0);
 		
-		Date dateStart = Date.valueOf("2025-01-03");
-		Date dateEnd = Date.valueOf("2025-01-08");
+//		Date dateStart = Date.valueOf("2025-01-03");
+//		Date dateEnd = Date.valueOf("2025-01-08");
 		
 		for (int i = 1; i < sheet.getLastRowNum() + 1; i++) {
 			XSSFRow rowI = sheet.getRow(i);
@@ -2578,72 +2578,101 @@ public class POIExcel {
 	        XSSFCell cellQuant= rowI.getCell(22);
 	        XSSFCell cellValueQuant= rowI.getCell(23);
 	        
+	        Schedule schedule = new Schedule();
+			schedule.setCounterpartyCode(Long.parseLong(getCellValue(cellCodeCounter).split("\\.")[0]));
+            schedule.setName(getCellValue(cellNameCount));
+            schedule.setCounterpartyContractCode(Long.parseLong(getCellValue(cellNumContract).split("\\.")[0]));
+            schedule.setNote(getCellValue(cellWeek));
+            schedule.setMonday(getCellValue(cellMonday));
+            schedule.setTuesday(getCellValue(cellTuesday));
+            schedule.setWednesday(getCellValue(cellWednesday));
+            schedule.setThursday(getCellValue(cellThursday));
+            schedule.setFriday(getCellValue(cellFriday));
+            schedule.setSaturday(getCellValue(cellSaturday));
+            schedule.setSunday(getCellValue(cellSunday));
+            schedule.setSupplies(Integer.parseInt(getCellValue(cellNumPost).split("\\.")[0]));
+            schedule.setStatus(20);
+            schedule.setNumStock(Integer.parseInt(getCellValue(cellNumStock).split("\\.")[0]));
+            schedule.setQuantum(Double.parseDouble(getCellValue(cellQuant)));
+            schedule.setCodeNameOfQuantumCounterparty(getCellValue(cellNameQuant));
+            schedule.setQuantumMeasurements(getCellValue(cellValueQuant));
+            schedule.setToType(getCellValue(cellStockType));
+            schedule.setIsDayToDay(getCellValue(cellDayToDay) != null ? getCellValue(cellDayToDay).equals("true") : null);
+//            schedule.setStartDateTemp(dateStart);
+//            schedule.setEndDateTemp(dateEnd);			
+            schedule.setDateLoadExcel(Timestamp.valueOf(LocalDateTime.now()));
+            schedule.setIsNotCalc(false);
+            schedule.setIsImport(false);
+            schedule.setType("ТО"); //кирилица
+            schedule.setNameStock(getCellValue(cellAddressStock));
+			scheduleService.saveSchedule(schedule);
+	        
 			
-	        List<Schedule> existingSchedules = scheduleService.getScheduleByNumContractAndNUmStockWithTemp(Long.parseLong(getCellValue(cellNumContract).split("\\.")[0]), Integer.parseInt(getCellValue(cellNumStock).split("\\.")[0]));
-	        if(existingSchedules.size() == 1) {
-	        	Schedule schedule = new Schedule();
-				schedule.setCounterpartyCode(Long.parseLong(getCellValue(cellCodeCounter).split("\\.")[0]));
-	            schedule.setName(getCellValue(cellNameCount));
-	            schedule.setCounterpartyContractCode(Long.parseLong(getCellValue(cellNumContract).split("\\.")[0]));
-	            schedule.setNote(getCellValue(cellWeek));
-	            schedule.setMonday(getCellValue(cellMonday));
-	            schedule.setTuesday(getCellValue(cellTuesday));
-	            schedule.setWednesday(getCellValue(cellWednesday));
-	            schedule.setThursday(getCellValue(cellThursday));
-	            schedule.setFriday(getCellValue(cellFriday));
-	            schedule.setSaturday(getCellValue(cellSaturday));
-	            schedule.setSunday(getCellValue(cellSunday));
-	            schedule.setSupplies(Integer.parseInt(getCellValue(cellNumPost).split("\\.")[0]));
-	            schedule.setStatus(20);
-	            schedule.setNumStock(Integer.parseInt(getCellValue(cellNumStock).split("\\.")[0]));
-	            schedule.setQuantum(Double.parseDouble(getCellValue(cellQuant)));
-	            schedule.setCodeNameOfQuantumCounterparty(getCellValue(cellNameQuant));
-	            schedule.setQuantumMeasurements(getCellValue(cellValueQuant));
-	            schedule.setToType(getCellValue(cellStockType));
-	            schedule.setIsDayToDay(getCellValue(cellDayToDay) != null ? getCellValue(cellDayToDay).equals("true") : null);
-	            schedule.setStartDateTemp(dateStart);
-	            schedule.setEndDateTemp(dateEnd);			
-	            schedule.setDateLoadExcel(Timestamp.valueOf(LocalDateTime.now()));
-	            schedule.setIsNotCalc(false);
-	            schedule.setIsImport(false);
-	            schedule.setType("ТО"); //кирилица
-	            schedule.setNameStock(getCellValue(cellAddressStock));
-				scheduleService.saveSchedule(schedule);
-	        }else {
-	        	for (Schedule sch : existingSchedules) {
-					if (sch.getEndDateTemp() != null) { //значит временный существует!
-						Schedule schedule = sch;
-						schedule.setIdSchedule(sch.getIdSchedule());
-						schedule.setCounterpartyCode(Long.parseLong(getCellValue(cellCodeCounter).split("\\.")[0]));
-			            schedule.setName(getCellValue(cellNameCount));
-			            schedule.setCounterpartyContractCode(Long.parseLong(getCellValue(cellNumContract).split("\\.")[0]));
-			            schedule.setNote(getCellValue(cellWeek));
-			            schedule.setMonday(getCellValue(cellMonday));
-			            schedule.setTuesday(getCellValue(cellTuesday));
-			            schedule.setWednesday(getCellValue(cellWednesday));
-			            schedule.setThursday(getCellValue(cellThursday));
-			            schedule.setFriday(getCellValue(cellFriday));
-			            schedule.setSaturday(getCellValue(cellSaturday));
-			            schedule.setSunday(getCellValue(cellSunday));
-			            schedule.setSupplies(Integer.parseInt(getCellValue(cellNumPost).split("\\.")[0]));
-			            schedule.setStatus(20);
-			            schedule.setNumStock(Integer.parseInt(getCellValue(cellNumStock).split("\\.")[0]));
-			            schedule.setQuantum(Double.parseDouble(getCellValue(cellQuant)));
-			            schedule.setCodeNameOfQuantumCounterparty(getCellValue(cellNameQuant));
-			            schedule.setQuantumMeasurements(getCellValue(cellValueQuant));
-			            schedule.setToType(getCellValue(cellStockType));
-			            schedule.setIsDayToDay(getCellValue(cellDayToDay) != null ? getCellValue(cellDayToDay).equals("true") : null);
-			            schedule.setStartDateTemp(dateStart);
-			            schedule.setEndDateTemp(dateEnd);			
-			            schedule.setDateLoadExcel(Timestamp.valueOf(LocalDateTime.now()));
-			            schedule.setIsNotCalc(false);
-			            schedule.setIsImport(false);
-			            schedule.setType("ТО"); //кирилица
-			            schedule.setNameStock(getCellValue(cellAddressStock));
-						scheduleService.updateSchedule(schedule);
-					}
-				}
-	        }
+//	        List<Schedule> existingSchedules = scheduleService.getScheduleByNumContractAndNUmStockWithTemp(Long.parseLong(getCellValue(cellNumContract).split("\\.")[0]), Integer.parseInt(getCellValue(cellNumStock).split("\\.")[0]));
+//	        if(existingSchedules.size() == 1) {
+//	        	Schedule schedule = new Schedule();
+//				schedule.setCounterpartyCode(Long.parseLong(getCellValue(cellCodeCounter).split("\\.")[0]));
+//	            schedule.setName(getCellValue(cellNameCount));
+//	            schedule.setCounterpartyContractCode(Long.parseLong(getCellValue(cellNumContract).split("\\.")[0]));
+//	            schedule.setNote(getCellValue(cellWeek));
+//	            schedule.setMonday(getCellValue(cellMonday));
+//	            schedule.setTuesday(getCellValue(cellTuesday));
+//	            schedule.setWednesday(getCellValue(cellWednesday));
+//	            schedule.setThursday(getCellValue(cellThursday));
+//	            schedule.setFriday(getCellValue(cellFriday));
+//	            schedule.setSaturday(getCellValue(cellSaturday));
+//	            schedule.setSunday(getCellValue(cellSunday));
+//	            schedule.setSupplies(Integer.parseInt(getCellValue(cellNumPost).split("\\.")[0]));
+//	            schedule.setStatus(20);
+//	            schedule.setNumStock(Integer.parseInt(getCellValue(cellNumStock).split("\\.")[0]));
+//	            schedule.setQuantum(Double.parseDouble(getCellValue(cellQuant)));
+//	            schedule.setCodeNameOfQuantumCounterparty(getCellValue(cellNameQuant));
+//	            schedule.setQuantumMeasurements(getCellValue(cellValueQuant));
+//	            schedule.setToType(getCellValue(cellStockType));
+//	            schedule.setIsDayToDay(getCellValue(cellDayToDay) != null ? getCellValue(cellDayToDay).equals("true") : null);
+//	            schedule.setStartDateTemp(dateStart);
+//	            schedule.setEndDateTemp(dateEnd);			
+//	            schedule.setDateLoadExcel(Timestamp.valueOf(LocalDateTime.now()));
+//	            schedule.setIsNotCalc(false);
+//	            schedule.setIsImport(false);
+//	            schedule.setType("ТО"); //кирилица
+//	            schedule.setNameStock(getCellValue(cellAddressStock));
+//				scheduleService.saveSchedule(schedule);
+//	        }else {
+//	        	for (Schedule sch : existingSchedules) {
+//					if (sch.getEndDateTemp() != null) { //значит временный существует!
+//						Schedule schedule = sch;
+//						schedule.setIdSchedule(sch.getIdSchedule());
+//						schedule.setCounterpartyCode(Long.parseLong(getCellValue(cellCodeCounter).split("\\.")[0]));
+//			            schedule.setName(getCellValue(cellNameCount));
+//			            schedule.setCounterpartyContractCode(Long.parseLong(getCellValue(cellNumContract).split("\\.")[0]));
+//			            schedule.setNote(getCellValue(cellWeek));
+//			            schedule.setMonday(getCellValue(cellMonday));
+//			            schedule.setTuesday(getCellValue(cellTuesday));
+//			            schedule.setWednesday(getCellValue(cellWednesday));
+//			            schedule.setThursday(getCellValue(cellThursday));
+//			            schedule.setFriday(getCellValue(cellFriday));
+//			            schedule.setSaturday(getCellValue(cellSaturday));
+//			            schedule.setSunday(getCellValue(cellSunday));
+//			            schedule.setSupplies(Integer.parseInt(getCellValue(cellNumPost).split("\\.")[0]));
+//			            schedule.setStatus(20);
+//			            schedule.setNumStock(Integer.parseInt(getCellValue(cellNumStock).split("\\.")[0]));
+//			            schedule.setQuantum(Double.parseDouble(getCellValue(cellQuant)));
+//			            schedule.setCodeNameOfQuantumCounterparty(getCellValue(cellNameQuant));
+//			            schedule.setQuantumMeasurements(getCellValue(cellValueQuant));
+//			            schedule.setToType(getCellValue(cellStockType));
+//			            schedule.setIsDayToDay(getCellValue(cellDayToDay) != null ? getCellValue(cellDayToDay).equals("true") : null);
+//			            schedule.setStartDateTemp(dateStart);
+//			            schedule.setEndDateTemp(dateEnd);			
+//			            schedule.setDateLoadExcel(Timestamp.valueOf(LocalDateTime.now()));
+//			            schedule.setIsNotCalc(false);
+//			            schedule.setIsImport(false);
+//			            schedule.setType("ТО"); //кирилица
+//			            schedule.setNameStock(getCellValue(cellAddressStock));
+//						scheduleService.updateSchedule(schedule);
+//					}
+//				}
+//	        }
 	        
 	        
 			

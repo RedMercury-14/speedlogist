@@ -1,5 +1,5 @@
 import { AG_GRID_LOCALE_RU } from './AG-Grid/ag-grid-locale-RU.js'
-import { cell, gridColumnLocalState, gridFilterLocalState, ResetStateToolPanel } from './AG-Grid/ag-grid-utils.js'
+import { gridColumnLocalState, gridFilterLocalState, ResetStateToolPanel, SubmitButtonTextEditor } from './AG-Grid/ag-grid-utils.js'
 import { ajaxUtils } from './ajaxUtils.js'
 import { getReviewsBaseUrl, updateUserReviewUrl } from './globalConstants/urls.js'
 import { snackbar } from './snackbar/snackbar.js'
@@ -42,12 +42,12 @@ const columnDefs = [
 		headerName: 'Ответ', field: 'replyBody', flex: 4,
 		cellClass: (params) => params && params.data.needReply && !params.data.replyBody ? 'px-2 text-center border-info' : 'px-2 text-center',
 		editable: (params) => isAdmin(role) || isObserver(role) && params.data.needReply && params.data.email && !params.data.replyBody,
-		cellEditor: 'agLargeTextCellEditor',
+		cellEditor: SubmitButtonTextEditor,
 		cellEditorPopup: true,
 		onCellValueChanged: updateReview,
 		cellEditorParams: {
-        	maxLength: 10000000, // схуяли стояло 200 по дефолту?!
-    	},
+			maxLength: 10000000,
+		},
 	},
 	{ headerName: 'Автор ответа', field: 'replyAuthor', },
 	{
@@ -57,12 +57,12 @@ const columnDefs = [
 	{
 		headerName: 'Комментарий', field: 'comment',
 		editable: isAdmin(role) || isObserver(role),
-		cellEditor: 'agLargeTextCellEditor',
+		cellEditor: SubmitButtonTextEditor,
 		cellEditorPopup: true,
 		onCellValueChanged: updateReview,
 		cellEditorParams: {
-        	maxLength: 10000000, // схуяли стояло 200 по дефолту?!
-    	},
+			maxLength: 10000000,
+		},
 	},
 ]
 

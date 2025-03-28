@@ -436,12 +436,9 @@ export const updateUserReviewUrl = '/speedlogist/api/reviews/update-review'
 
 
 ///////////////////////////////////////////////
-//Отдел качества
+// Отдел качества
 ///////////////////////////////////////////////
-export const getAllAcceptanceQualityFoodCardUrl = '/tsd/getAllAcceptanceQualityFoodCard'
-export const closedAcceptanceQualityUrl = '/tsd/closedAcceptanceQuality'
-export const inProcessAcceptanceQualityUrl = '/tsd/inProcessAcceptanceQuality'
-export const unprocessedAcceptanceQualityUrl = '/tsd/unprocessedAcceptanceQuality'
-// export const unprocessedAcceptanceQualityUrl = '/tsd/files/'
-
-
+export const getUnprocessedAcceptanceQualityUrl = '/speedlogist/tsd/unprocessedAcceptanceQuality'
+export const getInProcessAcceptanceQualityUrl = '/speedlogist/tsd/inProcessAcceptanceQuality'
+export const getClosedAcceptanceQualityBaseUrl = '/speedlogist/tsd/closedAcceptanceQuality'
+export const getAllAcceptanceQualityFoodCardUrl = '/speedlogist/tsd/getAllAcceptanceQualityFoodCard'

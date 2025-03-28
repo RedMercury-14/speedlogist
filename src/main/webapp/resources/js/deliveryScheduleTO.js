@@ -55,6 +55,14 @@ let counterpartyContractCodeList
 let NOW_MS = new Date().getTime()
 
 const columnDefs = [
+	{
+		field: '', colId: 'selectionRow',
+		width: 30,
+		pinned: 'left', lockPinned: true,
+		checkboxSelection: true,
+		suppressMovable: true, suppressMenu: true,
+		resizable: false, sortable: false, filter: false,
+	},
 	...deliveryScheduleColumnDefs,
 	{
 		headerName: 'Пост-й/Врем-й график', field: 'isTempSchedule',
@@ -159,6 +167,7 @@ const gridOptions = {
 		wrapHeaderText: true,
 		autoHeaderHeight: true,
 	},
+	rowSelection: 'multiple',
 	suppressRowClickSelection: true,
 	enableBrowserTooltips: true,
 	localeText: AG_GRID_LOCALE_RU,
@@ -395,6 +404,8 @@ function getContextMenuItems(params) {
 	const status = rowNode.data.status
 	const isTempSchedule = rowNode.data.isTempSchedule === 'Временный'
 
+	const selectedRowNodes = params.api.getSelectedNodes()
+
 	const confirmUnconfirmItems = status === 10 || status === 0
 		? [
 			{
@@ -408,6 +419,20 @@ function getContextMenuItems(params) {
 						action: async () => {
 							await confirmScheduleItem(rowNode)
 							!isTempSchedule && await confirmTempScheduleItem(rowNode)
+						},
+					},
+					{
+						name: `Подтвердить ВЫДЕЛЕННЫЕ графики`,
+						disabled: !isAdmin(role) && !isORL(role) && !isOrderSupport(role)
+								|| !selectedRowNodes.length
+								|| !areAllStatusesMatch(selectedRowNodes),
+						action: async () => {
+							await Promise.allSettled(selectedRowNodes.map( async (rowNode) => {
+								const isTempSchedule = rowNode.data.isTempSchedule === 'Временный'
+								await confirmScheduleItem(rowNode)
+								!isTempSchedule && await confirmTempScheduleItem(rowNode)
+							}))
+							params.api.deselectAll()
 						},
 					},
 					{
@@ -431,6 +456,20 @@ function getContextMenuItems(params) {
 						action: async () => {
 							await unconfirmScheduleItem(rowNode)
 							!isTempSchedule && await unconfirmTempScheduleItem(rowNode)
+						},
+					},
+					{
+						name: `Снять подтверждение с ВЫДЕЛЕННЫХ графиков`,
+						disabled: !isAdmin(role) && !isORL(role) && !isOrderSupport(role)
+								|| !selectedRowNodes.length
+								|| !areAllStatusesMatch(selectedRowNodes),
+						action: async () => {
+							await Promise.allSettled(selectedRowNodes.map( async (rowNode) => {
+								const isTempSchedule = rowNode.data.isTempSchedule === 'Временный'
+								await unconfirmScheduleItem(rowNode)
+								!isTempSchedule && await unconfirmTempScheduleItem(rowNode)
+							}))
+							params.api.deselectAll()
 						},
 					},
 					{
@@ -502,6 +541,20 @@ function getContextMenuItems(params) {
 					name: `Удалить ВСЕ ВРЕМЕННЫЕ графики по текущему коду контракта`,
 					action: () => {
 						deleteTempScheduleItemsByContract(rowNode)
+					},
+				},
+				{
+					name: `Удалить ВЫДЕЛЕННЫЕ графики`,
+					disabled: !isAdmin(role) && !isORL(role) && !isOrderSupport(role)
+								|| !selectedRowNodes.length
+								|| !areAllStatusesMatch(selectedRowNodes),
+					action: async () => {
+						await Promise.allSettled(selectedRowNodes.map( async (rowNode) => {
+							const isTempSchedule = rowNode.data.isTempSchedule === 'Временный'
+							await deleteScheduleItem(rowNode)
+							!isTempSchedule && await deleteTempScheduleItem(rowNode)
+						}))
+						params.api.deselectAll()
 					},
 				},
 				{
@@ -1383,4 +1436,11 @@ function setSchedulesTONewsCookie(value) {
 	let date = new Date(Date.now() + 31562e7)
 	date = date.toUTCString()
 	cookieHelper.setCookie('_SchedulesTONews1', value, { expires: date, })
+}
+
+// проверка совпадения всех статусов
+function areAllStatusesMatch(rowNodes) {
+	if (rowNodes.length === 0) return false
+	const firstStatus = rowNodes[0].data.status
+	return rowNodes.every(rowNode => rowNode.data.status === firstStatus)
 }

@@ -89,6 +89,15 @@ public class PDFWriter {
         return new String(decryptedBytes);
     }
 	
+    /**
+     * Метод отвечает за формирование заявки в пдф (сохраняет в указанную директорию)
+     * @param request
+     * @param route
+     * @param user
+     * @return
+     * @throws FileNotFoundException
+     * @throws DocumentException
+     */
 	public int getProposal(HttpServletRequest request, Route route, User user) throws FileNotFoundException, DocumentException {
 	    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 	    DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");

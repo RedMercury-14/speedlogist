@@ -131,6 +131,7 @@ const detailGridOptions = {
 		autoHeight: true,
 		resizable: true,
 		flex: 2,
+		minWidth: 100,
 		suppressMenu: true,
 		wrapHeaderText: true,
 		autoHeaderHeight: true,

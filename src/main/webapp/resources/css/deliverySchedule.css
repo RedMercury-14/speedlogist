@@ -174,8 +174,7 @@ footer.to-bottom {
 }
 @media (max-width: 768px) {
 	#myGrid {
-		height: calc(100vh - 280px);
-		margin-bottom: 53px;
+		height: calc(100vh - 172px);
 	}
 	.container.my-container {
 		padding: 0;

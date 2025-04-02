@@ -280,6 +280,7 @@ export const getStockRemainderUrl = '/speedlogist/api/order-support/getStockRema
 export const setNewBalanceBaseUrl = '/speedlogist/api/order-support/setNewBalance/'
 export const setMaxDayBaseUrl = '/speedlogist/api/order-support/setMaxDay/'
 export const changeExceptionBaseUrl = '/speedlogist/api/order-support/changeException/'
+export const blockProductUrl = '/speedlogist/api/order-support/blockProduct'
 
 
 ///////////////////////////////////////////////
@@ -442,3 +443,4 @@ export const getUnprocessedAcceptanceQualityUrl = '/speedlogist/tsd/unprocessedA
 export const getInProcessAcceptanceQualityUrl = '/speedlogist/tsd/inProcessAcceptanceQuality'
 export const getClosedAcceptanceQualityBaseUrl = '/speedlogist/tsd/closedAcceptanceQuality'
 export const getAllAcceptanceQualityFoodCardUrl = '/speedlogist/tsd/getAllAcceptanceQualityFoodCard'
+export const aproofQualityFoodCardUrl = '/speedlogist/tsd/aproofQualityFoodCard'

@@ -49,7 +49,8 @@ public class AcceptanceFoodQuality {
     private Integer qualityProcessStatus;
 
     @OneToMany(mappedBy = "acceptanceFoodQuality", fetch = FetchType.LAZY)
-    @JsonManagedReference
+    @JsonBackReference
+    @JsonIgnore
     private Set<AcceptanceFoodQualityUser> acceptanceFoodQualityUsers;
 
     @OneToMany(mappedBy = "acceptanceFoodQuality", fetch = FetchType.LAZY)
@@ -136,5 +137,13 @@ public class AcceptanceFoodQuality {
     public void setAcceptanceQualityFoodCardSet(Set<AcceptanceQualityFoodCard> acceptanceQualityFoodCardSet) {
         this.acceptanceQualityFoodCardSet = acceptanceQualityFoodCardSet;
     }
+
+	@Override
+	public String toString() {
+		return "AcceptanceFoodQuality [idAcceptanceFoodQuality=" + idAcceptanceFoodQuality + ", pauseStatus="
+				+ pauseStatus + ", datePause=" + datePause + ", qualityProcessStatus=" + qualityProcessStatus + "]";
+	}
+
+	
 
 }

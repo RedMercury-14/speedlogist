@@ -53,6 +53,44 @@
 		<div id="snackbar"></div>
 	</div>
 
+	<div class="modal fade" id="blockProductModal" tabindex="-1" role="dialog" aria-labelledby="blockProductModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-lg" role="document">
+			<div class="modal-content p-0">
+				<div class="modal-header bg-color text-white">
+					<h5 class="modal-title" id="blockProductModalLabel">Блокировка товара</h5>
+					<button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<form class="" id="blockProductForm">
+					<div class="modal-body">
+						<input type="hidden" name="idProduct" id="idProduct">
+
+						<div class="row">
+							<div class="col-md-6">
+								<div class="form-group">
+									<label class="text-muted font-weight-bold mb-1" for="dateStart">Дата начала блокировки</label>
+									<input type="date" name="dateStart" id="dateStart" class="form-control">
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="form-group">
+									<label class="text-muted font-weight-bold mb-1" for="dateFinish">Дата окончания блокировки</label>
+									<input type="date" name="dateFinish" id="dateFinish" class="form-control">
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-primary">Сохранить</button>
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
 	<script src='${pageContext.request.contextPath}/resources/js/mainPage/nav-fixed-top.js'></script>
 	<script src="${pageContext.request.contextPath}/resources/js/orderSupportControlLogist.js" type="module"></script>
 </body>

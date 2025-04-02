@@ -686,7 +686,7 @@ public class ReaderSchedulePlan {
 			 System.err.println("ReaderSchedulePlan.process: numContract = null");
 			 return new PlanResponce(0, "Действие заблокировано!\nНе найден номер контракта в заказе");
 		 }
-		 Date dateNow = Date.valueOf(LocalDate.now());
+		 
 		 String infoRow = "Строк в заказе: " + lines.size();
 		 Integer factStock = Integer.parseInt(getTrueStock(order)); //фактическое значение склада взятое из номера рампы
 		 for (OrderLine line : lines) {// переделать используя список!
@@ -710,6 +710,25 @@ public class ReaderSchedulePlan {
 				 
 			 }
 		 }
+		 
+		 //реализация специальной проверки на запрет постановки слотов, которые блокируются спец полями
+		 LocalDate dateNow = LocalDate.now();
+		 for (Entry<Integer,Product> entry : products.entrySet()) {
+			 if(entry.getValue().getBlockDateStart() != null && entry.getValue().getBlockDateFinish() != null) {
+				 LocalDate dateStart = entry.getValue().getBlockDateStart().toLocalDate();
+				 LocalDate dateFinish = entry.getValue().getBlockDateFinish().toLocalDate();
+				 if (!dateNow.isBefore(dateStart) && !dateNow.isAfter(dateFinish)) {
+					    return new PlanResponce(0, "Действие заблокировано!\n Создание слота на товар " + entry.getValue().getCodeProduct() + " - " + entry.getValue().getName() + " запрещено с "
+					    		+ dateStart.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + " по "
+					    		+ dateFinish.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + " в связи с проведением инвентаризации для разделения 1 товар - 1 GTIN.");
+					}
+			 }else {
+				 continue;
+			 }
+			 
+			 
+		 }
+		 
 		 
 //		 products.forEach(p-> System.out.println(p));
 		 

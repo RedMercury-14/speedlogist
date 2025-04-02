@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 @Repository
 public class AcceptanceQualityFoodCardImageUrlDAOImpl implements AcceptanceQualityFoodCardImageUrlDAO {
@@ -46,4 +47,15 @@ public class AcceptanceQualityFoodCardImageUrlDAOImpl implements AcceptanceQuali
         query.setParameter("idAcceptanceQualityFoodCardImageUrl", idAcceptanceQualityFoodCardImageUrl);
         return query.getSingleResult();
     }
+
+    
+    private static final String queryGetMapCardImage = "SELECT image from AcceptanceQualityFoodCardImageUrl image "
+			+ "where ol.goodsId IN (:goodsIds)"
+			+ "and o.dateDelivery is not null "
+			+ "ORDER BY o.dateDelivery DESC";
+	@Override
+	public Map<Long, List<AcceptanceQualityFoodCardImageUrl>> getMapCardImage(List<Long> idAcceptanceQualityFoodCard) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

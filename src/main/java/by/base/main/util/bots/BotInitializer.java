@@ -17,6 +17,7 @@ public class BotInitializer {
 	private TelegramBot bot;
 	private TelegramBotRouting botRouting;
 	private TelegramBotRoutingTEST botRoutingTEST;
+	private TelegrammBotQuantityYard botQuantityYard;
 	
 	public BotInitializer(TelegramBot bot) {
 		this.bot = bot;
@@ -27,6 +28,10 @@ public class BotInitializer {
 	public BotInitializer(TelegramBotRoutingTEST botRoutingTEST) {
 		this.botRoutingTEST = botRoutingTEST;
 	}
+	public BotInitializer(TelegrammBotQuantityYard botQuantityYard) {
+		this.botQuantityYard = botQuantityYard;
+	}
+	
 
 	@EventListener({ ContextRefreshedEvent.class })
 	public void init() {
@@ -61,6 +66,18 @@ public class BotInitializer {
 			TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);			
 			telegramBotsApi.registerBot((LongPollingBot) botRoutingTEST);
 			System.out.println("TelegramBotRoutingTEST запущен");			
+		} catch (TelegramApiException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	@EventListener({ ContextRefreshedEvent.class })
+	public void initBotQuantityYard() {
+		
+		try {			
+			TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);			
+			telegramBotsApi.registerBot((LongPollingBot) botQuantityYard);
+			System.out.println("BotQuantityYard запущен");			
 		} catch (TelegramApiException e) {
 			e.printStackTrace();
 		}

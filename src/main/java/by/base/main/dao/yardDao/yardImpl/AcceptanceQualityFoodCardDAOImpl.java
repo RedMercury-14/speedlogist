@@ -28,7 +28,6 @@ public class AcceptanceQualityFoodCardDAOImpl implements AcceptanceQualityFoodCa
     @Transactional(transactionManager = "myTransactionManagerYard")
     public List<AcceptanceQualityFoodCard> getAllByAcceptanceFoodQuality(AcceptanceFoodQuality acceptanceFoodQuality) {
         Session session = sessionFactoryYard.getCurrentSession();
-
         Query<AcceptanceQualityFoodCard> query = session.createQuery(GET_ALL_BY_ACCEPTANCE_FOOD_QUAILITY, AcceptanceQualityFoodCard.class);
         query.setParameter("acceptanceFoodQuality",acceptanceFoodQuality);
         return query.getResultList();
@@ -50,6 +49,38 @@ public class AcceptanceQualityFoodCardDAOImpl implements AcceptanceQualityFoodCa
 
         return query.uniqueResult();
     }
+    
+    private static final String querryGetFoodCardByIdFoodQuality = "SELECT DISTINCT card FROM AcceptanceQualityFoodCard card " +
+            "LEFT JOIN FETCH card.internalDefectsQualityCardList " +
+            "LEFT JOIN FETCH card.lightDefectsQualityCardList " +
+            "LEFT JOIN FETCH card.totalDefectQualityCardList " +
+            "LEFT JOIN FETCH card.acceptanceFoodQuality " +
+            "LEFT JOIN FETCH card.acceptanceQualityFoodCardImageUrls " +
+            "WHERE card.acceptanceFoodQuality.idAcceptanceFoodQuality = :acceptanceFoodQuality";
+    @Override
+    @Transactional(transactionManager = "myTransactionManagerYard")
+	public List<AcceptanceQualityFoodCard> getFoodCardByIdFoodQuality(Long idAcceptanceFoodQuality) {
+    	Session session = sessionFactoryYard.getCurrentSession();
+    	Query<AcceptanceQualityFoodCard> theObject = session.createQuery(querryGetFoodCardByIdFoodQuality, AcceptanceQualityFoodCard.class);
+		theObject.setParameter("acceptanceFoodQuality", idAcceptanceFoodQuality);
+		List<AcceptanceQualityFoodCard> orders = theObject.getResultList();
+		return orders;
+	}
+
+	@Override
+	public int save(AcceptanceQualityFoodCard acceptanceQualityFoodCard) {
+		Session currentSession = sessionFactoryYard.getCurrentSession();
+		currentSession.save(acceptanceQualityFoodCard);
+		return Integer.parseInt(currentSession.getIdentifier(acceptanceQualityFoodCard).toString());
+	}
+
+	@Override
+	public void update(AcceptanceQualityFoodCard acceptanceQualityFoodCard) {
+		Session currentSession = sessionFactoryYard.getCurrentSession();
+		currentSession.update(acceptanceQualityFoodCard);
+	}
+
+	
 
 }
 

@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
@@ -806,210 +807,237 @@ public class ScheduledTask {
     @Scheduled(cron = "0 0,30 8-21 * * MON-SAT")
 	public void checkPalletsDifference() throws ParseException, IOException {
     	if(isRatRun) {
-			Map<String, String> resultMap = new HashMap<>();
-			Map<String, Order> responseMap = new HashMap<>();
-			java.util.Date t1 = new java.util.Date();
-			System.err.println("ТАРАКАААААН");
-			Date startDate = Date.valueOf(LocalDate.now());
-			Date finishDate = Date.valueOf(LocalDate.now().plusDays(14));
-			String appPath = servletContext.getRealPath("/");
+            Map<String, String> resultMap = new HashMap<>();
+             Map<String, Order> responseMap = new HashMap<>();
+             java.util.Date t1 = new java.util.Date();
+             System.err.println("ТАРАКАААААН");
+             Date startDate = Date.valueOf(LocalDate.now());
+             Date finishDate = Date.valueOf(LocalDate.now().plusDays(14));
+             String appPath = servletContext.getRealPath("/");
 
-			List<Order> orders = orderService.getOrderByTimeDelivery(startDate, finishDate);
+             List<Order> orders = orderService.getOrderByTimeDelivery(startDate, finishDate);
 
-//       orders.forEach(o-> System.out.println("ТАРАКАААААН - 1 - " + o.getMarketNumber()));
-//       System.out.println("ТАРАКАААААН - 1 - " + orders.size());
-//       System.out.println("");
+//          orders.forEach(o-> System.out.println("ТАРАКАААААН - 1 - " + o.getMarketNumber()));
+//          System.out.println("ТАРАКАААААН - 1 - " + orders.size());
+//          System.out.println("");
 
-			List<Order> filteredOrders = orders.stream()
-					.filter(o -> o.getMarketNumber() != null)
-					.filter(o -> Optional.ofNullable(o.getWay()).stream().noneMatch("АХО"::equals))
-					.distinct().collect(Collectors.toList()); // .toList()
+             List<Order> filteredOrders = orders.stream()
+                   .filter(o -> o.getMarketNumber() != null)
+                   .filter(o -> Optional.ofNullable(o.getWay()).stream().noneMatch("АХО"::equals))
+                   .distinct().collect(Collectors.toList()); // .toList()
 
-			//создаём мапу marketNumber - order и заполняем лист с marketNumber
-			Map<String, Order> ordersFromDB = new HashMap<>();
-			for (Order order : filteredOrders) {
-				ordersFromDB.put(order.getMarketNumber(), order);
-			}
+             //создаём мапу marketNumber - order и заполняем лист с marketNumber
+             Map<String, Order> ordersFromDB = new HashMap<>();
+             for (Order order : filteredOrders) {
+                ordersFromDB.put(order.getMarketNumber(), order);
+             }
 
-			ordersFromDB.forEach((k,v)-> System.out.println("ТАРАКАААААН - 2 - " + k + " " + v));
-			System.out.println("ТАРАКАААААН - 2 - " + ordersFromDB.size());
-			System.out.println("");
+             ordersFromDB.forEach((k, v) -> System.out.println("ТАРАКАААААН - 2 - " + k + " " + v));
+             System.out.println("ТАРАКАААААН - 2 - " + ordersFromDB.size());
+             System.out.println("");
 
-			String result = String.join(",", ordersFromDB.keySet());
-			try {
-				checkJWT(mainRestController.marketUrl);
-			} catch (Exception e) {
-				System.err.println("Ошибка получения jwt токена");
-			}
+             String result = String.join(",", ordersFromDB.keySet());
+             try {
+                checkJWT(MainRestController.marketUrl);
+             } catch (Exception e) {
+                System.err.println("Ошибка получения jwt токена");
+             }
 
-			Object[] goodsId = result.split(",");
+             Object[] goodsId = result.split(",");
 
-			Map<String, Order> response = new HashMap<String, Order>();
-			MarketDataArrayForRequestDto dataDto3 = new MarketDataArrayForRequestDto(goodsId);
-			MarketPacketDto packetDto3 = new MarketPacketDto(mainRestController.marketJWT, "SpeedLogist.OrderBuyArrayInfoGet", mainRestController.serviceNumber, dataDto3);
-			MarketRequestDto requestDto3 = new MarketRequestDto("", packetDto3);
-			String marketOrder2 = null;
-			try {
-				marketOrder2 = postRequest(mainRestController.marketUrl, gson.toJson(requestDto3));
-			} catch (Exception e) {
-				e.printStackTrace();
-				System.err.println("ERROR : Ошибка запроса к Маркету");
-				System.err.println("marketOrder2 : "+marketOrder2);
-				System.err.println("ERROR DESCRIPTION - " + e.toString());
-			}
+             Map<String, Order> response = new HashMap<String, Order>();
+             MarketDataArrayForRequestDto dataDto3 = new MarketDataArrayForRequestDto(goodsId);
+             MarketPacketDto packetDto3 = new MarketPacketDto(mainRestController.marketJWT, "SpeedLogist.OrderBuyArrayInfoGet", mainRestController.serviceNumber, dataDto3);
+             MarketRequestDto requestDto3 = new MarketRequestDto("", packetDto3);
+             String marketOrder2 = null;
+             try {
+                marketOrder2 = postRequest(mainRestController.marketUrl, gson.toJson(requestDto3));
+             } catch (Exception e) {
+                e.printStackTrace();
+                System.err.println("ERROR : Ошибка запроса к Маркету");
+                System.err.println("marketOrder2 : " + marketOrder2);
+                System.err.println("ERROR DESCRIPTION - " + e.toString());
+             }
 
-			System.out.println("request -> " + gson.toJson(requestDto3));
-			//проверяем на наличие сообщений об ошибке со стороны маркета
-			if(marketOrder2.contains("Error")) {
-				//тут избавляемся от мусора в json
-				System.out.println(marketOrder2);
-//			String str2 = marketOrder2.split("\\[", 2)[1];
-//			String str3 = str2.substring(0, str2.length()-2);
-				MarketErrorDto errorMarket = gson.fromJson(marketOrder2, MarketErrorDto.class);
-//			System.out.println("JSON -> "+str3);
-//			System.out.println(errorMarket);
-				if(errorMarket.getError().equals("99")) {//обработка случая, когда в маркете номера нет, а в бд есть.
+             System.out.println("request -> " + gson.toJson(requestDto3));
+             //проверяем на наличие сообщений об ошибке со стороны маркета
+             if (marketOrder2.contains("Error")) {
+                //тут избавляемся от мусора в json
+                System.out.println(marketOrder2);
+//           String str2 = marketOrder2.split("\\[", 2)[1];
+//           String str3 = str2.substring(0, str2.length()-2);
+                MarketErrorDto errorMarket = gson.fromJson(marketOrder2, MarketErrorDto.class);
+//           System.out.println("JSON -> "+str3);
+//           System.out.println(errorMarket);
+                if (errorMarket.getError().equals("99")) {//обработка случая, когда в маркете номера нет, а в бд есть.
 
-				}
-				System.err.println("ERROR");
-				System.err.println(marketOrder2);
-				System.err.println("ERROR DESCRIPTION - " + errorMarket.getErrorDescription());
-			}
+                }
+                System.err.println("ERROR");
+                System.err.println(marketOrder2);
+                System.err.println("ERROR DESCRIPTION - " + errorMarket.getErrorDescription());
+             }
 
-			System.out.println("Пришло из маркета: " + marketOrder2);
+             System.out.println("Пришло из маркета: " + marketOrder2);
 
-			//создаём свой парсер и парсим json в объекты, с которыми будем работать.
-			CustomJSONParser customJSONParser = new CustomJSONParser();
+             //создаём свой парсер и парсим json в объекты, с которыми будем работать.
+             CustomJSONParser customJSONParser = new CustomJSONParser();
 
-			//создаём лист OrderBuyGroup
-//		Map<Long, OrderBuyGroupDTO> OrderBuyGroupDTOMap = new HashMap<Long, OrderBuyGroupDTO>();
-//		Map<String, Order> ordersFromMarket = new HashMap<String, Order>();
-			JSONParser parser = new JSONParser();
-			JSONObject jsonMainObject = (JSONObject) parser.parse(marketOrder2);
-			JSONArray numShopsJSON = (JSONArray) jsonMainObject.get("OrderBuyGroup");
-			Map<String, List<Order>> ordersWithStatus0 = new HashMap<>();
-			Map<String, List<Order>> ordersWithWrongPallets = new HashMap<>();
+             //создаём лист OrderBuyGroup
+//        Map<Long, OrderBuyGroupDTO> OrderBuyGroupDTOMap = new HashMap<Long, OrderBuyGroupDTO>();
+//        Map<String, Order> ordersFromMarket = new HashMap<String, Order>();
+             JSONParser parser = new JSONParser();
+             JSONObject jsonMainObject = (JSONObject) parser.parse(marketOrder2);
+             JSONArray numShopsJSON = (JSONArray) jsonMainObject.get("OrderBuyGroup");
+             Map<String, List<Order>> ordersWithStatus0 = new HashMap<>();
+             Map<String, List<Order>> ordersWithWrongPallets = new HashMap<>();
 
-			for (Object object : numShopsJSON) {
-				//создаём OrderBuyGroup
-				OrderBuyGroupDTO orderBuyGroupDTO = customJSONParser.parseOrderBuyGroupFromJSON(object.toString());
-				int checkx = orderBuyGroupDTO.getCheckx();
-				if (checkx == 0 ) {
-					Order order = orderCreater.createSimpleOrder(orderBuyGroupDTO);
-					Order currentOrderFromDB = ordersFromDB.get(order.getMarketNumber());
-					List<Order> list;
-					String loginManager = currentOrderFromDB.getLoginManager();
-					User user = userService.getUserByLogin(loginManager);
+             for (Object object : numShopsJSON) {
+                //создаём OrderBuyGroup
+                OrderBuyGroupDTO orderBuyGroupDTO = customJSONParser.parseOrderBuyGroupFromJSON(object.toString());
+                int checkx = orderBuyGroupDTO.getCheckx();
+                if (checkx == 0) {
+                   Order order = orderCreater.createSimpleOrder(orderBuyGroupDTO);
+                   Order currentOrderFromDB = ordersFromDB.get(order.getMarketNumber());
+                   List<Order> list;
+                   String loginManager = currentOrderFromDB.getLoginManager();
+                   User user = userService.getUserByLogin(loginManager);
 
-					String emailManager = user.geteMail();
-					if(ordersWithStatus0.containsKey(emailManager)) {
-						list = ordersWithStatus0.get(emailManager);
-					} else {
-						list = new ArrayList<>();
-					}
-					list.add(currentOrderFromDB);
-					ordersWithStatus0.put(emailManager,list);
+                   String emailManager = user.geteMail();
+                   if (ordersWithStatus0.containsKey(emailManager)) {
+                      list = ordersWithStatus0.get(emailManager);
+                   } else {
+                      list = new ArrayList<>();
+                   }
+                   list.add(currentOrderFromDB);
+                   ordersWithStatus0.put(emailManager, list);
 
-				} else if (checkx == 50 || checkx == 51) {
-					Order order = orderCreater.createSimpleOrder(orderBuyGroupDTO);
-					responseMap.put(order.getMarketNumber(), order);
-				}
-//			OrderBuyGroupDTOMap.put(orderBuyGroupDTO.getOrderBuyGroupId(), orderBuyGroupDTO);
+                } else if (checkx == 50 || checkx == 51) {
+                   Order order = orderCreater.createSimpleOrder(orderBuyGroupDTO);
+                   responseMap.put(order.getMarketNumber(), order);
+                }
+//           OrderBuyGroupDTOMap.put(orderBuyGroupDTO.getOrderBuyGroupId(), orderBuyGroupDTO);
 
-			}
+             }
 
-			responseMap.forEach((k,v)-> System.out.println("ТАРАКАААААН - 3 - " + k + " " + v));
-			System.out.println("ТАРАКАААААН - 3 - " + responseMap.size());
-			System.out.println("");
+             responseMap.forEach((k, v) -> System.out.println("ТАРАКАААААН - 3 - " + k + " " + v));
+             System.out.println("ТАРАКАААААН - 3 - " + responseMap.size());
+             System.out.println("");
+             
+             System.out.println("EMAIL TEST = " + propertiesUtils.getValuesByPartialKey(servletContext, "email.test").get(0));
 
-			//вычисляем косячные ордеры и раскладываем по соответствующим мапам
+             //вычисляем косячные ордеры и раскладываем по соответствующим мапам
 
-			for(String key: responseMap.keySet()) {
+             for (String key : responseMap.keySet()) {
 
-				double marketAmountOfPallets = 0;
-				Order marketOrder = responseMap.get(key);
-				Set<OrderLine> orderLines = marketOrder.getOrderLines();
-				for(OrderLine orderLine: orderLines) {
-					marketAmountOfPallets += Math.ceil(orderLine.getQuantityOrder()/orderLine.getQuantityPallet());
-				}
-				Order currentOrderFromBD = ordersFromDB.get(key);
-				List<Order> list;
+                double marketAmountOfPallets = 0;
+                Order marketOrder = responseMap.get(key);
+                Set<OrderLine> orderLines = marketOrder.getOrderLines();
 
-				String loginManager = currentOrderFromBD.getLoginManager();
-				User user = userService.getUserByLogin(loginManager);
+                for (OrderLine orderLine : orderLines) {
+                 System.out.println("ТАРАКАААААН - 3.3 - Orderlines pallets " + orderLine.getQuantityPallet());
+                 System.out.println("");
+                 if ((orderLine.getQuantityPallet() != null && orderLine.getQuantityPallet() > 0) && orderLine.getQuantityOrder() != null) {
+                    marketAmountOfPallets += Math.ceil(orderLine.getQuantityOrder() / orderLine.getQuantityPallet());
+                 }
+                }
+                Order currentOrderFromBD = ordersFromDB.get(key);
+                List<Order> list;
 
-				String emailManager = user.geteMail();
-				int DBAmountOfPallets = Integer.parseInt(currentOrderFromBD.getPall());
-				if (DBAmountOfPallets > marketAmountOfPallets) {
-					int d = 0;
-				}
-				if (DBAmountOfPallets < marketAmountOfPallets) {
-					if(ordersWithWrongPallets.containsKey(emailManager)) {
-						list = ordersWithWrongPallets.get(emailManager);
-					} else {
-						list = new ArrayList<>();
-					}
-					list.add(currentOrderFromBD);
-					ordersWithWrongPallets.put(emailManager,list);
-				}
-			}
+                String loginManager = currentOrderFromBD.getLoginManager();
+                User user = userService.getUserByLogin(loginManager);
 
-			//обрабатываем полученные мапы: формируем рассылку и чистим слоты
-			for(String emailManager: ordersWithStatus0.keySet()) {
-				List<Order> orderCheckPalletsDtos = ordersWithStatus0.get(emailManager);
+                String emailManager = user.geteMail();
+              System.out.println("ТАРАКАААААН - 3.4 - DBOrder pallets " + currentOrderFromBD.getPall());
+              System.out.println("");
+                int DBAmountOfPallets = Integer.parseInt(currentOrderFromBD.getPall());
 
-				StringBuilder orderIds = new StringBuilder();
-				for (Order order : orderCheckPalletsDtos) {
-					orderIds.append(order.getIdOrder());
-					orderIds.append(", ");
-				}
-				orderIds.deleteCharAt(orderIds.length() - 1);
-				orderIds.deleteCharAt(orderIds.length() - 1);
+                if (DBAmountOfPallets < marketAmountOfPallets) {
+                   if (ordersWithWrongPallets.containsKey(emailManager)) {
+                      list = ordersWithWrongPallets.get(emailManager);
+                   } else {
+                      list = new ArrayList<>();
+                   }
+                   list.add(currentOrderFromBD);
+                   ordersWithWrongPallets.put(emailManager, list);
+                }
+             }
 
-				List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext,"email.test");
-				String messageText = "Добрый день.\nЗаказы " + orderIds + " находились в статусе 0. Заказы удалены из слотов.";
-				mailService.sendEmailToUsers(appPath, "Информация по заказам", messageText, emailsAdmins);
+          System.out.println("ТАРАКАААААН - 4 - сформированы мапы = " + ordersWithWrongPallets.size());
+          System.out.println("");
 
-				for (Order orderCheckPalletsDto : orderCheckPalletsDtos) {
-//               orderService.deleteSlot(orderCheckPalletsDto.getIdOrder());
-				}
-			}
+             //обрабатываем полученные мапы: формируем рассылку и чистим слоты
+             for (String emailManager : ordersWithStatus0.keySet()) {
+                List<Order> orderCheckPalletsDtos = ordersWithStatus0.get(emailManager);
 
-			for(String emailManager: ordersWithWrongPallets.keySet()) {
-				List<Order> orderCheckPalletsDtos = ordersWithWrongPallets.get(emailManager);
+                StringBuilder orderIds = new StringBuilder();
+                for (Order order : orderCheckPalletsDtos) {
+                   orderIds.append(order.getIdOrder());
+                   orderIds.append(", ");
+                }
+                orderIds.deleteCharAt(orderIds.length() - 1);
+                orderIds.deleteCharAt(orderIds.length() - 1);
+
+                System.out.println("ТАРАКАААААН - 5 - перед рассылкой статусов 0");
+                System.out.println("");
+                
+                List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+                String messageText = "Добрый день.\nЗаказы " + orderIds + " находились в статусе 0. Заказы удалены из слотов.";
+                mailService.sendEmailToUsers(appPath, "Информация по заказам", messageText, emailsAdmins);
+
+                for (Order orderCheckPalletsDto : orderCheckPalletsDtos) {
+//                  orderService.deleteSlot(orderCheckPalletsDto.getIdOrder());
+                }
+                
+             }
+
+             for (String emailManager : ordersWithWrongPallets.keySet()) {
+                List<Order> orderCheckPalletsDtos = ordersWithWrongPallets.get(emailManager);
 
 
-				StringBuilder orderIds = new StringBuilder();
-				for (Order order : orderCheckPalletsDtos) {
-					orderIds.append(order.getIdOrder());
-					orderIds.append(", ");
-				}
-				orderIds.deleteCharAt(orderIds.length() - 1);
-				orderIds.deleteCharAt(orderIds.length() - 1);
+                StringBuilder orderIds = new StringBuilder();
+                for (Order order : orderCheckPalletsDtos) {
+                   orderIds.append(order.getIdOrder());
+                   orderIds.append(", ");
+                }
+                orderIds.deleteCharAt(orderIds.length() - 1);
+                orderIds.deleteCharAt(orderIds.length() - 1);
 
-				List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext,"email.test");
-				//пока что тут мой имейл, потом надо подставить emailManager
+                System.out.println("ТАРАКАААААН - 5 - перед рассылкой косяков паллет");
+                System.out.println("");
+                
+                List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+                //пока что тут мой имейл, потом надо подставить emailManager
 
-				String messageText = "Добрый день.\n" +
-						"В заказах " + orderIds + " количество паллет в маркете больше чем количество паллет в Speedlogist. Заказы удалёны из слотов.";
-				mailService.sendEmailToUsers(appPath, "Информация по заказам", messageText, emailsAdmins);
+                String messageText = "Добрый день.\n" +
+                      "В заказах " + orderIds + " количество паллет в маркете больше чем количество паллет в Speedlogist. Заказы удалёны из слотов.";
+                mailService.sendEmailToUsers(appPath, "Информация по заказам", messageText, emailsAdmins);
 
-				for (Order order : orderCheckPalletsDtos) {
-//               orderService.deleteSlot(orderCheckPalletsDto.getIdOrder());
-				}
-			}
+                for (Order order : orderCheckPalletsDtos) {
+//                  orderService.deleteSlot(orderCheckPalletsDto.getIdOrder());
+                }
+             }
 
-			ordersWithStatus0.forEach((k,v)-> System.out.println("ТАРАКАААААН - ordersWithStatus0 - " + k + " " + v));
-			System.out.println("ТАРАКАААААН - ordersWithStatus0 - " + ordersWithStatus0.size());
-			System.out.println("");
+             ordersWithStatus0.forEach((k, v) -> System.out.println("ТАРАКАААААН - ordersWithStatus0 - " + k + " " + v));
+             System.out.println("ТАРАКАААААН - ordersWithStatus0 - " + ordersWithStatus0.size());
+             System.out.println("");
 
-			ordersWithWrongPallets.forEach((k,v)-> System.out.println("ТАРАКАААААН - ordersWithStatus0 - " + k + " " + v));
-			System.out.println("ТАРАКАААААН - ordersWithWrongPallets - " + ordersWithWrongPallets.size());
-			System.out.println("");
+             ordersWithWrongPallets.forEach((k, v) -> System.out.println("ТАРАКАААААН - ordersWithStatus0 - " + k + " " + v));
+             System.out.println("ТАРАКАААААН - ordersWithWrongPallets - " + ordersWithWrongPallets.size());
+             System.out.println("");
 
-			java.util.Date t3 = new java.util.Date();
-			System.err.println(t3.getTime() - t1.getTime() + " ms");
-    	}
+             java.util.Date t3 = new java.util.Date();
+             System.err.println(t3.getTime() - t1.getTime() + " ms");
+//          responseMap.put("message", "emails sent successfully");
+             resultMap.put("marketOrder2", marketOrder2);
+             System.out.println("+++++++++++++++++++++++++++++++++");
+             String folderPath = appPath + "resources/others/marketorder2.txt";
+             try (FileWriter writer = new FileWriter(folderPath)) {
+                 writer.write(marketOrder2);
+                 System.out.println("Файл успешно записан.");
+             } catch (IOException e) {
+                 System.out.println("Ошибка при записи файла: " + e.getMessage());
+             }
+         }
 	}    
 
     

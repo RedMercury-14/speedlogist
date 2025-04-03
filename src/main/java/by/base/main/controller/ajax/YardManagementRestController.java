@@ -59,15 +59,18 @@ import org.springframework.web.bind.annotation.*;
 
 import com.google.gson.Gson;
 
+import by.base.main.model.Act;
 import by.base.main.model.Address;
 import by.base.main.model.ClientRequest;
 import by.base.main.model.Message;
 import by.base.main.model.Order;
+import by.base.main.model.Route;
 import by.base.main.model.User;
 import by.base.main.service.OrderService;
 import by.base.main.service.UserService;
 import by.base.main.service.util.SocketClient;
 import by.base.main.util.SlotWebSocket;
+import by.base.main.util.bots.TelegrammBotQuantityYard;
 
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -100,6 +103,9 @@ public class YardManagementRestController {
 
 	@Autowired
 	private AcceptanceQualityFoodCardImageUrlService acceptanceQualityFoodCardImageUrlService;
+	
+	@Autowired
+	private TelegrammBotQuantityYard telegrammBotQuantityYard;
 
 	private static final String staticToken = "3d075c53-4fd3-41c3-89fc-a5e5c4a0b25b";
 	
@@ -109,10 +115,14 @@ public class YardManagementRestController {
 	public String urlPart;
 	
 
+	/**
+	 * Метод который запрашивае фото у двора и отдаёт клиенту
+	 * @param id
+	 * @return
+	 */
 	@GetMapping("/files/{id}")
     public ResponseEntity<Resource> getImage(@PathVariable("id") String id) {
         // URL на внешний сервер
-//        String externalUrl = "http://178.163.235.66:14000/quality/files/" + id;
         String externalUrl = urlPart + id;
 
         // Выполняем GET-запрос
@@ -326,9 +336,63 @@ public class YardManagementRestController {
 			@RequestParam("idAcceptanceFoodQuality") Long idAcceptanceFoodQuality) {
 
 		List<AcceptanceQualityFoodCardDTO> acceptanceQualityFoodCardDTOList =
-				acceptanceQualityFoodCardService.getAllAcceptanceQualityFoodCard(idAcceptanceFoodQuality,request);
+				acceptanceQualityFoodCardService.getAllAcceptanceQualityFoodCard(idAcceptanceFoodQuality,request); // этим методом можно получить урлы к фото
 
 		return ResponseEntity.ok(acceptanceQualityFoodCardDTOList);
+	}
+	
+	/**
+	 * Реализация подтверждения карточки товара.
+	 * Записывает сразу в базу данных
+	 * @param request
+	 * @param str
+	 * @return
+	 * @throws ParseException
+	 * @throws IOException
+	 */
+	@PostMapping("/aproofQualityFoodCard")
+	public Map<String, Object> setActStatus(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+		Map<String, Object> response = new HashMap<>();
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		
+		Integer idCard = Integer.parseInt(jsonMainObject.get("idAcceptanceQualityFoodCard").toString());
+		String comment = jsonMainObject.get("comment") != null && !jsonMainObject.get("comment").toString().isEmpty() ? jsonMainObject.get("comment").toString() : null;
+		String percent = jsonMainObject.get("managerPercent") != null && !jsonMainObject.get("managerPercent").toString().isEmpty() ? jsonMainObject.get("managerPercent").toString() : null;
+		Integer status = jsonMainObject.get("status") != null ? Integer.parseInt(jsonMainObject.get("status").toString()) : null;
+		
+		AcceptanceQualityFoodCard foodCard = acceptanceQualityFoodCardService.getByIdAcceptanceQualityFoodCard(idCard.longValue());
+		
+		foodCard.setCardStatus(status);
+		foodCard.setCommentAproof(comment);	
+		
+		acceptanceQualityFoodCardService.save(foodCard);
+		
+		response.put("status", "200");
+		response.put("object", foodCard);
+		return response;
+	}
+	
+	@GetMapping("/acceptanceQualityBot/{id}")
+	public ResponseEntity<List<AcceptanceQualityFoodCardDTO>> getAcceptanceQualityBot(HttpServletRequest request,
+			@PathVariable("id") String idCar) {
+		
+		System.err.println(idCar);
+		
+		List<AcceptanceQualityFoodCard> acceptanceQualityFoodCardList =	acceptanceQualityFoodCardService.getFoodCardByIdFoodQuality(Long.parseLong(idCar)); 
+		
+		
+		
+		for (AcceptanceQualityFoodCard acceptanceQualityFoodCard : acceptanceQualityFoodCardList) {
+//			acceptanceQualityFoodCardDTO
+			for (AcceptanceQualityFoodCardImageUrl acceptanceQualityFoodCardImageUrl : acceptanceQualityFoodCard.getAcceptanceQualityFoodCardImageUrls()) {
+				System.out.println(acceptanceQualityFoodCard.getIdAcceptanceQualityFoodCard() +" --> "+acceptanceQualityFoodCardImageUrl);				
+			}
+		}
+		
+//		telegrammBotQuantityYard.sendMessageWithPhotosToAll("Test", null);
+
+		return null;
 	}
 
 

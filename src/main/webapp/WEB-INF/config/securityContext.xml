@@ -50,7 +50,8 @@
 			<security:intercept-url pattern="/main/reviews" access="permitAll"/>			
 			<security:intercept-url pattern="/main/signin"	access="hasRole('ROLE_ANONYMOUS')" />
 			<security:intercept-url pattern="/main/registration" access="hasAnyRole('ROLE_ANONYMOUS', 'ROLE_ADMIN')" />	
-			<security:intercept-url pattern="/main" access="hasAnyRole('ROLE_ANONYMOUS', 'ROLE_ADMIN', 'ROLE_MANAGER','ROLE_TOPMANAGER', 'ROLE_SHOP', 'ROLE_CARRIER', 'ROLE_STOCK', 'ROLE_PROCUREMENT', 'ROLE_ORDERSUPPORT', 'ROLE_STOCKSUPPORT', 'ROLE_SLOTOBSERVER', 'ROLE_ANALYTICS', 'ROLE_STOCKPROCUREMENT', 'ROLE_ORL', 'ROLE_LOGISTDELIVERY', 'ROLE_SHOW')" />	
+			<security:intercept-url pattern="/main" access="hasAnyRole('ROLE_ANONYMOUS', 'ROLE_ADMIN', 'ROLE_MANAGER','ROLE_TOPMANAGER', 'ROLE_SHOP', 'ROLE_CARRIER', 'ROLE_STOCK', 'ROLE_PROCUREMENT', 'ROLE_ORDERSUPPORT', 'ROLE_STOCKSUPPORT', 'ROLE_SLOTOBSERVER', 'ROLE_ANALYTICS', 'ROLE_STOCKPROCUREMENT', 'ROLE_ORL', 'ROLE_LOGISTDELIVERY', 'ROLE_SHOW', 'ROLE_QUALITYMANAGER', 'ROLE_QUALITYMANAGER_AND_PROCUREMENT')" />	
+<!-- 			<security:intercept-url pattern="/main" access="permitAll" />	 -->
 			<security:intercept-url pattern="/main/message" access="!isAnonymous()" />					
 			<security:intercept-url pattern="/main/who"	access="!isAnonymous()" />
 			<security:intercept-url pattern="/main/admin/**" access="hasAnyRole('ROLE_ADMIN', 'ROLE_TOPMANAGER', 'ROLE_SHOW')" />
@@ -73,7 +74,7 @@
 <!-- 			<security:intercept-url pattern="/api/**" access="!isAnonymous()" />			 -->
 			<security:intercept-url pattern="/main/reviews/**" access="permitAll"/>
 			<security:intercept-url pattern="/main/orderproof/**" access="permitAll"/>
-			<security:intercept-url pattern="/main/acceptanceQuality/**" access="permitAll"/>
+			<security:intercept-url pattern="/main/acceptanceQuality/**" access="hasAnyRole('ROLE_ADMIN', 'ROLE_SHOW', 'ROLE_QUALITYMANAGER', 'ROLE_QUALITYMANAGER_AND_PROCUREMENT')"/>
 			<security:intercept-url pattern="/main/**" access="hasRole('ROLE_ADMIN')" />
 <!-- 			<security:csrf disabled="true"/> -->
 	</security:http>

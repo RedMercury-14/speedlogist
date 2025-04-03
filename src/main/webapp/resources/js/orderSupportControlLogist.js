@@ -9,7 +9,8 @@ import {
 import { debounce, getData, dateHelper, isAdmin, isOrderSupport, } from './utils.js'
 import { ajaxUtils } from './ajaxUtils.js'
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
-import { changeExceptionBaseUrl, getStockRemainderUrl, setMaxDayBaseUrl, setNewBalanceBaseUrl } from './globalConstants/urls.js'
+import { blockProductUrl, changeExceptionBaseUrl, getStockRemainderUrl, setMaxDayBaseUrl, setNewBalanceBaseUrl } from './globalConstants/urls.js'
+import { snackbar } from './snackbar/snackbar.js'
 
 const token = $("meta[name='_csrf']").attr("content")
 const PAGE_NAME = 'skuControl'
@@ -78,19 +79,38 @@ const columnDefs = [
 	{ headerName: "Реализация расчётная в день для 1700", field: "calculatedPerDay1700", },
 	{ headerName: "Реализация расчётная в день для 1800", field: "calculatedPerDay1800", },
 	{ headerName: "Реализация расчётная в день (общая)", field: "сalculatedPerDay", },
-	{
-		headerName: "Мин. кол-во дней", field: "dayMax",
-		cellClass: "px-1 text-center font-weight-bold",
-		editable: isAdmin(role) || isOrderSupport(role),
-		onCellValueChanged: editDayMax,
-	},
+	// {
+	// 	headerName: "Мин. кол-во дней", field: "dayMax",
+	// 	cellClass: "px-1 text-center font-weight-bold",
+	// 	editable: isAdmin(role) || isOrderSupport(role),
+	// 	onCellValueChanged: editDayMax,
+	// },
 	{
 		headerName: "Исключение", field: "isException",
 		cellClass: 'py-0 flex-center', minWidth: 30,
 		editable: isAdmin(role) || isOrderSupport(role),
 		onCellValueChanged: editIsExeption,
 	},
-	{ headerName: "Акция", field: "promotionsInfo", },
+	// { headerName: "Акция", field: "promotionsInfo", },
+	{
+		headerName: "Заблокирован?", field: "isBlock",
+		cellDataType: false,
+		cellClass: 'px-2 text-center text-danger font-weight-bold',
+		valueFormatter: (params) => params.value ? "Заблокирован" : "",
+		filterParams: { valueFormatter: (params) => params.value ? "Заблокирован" : "", },
+	},
+	{
+		headerName: "Старт блокировки", field: "blockDateStart",
+		valueFormatter: dateValueFormatter,
+		comparator: dateComparator,
+		filterParams: { valueFormatter: dateValueFormatter, },
+	},
+	{
+		headerName: "Конец блокировки", field: "blockDateFinish",
+		valueFormatter: dateValueFormatter,
+		comparator: dateComparator,
+		filterParams: { valueFormatter: dateValueFormatter, },
+	},
 	{ headerName: "Дата обновления данных", field: "dateCreate", comparator: dateComparator,},
 ]
 
@@ -161,6 +181,48 @@ document.addEventListener('DOMContentLoaded', async () => {
 	const gridDiv = document.querySelector('#myGrid')
 	renderTable(gridDiv, gridOptions)
 
+	blockProductForm.addEventListener('submit', async (e) => {
+		e.preventDefault()
+		const formData = new FormData(e.target)
+		const data = Object.fromEntries(formData)
+		data.idProduct = Number(data.idProduct)
+
+		const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 300)
+
+		ajaxUtils.postJSONdata({
+			url: blockProductUrl,
+			data: data,
+			successCallback: (res) => {
+				clearTimeout(timeoutId)
+				bootstrap5overlay.hideOverlay()
+
+				if (res.status === '200') {
+					const updatedReview = getMappingItem(res.object)
+					updateTableRow(gridOptions, updatedReview)
+					res.message && snackbar.show(res.message)
+					$('#blockProductModal').modal('hide')
+					return
+				}
+
+				if (res.status === '100') {
+					
+					const message = res.message ? res.message : 'Неизвестная ошибка'
+					snackbar.show(message)
+					return
+				}
+			},
+			errorCallback: () => {
+				clearTimeout(timeoutId)
+				bootstrap5overlay.hideOverlay()
+			}
+		})
+		
+	})
+
+	$('#blockProductModal').on('hidden.bs.modal', (e) => {
+		blockProductForm.reset()
+	})
+
 	// отображение стартовых данных
 	if (window.initData) {
 		await initStartData()
@@ -211,19 +273,14 @@ function getContextMenuItems(params) {
 	const data = rowNode.data
 
 	const result = [
-		// {
-		// 	name: `Добавить в исключение всю группу`,
-		// 	action: () => {
-				
-		// 	},
-		// },
-		// {
-		// 	name: `Убрать из исключения всю группу`,
-		// 	action: () => {
-				
-		// 	},
-		// },
-		// "separator",
+		{
+			name: `Блокировать товар на период`,
+			action: () => {
+				blockProductForm.idProduct.value = data.codeProduct
+				$('#blockProductModal').modal('show')
+			},
+		},
+		"separator",
 		"excelExport",
 	]
 
@@ -232,6 +289,10 @@ function getContextMenuItems(params) {
 
 function getMappingItem(item) {
 	const promotionsInfo = getPromotionsInfo(item)
+	const nowDateMs = new Date().setHours(0, 0, 0, 0)
+	const isBlock = item.blockDateStart && item.blockDateFinish
+		? item.blockDateStart <= nowDateMs && item.blockDateFinish >= nowDateMs
+		: false
 	return {
 		...item,
 		dateUnload: dateHelper.getFormatDate(item.dateUnload),
@@ -239,6 +300,7 @@ function getMappingItem(item) {
 		dayMax: Number(item.dayMax),
 		balanceStockAndReserves: Number(item.balanceStockAndReserves),
 		promotionsInfo,
+		isBlock,
 	}
 }
 function getPromotionsInfo(product) {
@@ -348,6 +410,11 @@ function editIsExeption(agGridParams) {
 	})
 }
 
+function updateTableRow(gridOptions, rowData) {
+	gridOptions.api.applyTransactionAsync(
+		{ update: [rowData] }
+	)
+}
 
 // обновление ячейки
 function updateCellData(agGridParams, fieldName, oldValue) {
@@ -371,4 +438,11 @@ function saveFilterState() {
 }
 function restoreFilterState() {
 	gridFilterLocalState.restoreState(gridOptions, LOCAL_STORAGE_KEY)
+}
+
+// конверторы дат для таблицы
+function dateValueFormatter(params) {
+	const date = params.value
+	if (!date) return ''
+	return dateHelper.getFormatDate(date)
 }

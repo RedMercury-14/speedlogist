@@ -15,5 +15,16 @@ public interface AcceptanceQualityFoodCardService {
     AcceptanceQualityFoodCard getByIdAcceptanceQualityFoodCard(Long idAcceptanceQualityFoodCard);
 
     List<AcceptanceQualityFoodCardDTO> getAllAcceptanceQualityFoodCard(Long idAcceptanceFoodQuality, HttpServletRequest request);
+    
+    int save(AcceptanceQualityFoodCard acceptanceQualityFoodCard);
+    
+    void update(AcceptanceQualityFoodCard acceptanceQualityFoodCard);
+    
+    /**
+     * отдаёт карточки товаров по id карточки машины
+     * @param idAcceptanceFoodQuality
+     * @return
+     */
+    List<AcceptanceQualityFoodCard> getFoodCardByIdFoodQuality (Long idAcceptanceFoodQuality);
 
 }

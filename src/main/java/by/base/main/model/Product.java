@@ -340,8 +340,13 @@ public class Product {
 	
 	@Column(name = "moved_from_1700_to_1800")
 	private Double movedFrom1700To1800;
-
 	
+	@Column(name = "block_date_start")
+	private Date blockDateStart;
+	
+	@Column(name = "block_date_finish")
+	private Date blockDateFinish;
+		
 	/**
 	 * расчётный остаток для 1700 слкада в днях
 	 */
@@ -1510,6 +1515,22 @@ public class Product {
 
 	public void setMovedFrom1700To1800(Double movedFrom1700To1800) {
 		this.movedFrom1700To1800 = movedFrom1700To1800;
+	}
+
+	public Date getBlockDateStart() {
+		return blockDateStart;
+	}
+
+	public void setBlockDateStart(Date blockDateStart) {
+		this.blockDateStart = blockDateStart;
+	}
+
+	public Date getBlockDateFinish() {
+		return blockDateFinish;
+	}
+
+	public void setBlockDateFinish(Date blockDateFinish) {
+		this.blockDateFinish = blockDateFinish;
 	}
 
 	@Override

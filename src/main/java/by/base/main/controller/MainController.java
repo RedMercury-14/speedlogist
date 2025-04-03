@@ -111,6 +111,7 @@ import by.base.main.util.bots.BotInitializer;
 import by.base.main.util.bots.TelegramBot;
 import by.base.main.util.bots.TelegramBotRouting;
 import by.base.main.util.bots.TelegramBotRoutingTEST;
+import by.base.main.util.bots.TelegrammBotQuantityYard;
 import by.base.main.util.hcolossus.service.MatrixMachine;
 
 /**
@@ -199,6 +200,9 @@ public class MainController {
 	
 	@Autowired
 	private TelegramBotRouting telegramBotRouting;
+	
+	@Autowired
+	private TelegrammBotQuantityYard telegrammBotQuantityYard;
 	
 	@Autowired
 	private TelegramBotRoutingTEST telegramBotRoutingTEST;
@@ -299,10 +303,12 @@ public class MainController {
 			if(telegramBot.isRunning == false) {
 				new BotInitializer(telegramBot).init();
 				new BotInitializer(telegramBotRouting).initRoutingBot();
+				new BotInitializer(telegrammBotQuantityYard).initBotQuantityYard();
 				System.err.println("БОТЫ ЗАПУЩЕНЫ");	
 			}
 		}else {
 			System.err.println("ТЕЛЕГРАММ БОТ ОТКЛЮЧЕН!");	
+//			new BotInitializer(telegrammBotQuantityYard).initBotQuantityYard();
 		}
 		
 //		new BotInitializer(telegramBotRoutingTEST).initRoutingBotTEST();

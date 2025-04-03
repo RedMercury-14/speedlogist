@@ -4621,6 +4621,26 @@ public class MainRestController {
 		return response;		
 	}
 	
+	@PostMapping("/order-support/blockProduct")
+	public Map<String, Object> blockProduct(HttpServletRequest request, @RequestBody String str) throws ParseException {		
+		Map<String, Object> response = new HashMap<String, Object>();
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		
+		Integer idProduct = jsonMainObject.get("idProduct") != null && !jsonMainObject.get("idProduct").toString().isEmpty() ? Integer.parseInt(jsonMainObject.get("idProduct").toString().trim()) : null;
+		Date dateStart = jsonMainObject.get("dateStart") != null && !jsonMainObject.get("dateStart").toString().isEmpty() ? Date.valueOf(jsonMainObject.get("dateStart").toString()) : null;
+		Date dateFinish = jsonMainObject.get("dateFinish") != null && !jsonMainObject.get("dateFinish").toString().isEmpty() ? Date.valueOf(jsonMainObject.get("dateFinish").toString()) : null;
+		
+		Product product = productService.getProductByCode(idProduct);
+		product.setBlockDateStart(dateStart);
+		product.setBlockDateFinish(dateFinish);
+		productService.updateProduct(product);
+		response.put("status", "200");
+		response.put("message", "Время блокировки товара для слотово обновлено");
+		response.put("object", product);
+		return response;		
+	}
+	
 	/**
 	 * Редактор максимального кол-ва дней для Product 
 	 * @param request

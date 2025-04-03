@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
@@ -1590,6 +1591,7 @@ public class ReaderSchedulePlan {
 		}
 		
 		Integer numStock = Integer.parseInt(getTrueStock(order));
+		
 		//реализация проверки, когда нужно проверить только один продукт
 				if(product != null) {
 					if(product.getDateUnload() == null) {
@@ -1598,8 +1600,9 @@ public class ReaderSchedulePlan {
 					}
 					LocalDate dateNow = LocalDate.now();
 					Period period = Period.between(product.getDateUnload().toLocalDate(), dateNow);
-					if(product.getDateUnload() != null && period.getDays()<minDayFromUnloadFile) {
-						
+					long daysBetween = ChronoUnit.DAYS.between(product.getDateUnload().toLocalDate(), dateNow);
+					
+					if(product.getDateUnload() != null && daysBetween<minDayFromUnloadFile) {					
 						
 						Double quantityInOrder = order.getOrderLinesMap().get(product.getCodeProduct().longValue());
 						Double calculatedPerDayForTruck = 0.0;
@@ -1726,7 +1729,8 @@ public class ReaderSchedulePlan {
 			}
 			LocalDate dateNow = LocalDate.now();
 			Period period = Period.between(product.getDateUnload().toLocalDate(), dateNow);
-			if(product.getDateUnload() != null && period.getDays()<minDayFromUnloadFile) {
+			long daysBetween = ChronoUnit.DAYS.between(product.getDateUnload().toLocalDate(), dateNow);
+			if(product.getDateUnload() != null && daysBetween<minDayFromUnloadFile) {
 				
 				if(product.getСalculatedPerDay() == null || product.getСalculatedPerDay() == 0.0) {
 					result.append("<span style=\"color: #bbaa00;\"><strong>Проверка по стокам не проводилась!</strong> Расчётная реализация товара " + product.getName() + " (" + product.getCodeProduct()+") равна 0.0 !.</span>\n");

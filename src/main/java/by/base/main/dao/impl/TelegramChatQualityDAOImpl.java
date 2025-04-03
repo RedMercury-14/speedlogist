@@ -59,7 +59,7 @@ public class TelegramChatQualityDAOImpl implements TelegramChatQualityDAO{
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query theQuery = 
 				currentSession.createQuery(queryDeleteById);
-		theQuery.setParameter("id", chatId);
+		theQuery.setParameter("chatId", chatId);
 		theQuery.executeUpdate();
 	}
 

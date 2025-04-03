@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -53,84 +54,83 @@ public class TelegrammBotQuantityYard extends TelegramLongPollingBot {
      */
     public void sendMessageWithPhotos(List<Long> chatIds, String message, List<String> photoIds, List<String> tags) {
         try {
-            // Формируем строку с тегами
-            String tagsString = "";
-            if (tags != null && !tags.isEmpty()) {
-                tagsString = "\n\n" + tags.stream()
-                        .map(tag -> "#" + tag.replace(" ", "_"))
-                        .collect(Collectors.joining(" "));
-            }
-
+            // Формируем текст сообщения с тегами
+            String fullMessage = formatFullMessage(message, tags);
+            
             for (Long chatId : chatIds) {
-                if (photoIds != null && !photoIds.isEmpty()) {
-                    for (int i = 0; i < photoIds.size(); i += 10) {
-                        List<String> batch = photoIds.subList(i, Math.min(photoIds.size(), i + 10));
-
-                        // Формируем полный текст для этой группы (сообщение + теги)
-                        String fullCaption = null;
-                        if (message != null || tagsString != null) {
-                            fullCaption = (message != null ? message : "") + 
-                                       (tagsString != null ? tagsString : "");
-                        }
-
-                        if (batch.size() == 1) {
-                            // Отправка одной фотографии
-                            String photoId = batch.get(0);
-                            ResponseEntity<Resource> photoResponse = getImage(photoId);
-                            
-                            if (photoResponse.getStatusCode() == HttpStatus.OK && photoResponse.getBody() != null) {
-                                byte[] photoBytes = ((org.springframework.core.io.ByteArrayResource) photoResponse.getBody()).getByteArray();
-                                
-                                SendPhoto photo = new SendPhoto();
-                                photo.setChatId(chatId.toString());
-                                photo.setPhoto(new InputFile(new ByteArrayInputStream(photoBytes), "photo.jpg"));
-                                
-                                // Добавляем полный текст (сообщение + теги)
-                                if (fullCaption != null && !fullCaption.isEmpty()) {
-                                    photo.setCaption(fullCaption);
-                                }
-                                
-                                execute(photo);
-                            }
-                        } else {
-                            // Отправка группы фотографий (2-10)
-                            List<InputMedia> mediaGroup = new ArrayList<>();
-                            
-                            for (int j = 0; j < batch.size(); j++) {
-                                String photoId = batch.get(j);
-                                ResponseEntity<Resource> photoResponse = getImage(photoId);
-                                
-                                if (photoResponse.getStatusCode() == HttpStatus.OK && photoResponse.getBody() != null) {
-                                    byte[] photoBytes = ((org.springframework.core.io.ByteArrayResource) photoResponse.getBody()).getByteArray();
-                                    
-                                    InputMediaPhoto mediaPhoto = new InputMediaPhoto();
-                                    mediaPhoto.setMedia(new ByteArrayInputStream(photoBytes), "photo" + j + ".jpg");
-                                    
-                                    // Добавляем полный текст только к первой фотографии в группе
-                                    if (j == 0 && fullCaption != null && !fullCaption.isEmpty()) {
-                                        mediaPhoto.setCaption(fullCaption);
-                                    }
-                                    
-                                    mediaGroup.add(mediaPhoto);
-                                }
-                            }
-                            
-                            if (!mediaGroup.isEmpty()) {
-                                SendMediaGroup mediaGroupMessage = new SendMediaGroup();
-                                mediaGroupMessage.setChatId(chatId.toString());
-                                mediaGroupMessage.setMedias(mediaGroup);
-                                execute(mediaGroupMessage);
-                            }
-                        }
-                        
-                        // Небольшая пауза между группами
-                        Thread.sleep(300);
+                try {
+                    if (photoIds == null || photoIds.isEmpty()) {
+                        // Отправка простого текстового сообщения
+                        sendTextMessage(chatId, fullMessage);
+                    } else {
+                        // Отправка медиагруппы
+                        sendMediaGroup(chatId, fullMessage, photoIds);
                     }
+                } catch (Exception e) {
+                    handleSendError(chatId, e);
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
-            // Обработка ошибок
+        }
+    }
+    
+    private String formatFullMessage(String message, List<String> tags) {
+        if (tags == null || tags.isEmpty()) {
+            return message;
+        }
+        return message + "\n\n" + tags.stream()
+                .map(tag -> "#" + tag.replace(" ", "_"))
+                .collect(Collectors.joining(" "));
+    }
+    
+    private void handleSendError(Long chatId, Exception e) {
+        if (e instanceof TelegramApiException) {
+            String errorMessage = e.getMessage();
+            
+            if (errorMessage != null && (errorMessage.contains("USER_IS_BLOCKED") || 
+                                       errorMessage.contains("bot was blocked"))) {
+                // Удаляем заблокировавшего пользователя из базы
+                telegramChatQualityService.deleteByChatId(chatId.intValue());
+                System.out.println("Удален заблокировавший пользователь: " + chatId);
+                return;
+            }
+        }
+        e.printStackTrace();
+    }
+    
+    private void sendMediaGroup(Long chatId, String caption, List<String> photoIds) throws TelegramApiException {
+        List<InputMedia> mediaGroup = new ArrayList<>();
+        
+        for (int i = 0; i < photoIds.size(); i++) {
+            String photoId = photoIds.get(i);
+            ResponseEntity<Resource> photoResponse = getImage(photoId);
+            
+            if (photoResponse.getStatusCode() == HttpStatus.OK && photoResponse.getBody() != null) {
+                byte[] photoBytes = ((ByteArrayResource) photoResponse.getBody()).getByteArray();
+                InputMediaPhoto media = new InputMediaPhoto();
+                media.setMedia(new ByteArrayInputStream(photoBytes), "photo" + i + ".jpg");
+                
+                // Добавляем подпись только к первому фото
+                if (i == 0) {
+                    media.setCaption(caption);
+                }
+                
+                mediaGroup.add(media);
+            }
+        }
+        
+        if (!mediaGroup.isEmpty()) {
+            SendMediaGroup group = new SendMediaGroup();
+            group.setChatId(chatId.toString());
+            group.setMedias(mediaGroup);
+            execute(group);
+            try {
+				Thread.sleep(300);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
         }
     }
 
@@ -302,25 +302,18 @@ public class TelegrammBotQuantityYard extends TelegramLongPollingBot {
 //    }
 
  // Новый метод для отправки только текстовых сообщений
-    public void sendTextMessage(List<Long> chatIds, String message) {
-        if (message == null || message.isEmpty()) {
-            return;
-        }
-
-        for (Long chatId : chatIds) {
-            try {
-                SendMessage textMessage = new SendMessage();
-                textMessage.setChatId(chatId.toString());
-                textMessage.setText(message);
-                execute(textMessage);
-                
-                // Небольшая задержка, чтобы не превысить лимиты Telegram
-                Thread.sleep(100);
-            } catch (Exception e) {
-                e.printStackTrace();
-                // Можно добавить логирование ошибок
-            }
-        }
+    private void sendTextMessage(Long chatId, String text) throws TelegramApiException {
+        SendMessage msg = new SendMessage();
+        msg.setChatId(chatId.toString());
+        msg.setText(text);
+        msg.enableHtml(true);
+        execute(msg);
+        try {
+			Thread.sleep(100);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
     
     @Override

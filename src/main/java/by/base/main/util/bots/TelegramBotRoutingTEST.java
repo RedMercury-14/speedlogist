@@ -1,1376 +1,258 @@
 package by.base.main.util.bots;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.sql.Date;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.send.SendMediaGroup;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
-import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.media.InputMedia;
+import org.telegram.telegrambots.meta.api.objects.media.InputMediaPhoto;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import by.base.main.controller.MainController;
-import by.base.main.model.TGUser;
-import by.base.main.service.TGTruckService;
-import by.base.main.service.TGUserService;
-import by.base.main.util.SlotWebSocket;
-import by.base.main.model.Message;
-import by.base.main.model.TGTruck;
-import io.github.dostonhamrakulov.InlineCalendarBuilder;
-import io.github.dostonhamrakulov.InlineCalendarCommandUtil;
-import io.github.dostonhamrakulov.LanguageEnum;
+import by.base.main.model.TelegramChatQuality;
+import by.base.main.service.TelegramChatQualityService;
 
 @Component
 public class TelegramBotRoutingTEST extends TelegramLongPollingBot{
 	
-	public boolean isRunning = false;
-	
-	@Autowired
-	public KeyboardMaker keyboardMaker;
-	
-	@Autowired
-	public MainController mainController;
-	
-	@Autowired
-	public TGTruckService tgTruckService;
-	
-	@Autowired
-	public TGUserService tgUserService;
-	
-	@Autowired
-	private SlotWebSocket slotWebSocket;
-	
-	private long idAdmin = 907699213;
-//	private Map<Long, TGUser> users = new HashMap<Long, TGUser>(); // юзеры, которые заявляют авто
-	private List<Long> idAllUsers = new ArrayList<Long>(); // все подключенные к боту юзеры
-	private Map<Long, String> idAdmins = new HashMap<Long, String>(); // админы
-	
-	private static final InlineCalendarBuilder inlineCalendarBuilder = new InlineCalendarBuilder(LanguageEnum.RU);
-	private Map<Long, Integer> chatAndMessageIdMap = new HashMap<>();
-	
-	private String description = "TEST TEST TEST\r\n Приветстсвую!\r\n"
-			+ "РазвозДоброномBot 🚚\r\n"
-			+ "\r\n"
-			+ "📋 *Описание*:\r\n"
-			+ "Бот, который поможет вам заявить свою машину (и не одну) на определённую дату загрузки. Информация будет оперативно предоставлена транспортным логистам.\r\n"
-			+ "\r\n"
-			+ "✨ *Функции*:\r\n"
-			+ "- 🗓️ Заявка на определённую дату\r\n"
-			+ "- ⏳ Заявка на завтра\r\n"
-			+ "- 🚛 Управление уже заявленными машинами\r\n";
-	
-	@Override
-	public void onUpdateReceived(Update update) {
-		try {
-			if(update.hasMessage() && update.getMessage().hasContact()){	
-				long chatId = update.getMessage().getChatId();
-				TGUser user = new TGUser();
-				user.setChatId(chatId);
-				user.setTelephone(update.getMessage().getContact().getPhoneNumber());
-				user.setCommand("/login");
-				tgUserService.saveOrUpdateTGUser(user);
-				sendMessage(chatId, "Номер принят. Напишите название фирмы");
-			}
-			if(update.hasMessage() && update.getMessage().hasLocation()){
-				long chatId = update.getMessage().getChatId();
-				sendMessage(chatId, update.getMessage().getLocation().toString());
-			}
-			
-			//лавный блок обработки CallbackData т.е. сообщений которые призодят с кнопок прикрепленных к сообщениям
-			if(update.hasCallbackQuery()){
-//				System.out.println("CallbackData -> " + update.getCallbackQuery().getData());
-//				System.out.println("CallbackData.getMessage().getChatId() -> " + update.getCallbackQuery().getMessage().getChatId());
-				
-				long chatId = update.getCallbackQuery().getMessage().getChatId();
-				//тут достаём id старого сообщения
-				long messageId = update.getCallbackQuery().getMessage().getMessageId();
-				String message = update.getCallbackQuery().getMessage().getText();
-				String data = update.getCallbackQuery().getData();
-				TGUser user = tgUserService.getTGUserByChatId(chatId);
-				String nextText = null;
-				switch (data.split("_")[0]) {
-				case "CAL": //отдельная обработка на календарь
-					 SendMessage sendMessage = new SendMessage();
-				        sendMessage.setChatId(chatId);
+	private String botUsername = "RoutingBotTest";
+    private String botToken = "7906852645:AAGZ2eXYBlyzhwXeLrXz4zGXbMcvEA8k22I";
 
-				        // Проверяем, была ли нажата кнопка календаря		        
-				        if (InlineCalendarCommandUtil.isInlineCalendarClicked(update)) {
-				            // Обрабатываем навигацию по месяцам
-				            if (InlineCalendarCommandUtil.isCalendarNavigationButtonClicked(update)) {
-//				                sendMessage.setReplyMarkup(inlineCalendarBuilder.build(update));
-				                EditMessageText newMessage = EditMessageText.builder()
-				    		            .chatId(chatId)
-				    		            .messageId(Math.toIntExact(messageId))
-				    		            .text("Выберите дату")
-				    		            .replyMarkup(inlineCalendarBuilder.build(update)) // сюда указываем колличество паллет, дальше делает клава
-				    		            .build();
-				    		        try {
-				    		            execute(newMessage);
-				    		        } catch (TelegramApiException e) {
-				    		            e.printStackTrace();
-				    		        }
-				                // Выполняем отправку сообщения
-				                return;
-				            }
+    @Value("${yard.web.urlPart}")
+    public String urlPart;
+    
+    private final RestTemplate restTemplate = new RestTemplate();
 
-				            // Извлекаем выбранную дату
-				            LocalDate localDate = InlineCalendarCommandUtil.extractDate(update);
-				            if(localDate.isBefore(LocalDate.now())) {//если юзер пытается заявить прошлым числом
-				            	String currentText = "Нельзя выбрать дату до "+LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))+"\nВыберите дату"; 
-				            	String newText = "Еще раз : <b>нельзя выбрать дату до "+LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))+"</b>\nВыберите новую дату"; // Ваш новый текст
-				            	EditMessageText newMessage = null;
-				            	if(message.equals(currentText)) {
-				            		newMessage = EditMessageText.builder()
-				        		            .chatId(chatId)
-				        		            .messageId(Math.toIntExact(messageId))
-				        		            .text(newText)
-				        		            .replyMarkup(inlineCalendarBuilder.build(update))
-				        		            .parseMode("HTML")
-				        		            .build();
-				            	}else {
-				            		newMessage = EditMessageText.builder()
-				        		            .chatId(chatId)
-				        		            .messageId(Math.toIntExact(messageId))
-				        		            .text(currentText)
-				        		            .replyMarkup(inlineCalendarBuilder.build(update))
-				        		            .build();
-				            	}
-				            	
-			        		        try {
-			        		            execute(newMessage);
-			        		        } catch (TelegramApiException e) {
-			        		            e.printStackTrace();
-			        		        }
-			                    return;
-				            }
-				            
-				            TGUser userForTruck = tgUserService.getTGUserByChatId(chatId);
-		                	userForTruck.setCommand("/numtruck");
-		                	userForTruck.setDateOrderTruckOptimization(Date.valueOf(localDate));
-		                	nextText = localDate.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-		                	tgUserService.saveOrUpdateTGUser(userForTruck);
-		                	EditMessageText newMessage = EditMessageText.builder()
-            				.chatId(chatId)
-            				.messageId(Math.toIntExact(messageId))
-            				.text("Введите номер авто ")
-            				.build();
-            		try {
-            			execute(newMessage);
-            		} catch (TelegramApiException e) {
-            			e.printStackTrace();
-            		}
-				        }
-				        
-				        SendMessage sendKeyboard = new SendMessage();      //следом кидаем  клаву для юзеров          	
-				        sendKeyboard.setChatId(chatId);
-				        sendKeyboard.setReplyMarkup(keyboardMaker.getMainCancelKeyboard()); //следом кидаем  клаву для юзеров
-				        sendKeyboard.setText("На " + nextText + ":");
-				        try {
-				        	execute(sendKeyboard);
-				        } catch (TelegramApiException e) {
-				        	// TODO Auto-generated catch block
-				        	e.printStackTrace();
-				        }
-				        
-				        
-					return;
-				case "cancelTruck" :
-					
-					TGTruck tgTruckForDelete = tgTruckService.getTGTruckByChatNumTruckStrict(data.split("_")[1], Date.valueOf(data.split("_")[2]), user);
-					
-					if(tgTruckForDelete.getStatus() == 50) {
-						EditMessageText newMessage = EditMessageText.builder()
-	        		            .chatId(chatId)
-	        		            .messageId(Math.toIntExact(messageId))
-	        		            .parseMode("HTML")
-	        		            .text("Машина <b>" + tgTruckForDelete.getNumTruck() + "</b> уже используется в планировании сотрудникаим транспортной логистики")
-	        		            .build();
-						try {
-        		            execute(newMessage);
-        		        } catch (TelegramApiException e) {
-        		            e.printStackTrace();
-        		        }
-						
-						
-						return;
-					}else {
-						Message messageObject = new Message("TGBotRouting", "tgBot", null, "200", tgTruckService.getTGTruckByChatNumTruckStrict(data.split("_")[1], Date.valueOf(data.split("_")[2]), user).toJSON(), null, "delete");
-						slotWebSocket.sendMessage(messageObject);
-						tgTruckService.deleteTGTruckByNumTruck(data.split("_")[1], Date.valueOf(data.split("_")[2]));	
-						user.removeTrucksForBot(data.split("_")[1]);
-						
-						DeleteMessage deleteMessage = new DeleteMessage();
-						deleteMessage.setChatId(chatId);  // Укажите идентификатор чата
-						deleteMessage.setMessageId(Math.toIntExact(messageId));  // Укажите идентификатор сообщения
-						tgUserService.saveOrUpdateTGUser(user);
-						try {
-						    execute(deleteMessage);  // Выполняем удаление сообщения
-						} catch (TelegramApiException e) {
-						    e.printStackTrace();
-						}
-						return;
-					}
-					
-					
-					
-					
-				case "editTruck" :
-					System.out.println("тут обработка оредактирования авто");
-					break;
-					
-				case "copyTruck" :
-					System.out.println("тут обработка копирования авто");
-					break;
+    @Autowired
+    private TelegramChatQualityService chatRepository;
+    
+    @Autowired
+    private TelegramChatQualityService telegramChatQualityService;
 
-				default:
-					break;
-				}
-				
-				
-				
-				
-				switch (user.getCommand()) {
-//				case "/setpall":
-//					String numTruck = data.split("_")[0];
-//					String pall = data.split("_")[1];
-////					TGTruck truck = tgTruckService.getTGTruckByChatNumTruck(numTruck, user);
-//					TGTruck truck = new TGTruck();
-//					if(user.getDateOrderTruckOptimization() != null) {
-//						truck.setDateRequisition(user.getDateOrderTruckOptimization());
-//					}else {
-//						truck.setDateRequisition(Date.valueOf(LocalDate.now().plusDays(1)));
-//					}
-//					truck.setNumTruck(numTruck);
-//					truck.setPall(Integer.parseInt(pall));
-//					truck.setChatIdUserTruck(user.getChatId());
-//					user.putTrucksForBot(numTruck, truck);	
-//					tgTruckService.saveOrUpdateTGTruck(truck);
-//					user.setValidityTruck(numTruck); // сюза временно записываем номер авто которое обрабатывается
-//					//создали машину, присвоили номер и записали сколько паллет.
-//					
-//					user.setCommand("/setweigth");
-//					tgUserService.saveOrUpdateTGUser(user);
-//					//тут достаём старое сообщение и меняем его
-////					long messageId = update.getCallbackQuery().getMessage().getMessageId();
-//					String answer1 = "Выберите грузоподъемность авто";
-//			        EditMessageText newMessage = EditMessageText.builder()
-//			            .chatId(chatId)
-//			            .messageId(Math.toIntExact(messageId))
-//			            .text(answer1)
-//			            .replyMarkup(keyboardMaker.getWeigthKeyboard(pall.trim())) // сюда указываем колличество паллет, дальше делает клава
-//			            .build();
-//			        try {
-//			            execute(newMessage);
-//			        } catch (TelegramApiException e) {
-//			            e.printStackTrace();
-//			        }
-//			        return;
-				case "/setpall":
-					String numTruck = data.split("_")[0];
-					String pall = data.split("_")[1];
-//					TGTruck truck = tgTruckService.getTGTruckByChatNumTruck(numTruck, user);
-					TGTruck truck = new TGTruck();
-					if(user.getDateOrderTruckOptimization() != null) {
-						truck.setDateRequisition(user.getDateOrderTruckOptimization());
-					}else {
-						truck.setDateRequisition(Date.valueOf(LocalDate.now().plusDays(1)));
-					}
-					truck.setNumTruck(numTruck);
-					truck.setPall(Integer.parseInt(pall));
-					truck.setChatIdUserTruck(user.getChatId());
-					user.putTrucksForBot(numTruck, truck);	
-					tgTruckService.saveOrUpdateTGTruck(truck);
-					user.setValidityTruck(numTruck); // сюза временно записываем номер авто которое обрабатывается
-					//создали машину, присвоили номер и записали сколько паллет.
-					
-					user.setCommand("/setround");
-					tgUserService.saveOrUpdateTGUser(user);
-					//тут достаём старое сообщение и меняем его
-//					long messageId = update.getCallbackQuery().getMessage().getMessageId();
-					String answer1 = "Машина может совершить 2 рейса в день?";
-			        EditMessageText newMessage = EditMessageText.builder()
-			            .chatId(chatId)
-			            .messageId(Math.toIntExact(messageId))
-			            .text(answer1)
-			            .replyMarkup(keyboardMaker.getYesNoKeyboard(numTruck)) 
-			            .build();
-			        try {
-			            execute(newMessage);
-			        } catch (TelegramApiException e) {
-			            e.printStackTrace();
-			        }
-			        return;
-				case "/setround":
-					String numTruckForRound = data.split("_")[0];
-					String ansver = data.split("_")[1];
-					TGTruck truckForRound = tgTruckService.getTGTruckByChatNumTruck(numTruckForRound, user);
-					if(ansver.equals("yes")) {
-						truckForRound.setSecondRound(true);
-					}else {
-						truckForRound.setSecondRound(false);
-					}
-					tgTruckService.saveOrUpdateTGTruck(truckForRound);
-					user.setCommand("/setweigth");
-					tgUserService.saveOrUpdateTGUser(user);
-					String answer2 = "Выберите грузоподъемность авто";
-			        EditMessageText newMessage2 = EditMessageText.builder()
-			            .chatId(chatId)
-			            .messageId(Math.toIntExact(messageId))
-			            .text(answer2)
-			            .replyMarkup(keyboardMaker.getWeigthKeyboard(truckForRound.getPall()+"")) // сюда указываем колличество паллет, дальше делает клава
-			            .build();
-			        try {
-			            execute(newMessage2);
-			        } catch (TelegramApiException e) {
-			            e.printStackTrace();
-			        }
-			        return;
-			        
-				case "/settype":
-					String numTruckForType = data.split("_")[0];
-					String type = data.split("_")[1];
-					
-					TGTruck truckForType = tgTruckService.getTGTruckByChatNumTruck(numTruckForType, user);
-					truckForType.setTypeTrailer(type);
-					truckForType.setCompanyName(user.getCompanyName());
-					
-					
-					tgTruckService.saveOrUpdateTGTruck(truckForType);					
-					user.setCommand("/setdriver");
-					tgUserService.saveOrUpdateTGUser(user);
-					
-					String text = "Тип принят. Укажите ФИО и телефон водителя";
-					
-//					long messageIdType = update.getCallbackQuery().getMessage().getMessageId();
-					EditMessageText messageProof = EditMessageText.builder()
-							.chatId(chatId)
-							.messageId(Math.toIntExact(messageId))
-							.text(text)
-							.build();   
-	        		try {
-						execute(messageProof);
-					} catch (TelegramApiException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-	        		return;				
-				case "/setweigth":
-					TGUser userForTruck3 = tgUserService.getTGUserByChatId(chatId);
-					TGTruck truckForWeigth = tgTruckService.getTGTruckByChatNumTruck(userForTruck3.getValidityTruck(), userForTruck3);
-					
-	            	truckForWeigth.setCargoCapacity(data.split("_")[0]);
-	            	userForTruck3.setCommand("/settype");
-	            	userForTruck3.putTrucksForBot(userForTruck3.getValidityTruck(), truckForWeigth);
-	            	tgUserService.saveOrUpdateTGUser(userForTruck3);
-	            	tgTruckService.saveOrUpdateTGTruck(truckForWeigth);            	
-	            	
-					EditMessageText messageWeigthEdit = EditMessageText.builder()
-							.chatId(chatId)
-							.messageId(Math.toIntExact(messageId))
-							.text("Вес принял. \nУкажите тип авто")
-							.replyMarkup(keyboardMaker.getTypeTruckKeyboard(truckForWeigth.getNumTruck()))
-							.build();   
-	        		try {
-						execute(messageWeigthEdit);
-					} catch (TelegramApiException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-	        		return;
-				case "/proofTruck":
-					String numTruckProof = data.split("_")[0];
-					String answer = data.split("_")[1];
-					
-					TGTruck proofTruck = tgTruckService.getTGTruckByChatNumTruck(numTruckProof, user);
-					proofTruck.setStatus(10);
-					
-					tgTruckService.saveOrUpdateTGTruck(proofTruck);					
-					SendMessage sendKeyboard = new SendMessage();                	
-	            	sendKeyboard.setChatId(chatId);
-	            	
-					if(answer.equals("yes")) {					
-						Message messageObject = new Message("TGBotRouting", "tgBot", null, "200", proofTruck.toJSON(), null, "add");
-						slotWebSocket.sendMessage(messageObject);
-						
-						user.setCommand(null);
-						user.setValidityTruck(null);
-						user.setDateOrderTruckOptimization(null);
-						tgUserService.saveOrUpdateTGUser(user);
-						//сюда вставить статус машины (5 статус)
-						EditMessageText messageEditYes = EditMessageText.builder()
-								.chatId(chatId)
-								.messageId(Math.toIntExact(messageId))
-								.text("Машина заявлена!")
-								.build();   
-		        		try {
-							execute(messageEditYes); // меняем прошлое сообщение
-						} catch (TelegramApiException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-						sendKeyboard.setReplyMarkup(keyboardMaker.getMainKeyboard()); //следом кидаем  клаву для юзеров
-						
-					}else {
-						tgTruckService.deleteTGTruckByNumTruck(numTruckProof, user);
-						user.removeTrucksForBot(numTruckProof);
-						user.setCommand(null);
-						user.setValidityTruck(null);
-						tgUserService.saveOrUpdateTGUser(user);
-						EditMessageText messageEditNo = EditMessageText.builder()
-								.chatId(chatId)
-								.messageId(Math.toIntExact(messageId))
-								.text("Машина отменена!")
-								.build();   
-		        		try {
-							execute(messageEditNo); // меняем прошлое сообщение
-						} catch (TelegramApiException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-						sendKeyboard.setReplyMarkup(keyboardMaker.getMainKeyboard()); //следом кидаем  клаву для юзеров
-					}
-					sendKeyboard.setText("Выберите следующее действие");
-					try {
-						execute(sendKeyboard);
-					} catch (TelegramApiException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					
-					return;
-					
-				default:
-					break;
-				} 			
-			}
-			long chatId = update.getMessage().getChatId();
-	        if(update.hasMessage() && update.getMessage().hasText()){
-	            String messageText = update.getMessage().getText();            
-	            String onlyText = new String(update.getMessage().getText());     
-	            TGUser user = tgUserService.getTGUserByChatId(chatId);
-	            
-	            if(user != null && user.getCommand() != null && messageText.split("~")[0].equals("/start")) {
-	            	TGUser user1 = tgUserService.getTGUserByChatId(chatId);
-	            	user1.setCommand(null);
-	            	tgUserService.saveOrUpdateTGUser(user1);
-	            }
-	            
-	            if(user != null && user.getCommand() != null && !messageText.split("~")[0].equals("/start")) {
-	            	messageText = user.getCommand()+"~"+messageText;
-	            }
-	            
-//	            System.out.println(messageText + " idChat = " + chatId);
-	            String command;
-	            if(messageText.split("~").length > 1 && messageText.split("~")[1].equals("Отменить действие")) {
-	            	command = messageText.split("~")[1];
-	            }else {
-	            	command = messageText.split("~")[0];
-	            }
-	            
-	            if(messageText.split("/").length>4) {//тут отдельный обработчик формы заявки
-	            	if(messageText.trim().endsWith(";")) {
-	            		try {
-//		            		TGTruck tgTruck = parseFromString(messageText, user);
-		            		Integer truckSum = parseFromStringMethod2(messageText, user);
-		            		SendMessage sendOK = new SendMessage();
-		            		sendOK.setText("Заявка принята. Всего заявлено " + truckSum + " машин.");
-		            		sendOK.setChatId(chatId);
-		            		sendOK.setReplyMarkup(keyboardMaker.getMainKeyboard()); // клава для юзеров               	
-		            		try {
-								execute(sendOK);
-							} catch (TelegramApiException ee) {
-								// TODO Auto-generated catch block
-								ee.printStackTrace();
-							}
-						} catch (Exception e) {
-							SendMessage sendException = new SendMessage();
-							sendException.setText(e.getMessage());
-							sendException.setChatId(chatId);
-							sendException.setReplyMarkup(keyboardMaker.getMainKeyboard()); // клава для юзеров               	
-		            		try {
-								execute(sendException);
-							} catch (TelegramApiException ee) {
-								// TODO Auto-generated catch block
-								ee.printStackTrace();
-							}
-						}
-	            	}else {
-	            		SendMessage sendException = new SendMessage();
-						sendException.setText("Ожидается в конце обязательный символ  ;");
-						sendException.setChatId(chatId);
-						sendException.setReplyMarkup(keyboardMaker.getMainKeyboard()); // клава для юзеров               	
-	            		try {
-							execute(sendException);
-						} catch (TelegramApiException ee) {
-							// TODO Auto-generated catch block
-							ee.printStackTrace();
-						}
-	            	}
-	            	return;
-	            }
-	            
-	            
-	            System.err.println(command);
-	            switch (command.toLowerCase()){
-	                case "/start": 
-	                	SendMessage sendKeyboard = new SendMessage();                	
-	                	sendKeyboard.setChatId(chatId);
-						if(user != null) {
-							sendKeyboard.setText("Приветствую " + user.getCompanyName() + "!");
-							sendKeyboard.setReplyMarkup(keyboardMaker.getMainKeyboard()); // клава для юзеров
-						}else {		
-							sendKeyboard.setText(description);
-							sendKeyboard.enableMarkdown(true);
-		                	sendKeyboard.setReplyMarkup(keyboardMaker.getStartKeyboard()); // клава со входом	
-						}                	
-	            		try {
-							execute(sendKeyboard);
-						} catch (TelegramApiException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-	                    break;
-	                case "/login": 
-	                	String companyName = messageText.contains("~") ? messageText.split("~")[1] : messageText;
-	                	companyName = companyName.replaceAll("\"", "");
-	                	user.setCompanyName(companyName);
-	                	user.setCommand(null);
-	                	tgUserService.saveOrUpdateTGUser(user);
-	                	SendMessage sendKeyboard2 = new SendMessage();
-	                	sendKeyboard2.setText("Название фирмы принято. Теперь бот Вас запомнил");
-	                	sendKeyboard2.setChatId(chatId);
-	                	sendKeyboard2.setReplyMarkup(keyboardMaker.getMainKeyboard()); // клава для юзеров               	
-	            		try {
-							execute(sendKeyboard2);
-						} catch (TelegramApiException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-	                    break;
-	                case "заявить машину на завтра": 
-	                	user.setCommand("/numtruck");
-	                	tgUserService.saveOrUpdateTGUser(user);
-	                	SendMessage sendMessage = new SendMessage();
-	            		sendMessage.setText("Введите номер авто: ");
-	            		sendMessage.setChatId(chatId);
-	            		sendMessage.setReplyMarkup(keyboardMaker.getMainCancelKeyboard());
-	            		try {
-	            			execute(sendMessage);
-	            		} catch (TelegramApiException e) {
-	            			System.err.println("execute не сработал");
-	            			e.printStackTrace();
-	            			
-	            		}
-	                    break;
-	                case "отменить действие": 
-	                	tgTruckService.deleteTGTruckByNumTruck(user.getValidityTruck(), user);
-	                	user.setCommand(null);
-	                	user.setValidityTruck(null);
-	                	user.setDateOrderTruckOptimization(null);
-	                	tgUserService.saveOrUpdateTGUser(user);
-	                	SendMessage sendMessageCancel = new SendMessage();
-	                	sendMessageCancel.setText("Действия отменены");
-	                	sendMessageCancel.setChatId(chatId);
-	                	sendMessageCancel.setReplyMarkup(keyboardMaker.getMainKeyboard());
-	            		try {
-	            			execute(sendMessageCancel);
-	            		} catch (TelegramApiException e) {
-	            			System.err.println("execute не сработал");
-	            			e.printStackTrace();
-	            		}
-	                    break;
-	                case "/setdriver": 
-	                	//тут проверяем, есть ли машина с таким номером и датой заявки
-	                	TGTruck truckDriver = tgTruckService.getTGTruckByChatNumTruckStrict(user.getValidityTruck(), user.getDateOrderTruckOptimization() == null ? Date.valueOf(LocalDate.now().plusDays(1)) : user.getDateOrderTruckOptimization(), user);
-	                	onlyText = onlyText.replaceAll("\"", "");
-	                	truckDriver.setFio(onlyText);
-	                	user.setCommand("/setinfo");
-	                	tgUserService.saveOrUpdateTGUser(user);
-	                	tgTruckService.saveOrUpdateTGTruck(truckDriver);
-	                	//создаём и записываем авто
-	                	SendMessage messageChat = new SendMessage();
-	                	messageChat.setChatId(chatId);                    
-	                	messageChat.setText("Водитель принят. \nУкажите Информацию о подаче машины (время) и направление");
-	            		try {
-							execute(messageChat);
-						} catch (TelegramApiException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-	                    break;
-	                case "/setinfo": 
-	                	//тут проверяем, есть ли машина с таким номером и датой заявки
-	                	TGTruck truckInfo = tgTruckService.getTGTruckByChatNumTruckStrict(user.getValidityTruck(), user.getDateOrderTruckOptimization() == null ? Date.valueOf(LocalDate.now().plusDays(1)) : user.getDateOrderTruckOptimization(), user);
-	                	onlyText = onlyText.replaceAll("\"", "");
-	                	truckInfo.setOtherInfo(onlyText);
-	                	user.setCommand("/proofTruck");
-	                	user.setValidityTruck(null); // сюза временно записываем номер авто которое обрабатывается но записывем null т.к. типо закончили
-	                	tgUserService.saveOrUpdateTGUser(user);
-	                	tgTruckService.saveOrUpdateTGTruck(truckInfo);
-	                	//создаём и записываем авто
-	                	String textEnd;
-						String dateNext = LocalDate.now().plusDays(1).format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-						if(user.getDateOrderTruckOptimization() != null) {
-							textEnd = "Заявляем машину на ("+user.getDateOrderTruckOptimization().toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))+")\n Авто: "+truckInfo.getTruckForBot();
-							truckInfo.setDateRequisition(user.getDateOrderTruckOptimization());
-						}else {
-							textEnd = "Заявляем машину на завтра ("+dateNext+")\n Авто: "+truckInfo.getTruckForBot();
-							truckInfo.setDateRequisition(LocalDate.now().plusDays(1));
-						}
-						
-						SendMessage messageProof = SendMessage.builder()
-								.chatId(chatId)
-								.text(textEnd)
-								.replyMarkup(keyboardMaker.getYesNoKeyboard(truckInfo.getNumTruck()))
-								.build();   
-		        		try {
-							execute(messageProof);
-						} catch (TelegramApiException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-	                    break;
-	                case "/numtruck": 
-	                	String numTruck = messageText.split("~")[1];
-	                	//тут проверяем, есть ли машина с таким номером и датой заявки
-	                	TGTruck testTruck = tgTruckService.getTGTruckByChatNumTruckStrict(numTruck, user.getDateOrderTruckOptimization(), user);
-	                	if(testTruck != null) {
-		                	user.setCommand(null);
-		                	user.setValidityTruck(null);
-		                	user.setDateOrderTruckOptimization(null);
-		                	tgUserService.saveOrUpdateTGUser(user);
-		                	SendMessage sendMessageCancelExeption = new SendMessage();
-		                	sendMessageCancelExeption.setText("Машина с номером " + numTruck + " уже заявлена на " + testTruck.getDateRequisitionLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
-		                	sendMessageCancelExeption.setChatId(chatId);
-		                	sendMessageCancelExeption.setReplyMarkup(keyboardMaker.getMainKeyboard());
-		            		try {
-		            			execute(sendMessageCancelExeption);
-		            		} catch (TelegramApiException e) {
-		            			System.err.println("execute не сработал");
-		            			e.printStackTrace();
-		            		}
-		            		return;
-	                	}
-	                	
-	                	
-	                	user.setCommand("/setpall");
-	                	user.setValidityTruck(numTruck);
-	                	tgUserService.saveOrUpdateTGUser(user);
-	                	//создаём и записываем авто
-//	                	TGTruck tgTruckFirst = new TGTruck();
-//	                	tgTruckFirst.setNumTruck(numTruck);
-//	                	tgTruckFirst.setChatIdUserTruck(chatId);
-//	                	tgTruckService.saveOrUpdateTGTruck(tgTruckFirst);
-	                	
-	                	SendMessage message = new SendMessage();
-	                    message.setChatId(chatId);                    
-	                    message.setText("Номер " + numTruck +" принят. \nВведите сколько паллет вмещает авто");
-	            		message.setReplyMarkup(keyboardMaker.getPallMessageKeyboardNew(numTruck));
-	            		try {
-							execute(message);
-						} catch (TelegramApiException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-	            		return;
-	                    
-	                case "список ближайших заявленных машин":                	
-	                	Map<String, TGTruck> filteredMap = user.getTrucksForBot();
-	                	if(filteredMap == null ||filteredMap.isEmpty()) {
-	                		SendMessage messageTruckList = new SendMessage();
-	                    	messageTruckList.setChatId(chatId);
-	                    	messageTruckList.setParseMode("HTML");  // Устанавливаем режим HTML
-	                    	messageTruckList.setText("Машины заявленные на сегодня или завтра (<b>" + LocalDate.now().plusDays(1).format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))+"</b>) отсутствуют.");
-	                		try {
-	    						execute(messageTruckList);
-	    					} catch (TelegramApiException e) {
-	    						// TODO Auto-generated catch block
-	    						e.printStackTrace();
-	    					}
-	                	}else {
-	                		filteredMap.entrySet().stream()
-		                    .filter(e -> e.getValue().getDateRequisitionLocalDate().equals(LocalDate.now().plusDays(1)) ||  e.getValue().getDateRequisitionLocalDate().equals(LocalDate.now()))
-		                    .forEach(entry->{
-	                			SendMessage messageTruckList = new SendMessage();
-	                        	messageTruckList.setChatId(chatId);
-	                        	messageTruckList.setParseMode("HTML");  // Устанавливаем режим HTML
-	                        	messageTruckList.setText(entry.getValue().getTruckForBot() + " на <b>" + entry.getValue().getDateRequisitionLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))+"</b>");
-	                        	messageTruckList.setReplyMarkup(keyboardMaker.getCancelDeleteEditKeyboard(entry.getKey(), entry.getValue().getDateRequisition()));	                        	
-	                    		try {
-	        						execute(messageTruckList);
-	        					} catch (TelegramApiException e) {
-	        						// TODO Auto-generated catch block
-	        						e.printStackTrace();
-	        					}
-	                		});
-	                	} 
-	                    break;
-	                case "список всех заявленных машин":  
-	                	List<TGTruck> filteredMapAll = tgTruckService.getTGTruckByChatIdUserList(user.getChatId());
-	                	List<TGTruck> finalList = new ArrayList<TGTruck>();
-	                	if(filteredMapAll == null || filteredMapAll.isEmpty()) {
-	                		SendMessage messageTruckList = new SendMessage();
-	                    	messageTruckList.setChatId(chatId);
-	                    	messageTruckList.setParseMode("HTML");  // Устанавливаем режим HTML
-	                    	messageTruckList.setText("Заявленные машины отсутствуют.");
-	                		try {
-	    						execute(messageTruckList);
-	    					} catch (TelegramApiException e) {
-	    						// TODO Auto-generated catch block
-	    						e.printStackTrace();
-	    					}
-	                	}else {
-//	                		tgTruckService.getTGTruckByChatIdUserList(user.getChatId()).stream().forEach(entry->{                		
-	                		finalList = filteredMapAll.stream()
-	                		.filter(t-> t.getDateRequisition().toLocalDate().isAfter(LocalDate.now().minusDays(1))).collect(Collectors.toList());
-	                		if(finalList.isEmpty()) {
-	                			SendMessage messageTruckList = new SendMessage();
-		                    	messageTruckList.setChatId(chatId);
-		                    	messageTruckList.setParseMode("HTML");  // Устанавливаем режим HTML
-		                    	messageTruckList.setText("Заявленные машины отсутствуют.");
-		                		try {
-		    						execute(messageTruckList);
-		    					} catch (TelegramApiException e) {
-		    						// TODO Auto-generated catch block
-		    						e.printStackTrace();
-		    					}
-	                		}
-	                		finalList.forEach(entry->{                		
-		                    	SendMessage messageTruckList = new SendMessage();
-		                    	messageTruckList.setChatId(chatId);   
-		                    	messageTruckList.setParseMode("HTML");  // Устанавливаем режим HTML
-		                    	messageTruckList.setText(entry.getTruckForBot() + " на <b>" + entry.getDateRequisitionLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))+"</b>");
-		                    	messageTruckList.setReplyMarkup(keyboardMaker.getCancelDeleteEditKeyboard(entry.getNumTruck(), entry.getDateRequisition()));
-		                		try {
-		    						execute(messageTruckList);
-		    					} catch (TelegramApiException e) {
-		    						// TODO Auto-generated catch block
-		    						e.printStackTrace();
-		    					}
-		                	});
-	                	}	                	  
-	                    break;
-	                case "заявить машину на дату":
-	                	SendMessage sendMessage1 = new SendMessage();
-	                    sendMessage1.setChatId(chatId);
-	                    sendMessage1.setText("Выберите дату");
-	                    sendMessage1.setReplyMarkup(inlineCalendarBuilder.build(update));
-	                    
-					try {
-						execute(sendMessage1);
-					} catch (TelegramApiException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
-	                    break;
-	             
-	                case "/mail":
-	                	if(idAdmins.get(chatId) != null) {
-	                		sendMessageAll(messageText.split("~")[1]);
-	                	}else {
-	                		sendMessage(chatId, "Недостаточно прав");    
-	                	}                	
-	                	break;
-	                case "/addadmin":
-	                case "/admin":
-	                case "/addAdmin":
-	                	if(chatId == idAdmin) {
-	                		Long id = Long.parseLong(messageText.split("~")[1]);
-	                		String name = messageText.split("~")[2];                		
-	                		idAdmins.put(id, name);// /addAdmin~42523532523~Олег Пипченко
-	                		serializableIdAdmins();
-	                		sendMessage(chatId, "Пользователь с именем " + messageText.split("~")[2] + " и id " + messageText.split("~")[1] + " добавлен в список админов"); 
-	                	}else {
-	                		sendMessage(chatId, "Недостаточно прав");    
-	                	}                	
-	                	break;
-	                case "/delAdmin":
-	                	if(chatId == idAdmin) {
-	                		Long id = Long.parseLong(messageText.split("~")[1]);               		
-	                		String name = idAdmins.remove(id);// /delAdmin~42523532523
-	                    	sendMessage(chatId, "Пользователь с именем " + name + " и id " + id + " удалён из списка админов");                		
-	                    	serializableIdAdmins();
-	                	}else {
-	                		sendMessage(chatId, "Недостаточно прав");    
-	                	}                	
-	                	break;
-	                case "/help":
-	                	if(chatId == idAdmin || idAdmins.containsKey(chatId)) {
-	                    	sendMessage(chatId, "/mail~text\n/addAdmin~42523532523~Олег Пипченко\n/delAdmin~42523532523\n/id\n/admins\n/stop\n/stat - статистика"); 
-	                	}else {
-	                		sendMessage(chatId, "Недостаточно прав", keyboardMaker.getMainKeyboard());    
-	                	}                	
-	                	break;
-	                case "/id":
-	            		sendMessage(chatId, chatId+"");            
-	                	break;
-	                case "/admins":
-	                	if(chatId == idAdmin || idAdmins.containsKey(chatId)) {
-	                		if(!idAdmins.isEmpty()) {
-	                    		idAdmins.forEach((k,v) -> sendMessage(chatId, k+" - " + v));
-	                    	}else {
-	                    		sendMessage(chatId, "Список пуст");
-							}	
-	                	}else {
-	                		sendMessage(chatId, "Недостаточно прав"); 
-						}    
-	                	break;
+    /**
+     * Метод для отправки сообщения с фотографиями и тегами
+     * @param chatIds
+     * @param message
+     * @param photoIds
+     * @param tags
+     */
+    public void sendMessageWithPhotos(List<Long> chatIds, String message, List<String> photoIds, List<String> tags) {
+        try {
+            // Формируем строку с тегами
+            String tagsString = "";
+            if (tags != null && !tags.isEmpty()) {
+                tagsString = "\n\n" + tags.stream()
+                        .map(tag -> "#" + tag.replace(" ", "_"))
+                        .collect(Collectors.joining(" "));
+            }
 
-	                case "инфо":
-	                	sendMessage(chatId,"Это официальный телеграмм-бот платформы SpeedLogist. Сюда приходят, в режиме реального времени, все сообщения о готовности маршрутов к торгам."
-	                			+ "\nДля того, чтобы получать уведомления, достаточно подписаться на бота.\nЧтобы прекратить получать уведомления, нажмите на кнопку \"Выключить рассылку\" или выйдете из бота");
-	                	break;
-	                case "/stop":
-	                	if(chatId == 907699213) {
-	                		super.onClosing();
-	                	}                	
-	                	break;
+            for (Long chatId : chatIds) {
+                if (photoIds != null && !photoIds.isEmpty()) {
+                    for (int i = 0; i < photoIds.size(); i += 10) {
+                        List<String> batch = photoIds.subList(i, Math.min(photoIds.size(), i + 10));
 
-	                case "пошел на хуй":
-	                case "пошел нахуй":
-	                	sendMessage(chatId, "Как оригинально! \nБот внёс Вас в некультурный список!", keyboardMaker.getMainKeyboard());              	
-	                	break;
-	                case "пизда":
-	                	sendMessage(chatId, "Как оригинально! \nБот внёс Вас в некультурный список!", keyboardMaker.getMainKeyboard());              	
-	                	break;
-	                case "хуй":
-	                	sendMessage(chatId, "Заборов мало?! \nБот внёс Вас в некультурный список!", keyboardMaker.getMainKeyboard());              	
-	                	break;
-	                case "бот говно":
-	                case "Бот говно":
-	                	sendMessage(chatId, "╭∩╮ (`-`) ╭∩╮ \n\nБот внёс Вас в некультурный список!", keyboardMaker.getMainKeyboard());              	
-	                	break;
-	                case "соси":
-	                	sendMessage(chatId, "Что сосать?", keyboardMaker.getMainKeyboard());              	
-	                	break;
-	                case "соси хуй":
-	                	sendMessage(chatId, "Как неожиданно! \nБот внёс Вас в некультурный список!", keyboardMaker.getMainKeyboard());              	
-	                	break;
-	                case "лох":
-	                	sendMessage(chatId, "Пароль принят! \nОтправьте фото карты с двух сторон для перевода денег!", keyboardMaker.getMainKeyboard());              	
-	                	break;
-	                case "не работает":
-	                case "бот не работает":
-	                case "Бот не работает":
-	                case "Не работает":
-	                	sendMessage(chatId, "Всё работает! Перезагрузите телефон.", keyboardMaker.getMainKeyboard());              	
-	                	break;
-	                case "мудак":
-	                	sendMessage(chatId, "Правильно писать чудак.", keyboardMaker.getMainKeyboard());              	
-	                	break;
-	                case "педик":
-	                case "пидор":
-	                case "пидр":
-	                	sendMessage(chatId, "Новый логин для входа в SpeedLogist принят!", keyboardMaker.getMainKeyboard());              	
-	                	sendMessage(chatId, "Бот внёс Вас в некультурный список!", keyboardMaker.getMainKeyboard());             	
-	                	break;
-	                default:
-	                	SendMessage sendMessageUnknown  = new SendMessage();
-	                	sendMessageUnknown.setText("Неизвестная команда");
-	                	sendMessageUnknown.setChatId(chatId);
-	                	sendMessageUnknown.setReplyMarkup(keyboardMaker.getMainKeyboard());
-	            		try {
-	            			execute(sendMessageUnknown);
-	            		} catch (TelegramApiException e) {
-	            			System.err.println("execute не сработал");
-	            			e.printStackTrace();
-	            		}
-	            }
-	        }
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+                        // Формируем полный текст для этой группы (сообщение + теги)
+                        String fullCaption = null;
+                        if (message != null || tagsString != null) {
+                            fullCaption = (message != null ? message : "") + 
+                                       (tagsString != null ? tagsString : "");
+                        }
 
-	@Override
-	public String getBotUsername() {
-		return "RoutingBotTest";
-	}
-	
-	@Override
-	public String getBotToken() {
-		return "7906852645:AAGZ2eXYBlyzhwXeLrXz4zGXbMcvEA8k22I";
-	}
-	
-	@Override
-	public void onRegister() {
-		if(!isRunning) {
-			super.onRegister();
-			isRunning = true;
-		}else {
-			System.err.println("Бот уже запущен");
-		}
-	}
-	
-	/**
-	 * Паттерн : numTruck/modelTruck/tyfpeTrailer/pall/cargoCapacity/fio/otherInfo/dateRequisition
-	 * @param input
-	 * @param tgUser
-	 * @return
-	 * @throws IllegalArgumentException
-	 */
-	public TGTruck parseFromString(String input, TGUser tgUser) throws IllegalArgumentException {
-	    if (input == null || input.isEmpty()) {
-	        throw new IllegalArgumentException("Входная строка не может быть пустой или null.");
-	    }
-
-	    // Проверка на SQL-инъекции
-	    if (containsSQLInjectionRisk(input)) {
-	        throw new IllegalArgumentException("Входная строка содержит потенциально опасные символы.");
-	    }
-
-	    String[] parts = input.split("/");
-	    if (parts.length != 8) {
-	        throw new IllegalArgumentException("Неверный формат строки. Ожидается 8 частей, разделенных символом '/'.\n"
-	                + "номер машины/модель машины/тип машины(Тент, Реф Изотерма)/паллетовместимость машины/грузоподъемность машины/ФИО и телефон водителя/Время подачи и направление/дата подачи");
-	    }
-
-	    TGTruck truck = new TGTruck();
-
-	    // numTruck
-	    String numTruck = parts[0];
-	    if (numTruck == null || numTruck.trim().isEmpty()) {
-	        throw new IllegalArgumentException("Номер машины не может быть пустым.");
-	    }
-	    truck.setNumTruck(numTruck);
-
-	    // modelTruck
-	    String modelTruck = parts[1];
-	    if (modelTruck == null || modelTruck.trim().isEmpty()) {
-	        throw new IllegalArgumentException("Модель машины не может быть пустой.");
-	    }
-	    truck.setModelTruck(modelTruck);
-
-	    // typeTrailer
-	    String typeTrailer = parts[2];
-	    if (typeTrailer.equalsIgnoreCase("Тент") || typeTrailer.equalsIgnoreCase("Рефрижератор") || typeTrailer.equalsIgnoreCase("Изотерма")) {
-	        truck.setTypeTrailer(typeTrailer);
-	    } else {
-	        throw new IllegalArgumentException("Неверный формат типа авто. Ожидается: Тент, Рефрижератор, Изотерма.");
-	    }
-
-	    // pall
-	    try {
-	        Integer pall = Integer.parseInt(parts[3]);
-	        if (pall < 0) {
-	            throw new IllegalArgumentException("Количество паллет должно быть положительным числом.");
-	        }
-	        if (pall > 38) {
-	            throw new IllegalArgumentException("Количество паллет не должно быть больше 38.");
-	        }
-	        truck.setPall(pall);
-	    } catch (NumberFormatException e) {
-	        throw new IllegalArgumentException("Неверный формат числа для поля паллет.");
-	    }
-
-	    // cargoCapacity (валидируем ввод в тоннах)
-	    try {
-	        double cargoCapacity = Double.parseDouble(parts[4].replace(',', '.'));
-	        if (cargoCapacity <= 0) {
-	            throw new IllegalArgumentException("Грузоподъемность должна быть положительным числом.");
-	        }
-	        if (cargoCapacity > 30.0) {
-	            throw new IllegalArgumentException("Неверный формат для поля веса. Ожидается значение в тоннах (например, 13.2 или 10).");
-	        }
-	        truck.setCargoCapacity(String.format("%.1f", cargoCapacity)); // Сохраняем с одним знаком после запятой
-	    } catch (NumberFormatException e) {
-	        throw new IllegalArgumentException("Неверный формат для поля веса. Ожидается значение в тоннах (например, 13.2 или 10).");
-	    }
-
-	    // fio
-	    String fio = parts[5];
-	    if (fio == null || fio.trim().isEmpty()) {
-	        throw new IllegalArgumentException("ФИО и телефон не может быть пустым.");
-	    }
-	    truck.setFio(fio);
-
-	    // otherInfo
-	    String otherInfo = parts[6];
-	    if (otherInfo == null || otherInfo.trim().isEmpty()) {
-	        throw new IllegalArgumentException("Поле подачи не может быть пустым.");
-	    }
-	    truck.setOtherInfo(otherInfo);
-
-	    // dateRequisition
-	    try {
-	        Date dateRequisition = Date.valueOf(parts[7]); // Ожидается формат yyyy-mm-dd
-	        truck.setDateRequisition(dateRequisition);
-	    } catch (IllegalArgumentException e) {
-	        throw new IllegalArgumentException("Неверный формат даты. Ожидаемый формат: yyyy-mm-dd.");
-	    }
-	    
-	    //проверяем, есть ли такая машина в базе данных
-	    TGTruck dbTruck = tgTruckService.getTGTruckByChatNumTruckStrict(numTruck, truck.getDateRequisition(), tgUser);
-	    if(dbTruck != null) {
-	    	throw new IllegalArgumentException("Машина с номером " + numTruck + " заявлена на " + truck.getDateRequisition().toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + ".");
-	    }
-
-	    return truck;
-	}
-	
-	/**
-	 * паттерн : кол-во/typeTrailer/pall/cargoCapacity/otherInfo/dateRequisition
-	 * @param input
-	 * @param tgUser
-	 * @return
-	 * @throws IllegalArgumentException
-	 */
-	public Integer parseFromStringMethod2(String input, TGUser tgUser) throws IllegalArgumentException {
-	    if (input == null || input.isEmpty()) {
-	        throw new IllegalArgumentException("Входная строка не может быть пустой или null.");
-	    }
-
-	    // Проверка на SQL-инъекции
-	    if (containsSQLInjectionRisk(input)) {
-	        throw new IllegalArgumentException("Входная строка содержит потенциально опасные символы.");
-	    }
-	    Integer mainInt = 0;
-	    String[] str = input.split(";");
-	    
-	    for (String string : str) {//проверка на ;
-	    	String[] parts = string.split("/");
-	 	    if (parts.length != 6) {
-	 	        throw new IllegalArgumentException("Неверный формат строки. Ожидается 6 частей, разделенных символом '/'.\n"
-	 	                + "количество машин/тип/паллеты/грузоподъемность/другая информация/дата заявки");
-	 	    }
-	 	   try {
-	 	        Integer quantity = Integer.parseInt(parts[0].trim());
-	 	        if (quantity <= 0) {
-	 	            throw new IllegalArgumentException("Количество должно быть положительным числом.");
-	 	        }
-	 	    } catch (NumberFormatException e) {
-	 	        throw new IllegalArgumentException("Неверный формат для поля количества.");
-	 	    }
-	 	  String typeTrailer = parts[1];
-	 	    if(typeTrailer.equals("реф") || typeTrailer.equals("Реф")) {
-	 	    	typeTrailer = "Рефрижератор";
-	 	    }
-	 	    if (typeTrailer.equalsIgnoreCase("Тент") || typeTrailer.equalsIgnoreCase("Рефрижератор") || typeTrailer.equalsIgnoreCase("Изотерма")) {
-	 	    	
-	 	    } else {
-	 	        throw new IllegalArgumentException("Неверный формат типа авто. Ожидается: Тент, Рефрижератор, Изотерма.");
-	 	    }
-	 	   try {
-	 	        Integer pall = Integer.parseInt(parts[2]);
-	 	        if (pall < 0) {
-	 	            throw new IllegalArgumentException("Количество паллет должно быть положительным числом.");
-	 	        }
-	 	        if (pall > 38) {
-	 	            throw new IllegalArgumentException("Количество паллет не должно быть больше 38.");
-	 	        }
-	 	    } catch (NumberFormatException e) {
-	 	        throw new IllegalArgumentException("Неверный формат числа для поля паллет.");
-	 	    }
-	 	  try {
-	 	        double cargoCapacity = Double.parseDouble(parts[3].replace(',', '.'));
-	 	        if (cargoCapacity <= 0) {
-	 	            throw new IllegalArgumentException("Грузоподъемность должна быть положительным числом.");
-	 	        }
-	 	        if (cargoCapacity > 30.0) {
-	 	            throw new IllegalArgumentException("Неверный формат для поля веса. Ожидается значение в тоннах (например, 13.2 или 10).");
-	 	        }
-	 	    } catch (NumberFormatException e) {
-	 	        throw new IllegalArgumentException("Неверный формат для поля веса. Ожидается значение в тоннах (например, 13.2 или 10).");
-	 	    }
-	 	 String otherInfo = parts[4];
-	 	    if (otherInfo == null || otherInfo.trim().isEmpty()) {
-	 	        throw new IllegalArgumentException("Поле другая информация не может быть пустым.");
-	 	    }
-	 	   try {
-	 	        Date dateRequisition = Date.valueOf(parts[5]); // Ожидается формат yyyy-mm-dd
-	 	    } catch (IllegalArgumentException e) {
-	 	        throw new IllegalArgumentException("Неверный формат даты. Ожидаемый формат: yyyy-mm-dd.");
-	 	    }
-	    }
-	    
-	    for (String string : str) {
-	    	String[] parts = string.split("/");
-
-	 	    TGTruck truck = new TGTruck();
-
-	 	    int i = 0;
-	 	    truck.setChatIdUserTruck(tgUser.getChatId());
-	 	    truck.setCompanyName(tgUser.getCompanyName());
-	 	    truck.setStatus(10);
-	 	    
-	 	    // quantity (количество)
-	 	    Integer quantity = Integer.parseInt(parts[0].trim());
-	 	    i = quantity;
-
-	 	    // typeTrailer
-	 	    String typeTrailer = parts[1];
-	 	    if(typeTrailer.equals("реф") || typeTrailer.equals("Реф")) {
-	 	    	typeTrailer = "Рефрижератор";
-	 	    }
-	 	    if (typeTrailer.equalsIgnoreCase("Тент") || typeTrailer.equalsIgnoreCase("Рефрижератор") || typeTrailer.equalsIgnoreCase("Изотерма")) {
-	 	        truck.setTypeTrailer(typeTrailer);
-	 	    }
-
-	 	    // pall
-	 	    Integer pall = Integer.parseInt(parts[2]);
-	 	    truck.setPall(pall);
-
-	 	    // cargoCapacity (валидируем ввод в тоннах)
-	 	    double cargoCapacity = Double.parseDouble(parts[3].replace(',', '.'));
-	 	    truck.setCargoCapacity(String.format("%.1f", cargoCapacity).replace(',', '.')); // Сохраняем с одним знаком после запятой
-
-	 	    // otherInfo
-	 	    String otherInfo = parts[4];
-	 	    if (otherInfo == null || otherInfo.trim().isEmpty()) {
-	 	        throw new IllegalArgumentException("Поле другая информация не может быть пустым.");
-	 	    }
-	 	    truck.setOtherInfo(otherInfo);
-
-	 	    // dateRequisition
-	 	    Date dateRequisition = Date.valueOf(parts[5]); // Ожидается формат yyyy-mm-dd
-	 	    truck.setDateRequisition(dateRequisition);
-	 	    
-	 	    for (int j = 1; j <= i; j++) {
-	 	    	truck.setNumTruck(tgUser.getCompanyName() + " - "+ j + " "+truck.getPall()+"/"+truck.getCargoCapacity());
-	 	    	truck.setIdTGTruck(null);
-	 			tgTruckService.saveOrUpdateTGTruck(truck);
-	 			mainInt++;
-	 		}
-		}
-
-	    return mainInt;
-	}
-
-
-	// Проверка строки на потенциально опасные символы
-	private static boolean containsSQLInjectionRisk(String input) {
-	    String[] dangerousCharacters = {"'", "\"", "--", "/*", "*/"};
-	    for (String dangerous : dangerousCharacters) {
-	        if (input.contains(dangerous)) {
-	            return true;
-	        }
-	    }
-	    return false;
-	}
-
-
-
-
-	
-	
-	
-	public void sendMessage(long chatId, String textToSend, ReplyKeyboardMarkup replyKeyboardMarkup) {
-		SendMessage sendMessage = new SendMessage();
-		sendMessage.setText(textToSend);
-		sendMessage.setChatId(chatId);
-		sendMessage.setReplyMarkup(replyKeyboardMarkup);
-		try {
-			execute(sendMessage);
-		} catch (TelegramApiException e) {
-			System.err.println("execute не сработал");
-			e.printStackTrace();
-			
-		}
-	}
-	
-	public void sendMessage(long chatId, String textToSend) {
-		SendMessage sendMessage = new SendMessage();
-		sendMessage.setText(textToSend);
-		sendMessage.setChatId(chatId);
-		sendMessage.setReplyMarkup(null);
-		try {
-			execute(sendMessage);
-		} catch (TelegramApiException e) {
-			System.err.println("execute не сработал");
-			e.printStackTrace();
-			
-		}
-	}
-	
-	public void sendMessageForStart(long chatId, String textToSend) {
-		SendMessage sendMessage = new SendMessage();
-		sendMessage.setText(textToSend);
-		sendMessage.setChatId(chatId);
-//		sendMessage.setReplyMarkup(keyboardMaker.getMainMenuKeyboard());
-		sendMessage.setReplyMarkup(keyboardMaker.getSecondMenuKeyboard());
-		try {
-			execute(sendMessage);
-		} catch (TelegramApiException e) {
-			System.err.println("execute не сработал");
-			e.printStackTrace();
-			
-		}
-	}
-
-	
-	/**
-	 * Отправляет сообщение ТГ боту всем кто вошел
-	 * @param chatId
-	 * @param textToSend
-	 */
-	public void sendMessageAll(String textToSend) {
-		for (Long id : idAllUsers) {
-			SendMessage sendMessage = new SendMessage(id.toString(),textToSend);
-			try {
-				execute(sendMessage);
-			} catch (TelegramApiException e) {
-				e.printStackTrace();
-				
-			}
-		}
-	}
-	
-	private void startCommandReceived(long chatId, String name) {
-        String answer = "Добро пожаловать " + name + "Новый бот!";
-        sendMessageForStart(chatId, answer);
-        
+                        if (batch.size() == 1) {
+                            // Отправка одной фотографии
+                            String photoId = batch.get(0);
+                            ResponseEntity<Resource> photoResponse = getImage(photoId);
+                            
+                            if (photoResponse.getStatusCode() == HttpStatus.OK && photoResponse.getBody() != null) {
+                                byte[] photoBytes = ((org.springframework.core.io.ByteArrayResource) photoResponse.getBody()).getByteArray();
+                                
+                                SendPhoto photo = new SendPhoto();
+                                photo.setChatId(chatId.toString());
+                                photo.setPhoto(new InputFile(new ByteArrayInputStream(photoBytes), "photo.jpg"));
+                                
+                                // Добавляем полный текст (сообщение + теги)
+                                if (fullCaption != null && !fullCaption.isEmpty()) {
+                                    photo.setCaption(fullCaption);
+                                }
+                                
+                                execute(photo);
+                            }
+                        } else {
+                            // Отправка группы фотографий (2-10)
+                            List<InputMedia> mediaGroup = new ArrayList<>();
+                            
+                            for (int j = 0; j < batch.size(); j++) {
+                                String photoId = batch.get(j);
+                                ResponseEntity<Resource> photoResponse = getImage(photoId);
+                                
+                                if (photoResponse.getStatusCode() == HttpStatus.OK && photoResponse.getBody() != null) {
+                                    byte[] photoBytes = ((org.springframework.core.io.ByteArrayResource) photoResponse.getBody()).getByteArray();
+                                    
+                                    InputMediaPhoto mediaPhoto = new InputMediaPhoto();
+                                    mediaPhoto.setMedia(new ByteArrayInputStream(photoBytes), "photo" + j + ".jpg");
+                                    
+                                    // Добавляем полный текст только к первой фотографии в группе
+                                    if (j == 0 && fullCaption != null && !fullCaption.isEmpty()) {
+                                        mediaPhoto.setCaption(fullCaption);
+                                    }
+                                    
+                                    mediaGroup.add(mediaPhoto);
+                                }
+                            }
+                            
+                            if (!mediaGroup.isEmpty()) {
+                                SendMediaGroup mediaGroupMessage = new SendMediaGroup();
+                                mediaGroupMessage.setChatId(chatId.toString());
+                                mediaGroupMessage.setMedias(mediaGroup);
+                                execute(mediaGroupMessage);
+                            }
+                        }
+                        
+                        // Небольшая пауза между группами
+                        Thread.sleep(300);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Обработка ошибок
+        }
     }
-	
-	private static final String usersDir = "resources/others/telegramm/route/Users.ser";
-	
-	/**
-	 * Сериализация users
-	 */
-//	private void serializableUsers() {
-//		//проверка директории
-//        File fileTest= new File(mainController.path + "resources/others/telegramm/");
-//        if (!fileTest.exists()) {
-//            fileTest.mkdir();
-//            File fileTest2= new File(mainController.path + "resources/others/telegramm/route/");
-//	        if (!fileTest2.exists()) {
-//	            fileTest2.mkdir();
-//	        }
-//        }
-//		try {
-//			FileOutputStream fos = new FileOutputStream(mainController.path + usersDir);
-//                  ObjectOutputStream oos = new ObjectOutputStream(fos);
-//                  oos.writeObject(this.users);
-//                  oos.close();
-//                  fos.close();
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-//	}
-	
-	/**
-	 * Сериализация листа idAllUsers
-	 */
-//	private void serializableIdAllUsers() {
-//		try {
-//			FileOutputStream fos = new FileOutputStream(mainController.path + "resources/others/telegrammIdAllUser.ser");
-//                  ObjectOutputStream oos = new ObjectOutputStream(fos);
-//                  oos.writeObject(this.idAllUsers);
-//                  oos.close();
-//                  fos.close();
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-//	}
-	
-	/**
-	 * Сериализация листа idAdmins
-	 */
-	private void serializableIdAdmins() {
-		try {
-			FileOutputStream fos = new FileOutputStream(mainController.path + "resources/others/telegrammIdAdmins.ser");
-                  ObjectOutputStream oos = new ObjectOutputStream(fos);
-                  oos.writeObject(this.idAdmins);
-                  oos.close();
-                  fos.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-	
-	/**
-	 * Десериализация листа idAllUsers
-	 */
-//	public void deSerializableIdAllUsers() {
-//		try {
-//			FileInputStream fis = new FileInputStream(mainController.path + "resources/others/telegrammIdAllUser.ser");
-//		         ObjectInputStream ois = new ObjectInputStream(fis);
-//		         this.idAllUsers = (ArrayList) ois.readObject();
-//		         ois.close();
-//		         fis.close();
-//			}catch (Exception e) {
-//				e.printStackTrace();
-//			}
-//	}
-	
-	/**
-	 * Десериализация листа idUsers
-	 */
-//	public void deSerializableIdUsers() {
-//		try {
-//			FileInputStream fis = new FileInputStream(mainController.path + usersDir);
-//		         ObjectInputStream ois = new ObjectInputStream(fis);
-//		         this.users =  (Map<Long, User>) ois.readObject();
-//		         ois.close();
-//		         fis.close();
-//			}catch (Exception e) {
-//				e.printStackTrace();
-//			}
-//	}
-	
-//	public void deSerializableIdUsers() {
-//	    // Полный путь к файлу
-//	    String fullPath = mainController.path + usersDir;
-//
-//	    // Проверка на существование директории
-//	    File userFile = new File(fullPath);
-//	    File userDirectory = userFile.getParentFile();
-//	    
-//	    if (!userDirectory.exists()) {
-//	        userDirectory.mkdirs(); // Создаем директорию, если она не существует
-//	    }
-//
-//	    // Проверка на существование файла
-//	    if (!userFile.exists()) {
-//	        try {
-//	            userFile.createNewFile(); // Создаем файл, если он не существует
-//	            // Можно инициализировать его пустым Map
-//	            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(userFile))) {
-//	                oos.writeObject(new HashMap<Long, TGUser>());
-//	            }
-//	        } catch (IOException e) {
-//	            e.printStackTrace();
-//	        }
-//	    }
-//
-//	    // Десериализация данных из файла
-//	    try (FileInputStream fis = new FileInputStream(fullPath);
-//	         ObjectInputStream ois = new ObjectInputStream(fis)) {
-//	        this.users = (Map<Long, TGUser>) ois.readObject();
-//	    } catch (Exception e) {
-//	        e.printStackTrace();
-//	    }
-//	}
-	
-	/**
-	 * Десериализация листа idAdmins
-	 */
-	public void deSerializableIdAdmins() {
-		try {
-			FileInputStream fis = new FileInputStream(mainController.path + "resources/others/telegrammIdAdmins.ser");
-		         ObjectInputStream ois = new ObjectInputStream(fis);
-		         this.idAdmins = (Map<Long, String>) ois.readObject();
-		         ois.close();
-		         fis.close();
-			}catch (Exception e) {
-				e.printStackTrace();
-			}
-	}
-	
+
+    // Метод для получения изображения (без изменений)
+    public ResponseEntity<Resource> getImage(String id) {
+        String externalUrl = urlPart + id;
+
+        ResponseEntity<byte[]> response = restTemplate.exchange(
+                externalUrl,
+                HttpMethod.GET,
+                null,
+                byte[].class
+        );
+
+        if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+            org.springframework.core.io.ByteArrayResource resource = 
+                new org.springframework.core.io.ByteArrayResource(response.getBody());
+
+            return ResponseEntity.ok()
+                    .contentLength(response.getBody().length)
+                    .contentType(response.getHeaders().getContentType() != null ?
+                            response.getHeaders().getContentType() :
+                            MediaType.IMAGE_JPEG)
+                    .body(resource);
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
+        }
+    }
+    
+
+    private static final Long ADMIN_CHAT_ID = 907699213L;
+
+    @Override
+    public void onUpdateReceived(Update update) {
+        if (update.hasMessage() && update.getMessage().hasText()) {
+            String chatId = update.getMessage().getChatId().toString();
+            Long senderChatId = update.getMessage().getChatId();
+            String text = update.getMessage().getText().trim();
+            String senderName = update.getMessage().getFrom().getFirstName();
+
+            // Обработка команды /start (без изменений)
+            if ("/start".equalsIgnoreCase(text)) {
+                SendMessage welcome;
+                if (!chatRepository.existsById(Integer.parseInt(chatId))) {
+                    chatRepository.save(new TelegramChatQuality(Integer.parseInt(chatId)));
+                    welcome = new SendMessage(chatId, "Привет! Ты подписан на рассылку.");
+                } else {
+                    welcome = new SendMessage(chatId, "Приветствую.");
+                }
+
+                try {
+                    execute(welcome);
+                } catch (TelegramApiException e) {
+                    e.printStackTrace();
+                }
+                return;
+            }
+
+            // Проверяем что отправитель подписан
+            if (chatRepository.existsById(Integer.parseInt(chatId))) {
+                // Форматируем сообщение
+                String formattedMessage;
+                if (ADMIN_CHAT_ID.equals(senderChatId)) {
+                    formattedMessage = "<b>🚨 ADMIN " + senderName + ":</b>\n<strong>" + text + "</strong>";
+                } else {
+                    formattedMessage = "<b>" + senderName + ":</b>\n" + text;
+                }
+
+                // Получаем всех подписчиков, исключая отправителя
+                List<Long> chatIds = telegramChatQualityService.getChatIdList().stream()
+                        .map(s -> s.getChatId().longValue())
+                        .filter(id -> !id.equals(senderChatId)) // Вот ключевое изменение!
+                        .collect(Collectors.toList());
+
+                // Отправляем сообщение всем, кроме отправителя
+                for (Long id : chatIds) {
+                    try {
+                        SendMessage msg = new SendMessage();
+                        msg.setChatId(id.toString());
+                        msg.setText(formattedMessage);
+                        msg.enableHtml(true);
+                        execute(msg);
+                        Thread.sleep(100); // Небольшая задержка
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+    }
+
+ // Новый метод для отправки только текстовых сообщений
+    public void sendTextMessage(List<Long> chatIds, String message) {
+        if (message == null || message.isEmpty()) {
+            return;
+        }
+
+        for (Long chatId : chatIds) {
+            try {
+                SendMessage textMessage = new SendMessage();
+                textMessage.setChatId(chatId.toString());
+                textMessage.setText(message);
+                execute(textMessage);
+                
+                // Небольшая задержка, чтобы не превысить лимиты Telegram
+                Thread.sleep(100);
+            } catch (Exception e) {
+                e.printStackTrace();
+                // Можно добавить логирование ошибок
+            }
+        }
+    }
+    
+    @Override
+    public String getBotUsername() {
+        return botUsername;
+    }
+
+    @Override
+    public String getBotToken() {
+        return botToken;
+    }
+
 
 }

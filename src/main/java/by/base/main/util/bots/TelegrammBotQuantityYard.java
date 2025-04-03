@@ -1,14 +1,8 @@
 package by.base.main.util.bots;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -166,19 +160,24 @@ public class TelegrammBotQuantityYard extends TelegramLongPollingBot {
         }
     }
 
+    private static final Long ADMIN_CHAT_ID = 907699213L;
+
     @Override
     public void onUpdateReceived(Update update) {
         if (update.hasMessage() && update.getMessage().hasText()) {
             String chatId = update.getMessage().getChatId().toString();
+            Long senderChatId = update.getMessage().getChatId();
             String text = update.getMessage().getText().trim();
-            
+            String senderName = update.getMessage().getFrom().getFirstName();
+
+            // Обработка команды /start (без изменений)
             if ("/start".equalsIgnoreCase(text)) {
                 SendMessage welcome;
                 if (!chatRepository.existsById(Integer.parseInt(chatId))) {
                     chatRepository.save(new TelegramChatQuality(Integer.parseInt(chatId)));
                     welcome = new SendMessage(chatId, "Привет! Ты подписан на рассылку.");
                 } else {
-                    welcome = new SendMessage(chatId, "Приветствую.");                	
+                    welcome = new SendMessage(chatId, "Приветствую.");
                 }
 
                 try {
@@ -186,29 +185,35 @@ public class TelegrammBotQuantityYard extends TelegramLongPollingBot {
                 } catch (TelegramApiException e) {
                     e.printStackTrace();
                 }
+                return;
             }
 
-            if (text.startsWith("send ")) {
-                String messageToSend = text.substring(5).trim();
-                if (!messageToSend.isEmpty()) {
-                    // Получаем все chatId
-                	List<Long> chatIds = telegramChatQualityService.getChatIdList().stream().map(s-> s.getChatId().longValue()).collect(Collectors.toList()) ;
-                    
-                    // Отправляем сообщение всем
-                	sendTextMessage(chatIds, messageToSend);
-                    
-                    // Подтверждение отправителю
-                    SendMessage confirmation = new SendMessage(chatId, "Сообщение отправлено " + chatIds.size() + " подписчикам");
-                    try {
-                        execute(confirmation);
-                    } catch (TelegramApiException e) {
-                        e.printStackTrace();
-                    }
+            // Проверяем что отправитель подписан
+            if (chatRepository.existsById(Integer.parseInt(chatId))) {
+                // Форматируем сообщение
+                String formattedMessage;
+                if (ADMIN_CHAT_ID.equals(senderChatId)) {
+                    formattedMessage = "<b>🚨 ADMIN " + senderName + ":</b>\n<strong>" + text + "</strong>";
                 } else {
-                    SendMessage error = new SendMessage(chatId, "Пожалуйста, укажите текст сообщения после команды send");
+                    formattedMessage = "<b>" + senderName + ":</b>\n" + text;
+                }
+
+                // Получаем всех подписчиков, исключая отправителя
+                List<Long> chatIds = telegramChatQualityService.getChatIdList().stream()
+                        .map(s -> s.getChatId().longValue())
+                        .filter(id -> !id.equals(senderChatId)) // Вот ключевое изменение!
+                        .collect(Collectors.toList());
+
+                // Отправляем сообщение всем, кроме отправителя
+                for (Long id : chatIds) {
                     try {
-                        execute(error);
-                    } catch (TelegramApiException e) {
+                        SendMessage msg = new SendMessage();
+                        msg.setChatId(id.toString());
+                        msg.setText(formattedMessage);
+                        msg.enableHtml(true);
+                        execute(msg);
+                        Thread.sleep(100); // Небольшая задержка
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }

@@ -308,7 +308,6 @@ public class MainController {
 			}
 		}else {
 			System.err.println("ТЕЛЕГРАММ БОТ ОТКЛЮЧЕН!");	
-//			new BotInitializer(telegrammBotQuantityYard).initBotQuantityYard();
 		}
 		
 //		new BotInitializer(telegramBotRoutingTEST).initRoutingBotTEST();

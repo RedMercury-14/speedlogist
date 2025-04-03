@@ -46,4 +46,13 @@ public class AcceptanceQualityFoodCardImageUrl {
     public void setUrl(String url) {
         this.url = url;
     }
+
+	@Override
+	public String toString() {
+		return "AcceptanceQualityFoodCardImageUrl [idAcceptanceQualityFoodCardImageUrl="
+				+ idAcceptanceQualityFoodCardImageUrl + ", acceptanceQualityFoodCard=" + acceptanceQualityFoodCard
+				+ ", url=" + url + "]";
+	}
+    
+    
 }

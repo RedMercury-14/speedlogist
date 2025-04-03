@@ -88,6 +88,12 @@
 			<artifactId>telegrambots</artifactId>
 			<version>6.5.0</version>
 		</dependency>
+<!-- https://mvnrepository.com/artifact/org.telegram/telegrambots -->
+<!--<dependency>-->
+<!--    <groupId>org.telegram</groupId>-->
+<!--    <artifactId>telegrambots</artifactId>-->
+<!--    <version>6.8.0</version>-->
+<!--</dependency>-->
 		
 		<!-- PDF  -->
 		<!-- https://mvnrepository.com/artifact/com.itextpdf/itextpdf -->

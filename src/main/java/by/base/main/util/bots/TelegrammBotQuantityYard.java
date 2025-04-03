@@ -161,7 +161,7 @@ public class TelegrammBotQuantityYard extends TelegramLongPollingBot {
     }
 
     private static final Long ADMIN_CHAT_ID = 907699213L;
-
+    
     @Override
     public void onUpdateReceived(Update update) {
         if (update.hasMessage() && update.getMessage().hasText()) {
@@ -170,56 +170,136 @@ public class TelegrammBotQuantityYard extends TelegramLongPollingBot {
             String text = update.getMessage().getText().trim();
             String senderName = update.getMessage().getFrom().getFirstName();
 
-            // Обработка команды /start (без изменений)
+            // Обработка команды /start
             if ("/start".equalsIgnoreCase(text)) {
-                SendMessage welcome;
-                if (!chatRepository.existsById(Integer.parseInt(chatId))) {
-                    chatRepository.save(new TelegramChatQuality(Integer.parseInt(chatId)));
-                    welcome = new SendMessage(chatId, "Привет! Ты подписан на рассылку.");
-                } else {
-                    welcome = new SendMessage(chatId, "Приветствую.");
-                }
-
-                try {
-                    execute(welcome);
-                } catch (TelegramApiException e) {
-                    e.printStackTrace();
-                }
+                handleStartCommand(chatId);
                 return;
             }
 
             // Проверяем что отправитель подписан
             if (chatRepository.existsById(Integer.parseInt(chatId))) {
                 // Форматируем сообщение
-                String formattedMessage;
-                if (ADMIN_CHAT_ID.equals(senderChatId)) {
-                    formattedMessage = "<b>🚨 ADMIN " + senderName + ":</b>\n<strong>" + text + "</strong>";
-                } else {
-                    formattedMessage = "<b>" + senderName + ":</b>\n" + text;
-                }
+                String formattedMessage = formatMessage(text, senderName, senderChatId);
 
                 // Получаем всех подписчиков, исключая отправителя
-                List<Long> chatIds = telegramChatQualityService.getChatIdList().stream()
-                        .map(s -> s.getChatId().longValue())
-                        .filter(id -> !id.equals(senderChatId)) // Вот ключевое изменение!
-                        .collect(Collectors.toList());
+                List<Long> recipients = getRecipients(senderChatId);
 
-                // Отправляем сообщение всем, кроме отправителя
-                for (Long id : chatIds) {
-                    try {
-                        SendMessage msg = new SendMessage();
-                        msg.setChatId(id.toString());
-                        msg.setText(formattedMessage);
-                        msg.enableHtml(true);
-                        execute(msg);
-                        Thread.sleep(100); // Небольшая задержка
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
+                // Отправляем сообщение с обработкой ошибок
+                sendMessagesWithErrorHandling(formattedMessage, recipients);
             }
         }
     }
+
+    private void sendMessagesWithErrorHandling(String message, List<Long> recipients) {
+        for (Long chatId : recipients) {
+            try {
+                SendMessage msg = new SendMessage();
+                msg.setChatId(chatId.toString());
+                msg.setText(message);
+                msg.enableHtml(true);
+                execute(msg);
+                Thread.sleep(100);
+            } catch (TelegramApiException e) {
+                if (e.getMessage() != null && e.getMessage().contains("USER_IS_BLOCKED")) {
+                    // Удаляем заблокировавшего пользователя из базы
+                    telegramChatQualityService.deleteByChatId(chatId.intValue());
+                    System.out.println("Удален заблокировавший пользователь: " + chatId);
+                } else {
+                    e.printStackTrace();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private String formatMessage(String text, String senderName, Long senderChatId) {
+        return ADMIN_CHAT_ID.equals(senderChatId)
+            ? "<b>🚨 ADMIN " + senderName + ":</b>\n<strong>" + text + "</strong>"
+            : "<b>" + senderName + ":</b>\n" + text;
+    }
+
+    private List<Long> getRecipients(Long excludeChatId) {
+        return telegramChatQualityService.getChatIdList().stream()
+                .map(s -> s.getChatId().longValue())
+                .filter(id -> !id.equals(excludeChatId))
+                .collect(Collectors.toList());
+    }
+
+    private void handleStartCommand(String chatId) {
+        SendMessage welcome;
+        if (!chatRepository.existsById(Integer.parseInt(chatId))) {
+            chatRepository.save(new TelegramChatQuality(Integer.parseInt(chatId)));
+            welcome = new SendMessage(chatId, "Привет! Ты подписан на рассылку.");
+        } else {
+            welcome = new SendMessage(chatId, "Приветствую.");
+        }
+
+        try {
+            execute(welcome);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
+
+//    @Override
+//    public void onUpdateReceived(Update update) {
+//        if (update.hasMessage() && update.getMessage().hasText()) {
+//            String chatId = update.getMessage().getChatId().toString();
+//            Long senderChatId = update.getMessage().getChatId();
+//            String text = update.getMessage().getText().trim();
+//            String senderName = update.getMessage().getFrom().getFirstName();
+//
+//            // Обработка команды /start (без изменений)
+//            if ("/start".equalsIgnoreCase(text)) {
+//                SendMessage welcome;
+//                if (!chatRepository.existsById(Integer.parseInt(chatId))) {
+//                    chatRepository.save(new TelegramChatQuality(Integer.parseInt(chatId)));
+//                    welcome = new SendMessage(chatId, "Привет! Ты подписан на рассылку.");
+//                } else {
+//                    welcome = new SendMessage(chatId, "Приветствую.");
+//                }
+//
+//                try {
+//                    execute(welcome);
+//                } catch (TelegramApiException e) {
+//                    e.printStackTrace();
+//                }
+//                return;
+//            }
+//
+//            // Проверяем что отправитель подписан
+//            if (chatRepository.existsById(Integer.parseInt(chatId))) {
+//                // Форматируем сообщение
+//                String formattedMessage;
+//                if (ADMIN_CHAT_ID.equals(senderChatId)) {
+//                    formattedMessage = "<b>🚨 ADMIN " + senderName + ":</b>\n<strong>" + text + "</strong>";
+//                } else {
+//                    formattedMessage = "<b>" + senderName + ":</b>\n" + text;
+//                }
+//
+//                // Получаем всех подписчиков, исключая отправителя
+//                List<Long> chatIds = telegramChatQualityService.getChatIdList().stream()
+//                        .map(s -> s.getChatId().longValue())
+//                        .filter(id -> !id.equals(senderChatId)) // Вот ключевое изменение!
+//                        .collect(Collectors.toList());
+//
+//                // Отправляем сообщение всем, кроме отправителя
+//                for (Long id : chatIds) {
+//                    try {
+//                        SendMessage msg = new SendMessage();
+//                        msg.setChatId(id.toString());
+//                        msg.setText(formattedMessage);
+//                        msg.enableHtml(true);
+//                        execute(msg);
+//                        Thread.sleep(100); // Небольшая задержка
+//                    } catch (Exception e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//            }
+//        }
+//    }
 
  // Новый метод для отправки только текстовых сообщений
     public void sendTextMessage(List<Long> chatIds, String message) {

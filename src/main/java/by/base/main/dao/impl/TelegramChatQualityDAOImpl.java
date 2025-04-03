@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.transaction.Transactional;
+
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
@@ -51,6 +53,14 @@ public class TelegramChatQualityDAOImpl implements TelegramChatQualityDAO{
 		currentSession.save(telegramChatQuality);		
 	}
 	
-	
+	private static final String queryDeleteById = "delete from TelegramChatQuality where chatId=:chatId";
+	@Override
+	public void deleteByChatId(int chatId) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query theQuery = 
+				currentSession.createQuery(queryDeleteById);
+		theQuery.setParameter("id", chatId);
+		theQuery.executeUpdate();
+	}
 
 }

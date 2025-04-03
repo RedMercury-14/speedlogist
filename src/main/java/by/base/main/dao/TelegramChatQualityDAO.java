@@ -11,5 +11,7 @@ public interface TelegramChatQualityDAO {
 	boolean existsById(int chatId);
 	
 	void save(TelegramChatQuality telegramChatQuality);
+	
+	void deleteByChatId (int chatId);
 
 }

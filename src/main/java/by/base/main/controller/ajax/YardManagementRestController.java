@@ -67,9 +67,11 @@ import by.base.main.model.Order;
 import by.base.main.model.Route;
 import by.base.main.model.User;
 import by.base.main.service.OrderService;
+import by.base.main.service.TelegramChatQualityService;
 import by.base.main.service.UserService;
 import by.base.main.service.util.SocketClient;
 import by.base.main.util.SlotWebSocket;
+import by.base.main.util.bots.TelegramBotRoutingTEST;
 import by.base.main.util.bots.TelegrammBotQuantityYard;
 
 import org.springframework.core.io.ByteArrayResource;
@@ -106,6 +108,12 @@ public class YardManagementRestController {
 	
 	@Autowired
 	private TelegrammBotQuantityYard telegrammBotQuantityYard;
+	
+	@Autowired
+	private TelegramChatQualityService telegramChatQualityService;
+	
+	@Autowired
+	private TelegramBotRoutingTEST telegramBotRoutingTEST;
 
 	private static final String staticToken = "3d075c53-4fd3-41c3-89fc-a5e5c4a0b25b";
 	
@@ -374,25 +382,44 @@ public class YardManagementRestController {
 	}
 	
 	@GetMapping("/acceptanceQualityBot/{id}")
-	public ResponseEntity<List<AcceptanceQualityFoodCardDTO>> getAcceptanceQualityBot(HttpServletRequest request,
+	public Map<String, String> getAcceptanceQualityBot(HttpServletRequest request,
 			@PathVariable("id") String idCar) {
+		Map<String, String> responce = new HashMap<String, String>();
+		List<AcceptanceQualityFoodCard> acceptanceQualityFoodCardList =	acceptanceQualityFoodCardService.getFoodCardByIdFoodQuality(Long.parseLong(idCar));
 		
-		System.err.println(idCar);
-		
-		List<AcceptanceQualityFoodCard> acceptanceQualityFoodCardList =	acceptanceQualityFoodCardService.getFoodCardByIdFoodQuality(Long.parseLong(idCar)); 
-		
-		
-		
+		List<Long> chatIds = telegramChatQualityService.getChatIdList().stream().map(s-> s.getChatId().longValue()).collect(Collectors.toList()); // список chatId--
+		List<String> tags = new ArrayList<String>();
 		for (AcceptanceQualityFoodCard acceptanceQualityFoodCard : acceptanceQualityFoodCardList) {
-//			acceptanceQualityFoodCardDTO
+			List<String> photoIds = new ArrayList<String>();
 			for (AcceptanceQualityFoodCardImageUrl acceptanceQualityFoodCardImageUrl : acceptanceQualityFoodCard.getAcceptanceQualityFoodCardImageUrls()) {
-				System.out.println(acceptanceQualityFoodCard.getIdAcceptanceQualityFoodCard() +" --> "+acceptanceQualityFoodCardImageUrl);				
+				System.out.println(acceptanceQualityFoodCard.getIdAcceptanceQualityFoodCard() +" --> "+acceptanceQualityFoodCardImageUrl);	
+				photoIds.add(acceptanceQualityFoodCardImageUrl.getIdAcceptanceQualityFoodCardImageUrl().toString());	
 			}
+			StringBuilder message = new StringBuilder();
+			message.append("Поставщик: " + acceptanceQualityFoodCard.getAcceptanceFoodQuality().getAcceptance().getFirmNameAccept() + ";  авто: " 
+					+ acceptanceQualityFoodCard.getAcceptanceFoodQuality().getAcceptance().getCarNumber() + "; продукт: "
+					+ acceptanceQualityFoodCard.getProductName() + "; Карточка товара №" + acceptanceQualityFoodCard.getIdAcceptanceQualityFoodCard()
+					+ "\n");
+			if(acceptanceQualityFoodCard.getTasteQuality() != null) message.append("Вкусовые качества: " + acceptanceQualityFoodCard.getTasteQuality().trim() + "\n");
+			if(acceptanceQualityFoodCard.getCardInfo() != null) message.append("Примечания: " + acceptanceQualityFoodCard.getCardInfo().trim() + "\n");
+			if(acceptanceQualityFoodCard.getCaliber() != null) message.append("Калибр: " + acceptanceQualityFoodCard.getCaliber().trim() + "\n");
+			if(acceptanceQualityFoodCard.getMaturityLevel() != null) message.append("Уровень зрелости: " + acceptanceQualityFoodCard.getMaturityLevel().trim() + "\n");
+			if(acceptanceQualityFoodCard.getAppearanceDefects() != null) message.append("Внешние дефекты: " + acceptanceQualityFoodCard.getAppearanceDefects().trim() + "\n");
+			
+			
+			if(!tags.contains(acceptanceQualityFoodCard.getAcceptanceFoodQuality().getAcceptance().getFirmNameAccept())) {
+				tags.add(acceptanceQualityFoodCard.getAcceptanceFoodQuality().getAcceptance().getFirmNameAccept());
+			}
+			if(!tags.contains(acceptanceQualityFoodCard.getProductName())) {
+				tags.add(acceptanceQualityFoodCard.getProductName());
+			}			
+			telegrammBotQuantityYard.sendMessageWithPhotos(chatIds, message.toString(), photoIds, tags);
+//			telegramBotRoutingTEST.sendMessageWithPhotos(chatIds, message.toString(), photoIds, tags);
 		}
-		
-//		telegrammBotQuantityYard.sendMessageWithPhotosToAll("Test", null);
+		responce.put("status", "200");		
+		responce.put("message", "ообщение отправлено в телеграмм бот");	
 
-		return null;
+		return responce;
 	}
 
 

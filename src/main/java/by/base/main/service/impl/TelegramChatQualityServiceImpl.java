@@ -34,6 +34,12 @@ public class TelegramChatQualityServiceImpl implements TelegramChatQualityServic
 	public void save(TelegramChatQuality telegramChatQuality) {
 		telegramChatQualityDAO.save(telegramChatQuality);
 	}
+
+	@Transactional
+	@Override
+	public void deleteByChatId(int chatId) {
+		telegramChatQualityDAO.deleteByChatId(chatId);
+	}
 	
 	
 

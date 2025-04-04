@@ -114,6 +114,9 @@ public class YardManagementRestController {
 	
 	@Autowired
 	private TelegramBotRoutingTEST telegramBotRoutingTEST;
+	
+	@Value("${telegramm.bot.run}")
+	private boolean isRunTelegrammBot;
 
 	private static final String staticToken = "3d075c53-4fd3-41c3-89fc-a5e5c4a0b25b";
 	
@@ -412,9 +415,13 @@ public class YardManagementRestController {
 			}
 			if(!tags.contains(acceptanceQualityFoodCard.getProductName())) {
 				tags.add(acceptanceQualityFoodCard.getProductName());
-			}			
-			telegrammBotQuantityYard.sendMessageWithPhotos(chatIds, message.toString(), photoIds, tags);
-//			telegramBotRoutingTEST.sendMessageWithPhotos(chatIds, message.toString(), photoIds, tags);
+			}	
+			
+			if(isRunTelegrammBot) {
+				telegrammBotQuantityYard.sendMessageWithPhotos(chatIds, message.toString(), photoIds, tags);				
+			}else {
+				telegramBotRoutingTEST.sendMessageWithPhotos(chatIds, message.toString(), photoIds, tags);				
+			}
 		}
 		responce.put("status", "200");		
 		responce.put("message", "ообщение отправлено в телеграмм бот");	

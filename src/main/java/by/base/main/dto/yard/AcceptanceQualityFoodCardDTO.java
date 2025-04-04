@@ -30,8 +30,8 @@ public class AcceptanceQualityFoodCardDTO {
     private Integer cardStatus;
     private String cardInfo;
     private String thermogram;
-    private Double bodyTemp;
-    private Double fruitTemp;
+    private String bodyTemp;
+    private String fruitTemp;
     private Integer appearanceEvaluation;
     private String appearanceDefects;
     private String maturityLevel;
@@ -177,19 +177,19 @@ public class AcceptanceQualityFoodCardDTO {
         this.thermogram = thermogram;
     }
 
-    public Double getBodyTemp() {
+    public String getBodyTemp() {
         return bodyTemp;
     }
 
-    public void setBodyTemp(Double bodyTemp) {
+    public void setBodyTemp(String bodyTemp) {
         this.bodyTemp = bodyTemp;
     }
 
-    public Double getFruitTemp() {
+    public String getFruitTemp() {
         return fruitTemp;
     }
 
-    public void setFruitTemp(Double fruitTemp) {
+    public void setFruitTemp(String fruitTemp) {
         this.fruitTemp = fruitTemp;
     }
 

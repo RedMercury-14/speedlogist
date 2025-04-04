@@ -350,7 +350,7 @@ function getContextMenuItemsForOrderTable(params) {
 			icon: uiIcons.clickBoadrPlus
 		},
 		{
-			disabled: !!idRamp || status !== 5 || isLogist(role) || isAdmin(role) || isSlotsObserver(role) || isObserver(role),
+			disabled: !!idRamp || (status !== 5 && status !== 4) || isLogist(role) || isAdmin(role) || isSlotsObserver(role) || isObserver(role),
 			name: `Создать слот заказа от поставщика`,
 			action: () => {
 				const eventContainer = document.querySelector("#external-events")
@@ -360,7 +360,7 @@ function getContextMenuItemsForOrderTable(params) {
 			icon: uiIcons.clickBoadrPlus
 		},
 		{
-			disabled: !!idRamp || status !== 5 || isLogist(role) || isAdmin(role) || isSlotsObserver(role) || isObserver(role),
+			disabled: !!idRamp || (status !== 5 && status !== 4) || isLogist(role) || isAdmin(role) || isSlotsObserver(role) || isObserver(role),
 			name: `Обновить заказ`,
 			action: () => {
 				// получаем обновленный заказ по номеру Маркета и обновляем в сторе и таблице
@@ -413,6 +413,11 @@ function createNewOrder(marketNumber, eventContainer) {
 		return
 	}
 
+	if (order.status === 4) {
+		alert('Невозможно установить слот. Необходимо обновить заказ из маркета')
+		return
+	}
+
 	store.addEventToDropZone(order)
 	createDraggableElement(eventContainer, order, login, currentStock)
 }
@@ -423,7 +428,8 @@ function addNewOrderButtonHandler(e, eventContainer) {
 	if (!marketNumber) return
 	// проверка, есть ли заказ с таким номером
 	const existingOrder = store.getOrderByMarketNumber(marketNumber)
-	if (existingOrder) {
+	const isBlockedOrder = existingOrder && existingOrder.status === 4
+	if (existingOrder && !isBlockedOrder) {
 		snackbar.show('Заказ с таким номером уже существует')
 		return
 	}

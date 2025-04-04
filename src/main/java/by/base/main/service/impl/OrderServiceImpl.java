@@ -492,7 +492,7 @@ public class OrderServiceImpl implements OrderService {
 	@Override
     public Order deleteSlot(Integer orderId) {
         Order order = orderDAO.getOrderById(orderId);
-        order.setStatus(5);
+        order.setStatus(4);
         order.setTimeDelivery(null);
         order.setSlotMessageHistory(null);
         order.setFirstLoadSlot(null);
@@ -501,15 +501,4 @@ public class OrderServiceImpl implements OrderService {
         return order;
     }
 
-	@Override
-	public Order deleteSlot(Integer orderId) {
-		Order order = orderDAO.getOrderById(orderId);
-		order.setStatus(5);
-		order.setTimeDelivery(null);
-		order.setSlotMessageHistory(null);
-		order.setFirstLoadSlot(null);
-		order.setLoginManager(null);
-		orderDAO.updateOrder(order);
-		return order;
-	}
 }

@@ -1,6 +1,7 @@
 package by.base.main.service.impl;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
@@ -39,6 +40,15 @@ public class TelegramChatQualityServiceImpl implements TelegramChatQualityServic
 	@Override
 	public void deleteByChatId(int chatId) {
 		telegramChatQualityDAO.deleteByChatId(chatId);
+	}
+
+	@Transactional
+	@Override
+	public List<Long> getChatIdLongList() {
+		// TODO Auto-generated method stub
+		return telegramChatQualityDAO.getChatIdList().stream()
+                .map(s -> s.getChatId().longValue())
+                .collect(Collectors.toList());
 	}
 	
 	

@@ -23,6 +23,7 @@ public class AcceptanceQualityFoodCardDAOImpl implements AcceptanceQualityFoodCa
             "LEFT JOIN FETCH card.internalDefectsQualityCardList " +
             "LEFT JOIN FETCH card.lightDefectsQualityCardList " +
             "LEFT JOIN FETCH card.totalDefectQualityCardList " +
+            "LEFT JOIN FETCH card.acceptanceQualityFoodCardImageUrls " +
             "WHERE card.acceptanceFoodQuality = :acceptanceFoodQuality";
 
     @Transactional(transactionManager = "myTransactionManagerYard")
@@ -38,6 +39,7 @@ public class AcceptanceQualityFoodCardDAOImpl implements AcceptanceQualityFoodCa
             "LEFT JOIN FETCH a.internalDefectsQualityCardList " +
             "LEFT JOIN FETCH a.lightDefectsQualityCardList " +
             "LEFT JOIN FETCH a.totalDefectQualityCardList " +
+            "LEFT JOIN FETCH a.acceptanceQualityFoodCardImageUrls " +
             "WHERE a.idAcceptanceQualityFoodCard = :idAcceptanceQualityFoodCard";
 
     @Transactional(transactionManager = "myTransactionManagerYard")
@@ -68,6 +70,7 @@ public class AcceptanceQualityFoodCardDAOImpl implements AcceptanceQualityFoodCa
 	}
 
 	@Override
+	@Transactional(transactionManager = "myTransactionManagerYard")
 	public int save(AcceptanceQualityFoodCard acceptanceQualityFoodCard) {
 		Session currentSession = sessionFactoryYard.getCurrentSession();
 		currentSession.save(acceptanceQualityFoodCard);
@@ -75,6 +78,7 @@ public class AcceptanceQualityFoodCardDAOImpl implements AcceptanceQualityFoodCa
 	}
 
 	@Override
+	@Transactional(transactionManager = "myTransactionManagerYard")
 	public void update(AcceptanceQualityFoodCard acceptanceQualityFoodCard) {
 		Session currentSession = sessionFactoryYard.getCurrentSession();
 		currentSession.update(acceptanceQualityFoodCard);

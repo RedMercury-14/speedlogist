@@ -119,15 +119,27 @@ public class AcceptanceQualityFoodCard {
     
     @Column(name = "unit")
     private String unit;
+    
+    @Column(name = "manager_percent")
+    private String managerPercent;
 
     // Getters and Setters
 
+    
 
     public LocalDateTime getDateCard() {
         return dateCard;
     }
 
-    public String getUnit() {
+    public String getManagerPercent() {
+		return managerPercent;
+	}
+
+	public void setManagerPercent(String managerPercent) {
+		this.managerPercent = managerPercent;
+	}
+
+	public String getUnit() {
 		return unit;
 	}
 

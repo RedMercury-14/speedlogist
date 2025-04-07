@@ -80,6 +80,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 @RestController
 @RequestMapping(path = "tsd", produces = "application/json")
@@ -444,14 +445,16 @@ public class YardManagementRestController {
 	/**
 	 * Реализация подтверждения карточки товара.
 	 * Записывает сразу в базу данных
+	 * <b></b>
 	 * @param request
 	 * @param str
 	 * @return
 	 * @throws ParseException
 	 * @throws IOException
+	 * @throws TelegramApiException 
 	 */
 	@PostMapping("/aproofQualityFoodCard")
-	public Map<String, Object> setActStatus(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+	public Map<String, Object> setActStatus(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException, TelegramApiException {
 		Map<String, Object> response = new HashMap<>();
 		JSONParser parser = new JSONParser();
 		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
@@ -465,11 +468,52 @@ public class YardManagementRestController {
 		
 		foodCard.setCardStatus(status);
 		foodCard.setCommentAproof(comment);	
+		foodCard.setManagerPercent(percent);
 		
-		acceptanceQualityFoodCardService.save(foodCard);
+		acceptanceQualityFoodCardService.update(foodCard);
+		
+		//тут отпраляем сообщение в бот.
+		String statusStr = null;
+		switch (status) {
+		case 150:
+			statusStr = "Принимаем.";
+			break;
+		case 152:
+			statusStr = "Принимаем c переборкой.";
+			break;
+		case 154:
+			statusStr = "Принимаем с процентом брака.";
+			break;
+		case 156:
+			statusStr = "Принимаем под реализацию";
+			break;
+		case 140:
+			statusStr = "Не принимаем";
+			break;
+		default:
+			statusStr = "Ошибка чтения статуса";
+			break;
+		}
+		
+		StringBuilder message = new StringBuilder();
+		message.append("Поставщик: " + foodCard.getAcceptanceFoodQuality().getAcceptance().getFirmNameAccept() + ";  авто: " 
+				+ foodCard.getAcceptanceFoodQuality().getAcceptance().getCarNumber() + "; продукт: "
+				+ foodCard.getProductName() + "; Карточка товара №" + foodCard.getIdAcceptanceQualityFoodCard()
+				+ "\n");
+		message.append("<b>Статус по карточке: " + statusStr);
+		if(status == 152 || status == 156 || status == 140 && comment!=null) message.append("Комментарий: " + comment);
+		if(status == 154) message.append("Информация по процентам: " + percent);		
+		message.append("</b>");
+		
+		if(isRunTelegrammBot) {
+			telegrammBotQuantityYard.sendMessageInBot(message.toString());				
+		}else {
+			telegramBotRoutingTEST.sendMessageInBot(message.toString());	
+		}
 		
 		response.put("status", "200");
 		response.put("object", foodCard);
+		response.put("telegrammMessage", message.toString());
 		return response;
 	}
 	
@@ -520,9 +564,7 @@ public class YardManagementRestController {
 			if(isRunTelegrammBot) {
 				telegrammBotQuantityYard.sendMessageWithPhotos(chatIds, message.toString(), photoIds, tags);				
 			}else {
-				System.err.println(message.toString());
 				telegramBotRoutingTEST.sendMessageWithPhotos(chatIds, message.toString(), photoIds, tags);		
-				System.out.println("В телегу полетело");
 			}
 		}
 		responce.put("status", "200");		

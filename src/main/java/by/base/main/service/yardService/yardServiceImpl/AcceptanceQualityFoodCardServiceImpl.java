@@ -107,14 +107,12 @@ public class AcceptanceQualityFoodCardServiceImpl implements AcceptanceQualityFo
         return acceptanceQualityFoodCardDTOList;
     }
 
-	@Override
-	@Transactional
+	@Override	
 	public int save(AcceptanceQualityFoodCard acceptanceQualityFoodCard) {
 		return acceptanceQualityFoodCardDAO.save(acceptanceQualityFoodCard);
 	}
 
 	@Override
-	@Transactional
 	public void update(AcceptanceQualityFoodCard acceptanceQualityFoodCard) {
 		acceptanceQualityFoodCardDAO.update(acceptanceQualityFoodCard);
 	}

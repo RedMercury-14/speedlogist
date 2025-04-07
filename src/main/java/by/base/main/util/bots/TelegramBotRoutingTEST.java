@@ -450,6 +450,21 @@ public class TelegramBotRoutingTEST extends TelegramLongPollingBot {
         }
     }
     
+    /**
+     * Отправляет текстовое сообщение всем в чате
+     * @param text
+     * @throws TelegramApiException
+     */
+    public void sendMessageInBot(String text) throws TelegramApiException {
+    	for (Long chatId : telegramChatQualityService.getChatIdLongList()) {
+    		SendMessage msg = new SendMessage();
+            msg.setChatId(chatId.toString());
+            msg.setText(text);
+            msg.enableHtml(true);
+            execute(msg);
+		}        
+    }
+    
     @Override
     public String getBotUsername() {
         return botUsername;

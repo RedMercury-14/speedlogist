@@ -50,9 +50,6 @@ public class TelegrammBotQuantityYard extends TelegramLongPollingBot {
     public String urlPart;
     
     private final RestTemplate restTemplate = new RestTemplate();
-
-    @Autowired
-    private TelegramChatQualityService chatRepository;
     
     @Autowired
     private TelegramChatQualityService telegramChatQualityService;
@@ -386,7 +383,7 @@ public class TelegrammBotQuantityYard extends TelegramLongPollingBot {
                 return;
             }
 
-            if (chatRepository.existsById(Integer.parseInt(chatId))) {
+            if (telegramChatQualityService.existsById(Integer.parseInt(chatId))) {
                 String formattedMessage = formatMessage(text, senderName, senderChatId);
                 List<Long> recipients = getRecipients(senderChatId);
                 sendMessagesWithErrorHandling(formattedMessage, recipients);
@@ -424,8 +421,8 @@ public class TelegrammBotQuantityYard extends TelegramLongPollingBot {
 
     private void handleStartCommand(String chatId) {
         SendMessage welcome;
-        if (!chatRepository.existsById(Integer.parseInt(chatId))) {
-            chatRepository.save(new TelegramChatQuality(Integer.parseInt(chatId)));
+        if (!telegramChatQualityService.existsById(Integer.parseInt(chatId))) {
+        	telegramChatQualityService.save(new TelegramChatQuality(Integer.parseInt(chatId)));
             welcome = new SendMessage(chatId, "Привет! Ты подписан на рассылку.");
         } else {
             welcome = new SendMessage(chatId, "Приветствую.");
@@ -449,6 +446,21 @@ public class TelegrammBotQuantityYard extends TelegramLongPollingBot {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+    }
+    
+    /**
+     * Отправляет текстовое сообщение всем в чате
+     * @param text
+     * @throws TelegramApiException
+     */
+    public void sendMessageInBot(String text) throws TelegramApiException {
+    	for (Long chatId : telegramChatQualityService.getChatIdLongList()) {
+    		SendMessage msg = new SendMessage();
+            msg.setChatId(chatId.toString());
+            msg.setText(text);
+            msg.enableHtml(true);
+            execute(msg);
+		}        
     }
     
     @Override

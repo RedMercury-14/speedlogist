@@ -251,8 +251,12 @@ public class User implements Serializable{
 	@Transient
 	@JsonIgnore
 	private Map<String, Truck> trucksForBot = null;
-	
-	
+
+	@OneToMany(fetch=FetchType.LAZY,
+			mappedBy="user",
+			cascade= {CascadeType.ALL}, orphanRemoval = true)
+	@JsonBackReference
+	private Set<Rotation> rotations;
 	
 	public User(){		
 	}
@@ -705,6 +709,14 @@ public class User implements Serializable{
 	
 	public Truck getTrucksForBot(String numTruck) {
 		return trucksForBot.get(numTruck);
+	}
+
+	public Set<Rotation> getRotations() {
+		return rotations;
+	}
+
+	public void setRotations(Set<Rotation> rotations) {
+		this.rotations = rotations;
 	}
 	
 	public void putTrucksForBot(String numTruck, Truck truck) {

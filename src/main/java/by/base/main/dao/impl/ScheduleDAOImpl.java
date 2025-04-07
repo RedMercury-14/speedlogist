@@ -493,7 +493,6 @@ public class ScheduleDAOImpl implements ScheduleDAO{
 	 * @return
 	 */
 	private static final String queryGetSchedulesRCByContractNums = "from Schedule s where s.counterpartyContractCode in (:codes)";
-	@Transactional
 	@Override
 	public Map<Long, Schedule> getSchedulesRCbyContractNums(Set<Long> contractNums) {
 		Session currentSession = sessionFactory.getCurrentSession();

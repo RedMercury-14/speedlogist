@@ -86,6 +86,9 @@ public class MainFileController {
     @Autowired
     private ActService actService;
 
+    @Autowired
+    private RotationService rotationService;
+
 	private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(Date.class, new JsonSerializer<Date>() {
 				@Override
@@ -95,6 +98,41 @@ public class MainFileController {
             })
             .create();
 
+
+    @RequestMapping("/get-actual-rotations-excel")
+    @TimedExecution
+    public void getActualRotationsExcel(HttpServletRequest request, HttpServletResponse response) throws IOException, ParseException {
+        String appPath = request.getRealPath("/");
+
+        String filepath = appPath + "resources/others/actual-rotations.xlsx";
+
+        List<Rotation> rotations = rotationService.getActualRotations();
+        try {
+            poiExcel.generateActualRotationsExcel(rotations, filepath);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        response.setHeader("content-disposition", "attachment;filename="+"actual-rotations.xlsx");
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+
+        response.setHeader("content-disposition", "attachment;filename="+"actual-rotations.xlsx");
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        try (FileInputStream in = new FileInputStream(filepath); OutputStream out = response.getOutputStream()) {
+            // Прочтите файл, который нужно загрузить, и сохраните его во входном потоке файла
+            //  Создать выходной поток
+            //  Создать буфер
+            byte buffer[] = new byte[1024];
+            int len = 0;
+            //  Прочитать содержимое входного потока в буфер в цикле
+            while ((len = in.read(buffer)) > 0) {
+                out.write(buffer, 0, len);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     /**
      * @param request

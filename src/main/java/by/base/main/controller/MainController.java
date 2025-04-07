@@ -3651,6 +3651,11 @@ public class MainController {
 		
 		return "archive";
 	}
+
+	@GetMapping("/main/orl/rotations")
+	public String getRotations(Model model, HttpServletRequest request) {
+		return "rotations";
+	}
 	
 	private void getTimeNow(HttpServletRequest request) {
 		LocalDate date = LocalDate.now();

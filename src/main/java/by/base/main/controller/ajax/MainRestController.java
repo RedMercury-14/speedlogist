@@ -5,17 +5,7 @@ import static com.graphhopper.json.Statement.Op.LIMIT;
 import static com.graphhopper.json.Statement.Op.MULTIPLY;
 
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.*;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URI;
@@ -24,9 +14,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -71,10 +58,7 @@ import by.base.main.dto.*;
 import by.base.main.model.*;
 import by.base.main.service.*;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -85,8 +69,6 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
-import org.springframework.security.access.annotation.Secured;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -156,7 +138,6 @@ import by.base.main.service.TGUserService;
 import by.base.main.service.TaskService;
 import by.base.main.service.TruckService;
 import by.base.main.service.UserService;
-import by.base.main.service.impl.MarketException;
 import by.base.main.service.impl.MarketExceptionBuilder;
 import by.base.main.service.util.CheckOrderNeeds;
 import by.base.main.service.util.CustomJSONParser;
@@ -319,6 +300,9 @@ public class MainRestController {
 	
 	@Autowired
 	private ReviewService reviewService;
+
+	@Autowired
+	private RotationService rotationService;
 	
 
 	private static String classLog;
@@ -368,9 +352,364 @@ public class MainRestController {
 
 	@Autowired
     private ServletContext servletContext;
-	
-	
-	
+
+	@RequestMapping(value = "/rotations/load", method = RequestMethod.POST, consumes = {
+			MediaType.MULTIPART_FORM_DATA_VALUE })
+	public Map<String, String> postLoadExcelRotations (HttpServletRequest request, HttpSession session,
+												  @RequestParam(value = "excel", required = false) MultipartFile excel)
+            throws InvalidFormatException, IOException, ServiceException, java.text.ParseException {
+
+		Map<String, String> response = new HashMap<String, String>();
+
+		File file1 = poiExcel.getFileByMultipartTarget(excel, request, "rotations.xlsx");
+		List <Rotation> rotations = poiExcel.loadRotationExcel(file1);
+		for(Rotation rotation: rotations) {
+			rotationService.saveRotation(rotation);
+		}
+
+		response.put("status", "200");
+		response.put("message", "Готово");
+		return response;
+	}
+
+	@GetMapping("/test")
+    @TimedExecution
+    public Map<String, Object> getTEST(HttpServletRequest request) throws ParseException, IOException, ServiceException, java.text.ParseException, InvalidFormatException {
+		Map<String, Object> resultMap = new HashMap<>();
+		Map<String, Order> responseMap = new HashMap<>();
+		java.util.Date t1 = new java.util.Date();
+		System.err.println("ТАРАКАААААН");
+		Date startDate = Date.valueOf(LocalDate.now());
+		Date finishDate = Date.valueOf(LocalDate.now().plusDays(14));
+		String appPath = servletContext.getRealPath("/");
+
+		List<Order> orders = orderService.getOrderByTimeDelivery(startDate, finishDate);
+
+//         orders.forEach(o-> System.out.println("ТАРАКАААААН - 1 - " + o.getMarketNumber()));
+//         System.out.println("ТАРАКАААААН - 1 - " + orders.size());
+//         System.out.println("");
+
+		List<Order> filteredOrders = orders.stream()
+				.filter(o -> o.getMarketNumber() != null)
+				.filter(o -> Optional.ofNullable(o.getWay()).stream().noneMatch("АХО"::equals))
+//				.filter(o -> o.getStatus() == 8 || o.getStatus() == 100)
+				.distinct().collect(Collectors.toList()); // .toList()
+
+		//создаём мапу marketNumber - order и заполняем лист с marketNumber
+		Map<String, Order> ordersFromDB = new HashMap<>();
+		for (Order order : filteredOrders) {
+			ordersFromDB.put(order.getMarketNumber(), order);
+		}
+
+		ordersFromDB.forEach((k, v) -> System.out.println("ТАРАКАААААН - 2 - " + k + " " + v));
+		System.out.println("ТАРАКАААААН - 2 - " + ordersFromDB.size());
+		System.out.println("");
+
+		String result = String.join(",", ordersFromDB.keySet());
+		try {
+			checkJWT(MainRestController.marketUrl);
+		} catch (Exception e) {
+			System.err.println("Ошибка получения jwt токена");
+		}
+
+		Object[] goodsId = result.split(",");
+
+		Map<String, Order> response = new HashMap<String, Order>();
+		MarketDataArrayForRequestDto dataDto3 = new MarketDataArrayForRequestDto(goodsId);
+		MarketPacketDto packetDto3 = new MarketPacketDto(marketJWT, "SpeedLogist.OrderBuyArrayInfoGet", serviceNumber, dataDto3);
+		MarketRequestDto requestDto3 = new MarketRequestDto("", packetDto3);
+		String marketOrder2 = null;
+		try {
+			marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto3));
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.err.println("ERROR : Ошибка запроса к Маркету");
+			System.err.println("marketOrder2 : " + marketOrder2);
+			System.err.println("ERROR DESCRIPTION - " + e.toString());
+		}
+
+		System.out.println("request -> " + gson.toJson(requestDto3));
+		//проверяем на наличие сообщений об ошибке со стороны маркета
+		if (marketOrder2.contains("Error")) {
+			//тут избавляемся от мусора в json
+			System.out.println(marketOrder2);
+//          String str2 = marketOrder2.split("\\[", 2)[1];
+//          String str3 = str2.substring(0, str2.length()-2);
+			MarketErrorDto errorMarket = gson.fromJson(marketOrder2, MarketErrorDto.class);
+//          System.out.println("JSON -> "+str3);
+//          System.out.println(errorMarket);
+			if (errorMarket.getError().equals("99")) {//обработка случая, когда в маркете номера нет, а в бд есть.
+
+			}
+			System.err.println("ERROR");
+			System.err.println(marketOrder2);
+			System.err.println("ERROR DESCRIPTION - " + errorMarket.getErrorDescription());
+		}
+
+		System.out.println("Пришло из маркета: " + marketOrder2);
+
+		//создаём свой парсер и парсим json в объекты, с которыми будем работать.
+		CustomJSONParser customJSONParser = new CustomJSONParser();
+
+		//создаём лист OrderBuyGroup
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(marketOrder2);
+		JSONArray numShopsJSON = (JSONArray) jsonMainObject.get("OrderBuyGroup");
+		Map<String, List<Order>> ordersWithStatus0 = new HashMap<>();
+		Map<String, List<Order>> ordersWithWrongPallets = new HashMap<>();
+
+		for (Object object : numShopsJSON) {
+			//создаём OrderBuyGroup
+			OrderBuyGroupDTO orderBuyGroupDTO = customJSONParser.parseOrderBuyGroupFromJSON(object.toString());
+			int checkx = orderBuyGroupDTO.getCheckx();
+			if (checkx == 0) {
+				Order order = orderCreater.createSimpleOrder(orderBuyGroupDTO);
+				Order currentOrderFromDB = ordersFromDB.get(order.getMarketNumber());
+				List<Order> list;
+				String loginManager = currentOrderFromDB.getLoginManager();
+				User user = userService.getUserByLogin(loginManager);
+
+				String emailManager = user.geteMail();
+				if (ordersWithStatus0.containsKey(emailManager)) {
+					list = ordersWithStatus0.get(emailManager);
+				} else {
+					list = new ArrayList<>();
+				}
+				list.add(currentOrderFromDB);
+				ordersWithStatus0.put(emailManager, list);
+
+			} else if (checkx == 50 || checkx == 51) {
+				Order order = orderCreater.createSimpleOrder(orderBuyGroupDTO);
+				responseMap.put(order.getMarketNumber(), order);
+			}
+		}
+
+		responseMap.forEach((k, v) -> System.out.println("ТАРАКАААААН - 3 - " + k + " " + v));
+		System.out.println("ТАРАКАААААН - 3 - " + responseMap.size());
+		System.out.println("");
+
+		System.out.println("EMAIL TEST = " + propertiesUtils.getValuesByPartialKey(servletContext, "email.test").get(0));
+
+		//вычисляем косячные ордеры и раскладываем по соответствующим мапам
+		for (String key : responseMap.keySet()) {
+			double marketAmountOfPallets = 0;
+			Order marketOrder = responseMap.get(key);
+			Set<OrderLine> orderLines = marketOrder.getOrderLines();
+
+			for (OrderLine orderLine : orderLines) {
+				System.out.println("ТАРАКАААААН - 3.3 - Orderlines pallets " + orderLine.getQuantityPallet());
+				System.out.println("");
+				if ((orderLine.getQuantityPallet() != null && orderLine.getQuantityPallet() > 0) && orderLine.getQuantityOrder() != null) {
+					marketAmountOfPallets += Math.ceil(orderLine.getQuantityOrder() / orderLine.getQuantityPallet());
+				}
+			}
+			Order currentOrderFromBD = ordersFromDB.get(key);
+			List<Order> list;
+
+			String loginManager = currentOrderFromBD.getLoginManager();
+			User user = userService.getUserByLogin(loginManager);
+
+			String emailManager = user.geteMail();
+			System.out.println("ТАРАКАААААН - 3.4 - DBOrder pallets " + currentOrderFromBD.getPall());
+			System.out.println("");
+			int DBAmountOfPallets = Integer.parseInt(currentOrderFromBD.getPall());
+
+			if (DBAmountOfPallets < marketAmountOfPallets) {
+				if (ordersWithWrongPallets.containsKey(emailManager)) {
+					list = ordersWithWrongPallets.get(emailManager);
+				} else {
+					list = new ArrayList<>();
+				}
+				list.add(currentOrderFromBD);
+				ordersWithWrongPallets.put(emailManager, list);
+			}
+		}
+
+		System.out.println("ТАРАКАААААН - 4 - сформированы мапы = " + ordersWithWrongPallets.size());
+		System.out.println("");
+
+		//обрабатываем полученные мапы: формируем рассылку и чистим слоты
+		for (String emailManager : ordersWithStatus0.keySet()) {
+			List<Order> orderCheckPalletsDtos = ordersWithStatus0.get(emailManager);
+
+			StringBuilder orderMarketNumbers = new StringBuilder();
+			for (Order order : orderCheckPalletsDtos) {
+				orderMarketNumbers.append(order.getMarketNumber());
+				orderMarketNumbers.append(", ");
+			}
+			orderMarketNumbers.deleteCharAt(orderMarketNumbers.length() - 1);
+			orderMarketNumbers.deleteCharAt(orderMarketNumbers.length() - 1);
+
+			System.out.println("ТАРАКАААААН - 5 - перед рассылкой статусов 0");
+			System.out.println("");
+
+			List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+			List<String> emails = new ArrayList<>();
+			emails.add(emailManager);
+//               String messageText = "Добрый день.\nЗаказы " + orderMarketNumbers + " находились в статусе 0. Заказы удалены из слотов.";
+			String messageText = "Добрый день.\nЗаказы " + orderMarketNumbers + " находились в статусе 0. В следующем обновлении такие заказы будут удаляться.";
+
+			mailService.sendEmailToUsers(appPath, "Информация по заказам", messageText, emailsAdmins);
+//			mailService.sendEmailToUsers(appPath, "Информация по заказам", messageText, emails);
+			for (Order orderCheckPalletsDto : orderCheckPalletsDtos) {
+//                 orderService.deleteSlot(orderCheckPalletsDto.getIdOrder());
+			}
+
+		}
+
+		for (String emailManager : ordersWithWrongPallets.keySet()) {
+			List<Order> orderCheckPalletsDtos = ordersWithWrongPallets.get(emailManager);
+
+			StringBuilder orderMarketNumbers = new StringBuilder();
+			for (Order order : orderCheckPalletsDtos) {
+				orderMarketNumbers.append(order.getMarketNumber());
+				orderMarketNumbers.append(", ");
+			}
+			orderMarketNumbers.deleteCharAt(orderMarketNumbers.length() - 1);
+			orderMarketNumbers.deleteCharAt(orderMarketNumbers.length() - 1);
+
+			System.out.println("ТАРАКАААААН - 5 - перед рассылкой косяков паллет");
+			System.out.println("");
+
+			List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+			List<String> emails = new ArrayList<>();
+			emails.add(emailManager);
+
+			//пока что тут мой имейл, потом надо подставить emailManager
+
+//               String messageText = "Добрый день.\n" +
+//                     "В заказах " + orderMarketNumbers + " количество паллет в маркете больше чем количество паллет в Speedlogist. Заказы удалены из слотов.";
+			String messageText = "Добрый день.\n" +
+					"В заказах " + orderMarketNumbers + " количество паллет в маркете больше чем количество паллет в Speedlogist. В следующем обновлении такие заказы будут удаляться.";
+               mailService.sendEmailToUsers(appPath, "Информация по заказам", messageText, emailsAdmins);
+//			mailService.sendEmailToUsers(appPath, "Информация по заказам", messageText, emails);
+
+
+			for (Order order : orderCheckPalletsDtos) {
+//                 orderService.deleteSlot(orderCheckPalletsDto.getIdOrder());
+			}
+		}
+
+		ordersWithStatus0.forEach((k, v) -> System.out.println("ТАРАКАААААН - ordersWithStatus0 - " + k + " " + v));
+		System.out.println("ТАРАКАААААН - ordersWithStatus0 - " + ordersWithStatus0.size());
+		System.out.println("");
+
+		ordersWithWrongPallets.forEach((k, v) -> System.out.println("ТАРАКАААААН - ordersWithStatus0 - " + k + " " + v));
+		System.out.println("ТАРАКАААААН - ordersWithWrongPallets - " + ordersWithWrongPallets.size());
+		System.out.println("");
+
+		java.util.Date t3 = new java.util.Date();
+		System.err.println(t3.getTime() - t1.getTime() + " ms");
+//         responseMap.put("message", "emails sent successfully");
+		return resultMap;
+	}
+
+
+//	@GetMapping("/test/{orderId}")
+//    @TimedExecution
+//    public Map<String, Object> getTEST(@PathVariable String orderId, HttpServletRequest request) throws ParseException, IOException {
+//		Map<String, Object> responseMap = new HashMap<>();
+//		Integer id = Integer.parseInt(orderId);
+//		orderService.deleteSlot(id);
+//		responseMap.put("id", id);
+//		return responseMap;
+//	}
+
+
+
+	@PostMapping("/rotations/create")
+	public Map<String, Object> createRotation(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+		Map<String, Object> response = new HashMap<>();
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		User user = getThisUser();
+		String appPath = request.getServletContext().getRealPath("");
+		Rotation rotation = new Rotation();
+		long goodIdNew = Long.parseLong(jsonMainObject.get("goodIdNew").toString());
+		long goodIdAnalog = Long.parseLong(jsonMainObject.get("goodIdAnalog").toString());
+		if(goodIdNew == goodIdAnalog) {
+			rotation.setStatus(20);
+			//пока что тут мой имейл, потом надо подставить три из новой группы
+			List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+			String messageText = "Добрый день.";
+			mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, emailsAdmins);
+		} else {
+			rotation.setStatus(30);
+		}
+
+		rotation.setGoodIdNew(jsonMainObject.get("goodIdNew") != null ? Long.parseLong(jsonMainObject.get("goodIdNew").toString()) : null);
+		rotation.setGoodNameNew(jsonMainObject.get("goodNameNew") != null ? jsonMainObject.get("goodNameNew").toString() : null);
+		rotation.setStartDate(jsonMainObject.get("startDate") != null ? Date.valueOf(jsonMainObject.get("startDate").toString()) : null);
+		rotation.setEndDate(jsonMainObject.get("endDate") != null ? Date.valueOf(jsonMainObject.get("endDate").toString()) : null);
+		rotation.setGoodIdAnalog(jsonMainObject.get("goodIdAnalog") != null ? Long.parseLong(jsonMainObject.get("goodIdAnalog").toString()) : null);
+		rotation.setGoodNameAnalog(jsonMainObject.get("goodNameAnalog") != null ? jsonMainObject.get("goodNameAnalog").toString() : null);
+		rotation.setToList(jsonMainObject.get("toList") != null ? jsonMainObject.get("toList").toString() : null);
+		rotation.setCountOldCodeRemains(jsonMainObject.get("countOldCodeRemains") != null ? Boolean.parseBoolean(jsonMainObject.get("countOldCodeRemains").toString()) : null);
+		rotation.setLimitOldCode(jsonMainObject.get("limitOldCode") != null ? Integer.parseInt(jsonMainObject.get("limitOldCode").toString()) : null);
+		rotation.setCoefficient(jsonMainObject.get("coefficient") != null ? Double.parseDouble(jsonMainObject.get("coefficient").toString()) : null);
+		rotation.setTransferOldToNew(jsonMainObject.get("transferOldToNew") != null ? Boolean.parseBoolean(jsonMainObject.get("transferOldToNew").toString()) : null);
+		rotation.setDistributeNewPosition(jsonMainObject.get("distributeNewPosition") != null ? Boolean.parseBoolean(jsonMainObject.get("distributeNewPosition").toString()) : null);
+		rotation.setLimitOldPositionRemain(jsonMainObject.get("limitOldPositionRemain") != null ? Integer.parseInt(jsonMainObject.get("limitOldPositionRemain").toString()) : null);
+		rotation.setRotationInitiator(user.getSurname() + " " + user.getName() + " " + user.getPatronymic());
+		rotation.setUser(user);
+
+		Long id = rotationService.saveRotation(rotation);
+		rotation.setIdRotation(id);
+
+		response.put("status", "200");
+		response.put("object", rotation);
+		return response;
+	}
+
+	@PostMapping("/rotations/preCreation")
+	public Map<String, Object> preCreationRotation(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+		Map<String, Object> response = new HashMap<>();
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+
+		long goodIdNew = Long.parseLong(jsonMainObject.get("goodIdNew").toString());
+		long goodIdAnalog = Long.parseLong(jsonMainObject.get("goodIdAnalog").toString());
+
+		if(goodIdNew == goodIdAnalog) {
+			response.put("status", "205");
+			response.put("message", "Код товара и код аналог совпадают. Если Вы подтвердите создание новой ротации, она будет отправлена на согласование. После согласования Вам поступит email о результате.");
+			return response;
+		}
+
+		Rotation rotationNewCodeDuplicate = rotationService.getActualNewCodeDuplicates(goodIdNew);
+		if(rotationNewCodeDuplicate != null) {
+			response.put("status", "205");
+			response.put("message", "Ротация с таким кодом товара уже существует. Если Вы подтвердите создание новой ротации, существующая перестанет действовать.");
+			return response;
+		}
+
+		Rotation rotationAnalogCodeDuplicate = rotationService.getActualAnalogCodeDuplicates(goodIdAnalog);
+		if (rotationAnalogCodeDuplicate != null) {
+			response.put("status", "205");
+			response.put("message", "Ротация с таким кодом аналогом уже существует. Если Вы подтвердите создание новой ротации, существующая перестанет действовать.");
+			return response;
+		}
+
+		Rotation rotationCrossCodeDuplicate = rotationService.getActualCrossCodeDuplicates(goodIdNew, goodIdAnalog);
+		if (rotationCrossCodeDuplicate != null) {
+			response.put("status", "205");
+			response.put("message", "Уже существует ротация, где код аналог равен коду товара в Вашей ротации и код товара равен коду аналогу в Вашей ротации. " +
+					"Если Вы подтвердите создание новой ротации, существующая перестанет действовать.");
+			return response;
+		}
+
+		response = createRotation(request, str);
+		return response;
+	}
+
+	@GetMapping("/rotations/get-rotations")
+	public Map<String, Object> getRotations(){
+		Map<String, Object> response = new HashMap<>();
+		response.put("reviews", rotationService.getAllRotations());
+		response.put("status", "200");
+		return response;
+	}
+
 	@GetMapping("/orderproof/approve")
 	public Map<String, Object> getApproveOrder(HttpServletRequest request, HttpServletResponse response) throws IOException{
 	    Map<String, Object> responseMap = new HashMap<>();
@@ -654,122 +993,265 @@ public class MainRestController {
 		return response;
 	}
 
+//	@GetMapping("/test")
+//    @TimedExecution
+//    public Map<String, Object> getTEST(HttpServletRequest request) throws ParseException, IOException {
+//		Map<String, Object> resultMap = new HashMap<>();
+//		String appPath = servletContext.getRealPath("/");
+//		String folderPath = appPath + "resources/others/marketorder2.txt";
+//		String folderPath2 = appPath + "resources/others/check.xlsx";
+//		String marketOrder2 = null;
+//		try {
+//			marketOrder2 = Files.readString(Path.of(folderPath));
+//		} catch (IOException e) {
+//			resultMap.put("error", "Ошибка при чтении файла: " + e.getMessage());
+//		}
+//
+//				//создаём свой парсер и парсим json в объекты, с которыми будем работать.
+//		CustomJSONParser customJSONParser = new CustomJSONParser();
+//
+//		//создаём лист OrderBuyGroup
+////		Map<Long, OrderBuyGroupDTO> OrderBuyGroupDTOMap = new HashMap<Long, OrderBuyGroupDTO>();
+////		Map<String, Order> ordersFromMarket = new HashMap<String, Order>();
+//		JSONParser parser = new JSONParser();
+//		JSONObject jsonMainObject = (JSONObject) parser.parse(marketOrder2);
+//		JSONArray numShopsJSON = (JSONArray) jsonMainObject.get("OrderBuyGroup");
+//
+//		Map<String, List<Order>> ordersWithStatus0 = new HashMap<>();
+//		Map<String, List<Order>> ordersWithWrongPallets = new HashMap<>();
+//		BufferedWriter writer = new BufferedWriter(new FileWriter(folderPath2));
+//		int rowNum = 0;
+//		int rowSize = 0;
+//		Workbook workbook = new XSSFWorkbook();
+//		Sheet sheet = workbook.createSheet("Отчет");
+//		for (Object object : numShopsJSON) {
+//			//создаём OrderBuyGroup
+//			TempDto tempDto = customJSONParser.parseTempDtoFromJSON(object.toString());
+//
+//			Row row1 = sheet.createRow(rowNum);
+//			row1.createCell(0).setCellValue("marketNumber");
+//			row1.createCell(1).setCellValue(tempDto.getMarketNumber()); //Дата приёма документов на оплату
+//			row1.createCell(2).setCellValue(""); //Импорт/Экспорт
+//			row1.createCell(3).setCellValue("idOrder"); //ID маршрута
+//			row1.createCell(4).setCellValue(""); //ID заявки - id order???
+//			row1.createCell(5).setCellValue("Status: " + tempDto.getCheckX());
+//			rowNum++;
+//			List<OrderLine> orderLines = tempDto.getOrderLines();
+//			for (OrderLine orderLine : orderLines) {
+//				Row row = sheet.createRow(rowNum);
+//				row.createCell(0).setCellValue("palletsMarket:");
+//				if(orderLine.getQuantityPallet() != null && orderLine.getQuantityPallet() > 0){
+//					row.createCell(1).setCellValue(Math.ceil(orderLine.getQuantityOrder()/orderLine.getQuantityPallet()));
+//				} else {
+//					row.createCell(1).setCellValue("null or 0");
+//				}
+//				rowNum++;
+//			}
+//
+//
+//		}
+//
+//		// Устанавливаем заморозку первых двух строк
+//		// Первый параметр: количество фиксированных столбцов (0 — без заморозки столбцов)
+//		// Второй параметр: количество фиксированных строк (2 строки)
+//		for (int i = 0; i < 5; i++) {
+//			sheet.autoSizeColumn(i);
+//		}
+//		try (FileOutputStream fileOut = new FileOutputStream(folderPath2)) {
+//			workbook.write(fileOut);
+//		}
+//
+//		// Закрываем рабочую книгу
+//		workbook.close();
+//		return resultMap;
+//	}
+
 	/*
 	 * ===========================================тест таракана
 	 */
-	@GetMapping("/test")
-    @TimedExecution
-    public Map<String, Order> getTEST(HttpServletRequest request) throws ParseException, IOException {
-       Map<String, Order> responseMap = new HashMap<>();
-       java.util.Date t1 = new java.util.Date();
-       System.err.println("ТАРАКАААААН");
-       Date startDate = Date.valueOf(LocalDate.now());
-       Date finishDate = Date.valueOf(LocalDate.now().plusDays(14));
-       String appPath = servletContext.getRealPath("/");
-
-       List<Order> orders = getListOfOrdersFromBD(startDate,finishDate);
-       
-//       orders.forEach(o-> System.out.println("ТАРАКАААААН - 1 - " + o.getMarketNumber()));
-//       System.out.println("ТАРАКАААААН - 1 - " + orders.size());
+//	@GetMapping("/test")
+//    @TimedExecution
+//    public Map<String, String> getTEST(HttpServletRequest request) throws ParseException, IOException {
+//		Map<String, String> resultMap = new HashMap<>();
+//       Map<String, Order> responseMap = new HashMap<>();
+//       java.util.Date t1 = new java.util.Date();
+//       System.err.println("ТАРАКАААААН");
+//       Date startDate = Date.valueOf(LocalDate.now());
+//       Date finishDate = Date.valueOf(LocalDate.now().plusDays(14));
+//       String appPath = servletContext.getRealPath("/");
+//
+//       List<Order> orders = orderService.getOrderByTimeDelivery(startDate, finishDate);
+//
+////       orders.forEach(o-> System.out.println("ТАРАКАААААН - 1 - " + o.getMarketNumber()));
+////       System.out.println("ТАРАКАААААН - 1 - " + orders.size());
+////       System.out.println("");
+//
+//		List<Order> filteredOrders = orders.stream()
+//				.filter(o -> o.getMarketNumber() != null)
+//				.filter(o -> Optional.ofNullable(o.getWay()).stream().noneMatch("АХО"::equals))
+//				.distinct().collect(Collectors.toList()); // .toList()
+//
+//		//создаём мапу marketNumber - order и заполняем лист с marketNumber
+//		Map<String, Order> ordersFromDB = new HashMap<>();
+//		for (Order order : filteredOrders) {
+//			ordersFromDB.put(order.getMarketNumber(), order);
+//		}
+//
+//        ordersFromDB.forEach((k,v)-> System.out.println("ТАРАКАААААН - 2 - " + k + " " + v));
+//        System.out.println("ТАРАКАААААН - 2 - " + ordersFromDB.size());
+//        System.out.println("");
+//
+//        String result = String.join(",", ordersFromDB.keySet());
+//        try {
+//           checkJWT(MainRestController.marketUrl);
+//        } catch (Exception e) {
+//           System.err.println("Ошибка получения jwt токена");
+//        }
+//
+//        Object[] goodsId = result.split(",");
+//
+//		Map<String, Order> response = new HashMap<String, Order>();
+//		MarketDataArrayForRequestDto dataDto3 = new MarketDataArrayForRequestDto(goodsId);
+//		MarketPacketDto packetDto3 = new MarketPacketDto(marketJWT, "SpeedLogist.OrderBuyArrayInfoGet", serviceNumber, dataDto3);
+//		MarketRequestDto requestDto3 = new MarketRequestDto("", packetDto3);
+//		String marketOrder2 = null;
+//		try {
+//			marketOrder2 = postRequest(marketUrl, gson.toJson(requestDto3));
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//			System.err.println("ERROR : Ошибка запроса к Маркету");
+//			System.err.println("marketOrder2 : "+marketOrder2);
+//			System.err.println("ERROR DESCRIPTION - " + e.toString());
+//			return null;
+//		}
+//
+//		System.out.println("request -> " + gson.toJson(requestDto3));
+//		//проверяем на наличие сообщений об ошибке со стороны маркета
+//		if(marketOrder2.contains("Error")) {
+//			//тут избавляемся от мусора в json
+//			System.out.println(marketOrder2);
+////			String str2 = marketOrder2.split("\\[", 2)[1];
+////			String str3 = str2.substring(0, str2.length()-2);
+//			MarketErrorDto errorMarket = gson.fromJson(marketOrder2, MarketErrorDto.class);
+////			System.out.println("JSON -> "+str3);
+////			System.out.println(errorMarket);
+//			if(errorMarket.getError().equals("99")) {//обработка случая, когда в маркете номера нет, а в бд есть.
+//
+//			}
+//			System.err.println("ERROR");
+//			System.err.println(marketOrder2);
+//			System.err.println("ERROR DESCRIPTION - " + errorMarket.getErrorDescription());
+//			return null;
+//		}
+//
+//		System.out.println("Пришло из маркета: " + marketOrder2);
+//
+//		//создаём свой парсер и парсим json в объекты, с которыми будем работать.
+//		CustomJSONParser customJSONParser = new CustomJSONParser();
+//
+//		//создаём лист OrderBuyGroup
+////		Map<Long, OrderBuyGroupDTO> OrderBuyGroupDTOMap = new HashMap<Long, OrderBuyGroupDTO>();
+////		Map<String, Order> ordersFromMarket = new HashMap<String, Order>();
+//		JSONParser parser = new JSONParser();
+//		JSONObject jsonMainObject = (JSONObject) parser.parse(marketOrder2);
+//		JSONArray numShopsJSON = (JSONArray) jsonMainObject.get("OrderBuyGroup");
+//
+//		Map<String, List<Order>> ordersWithStatus0 = new HashMap<>();
+//		Map<String, List<Order>> ordersWithWrongPallets = new HashMap<>();
+//
+//		for (Object object : numShopsJSON) {
+//			//создаём OrderBuyGroup
+//			OrderBuyGroupDTO orderBuyGroupDTO = customJSONParser.parseOrderBuyGroupFromJSON(object.toString());
+//			int checkx = orderBuyGroupDTO.getCheckx();
+//			if (checkx == 0 ) {
+//				Order order = orderCreater.createSimpleOrder(orderBuyGroupDTO);
+//				Order currentOrderFromDB = ordersFromDB.get(order.getMarketNumber());
+//				List<Order> list;
+//				String loginManager = currentOrderFromDB.getLoginManager();
+//				User user = userService.getUserByLogin(loginManager);
+//
+//				String emailManager = user.geteMail();
+//				if(ordersWithStatus0.containsKey(emailManager)) {
+//					list = ordersWithStatus0.get(emailManager);
+//				} else {
+//					list = new ArrayList<>();
+//				}
+//				list.add(currentOrderFromDB);
+//				ordersWithStatus0.put(emailManager,list);
+//
+//			} else if (checkx == 50 || checkx == 51) {
+//				Order order = orderCreater.createSimpleOrder(orderBuyGroupDTO);
+//				responseMap.put(order.getMarketNumber(), order);
+//			}
+////			OrderBuyGroupDTOMap.put(orderBuyGroupDTO.getOrderBuyGroupId(), orderBuyGroupDTO);
+//
+//		}
+//
+//       responseMap.forEach((k,v)-> System.out.println("ТАРАКАААААН - 3 - " + k + " " + v));
+//       System.out.println("ТАРАКАААААН - 3 - " + responseMap.size());
+//		System.out.println("RESPONSEMAP " + responseMap);
 //       System.out.println("");
-
-       Map<String, Order> ordersFromBD = getCollectToMap(orders);
-       
-       ordersFromBD.forEach((k,v)-> System.out.println("ТАРАКАААААН - 2 - " + k + " " + v));
-       System.out.println("ТАРАКАААААН - 2 - " + ordersFromBD.size());
-       System.out.println("");
-
-       String result = String.join(",", ordersFromBD.keySet());
-       try {
-          checkJWT(MainRestController.marketUrl);
-       } catch (Exception e) {
-          System.err.println("Ошибка получения jwt токена");
-       }
-
-       Object[] goodsId = result.split(",");
-
-       responseMap = requestToMarket(goodsId); // остановился тут
-       
-       responseMap.forEach((k,v)-> System.out.println("ТАРАКАААААН - 3 - " + k + " " + v));
-       System.out.println("ТАРАКАААААН - 3 - " + responseMap.size());
-       System.out.println("");
-
-       if (responseMap.get("marketOrder2") == null) {
-          return responseMap;
-       }
-
-//       String marketOrder2 = responseMap.get("marketOrder2").toString();
-
-//       responseMap = parseJson(marketOrder2);
-       Map<String, OrderCheckPalletsDto> ordersFromMarket = (HashMap) responseMap;
-       
-       ordersFromMarket.forEach((k,v)-> System.out.println("ТАРАКАААААН - 4 - " + k + " " + v));
-       System.out.println("ТАРАКАААААН - 4 - " + ordersFromMarket.size());
-       System.out.println("");
-
-       //вычисляем косячные ордеры и раскладываем по соответствующим мапам
-       Map<String, List<OrderCheckPalletsDto>> ordersWithStatus0 = new HashMap<>();
-       Map<String, List<OrderCheckPalletsDto>> ordersWithWrongPallets = new HashMap<>();
-       for(String key: ordersFromMarket.keySet()) {
-          if (ordersFromMarket.get(key).getStatus() == 0) {
-             String loginManager = ordersFromMarket.get(key).getLoginManager();
-             String emailManager = userService.getUserByLogin(loginManager).geteMail();
-
-             List<OrderCheckPalletsDto> list;
-             if(ordersWithStatus0.containsKey(emailManager)) {
-                list = ordersWithStatus0.get(emailManager);
-             } else {
-                list = new ArrayList<>();
-             }
-             list.add(ordersFromMarket.get(key));
-             ordersWithStatus0.put(emailManager, list);
-
-          } else if (ordersFromMarket.get(key).getStatus() == 50) {
-             if (ordersFromMarket.get(key).getPallets() > Integer.parseInt(ordersFromBD.get(key).getPall())) {
-                String loginManager = ordersFromMarket.get(key).getLoginManager();
-
-                String emailManager = userService.getUserByLogin(loginManager).geteMail();
-
-                List<OrderCheckPalletsDto> list;
-                if(ordersWithWrongPallets.containsKey(emailManager)) {
-                   list = ordersWithWrongPallets.get(emailManager);
-                } else {
-                   list = new ArrayList<>();
-                }
-                list.add(ordersFromMarket.get(key));
-                ordersWithWrongPallets.put(emailManager, list);
-             }
-          }
-       }
-
-       //обрабатываем полученные мапы: формируем рассылку и чистим слоты
+//
+//       //вычисляем косячные ордеры и раскладываем по соответствующим мапам
+//
+//       for(String key: responseMap.keySet()) {
+//
+//		   double marketAmountOfPallets = 0;
+//		   Order marketOrder = responseMap.get(key);
+//		   Set<OrderLine> orderLines = marketOrder.getOrderLines();
+//		   for(OrderLine orderLine: orderLines) {
+//			   marketAmountOfPallets += Math.ceil(orderLine.getQuantityOrder()/orderLine.getQuantityPallet());
+//		   }
+//		   Order currentOrderFromBD = ordersFromDB.get(key);
+//		   List<Order> list;
+//
+//		   String loginManager = currentOrderFromBD.getLoginManager();
+//		   User user = userService.getUserByLogin(loginManager);
+//
+//		   String emailManager = user.geteMail();
+//		   int DBAmountOfPallets = Integer.parseInt(currentOrderFromBD.getPall());
+//		   if (DBAmountOfPallets > marketAmountOfPallets) {
+//			   int d = 0;
+//		   }
+//		   if (DBAmountOfPallets < marketAmountOfPallets) {
+//			   if(ordersWithWrongPallets.containsKey(emailManager)) {
+//				   list = ordersWithWrongPallets.get(emailManager);
+//			   } else {
+//				   list = new ArrayList<>();
+//			   }
+//			   list.add(currentOrderFromBD);
+//			   ordersWithWrongPallets.put(emailManager,list);
+//		   }
+//       }
+//
+//       //обрабатываем полученные мапы: формируем рассылку и чистим слоты
 //       for(String emailManager: ordersWithStatus0.keySet()) {
-//          List<OrderCheckPalletsDto> orderCheckPalletsDtos = ordersWithStatus0.get(emailManager);
+//          List<Order> orderCheckPalletsDtos = ordersWithStatus0.get(emailManager);
 //
 //          StringBuilder orderIds = new StringBuilder();
-//          for (OrderCheckPalletsDto orderCheckPalletsDto : orderCheckPalletsDtos) {
-//             orderIds.append(orderCheckPalletsDto.getIdOrder());
+//          for (Order order : orderCheckPalletsDtos) {
+//             orderIds.append(order.getIdOrder());
 //             orderIds.append(", ");
 //          }
 //          orderIds.deleteCharAt(orderIds.length() - 1);
 //          orderIds.deleteCharAt(orderIds.length() - 1);
 //
 //          List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext,"email.test");
-//          String messageText = "Добрый день.\nЗаказы " + orderIds + "находились в статусе 0. Заказы удалены из слотов.";
-//          mailService.sendEmailToUsers(appPath, "Информация по заказам", messageText, emailsAdmins);
+//          String messageText = "Добрый день.\nЗаказы " + orderIds + " находились в статусе 0. Заказы удалены из слотов.";
+////          mailService.sendEmailToUsers(appPath, "Информация по заказам", messageText, emailsAdmins);
 //
-//          for (OrderCheckPalletsDto orderCheckPalletsDto : orderCheckPalletsDtos) {
+//          for (Order orderCheckPalletsDto : orderCheckPalletsDtos) {
 ////               orderService.deleteSlot(orderCheckPalletsDto.getIdOrder());
 //          }
 //       }
 //
 //       for(String emailManager: ordersWithWrongPallets.keySet()) {
-//          List<OrderCheckPalletsDto> orderCheckPalletsDtos = ordersWithWrongPallets.get(emailManager);
+//          List<Order> orderCheckPalletsDtos = ordersWithWrongPallets.get(emailManager);
 //
 //
 //          StringBuilder orderIds = new StringBuilder();
-//          for (OrderCheckPalletsDto orderCheckPalletsDto : orderCheckPalletsDtos) {
-//             orderIds.append(orderCheckPalletsDto.getIdOrder());
+//          for (Order order : orderCheckPalletsDtos) {
+//             orderIds.append(order.getIdOrder());
 //             orderIds.append(", ");
 //          }
 //          orderIds.deleteCharAt(orderIds.length() - 1);
@@ -780,26 +1262,33 @@ public class MainRestController {
 //
 //          String messageText = "Добрый день.\n" +
 //                "В заказах " + orderIds + " количество паллет в маркете больше чем количество паллет в Speedlogist. Заказы удалёны из слотов.";
-//          mailService.sendEmailToUsers(appPath, "Информация по заказам", messageText, emailsAdmins);
+////          mailService.sendEmailToUsers(appPath, "Информация по заказам", messageText, emailsAdmins);
 //
-//          for (OrderCheckPalletsDto orderCheckPalletsDto : orderCheckPalletsDtos) {
+//          for (Order order : orderCheckPalletsDtos) {
 ////               orderService.deleteSlot(orderCheckPalletsDto.getIdOrder());
 //          }
 //       }
-       
-       ordersWithStatus0.forEach((k,v)-> System.out.println("ТАРАКАААААН - ordersWithStatus0 - " + k + " " + v));
-       System.out.println("ТАРАКАААААН - ordersWithStatus0 - " + ordersWithStatus0.size());
-       System.out.println("");
-       
-       ordersWithWrongPallets.forEach((k,v)-> System.out.println("ТАРАКАААААН - ordersWithStatus0 - " + k + " " + v));
-       System.out.println("ТАРАКАААААН - ordersWithWrongPallets - " + ordersWithWrongPallets.size());
-       System.out.println("");
-       
-       java.util.Date t3 = new java.util.Date();
-       System.err.println(t3.getTime() - t1.getTime() + " ms");
-//       responseMap.put("message", "emails sent successfully");
-       return responseMap;
-	}
+//
+//       ordersWithStatus0.forEach((k,v)-> System.out.println("ТАРАКАААААН - ordersWithStatus0 - " + k + " " + v));
+//       System.out.println("ТАРАКАААААН - ordersWithStatus0 - " + ordersWithStatus0.size());
+//       System.out.println("");
+//
+//       ordersWithWrongPallets.forEach((k,v)-> System.out.println("ТАРАКАААААН - ordersWithStatus0 - " + k + " " + v));
+//       System.out.println("ТАРАКАААААН - ordersWithWrongPallets - " + ordersWithWrongPallets.size());
+//       System.out.println("");
+//
+//       java.util.Date t3 = new java.util.Date();
+//       System.err.println(t3.getTime() - t1.getTime() + " ms");
+////       responseMap.put("message", "emails sent successfully");
+//		String folderPath = appPath + "resources/others/marketorder2.txt";
+//		try (FileWriter writer = new FileWriter(folderPath)) {
+//			writer.write(marketOrder2);
+//			System.out.println("Файл успешно записан.");
+//		} catch (IOException e) {
+//			System.out.println("Ошибка при записи файла: " + e.getMessage());
+//		}   		resultMap.put("marketOrder2", marketOrder2);
+//		return resultMap;
+//	}
 	
 	/**
 	 * Выдёт актуальные Orders
@@ -833,12 +1322,12 @@ public class MainRestController {
      * @throws ParseException
      */
     public Map<String, Order> requestToMarket(Object[] goodsId) throws ParseException {
-    	try {			
-			checkJWT(marketUrl);			
+    	try {
+			checkJWT(marketUrl);
 		} catch (Exception e) {
 			System.err.println("Ошибка получения jwt токена");
 		}
-		
+
 		Map<String, Order> response = new HashMap<String, Order>();
 		MarketDataArrayForRequestDto dataDto3 = new MarketDataArrayForRequestDto(goodsId);
 		MarketPacketDto packetDto3 = new MarketPacketDto(marketJWT, "SpeedLogist.OrderBuyArrayInfoGet", serviceNumber, dataDto3);
@@ -853,7 +1342,7 @@ public class MainRestController {
 			System.err.println("ERROR DESCRIPTION - " + e.toString());
 			return null;
 		}
-		
+
 		System.out.println("request -> " + gson.toJson(requestDto3));
 		//проверяем на наличие сообщений об ошибке со стороны маркета
 		if(marketOrder2.contains("Error")) {
@@ -865,19 +1354,19 @@ public class MainRestController {
 //			System.out.println("JSON -> "+str3);
 //			System.out.println(errorMarket);
 			if(errorMarket.getError().equals("99")) {//обработка случая, когда в маркете номера нет, а в бд есть.
-				
+
 			}
 			System.err.println("ERROR");
 			System.err.println(marketOrder2);
 			System.err.println("ERROR DESCRIPTION - " + errorMarket.getErrorDescription());
 			return null;
 		}
-		
+
 		System.out.println("Пришло из маркета: "+marketOrder2);
-		
+
 		//создаём свой парсер и парсим json в объекты, с которыми будем работать.
 		CustomJSONParser customJSONParser = new CustomJSONParser();
-		
+
 		//создаём лист OrderBuyGroup
 		Map<Long, OrderBuyGroupDTO> OrderBuyGroupDTOMap = new HashMap<Long, OrderBuyGroupDTO>();
 		Map<String, Order> orderMap = new HashMap<String, Order>();
@@ -887,9 +1376,13 @@ public class MainRestController {
 		for (Object object : numShopsJSON) {
 			//создаём OrderBuyGroup
 			OrderBuyGroupDTO orderBuyGroupDTO = customJSONParser.parseOrderBuyGroupFromJSON(object.toString());
+			int checkx = orderBuyGroupDTO.getCheckx();
+			if (checkx == 0 || checkx == 50 || checkx == 51) {
+				Order order = orderCreater.createSimpleOrder(orderBuyGroupDTO);
+				orderMap.put(order.getMarketNumber(), order);
+			}
 			OrderBuyGroupDTOMap.put(orderBuyGroupDTO.getOrderBuyGroupId(), orderBuyGroupDTO);
-			Order order = orderCreater.createSimpleOrder(orderBuyGroupDTO);
-			orderMap.put(order.getMarketNumber(), order);
+
 		}
 		return orderMap;
      }

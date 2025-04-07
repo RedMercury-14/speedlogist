@@ -115,7 +115,10 @@ public class AcceptanceQualityFoodCard {
     private LocalDateTime dateTimeEndCard;
     
     @Column(name = "comment_aproof", columnDefinition = "TEXT")
-    private String commentAproof;       
+    private String commentAproof;  
+    
+    @Column(name = "unit")
+    private String unit;
 
     // Getters and Setters
 
@@ -124,7 +127,15 @@ public class AcceptanceQualityFoodCard {
         return dateCard;
     }
 
-    public void setDateCard(LocalDateTime dateCard) {
+    public String getUnit() {
+		return unit;
+	}
+
+	public void setUnit(String unit) {
+		this.unit = unit;
+	}
+
+	public void setDateCard(LocalDateTime dateCard) {
         this.dateCard = dateCard;
     }
 

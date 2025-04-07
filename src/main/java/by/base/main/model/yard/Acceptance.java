@@ -124,8 +124,19 @@ public class Acceptance {
 
     @Column(name = "reason_of_early_start_acceptance")
     private String reasonOfEarlyStartAcceptance;
+    
+    @Column(name = "is_import")
+    private Boolean isImport;
 
-    public Integer getIdAcceptance() {
+    public Boolean getIsImport() {
+		return isImport;
+	}
+
+	public void setIsImport(Boolean isImport) {
+		this.isImport = isImport;
+	}
+
+	public Integer getIdAcceptance() {
         return idAcceptance;
     }
 

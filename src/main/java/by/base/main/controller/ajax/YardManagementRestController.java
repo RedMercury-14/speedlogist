@@ -33,6 +33,7 @@ import by.base.main.dto.yard.AcceptanceQualityFoodCardDTO;
 import by.base.main.model.yard.AcceptanceFoodQuality;
 import by.base.main.model.yard.AcceptanceQualityFoodCard;
 import by.base.main.model.yard.AcceptanceQualityFoodCardImageUrl;
+import by.base.main.model.yard.DefectBase;
 import by.base.main.model.yard.TtnIn;
 import by.base.main.service.yardService.AcceptanceFoodQualityService;
 import by.base.main.service.yardService.AcceptanceQualityFoodCardImageUrlService;
@@ -178,6 +179,94 @@ public class YardManagementRestController {
 		response.put("time", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy; hh:MM:ss")));
 		return response;		
 	}
+	
+	@RequestMapping("/test/{id}")
+	public Map<String, Object> test(@PathVariable String id){
+		
+		Map<String, Object> responce = new HashMap<String, Object>();
+		List<AcceptanceQualityFoodCard> cards =	acceptanceQualityFoodCardService.getFoodCardByIdFoodQuality(Long.parseLong(id));
+		
+		StringBuilder resultBuilder = new StringBuilder();
+		
+		
+
+        for (AcceptanceQualityFoodCard card : cards) {
+            StringBuilder cardBuilder = new StringBuilder();
+            cardBuilder.append("Карта ID: ").append(card.getIdAcceptanceQualityFoodCard()).append("\n");
+            cardBuilder.append("Продукт: ").append(card.getProductName()).append("\n");
+
+            boolean isImport = Optional.ofNullable(card.getAcceptanceFoodQuality().getAcceptance().getIsImport()).orElse(false);
+            boolean withPC = card.getUnit() != null && !"шт".equalsIgnoreCase(card.getUnit());
+            double sampleSize = Optional.ofNullable(card.getSampleSize()).orElse(0.0);
+
+            // Обработка трёх типов дефектов
+            processDefectGroup("Внутренние дефекты", card.getInternalDefectsQualityCardList(), isImport, withPC, sampleSize, cardBuilder, false);
+            processDefectGroup("Некондиция", card.getLightDefectsQualityCardList(), isImport, withPC, sampleSize, cardBuilder, false);
+            processDefectGroup("Брак / гниль", card.getTotalDefectQualityCardList(), isImport, withPC, sampleSize, cardBuilder, true);
+
+            resultBuilder.append(cardBuilder).append("\n----------------------------\n");
+        }		
+        responce.put("object", resultBuilder.toString());
+        System.out.println(resultBuilder.toString());
+		return responce;		
+	}
+	
+
+    private void processDefectGroup(String title,
+                                           Collection<? extends DefectBase> defects,
+                                           boolean isImport,
+                                           boolean withPC,
+                                           double sampleSize,
+                                           StringBuilder builder,
+                                           boolean applyPC) {
+
+        final double pcThreshold = 10.0;
+        final double percentageFactor = 100.0;
+        final double pcFactorBeforeThreshold = isImport ? 160.0 : 140.0;
+        final double pcFactorAfterThreshold = 200.0;
+
+        double totalWeight = 0.0;
+        double totalPercentage = 0.0;
+        double totalPercentageWithPC = 0.0;
+
+        builder.append(title).append(":\n");
+
+        for (DefectBase defect : defects) {
+            double weight = Optional.ofNullable(defect.getWeight()).orElse(0.0);
+            totalWeight += weight;
+
+            double percentage = sampleSize > 0 ? (weight / sampleSize) * percentageFactor : 0.0;
+            totalPercentage += percentage;
+
+            double percentageWithPC = 0.0;
+            if (applyPC && withPC && sampleSize > 0) {
+                percentageWithPC = percentage <= pcThreshold
+                        ? (weight / sampleSize) * pcFactorBeforeThreshold
+                        : (weight / sampleSize) * pcFactorAfterThreshold;
+                totalPercentageWithPC += percentageWithPC;
+            }
+
+//            builder.append("  - ")
+//                    .append(defect.getDescription()).append(" | вес: ").append(weight)
+//                    .append(" | %: ").append(String.format("%.2f", percentage));
+
+//            if (applyPC) {
+//                builder.append(" | % c ПК: ").append(String.format("%.2f", percentageWithPC));
+//            }
+//            builder.append("\n");
+        }
+
+        builder.append("  Итого вес: ").append(roundNumber(totalWeight, 100)).append("\n");
+        builder.append("  Итого %: ").append(String.format("%.2f", totalPercentage)).append("%").append("\n");
+        if (applyPC) {
+            builder.append("  Итого % с ПК: ").append(String.format("%.2f", totalPercentageWithPC)).append("%").append("\n");
+        }
+    }
+
+    private static double roundNumber(double value, int factor) {
+        return Math.round(value * factor) / (double) factor;
+    }
+	
 	
 	@RequestMapping("/server")
 	public Map<String, String> getEchoServer(HttpServletRequest request) throws UnknownHostException, ClassNotFoundException, IOException {
@@ -398,16 +487,18 @@ public class YardManagementRestController {
 				System.out.println(acceptanceQualityFoodCard.getIdAcceptanceQualityFoodCard() +" --> "+acceptanceQualityFoodCardImageUrl);	
 				photoIds.add(acceptanceQualityFoodCardImageUrl.getIdAcceptanceQualityFoodCardImageUrl().toString());	
 			}
+			
+			
 			StringBuilder message = new StringBuilder();
 			message.append("Поставщик: " + acceptanceQualityFoodCard.getAcceptanceFoodQuality().getAcceptance().getFirmNameAccept() + ";  авто: " 
 					+ acceptanceQualityFoodCard.getAcceptanceFoodQuality().getAcceptance().getCarNumber() + "; продукт: "
 					+ acceptanceQualityFoodCard.getProductName() + "; Карточка товара №" + acceptanceQualityFoodCard.getIdAcceptanceQualityFoodCard()
 					+ "\n");
-			if(acceptanceQualityFoodCard.getTasteQuality() != null) message.append("Вкусовые качества: " + acceptanceQualityFoodCard.getTasteQuality().trim() + "\n");
+//			if(acceptanceQualityFoodCard.getTasteQuality() != null) message.append("Вкусовые качества: " + acceptanceQualityFoodCard.getTasteQuality().trim() + "\n");
 			if(acceptanceQualityFoodCard.getCardInfo() != null) message.append("Примечания: " + acceptanceQualityFoodCard.getCardInfo().trim() + "\n");
-			if(acceptanceQualityFoodCard.getCaliber() != null) message.append("Калибр: " + acceptanceQualityFoodCard.getCaliber().trim() + "\n");
-			if(acceptanceQualityFoodCard.getMaturityLevel() != null) message.append("Уровень зрелости: " + acceptanceQualityFoodCard.getMaturityLevel().trim() + "\n");
-			if(acceptanceQualityFoodCard.getAppearanceDefects() != null) message.append("Внешние дефекты: " + acceptanceQualityFoodCard.getAppearanceDefects().trim() + "\n");
+//			if(acceptanceQualityFoodCard.getCaliber() != null) message.append("Калибр: " + acceptanceQualityFoodCard.getCaliber().trim() + "\n");
+//			if(acceptanceQualityFoodCard.getMaturityLevel() != null) message.append("Уровень зрелости: " + acceptanceQualityFoodCard.getMaturityLevel().trim() + "\n");
+//			if(acceptanceQualityFoodCard.getAppearanceDefects() != null) message.append("Внешние дефекты: " + acceptanceQualityFoodCard.getAppearanceDefects().trim() + "\n");
 			
 			
 			if(!tags.contains(acceptanceQualityFoodCard.getAcceptanceFoodQuality().getAcceptance().getFirmNameAccept())) {
@@ -417,10 +508,21 @@ public class YardManagementRestController {
 				tags.add(acceptanceQualityFoodCard.getProductName());
 			}	
 			
+			boolean isImport = Optional.ofNullable(acceptanceQualityFoodCard.getAcceptanceFoodQuality().getAcceptance().getIsImport()).orElse(false);
+            boolean withPC = acceptanceQualityFoodCard.getUnit() != null && !"шт".equalsIgnoreCase(acceptanceQualityFoodCard.getUnit());
+            double sampleSize = Optional.ofNullable(acceptanceQualityFoodCard.getSampleSize()).orElse(0.0);
+
+            // Обработка трёх типов дефектов
+            processDefectGroup("Внутренние дефекты", acceptanceQualityFoodCard.getInternalDefectsQualityCardList(), isImport, withPC, sampleSize, message, false);
+            processDefectGroup("Некондиция", acceptanceQualityFoodCard.getLightDefectsQualityCardList(), isImport, withPC, sampleSize, message, false);
+            processDefectGroup("Брак / гниль", acceptanceQualityFoodCard.getTotalDefectQualityCardList(), isImport, withPC, sampleSize, message, true);
+			
 			if(isRunTelegrammBot) {
 				telegrammBotQuantityYard.sendMessageWithPhotos(chatIds, message.toString(), photoIds, tags);				
 			}else {
-				telegramBotRoutingTEST.sendMessageWithPhotos(chatIds, message.toString(), photoIds, tags);				
+				System.err.println(message.toString());
+				telegramBotRoutingTEST.sendMessageWithPhotos(chatIds, message.toString(), photoIds, tags);		
+				System.out.println("В телегу полетело");
 			}
 		}
 		responce.put("status", "200");		

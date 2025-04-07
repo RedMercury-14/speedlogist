@@ -308,7 +308,7 @@ public class MainController {
 			}
 		}else {
 			System.err.println("ТЕЛЕГРАММ БОТ ОТКЛЮЧЕН!");	
-//			new BotInitializer(telegramBotRoutingTEST).initRoutingBotTEST();
+			new BotInitializer(telegramBotRoutingTEST).initRoutingBotTEST();
 		}
 		
 		

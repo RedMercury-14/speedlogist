@@ -52,7 +52,7 @@
 				</c:when>
 			</c:choose>
 			<c:choose>
-				<c:when test="${roles == '[ROLE_ADMIN]'}">
+				<c:when test="${roles == '[ROLE_ADMIN]' || roles == '[ROLE_ORL]'}">
 					<button type="button" id="sendScheduleDataToMail" class="btn tools-btn font-weight-bold text-muted ml-auto">
 						Отправить данные
 					</button>

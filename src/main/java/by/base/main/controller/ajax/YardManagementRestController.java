@@ -458,6 +458,7 @@ public class YardManagementRestController {
 		Map<String, Object> response = new HashMap<>();
 		JSONParser parser = new JSONParser();
 		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		User user = getThisUser();
 		
 		Integer idCard = Integer.parseInt(jsonMainObject.get("idAcceptanceQualityFoodCard").toString());
 		String comment = jsonMainObject.get("comment") != null && !jsonMainObject.get("comment").toString().isEmpty() ? jsonMainObject.get("comment").toString() : null;
@@ -469,6 +470,10 @@ public class YardManagementRestController {
 		foodCard.setCardStatus(status);
 		foodCard.setCommentAproof(comment);	
 		foodCard.setManagerPercent(percent);
+		
+		foodCard.setLoginManagerAproof(user.getLogin());
+		foodCard.setIdManagerAproof(user.getIdUser());
+		foodCard.setFullnameManagerAproof(user.getSurname() +" "+ user.getName());
 		
 		acceptanceQualityFoodCardService.update(foodCard);
 		
@@ -501,9 +506,12 @@ public class YardManagementRestController {
 				+ foodCard.getProductName() + "; Карточка товара №" + foodCard.getIdAcceptanceQualityFoodCard()
 				+ "\n");
 		message.append("<b>Статус по карточке: " + statusStr);
-		if(status == 152 || status == 156 || status == 140 && comment!=null) message.append("Комментарий: " + comment);
+		if((status == 150 || status == 152 || status == 156 || status == 140) && comment != null) message.append(" Комментарий: " + comment);
+		if(status == 154 && comment != null) message.append("Информация по процентам: " + percent + "\nКомментарий: " + comment);		
 		if(status == 154) message.append("Информация по процентам: " + percent);		
-		message.append("</b>");
+		message.append("</b>\n");
+		message.append("Принял решение: " + user.getSurname() +" "+ user.getName() + ". Тел: " + user.getTelephone());
+		
 		
 		if(isRunTelegrammBot) {
 			telegrammBotQuantityYard.sendMessageInBot(message.toString());				

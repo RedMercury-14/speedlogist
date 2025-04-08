@@ -7,6 +7,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +19,7 @@ public class AcceptanceQualityFoodCardImageUrlDAOImpl implements AcceptanceQuali
 
 
     @Autowired
+    @Qualifier("sessionFactoryYard")
     private SessionFactory sessionFactoryYard;
 
     private static final String GET_ALL_IMAGES_BY_ACCEPTANCE_QUALITY_FOOD_CARD =

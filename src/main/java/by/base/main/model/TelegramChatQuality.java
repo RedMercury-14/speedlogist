@@ -11,19 +11,19 @@ public class TelegramChatQuality {
 
 	@Id
 	@Column(name = "chat_id")
-    private Integer chatId;
+    private Long chatId;
 
     public TelegramChatQuality() {}
 
-    public TelegramChatQuality(Integer chatId) {
+    public TelegramChatQuality(Long chatId) {
         this.chatId = chatId;
     }
 
-    public Integer getChatId() {
+    public Long getChatId() {
         return chatId;
     }
 
-    public void setChatId(Integer chatId) {
+    public void setChatId(Long chatId) {
         this.chatId = chatId;
     }
 

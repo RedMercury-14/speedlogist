@@ -452,6 +452,11 @@ public class MainController {
 		return "reviewsForm";
 	}
 	
+	@GetMapping("/main/procurement/price-protocol/list")
+	public String getPriceProtocolList(Model model, HttpServletRequest request) {
+		return "priceProtocolList";
+	}
+	
 	@GetMapping("/main/procurement/permission/list")
 	public String getPermissionList(Model model, HttpServletRequest request) {
 		return "permissionList";

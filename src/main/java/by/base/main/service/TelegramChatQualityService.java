@@ -14,10 +14,10 @@ public interface TelegramChatQualityService {
 	 */
 	List<Long> getChatIdLongList();
 	
-	boolean existsById(int chatId);
+	boolean existsById(Long chatId);
 	
 	void save(TelegramChatQuality telegramChatQuality);
 	
-	void deleteByChatId (int chatId);
+	void deleteByChatId (Long chatId);
 
 }

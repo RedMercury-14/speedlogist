@@ -317,6 +317,9 @@ public class MainRestController {
 	@Autowired
 	private ReviewService reviewService;
 	
+	@Autowired
+	private PriceProtocolService priceProtocolService;
+	
 	
 	private static String classLog;
 	public static String marketJWT;
@@ -366,7 +369,125 @@ public class MainRestController {
 	@Autowired
     private ServletContext servletContext;
 	
+	private Double toDouble(Object obj) {
+	    if (obj == null || obj.toString().isEmpty()) return null;
+	    return Double.parseDouble(obj.toString());
+	}
+
+	private Integer toInteger(Object obj) {
+	    if (obj == null || obj.toString().isEmpty()) return null;
+	    return Integer.parseInt(obj.toString());
+	}
+
+	private Date toSqlDate(Object obj) {
+	    if (obj == null || obj.toString().isEmpty()) return null;
+	    return Date.valueOf(obj.toString()); // формат: "yyyy-MM-dd"
+	}
 	
+	@PostMapping("/procurement/price-protocol/createArray")
+	public Map<String, Object> createPriceProtocolArray(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+		Map<String, Object> response = new HashMap<>();
+	    JSONParser parser = new JSONParser();
+	    JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+
+	    Date validFrom = toSqlDate(jsonMainObject.get("validFrom"));
+	    Date validTo = toSqlDate(jsonMainObject.get("validTo"));
+	    String contractNumber = (String) jsonMainObject.get("contractNumber");
+	    Date contractDate = toSqlDate(jsonMainObject.get("contractDate"));
+
+	    List<PriceProtocol> savedProtocols = new ArrayList<>();
+
+	    JSONArray array = (JSONArray) jsonMainObject.get("array");
+	    for (Object obj : array) {
+	        JSONObject item = (JSONObject) obj;
+	        PriceProtocol protocol = new PriceProtocol();
+
+	        protocol.setBarcode((String) item.get("barcode"));
+	        protocol.setProductCode((String) item.get("productCode"));
+	        protocol.setTnvCode((String) item.get("tnvCode"));
+	        protocol.setName((String) item.get("name"));
+	        protocol.setPriceProducer(toDouble(item.get("priceProducer")));
+	        protocol.setCostImporter(toDouble(item.get("costImporter")));
+	        protocol.setMarkupImporterPercent(toDouble(item.get("markupImporterPercent")));
+	        protocol.setDiscountPercent(toDouble(item.get("discountPercent")));
+	        protocol.setWholesaleDiscountPercent(toDouble(item.get("wholesaleDiscountPercent")));
+	        protocol.setPriceWithoutVat(toDouble(item.get("priceWithoutVat")));
+	        protocol.setWholesaleMarkupPercent(toDouble(item.get("wholesaleMarkupPercent")));
+	        protocol.setVatRate(toDouble(item.get("vatRate")));
+	        protocol.setPriceWithVat(toDouble(item.get("priceWithVat")));
+	        protocol.setCountryOrigin((String) item.get("countryOrigin"));
+	        protocol.setManufacturer((String) item.get("manufacturer"));
+	        protocol.setUnitPerPack((String) item.get("unitPerPack"));
+	        protocol.setShelfLifeDays(toInteger(item.get("shelfLifeDays")));
+	        protocol.setCurrentPrice(toDouble(item.get("currentPrice")));
+	        protocol.setPriceChangePercent(toDouble(item.get("priceChangePercent")));
+	        protocol.setLastPriceChangeDate(toSqlDate(item.get("lastPriceChangeDate")));
+
+	        // Устанавливаем общие поля для всех записей
+	        protocol.setValidFrom(validFrom);
+	        protocol.setValidTo(validTo);
+	        protocol.setContractNumber(contractNumber);
+	        protocol.setContractDate(contractDate);
+
+	        int id = priceProtocolService.save(protocol);
+	        protocol.setIdPriceProtocol(id);
+
+	        savedProtocols.add(protocol);
+	    }
+
+	    response.put("status", "200");
+	    response.put("object", savedProtocols);
+	    return response;
+	}
+	
+	@PostMapping("/procurement/price-protocol/create")
+	public Map<String, Object> createPriceProtocol(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+	    Map<String, Object> response = new HashMap<>();
+	    JSONParser parser = new JSONParser();
+	    JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+
+	    PriceProtocol protocol = new PriceProtocol();
+
+	    protocol.setBarcode((String) jsonMainObject.get("barcode"));
+	    protocol.setProductCode((String) jsonMainObject.get("productCode"));
+	    protocol.setTnvCode((String) jsonMainObject.get("tnvCode"));
+	    protocol.setName((String) jsonMainObject.get("name"));
+	    protocol.setPriceProducer(toDouble(jsonMainObject.get("priceProducer")));
+	    protocol.setCostImporter(toDouble(jsonMainObject.get("costImporter")));
+	    protocol.setMarkupImporterPercent(toDouble(jsonMainObject.get("markupImporterPercent")));
+	    protocol.setDiscountPercent(toDouble(jsonMainObject.get("discountPercent")));
+	    protocol.setWholesaleDiscountPercent(toDouble(jsonMainObject.get("wholesaleDiscountPercent")));
+	    protocol.setPriceWithoutVat(toDouble(jsonMainObject.get("priceWithoutVat")));
+	    protocol.setWholesaleMarkupPercent(toDouble(jsonMainObject.get("wholesaleMarkupPercent")));
+	    protocol.setVatRate(toDouble(jsonMainObject.get("vatRate")));
+	    protocol.setPriceWithVat(toDouble(jsonMainObject.get("priceWithVat")));
+	    protocol.setCountryOrigin((String) jsonMainObject.get("countryOrigin"));
+	    protocol.setManufacturer((String) jsonMainObject.get("manufacturer"));
+	    protocol.setUnitPerPack((String) jsonMainObject.get("unitPerPack"));
+	    protocol.setShelfLifeDays(toInteger(jsonMainObject.get("shelfLifeDays")));
+	    protocol.setCurrentPrice(toDouble(jsonMainObject.get("currentPrice")));
+	    protocol.setPriceChangePercent(toDouble(jsonMainObject.get("priceChangePercent")));
+	    protocol.setLastPriceChangeDate(toSqlDate(jsonMainObject.get("lastPriceChangeDate")));
+	    protocol.setValidFrom(toSqlDate(jsonMainObject.get("validFrom")));
+	    protocol.setValidTo(toSqlDate(jsonMainObject.get("validTo")));
+	    protocol.setContractNumber((String) jsonMainObject.get("contractNumber"));
+	    protocol.setContractDate(toSqlDate(jsonMainObject.get("contractDate")));
+
+	    int id = priceProtocolService.save(protocol);
+	    protocol.setIdPriceProtocol(id);
+
+	    response.put("status", "200");
+	    response.put("object", protocol);
+	    return response;
+	}
+	
+	@GetMapping("/procurement/price-protocol/getList")
+	public Map<String, Object> getListProtocol(HttpServletRequest request, HttpServletResponse response) throws IOException{
+	    Map<String, Object> responseMap = new HashMap<>();
+	    responseMap.put("status", "200");
+	    responseMap.put("object", priceProtocolService.getAll());
+	    return responseMap;
+	}
 	
 	@GetMapping("/orderproof/approve")
 	public Map<String, Object> getApproveOrder(HttpServletRequest request, HttpServletResponse response) throws IOException{

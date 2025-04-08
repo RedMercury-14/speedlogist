@@ -337,7 +337,7 @@ public class TelegrammBotQuantityYard extends TelegramLongPollingBot {
             
             if (errorMessage != null && (errorMessage.contains("USER_IS_BLOCKED") || 
                                        errorMessage.contains("bot was blocked"))) {
-                telegramChatQualityService.deleteByChatId(chatId.intValue());
+                telegramChatQualityService.deleteByChatId(chatId.longValue());
                 System.out.println("Удален заблокировавший пользователь: " + chatId);
                 return;
             }
@@ -383,7 +383,7 @@ public class TelegrammBotQuantityYard extends TelegramLongPollingBot {
                 return;
             }
 
-            if (telegramChatQualityService.existsById(Integer.parseInt(chatId))) {
+            if (telegramChatQualityService.existsById(Long.parseLong(chatId))) {
                 String formattedMessage = formatMessage(text, senderName, senderChatId);
                 List<Long> recipients = getRecipients(senderChatId);
                 sendMessagesWithErrorHandling(formattedMessage, recipients);
@@ -397,7 +397,7 @@ public class TelegrammBotQuantityYard extends TelegramLongPollingBot {
                 sendTextMessage(chatId, message);
             } catch (TelegramApiException e) {
                 if (e.getMessage() != null && e.getMessage().contains("USER_IS_BLOCKED")) {
-                    telegramChatQualityService.deleteByChatId(chatId.intValue());
+                    telegramChatQualityService.deleteByChatId(chatId.longValue());
                     System.out.println("Удален заблокировавший пользователь: " + chatId);
                 } else {
                     e.printStackTrace();
@@ -421,8 +421,8 @@ public class TelegrammBotQuantityYard extends TelegramLongPollingBot {
 
     private void handleStartCommand(String chatId) {
         SendMessage welcome;
-        if (!telegramChatQualityService.existsById(Integer.parseInt(chatId))) {
-        	telegramChatQualityService.save(new TelegramChatQuality(Integer.parseInt(chatId)));
+        if (!telegramChatQualityService.existsById(Long.parseLong(chatId))) {
+        	telegramChatQualityService.save(new TelegramChatQuality(Long.parseLong(chatId)));
             welcome = new SendMessage(chatId, "Привет! Ты подписан на рассылку.");
         } else {
             welcome = new SendMessage(chatId, "Приветствую.");

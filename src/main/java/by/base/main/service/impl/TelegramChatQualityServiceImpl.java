@@ -26,7 +26,7 @@ public class TelegramChatQualityServiceImpl implements TelegramChatQualityServic
 
 	@Transactional
 	@Override
-	public boolean existsById(int chatId) {
+	public boolean existsById(Long chatId) {
 		return telegramChatQualityDAO.existsById(chatId);
 	}
 
@@ -38,7 +38,7 @@ public class TelegramChatQualityServiceImpl implements TelegramChatQualityServic
 
 	@Transactional
 	@Override
-	public void deleteByChatId(int chatId) {
+	public void deleteByChatId(Long chatId) {
 		telegramChatQualityDAO.deleteByChatId(chatId);
 	}
 

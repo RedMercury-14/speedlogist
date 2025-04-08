@@ -339,7 +339,7 @@ public class TelegramBotRoutingTEST extends TelegramLongPollingBot {
             
             if (errorMessage != null && (errorMessage.contains("USER_IS_BLOCKED") || 
                                        errorMessage.contains("bot was blocked"))) {
-                telegramChatQualityService.deleteByChatId(chatId.intValue());
+                telegramChatQualityService.deleteByChatId(chatId.longValue());
                 System.out.println("Удален заблокировавший пользователь: " + chatId);
                 return;
             }
@@ -373,19 +373,19 @@ public class TelegramBotRoutingTEST extends TelegramLongPollingBot {
     }
 
     @Override
-    public void onUpdateReceived(Update update) {
+    public void onUpdateReceived(Update update) {    	
         if (update.hasMessage() && update.getMessage().hasText()) {
             String chatId = update.getMessage().getChatId().toString();
             Long senderChatId = update.getMessage().getChatId();
             String text = update.getMessage().getText().trim();
             String senderName = update.getMessage().getFrom().getFirstName();
-
+            
             if ("/start".equalsIgnoreCase(text)) {
                 handleStartCommand(chatId);
                 return;
             }
 
-            if (chatRepository.existsById(Integer.parseInt(chatId))) {
+            if (chatRepository.existsById(Long.parseLong(chatId))) {
                 String formattedMessage = formatMessage(text, senderName, senderChatId);
                 List<Long> recipients = getRecipients(senderChatId);
                 sendMessagesWithErrorHandling(formattedMessage, recipients);
@@ -399,7 +399,7 @@ public class TelegramBotRoutingTEST extends TelegramLongPollingBot {
                 sendTextMessage(chatId, message);
             } catch (TelegramApiException e) {
                 if (e.getMessage() != null && e.getMessage().contains("USER_IS_BLOCKED")) {
-                    telegramChatQualityService.deleteByChatId(chatId.intValue());
+                    telegramChatQualityService.deleteByChatId(chatId.longValue());
                     System.out.println("Удален заблокировавший пользователь: " + chatId);
                 } else {
                     e.printStackTrace();
@@ -423,8 +423,8 @@ public class TelegramBotRoutingTEST extends TelegramLongPollingBot {
 
     private void handleStartCommand(String chatId) {
         SendMessage welcome;
-        if (!chatRepository.existsById(Integer.parseInt(chatId))) {
-            chatRepository.save(new TelegramChatQuality(Integer.parseInt(chatId)));
+        if (!chatRepository.existsById(Long.parseLong(chatId))) {
+            chatRepository.save(new TelegramChatQuality(Long.parseLong(chatId)));
             welcome = new SendMessage(chatId, "Привет! Ты подписан на рассылку.");
         } else {
             welcome = new SendMessage(chatId, "Приветствую.");

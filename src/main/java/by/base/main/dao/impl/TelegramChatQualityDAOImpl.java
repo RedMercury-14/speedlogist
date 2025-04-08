@@ -36,7 +36,7 @@ public class TelegramChatQualityDAOImpl implements TelegramChatQualityDAO{
 	
 	private static final String queryGetListObjByUser = "from TelegramChatQuality where chatId=:chatId";
 	@Override
-	public boolean existsById(int chatId) {
+	public boolean existsById(Long chatId) {
 		Session currentSession = sessionFactory.getCurrentSession();		
 		Query<TelegramChatQuality> theObject = currentSession.createQuery(queryGetListObjByUser, TelegramChatQuality.class);
 		theObject.setParameter("chatId", chatId);		
@@ -55,7 +55,7 @@ public class TelegramChatQualityDAOImpl implements TelegramChatQualityDAO{
 	
 	private static final String queryDeleteById = "delete from TelegramChatQuality where chatId=:chatId";
 	@Override
-	public void deleteByChatId(int chatId) {
+	public void deleteByChatId(Long chatId) {
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query theQuery = 
 				currentSession.createQuery(queryDeleteById);

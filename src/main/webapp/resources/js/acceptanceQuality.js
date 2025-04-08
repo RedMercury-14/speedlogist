@@ -1,6 +1,6 @@
 import { AG_GRID_LOCALE_RU } from './AG-Grid/ag-grid-locale-RU.js'
 import { BtnCellRenderer, BtnsCellRenderer, gridColumnLocalState, gridFilterLocalState, ResetStateToolPanel } from './AG-Grid/ag-grid-utils.js'
-import { getAllAcceptanceQualityFoodCardUrl, getClosedAcceptanceQualityBaseUrl } from './globalConstants/urls.js'
+import { aproofQualityFoodCardUrl, getAllAcceptanceQualityFoodCardUrl, getClosedAcceptanceQualityBaseUrl } from './globalConstants/urls.js'
 import { snackbar } from './snackbar/snackbar.js'
 import { dateHelper, debounce, getData } from './utils.js'
 import PhotoSwipeLightbox from './photoSwipe/photoswipe-lightbox.esm.min.js'
@@ -9,55 +9,44 @@ import PhotoSwipe from './photoSwipe/photoswipe.esm.min.js'
 import { buttons, caption, thumbnails } from './photoSwipe/photoSwipeHelper.js'
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 import { uiIcons } from './uiIcons.js'
+import { ajaxUtils } from './ajaxUtils.js'
 
 const PAGE_NAME = 'acceptanceQuality'
 const LOCAL_STORAGE_KEY = `AG_Grid_settings_to_${PAGE_NAME}`
 const DATES_KEY = `searchDates_to_${PAGE_NAME}`
+
+const token = $("meta[name='_csrf']").attr("content")
 
 const debouncedSaveColumnState = debounce(saveColumnState, 300)
 const debouncedSaveFilterState = debounce(saveFilterState, 300)
 
 let lightbox
 
-// форма отправки действия по карточке для строк таблицы
-class cardActionCellRenderer {
+class CardStatusCellRenderer {
 	init(params) {
 		this.params = params
-		this.cardAction = params.data.cardAction || ''
 
-		this.cardActionSpan = document.createElement('span')
-		this.cardActionSpan.textContent = this.cardAction
+		this.valueSpan = document.createElement('span')
+		this.valueSpan.innerText = getCardStatusText(params.data)
+		this.eGui = document.createElement("button")
+		this.eGui.className = this.params.className || ''
+		this.eGui.id = this.params.id || ''
+		this.eGui.innerText = this.params.label || this.params.dynamicLabel(this.params) || ''
 
-		this.eGui = document.createElement("form")
-		this.eGui.className = 'form-inline'
-		this.eGui.innerHTML = `
-			<input type="hidden" name="idAcceptanceQualityFoodCard" value="${params.data.idAcceptanceQualityFoodCard}">
-			<div class="form-group mr-2">
-				<label for="cardAction" class="sr-only">Действие</label>
-				<select name="cardAction" class="form-control form-control-sm" required>
-					<option value="" selected hidden disabled>Выберите действие</option>
-					<option value="confirm">Принять товар</option>
-					<option value="rework">На переборку</option>
-					<option value="unconfirm">Не принимать товар</option>
-				</select>
-			</div>
-			<button type="submit" class="btn btn-primary btn-sm">${uiIcons.check}</button>
-		`
-
-		this.formSubmitHandler = this.formSubmitHandler.bind(this)
-		this.eGui.addEventListener("submit", this.formSubmitHandler)
+		this.btnClickedHandler = this.btnClickedHandler.bind(this)
+		this.eGui.addEventListener("click", this.btnClickedHandler)
 	}
 
 	getGui() {
-		return this.cardAction ? this.cardActionSpan : this.eGui
+		return this.params.value === 100 ? this.eGui : this.valueSpan
 	}
 
-	formSubmitHandler(event) {
-		this.params.onSubmit(event)
+	btnClickedHandler(event) {
+		this.params.onClick(this.params)
 	}
 
 	destroy() {
-		this.eGui.removeEventListener("submit", this.formSubmitHandler)
+		this.eGui.removeEventListener("click", this.btnClickedHandler)
 	}
 }
 
@@ -65,13 +54,13 @@ const detailColumnDefs = [
 	{ headerName: 'Продукт', field: 'productName', flex: 5, },
 	{
 		headerName: 'Выборка', field: 'sampleSize',
-		valueFormatter: (params) => `${params.value} кг`
+		valueFormatter: (params) => `${params.value} ${params.data?.unit || "кг"}`
 	},
 	{
 		headerName: 'ВД (вес/процент)', field: 'totalInternalDefectPercentage',
 		valueGetter: (params) => {
 			const data = params.data
-			return `${data.totalInternalDefectWeight} кг / ${data.totalInternalDefectPercentage}%`
+			return `${data.totalInternalDefectWeight} ${params.data?.unit || "кг"} / ${data.totalInternalDefectPercentage}%`
 		},
 	},
 	{
@@ -79,14 +68,14 @@ const detailColumnDefs = [
 		flex: 3,
 		valueGetter: (params) => {
 			const data = params.data
-			return `${data.totalInternalDefectWeight} кг / ${data.totalDefectPercentage}% / ${data.totalDefectPercentageWithPC}%`
+			return `${data.totalDefectWeight} ${params.data?.unit || "кг"} / ${data.totalDefectPercentage}% / ${data.totalDefectPercentageWithPC}%`
 		},
 	},
 	{
 		headerName: 'ЛН (вес/процент)', field: 'totalLightDefectPercentage',
 		valueGetter: (params) => {
 			const data = params.data
-			return `${data.totalLightDefectWeight} кг / ${data.totalLightDefectPercentage}%`
+			return `${data.totalLightDefectWeight} ${params.data?.unit || "кг"} / ${data.totalLightDefectPercentage}%`
 		},
 	},
 	{
@@ -95,17 +84,7 @@ const detailColumnDefs = [
 		minWidth: 100, flex: 1,
 		cellRenderer: BtnsCellRenderer,
 		cellRendererParams: {
-			onClick: ((e, params) => {
-				if (e.buttonId === 'showImages') {
-					showGalleryItems(params.data)
-					return
-				}
-		
-				if (e.buttonId === 'showInfo') {
-					showCardModal(params.data)
-					return
-				}
-			}),
+			onClick: cardRowActionOnClickHandler,
 			buttonList: [
 				{ className: 'btn btn-light border btn-sm', id: 'showImages', icon: uiIcons.images, title: 'Показать фото' },
 				{ className: 'btn btn-light border btn-sm', id: 'showInfo', icon: uiIcons.info, title: 'Подробнее' },
@@ -113,12 +92,14 @@ const detailColumnDefs = [
 		},
 	},
 	{
-		headerName: 'Статус карточки', field: 'idAcceptanceQualityFoodCard',
-		cellClass: 'px-1 py-0 text-center small-row',
-		minWidth: 240, flex: 3,
-		cellRenderer: cardActionCellRenderer,
+		headerName: 'Статус карточки', field: 'cardStatus',
+		cellClass: 'px-1 py-0 text-center small-row font-weight-bold',
+		minWidth: 125, flex: 1,
+		cellRenderer: CardStatusCellRenderer,
 		cellRendererParams: {
-			onSubmit: cardActionFormSubmitHandler
+			onClick: (params) => showApproveCardModal(params.data),
+			label: 'Подтвердить',
+			className: 'btn btn-success border btn-sm',
 		},
 	},
 ]
@@ -139,6 +120,7 @@ const detailGridOptions = {
 	enableBrowserTooltips: true,
 	localeText: AG_GRID_LOCALE_RU,
 	getContextMenuItems: getContextMenuItems,
+	getRowId: (params) => params.data.idAcceptanceQualityFoodCard,
 }
 
 const columnDefs = [
@@ -162,6 +144,11 @@ const columnDefs = [
 	{ headerName: "SKU", field: "sku", minWidth: 50, width: 50 },
 	{ headerName: "ТТН", field: "ttn", width: 100, },
 	{ headerName: "О товаре", field: "infoAcceptance" },
+	{
+		headerName: "Импорт", field: "isImport",
+		valueFormatter: (params) => params.value ? "Да" : "Нет",
+		filterParams: { valueFormatter: (params) => params.value ? "Да" : "Нет", },
+	},
 	{
 		headerName: "Дата старт", field: "dateStartProcessInMs", width: 140,
 		valueFormatter: dateTimeValueFormatter,
@@ -298,7 +285,45 @@ document.addEventListener('DOMContentLoaded', async () => {
 	// листнер на отправку формы поиска заявок
 	orderSearchForm.addEventListener('submit', searchFormSubmitHandler)
 	// листнер на отправку формы установки статуса карточки
-	cardActionForm.addEventListener('submit', cardActionFormSubmitHandler)
+	approveCardForm.addEventListener('submit', approveCardFormSubmitHandler)
+	approveCardForm2.addEventListener('submit', approveCardFormSubmitHandler)
+
+	const cardStatusSelect = document.getElementById('status')
+	const cardManagerPercentInputsContainer = document.querySelectorAll('.managerPercentInput')
+	const managerPercentTypeSelect = document.getElementById('managerPercent_type')
+	const managerPercentValueInput = document.getElementById('managerPercent_value')
+	cardStatusSelect.addEventListener('change', (e) => {
+		cardStatusSelectChangeHandler(e, managerPercentTypeSelect, managerPercentValueInput, cardManagerPercentInputsContainer)
+	})
+
+	const cardStatusSelect2 = document.getElementById('status2')
+	const cardManagerPercentInputsContainer2 = document.querySelectorAll('.managerPercentInput2')
+	const managerPercentTypeSelect2 = document.getElementById('managerPercent_type2')
+	const managerPercentValueInput2 = document.getElementById('managerPercent_value2')
+	cardStatusSelect2.addEventListener('change', (e) => {
+		cardStatusSelectChangeHandler(e, managerPercentTypeSelect2, managerPercentValueInput2, cardManagerPercentInputsContainer2)
+	})
+
+	$('#approveCardModal').on('hidden.bs.modal', (e) => {
+		approveCardForm.reset()
+		managerPercentTypeSelect.setAttribute('disabled', '')
+		managerPercentTypeSelect.removeAttribute('required')
+		managerPercentValueInput.setAttribute('disabled', '')
+		managerPercentValueInput.removeAttribute('required')
+		cardManagerPercentInputsContainer.forEach(container => {
+			container.classList.add('d-none')
+		})
+	})
+	$('#qualityCardInfoModal').on('hidden.bs.modal', (e) => {
+		approveCardForm2.reset()
+		managerPercentTypeSelect2.setAttribute('disabled', '')
+		managerPercentTypeSelect2.removeAttribute('required')
+		managerPercentValueInput2.setAttribute('disabled', '')
+		managerPercentValueInput2.removeAttribute('required')
+		cardManagerPercentInputsContainer2.forEach(container => {
+			container.classList.add('d-none')
+		})
+	})
 })
 
 
@@ -310,6 +335,7 @@ window.addEventListener("unload", () => {
 	dateHelper.setDatesToFetch(DATES_KEY, date_fromInput.value, date_toInput.value)
 })
 
+// инициализация галереи
 function initGallery() {
 	lightbox = new PhotoSwipeLightbox(photoSwipeOptions)
 	new PhotoSwipeDynamicCaption(lightbox, photoSwipeDynamicCaptionOptions)
@@ -329,6 +355,7 @@ function initGallery() {
 	lightbox.init()
 }
 
+// отображение галереи с изображениями
 async function showGalleryItems(data) {
 	const galleryItems = data.images
 	if (!galleryItems.length) {
@@ -384,14 +411,86 @@ async function searchFormSubmitHandler(e) {
 	}
 }
 // обработчик отправки формы статуса карточки
-function cardActionFormSubmitHandler(e) {
+function approveCardFormSubmitHandler(e) {
 	e.preventDefault()
 	const formData = new FormData(e.target)
 	const data = Object.fromEntries(formData)
 
-	console.log(data)
+	const payload = {
+		idAcceptanceQualityFoodCard: data.idAcceptanceQualityFoodCard ?  Number(data.idAcceptanceQualityFoodCard) : null,
+		status: data.status ? Number(data.status) : null,
+		comment: data.comment ? data.comment.trim() : null,
+		managerPercent: data.managerPercent_type && data.managerPercent_value
+			? `${data.managerPercent_type} ${data.managerPercent_value}%` : null,
+	}
+
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 300)
+
+	ajaxUtils.postJSONdata({
+		token,
+		url: aproofQualityFoodCardUrl,
+		data: payload,
+		successCallback: (res) => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+
+			if (res.status === '200') {
+				// обновить карточку в detail строки таблицы
+				const cardData = res.object
+				const rowNode = gridOptions.api.getRowNode(data.idAcceptanceFoodQuality)
+				const rowData = rowNode.data
+				const updatedRowData = {
+					...rowData,
+					cards: rowData.cards.map(card => {
+						if (card.idAcceptanceQualityFoodCard === cardData.idAcceptanceQualityFoodCard) {
+							return recalculateCard(cardData)
+						}
+						return card
+					})
+				}
+				updateTableRow(gridOptions, updatedRowData)
+				res.message && snackbar.show(res.message)
+				$(`#qualityCardInfoModal`).modal('hide')
+				$(`#approveCardModal`).modal('hide')
+				return
+			}
+
+			if (res.status === '100') {
+				const message = res.message ? res.message : 'Неизвестная ошибка'
+				snackbar.show(message)
+				return
+			}
+		},
+		errorCallback: () => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+		}
+	})
 }
 
+// обработчик изменения значения статуса карточки в выпадающем списке формы
+function cardStatusSelectChangeHandler(e, typeSelect, valueInput, inputsContainer) {
+	const selectedStatus = e.target.value
+
+	if (selectedStatus === '154') {
+		typeSelect.removeAttribute('disabled',)
+		typeSelect.setAttribute('required', '')
+		valueInput.removeAttribute('disabled',)
+		valueInput.setAttribute('required', '')
+		inputsContainer.forEach(container => {
+			container.classList.remove('d-none')
+		})
+		typeSelect.focus()
+	} else {
+		typeSelect.setAttribute('disabled', '')
+		typeSelect.removeAttribute('required')
+		valueInput.setAttribute('disabled', '')
+		valueInput.removeAttribute('required')
+		inputsContainer.forEach(container => {
+			container.classList.add('d-none')
+		})
+	}
+}
 
 // получение данных качества товаров
 async function getAcceptanceQualityData(dateStart, dateEnd) {
@@ -487,15 +586,7 @@ function getCardsData (params) {
 		getAcceptanceQualityCards(idAcceptanceFoodQuality)
 			.then(cards => {
 				if (cards.length) {
-					cards = cards.map(card => {
-						const sampleSize = parseFloat(card.sampleSize) || 0;
-						return {
-							...card,
-							...recalculateDefects("internalDefectsQualityCardList", sampleSize, card.internalDefectsQualityCardList),
-							...recalculateDefects("totalDefectQualityCardList", sampleSize, card.totalDefectQualityCardList),
-							...recalculateDefects("lightDefectsQualityCardList", sampleSize, card.lightDefectsQualityCardList),
-						}
-					})
+					cards = cards.map(recalculateCard)
 				}
 				gridOptions.api.applyTransaction({ update: [{ ...rowData, cards }]})
 				params.successCallback(rowData.cards)
@@ -506,6 +597,17 @@ function getCardsData (params) {
 			})
 	} else {
 		params.successCallback(rowData.cards)
+	}
+}
+
+function recalculateCard(card) {
+	const sampleSize = parseFloat(card.sampleSize) || 0
+	const withPC = card.unit !== "шт"
+	return {
+		...card,
+		...recalculateDefects("internalDefectsQualityCardList", sampleSize, card.internalDefectsQualityCardList, card.isImport, withPC),
+		...recalculateDefects("totalDefectQualityCardList", sampleSize, card.totalDefectQualityCardList, card.isImport, withPC),
+		...recalculateDefects("lightDefectsQualityCardList", sampleSize, card.lightDefectsQualityCardList, card.isImport, withPC),
 	}
 }
 
@@ -566,15 +668,23 @@ function showCardModal(card) {
 	if (!card) return
 
 	const formatDate = dateHelper.getFormatDateTime(card.dateCard)
+	const sampleSizeUnit = card.unit === 'шт' ? 'шт' : 'кг'
+
+	const cardStatusText = document.getElementById('cardStatusText')
 
 	// отображение формы действия по карточке
-	card.cardAction
-		? cardActionForm.classList.add('d-none')
-		: cardActionForm.classList.remove('d-none')
-	cardActionForm.reset()
+	if (card.cardStatus === 100) {
+		cardStatusText.classList.add('d-none')
+		approveCardForm2.classList.remove('d-none')
+	} else {
+		approveCardForm2.classList.add('d-none')
+		cardStatusText.classList.remove('d-none')
+	}
 
 	// заполнение полей
-	cardActionForm.idAcceptanceQualityFoodCard.value = card.idAcceptanceQualityFoodCard
+	approveCardForm2.idAcceptanceFoodQuality.value = card.idAcceptanceFoodQuality
+	approveCardForm2.idAcceptanceQualityFoodCard.value = card.idAcceptanceQualityFoodCard
+	fillField('cardStatusText', getCardStatusText(card))
 	fillField('productName', card.productName)
 	fillField('dateCard', formatDate)
 	fillField('firmNameAccept', card.firmNameAccept)
@@ -602,6 +712,7 @@ function showCardModal(card) {
 	fillField('caliber', card.caliber)
 	fillField('stickerDescription', card.stickerDescription)
 	fillField('cardInfo', card.cardInfo)
+	document.querySelectorAll('.sampleSizeUnit').forEach((el) => (el.textContent = sampleSizeUnit))
 
 	// Заполнение таблиц с дефектами
 	fillDefectsTable('#internalDefectsList', card.internalDefectsQualityCardList, ['weight', 'percentage', 'description'])
@@ -618,27 +729,45 @@ function showCardModal(card) {
 	showImagesBtn.onclick = (e) => showGalleryItems(card)
 	showImagesBtnContainer.append(showImagesBtn)
 
-	$('#qualityCardModal').modal('show')
+	$('#qualityCardInfoModal').modal('show')
+}
+
+// отображение модального окна с подтверждением принятия качества
+function showApproveCardModal(card) {
+	if (!card) return
+	approveCardForm.idAcceptanceFoodQuality.value = card.idAcceptanceFoodQuality
+	approveCardForm.idAcceptanceQualityFoodCard.value = card.idAcceptanceQualityFoodCard
+	$('#approveCardModal').modal('show')
 }
 
 // расчет суммы отдельных дефектов
-function recalculateDefects(type, sampleSize, defects) {
+function recalculateDefects(type, sampleSize, defects, isImport, withPC) {
 	let totalWeight = 0
 	let totalPercentage = 0
 	let totalPercentageWithPC = 0
+
+	const pcThreshold = 10 // порог для ПК (%)
+	const defaultPercentageFactor = 100
+	const pcPercentageFactorBeforeTreshold = isImport ? 160 : 140 // процент ПК при браке до 10%
+	const pcPercentageFactorAftertTreshold = 200 // процент ПК при браке свыше 10%
+	
 
 	const updatedDefects = defects.map((defect) => {
 		const weight = parseFloat(defect.weight) || 0
 		totalWeight += weight
 
 		if (type === "totalDefectQualityCardList") {
-			const percentage = sampleSize ? (weight / sampleSize) * 100 : 0
-			const percentageWithPC = sampleSize ? (percentage < 10 ? (weight / sampleSize) * 140 : (weight / sampleSize) * 200) : 0
+			const percentage = sampleSize ? (weight / sampleSize) * defaultPercentageFactor : 0;
+			const percentageWithPC = withPC && sampleSize
+				? (percentage <= pcThreshold
+					? (weight / sampleSize) * pcPercentageFactorBeforeTreshold
+					: (weight / sampleSize) * pcPercentageFactorAftertTreshold)
+						: 0
 			totalPercentage += percentage
 			totalPercentageWithPC += percentageWithPC
 			return { ...defect, percentage: percentage.toFixed(2), percentageWithPC: percentageWithPC.toFixed(2) }
 		} else {
-			const percentage = sampleSize ? (weight / sampleSize) * 100 : 0
+			const percentage = sampleSize ? (weight / sampleSize) * defaultPercentageFactor : 0
 			totalPercentage += percentage
 			return { ...defect, percentage: percentage.toFixed(2) }
 		}
@@ -701,4 +830,52 @@ function getImageSize(src) {
 		img.onerror = () => reject(new Error('Не удалось загрузить изображение'))
 		img.src = src
 	})
+}
+
+// форматирование статусов карточек
+function getCardStatusText(card) {
+	if (!card) return ''
+
+	const status = card.cardStatus
+	if (status === 154) {
+		return `Принята с процентом: ${card.managerPercent}`
+	}
+
+	switch (status) {
+		case 10:
+			return 'Создана'
+		case 100:
+			return 'Закрыта'
+		case 140:
+			return 'Не принята УЗ'
+		case 150:
+			return 'Принята УЗ'
+		case 152:
+			return 'Принята с переборкой'
+		case 154:
+			return 'Принята с процентом брака'
+		case 156:
+			return 'Принята под реализацию'
+		default:
+			return `Неизвестный статус (${status})`
+	}
+}
+
+// обработчик кнопок в строке карточки товара
+function cardRowActionOnClickHandler(e, params) {
+	if (e.buttonId === 'showImages') {
+		showGalleryItems(params.data)
+		return
+	}
+
+	if (e.buttonId === 'showInfo') {
+		showCardModal(params.data)
+		return
+	}
+}
+
+function updateTableRow(gridOptions, rowData) {
+	gridOptions.api.applyTransactionAsync(
+		{ update: [rowData] }
+	)
 }

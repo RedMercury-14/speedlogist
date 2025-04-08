@@ -8,7 +8,7 @@ import javax.persistence.*;
 @Entity
 @Table(name = "internal_defects_quality_card")
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class InternalDefectsQualityCard {
+public class InternalDefectsQualityCard implements DefectBase{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

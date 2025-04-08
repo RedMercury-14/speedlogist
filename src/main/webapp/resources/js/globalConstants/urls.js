@@ -444,3 +444,12 @@ export const getInProcessAcceptanceQualityUrl = '/speedlogist/tsd/inProcessAccep
 export const getClosedAcceptanceQualityBaseUrl = '/speedlogist/tsd/closedAcceptanceQuality'
 export const getAllAcceptanceQualityFoodCardUrl = '/speedlogist/tsd/getAllAcceptanceQualityFoodCard'
 export const aproofQualityFoodCardUrl = '/speedlogist/tsd/aproofQualityFoodCard'
+
+
+///////////////////////////////////////////////
+// Таблица ротаций
+///////////////////////////////////////////////
+export const loadRotationExcelUrl = '/speedlogist/api/rotations/load'
+export const getRotationListUrl = '/speedlogist/api/rotations/get-rotations'
+export const preCreateRotationUrl = '/speedlogist/api/rotations/preCreation'
+export const approveCreateRotationUrl = '/speedlogist/api/rotations/create'

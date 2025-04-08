@@ -81,6 +81,8 @@ public class AcceptanceQualityFoodCardServiceImpl implements AcceptanceQualityFo
             acceptanceQualityFoodCardDTO.setCaliber(acceptanceQualityFoodCard.getCaliber());
             acceptanceQualityFoodCardDTO.setStickerDescription(acceptanceQualityFoodCard.getStickerDescription());
             acceptanceQualityFoodCardDTO.setDateCard(acceptanceQualityFoodCard.getDateCard());
+            acceptanceQualityFoodCardDTO.setUnit(acceptanceQualityFoodCard.getUnit());
+            acceptanceQualityFoodCardDTO.setIsImport(acceptanceFoodQuality.getAcceptance().getIsImport());
 
             acceptanceQualityFoodCardDTO.setInternalDefectsQualityCardList(
                     new ArrayList<>(acceptanceQualityFoodCard.getInternalDefectsQualityCardList()));
@@ -105,14 +107,12 @@ public class AcceptanceQualityFoodCardServiceImpl implements AcceptanceQualityFo
         return acceptanceQualityFoodCardDTOList;
     }
 
-	@Override
-	@Transactional
+	@Override	
 	public int save(AcceptanceQualityFoodCard acceptanceQualityFoodCard) {
 		return acceptanceQualityFoodCardDAO.save(acceptanceQualityFoodCard);
 	}
 
 	@Override
-	@Transactional
 	public void update(AcceptanceQualityFoodCard acceptanceQualityFoodCard) {
 		acceptanceQualityFoodCardDAO.update(acceptanceQualityFoodCard);
 	}

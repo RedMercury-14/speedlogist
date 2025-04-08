@@ -40,6 +40,9 @@ public class AcceptanceQualityFoodCardDTO {
     private String stickerDescription;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime dateCard;
+    
+    private Boolean isImport;
+    private String unit;
 
 
     private List<InternalDefectsQualityCard> internalDefectsQualityCardList;
@@ -272,4 +275,21 @@ public class AcceptanceQualityFoodCardDTO {
     public void setTotalDefectQualityCardList(List<TotalDefectQualityCard> totalDefectQualityCardList) {
         this.totalDefectQualityCardList = totalDefectQualityCardList;
     }
+
+	public Boolean getIsImport() {
+		return isImport;
+	}
+
+	public void setIsImport(Boolean isImport) {
+		this.isImport = isImport;
+	}
+
+	public String getUnit() {
+		return unit;
+	}
+
+	public void setUnit(String unit) {
+		this.unit = unit;
+	}
+    
 }

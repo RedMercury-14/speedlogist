@@ -8,6 +8,12 @@ public interface TelegramChatQualityService {
 	
 	List<TelegramChatQuality> getChatIdList();
 	
+	/**
+	 * Возвращает лист с id чатов, для отправки сообщения
+	 * @return
+	 */
+	List<Long> getChatIdLongList();
+	
 	boolean existsById(int chatId);
 	
 	void save(TelegramChatQuality telegramChatQuality);

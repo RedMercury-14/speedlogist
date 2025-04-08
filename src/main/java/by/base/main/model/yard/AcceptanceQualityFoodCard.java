@@ -115,16 +115,39 @@ public class AcceptanceQualityFoodCard {
     private LocalDateTime dateTimeEndCard;
     
     @Column(name = "comment_aproof", columnDefinition = "TEXT")
-    private String commentAproof;       
+    private String commentAproof;  
+    
+    @Column(name = "unit")
+    private String unit;
+    
+    @Column(name = "manager_percent")
+    private String managerPercent;
 
     // Getters and Setters
 
+    
 
     public LocalDateTime getDateCard() {
         return dateCard;
     }
 
-    public void setDateCard(LocalDateTime dateCard) {
+    public String getManagerPercent() {
+		return managerPercent;
+	}
+
+	public void setManagerPercent(String managerPercent) {
+		this.managerPercent = managerPercent;
+	}
+
+	public String getUnit() {
+		return unit;
+	}
+
+	public void setUnit(String unit) {
+		this.unit = unit;
+	}
+
+	public void setDateCard(LocalDateTime dateCard) {
         this.dateCard = dateCard;
     }
 

@@ -6,6 +6,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 
 import org.springframework.transaction.annotation.Transactional;
@@ -16,8 +17,8 @@ import java.util.List;
 public class AcceptanceQualityDAOImpl implements AcceptanceQualityDAO {
 
     @Autowired
+    @Qualifier("sessionFactoryYard")
     private SessionFactory sessionFactoryYard;
-
 
     private static final String GET_BY_STATUS = "SELECT DISTINCT afq FROM AcceptanceFoodQuality afq " +
             "JOIN FETCH afq.acceptance a " +
@@ -46,7 +47,7 @@ public class AcceptanceQualityDAOImpl implements AcceptanceQualityDAO {
             "left JOIN FETCH afqUser.userYard " +
             "where afq.qualityProcessStatus in (:statuses)";
 
-    @Transactional("myTransactionManagerYard")
+    @Transactional(transactionManager = "myTransactionManagerYard")
     public List<AcceptanceFoodQuality> getAllByStatuses(List<Integer> statuses) {
         Session session = sessionFactoryYard.getCurrentSession();
         Query<AcceptanceFoodQuality> query = session.createQuery(GET_BY_STATUSES, AcceptanceFoodQuality.class);
@@ -61,7 +62,7 @@ public class AcceptanceQualityDAOImpl implements AcceptanceQualityDAO {
             "left JOIN FETCH afqUser.userYard " +
             "where afq.qualityProcessStatus = :status and afq.dateStartProcess between :start and :end";
 
-    @Transactional("myTransactionManagerYard")
+    @Transactional(transactionManager = "myTransactionManagerYard")
     public List<AcceptanceFoodQuality> getAllByStatusAndDates(int status, LocalDateTime start, LocalDateTime end) {
         Session session = sessionFactoryYard.getCurrentSession();
         Query<AcceptanceFoodQuality> query = session.createQuery(GET_BY_STATUS_AND_DATE, AcceptanceFoodQuality.class);
@@ -73,7 +74,7 @@ public class AcceptanceQualityDAOImpl implements AcceptanceQualityDAO {
 
     private static final String GET_BY_ID_AND_STATUS = "from AcceptanceFoodQuality where idAcceptanceFoodQuality = :id and qualityProcessStatus = :status";
 
-    @Transactional("myTransactionManagerYard")
+    @Transactional(transactionManager = "myTransactionManagerYard")
     public AcceptanceFoodQuality getByIdAndStatus(Long id, int status) {
         Session session = sessionFactoryYard.getCurrentSession();
         Query<AcceptanceFoodQuality> query = session.createQuery(GET_BY_ID_AND_STATUS, AcceptanceFoodQuality.class);
@@ -84,7 +85,7 @@ public class AcceptanceQualityDAOImpl implements AcceptanceQualityDAO {
 
     private static final String GET_BY_ID_AND_STATUS_LESS = "from AcceptanceFoodQuality where idAcceptanceFoodQuality = :id and qualityProcessStatus < :status";
 
-    @Transactional("myTransactionManagerYard")
+    @Transactional(transactionManager = "myTransactionManagerYard")
     public AcceptanceFoodQuality getByIdAndStatusLessThan(Long id, int status) {
         Session session = sessionFactoryYard.getCurrentSession();
         Query<AcceptanceFoodQuality> query = session.createQuery(GET_BY_ID_AND_STATUS_LESS, AcceptanceFoodQuality.class);
@@ -100,7 +101,7 @@ public class AcceptanceQualityDAOImpl implements AcceptanceQualityDAO {
             "left JOIN FETCH afqUser.userYard " +
             "where afq.idAcceptanceFoodQuality = :id";
 
-    @Transactional("myTransactionManagerYard")
+    @Transactional(transactionManager = "myTransactionManagerYard")
     public AcceptanceFoodQuality getByIdAcceptanceFoodQuality(Long id) {
         Session session = sessionFactoryYard.getCurrentSession();
         Query<AcceptanceFoodQuality> query = session.createQuery(GET_BY_ID, AcceptanceFoodQuality.class);

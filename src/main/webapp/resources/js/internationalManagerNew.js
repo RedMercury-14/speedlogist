@@ -65,7 +65,7 @@ const columnDefs = [
 	{ headerName: 'Сверка УКЗ', field: 'ukz', wrapText: true, autoHeight: true, },
 	{ headerName: 'Груз', field: 'cargo', wrapText: true, autoHeight: true, },
 	{ headerName: 'Тип загрузки авто', field: 'typeLoad', },
-	{ headerName: 'Тип кузова', field: 'typeTruck', },
+	{ headerName: 'Тип кузова', field: 'typeTrailer', },
 	{ headerName: 'Способ загрузки авто', field: 'methodLoad', },
 	{ headerName: 'Температурные условия', field: 'temperature', wrapText: true, autoHeight: true, },
 	{ headerName: 'Контактное лицо контрагента', field: 'contact', wrapText: true, autoHeight: true, },
@@ -416,9 +416,9 @@ async function getMappingData(data) {
 			contact,
 			ukz,
 			cargo,
-			typeLoad,
-			typeTruck,
-			methodLoad,
+			// typeLoad,
+			// typeTruck,
+			// methodLoad,
 			temperature,
 		}
 	}))

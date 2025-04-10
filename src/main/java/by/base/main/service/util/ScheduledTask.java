@@ -65,12 +65,14 @@ import by.base.main.model.Order;
 import by.base.main.model.OrderLine;
 import by.base.main.model.OrderProduct;
 import by.base.main.model.Product;
+import by.base.main.model.Rotation;
 import by.base.main.model.Schedule;
 import by.base.main.model.Task;
 import by.base.main.model.User;
 import by.base.main.service.OrderProductService;
 import by.base.main.service.OrderService;
 import by.base.main.service.ProductService;
+import by.base.main.service.RotationService;
 import by.base.main.service.ScheduleService;
 import by.base.main.service.TaskService;
 import by.base.main.service.UserService;
@@ -120,6 +122,9 @@ public class ScheduledTask {
 	
 	@Autowired
 	private OrderCreater orderCreater;
+	
+	@Autowired
+	private RotationService rotationService;
 	
 	@Value("${rat.run}")
 	public boolean isRatRun;
@@ -1040,7 +1045,36 @@ public class ScheduledTask {
 //         responseMap.put("message", "emails sent successfully");
 
        }
-    }  
+    } 
+    
+    /**
+     * Отправка сообщения с таблицей ротаций
+     * @author Ira
+     */
+    @Scheduled(cron = "0 30 5 * * ?") // каждый день в 05:30 утра
+    public void sendEmailRotations() {
+
+       List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to.ORL");
+       List<String> testEmails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+
+       String appPath = servletContext.getRealPath("/");
+       String filepath = appPath + "resources/others/actual-rotations.xlsx";
+
+       List<Rotation> rotations = rotationService.getActualRotations();
+       try {
+          poiExcel.generateActualRotationsExcel(rotations, filepath);
+       } catch (IOException e) {
+          e.printStackTrace();
+          System.err.println("Ошибка формирование EXCEL");
+       }
+
+       List<File> files = new ArrayList<File>();
+       files.add(new File(filepath));
+
+//     mailService.sendEmailWithFilesToUsers(servletContext, "Актуальные ротации", "Ручная отправка excel-таблицы с ротациями", files, emailsORL);
+       mailService.sendEmailWithFilesToUsers(servletContext, "Актуальные ротации", "Excel-таблица с актуальными ротациями", files, testEmails);
+
+    }
 
     
 }

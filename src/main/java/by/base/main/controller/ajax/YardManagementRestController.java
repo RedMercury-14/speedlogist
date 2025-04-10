@@ -181,37 +181,6 @@ public class YardManagementRestController {
 		return response;		
 	}
 	
-	@RequestMapping("/test/{id}")
-	public Map<String, Object> test(@PathVariable String id){
-		
-		Map<String, Object> responce = new HashMap<String, Object>();
-		List<AcceptanceQualityFoodCard> cards =	acceptanceQualityFoodCardService.getFoodCardByIdFoodQuality(Long.parseLong(id));
-		
-		StringBuilder resultBuilder = new StringBuilder();
-		
-		
-
-        for (AcceptanceQualityFoodCard card : cards) {
-            StringBuilder cardBuilder = new StringBuilder();
-            cardBuilder.append("Карта ID: ").append(card.getIdAcceptanceQualityFoodCard()).append("\n");
-            cardBuilder.append("Продукт: ").append(card.getProductName()).append("\n");
-
-            boolean isImport = Optional.ofNullable(card.getAcceptanceFoodQuality().getAcceptance().getIsImport()).orElse(false);
-            boolean withPC = card.getUnit() != null && !"шт".equalsIgnoreCase(card.getUnit());
-            double sampleSize = Optional.ofNullable(card.getSampleSize()).orElse(0.0);
-
-            // Обработка трёх типов дефектов
-            processDefectGroup("Внутренние дефекты", card.getInternalDefectsQualityCardList(), isImport, withPC, sampleSize, cardBuilder, false);
-            processDefectGroup("Некондиция", card.getLightDefectsQualityCardList(), isImport, withPC, sampleSize, cardBuilder, false);
-            processDefectGroup("Брак / гниль", card.getTotalDefectQualityCardList(), isImport, withPC, sampleSize, cardBuilder, true);
-
-            resultBuilder.append(cardBuilder).append("\n----------------------------\n");
-        }		
-        responce.put("object", resultBuilder.toString());
-        System.out.println(resultBuilder.toString());
-		return responce;		
-	}
-	
 
     private void processDefectGroup(String title,
                                            Collection<? extends DefectBase> defects,
@@ -219,6 +188,7 @@ public class YardManagementRestController {
                                            boolean withPC,
                                            double sampleSize,
                                            StringBuilder builder,
+                                           StringBuilder finalMessage,
                                            boolean applyPC) {
 
         final double pcThreshold = 10.0;
@@ -231,6 +201,7 @@ public class YardManagementRestController {
         double totalPercentageWithPC = 0.0;
 
         builder.append(title).append(":\n");
+        finalMessage.append(title).append(":\n");
 
         for (DefectBase defect : defects) {
             double weight = Optional.ofNullable(defect.getWeight()).orElse(0.0);
@@ -257,10 +228,12 @@ public class YardManagementRestController {
 //            builder.append("\n");
         }
 
-        builder.append("  Итого вес: ").append(roundNumber(totalWeight, 100)).append("\n");
+//        builder.append("  Итого вес: ").append(roundNumber(totalWeight, 100)).append("\n");
         builder.append("  Итого %: ").append(String.format("%.2f", totalPercentage)).append("%").append("\n");
+        finalMessage.append("  Итого %: ").append(String.format("%.2f", totalPercentage)).append("%").append("\n");
         if (applyPC) {
             builder.append("  Итого % с ПК: ").append(String.format("%.2f", totalPercentageWithPC)).append("%").append("\n");
+            finalMessage.append("  Итого % с ПК: ").append(String.format("%.2f", totalPercentageWithPC)).append("%").append("\n");
         }
     }
 
@@ -514,9 +487,9 @@ public class YardManagementRestController {
 		
 		
 		if(isRunTelegrammBot) {
-			telegrammBotQuantityYard.sendMessageInBot(message.toString());				
+			telegrammBotQuantityYard.sendMessageInBot(message.toString(), null);				
 		}else {
-			telegramBotRoutingTEST.sendMessageInBot(message.toString());	
+			telegramBotRoutingTEST.sendMessageInBot(message.toString(), null);	
 		}
 		
 		response.put("status", "200");
@@ -525,25 +498,46 @@ public class YardManagementRestController {
 		return response;
 	}
 	
+	/**
+	 * Главынй метод отправки сообщения телеграмм боту
+	 * <b></b>
+	 * @param request
+	 * @param idCar
+	 * @return
+	 * @throws TelegramApiException
+	 */
 	@GetMapping("/acceptanceQualityBot/{id}")
 	public Map<String, String> getAcceptanceQualityBot(HttpServletRequest request,
-			@PathVariable("id") String idCar) {
+			@PathVariable("id") String idCar) throws TelegramApiException {
 		Map<String, String> responce = new HashMap<String, String>();
 		List<AcceptanceQualityFoodCard> acceptanceQualityFoodCardList =	acceptanceQualityFoodCardService.getFoodCardByIdFoodQuality(Long.parseLong(idCar));
 		
 		List<Long> chatIds = telegramChatQualityService.getChatIdList().stream().map(s-> s.getChatId().longValue()).collect(Collectors.toList()); // список chatId--
-		List<String> tags = new ArrayList<String>();
+		
+		String finalName = null;
+		String finalCar = null;
+		StringBuilder finalProductCard = new StringBuilder();
+		List<String> tagsAll = new ArrayList<String>();
+		
 		for (AcceptanceQualityFoodCard acceptanceQualityFoodCard : acceptanceQualityFoodCardList) {
+			List<String> tags = new ArrayList<String>();
 			List<String> photoIds = new ArrayList<String>();
 			for (AcceptanceQualityFoodCardImageUrl acceptanceQualityFoodCardImageUrl : acceptanceQualityFoodCard.getAcceptanceQualityFoodCardImageUrls()) {
 				System.out.println(acceptanceQualityFoodCard.getIdAcceptanceQualityFoodCard() +" --> "+acceptanceQualityFoodCardImageUrl);	
 				photoIds.add(acceptanceQualityFoodCardImageUrl.getIdAcceptanceQualityFoodCardImageUrl().toString());	
 			}
 			
+			if(finalName == null) {
+				finalName = acceptanceQualityFoodCard.getAcceptanceFoodQuality().getAcceptance().getFirmNameAccept();
+				finalCar = acceptanceQualityFoodCard.getAcceptanceFoodQuality().getAcceptance().getCarNumber();
+				finalProductCard.append("Поставщик: " + finalName + ";  авто: " 
+					+ finalCar + "; \n");				
+			}
+			
 			
 			StringBuilder message = new StringBuilder();
-			message.append("Поставщик: " + acceptanceQualityFoodCard.getAcceptanceFoodQuality().getAcceptance().getFirmNameAccept() + ";  авто: " 
-					+ acceptanceQualityFoodCard.getAcceptanceFoodQuality().getAcceptance().getCarNumber() + "; продукт: "
+			message.append("Поставщик: " + finalName + ";  авто: " 
+					+ finalCar + "; продукт: "
 					+ acceptanceQualityFoodCard.getProductName() + "; Карточка товара №" + acceptanceQualityFoodCard.getIdAcceptanceQualityFoodCard()
 					+ "\n");
 //			if(acceptanceQualityFoodCard.getTasteQuality() != null) message.append("Вкусовые качества: " + acceptanceQualityFoodCard.getTasteQuality().trim() + "\n");
@@ -552,28 +546,42 @@ public class YardManagementRestController {
 //			if(acceptanceQualityFoodCard.getMaturityLevel() != null) message.append("Уровень зрелости: " + acceptanceQualityFoodCard.getMaturityLevel().trim() + "\n");
 //			if(acceptanceQualityFoodCard.getAppearanceDefects() != null) message.append("Внешние дефекты: " + acceptanceQualityFoodCard.getAppearanceDefects().trim() + "\n");
 			
-			
-			if(!tags.contains(acceptanceQualityFoodCard.getAcceptanceFoodQuality().getAcceptance().getFirmNameAccept())) {
-				tags.add(acceptanceQualityFoodCard.getAcceptanceFoodQuality().getAcceptance().getFirmNameAccept());
+			tags.add(acceptanceQualityFoodCard.getAcceptanceFoodQuality().getAcceptance().getFirmNameAccept());
+			if(!tagsAll.contains(acceptanceQualityFoodCard.getAcceptanceFoodQuality().getAcceptance().getFirmNameAccept())) {				
+				tagsAll.add(acceptanceQualityFoodCard.getAcceptanceFoodQuality().getAcceptance().getFirmNameAccept());
 			}
-			if(!tags.contains(acceptanceQualityFoodCard.getProductName())) {
-				tags.add(acceptanceQualityFoodCard.getProductName());
+			tags.add(acceptanceQualityFoodCard.getProductName());
+			if(!tagsAll.contains(acceptanceQualityFoodCard.getProductName())) {				
+				tagsAll.add(acceptanceQualityFoodCard.getProductName());
 			}	
+			
+			tags.add(finalCar);
+			if(!tagsAll.contains(finalCar)) {
+				tagsAll.add(finalCar);
+			}
 			
 			boolean isImport = Optional.ofNullable(acceptanceQualityFoodCard.getAcceptanceFoodQuality().getAcceptance().getIsImport()).orElse(false);
             boolean withPC = acceptanceQualityFoodCard.getUnit() != null && !"шт".equalsIgnoreCase(acceptanceQualityFoodCard.getUnit());
             double sampleSize = Optional.ofNullable(acceptanceQualityFoodCard.getSampleSize()).orElse(0.0);
 
+            finalProductCard.append("<b>Карточка товара №" + acceptanceQualityFoodCard.getIdAcceptanceQualityFoodCard() +
+            		" -> " + acceptanceQualityFoodCard.getProductName() + ":</b>\n");            
             // Обработка трёх типов дефектов
-            processDefectGroup("Внутренние дефекты", acceptanceQualityFoodCard.getInternalDefectsQualityCardList(), isImport, withPC, sampleSize, message, false);
-            processDefectGroup("Некондиция", acceptanceQualityFoodCard.getLightDefectsQualityCardList(), isImport, withPC, sampleSize, message, false);
-            processDefectGroup("Брак / гниль", acceptanceQualityFoodCard.getTotalDefectQualityCardList(), isImport, withPC, sampleSize, message, true);
-			
+            processDefectGroup("Внутренние дефекты", acceptanceQualityFoodCard.getInternalDefectsQualityCardList(), isImport, withPC, sampleSize, message, finalProductCard, false);
+            processDefectGroup("Некондиция", acceptanceQualityFoodCard.getLightDefectsQualityCardList(), isImport, withPC, sampleSize, message, finalProductCard, false);
+            processDefectGroup("Брак / гниль", acceptanceQualityFoodCard.getTotalDefectQualityCardList(), isImport, withPC, sampleSize, message, finalProductCard, true);
+            finalProductCard.append("\n");
 			if(isRunTelegrammBot) {
 				telegrammBotQuantityYard.sendMessageWithPhotos(chatIds, message.toString(), photoIds, tags);				
 			}else {
 				telegramBotRoutingTEST.sendMessageWithPhotos(chatIds, message.toString(), photoIds, tags);		
 			}
+		}
+		
+		if(isRunTelegrammBot) {
+			telegrammBotQuantityYard.sendMessageInBot(finalProductCard.toString(), tagsAll);				
+		}else {
+			telegramBotRoutingTEST.sendMessageInBot(finalProductCard.toString(), tagsAll);	
 		}
 		responce.put("status", "200");		
 		responce.put("message", "ообщение отправлено в телеграмм бот");	

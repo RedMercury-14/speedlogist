@@ -455,11 +455,11 @@ public class TelegramBotRoutingTEST extends TelegramLongPollingBot {
      * @param text
      * @throws TelegramApiException
      */
-    public void sendMessageInBot(String text) throws TelegramApiException {
+    public void sendMessageInBot(String text, List<String> tags) throws TelegramApiException {
     	for (Long chatId : telegramChatQualityService.getChatIdLongList()) {
     		SendMessage msg = new SendMessage();
             msg.setChatId(chatId.toString());
-            msg.setText(text);
+            msg.setText(formatFullMessage(text, tags));
             msg.enableHtml(true);
             execute(msg);
 		}        

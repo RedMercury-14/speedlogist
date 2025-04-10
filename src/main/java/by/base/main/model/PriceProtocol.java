@@ -83,11 +83,11 @@ public class PriceProtocol {
     @Column(name = "last_price_change_date")
     private Date lastPriceChangeDate;
 
-    @Column(name = "valid_from")
-    private Date validFrom;
+    @Column(name = "date_valid_from")
+    private Date dateValidFrom;
 
-    @Column(name = "valid_to")
-    private Date validTo;
+    @Column(name = "date_valid_to")
+    private Date dateValidTo;
 
     @Column(name = "contract_number")
     private String contractNumber;
@@ -263,20 +263,20 @@ public class PriceProtocol {
 		this.lastPriceChangeDate = lastPriceChangeDate;
 	}
 
-	public Date getValidFrom() {
-		return validFrom;
+	public Date getDateValidFrom() {
+		return dateValidFrom;
 	}
 
-	public void setValidFrom(Date validFrom) {
-		this.validFrom = validFrom;
+	public void setDateValidFrom(Date dateValidFrom) {
+		this.dateValidFrom = dateValidFrom;
 	}
 
-	public Date getValidTo() {
-		return validTo;
+	public Date getDateValidTo() {
+		return dateValidTo;
 	}
 
-	public void setValidTo(Date validTo) {
-		this.validTo = validTo;
+	public void setDateValidTo(Date dateValidTo) {
+		this.dateValidTo = dateValidTo;
 	}
 
 	public String getContractNumber() {
@@ -300,7 +300,7 @@ public class PriceProtocol {
 		return Objects.hash(barcode, contractDate, contractNumber, costImporter, countryOrigin, currentPrice,
 				discountPercent, idPriceProtocol, lastPriceChangeDate, manufacturer, markupImporterPercent, name,
 				priceChangePercent, priceProducer, priceWithVat, priceWithoutVat, productCode, shelfLifeDays, tnvCode,
-				unitPerPack, validFrom, validTo, vatRate, wholesaleDiscountPercent, wholesaleMarkupPercent);
+				unitPerPack, dateValidFrom, dateValidTo, vatRate, wholesaleDiscountPercent, wholesaleMarkupPercent);
 	}
 
 	@Override
@@ -327,7 +327,7 @@ public class PriceProtocol {
 				&& Objects.equals(priceWithoutVat, other.priceWithoutVat)
 				&& Objects.equals(productCode, other.productCode) && Objects.equals(shelfLifeDays, other.shelfLifeDays)
 				&& Objects.equals(tnvCode, other.tnvCode) && Objects.equals(unitPerPack, other.unitPerPack)
-				&& Objects.equals(validFrom, other.validFrom) && Objects.equals(validTo, other.validTo)
+				&& Objects.equals(dateValidFrom, other.dateValidFrom) && Objects.equals(dateValidTo, other.dateValidTo)
 				&& Objects.equals(vatRate, other.vatRate)
 				&& Objects.equals(wholesaleDiscountPercent, other.wholesaleDiscountPercent)
 				&& Objects.equals(wholesaleMarkupPercent, other.wholesaleMarkupPercent);
@@ -343,7 +343,7 @@ public class PriceProtocol {
 				+ ", vatRate=" + vatRate + ", priceWithVat=" + priceWithVat + ", countryOrigin=" + countryOrigin
 				+ ", manufacturer=" + manufacturer + ", unitPerPack=" + unitPerPack + ", shelfLifeDays=" + shelfLifeDays
 				+ ", currentPrice=" + currentPrice + ", priceChangePercent=" + priceChangePercent
-				+ ", lastPriceChangeDate=" + lastPriceChangeDate + ", validFrom=" + validFrom + ", validTo=" + validTo
+				+ ", lastPriceChangeDate=" + lastPriceChangeDate + ", validFrom=" + dateValidFrom + ", validTo=" + dateValidTo
 				+ ", contractNumber=" + contractNumber + ", contractDate=" + contractDate + "]";
 	}
 

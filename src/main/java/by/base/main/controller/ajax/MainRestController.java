@@ -390,8 +390,8 @@ public class MainRestController {
 	    JSONParser parser = new JSONParser();
 	    JSONObject jsonMainObject = (JSONObject) parser.parse(str);
 
-	    Date validFrom = toSqlDate(jsonMainObject.get("validFrom"));
-	    Date validTo = toSqlDate(jsonMainObject.get("validTo"));
+	    Date validFrom = toSqlDate(jsonMainObject.get("dateValidFrom"));
+	    Date validTo = toSqlDate(jsonMainObject.get("dateValidTo"));
 	    String contractNumber = (String) jsonMainObject.get("contractNumber");
 	    Date contractDate = toSqlDate(jsonMainObject.get("contractDate"));
 
@@ -424,8 +424,8 @@ public class MainRestController {
 	        protocol.setLastPriceChangeDate(toSqlDate(item.get("lastPriceChangeDate")));
 
 	        // Устанавливаем общие поля для всех записей
-	        protocol.setValidFrom(validFrom);
-	        protocol.setValidTo(validTo);
+	        protocol.setDateValidFrom(validFrom);
+	        protocol.setDateValidTo(validTo);
 	        protocol.setContractNumber(contractNumber);
 	        protocol.setContractDate(contractDate);
 
@@ -468,8 +468,8 @@ public class MainRestController {
 	    protocol.setCurrentPrice(toDouble(jsonMainObject.get("currentPrice")));
 	    protocol.setPriceChangePercent(toDouble(jsonMainObject.get("priceChangePercent")));
 	    protocol.setLastPriceChangeDate(toSqlDate(jsonMainObject.get("lastPriceChangeDate")));
-	    protocol.setValidFrom(toSqlDate(jsonMainObject.get("validFrom")));
-	    protocol.setValidTo(toSqlDate(jsonMainObject.get("validTo")));
+	    protocol.setDateValidFrom(toSqlDate(jsonMainObject.get("dateValidFrom")));
+	    protocol.setDateValidTo(toSqlDate(jsonMainObject.get("dateValidTo")));
 	    protocol.setContractNumber((String) jsonMainObject.get("contractNumber"));
 	    protocol.setContractDate(toSqlDate(jsonMainObject.get("contractDate")));
 

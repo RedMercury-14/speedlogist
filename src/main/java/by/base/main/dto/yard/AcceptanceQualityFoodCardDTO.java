@@ -43,6 +43,8 @@ public class AcceptanceQualityFoodCardDTO {
     
     private Boolean isImport;
     private String unit;
+    private String managerPercent;
+    
 
 
     private List<InternalDefectsQualityCard> internalDefectsQualityCardList;
@@ -51,7 +53,15 @@ public class AcceptanceQualityFoodCardDTO {
 
     private List<String> images;
 
-    public List<String> getImages() {
+    public String getManagerPercent() {
+		return managerPercent;
+	}
+
+	public void setManagerPercent(String managerPercent) {
+		this.managerPercent = managerPercent;
+	}
+
+	public List<String> getImages() {
         return images;
     }
 

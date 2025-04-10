@@ -5,7 +5,7 @@ import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 import { addTask398Url, downloadReport398Url, getReport398List } from './globalConstants/urls.js'
 import { snackbar } from "./snackbar/snackbar.js"
 import { uiIcons } from './uiIcons.js'
-import { changeGridTableMarginTop, dateHelper, debounce, disableButton, enableButton, getData, hideLoadingSpinner, showLoadingSpinner } from './utils.js'
+import { changeGridTableMarginTop, dateHelper, debounce, disableButton, enableButton, getData, hideLoadingSpinner, isObserver, showLoadingSpinner } from './utils.js'
 
 const PAGE_NAME = 'orlReport398'
 const LOCAL_STORAGE_KEY = `AG_Grid_settings_to_${PAGE_NAME}`

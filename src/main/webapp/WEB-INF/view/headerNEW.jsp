@@ -180,7 +180,7 @@
 										<a class="dropdown-item" href="<spring:url value="/main/orl/arrival" />">Приход</a>
 										<a class="dropdown-item" href="<spring:url value="/main/orl/calculated" />">Приход паллет</a>
 										<a class="dropdown-item" href="<spring:url value="/main/orl/report/398" />">398 отчёт</a>
-										<!-- <a class="dropdown-item" href="<spring:url value="/main/orl/rotations" />">Ротации</a> -->
+										<a class="dropdown-item" href="<spring:url value="/main/orl/rotations" />">Ротации</a>
 									</div>
 								</li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/admin/reviews/list"/>">Список отзывов</a></li>
@@ -280,6 +280,7 @@
 								<!-- <li><a class="nav-item nav-link" href="<spring:url value="/main/procurement/ordersBalance" />">Остаток товара</a></li> -->
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/orl/calculated" />">Приход паллет</a></li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/orl/report/398" />">398 отчёт</a></li>
+								<li><a class="nav-item nav-link" href="<spring:url value="/main/orl/rotations" />">Ротации</a></li>
 							</c:when>
 
 							<c:when test="${roles == '[ROLE_SLOTOBSERVER]'}">
@@ -368,6 +369,7 @@
 										<a class="dropdown-item" href="<spring:url value="/main/slots/delivery-schedule" />">Графики поставок на РЦ</a>
 										<a class="dropdown-item" href="<spring:url value="/main/slots/delivery-schedule-to" />">Графики поставок на ТО</a>
 										<a class="dropdown-item" href="<spring:url value="/main/procurement/ordersBalance" />">Остаток товара</a>
+										<a class="dropdown-item" href="<spring:url value="/main/orl/rotations" />">Ротации</a>
 									</div>
 								</li>
 								<li class="dropdown">
@@ -425,6 +427,10 @@
 										<a class="dropdown-item" href="<spring:url value="/main/procurement/reports/mainReports" />">Поиск заявок по коду товара</a>
 									</div>
 								</li>
+							</c:when>
+
+							<c:when test="${roles == '[ROLE_RETAIL]'}">
+								<li><a class="nav-item nav-link" href="<spring:url value="/main/orl/rotations" />">Ротации</a></li>
 							</c:when>
 
 							<c:otherwise>

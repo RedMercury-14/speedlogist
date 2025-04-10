@@ -2,7 +2,7 @@ import { AG_GRID_LOCALE_RU } from './AG-Grid/ag-grid-locale-RU.js'
 import { BtnCellRenderer, BtnsCellRenderer, gridColumnLocalState, gridFilterLocalState, ResetStateToolPanel } from './AG-Grid/ag-grid-utils.js'
 import { aproofQualityFoodCardUrl, getAllAcceptanceQualityFoodCardUrl, getClosedAcceptanceQualityBaseUrl } from './globalConstants/urls.js'
 import { snackbar } from './snackbar/snackbar.js'
-import { dateHelper, debounce, getData, isObserver } from './utils.js'
+import { dateHelper, debounce, getData, isMobileDevice, isObserver } from './utils.js'
 import PhotoSwipeLightbox from './photoSwipe/photoswipe-lightbox.esm.min.js'
 import PhotoSwipeDynamicCaption  from './photoSwipe/photoswipe-dynamic-caption-plugin.esm.js'
 import PhotoSwipe from './photoSwipe/photoswipe.esm.min.js'
@@ -184,7 +184,7 @@ const gridOptions = {
 		cellClass: 'px-2 text-center',
 		flex: 1,
 		minWidth: 100,
-		resizable: true,
+		resizable: !isMobileDevice(),
 		suppressMenu: true,
 		sortable: true,
 		filter: true,
@@ -195,6 +195,7 @@ const gridOptions = {
 		autoHeaderHeight: true,
 		enableRowGroup: true,
 	},
+	suppressMovableColumns: isMobileDevice(),
 	animateRows: true,
 	suppressDragLeaveHidesColumns: true,
 	suppressRowClickSelection: true,

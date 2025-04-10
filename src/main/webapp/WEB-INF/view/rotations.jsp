@@ -196,14 +196,14 @@
 							<label class="text-muted font-weight-bold mb-1" for="limitOldCode">
 								Порог ТЗ старого кода
 							</label>
-							<input type="number" name="limitOldCode" id="limitOldCode" min="0" max="20" step="1" placeholder="Целое число" class="form-control" required>
+							<input type="number" name="limitOldCode" id="limitOldCode" min="4" max="20" step="1" placeholder="Целое число от 4 до 20" class="form-control" required>
 						</div>
 
 						<div class="form-group">
 							<label class="text-muted font-weight-bold mb-1" for="coefficient">
 								Коэффициент переноса продаж старого кода на новый
 							</label>
-							<input type="number" name="coefficient" id="coefficient" min="0" max="10" step="0.1" placeholder="0.0" class="form-control" required>
+							<input type="number" name="coefficient" id="coefficient" min="-1" max="10" step="0.1" placeholder="Дробное число (до десятой) от -1 до 10" class="form-control" required>
 						</div>
 
 						<div class="form-group">

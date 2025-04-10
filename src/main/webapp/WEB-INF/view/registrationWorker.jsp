@@ -100,6 +100,7 @@
   						<option value="16">Роль для наблюдателя за всей системой</option>
   						<option value="17">Роль закупок по отделу качества</option>
   						<option value="18">Роль закупок по отделу качества и обычного закупера</option>
+  						<option value="19">Отдел розничной торговли (ОРТ)</option>
  						</select>
 				</c:when>
 			</c:choose>

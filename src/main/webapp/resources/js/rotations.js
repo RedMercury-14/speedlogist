@@ -2,7 +2,7 @@ import { AG_GRID_LOCALE_RU } from './AG-Grid/ag-grid-locale-RU.js'
 import { gridColumnLocalState, gridFilterLocalState, ResetStateToolPanel } from './AG-Grid/ag-grid-utils.js'
 import { approveCreateRotationUrl, getActualRotationsExcelUrl, getRotationListUrl, loadRotationExcelUrl, preCreateRotationUrl, updateRotationUrl } from './globalConstants/urls.js'
 import { snackbar } from './snackbar/snackbar.js'
-import { dateHelper, debounce, getData, hideLoadingSpinner, isAdmin, isObserver, showLoadingSpinner } from './utils.js'
+import { dateHelper, debounce, getData, hideLoadingSpinner, isAdmin, isObserver, isRetail, showLoadingSpinner } from './utils.js'
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 import { ajaxUtils } from './ajaxUtils.js'
 
@@ -84,6 +84,11 @@ const columnDefs = [
 		filterParams: { valueFormatter: dateValueFormatter, },
 	},
 ]
+if (isAdmin(role)) {
+	columnDefs.push(
+		{ headerName: "История", field: "history", },
+	)
+}
 const gridOptions = {
 	columnDefs: columnDefs,
 	rowClassRules: rowClassRules,
@@ -209,6 +214,13 @@ function rotationFormSubmitHandler(e) {
 		distributeNewPosition: data.distributeNewPosition === 'Да',
 		limitOldPositionRemain: data.limitOldPositionRemain ? Number(data.limitOldPositionRemain) : '',
 		toList: data.toList.trim(),
+	}
+
+	const startDate = new Date(data.startDate).getTime()
+	const endDate = new Date(data.endDate).getTime()
+	if (startDate > endDate) {
+		snackbar.show('Дата начала ротации не может быть больше даты окончания ротации')
+		return
 	}
 
 	if (!TO_LIST_REG.test(payload.toList)) {
@@ -445,12 +457,12 @@ function getContextMenuItems (params) {
 
 	const items = [
 		{
-			disabled: status !== 20,
+			disabled: status !== 20 || (!isRetail(role) && !isAdmin(role)),
 			name: `Подтвердить ротацию`,
 			action: () => confirmRotation(rowNode),
 		},
 		{
-			disabled: !isChangableCoeff,
+			disabled: !isChangableCoeff || (!isRetail(role) && !isAdmin(role)),
 			name: "Изменить коэффициент переноса продаж старого кода на новую ротацию",
 			action: () => {
 				updateCoefficientForm.idRotation.value = rowNode.data.idRotation

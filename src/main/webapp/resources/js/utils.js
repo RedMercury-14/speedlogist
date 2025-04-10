@@ -782,6 +782,12 @@ export function isORL(role) {
 export function isObserver(role) {
 	return role === '[ROLE_SHOW]'
 }
+export function isQualityManager(role) {
+	return role === '[ROLE_QUALITYMANAGER]'
+}
+export function isQualityManagerAndProcurement(role) {
+	return role === '[ROLE_QUALITYMANAGER_AND_PROCUREMENT]'
+}
 
 export function isLogisticsDeliveryPage() {
 	return window.location.href.includes('logistics-delivery')

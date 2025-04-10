@@ -2,7 +2,7 @@ import { AG_GRID_LOCALE_RU } from './AG-Grid/ag-grid-locale-RU.js'
 import { BtnCellRenderer, BtnsCellRenderer, gridColumnLocalState, gridFilterLocalState, ResetStateToolPanel } from './AG-Grid/ag-grid-utils.js'
 import { aproofQualityFoodCardUrl, getAllAcceptanceQualityFoodCardUrl, getClosedAcceptanceQualityBaseUrl } from './globalConstants/urls.js'
 import { snackbar } from './snackbar/snackbar.js'
-import { dateHelper, debounce, getData } from './utils.js'
+import { dateHelper, debounce, getData, isObserver } from './utils.js'
 import PhotoSwipeLightbox from './photoSwipe/photoswipe-lightbox.esm.min.js'
 import PhotoSwipeDynamicCaption  from './photoSwipe/photoswipe-dynamic-caption-plugin.esm.js'
 import PhotoSwipe from './photoSwipe/photoswipe.esm.min.js'
@@ -16,6 +16,7 @@ const LOCAL_STORAGE_KEY = `AG_Grid_settings_to_${PAGE_NAME}`
 const DATES_KEY = `searchDates_to_${PAGE_NAME}`
 
 const token = $("meta[name='_csrf']").attr("content")
+const role = document.querySelector('#role').value
 
 const debouncedSaveColumnState = debounce(saveColumnState, 300)
 const debouncedSaveFilterState = debounce(saveFilterState, 300)
@@ -53,6 +54,31 @@ class CardStatusCellRenderer {
 const detailColumnDefs = [
 	{ headerName: 'Продукт', field: 'productName', flex: 5, },
 	{
+		headerName: 'Действия', field: 'idAcceptanceQualityFoodCard',
+		cellClass: 'px-1 py-0 text-center small-row',
+		minWidth: 130, flex: 1,
+		cellRenderer: BtnsCellRenderer,
+		cellRendererParams: {
+			onClick: cardRowActionOnClickHandler,
+			buttonList: [
+				{ className: 'btn btn-light border btn-sm', id: 'showImages', icon: uiIcons.images, title: 'Показать фото' },
+				{ className: 'btn btn-light border btn-sm', id: 'downloadImages', icon: uiIcons.download, title: 'Скачать все фото' },
+				{ className: 'btn btn-light border btn-sm', id: 'showInfo', icon: uiIcons.info, title: 'Подробнее' },
+			],
+		},
+	},
+	{
+		headerName: 'Статус карточки', field: 'cardStatus',
+		cellClass: 'px-1 py-0 text-center small-row font-weight-bold',
+		minWidth: 125, flex: 1,
+		cellRenderer: CardStatusCellRenderer,
+		cellRendererParams: {
+			onClick: (params) => showApproveCardModal(params.data),
+			label: 'Подтвердить',
+			className: 'btn btn-success border btn-sm',
+		},
+	},
+	{
 		headerName: 'Выборка', field: 'sampleSize',
 		valueFormatter: (params) => `${params.value} ${params.data?.unit || "кг"}`
 	},
@@ -78,30 +104,6 @@ const detailColumnDefs = [
 			return `${data.totalLightDefectWeight} ${params.data?.unit || "кг"} / ${data.totalLightDefectPercentage}%`
 		},
 	},
-	{
-		headerName: '', field: 'idAcceptanceQualityFoodCard',
-		cellClass: 'px-1 py-0 text-center small-row',
-		minWidth: 100, flex: 1,
-		cellRenderer: BtnsCellRenderer,
-		cellRendererParams: {
-			onClick: cardRowActionOnClickHandler,
-			buttonList: [
-				{ className: 'btn btn-light border btn-sm', id: 'showImages', icon: uiIcons.images, title: 'Показать фото' },
-				{ className: 'btn btn-light border btn-sm', id: 'showInfo', icon: uiIcons.info, title: 'Подробнее' },
-			],
-		},
-	},
-	{
-		headerName: 'Статус карточки', field: 'cardStatus',
-		cellClass: 'px-1 py-0 text-center small-row font-weight-bold',
-		minWidth: 125, flex: 1,
-		cellRenderer: CardStatusCellRenderer,
-		cellRendererParams: {
-			onClick: (params) => showApproveCardModal(params.data),
-			label: 'Подтвердить',
-			className: 'btn btn-success border btn-sm',
-		},
-	},
 ]
 const detailGridOptions = {
 	columnDefs: detailColumnDefs,
@@ -117,6 +119,7 @@ const detailGridOptions = {
 		wrapHeaderText: true,
 		autoHeaderHeight: true,
 	},
+	suppressMovableColumns: true,
 	enableBrowserTooltips: true,
 	localeText: AG_GRID_LOCALE_RU,
 	getContextMenuItems: getContextMenuItems,
@@ -146,6 +149,7 @@ const columnDefs = [
 	{ headerName: "О товаре", field: "infoAcceptance" },
 	{
 		headerName: "Импорт", field: "isImport",
+		cellDataType: false,
 		valueFormatter: (params) => params.value ? "Да" : "Нет",
 		filterParams: { valueFormatter: (params) => params.value ? "Да" : "Нет", },
 	},
@@ -208,6 +212,11 @@ const gridOptions = {
 	detailCellRendererParams: {
 		detailGridOptions: detailGridOptions,
 		getDetailRowData: getCardsData,
+	},
+	statusBar: {
+		statusPanels: [
+			{ statusPanel: 'agTotalAndFilteredRowCountComponent', align: 'left' },
+		],
 	},
 	sideBar: {
 		toolPanels: [
@@ -413,6 +422,12 @@ async function searchFormSubmitHandler(e) {
 // обработчик отправки формы статуса карточки
 function approveCardFormSubmitHandler(e) {
 	e.preventDefault()
+
+	if (isObserver(role)) {
+		snackbar.show('Недостаточно прав!')
+		return
+	}
+
 	const formData = new FormData(e.target)
 	const data = Object.fromEntries(formData)
 
@@ -588,7 +603,7 @@ function getCardsData (params) {
 				if (cards.length) {
 					cards = cards.map(recalculateCard)
 				}
-				gridOptions.api.applyTransaction({ update: [{ ...rowData, cards }]})
+				gridOptions.api.applyTransaction({ update: [{ ...rowData, cards, }]})
 				params.successCallback(rowData.cards)
 			})
 			.catch(error => {
@@ -703,14 +718,14 @@ function showCardModal(card) {
 	fillField('numberOfBrands', card.numberOfBrands)
 	fillField('qualityOfProductPackaging', card.qualityOfProductPackaging)
 	fillField('thermogram', card.thermogram)
-	fillField('bodyTemp', card.bodyTemp)
+	// fillField('bodyTemp', card.bodyTemp)
 	fillField('fruitTemp', card.fruitTemp)
-	fillField('appearanceEvaluation', card.appearanceEvaluation)
-	fillField('appearanceDefects', card.appearanceDefects)
+	// fillField('appearanceEvaluation', card.appearanceEvaluation)
+	// fillField('appearanceDefects', card.appearanceDefects)
 	fillField('maturityLevel', card.maturityLevel)
 	fillField('tasteQuality', card.tasteQuality)
 	fillField('caliber', card.caliber)
-	fillField('stickerDescription', card.stickerDescription)
+	// fillField('stickerDescription', card.stickerDescription)
 	fillField('cardInfo', card.cardInfo)
 	document.querySelectorAll('.sampleSizeUnit').forEach((el) => (el.textContent = sampleSizeUnit))
 
@@ -750,24 +765,23 @@ function recalculateDefects(type, sampleSize, defects, isImport, withPC) {
 	const defaultPercentageFactor = 100
 	const pcPercentageFactorBeforeTreshold = isImport ? 160 : 140 // процент ПК при браке до 10%
 	const pcPercentageFactorAftertTreshold = 200 // процент ПК при браке свыше 10%
-	
 
 	const updatedDefects = defects.map((defect) => {
 		const weight = parseFloat(defect.weight) || 0
 		totalWeight += weight
 
 		if (type === "totalDefectQualityCardList") {
-			const percentage = sampleSize ? (weight / sampleSize) * defaultPercentageFactor : 0;
+			const percentage = sampleSize ? getPercentage(weight, sampleSize, defaultPercentageFactor) : 0
 			const percentageWithPC = withPC && sampleSize
-				? (percentage <= pcThreshold
-					? (weight / sampleSize) * pcPercentageFactorBeforeTreshold
-					: (weight / sampleSize) * pcPercentageFactorAftertTreshold)
+				? percentage <= pcThreshold
+					? getPercentage(weight, sampleSize, pcPercentageFactorBeforeTreshold)
+					: getPercentage(weight, sampleSize, pcPercentageFactorAftertTreshold)
 						: 0
 			totalPercentage += percentage
 			totalPercentageWithPC += percentageWithPC
 			return { ...defect, percentage: percentage.toFixed(2), percentageWithPC: percentageWithPC.toFixed(2) }
 		} else {
-			const percentage = sampleSize ? (weight / sampleSize) * defaultPercentageFactor : 0
+			const percentage = sampleSize ? getPercentage(weight, sampleSize, defaultPercentageFactor) : 0
 			totalPercentage += percentage
 			return { ...defect, percentage: percentage.toFixed(2) }
 		}
@@ -781,6 +795,10 @@ function recalculateDefects(type, sampleSize, defects, isImport, withPC) {
 	}
 }
 
+function getPercentage(weight, sampleSize, percentageFactor) {
+	const percentage = roundNumber(((weight / sampleSize) * percentageFactor), 100)
+	return percentage
+}
 function roundNumber(num, fraction) {
 	return Math.round((Number(num) + Number.EPSILON) * fraction) / fraction
 }
@@ -872,10 +890,78 @@ function cardRowActionOnClickHandler(e, params) {
 		showCardModal(params.data)
 		return
 	}
+
+	if (e.buttonId === 'downloadImages') {
+		downloadImagesAsZip(params.data.images)
+		return
+	}
 }
 
 function updateTableRow(gridOptions, rowData) {
 	gridOptions.api.applyTransactionAsync(
 		{ update: [rowData] }
 	)
+}
+
+// скачивание архива картинок
+async function downloadImagesAsZip(imageUrls) {
+	const zip = new JSZip()
+
+	bootstrap5overlay.showOverlay()
+  
+	const fetchPromises = imageUrls.map(async (url, i) => {
+		try {
+			const response = await fetch(url)
+			const contentType = response.headers.get('Content-Type')
+			const contentDisposition = response.headers.get('Content-Disposition')
+			const ext = getExtensionFromContentType(contentType)
+			const blob = await response.blob()
+			let filename = getFilenameFromDisposition(contentDisposition)
+			if (!filename) {
+				filename = `image_${i + 1}${ext}`
+			}
+			zip.file(filename, blob)
+		} catch (err) {
+			bootstrap5overlay.hideOverlay()
+			console.error('Ошибка загрузки файла:', url, err)
+		}
+	})
+
+	await Promise.all(fetchPromises)
+
+	const zipBlob = await zip.generateAsync({ type: 'blob' })
+	saveAs(zipBlob, 'images.zip')
+
+	bootstrap5overlay.hideOverlay()
+}
+
+// определение типа файла
+function getExtensionFromContentType(contentType) {
+	const map = {
+		'image/jpeg': '.jpg',
+		'image/jpg': '.jpg',
+		'image/png': '.png',
+		'image/gif': '.gif',
+		'image/webp': '.webp',
+		'image/bmp': '.bmp',
+		'image/x-ms-bmp': '.bmp',
+		'image/svg+xml': '.svg',
+		'image/tiff': '.tiff',
+		'image/x-icon': '.ico',
+		'image/avif': '.avif',
+		'image/heic': '.heic'
+	};
+	return map[contentType] || '.jpg'
+}
+
+// получение наименования файла
+function getFilenameFromDisposition(contentDisposition) {
+	if (!contentDisposition) return null
+
+	const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)
+	if (filenameMatch != null) {
+		let filename = filenameMatch[1]
+		return filename.replace(/['"]/g, '')
+	}
+	return null
 }

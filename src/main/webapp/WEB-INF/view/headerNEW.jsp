@@ -75,7 +75,7 @@
 								<!-- <li><a class="nav-item nav-link" href="<spring:url value="/main/slots" />">Слоты</a></li> -->
 								<li class="dropdown">
 									<a href="#" class="nav-item nav-link" data-toggle="dropdown">
-										Заказы, слоты
+										Отдел закупок
 									</a>
 									<div class="dropdown-menu">
 										<a class="dropdown-item" href="<spring:url value="/main/slots" />">Слоты</a>
@@ -84,15 +84,22 @@
 										<a class="dropdown-item" href="<spring:url value="/main/order-support/orders" />">Остаток товара</a>
 										<a class="dropdown-item" href="<spring:url value="/main/order-support/control" />">Загрузить отчёт</a>
 										<!-- <a class="dropdown-item" href="<spring:url value="/main/stock-support/orders" />">Таблица Башкиров</a> -->
+										<a class="dropdown-item" href="<spring:url value="/main/procurement/permission/list" />">История решений по заказам</a>
+										<a class="dropdown-item" href="<spring:url value="/main/acceptanceQuality" />">Подтверждение качества</a>
+										<a class="dropdown-item" href="<spring:url value="/main/procurement/price-protocol/list" />">Протокол согласования цены</a>
+									</div>
+								</li>
+								<li class="dropdown">
+									<a href="#" class="nav-item nav-link" data-toggle="dropdown">
+										ОРЛ
+									</a>
+									<div class="dropdown-menu">
 										<a class="dropdown-item" href="<spring:url value="/main/orl/delivery-schedule" />">Графики поставок на РЦ</a>
 										<a class="dropdown-item" href="<spring:url value="/main/orl/delivery-schedule-to" />">Графики поставок на ТО</a>
 										<a class="dropdown-item" href="<spring:url value="/main/orl/need" />">Потребности</a>
 										<a class="dropdown-item" href="<spring:url value="/main/orl/arrival" />">Приход</a>
 										<a class="dropdown-item" href="<spring:url value="/main/orl/calculated" />">Приход паллет</a>
 										<a class="dropdown-item" href="<spring:url value="/main/orl/report/398" />">398 отчёт</a>
-										<a class="dropdown-item" href="<spring:url value="/main/procurement/permission/list" />">История решений по заказам</a>
-										
-										<a class="dropdown-item" href="<spring:url value="/main/acceptanceQuality" />">Подтверждение качества</a>
 										<a class="dropdown-item" href="<spring:url value="/main/orl/rotations" />">Ротации</a>
 									</div>
 								</li>
@@ -110,10 +117,14 @@
 										<a class="dropdown-item" href="<spring:url value="/main/admin/reports/mainReports" />">Поиск заявок по коду товара</a>
 									</div>
 								</li>
-								
-								<li><a class="nav-item nav-link" href="<spring:url value="/main/admin" />">Администрация</a></li>
-								<!-- <li><a class="nav-item nav-link" href="<spring:url value="/main/reviews"/>">Обратная связь</a></li> -->
-								<li><a class="nav-item nav-link" href="<spring:url value="/main/admin/reviews/list"/>">Список отзывов</a></li>
+
+								<li class="dropdown">
+									<a href="#" class="nav-item nav-link" data-toggle="dropdown">Администрация, Отзывы</a>
+									<div class="dropdown-menu">
+										<a class="dropdown-item" href="<spring:url value="/main/admin" />">Администрация</a>
+										<a class="dropdown-item" href="<spring:url value="/main/admin/reviews/list"/>">Список отзывов</a>
+									</div>
+								</li>
 							</c:when>
 
 							<c:when test="${roles == '[ROLE_SHOW]'}">
@@ -144,18 +155,32 @@
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/depot" />">Маршрутизатор</a></li>
 								<li class="dropdown">
 									<a href="#" class="nav-item nav-link" data-toggle="dropdown">
-										Заказы, слоты
+										Отдел закупок
 									</a>
 									<div class="dropdown-menu">
 										<a class="dropdown-item" href="<spring:url value="/main/slots" />">Слоты</a>
 										<a class="dropdown-item" href="<spring:url value="/main/procurement/add-order" />">Создание заявки</a>
 										<a class="dropdown-item" href="<spring:url value="/main/procurement/orders" />">Контроль заявок</a>
 										<a class="dropdown-item" href="<spring:url value="/main/order-support/orders" />">Остаток товара</a>
+										<a class="dropdown-item" href="<spring:url value="/main/order-support/control" />">Загрузить отчёт</a>
+										<!-- <a class="dropdown-item" href="<spring:url value="/main/stock-support/orders" />">Таблица Башкиров</a> -->
+										<a class="dropdown-item" href="<spring:url value="/main/procurement/permission/list" />">История решений по заказам</a>
+										<a class="dropdown-item" href="<spring:url value="/main/acceptanceQuality" />">Подтверждение качества</a>
+										<!-- <a class="dropdown-item" href="<spring:url value="/main/procurement/price-protocol/list" />">Протокол согласования цены</a> -->
+									</div>
+								</li>
+								<li class="dropdown">
+									<a href="#" class="nav-item nav-link" data-toggle="dropdown">
+										ОРЛ
+									</a>
+									<div class="dropdown-menu">
 										<a class="dropdown-item" href="<spring:url value="/main/orl/delivery-schedule" />">Графики поставок на РЦ</a>
 										<a class="dropdown-item" href="<spring:url value="/main/orl/delivery-schedule-to" />">Графики поставок на ТО</a>
 										<a class="dropdown-item" href="<spring:url value="/main/orl/need" />">Потребности</a>
-										<!-- <a class="dropdown-item" href="<spring:url value="/main/orl/calculated" />">Приход паллет</a> -->
-										<!-- <a class="dropdown-item" href="<spring:url value="/main/orl/report/398" />">398 отчёт</a> -->
+										<a class="dropdown-item" href="<spring:url value="/main/orl/arrival" />">Приход</a>
+										<a class="dropdown-item" href="<spring:url value="/main/orl/calculated" />">Приход паллет</a>
+										<a class="dropdown-item" href="<spring:url value="/main/orl/report/398" />">398 отчёт</a>
+										<!-- <a class="dropdown-item" href="<spring:url value="/main/orl/rotations" />">Ротации</a> -->
 									</div>
 								</li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/admin/reviews/list"/>">Список отзывов</a></li>

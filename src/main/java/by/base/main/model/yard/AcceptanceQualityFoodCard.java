@@ -123,9 +123,7 @@ public class AcceptanceQualityFoodCard {
     @Column(name = "manager_percent")
     private String managerPercent;
 
-    // Getters and Setters
-
-    
+    // Getters and Setters   
 
     public LocalDateTime getDateCard() {
         return dateCard;

@@ -447,6 +447,11 @@ public class MainController {
 		return "reviewsForm";
 	}
 	
+	@GetMapping("/main/orl/rotations")
+	public String getRotations(Model model, HttpServletRequest request) {
+	    return "rotations";
+	}
+	
 	@GetMapping("/main/reviews")
 	public String getReviews(Model model, HttpServletRequest request) {
 		return "reviewsForm";

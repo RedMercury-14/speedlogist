@@ -1054,8 +1054,7 @@ public class ScheduledTask {
     @Scheduled(cron = "0 30 5 * * ?") // каждый день в 05:30 утра
     public void sendEmailRotations() {
 
-       List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to.ORL");
-       List<String> testEmails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+       List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.rotation");
 
        String appPath = servletContext.getRealPath("/");
        String filepath = appPath + "resources/others/actual-rotations.xlsx";
@@ -1072,7 +1071,7 @@ public class ScheduledTask {
        files.add(new File(filepath));
 
 //     mailService.sendEmailWithFilesToUsers(servletContext, "Актуальные ротации", "Ручная отправка excel-таблицы с ротациями", files, emailsORL);
-       mailService.sendEmailWithFilesToUsers(servletContext, "Актуальные ротации", "Excel-таблица с актуальными ротациями", files, testEmails);
+       mailService.sendEmailWithFilesToUsers(servletContext, "Актуальные ротации", "Excel-таблица с актуальными ротациями", files, emailsORL);
 
     }
 

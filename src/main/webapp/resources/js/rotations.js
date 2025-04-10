@@ -2,7 +2,7 @@ import { AG_GRID_LOCALE_RU } from './AG-Grid/ag-grid-locale-RU.js'
 import { gridColumnLocalState, gridFilterLocalState, ResetStateToolPanel } from './AG-Grid/ag-grid-utils.js'
 import { approveCreateRotationUrl, getActualRotationsExcelUrl, getRotationListUrl, loadRotationExcelUrl, preCreateRotationUrl, updateRotationUrl } from './globalConstants/urls.js'
 import { snackbar } from './snackbar/snackbar.js'
-import { dateHelper, debounce, getData, hideLoadingSpinner, isAdmin, showLoadingSpinner } from './utils.js'
+import { dateHelper, debounce, getData, hideLoadingSpinner, isAdmin, isObserver, showLoadingSpinner } from './utils.js'
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 import { ajaxUtils } from './ajaxUtils.js'
 
@@ -178,6 +178,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 	const downloadExcelBtn = document.getElementById('downloadExcel')
 	downloadExcelBtn.addEventListener('click', downloadExcelHandler)
+
+	$('#rotationModal').on('hidden.bs.modal', (e) => {
+		rotationForm.reset()
+	})
 })
 
 

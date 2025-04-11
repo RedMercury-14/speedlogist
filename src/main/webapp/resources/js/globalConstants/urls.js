@@ -456,6 +456,7 @@ export const approveCreateRotationUrl = '/speedlogist/api/rotations/create'
 export const sendEmailRotationsUrl = '/speedlogist/api/rotations/send-email-rotations'
 export const updateRotationUrl = '/speedlogist/api/rotations/update-rotation'
 export const getActualRotationsExcelUrl = '/speedlogist/file/rotations/get-actual-rotations-excel'
+export const downloadRotationFAQUrl = '/speedlogist/file/rotations/download/instruction-rotations'
 
 
 ///////////////////////////////////////////////

@@ -2,6 +2,7 @@ package by.base.main.service;
 
 import by.base.main.model.Rotation;
 
+import javax.transaction.Transactional;
 import java.util.List;
 
 public interface RotationService {

@@ -22,8 +22,7 @@ public interface RotationDao {
     void updateRotation(Rotation rotation);
 
     /**
-     * @param id
-     * <br>Метод получает объект ротации по id</br>
+     * @param id     <br>Метод получает объект ротации по id</br>
      * @author Ira
      */
     Rotation getRotationById(Long id);

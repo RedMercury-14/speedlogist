@@ -1,6 +1,7 @@
 package by.base.main.service.util;
 
 import java.awt.Color;
+import java.awt.*;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -22,6 +23,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
 import java.time.temporal.WeekFields;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.servlet.ServletContext;
@@ -5487,165 +5489,6 @@ public class POIExcel {
 
 	}
 
-    public void generateActualRotationsExcel(List<Rotation> actualRotations, String filePath) throws IOException {
-
-        String dateFormat = "dd.MM.yyyy";
-        java.text.SimpleDateFormat dateFormatter = new java.text.SimpleDateFormat(dateFormat);
-        DateTimeFormatter localDateFormatter = DateTimeFormatter.ofPattern(dateFormat);
-
-        Workbook workbook = new XSSFWorkbook();
-        Sheet sheet = workbook.createSheet("Отчет");
-
-        String[] headers1 = {"№", "НОВЫЙ КОД (ВВОД)", "ОБЯЗАТЕЛЬНО ДЛЯ ЗАПОЛНЕНИЯ. ПРИ ОТСУТСВИИ ПЕРИОДА ДЕЙСТВИЯ, РОТАЦИЯ НЕ РАБОТАЕТ",
-                "СТАРЫЙ КОД (ВЫВОД)", "Список ТО / Сеть", "Учитывать остатки старого кода?", "Порог ТЗ старого кода",
-                "Коэффициент переноса продаж старого кода на новый",
-                "Переносим продажи старого кода к продажам нового, если есть продажи у нового?",
-                "Распределяем новую позицию, если есть остаток старого кода на РЦ?",
-                "Порог остатка старого кода на ТО (шт/кг)", "ФИО инициатора ротации"};
-
-        int[] header1cells = {0, 1, 3, 5, 7, 8, 9, 10, 11, 12, 13, 14};
-        String[] headers2 = {"", "Код товара", "Наименование товара", "Дата начала", "Дата окончания", "Код аналог", "Наименование Аналог"};
-
-        Row headerRow1 = sheet.createRow(1);
-        sheet.addMergedRegion(new CellRangeAddress(1, 1, 1, 2));
-        sheet.addMergedRegion(new CellRangeAddress(1, 1, 3, 4));
-        sheet.addMergedRegion(new CellRangeAddress(1, 1, 5, 6));
-        int num = 0;
-        for (int cellNum: header1cells) {
-            Cell cell = headerRow1.createCell(cellNum);
-            cell.setCellValue(headers1[num]);
-            num++;
-        }
-
-        Row headerRow2 = sheet.createRow(2);
-        for (int i = 0; i < headers2.length; i++) {
-            Cell cell = headerRow2.createCell(i);
-            cell.setCellValue(headers2[i]);
-        }
-
-        int rowNum = 3;
-        for (Rotation rotation: actualRotations) {
-            Row row = sheet.createRow(rowNum);
-            row.createCell(0).setCellValue(rowNum);
-            row.createCell(1).setCellValue(rotation.getGoodIdNew());
-            row.createCell(2).setCellValue(rotation.getGoodNameNew());
-            row.createCell(3).setCellValue(rotation.getStartDate());
-            row.createCell(4).setCellValue(rotation.getEndDate());
-            row.createCell(5).setCellValue(rotation.getGoodIdAnalog());
-            row.createCell(6).setCellValue(rotation.getGoodNameAnalog());
-            row.createCell(7).setCellValue(rotation.getToList());
-            row.createCell(8).setCellValue(rotation.getCountOldCodeRemains() ? "Да" : "Нет");
-            row.createCell(9).setCellValue(rotation.getLimitOldCode());
-            row.createCell(10).setCellValue(rotation.getCoefficient());
-            row.createCell(11).setCellValue(rotation.getTransferOldToNew() ? "Да" : "Нет");
-            row.createCell(12).setCellValue(rotation.getDistributeNewPosition() ? "Да" : "Нет");
-            row.createCell(13).setCellValue(rotation.getLimitOldPositionRemain());
-            row.createCell(14).setCellValue(rotation.getRotationInitiator());
-            rowNum++;
-        }
-
-//
-//        for (int i = 0; i < headers1.length; i++) {
-//            sheet.autoSizeColumn(i);
-//        }
-
-
-//        headerRow1.setHeightInPoints((short) 58);
-//
-//        XSSFCellStyle headerStyle = (XSSFCellStyle) workbook.createCellStyle();
-//        XSSFColor color = new XSSFColor(new byte[]{(byte) 247, (byte) 150, (byte) 70}, new DefaultIndexedColorMap()); // Красный цвет
-//        Font font = workbook.createFont();
-//        font.setColor(IndexedColors.WHITE.getIndex());
-//        font.setBold(true);
-//        headerStyle.setFillForegroundColor(color);
-//        headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-//        headerStyle.setWrapText(true);
-//        headerStyle.setAlignment(HorizontalAlignment.CENTER);
-//        headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
-//        headerStyle.setBorderBottom(BorderStyle.MEDIUM);
-//        headerStyle.setFont(font);
-//
-//        for (int i = 0; i < headers1.length; i++) {
-//            Cell cell = headerRow1.createCell(i);
-//            cell.setCellValue(headers1[i]);
-//            cell.setCellStyle(headerStyle);
-//        }
-//
-//        CellStyle style = workbook.createCellStyle();
-//        style.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex()); // Цвет фона
-//        style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-//
-//        int rowNum = 1;
-//        for (RoadTransportDto roadTransportDto: roadTransportDTOList) {
-//            Row row = sheet.createRow(rowNum);
-//            row.createCell(0).setCellValue(rowNum); //№
-//            row.createCell(1).setCellValue(roadTransportDto.getDocumentsArrived() == null ? null : dateFormatter.format(roadTransportDto.getDocumentsArrived())); //Дата приёма документов на оплату
-//            row.createCell(2).setCellValue(roadTransportDto.getImportOrExport()); //Импорт/Экспорт
-//            row.createCell(3).setCellValue(roadTransportDto.getRouteId()); //ID маршрута
-//            row.createCell(4).setCellValue(roadTransportDto.getRequestId()); //ID заявки - id order???
-//            row.createCell(5).setCellValue(roadTransportDto.getSupplier()); //взять counterpartyName
-//            row.createCell(6).setCellValue(roadTransportDto.getRequestInitiator()); //order - manager
-//            row.createCell(7).setCellValue(roadTransportDto.getResponsibleLogist()); //
-//            row.createCell(8).setCellValue(roadTransportDto.getDateRequestReceiving() == null ? null : dateFormatter.format(roadTransportDto.getDateRequestReceiving()));
-//            row.createCell(9).setCellValue(roadTransportDto.getCargoReadiness() == null ? "" : dateFormatter.format(roadTransportDto.getCargoReadiness()));
-//            row.createCell(10).setCellValue(roadTransportDto.getLoadingOnRequest()  == null ? "" : dateFormatter.format(roadTransportDto.getLoadingOnRequest()));
-//            row.createCell(11).setCellValue(roadTransportDto.getActualLoading() == null ? null : localDateFormatter.format(roadTransportDto.getActualLoading())); //Погрузка фактическая - вообще непонятно что брать
-//            row.createCell(12); //Маршрут
-//            row.createCell(13); //Страна отправления/погрузки
-//            row.createCell(14); //Место загрузки (Область)
-//            row.createCell(15).setCellValue(roadTransportDto.getCarrier()); //Экспедитор/Перевозчи - order
-//            row.createCell(16).setCellValue(roadTransportDto.getTenderParticipants()); //Участники тендера
-//            row.createCell(17).setCellValue(roadTransportDto.getBid()); //Ставка
-//            row.createCell(18).setCellValue(roadTransportDto.getBidCurrency()); //Валюта
-//            row.createCell(19).setCellValue(roadTransportDto.getBidComment()); //Коммент. к ставке
-//            row.createCell(20); //Доп. расходы.
-//            row.createCell(21); //Валюта доп. расх
-//            row.createCell(22); //Коментарий к доп расх.
-//            row.createCell(23).setCellValue(roadTransportDto.getTruckNumber()); //Номер ТС
-//            row.createCell(24).setCellValue(roadTransportDto.getTruckType()); //Тип ТС
-//            row.createCell(25).setCellValue(roadTransportDto.getTemperature()); //Темп. режим
-//            row.createCell(26).setCellValue(roadTransportDto.getUKZ()); //УКЗ
-//            row.createCell(27); //ADR (класс)
-//            row.createCell(28).setCellValue(roadTransportDto.getWeight()); //Вес, тонн
-//            row.createCell(29); //Стоимость груза, BYN
-//            row.createCell(30); //Страхование груза (да/нет)
-//            row.createCell(31); //Вид доставки
-//            row.createCell(32); //Дата прибытия на ПТО
-//            row.createCell(33).setCellValue(roadTransportDto.getUnloadingWarehouse()); //Склад выгрузки
-//            row.createCell(34); //Комментарии иные
-//            if (rowNum % 2 == 0) {
-//                for (Cell cell : row) {
-//                    cell.setCellStyle(style);
-//                }
-//            }
-//            rowNum++;
-//
-//        }
-//
-//        List<Integer> widths = new ArrayList<>();
-//        Integer[] array = {4, 12, 8, 8, 8, 30, 25, 25, 10, 10, 10, 10, 20, 10, 20, 35, 8, 8, 5, 10, 15, 10, 14, 10, 20, 13, 22, 10, 8, 10, 10, 8, 10, 15, 10};
-//        Collections.addAll(widths, array);
-//        for (int i = 0; i < widths.size(); i++) {
-//            sheet.setColumnWidth(i, widths.get(i) * 256);
-//
-//        }
-//
-//        // Устанавливаем фильтры на все столбцы
-//        sheet.setAutoFilter(new CellRangeAddress(0, 0, 0, headers1.length - 1));
-//
-//        // Устанавливаем заморозку первых двух строк
-//        // Первый параметр: количество фиксированных столбцов (0 — без заморозки столбцов)
-//        // Второй параметр: количество фиксированных строк (2 строки)
-//        sheet.createFreezePane(6, 0);
-
-        try (FileOutputStream fileOut = new FileOutputStream(filePath)) {
-            workbook.write(fileOut);
-        }
-
-        // Закрываем рабочую книгу
-        workbook.close();
-    }
-
     public void createExcelOrderStatistic(Date from, Date to, Map<List<String>, Integer> orderMap, Map<List<String>, Map<DayOfWeek, Integer>> dailySatistic) {
 
         String appPath = servletContext.getRealPath("/");
@@ -5724,73 +5567,6 @@ public class POIExcel {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    public List<Rotation> loadRotationExcel(File file) throws ServiceException, InvalidFormatException, IOException, ParseException {
-
-
-//        Map<Integer, OrderProduct> orderMap = new HashMap<>();
-        XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
-        XSSFSheet sheet = wb.getSheetAt(0);
-        //по сути
-        List<Rotation> rotations = new ArrayList<>();
-        for (int i = 3; i <= sheet.getLastRowNum(); i++) { // Начинаем с 3, чтобы пропустить заголовок
-            Row row = sheet.getRow(i);
-
-            if (row != null) {
-                Rotation rotation = new Rotation();
-
-                rotation.setGoodIdNew(row.getCell(1).getNumericCellValue() != 0.0 ? (long)row.getCell(1).getNumericCellValue() : null);
-                rotation.setGoodNameNew(row.getCell(2).getStringCellValue());
-//                Date dbl = row.getCell(3).getDateCellValue();
-                rotation.setStartDate(row.getCell(3).getDateCellValue() != null ? new Date(row.getCell(3).getDateCellValue().getTime()) : null);
-                rotation.setEndDate(row.getCell(4).getDateCellValue() != null ? new Date(row.getCell(3).getDateCellValue().getTime()) : null);
-                rotation.setGoodIdAnalog(row.getCell(5).getNumericCellValue() != 0.0 ? (long)row.getCell(5).getNumericCellValue() : null);
-                rotation.setGoodNameAnalog(row.getCell(6).getStringCellValue());
-                rotation.setToList(row.getCell(7).getStringCellValue());
-                String countOldCodeRemainsString = row.getCell(8).getStringCellValue();
-                Boolean countOldCodeRemains = null;
-                if (countOldCodeRemainsString.equals("Да")) {
-                    countOldCodeRemains = true;
-                } else if (countOldCodeRemainsString.equals("Нет")) {
-                    countOldCodeRemains = false;
-                }
-                rotation.setCountOldCodeRemains(countOldCodeRemains);
-                rotation.setLimitOldCode((int) row.getCell(9).getNumericCellValue());
-                CellType test = row.getCell(10).getCellType();
-                row.getCell(10).setCellType(CellType.STRING);
-                Double coefficient;
-                String coefficientString = row.getCell(10).getStringCellValue();
-                if (coefficientString.equals("нет")) {
-                    coefficient = 0.0;
-                } else {
-                    coefficient = Double.parseDouble(coefficientString);
-                }
-                rotation.setCoefficient(coefficient);
-                Boolean transferOldToNew = null;
-                if (countOldCodeRemainsString.equals("Да")) {
-                    transferOldToNew = true;
-                } else if (countOldCodeRemainsString.equals("Нет")) {
-                    transferOldToNew = false;
-                }
-                rotation.setTransferOldToNew(transferOldToNew);
-                Boolean distributeNewPosition = null;
-                if (countOldCodeRemainsString.equals("Да")) {
-                    distributeNewPosition = true;
-                } else if (countOldCodeRemainsString.equals("Нет")) {
-                    distributeNewPosition = false;
-                }
-                rotation.setDistributeNewPosition(distributeNewPosition);
-                rotation.setLimitOldPositionRemain((int) row.getCell(13).getNumericCellValue());
-                rotation.setRotationInitiator(row.getCell(14).getStringCellValue());
-                rotation.setStatus(30);
-                rotations.add(rotation);
-            }
-        }
-
-        wb.close();
-
-        return rotations;
     }
 
     public void generateRoadTransportReport(List<RoadTransportDto> roadTransportDTOList, String filePath) throws IOException {

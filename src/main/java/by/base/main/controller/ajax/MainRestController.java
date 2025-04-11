@@ -309,8 +309,8 @@ public class MainRestController {
 
 	@Autowired
 	private RotationService rotationService;
-
 	
+
 	private static String classLog;
 	public static String marketJWT;
 	//в отдельный файл
@@ -358,7 +358,7 @@ public class MainRestController {
 
 	@Autowired
     private ServletContext servletContext;
-	
+
 	private Double toDouble(Object obj) {
 	    if (obj == null || obj.toString().isEmpty()) return null;
 	    return Double.parseDouble(obj.toString());
@@ -396,282 +396,290 @@ public class MainRestController {
        return response;
     }
 
-    /**
-     * Обновление ротации (при удалении, подтверждении, изменении коэффициента)
-     * @author Ira
-     */
-    @PostMapping("/rotations/update-rotation")
-    public Map<String, Object> updateRotation(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
-       Map<String, Object> response = new HashMap<String, Object>();
-       String appPath = request.getServletContext().getRealPath("");
-       JSONParser parser = new JSONParser();
-       JSONObject jsonMainObject = (JSONObject) parser.parse(str);
-       int status = Integer.parseInt(jsonMainObject.get("status").toString());
-       long id = Long.parseLong(jsonMainObject.get("idRotation").toString());
-       Rotation rotation = rotationService.getRotationById(id);
-       Double coefficient = Double.parseDouble(jsonMainObject.get("coefficient").toString());
-       rotation.setCoefficient(coefficient);
-       if (status == 10) {
-          rotation.setStatus(10);
-          StringBuilder sb = new StringBuilder(rotation.getHistory() != null ? rotation.getHistory() : "");
-          sb.append("отменена - ").append(getThisUser().getSurname()).append(" ").append(getThisUser().getName()).append("; ");
-          rotation.setHistory(sb.toString());
-       } else if (status == 30) {
-          if (rotation.getStatus() == 30) {
-             rotation.setCoefficient(coefficient);
-             try {
-                String email = rotation.getUser().geteMail();
-                List<String> emails = new ArrayList<>();
-                emails.add(email);
-                StringBuilder sb = new StringBuilder(rotation.getHistory() != null ? rotation.getHistory() : "");
-                sb.append("изменён коэффициент - ").append(getThisUser().getSurname()).append(" ").append(getThisUser().getName()).append("; ");
-                rotation.setHistory(sb.toString());
+	/**
+	 * Обновление ротации (при удалении, подтверждении, изменении коэффициента)
+	 * @author Ira
+	 */
+	@PostMapping("/rotations/update-rotation")
+	public Map<String, Object> updateRotation(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+		Map<String, Object> response = new HashMap<String, Object>();
+		String appPath = request.getServletContext().getRealPath("");
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		int status = Integer.parseInt(jsonMainObject.get("status").toString());
+		long id = Long.parseLong(jsonMainObject.get("idRotation").toString());
+		Rotation rotation = rotationService.getRotationById(id);
+		Double coefficient = Double.parseDouble(jsonMainObject.get("coefficient").toString());
+		rotation.setCoefficient(coefficient);
+		if (status == 10) {
+			rotation.setStatus(10);
+			StringBuilder sb = new StringBuilder(rotation.getHistory() != null ? rotation.getHistory() : "");
+			sb.append("отменена - ").append(getThisUser().getSurname()).append(" ").append(getThisUser().getName()).append("; ");
+			rotation.setHistory(sb.toString());
+		} else if (status == 30) {
+			if (rotation.getStatus() == 30) {
+				rotation.setCoefficient(coefficient);
+				try {
+					String email = rotation.getUser().geteMail();
+					List<String> emails = new ArrayList<>();
+					emails.add(email);
+					StringBuilder sb = new StringBuilder(rotation.getHistory() != null ? rotation.getHistory() : "");
+					sb.append("изменён коэффициент - ").append(getThisUser().getSurname()).append(" ").append(getThisUser().getName()).append("; ");
+					rotation.setHistory(sb.toString());
 
-                List<String> approveEmails = propertiesUtils.getValuesByPartialKey(servletContext, "email.ort.rotation");
-                emails.addAll(approveEmails);
-                List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
-                String messageText = "Добрый день.\nВ ротации товара " + rotation.getGoodIdNew() + " изменён коэффициент: " + coefficient +
-                      "пользователем " + getThisUser().getName() + " " + getThisUser().getSurname() + ".";
-//              mailService.sendEmailToUsers(appPath, "Изменение коэффициента ротации", messageText, emailsAdmins);
-                mailService.sendEmailToUsers(appPath, "Изменение коэффициента ротации", messageText, emails);
-             } catch (NullPointerException e) {
-                e.printStackTrace();
-             }
+					List<String> approveEmails = propertiesUtils.getValuesByPartialKey(servletContext, "email.ort.rotation");
+					emails.addAll(approveEmails);
+					List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+					String messageText = "Добрый день.\nВ ротации товара " + rotation.getGoodIdNew() + " изменён коэффициент: " + coefficient +
+							"пользователем " + getThisUser().getName() + " " + getThisUser().getSurname() + ".";
+//					mailService.sendEmailToUsers(appPath, "Изменение коэффициента ротации", messageText, emailsAdmins);
+					mailService.sendEmailToUsers(appPath, "Изменение коэффициента ротации", messageText, emails);
+				} catch (NullPointerException e) {
+					e.printStackTrace();
+				}
 
-          } else if (rotation.getStatus() == 20) {
-             rotation.setApproveDate(jsonMainObject.get("approveDate") != null ? Date.valueOf(jsonMainObject.get("approveDate").toString()) : null);
-             long goodIdNew = Long.parseLong(jsonMainObject.get("goodIdNew").toString());
-             long goodIdAnalog = Long.parseLong(jsonMainObject.get("goodIdAnalog").toString());
-             List<Rotation> rotationsNewDuplicates = rotationService.getActualNewCodeDuplicates(goodIdNew).stream().filter(r -> r.getStatus() == 30).toList();
-             if (!rotationsNewDuplicates.isEmpty()) {
-                Rotation duplicateGoodIdNew = rotationsNewDuplicates.get(0);
-                duplicateGoodIdNew.setStatus(10);
-                rotationService.updateRotation(duplicateGoodIdNew);
-             }
-             List<Rotation> rotationsAnalogDuplicates = rotationService.getActualAnalogCodeDuplicates(goodIdAnalog).stream().filter(r -> r.getStatus() == 30).toList();
-             if (!rotationsAnalogDuplicates.isEmpty()) {
-                Rotation duplicateGoodIdAnalog = rotationsAnalogDuplicates.get(0);
-                duplicateGoodIdAnalog.setStatus(10);
-                rotationService.updateRotation(duplicateGoodIdAnalog);
-             }
-             try {
-                String email = rotation.getUser().geteMail();
-                List<String> emails = new ArrayList<>();
-                emails.add(email);
-                StringBuilder sb = new StringBuilder(rotation.getHistory() != null ? rotation.getHistory() : "");
-                sb.append("подтверждена - ").append(getThisUser().getSurname()).append(" ").append(getThisUser().getName()).append("; ");
-                rotation.setHistory(sb.toString());
-                List<String> approveEmails = propertiesUtils.getValuesByPartialKey(servletContext, "email.ort.rotation");
-                emails.addAll(approveEmails);
-                List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
-                String messageText = "Добрый день.\nРотация товара " + rotation.getGoodIdNew() + " подтверждена с коэффициентом " + coefficient + ".";
-//              mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, emailsAdmins);
-                mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, emails);
+			} else if (rotation.getStatus() == 20) {
+				rotation.setApproveDate(jsonMainObject.get("approveDate") != null ? Date.valueOf(jsonMainObject.get("approveDate").toString()) : null);
+				long goodIdNew = Long.parseLong(jsonMainObject.get("goodIdNew").toString());
+				long goodIdAnalog = Long.parseLong(jsonMainObject.get("goodIdAnalog").toString());
+				List<Rotation> rotationsNewDuplicates = rotationService.getActualNewCodeDuplicates(goodIdNew).stream().filter(r -> r.getStatus() == 30).toList();
+				if (!rotationsNewDuplicates.isEmpty()) {
+					Rotation duplicateGoodIdNew = rotationsNewDuplicates.get(0);
+					duplicateGoodIdNew.setStatus(10);
+					rotationService.updateRotation(duplicateGoodIdNew);
+				}
+				List<Rotation> rotationsAnalogDuplicates = rotationService.getActualAnalogCodeDuplicates(goodIdAnalog).stream().filter(r -> r.getStatus() == 30).toList();
+				if (!rotationsAnalogDuplicates.isEmpty()) {
+					Rotation duplicateGoodIdAnalog = rotationsAnalogDuplicates.get(0);
+					duplicateGoodIdAnalog.setStatus(10);
+					rotationService.updateRotation(duplicateGoodIdAnalog);
+				}
+				try {
+					String email = rotation.getUser().geteMail();
+					List<String> emails = new ArrayList<>();
+					emails.add(email);
+					StringBuilder sb = new StringBuilder(rotation.getHistory() != null ? rotation.getHistory() : "");
+					sb.append("подтверждена - ").append(getThisUser().getSurname()).append(" ").append(getThisUser().getName()).append("; ");
+					rotation.setHistory(sb.toString());
+					List<String> approveEmails = propertiesUtils.getValuesByPartialKey(servletContext, "email.ort.rotation");
+					emails.addAll(approveEmails);
+					List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+					String messageText = "Добрый день.\nРотация товара " + rotation.getGoodIdNew() + " подтверждена с коэффициентом " + coefficient + ".";
+//					mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, emailsAdmins);
+					mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, emails);
 
-             } catch (NullPointerException e) {
-                e.printStackTrace();
-             }
-          }
+				} catch (NullPointerException e) {
+					e.printStackTrace();
+				}
+			}
 
-          rotation.setStatus(30);
-       }
-       rotationService.updateRotation(rotation);
+			rotation.setStatus(30);
+		}
+		rotationService.updateRotation(rotation);
 
-       response.put("status", "200");
-       return response;
-    }
+		response.put("status", "200");
+		return response;
+	}
 
-    /**
-     * Ручная отправка сообщения с таблицей ротаций
-     * @param request
-     * @return
-     * @author Ira
-     */
-    @GetMapping("/rotations/send-email-rotations")
-    public Map<String, Object> getSendEmailRotations(HttpServletRequest request) {
-       Map<String, Object> response = new HashMap<String, Object>();
-
-
-       List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.rotation");
-       List<String> testEmails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
-
-       String appPath = servletContext.getRealPath("/");
-       String filepath = appPath + "resources/others/actual-rotations.xlsx";
-
-       List<Rotation> rotations = rotationService.getActualRotations();
-       try {
-          poiExcel.generateActualRotationsExcel(rotations, filepath);
-
-       } catch (IOException e) {
-          e.printStackTrace();
-          System.err.println("Ошибка формирования EXCEL");
-       }
-
-       List<File> files = new ArrayList<>();
-       files.add(new File(filepath));
-
-       mailService.sendEmailWithFilesToUsers(servletContext, "Актуальные ротации", "Ручная отправка excel-таблицы с ротациями", files, emailsORL);
-//     mailService.sendEmailWithFilesToUsers(servletContext, "Актуальные ротации", "Ручная отправка excel-таблицы с ротациями", files, testEmails);
+	/**
+	 * Ручная отправка сообщения с таблицей ротаций
+	 * @param request
+	 * @return
+	 * @author Ira
+	 */
+	@GetMapping("/rotations/send-email-rotations")
+	public Map<String, Object> getSendEmailRotations(HttpServletRequest request) {
+		Map<String, Object> response = new HashMap<String, Object>();
 
 
-       response.put("status", "200");
-       response.put("message", "Сообщение отправлено");
+		List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.rotation");
+		List<String> testEmails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
 
-       return response;
-    }
+		String appPath = servletContext.getRealPath("/");
+		String filepath = appPath + "resources/others/actual-rotations.xlsx";
 
-    /**
-     * Создание новой ротации
-     * @author Ira
-     */
-    @PostMapping("/rotations/create")
-    public Map<String, Object> createRotation(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
-       Map<String, Object> response = new HashMap<>();
-       JSONParser parser = new JSONParser();
-       JSONObject jsonMainObject = (JSONObject) parser.parse(str);
-       User user = getThisUser();
-       String appPath = request.getServletContext().getRealPath("");
-       Rotation rotation = new Rotation();
-       long goodIdNew = Long.parseLong(jsonMainObject.get("goodIdNew").toString());
-       long goodIdAnalog = Long.parseLong(jsonMainObject.get("goodIdAnalog").toString());
+		List<Rotation> rotations = rotationService.getActualRotations();
+		try {
+			poiExcel.generateActualRotationsExcel(rotations, filepath);
 
-       rotation.setGoodIdNew(jsonMainObject.get("goodIdNew") != null ? Long.parseLong(jsonMainObject.get("goodIdNew").toString()) : null);
-       rotation.setGoodNameNew(jsonMainObject.get("goodNameNew") != null ? jsonMainObject.get("goodNameNew").toString() : null);
-       rotation.setStartDate(jsonMainObject.get("startDate") != null ? Date.valueOf(jsonMainObject.get("startDate").toString()) : null);
-       rotation.setEndDate(jsonMainObject.get("endDate") != null ? Date.valueOf(jsonMainObject.get("endDate").toString()) : null);
-       rotation.setGoodIdAnalog(jsonMainObject.get("goodIdAnalog") != null ? Long.parseLong(jsonMainObject.get("goodIdAnalog").toString()) : null);
-       rotation.setGoodNameAnalog(jsonMainObject.get("goodNameAnalog") != null ? jsonMainObject.get("goodNameAnalog").toString() : null);
-       rotation.setToList(jsonMainObject.get("toList") != null ? jsonMainObject.get("toList").toString() : null);
-       rotation.setCountOldCodeRemains(jsonMainObject.get("countOldCodeRemains") != null ? Boolean.parseBoolean(jsonMainObject.get("countOldCodeRemains").toString()) : null);
-       rotation.setLimitOldCode(jsonMainObject.get("limitOldCode") != null ? Integer.parseInt(jsonMainObject.get("limitOldCode").toString()) : null);
-       rotation.setCoefficient(jsonMainObject.get("coefficient") != null ? Double.parseDouble(jsonMainObject.get("coefficient").toString()) : null);
-       rotation.setTransferOldToNew(jsonMainObject.get("transferOldToNew") != null ? Boolean.parseBoolean(jsonMainObject.get("transferOldToNew").toString()) : null);
-       rotation.setDistributeNewPosition(jsonMainObject.get("distributeNewPosition") != null ? Boolean.parseBoolean(jsonMainObject.get("distributeNewPosition").toString()) : null);
-       rotation.setLimitOldPositionRemain(jsonMainObject.get("limitOldPositionRemain") != null ? Integer.parseInt(jsonMainObject.get("limitOldPositionRemain").toString()) : null);
-       rotation.setRotationInitiator(user.getSurname() + " " + user.getName() + " " + user.getPatronymic());
-       rotation.setStatus(30);
-       rotation.setUser(user);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.err.println("Ошибка формирования EXCEL");
+		}
 
-       List<Rotation> rotationNewCodeDuplicates = rotationService.getActualNewCodeDuplicates(goodIdNew);
-       List<Rotation> rotationAnalogCodeDuplicates = rotationService.getActualAnalogCodeDuplicates(goodIdAnalog);
-       Rotation rotationCrossCodeDuplicate = rotationService.getActualCrossCodeDuplicates(goodIdNew, goodIdAnalog);
+		List<File> files = new ArrayList<>();
+		files.add(new File(filepath));
 
-       if(goodIdNew == goodIdAnalog) {
-          rotation.setStatus(20);
-          List<String> approveEmails = propertiesUtils.getValuesByPartialKey(servletContext, "email.ort.rotation");
-          List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
-          String messageText = "Добрый день.\nПросьба подтвердить ротацию кода на увеличение коэффициента. Код товара " + rotation.getGoodIdNew() +
-                ".\nПодтвердить можно здесь https://boxlogs.net/speedlogist/main/orl/rotations";
-//        mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, emailsAdmins);
-          mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, approveEmails);
+		mailService.sendEmailWithFilesToUsers(servletContext, "Актуальные ротации", "Ручная отправка excel-таблицы с ротациями", files, emailsORL);
+//		mailService.sendEmailWithFilesToUsers(servletContext, "Актуальные ротации", "Ручная отправка excel-таблицы с ротациями", files, testEmails);
 
-          if(!rotationNewCodeDuplicates.isEmpty()) {
-             for (Rotation rotationNewCodeDuplicate : rotationNewCodeDuplicates) {
-                rotationNewCodeDuplicate.setStatus(10);
-                rotationService.updateRotation(rotationNewCodeDuplicate);
-             }
-          }
-          if (!rotationAnalogCodeDuplicates.isEmpty()) {
-             for (Rotation rotationAnalogCodeDuplicate : rotationAnalogCodeDuplicates) {
-                rotationAnalogCodeDuplicate.setStatus(10);
-                rotationService.updateRotation(rotationAnalogCodeDuplicate);
-             }
-          }
-          if (rotationCrossCodeDuplicate != null) {
-             rotationCrossCodeDuplicate.setStatus(10);
-             rotationService.updateRotation(rotationCrossCodeDuplicate);
-          }
-       } else {
-          rotation.setStatus(30);
-          if(!rotationNewCodeDuplicates.isEmpty()) {
-             for (Rotation rotationNewCodeDuplicate : rotationNewCodeDuplicates) {
-                rotationNewCodeDuplicate.setStatus(10);
-                rotationService.updateRotation(rotationNewCodeDuplicate);
-             }
-          }
-          if (!rotationAnalogCodeDuplicates.isEmpty()) {
-             for (Rotation rotationAnalogCodeDuplicate : rotationAnalogCodeDuplicates) {
-                rotationAnalogCodeDuplicate.setStatus(10);
-                rotationService.updateRotation(rotationAnalogCodeDuplicate);
-             }
-          }
-          if (rotationCrossCodeDuplicate != null) {
-             rotationCrossCodeDuplicate.setStatus(10);
-             rotationService.updateRotation(rotationCrossCodeDuplicate);
-          }
-       }
-       Long id = rotationService.saveRotation(rotation);
-       rotation.setIdRotation(id);
 
-       response.put("status", "200");
-       response.put("object", rotation);
-       return response;
-    }
+		response.put("status", "200");
+		response.put("message", "Сообщение отправлено");
 
-    /**
-     * Проверки перед созданием ротации
-     * @author Ira
-     */
-    @PostMapping("/rotations/pre-creation")
-    public Map<String, Object> preCreationRotation(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
-       Map<String, Object> response = new HashMap<>();
-       JSONParser parser = new JSONParser();
-       JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		return response;
+	}
 
-       long goodIdNew = Long.parseLong(jsonMainObject.get("goodIdNew").toString());
-       long goodIdAnalog = Long.parseLong(jsonMainObject.get("goodIdAnalog").toString());
-       List<Rotation> rotationNewCodeDuplicates = rotationService.getActualNewCodeDuplicates(goodIdNew);
-       List<Rotation> rotationAnalogCodeDuplicates = rotationService.getActualAnalogCodeDuplicates(goodIdAnalog);
-       Rotation rotationCrossCodeDuplicate = rotationService.getActualCrossCodeDuplicates(goodIdNew, goodIdAnalog);
+	/**
+	 * Создание новой ротации
+	 * @author Ira
+	 */
+	@PostMapping("/rotations/create")
+	public Map<String, Object> createRotation(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+		Map<String, Object> response = new HashMap<>();
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		User user = getThisUser();
+		String appPath = request.getServletContext().getRealPath("");
+		Rotation rotation = new Rotation();
+		long goodIdNew = Long.parseLong(jsonMainObject.get("goodIdNew").toString());
+		long goodIdAnalog = Long.parseLong(jsonMainObject.get("goodIdAnalog").toString());
 
-       if(goodIdNew == goodIdAnalog) {
-          if(!rotationNewCodeDuplicates.isEmpty()) {
-             response.put("status", "205");
-             response.put("message", "Код товара и код аналог совпадают, а так же ротация с таким кодом товара уже существуют. Если Вы подтвердите создание новой ротации, существующая перестанет действовать, а новая будет отправлена на согласование.");
-             return response;
-          }
-          if (!rotationAnalogCodeDuplicates.isEmpty()) {
-             response.put("status", "205");
-             response.put("message", "Код товара и код аналог совпадают, а так же ротация с таким кодом аналогом уже существуют. Если Вы подтвердите создание новой ротации, существующая перестанет действовать, а новая будет отправлена на согласование.");
-             return response;
+		rotation.setGoodIdNew(jsonMainObject.get("goodIdNew") != null ? Long.parseLong(jsonMainObject.get("goodIdNew").toString()) : null);
+		rotation.setGoodNameNew(jsonMainObject.get("goodNameNew") != null ? jsonMainObject.get("goodNameNew").toString() : null);
+		rotation.setStartDate(jsonMainObject.get("startDate") != null ? Date.valueOf(jsonMainObject.get("startDate").toString()) : null);
+		rotation.setEndDate(jsonMainObject.get("endDate") != null ? Date.valueOf(jsonMainObject.get("endDate").toString()) : null);
+		rotation.setGoodIdAnalog(jsonMainObject.get("goodIdAnalog") != null ? Long.parseLong(jsonMainObject.get("goodIdAnalog").toString()) : null);
+		rotation.setGoodNameAnalog(jsonMainObject.get("goodNameAnalog") != null ? jsonMainObject.get("goodNameAnalog").toString() : null);
+		rotation.setToList(jsonMainObject.get("toList") != null ? jsonMainObject.get("toList").toString() : null);
+		rotation.setCountOldCodeRemains(jsonMainObject.get("countOldCodeRemains") != null ? Boolean.parseBoolean(jsonMainObject.get("countOldCodeRemains").toString()) : null);
+		rotation.setLimitOldCode(jsonMainObject.get("limitOldCode") != null ? Integer.parseInt(jsonMainObject.get("limitOldCode").toString()) : null);
+		rotation.setCoefficient(jsonMainObject.get("coefficient") != null ? Double.parseDouble(jsonMainObject.get("coefficient").toString()) : null);
+		rotation.setTransferOldToNew(jsonMainObject.get("transferOldToNew") != null ? Boolean.parseBoolean(jsonMainObject.get("transferOldToNew").toString()) : null);
+		rotation.setDistributeNewPosition(jsonMainObject.get("distributeNewPosition") != null ? Boolean.parseBoolean(jsonMainObject.get("distributeNewPosition").toString()) : null);
+		rotation.setLimitOldPositionRemain(jsonMainObject.get("limitOldPositionRemain") != null ? Integer.parseInt(jsonMainObject.get("limitOldPositionRemain").toString()) : null);
+		rotation.setRotationInitiator(user.getSurname() + " " + user.getName() + " " + user.getPatronymic());
+		rotation.setStatus(30);
+		rotation.setUser(user);
 
-          }
-          response.put("status", "205");
-          response.put("message", "Код товара и код аналог совпадают. Если Вы подтвердите создание новой ротации, она будет отправлена на согласование. После согласования Вам поступит email.");
-          return response;
-       } else {
-          if(!rotationNewCodeDuplicates.isEmpty()) {
-             response.put("status", "205");
-             response.put("message", "Ротация с таким кодом товара уже существуют. Если Вы подтвердите создание новой ротации, существующая перестанет действовать.");
-             return response;
-          }
-          if (!rotationAnalogCodeDuplicates.isEmpty()) {
-             response.put("status", "205");
-             response.put("message", "Ротация с таким кодом аналогом уже существуют. Если Вы подтвердите создание новой ротации, существующая перестанет действовать.");
-             return response;
-          }
-          if (rotationCrossCodeDuplicate != null) {
-             response.put("status", "205");
-             response.put("message", "Уже существует ротация, где код аналог равен коду товара в Вашей ротации и код товара равен коду аналогу в Вашей ротации. " +
-                   "Если Вы подтвердите создание новой ротации, существующая перестанет действовать.");
-             return response;
-          }
-       }
-       response = createRotation(request, str);
-       return response;
-    }
+		List<Rotation> rotationNewCodeDuplicates = rotationService.getActualNewCodeDuplicates(goodIdNew);
+		List<Rotation> rotationAnalogCodeDuplicates = rotationService.getActualAnalogCodeDuplicates(goodIdAnalog);
+		Rotation rotationCrossCodeDuplicate = rotationService.getActualCrossCodeDuplicates(goodIdNew, goodIdAnalog);
 
-    /**
-     * Получение списка ротаций для отображения на фронте
-     * @author Ira
-     */
-    @GetMapping("/rotations/get-rotations")
-    public Map<String, Object> getRotations(){
-       Map<String, Object> response = new HashMap<>();
-       response.put("reviews", rotationService.getActualAndWaitingRotations());
-       response.put("status", "200");
-       return response;
-    }
+		if(goodIdNew == goodIdAnalog) {
+			rotation.setStatus(20);
+			String email = rotation.getUser().geteMail();
+			List<String> emails = new ArrayList<>();
+			emails.add(email);
+			StringBuilder sb = new StringBuilder(rotation.getHistory() != null ? rotation.getHistory() : "");
+			sb.append("подтверждена - ").append(getThisUser().getSurname()).append(" ").append(getThisUser().getName()).append("; ");
+			rotation.setHistory(sb.toString());
+			List<String> approveEmails = propertiesUtils.getValuesByPartialKey(servletContext, "email.ort.rotation");
+			emails.addAll(approveEmails);
+			List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+			String messageText = "Добрый день.\nПросьба подтвердить ротацию кода на увеличение коэффициента. Код товара " + rotation.getGoodIdNew() +
+					".\nПодтвердить можно <a href=https://boxlogs.net/speedlogist/main/orl/rotations>здесь<a>";
+//			mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, emailsAdmins);
+			mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, emails);
+
+			if(!rotationNewCodeDuplicates.isEmpty()) {
+				for (Rotation rotationNewCodeDuplicate : rotationNewCodeDuplicates) {
+					rotationNewCodeDuplicate.setStatus(10);
+					rotationService.updateRotation(rotationNewCodeDuplicate);
+				}
+			}
+			if (!rotationAnalogCodeDuplicates.isEmpty()) {
+				for (Rotation rotationAnalogCodeDuplicate : rotationAnalogCodeDuplicates) {
+					rotationAnalogCodeDuplicate.setStatus(10);
+					rotationService.updateRotation(rotationAnalogCodeDuplicate);
+				}
+			}
+			if (rotationCrossCodeDuplicate != null) {
+				rotationCrossCodeDuplicate.setStatus(10);
+				rotationService.updateRotation(rotationCrossCodeDuplicate);
+			}
+		} else {
+			rotation.setStatus(30);
+			if(!rotationNewCodeDuplicates.isEmpty()) {
+				for (Rotation rotationNewCodeDuplicate : rotationNewCodeDuplicates) {
+					rotationNewCodeDuplicate.setStatus(10);
+					rotationService.updateRotation(rotationNewCodeDuplicate);
+				}
+			}
+			if (!rotationAnalogCodeDuplicates.isEmpty()) {
+				for (Rotation rotationAnalogCodeDuplicate : rotationAnalogCodeDuplicates) {
+					rotationAnalogCodeDuplicate.setStatus(10);
+					rotationService.updateRotation(rotationAnalogCodeDuplicate);
+				}
+			}
+			if (rotationCrossCodeDuplicate != null) {
+				rotationCrossCodeDuplicate.setStatus(10);
+				rotationService.updateRotation(rotationCrossCodeDuplicate);
+			}
+		}
+		Long id = rotationService.saveRotation(rotation);
+		rotation.setIdRotation(id);
+
+		response.put("status", "200");
+		response.put("message", "Ротация создана");
+		response.put("object", rotation);
+		return response;
+	}
+
+	/**
+	 * Проверки перед созданием ротации
+	 * @author Ira
+	 */
+	@PostMapping("/rotations/pre-creation")
+	public Map<String, Object> preCreationRotation(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+		Map<String, Object> response = new HashMap<>();
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+
+		long goodIdNew = Long.parseLong(jsonMainObject.get("goodIdNew").toString());
+		long goodIdAnalog = Long.parseLong(jsonMainObject.get("goodIdAnalog").toString());
+		List<Rotation> rotationNewCodeDuplicates = rotationService.getActualNewCodeDuplicates(goodIdNew);
+		List<Rotation> rotationAnalogCodeDuplicates = rotationService.getActualAnalogCodeDuplicates(goodIdAnalog);
+		Rotation rotationCrossCodeDuplicate = rotationService.getActualCrossCodeDuplicates(goodIdNew, goodIdAnalog);
+
+		if(goodIdNew == goodIdAnalog) {
+			if(!rotationNewCodeDuplicates.isEmpty()) {
+				response.put("status", "205");
+				response.put("message", "Код товара и код аналог совпадают, а так же ротация с таким кодом товара уже существуют. Если Вы подтвердите создание новой ротации, существующая перестанет действовать, а новая будет отправлена на согласование в ОРТ.");
+				return response;
+			}
+			if (!rotationAnalogCodeDuplicates.isEmpty()) {
+				response.put("status", "205");
+				response.put("message", "Код товара и код аналог совпадают, а так же ротация с таким кодом аналогом уже существуют. Если Вы подтвердите создание новой ротации, существующая перестанет действовать, а новая будет отправлена на согласование в ОРТ.");
+				return response;
+
+			}
+			response.put("status", "205");
+			response.put("message", "Код товара и код аналог совпадают. Если Вы подтвердите создание новой ротации, она будет отправлена на согласование в ОРТ. После согласования Вам поступит email.");
+			return response;
+		} else {
+			if(!rotationNewCodeDuplicates.isEmpty()) {
+				response.put("status", "205");
+				response.put("message", "Ротация с таким кодом товара уже существуют. Если Вы подтвердите создание новой ротации, существующая перестанет действовать.");
+				return response;
+			}
+			if (!rotationAnalogCodeDuplicates.isEmpty()) {
+				response.put("status", "205");
+				response.put("message", "Ротация с таким кодом аналогом уже существуют. Если Вы подтвердите создание новой ротации, существующая перестанет действовать.");
+				return response;
+			}
+			if (rotationCrossCodeDuplicate != null) {
+				response.put("status", "205");
+				response.put("message", "Уже существует ротация, где код аналог равен коду товара в Вашей ротации и код товара равен коду аналогу в Вашей ротации. " +
+						"Если Вы подтвердите создание новой ротации, существующая перестанет действовать.");
+				return response;
+			}
+		}
+		response = createRotation(request, str);
+		return response;
+	}
+
+	/**
+	 * Получение списка ротаций для отображения на фронте
+	 * @author Ira
+	 */
+	@GetMapping("/rotations/get-rotations")
+	public Map<String, Object> getRotations(){
+		Map<String, Object> response = new HashMap<>();
+		response.put("reviews", rotationService.getActualAndWaitingRotations());
+		response.put("status", "200");
+		return response;
+	}
 
 	@PostMapping("/procurement/price-protocol/createArray")
 	public Map<String, Object> createPriceProtocolArray(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
@@ -777,7 +785,7 @@ public class MainRestController {
 	    responseMap.put("object", priceProtocolService.getAll());
 	    return responseMap;
 	}
-	
+
 	@GetMapping("/orderproof/approve")
 	public Map<String, Object> getApproveOrder(HttpServletRequest request, HttpServletResponse response) throws IOException{
 	    Map<String, Object> responseMap = new HashMap<>();

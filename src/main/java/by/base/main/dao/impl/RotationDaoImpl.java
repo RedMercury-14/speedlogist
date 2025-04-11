@@ -1,7 +1,6 @@
 package by.base.main.dao.impl;
 
 import by.base.main.dao.RotationDao;
-import by.base.main.model.Review;
 import by.base.main.model.Rotation;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;

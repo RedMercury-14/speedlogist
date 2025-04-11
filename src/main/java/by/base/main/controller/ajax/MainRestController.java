@@ -436,17 +436,21 @@ public class MainRestController {
                 String email = rotation.getUser().geteMail();
                 List<String> emails = new ArrayList<>();
                 emails.add(email);
+                StringBuilder sb = new StringBuilder(rotation.getHistory() != null ? rotation.getHistory() : "");
+                sb.append("изменён коэффициент - ").append(getThisUser().getSurname()).append(" ").append(getThisUser().getName()).append("; ");
+                rotation.setHistory(sb.toString());
 
+                List<String> approveEmails = propertiesUtils.getValuesByPartialKey(servletContext, "email.ort.rotation");
+                emails.addAll(approveEmails);
+                List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+                String messageText = "Добрый день.\nВ ротации товара " + rotation.getGoodIdNew() + " изменён коэффициент: " + coefficient +
+                      "пользователем " + getThisUser().getName() + " " + getThisUser().getSurname() + ".";
+//              mailService.sendEmailToUsers(appPath, "Изменение коэффициента ротации", messageText, emailsAdmins);
+                mailService.sendEmailToUsers(appPath, "Изменение коэффициента ротации", messageText, emails);
              } catch (NullPointerException e) {
                 e.printStackTrace();
              }
-             StringBuilder sb = new StringBuilder(rotation.getHistory() != null ? rotation.getHistory() : "");
-             sb.append("изменён коэффициент - ").append(getThisUser().getSurname()).append(" ").append(getThisUser().getName()).append("; ");
-             rotation.setHistory(sb.toString());
 
-             List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
-             String messageText = "Добрый день.\nВ ротации товара " + rotation.getGoodIdNew() + " изменён коэффициент " + coefficient + ".";
-             mailService.sendEmailToUsers(appPath, "Изменение коэффициента ротации", messageText, emailsAdmins);
           } else if (rotation.getStatus() == 20) {
              rotation.setApproveDate(jsonMainObject.get("approveDate") != null ? Date.valueOf(jsonMainObject.get("approveDate").toString()) : null);
              long goodIdNew = Long.parseLong(jsonMainObject.get("goodIdNew").toString());
@@ -467,16 +471,19 @@ public class MainRestController {
                 String email = rotation.getUser().geteMail();
                 List<String> emails = new ArrayList<>();
                 emails.add(email);
+                StringBuilder sb = new StringBuilder(rotation.getHistory() != null ? rotation.getHistory() : "");
+                sb.append("подтверждена - ").append(getThisUser().getSurname()).append(" ").append(getThisUser().getName()).append("; ");
+                rotation.setHistory(sb.toString());
+                List<String> approveEmails = propertiesUtils.getValuesByPartialKey(servletContext, "email.ort.rotation");
+                emails.addAll(approveEmails);
+                List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+                String messageText = "Добрый день.\nРотация товара " + rotation.getGoodIdNew() + " подтверждена с коэффициентом " + coefficient + ".";
+//              mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, emailsAdmins);
+                mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, emails);
+
              } catch (NullPointerException e) {
                 e.printStackTrace();
              }
-             StringBuilder sb = new StringBuilder(rotation.getHistory() != null ? rotation.getHistory() : "");
-             sb.append("подтверждена - ").append(getThisUser().getSurname()).append(" ").append(getThisUser().getName()).append("; ");
-             rotation.setHistory(sb.toString());
-
-             List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
-             String messageText = "Добрый день.\nРотация товара " + rotation.getGoodIdNew() + " подтверждена с коэффициентом " + coefficient + ".";
-             mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, emailsAdmins);
           }
 
           rotation.setStatus(30);
@@ -498,7 +505,7 @@ public class MainRestController {
        Map<String, Object> response = new HashMap<String, Object>();
        
 
-       List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to.ORL");
+       List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.rotation");
        List<String> testEmails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
 
        String appPath = servletContext.getRealPath("/");
@@ -516,8 +523,8 @@ public class MainRestController {
        List<File> files = new ArrayList<>();
        files.add(new File(filepath));
 
-//     mailService.sendEmailWithFilesToUsers(servletContext, "Актуальные ротации", "Ручная отправка excel-таблицы с ротациями", files, emailsORL);
-       mailService.sendEmailWithFilesToUsers(servletContext, "Актуальные ротации", "Ручная отправка excel-таблицы с ротациями", files, testEmails);
+       mailService.sendEmailWithFilesToUsers(servletContext, "Актуальные ротации", "Ручная отправка excel-таблицы с ротациями", files, emailsORL);
+//     mailService.sendEmailWithFilesToUsers(servletContext, "Актуальные ротации", "Ручная отправка excel-таблицы с ротациями", files, testEmails);
 
 
        response.put("status", "200");
@@ -564,11 +571,13 @@ public class MainRestController {
 
        if(goodIdNew == goodIdAnalog) {
           rotation.setStatus(20);
-          //пока что тут мой имейл, потом надо подставить три из новой группы
+          List<String> approveEmails = propertiesUtils.getValuesByPartialKey(servletContext, "email.ort.rotation");
           List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
           String messageText = "Добрый день.\nПросьба подтвердить ротацию кода на увеличение коэффициента. Код товара " + rotation.getGoodIdNew() +
-                ".\nПодтвердить можно здесь + https://boxlogs.net/speedlogist/api/rotations/get-rotations";
-          mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, emailsAdmins);
+                ".\nПодтвердить можно здесь https://boxlogs.net/speedlogist/main/orl/rotations";
+//        mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, emailsAdmins);
+          mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, approveEmails);
+
           if(!rotationNewCodeDuplicates.isEmpty()) {
              for (Rotation rotationNewCodeDuplicate : rotationNewCodeDuplicates) {
                 rotationNewCodeDuplicate.setStatus(10);

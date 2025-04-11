@@ -1055,6 +1055,7 @@ public class ScheduledTask {
     public void sendEmailRotations() {
 
        List<String> emailsORL = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.rotation");
+//       List<String> testEmails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
 
        String appPath = servletContext.getRealPath("/");
        String filepath = appPath + "resources/others/actual-rotations.xlsx";
@@ -1070,9 +1071,8 @@ public class ScheduledTask {
        List<File> files = new ArrayList<File>();
        files.add(new File(filepath));
 
-//     mailService.sendEmailWithFilesToUsers(servletContext, "Актуальные ротации", "Ручная отправка excel-таблицы с ротациями", files, emailsORL);
        mailService.sendEmailWithFilesToUsers(servletContext, "Актуальные ротации", "Excel-таблица с актуальными ротациями", files, emailsORL);
-
+//     mailService.sendEmailWithFilesToUsers(servletContext, "Актуальные ротации", "Excel-таблица с актуальными ротациями", files, testEmails);
     }
 
     

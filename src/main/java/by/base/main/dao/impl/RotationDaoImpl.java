@@ -11,8 +11,6 @@ import org.springframework.stereotype.Repository;
 import java.sql.Date;
 import java.util.List;
 
-import javax.persistence.TemporalType;
-
 @Repository
 
 public class RotationDaoImpl implements RotationDao {
@@ -116,6 +114,7 @@ public class RotationDaoImpl implements RotationDao {
         return theObject.getResultList();
     }
 
+//    private static final String queryActualAndWaitingRotations= "from Rotation where startDate <= :currentDate and endDate > :currentDate and (status = 20 or status = 30)";
     private static final String queryActualAndWaitingRotations= "from Rotation where endDate > :currentDate and (status = 20 or status = 30)";
 
     @Override
@@ -123,7 +122,7 @@ public class RotationDaoImpl implements RotationDao {
         Session currentSession = sessionFactory.getCurrentSession();
         Query<Rotation> theObject = currentSession.createQuery(queryActualAndWaitingRotations, Rotation.class);
         Date currentDate = new Date(System.currentTimeMillis());
-        theObject.setParameter("currentDate", currentDate, TemporalType.DATE);
+        theObject.setParameter("currentDate", currentDate);
         List<Rotation> rotations = theObject.getResultList();
         return theObject.getResultList();
     }

@@ -159,6 +159,44 @@ public class MainFileController {
 	    }
 	}
 	
+	/**
+	 * Метод отвечает за скачивание документа инструкции для ротаций
+	 * @param request
+	 * @param response
+	 * @return
+	 * @throws IOException
+	 * @author Ira
+	 */
+	@RequestMapping("/rotations/download/instruction-rotations")
+	public void downloadRotationsHelp(HttpServletRequest request, HttpServletResponse response) throws IOException {
+	    String appPath = request.getServletContext().getRealPath("");
+	    //File file = new File(appPath + "resources/others/Speedlogist.apk");
+	    response.setHeader("content-disposition", "attachment;filename="+"instruction-rotations.docx");
+	    response.setContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+	    FileInputStream in = null;
+	    OutputStream out = null;
+	    try {
+	        // Прочтите файл, который нужно загрузить, и сохраните его во входном потоке файла
+	        in = new FileInputStream(appPath + "resources/others/docs/instruction-rotations.docx");
+	        //  Создать выходной поток
+	        out = response.getOutputStream();
+	        //  Создать буфер
+	        byte buffer[] = new byte[1024];
+	        int len = 0;
+	        //  Прочитать содержимое входного потока в буфер в цикле
+	        while ((len = in.read(buffer)) > 0) {
+	            out.write(buffer, 0, len);
+	        }
+	        in.close();
+	        out.close();
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }finally {
+	        in.close();
+	        out.close();
+	    }
+	}
+	
     @RequestMapping(value="/echo", method=RequestMethod.GET)
     public @ResponseBody String handleFileUpload(HttpServletRequest request) throws IOException{
     	System.out.println("MainFileController ECHO");

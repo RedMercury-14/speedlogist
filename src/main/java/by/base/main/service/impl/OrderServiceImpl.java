@@ -497,6 +497,7 @@ public class OrderServiceImpl implements OrderService {
         order.setSlotMessageHistory(null);
         order.setFirstLoadSlot(null);
         order.setLoginManager(null);
+        order.setIdRamp(null);
         orderDAO.updateOrder(order);
         return order;
     }

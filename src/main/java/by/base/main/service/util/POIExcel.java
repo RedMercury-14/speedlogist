@@ -1,5 +1,6 @@
 package by.base.main.service.util;
 
+import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -53,6 +54,13 @@ import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.PropertyTemplate;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFColor;
+import org.apache.poi.xssf.usermodel.XSSFCreationHelper;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.xssf.usermodel.*;
 import org.hibernate.internal.build.AllowSysOut;
 import org.json.simple.JSONArray;
@@ -160,6 +168,268 @@ public class POIExcel {
 		return convFile;
 	}
 	
+	/**
+     * Парсинг excel-таблицы с ротациями для загрузки в БД
+     * @author Ira
+     */
+    public List<Rotation> loadRotationExcel(File file) throws ServiceException, InvalidFormatException, IOException, ParseException {
+
+        XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
+        XSSFSheet sheet = wb.getSheetAt(0);
+        //по сути
+        List<Rotation> rotations = new ArrayList<>();
+        for (int i = 3; i <= sheet.getLastRowNum(); i++) { // Начинаем с 3, чтобы пропустить заголовок
+            Row row = sheet.getRow(i);
+
+            if (row != null) {
+                Rotation rotation = new Rotation();
+
+                rotation.setGoodIdNew(row.getCell(1).getNumericCellValue() != 0.0 ? (long)row.getCell(1).getNumericCellValue() : null);
+                rotation.setGoodNameNew(row.getCell(2).getStringCellValue());
+//                Date dbl = row.getCell(3).getDateCellValue();
+                rotation.setStartDate(row.getCell(3).getDateCellValue() != null ? new Date(row.getCell(3).getDateCellValue().getTime()) : null);
+                rotation.setEndDate(row.getCell(4).getDateCellValue() != null ? new Date(row.getCell(4).getDateCellValue().getTime()) : null);
+                rotation.setGoodIdAnalog(row.getCell(5).getNumericCellValue() != 0.0 ? (long)row.getCell(5).getNumericCellValue() : null);
+                rotation.setGoodNameAnalog(row.getCell(6).getStringCellValue());
+                rotation.setToList(row.getCell(7).getStringCellValue());
+                String countOldCodeRemainsString = row.getCell(8).getStringCellValue();
+                Boolean countOldCodeRemains = null;
+                if (countOldCodeRemainsString.equals("Да")) {
+                    countOldCodeRemains = true;
+                } else if (countOldCodeRemainsString.equals("Нет")) {
+                    countOldCodeRemains = false;
+                }
+                rotation.setCountOldCodeRemains(countOldCodeRemains);
+                rotation.setLimitOldCode((int) row.getCell(9).getNumericCellValue());
+                CellType test = row.getCell(10).getCellType();
+                row.getCell(10).setCellType(CellType.STRING);
+                Double coefficient;
+                String coefficientString = row.getCell(10).getStringCellValue();
+                if (coefficientString.equals("нет")) {
+                    coefficient = 0.0;
+                } else {
+                    coefficient = Double.parseDouble(coefficientString);
+                }
+                rotation.setCoefficient(coefficient);
+                Boolean transferOldToNew = null;
+                if (countOldCodeRemainsString.equals("Да")) {
+                    transferOldToNew = true;
+                } else if (countOldCodeRemainsString.equals("Нет")) {
+                    transferOldToNew = false;
+                }
+                rotation.setTransferOldToNew(transferOldToNew);
+                Boolean distributeNewPosition = null;
+                if (countOldCodeRemainsString.equals("Да")) {
+                    distributeNewPosition = true;
+                } else if (countOldCodeRemainsString.equals("Нет")) {
+                    distributeNewPosition = false;
+                }
+                rotation.setDistributeNewPosition(distributeNewPosition);
+                rotation.setLimitOldPositionRemain((int) row.getCell(13).getNumericCellValue());
+                rotation.setRotationInitiator(row.getCell(14).getStringCellValue());
+                rotation.setStatus(30);
+                rotations.add(rotation);
+            }
+        }
+
+        wb.close();
+
+        return rotations;
+    }
+
+    /**
+     * Создание таблицы с актуальными ротациями на основе данных из БД
+     * @author Ira
+     */
+
+    public void generateActualRotationsExcel(List<Rotation> actualRotations, String filePath) throws IOException {
+
+        String dateFormat = "dd.MM.yyyy";
+        DateTimeFormatter localDateFormatter = DateTimeFormatter.ofPattern(dateFormat);
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Отчет");
+
+        XSSFColor red = new XSSFColor(new Color(255, 0, 0), null);
+        XSSFColor black = new XSSFColor(new Color(0, 0, 0), null);
+        XSSFColor lightGreen = new XSSFColor(new Color(146, 208, 80), null);
+        XSSFColor purple = new XSSFColor(new Color(112, 48, 160), null);
+        XSSFColor yellow = new XSSFColor(new Color(255, 255, 0), null);
+        XSSFColor lightBlue = new XSSFColor(new Color(189, 215, 238), null);
+        XSSFColor darkGreen = new XSSFColor(new Color(51, 163, 75), null);
+
+        XSSFCellStyle generalStyle = (XSSFCellStyle) workbook.createCellStyle();;
+        generalStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        generalStyle.setWrapText(true);
+        generalStyle.setAlignment(HorizontalAlignment.CENTER);
+        generalStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+        generalStyle.setBorderTop(BorderStyle.THIN);
+        generalStyle.setBorderBottom(BorderStyle.THIN);
+        generalStyle.setBorderLeft(BorderStyle.THIN);
+        generalStyle.setBorderRight(BorderStyle.THIN);
+
+        String[] headers1 = {"№", "НОВЫЙ КОД (ВВОД)", "ОБЯЗАТЕЛЬНО ДЛЯ ЗАПОЛНЕНИЯ. ПРИ ОТСУТСВИИ ПЕРИОДА ДЕЙСТВИЯ, РОТАЦИЯ НЕ РАБОТАЕТ",
+                "СТАРЫЙ КОД (ВЫВОД)", "Список ТО / Сеть", "Учитывать остатки старого кода?", "Порог ТЗ старого кода",
+                "Коэффициент переноса продаж старого кода на новый",
+                "Переносим продажи старого кода к продажам нового, если есть продажи у нового?",
+                "Распределяем новую позицию, если есть остаток старого кода на РЦ?",
+                "Порог остатка старого кода на ТО (шт/кг)", "ФИО инициатора ротации"};
+
+        int[] header1cells = {0, 1, 3, 5, 7, 8, 9, 10, 11, 12, 13, 14};
+        String[] headers2 = {"", "Код товара", "Наименование товара", "Дата начала", "Дата окончания", "Код аналог", "Наименование Аналог"};
+
+        Row headerRow1 = sheet.createRow(1);
+        headerRow1.setHeightInPoints((short) 58);
+
+        sheet.addMergedRegion(new CellRangeAddress(1, 1, 1, 2));
+        sheet.addMergedRegion(new CellRangeAddress(1, 1, 3, 4));
+        sheet.addMergedRegion(new CellRangeAddress(1, 1, 5, 6));
+        int num = 0;
+        for (int cellNum: header1cells) {
+            Cell cell = headerRow1.createCell(cellNum);
+            cell.setCellValue(headers1[num]);
+            num++;
+        }
+
+        Row headerRow2 = sheet.createRow(2);
+        for (int i = 0; i < headers2.length; i++) {
+            Cell cell = headerRow2.createCell(i);
+            cell.setCellValue(headers2[i]);
+        }
+
+        XSSFCellStyle greenStyle = generalStyle.clone();
+        Font blackFont = workbook.createFont();
+        blackFont.setColor(IndexedColors.BLACK.getIndex());
+        blackFont.setFontHeightInPoints((short) 11);
+        greenStyle.setFillForegroundColor(lightGreen);
+        greenStyle.setFont(blackFont);
+
+        headerRow1.getCell(0).setCellStyle(greenStyle);
+        headerRow1.getCell(1).setCellStyle(greenStyle);
+        headerRow2.getCell(0).setCellStyle(greenStyle);
+        headerRow2.getCell(1).setCellStyle(greenStyle);
+        headerRow2.getCell(2).setCellStyle(greenStyle);
+
+        XSSFCellStyle blackStyle = generalStyle.clone();
+        Font yellowFont = workbook.createFont();
+        yellowFont.setColor(IndexedColors.YELLOW.getIndex());
+        yellowFont.setFontHeightInPoints((short) 11);
+        blackStyle.setFillForegroundColor(black);
+        blackStyle.setFont(yellowFont);
+
+        headerRow1.getCell(3).setCellStyle(blackStyle);
+        headerRow2.getCell(3).setCellStyle(blackStyle);
+        headerRow2.getCell(4).setCellStyle(blackStyle);
+
+
+        XSSFCellStyle redStyle = generalStyle.clone();
+        redStyle.setFillForegroundColor(red);
+        redStyle.setFont(blackFont);
+
+        headerRow1.getCell(5).setCellStyle(redStyle);
+        headerRow2.getCell(5).setCellStyle(redStyle);
+        headerRow2.getCell(6).setCellStyle(redStyle);
+
+        XSSFCellStyle yellowStyle = generalStyle.clone();
+        Font smallBlackFont = workbook.createFont();
+        smallBlackFont.setColor(IndexedColors.BLACK.getIndex());
+        smallBlackFont.setFontHeightInPoints((short) 9);
+        yellowStyle.setFillForegroundColor(yellow);
+        yellowStyle.setFont(smallBlackFont);
+        headerRow1.getCell(7).setCellStyle(yellowStyle);
+        headerRow1.getCell(8).setCellStyle(yellowStyle);
+        headerRow1.getCell(9).setCellStyle(yellowStyle);
+        headerRow1.getCell(10).setCellStyle(yellowStyle);
+        headerRow1.getCell(11).setCellStyle(yellowStyle);
+
+        headerRow2.createCell(7).setCellStyle(yellowStyle);
+        headerRow2.createCell(8).setCellStyle(yellowStyle);
+        headerRow2.createCell(9).setCellStyle(yellowStyle);
+        headerRow2.createCell(10).setCellStyle(yellowStyle);
+        headerRow2.createCell(11).setCellStyle(yellowStyle);
+
+        XSSFCellStyle purpleStyle = generalStyle.clone();
+
+        Font smallWhiteFont = workbook.createFont();
+        smallWhiteFont.setColor(IndexedColors.WHITE.getIndex());
+        smallWhiteFont.setFontHeightInPoints((short) 9);
+        purpleStyle.setFillForegroundColor(purple);
+        purpleStyle.setFont(smallWhiteFont);
+
+        headerRow1.getCell(12).setCellStyle(purpleStyle);
+        headerRow1.getCell(13).setCellStyle(purpleStyle);
+        headerRow2.createCell(12).setCellStyle(purpleStyle);
+        headerRow2.createCell(13).setCellStyle(purpleStyle);
+
+        XSSFCellStyle lightBlueStyle = generalStyle.clone();
+        lightBlueStyle.setFillForegroundColor(lightBlue);
+        lightBlueStyle.setFont(blackFont);
+        headerRow1.getCell(14).setCellStyle(lightBlueStyle);
+        headerRow2.createCell(14).setCellStyle(lightBlueStyle);
+
+        XSSFCellStyle borderStyle = generalStyle.clone();
+        borderStyle.setFillPattern(FillPatternType.NO_FILL);
+        borderStyle.setWrapText(false);
+        borderStyle.setAlignment(HorizontalAlignment.LEFT);
+
+        XSSFCellStyle centerStyle = generalStyle.clone();
+        centerStyle.setAlignment(HorizontalAlignment.CENTER);
+        centerStyle.setFillPattern(FillPatternType.NO_FILL);
+
+        XSSFCellStyle darkGreenStyle = generalStyle.clone();
+        darkGreenStyle.setFillForegroundColor(darkGreen);
+        darkGreenStyle.setAlignment(HorizontalAlignment.LEFT);
+
+        int rowNum = 3;
+        for (Rotation rotation: actualRotations) {
+            Row row = sheet.createRow(rowNum);
+            for (int i = 0; i < 15; i++) {
+                row.createCell(i);
+                row.getCell(i).setCellStyle(borderStyle);
+            }
+            row.getCell(0).setCellValue(rowNum);
+            row.getCell(1).setCellValue(rotation.getGoodIdNew());
+            row.getCell(2).setCellValue(rotation.getGoodNameNew());
+            row.getCell(3).setCellValue(LocalDate.parse(rotation.getStartDate().toString()).format(localDateFormatter));
+            row.getCell(4).setCellValue(LocalDate.parse(rotation.getEndDate().toString()).format(localDateFormatter));
+            row.getCell(5).setCellValue(rotation.getGoodIdAnalog());
+            if (rotation.getGoodIdNew().equals(rotation.getGoodIdAnalog())) {
+                row.getCell(1).setCellStyle(darkGreenStyle);
+                row.getCell(5).setCellStyle(darkGreenStyle);
+            }
+            row.getCell(6).setCellValue(rotation.getGoodNameAnalog());
+            row.getCell(7).setCellValue(rotation.getToList());
+            row.getCell(8).setCellValue(rotation.getCountOldCodeRemains() ? "Да" : "Нет");
+            row.getCell(8).setCellStyle(centerStyle);
+            row.getCell(9).setCellValue(rotation.getLimitOldCode());
+            row.getCell(9).setCellStyle(centerStyle);
+            row.getCell(10).setCellValue(rotation.getCoefficient());
+            row.getCell(10).setCellStyle(centerStyle);
+            row.getCell(11).setCellValue(rotation.getTransferOldToNew() ? "Да" : "Нет");
+            row.getCell(11).setCellStyle(centerStyle);
+            row.getCell(12).setCellValue(rotation.getDistributeNewPosition() ? "Да" : "Нет");
+            row.getCell(12).setCellStyle(centerStyle);
+            row.getCell(13).setCellValue(rotation.getLimitOldPositionRemain());
+            row.getCell(13).setCellStyle(centerStyle);
+            row.getCell(14).setCellValue(rotation.getRotationInitiator());
+            rowNum++;
+        }
+
+        Integer[] array = {5, 15, 48, 17, 17, 15, 48, 14, 12, 12, 15, 16, 17, 12, 20};
+
+        for (int i = 0; i < array.length; i++) {
+            sheet.setColumnWidth(i, array[i] * 256);
+        }
+
+        sheet.createFreezePane(0, 3);
+
+        try (FileOutputStream fileOut = new FileOutputStream(filePath)) {
+            workbook.write(fileOut);
+        }
+
+        // Закрываем рабочую книгу
+        workbook.close();
+    }
+
 	/**
 	 * Главный метод создания екселя ReportRow или сервис левел по приходу
 	 * v 1.0

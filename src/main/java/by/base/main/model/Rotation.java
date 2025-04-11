@@ -79,6 +79,12 @@ public class Rotation {
     @Column(name = "status")
     private Integer status;
 
+    @Column(name = "approve_date")
+    private Date approveDate;
+
+    @Column(name = "history")
+    private String history;
+
     @ManyToOne
     @JoinColumn(name = "user_iduser")
     @JsonBackReference
@@ -210,6 +216,22 @@ public class Rotation {
 
     public void setStatus(Integer valid) {
         this.status = valid;
+    }
+
+    public Date getApproveDate() {
+        return approveDate;
+    }
+
+    public void setApproveDate(Date approveDate) {
+        this.approveDate = approveDate;
+    }
+
+    public String getHistory() {
+        return history;
+    }
+
+    public void setHistory(String history) {
+        this.history = history;
     }
 
     public User getUser() {

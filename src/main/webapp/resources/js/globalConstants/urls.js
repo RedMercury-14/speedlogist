@@ -280,6 +280,7 @@ export const getStockRemainderUrl = '/speedlogist/api/order-support/getStockRema
 export const setNewBalanceBaseUrl = '/speedlogist/api/order-support/setNewBalance/'
 export const setMaxDayBaseUrl = '/speedlogist/api/order-support/setMaxDay/'
 export const changeExceptionBaseUrl = '/speedlogist/api/order-support/changeException/'
+export const blockProductUrl = '/speedlogist/api/order-support/blockProduct'
 
 
 ///////////////////////////////////////////////
@@ -442,3 +443,24 @@ export const getUnprocessedAcceptanceQualityUrl = '/speedlogist/tsd/unprocessedA
 export const getInProcessAcceptanceQualityUrl = '/speedlogist/tsd/inProcessAcceptanceQuality'
 export const getClosedAcceptanceQualityBaseUrl = '/speedlogist/tsd/closedAcceptanceQuality'
 export const getAllAcceptanceQualityFoodCardUrl = '/speedlogist/tsd/getAllAcceptanceQualityFoodCard'
+export const aproofQualityFoodCardUrl = '/speedlogist/tsd/aproofQualityFoodCard'
+
+
+///////////////////////////////////////////////
+// Таблица ротаций
+///////////////////////////////////////////////
+export const loadRotationExcelUrl = '/speedlogist/api/rotations/load'
+export const getRotationListUrl = '/speedlogist/api/rotations/get-rotations'
+export const preCreateRotationUrl = '/speedlogist/api/rotations/pre-creation'
+export const approveCreateRotationUrl = '/speedlogist/api/rotations/create'
+export const sendEmailRotationsUrl = '/speedlogist/api/rotations/send-email-rotations'
+export const updateRotationUrl = '/speedlogist/api/rotations/update-rotation'
+export const getActualRotationsExcelUrl = '/speedlogist/file/rotations/get-actual-rotations-excel'
+
+
+///////////////////////////////////////////////
+// Протокол согласования цены (713)
+///////////////////////////////////////////////
+export const getPriceProtocolListUrl = '/speedlogist/api/procurement/price-protocol/getList'
+export const createPriceProtocolUrl = '/speedlogist/api/procurement/price-protocol/create'
+export const createArrayOfPriceProtocolUrl = '/speedlogist/api/procurement/price-protocol/createArray'

@@ -19,13 +19,11 @@ public class AcceptanceFoodQualityServiceImpl implements AcceptanceFoodQualitySe
 
 
     @Override
-
     public List<AcceptanceFoodQuality> getAllByStatus(Integer status) {
         return acceptanceQualityDAO.getAllByStatus(status);
     }
 
     @Override
-
     public List<AcceptanceFoodQuality> getAllByStatuses(List<Integer> statuses) {
         // Реализация метода, возможно, нужно адаптировать под ваш запрос
         return acceptanceQualityDAO.getAllByStatuses(statuses);

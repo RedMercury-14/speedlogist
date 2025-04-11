@@ -111,6 +111,7 @@ import by.base.main.util.bots.BotInitializer;
 import by.base.main.util.bots.TelegramBot;
 import by.base.main.util.bots.TelegramBotRouting;
 import by.base.main.util.bots.TelegramBotRoutingTEST;
+import by.base.main.util.bots.TelegrammBotQuantityYard;
 import by.base.main.util.hcolossus.service.MatrixMachine;
 
 /**
@@ -199,6 +200,9 @@ public class MainController {
 	
 	@Autowired
 	private TelegramBotRouting telegramBotRouting;
+	
+	@Autowired
+	private TelegrammBotQuantityYard telegrammBotQuantityYard;
 	
 	@Autowired
 	private TelegramBotRoutingTEST telegramBotRoutingTEST;
@@ -299,13 +303,14 @@ public class MainController {
 			if(telegramBot.isRunning == false) {
 				new BotInitializer(telegramBot).init();
 				new BotInitializer(telegramBotRouting).initRoutingBot();
+				new BotInitializer(telegrammBotQuantityYard).initBotQuantityYard();
 				System.err.println("БОТЫ ЗАПУЩЕНЫ");	
 			}
 		}else {
 			System.err.println("ТЕЛЕГРАММ БОТ ОТКЛЮЧЕН!");	
+//			new BotInitializer(telegramBotRoutingTEST).initRoutingBotTEST();
 		}
 		
-//		new BotInitializer(telegramBotRoutingTEST).initRoutingBotTEST();
 		
 		try {
 			currencyService.loadCurrencyMap(request);
@@ -442,9 +447,19 @@ public class MainController {
 		return "reviewsForm";
 	}
 	
+	@GetMapping("/main/orl/rotations")
+	public String getRotations(Model model, HttpServletRequest request) {
+	    return "rotations";
+	}
+	
 	@GetMapping("/main/reviews")
 	public String getReviews(Model model, HttpServletRequest request) {
 		return "reviewsForm";
+	}
+	
+	@GetMapping("/main/procurement/price-protocol/list")
+	public String getPriceProtocolList(Model model, HttpServletRequest request) {
+		return "priceProtocolList";
 	}
 	
 	@GetMapping("/main/procurement/permission/list")

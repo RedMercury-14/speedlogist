@@ -60,39 +60,33 @@ public class RotationDaoImpl implements RotationDao {
         return rotations;
     }
 
-    private static final String queryActualRotationDuplicateByNewGoodId = "from Rotation where goodIdNew=:goodIdNew and status=30 or status is null and endDate >:currentDate";
+    private static final String queryActualRotationDuplicateByNewGoodId = "from Rotation where goodIdNew=:goodIdNew and endDate >:currentDate and (status=30 or status=20) ";
 
     @Override
-    public Rotation getActualNewCodeDuplicates(Long goodIdNew) {
+    public List<Rotation> getActualNewCodeDuplicates(Long goodIdNew) {
         Session currentSession = sessionFactory.getCurrentSession();
         Query<Rotation> theObject = currentSession.createQuery(queryActualRotationDuplicateByNewGoodId, Rotation.class);
         Date currentDate = new Date(System.currentTimeMillis());
         theObject.setParameter("currentDate", currentDate);
         theObject.setParameter("goodIdNew", goodIdNew);
         List<Rotation> rotations = theObject.getResultList();
-        if(rotations.isEmpty()) {
-            return null;
-        }
-        return rotations.stream().findFirst().get();
+        return rotations;
     }
 
-    private static final String queryActualRotationDuplicateByAnalogGoodId = "from Rotation where goodIdAnalog=:goodIdAnalog and status=30 or status is null and endDate >:currentDate";
+    private static final String queryActualRotationDuplicateByAnalogGoodId = "from Rotation where goodIdAnalog=:goodIdAnalog and endDate >:currentDate and (status=30 or status=20)";
 
     @Override
-    public Rotation getActualAnalogCodeDuplicates(Long goodIdAnalog) {
+    public List<Rotation> getActualAnalogCodeDuplicates(Long goodIdAnalog) {
         Session currentSession = sessionFactory.getCurrentSession();
         Query<Rotation> theObject = currentSession.createQuery(queryActualRotationDuplicateByAnalogGoodId, Rotation.class);
         Date currentDate = new Date(System.currentTimeMillis());
         theObject.setParameter("currentDate", currentDate);
         theObject.setParameter("goodIdAnalog", goodIdAnalog);
         List<Rotation> rotations = theObject.getResultList();
-        if(rotations.isEmpty()) {
-            return null;
-        }
-        return rotations.stream().findFirst().get();
+        return rotations;
     }
 
-    private static final String queryActualCrossRotationDuplicate = "from Rotation where goodIdNew=:goodIdNew and goodIdAnalog=:goodIdAnalog and status=30 or status is null and endDate >:currentDate";
+    private static final String queryActualCrossRotationDuplicate = "from Rotation where goodIdNew=:goodIdNew and goodIdAnalog=:goodIdAnalog and endDate >:currentDate and (status=30 or status=20)";
 
     @Override
     public Rotation getActualCrossCodeDuplicates(Long goodIdNew, Long goodIdAnalog) {
@@ -110,7 +104,7 @@ public class RotationDaoImpl implements RotationDao {
         return rotations.stream().findFirst().get();
     }
 
-    private static final String queryActualRotations= "from Rotation where startDate <= :currentDate and endDate > :currentDate and status=30 or status is null";
+    private static final String queryActualRotations= "from Rotation where startDate <= :currentDate and endDate > :currentDate and status = 30";
 
     @Override
     public List<Rotation> getActualRotations() {
@@ -118,6 +112,19 @@ public class RotationDaoImpl implements RotationDao {
         Query<Rotation> theObject = currentSession.createQuery(queryActualRotations, Rotation.class);
         Date currentDate = new Date(System.currentTimeMillis());
         theObject.setParameter("currentDate", currentDate);
+        return theObject.getResultList();
+    }
+
+//    private static final String queryActualAndWaitingRotations= "from Rotation where startDate <= :currentDate and endDate > :currentDate and (status = 20 or status = 30)";
+    private static final String queryActualAndWaitingRotations= "from Rotation where endDate > :currentDate and (status = 20 or status = 30)";
+
+    @Override
+    public List<Rotation> getActualAndWaitingRotations() {
+        Session currentSession = sessionFactory.getCurrentSession();
+        Query<Rotation> theObject = currentSession.createQuery(queryActualAndWaitingRotations, Rotation.class);
+        Date currentDate = new Date(System.currentTimeMillis());
+        theObject.setParameter("currentDate", currentDate);
+        List<Rotation> rotations = theObject.getResultList();
         return theObject.getResultList();
     }
 }

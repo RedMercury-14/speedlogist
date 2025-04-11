@@ -19,7 +19,7 @@ public class AcceptanceQualityFoodCard {
 
     @ManyToOne
     @JoinColumn(name = "id_acceptance_food_quality")
-    @JsonBackReference
+//    @JsonBackReference
     @JsonIgnore
     private AcceptanceFoodQuality acceptanceFoodQuality;
 
@@ -49,6 +49,10 @@ public class AcceptanceQualityFoodCard {
     @OneToMany(mappedBy = "acceptanceQualityFoodCard", fetch = FetchType.LAZY,cascade = CascadeType.ALL, orphanRemoval = false)
     @JsonManagedReference
     Set<TotalDefectQualityCard> totalDefectQualityCardList;
+    
+    @OneToMany(mappedBy = "acceptanceQualityFoodCard", fetch = FetchType.LAZY,cascade = CascadeType.ALL, orphanRemoval = false)
+    @JsonManagedReference
+    Set<AcceptanceQualityFoodCardImageUrl> acceptanceQualityFoodCardImageUrls;
 
     @Column(name = "number_of_brands")
     private Integer numberOfBrands;
@@ -66,10 +70,10 @@ public class AcceptanceQualityFoodCard {
     private String thermogram;
 
     @Column(name = "body_temp")
-    private Double bodyTemp;
+    private String bodyTemp;
 
     @Column(name = "fruit_temp")
-    private Double fruitTemp;
+    private String fruitTemp;
 
     @Column(name = "appearance_evaluation")
     private Integer appearanceEvaluation;
@@ -92,15 +96,56 @@ public class AcceptanceQualityFoodCard {
     @Column(name = "date_card")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime dateCard;
+    
+    @Column(name = "login_manager_aproof", columnDefinition = "TEXT")
+    private String loginManagerAproof;
+    
+    @Column(name = "fullname_manager_aproof", columnDefinition = "TEXT")
+    private String fullnameManagerAproof;
+    
+    @Column(name = "id_manager_aproof")
+    private Integer idManagerAproof;
+    
+    @Column(name = "date_time_aproof")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime dateTimeAproof;
+    
+    @Column(name = "date_time_end_card")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime dateTimeEndCard;
+    
+    @Column(name = "comment_aproof", columnDefinition = "TEXT")
+    private String commentAproof;  
+    
+    @Column(name = "unit")
+    private String unit;
+    
+    @Column(name = "manager_percent")
+    private String managerPercent;
 
-    // Getters and Setters
-
+    // Getters and Setters   
 
     public LocalDateTime getDateCard() {
         return dateCard;
     }
 
-    public void setDateCard(LocalDateTime dateCard) {
+    public String getManagerPercent() {
+		return managerPercent;
+	}
+
+	public void setManagerPercent(String managerPercent) {
+		this.managerPercent = managerPercent;
+	}
+
+	public String getUnit() {
+		return unit;
+	}
+
+	public void setUnit(String unit) {
+		this.unit = unit;
+	}
+
+	public void setDateCard(LocalDateTime dateCard) {
         this.dateCard = dateCard;
     }
 
@@ -140,7 +185,16 @@ public class AcceptanceQualityFoodCard {
         return totalDefectQualityCardList;
     }
 
-    public void setTotalDefectQualityCardList(Set<TotalDefectQualityCard> totalDefectQualityCardList) {
+    public Set<AcceptanceQualityFoodCardImageUrl> getAcceptanceQualityFoodCardImageUrls() {
+		return acceptanceQualityFoodCardImageUrls;
+	}
+
+	public void setAcceptanceQualityFoodCardImageUrls(
+			Set<AcceptanceQualityFoodCardImageUrl> acceptanceQualityFoodCardImageUrls) {
+		this.acceptanceQualityFoodCardImageUrls = acceptanceQualityFoodCardImageUrls;
+	}
+
+	public void setTotalDefectQualityCardList(Set<TotalDefectQualityCard> totalDefectQualityCardList) {
         this.totalDefectQualityCardList = totalDefectQualityCardList;
     }
 
@@ -224,19 +278,19 @@ public class AcceptanceQualityFoodCard {
         this.thermogram = thermogram;
     }
 
-    public Double getBodyTemp() {
+    public String getBodyTemp() {
         return bodyTemp;
     }
 
-    public void setBodyTemp(Double bodyTemp) {
+    public void setBodyTemp(String bodyTemp) {
         this.bodyTemp = bodyTemp;
     }
 
-    public Double getFruitTemp() {
+    public String getFruitTemp() {
         return fruitTemp;
     }
 
-    public void setFruitTemp(Double fruitTemp) {
+    public void setFruitTemp(String fruitTemp) {
         this.fruitTemp = fruitTemp;
     }
 
@@ -288,32 +342,61 @@ public class AcceptanceQualityFoodCard {
         this.stickerDescription = stickerDescription;
     }
 
+    public String getLoginManagerAproof() {
+		return loginManagerAproof;
+	}
 
-    @Override
-    public String toString() {
-        return "AcceptanceQualityFoodCard{" +
-                "idAcceptanceQualityFoodCard=" + idAcceptanceQualityFoodCard +
-                ", acceptanceFoodQuality=" + acceptanceFoodQuality +
-                ", cargoWeightCard=" + cargoWeightCard +
-                ", sampleSize=" + sampleSize +
-                ", productName='" + productName + '\'' +
-                ", classType=" + classType +
-                ", internalDefectsQualityCardList=" + internalDefectsQualityCardList +
-                ", lightDefectsQualityCardList=" + lightDefectsQualityCardList +
-                ", totalDefectQualityCardList=" + totalDefectQualityCardList +
-                ", numberOfBrands=" + numberOfBrands +
-                ", qualityOfProductPackaging='" + qualityOfProductPackaging + '\'' +
-                ", cardStatus=" + cardStatus +
-                ", cardInfo='" + cardInfo + '\'' +
-                ", thermogram='" + thermogram + '\'' +
-                ", bodyTemp=" + bodyTemp +
-                ", fruitTemp=" + fruitTemp +
-                ", appearanceEvaluation=" + appearanceEvaluation +
-                ", appearanceDefects='" + appearanceDefects + '\'' +
-                ", maturityLevel='" + maturityLevel + '\'' +
-                ", tasteQuality='" + tasteQuality + '\'' +
-                ", caliber='" + caliber + '\'' +
-                ", stickerDescription='" + stickerDescription + '\'' +
-                '}';
-    }
+	public void setLoginManagerAproof(String loginManagerAproof) {
+		this.loginManagerAproof = loginManagerAproof;
+	}
+
+	public String getFullnameManagerAproof() {
+		return fullnameManagerAproof;
+	}
+
+	public void setFullnameManagerAproof(String fullnameManagerAproof) {
+		this.fullnameManagerAproof = fullnameManagerAproof;
+	}
+
+	public Integer getIdManagerAproof() {
+		return idManagerAproof;
+	}
+
+	public void setIdManagerAproof(Integer idManagerAproof) {
+		this.idManagerAproof = idManagerAproof;
+	}
+
+	public LocalDateTime getDateTimeAproof() {
+		return dateTimeAproof;
+	}
+
+	public void setDateTimeAproof(LocalDateTime dateTimeAproof) {
+		this.dateTimeAproof = dateTimeAproof;
+	}
+
+	public LocalDateTime getDateTimeEndCard() {
+		return dateTimeEndCard;
+	}
+
+	public void setDateTimeEndCard(LocalDateTime dateTimeEndCard) {
+		this.dateTimeEndCard = dateTimeEndCard;
+	}
+	
+	
+
+	public String getCommentAproof() {
+		return commentAproof;
+	}
+
+	public void setCommentAproof(String commentAproof) {
+		this.commentAproof = commentAproof;
+	}
+
+	@Override
+	public String toString() {
+		return "AcceptanceQualityFoodCard [idAcceptanceQualityFoodCard=" + idAcceptanceQualityFoodCard
+				+ ", productType=" + productType + ", cardStatus=" + cardStatus + ", cardInfo=" + cardInfo + "]";
+	}
+
+	
 }

@@ -42,13 +42,13 @@ public class RotationServiceImpl implements RotationService {
 
     @Override
     @Transactional
-    public Rotation getActualNewCodeDuplicates(Long goodIdNew) {
+    public List<Rotation> getActualNewCodeDuplicates(Long goodIdNew) {
         return rotationDao.getActualNewCodeDuplicates(goodIdNew);
     }
 
     @Override
     @Transactional
-    public Rotation getActualAnalogCodeDuplicates(Long goodIdAnalog) {
+    public List<Rotation> getActualAnalogCodeDuplicates(Long goodIdAnalog) {
         return rotationDao.getActualAnalogCodeDuplicates(goodIdAnalog);
     }
 
@@ -62,5 +62,11 @@ public class RotationServiceImpl implements RotationService {
     @Transactional
     public List<Rotation> getActualRotations() {
         return rotationDao.getActualRotations();
+    }
+
+    @Transactional
+    @Override
+    public List<Rotation> getActualAndWaitingRotations() {
+        return rotationDao.getActualAndWaitingRotations();
     }
 }

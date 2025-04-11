@@ -30,8 +30,8 @@ public class AcceptanceQualityFoodCardDTO {
     private Integer cardStatus;
     private String cardInfo;
     private String thermogram;
-    private Double bodyTemp;
-    private Double fruitTemp;
+    private String bodyTemp;
+    private String fruitTemp;
     private Integer appearanceEvaluation;
     private String appearanceDefects;
     private String maturityLevel;
@@ -40,6 +40,11 @@ public class AcceptanceQualityFoodCardDTO {
     private String stickerDescription;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime dateCard;
+    
+    private Boolean isImport;
+    private String unit;
+    private String managerPercent;
+    
 
 
     private List<InternalDefectsQualityCard> internalDefectsQualityCardList;
@@ -48,7 +53,15 @@ public class AcceptanceQualityFoodCardDTO {
 
     private List<String> images;
 
-    public List<String> getImages() {
+    public String getManagerPercent() {
+		return managerPercent;
+	}
+
+	public void setManagerPercent(String managerPercent) {
+		this.managerPercent = managerPercent;
+	}
+
+	public List<String> getImages() {
         return images;
     }
 
@@ -177,19 +190,19 @@ public class AcceptanceQualityFoodCardDTO {
         this.thermogram = thermogram;
     }
 
-    public Double getBodyTemp() {
+    public String getBodyTemp() {
         return bodyTemp;
     }
 
-    public void setBodyTemp(Double bodyTemp) {
+    public void setBodyTemp(String bodyTemp) {
         this.bodyTemp = bodyTemp;
     }
 
-    public Double getFruitTemp() {
+    public String getFruitTemp() {
         return fruitTemp;
     }
 
-    public void setFruitTemp(Double fruitTemp) {
+    public void setFruitTemp(String fruitTemp) {
         this.fruitTemp = fruitTemp;
     }
 
@@ -272,4 +285,21 @@ public class AcceptanceQualityFoodCardDTO {
     public void setTotalDefectQualityCardList(List<TotalDefectQualityCard> totalDefectQualityCardList) {
         this.totalDefectQualityCardList = totalDefectQualityCardList;
     }
+
+	public Boolean getIsImport() {
+		return isImport;
+	}
+
+	public void setIsImport(Boolean isImport) {
+		this.isImport = isImport;
+	}
+
+	public String getUnit() {
+		return unit;
+	}
+
+	public void setUnit(String unit) {
+		this.unit = unit;
+	}
+    
 }

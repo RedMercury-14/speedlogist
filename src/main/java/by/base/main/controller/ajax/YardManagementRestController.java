@@ -33,6 +33,7 @@ import by.base.main.dto.yard.AcceptanceQualityFoodCardDTO;
 import by.base.main.model.yard.AcceptanceFoodQuality;
 import by.base.main.model.yard.AcceptanceQualityFoodCard;
 import by.base.main.model.yard.AcceptanceQualityFoodCardImageUrl;
+import by.base.main.model.yard.DefectBase;
 import by.base.main.model.yard.TtnIn;
 import by.base.main.service.yardService.AcceptanceFoodQualityService;
 import by.base.main.service.yardService.AcceptanceQualityFoodCardImageUrlService;
@@ -59,21 +60,27 @@ import org.springframework.web.bind.annotation.*;
 
 import com.google.gson.Gson;
 
+import by.base.main.model.Act;
 import by.base.main.model.Address;
 import by.base.main.model.ClientRequest;
 import by.base.main.model.Message;
 import by.base.main.model.Order;
+import by.base.main.model.Route;
 import by.base.main.model.User;
 import by.base.main.service.OrderService;
+import by.base.main.service.TelegramChatQualityService;
 import by.base.main.service.UserService;
 import by.base.main.service.util.SocketClient;
 import by.base.main.util.SlotWebSocket;
+import by.base.main.util.bots.TelegramBotRoutingTEST;
+import by.base.main.util.bots.TelegrammBotQuantityYard;
 
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 @RestController
 @RequestMapping(path = "tsd", produces = "application/json")
@@ -100,6 +107,18 @@ public class YardManagementRestController {
 
 	@Autowired
 	private AcceptanceQualityFoodCardImageUrlService acceptanceQualityFoodCardImageUrlService;
+	
+	@Autowired
+	private TelegrammBotQuantityYard telegrammBotQuantityYard;
+	
+	@Autowired
+	private TelegramChatQualityService telegramChatQualityService;
+	
+	@Autowired
+	private TelegramBotRoutingTEST telegramBotRoutingTEST;
+	
+	@Value("${telegramm.bot.run}")
+	private boolean isRunTelegrammBot;
 
 	private static final String staticToken = "3d075c53-4fd3-41c3-89fc-a5e5c4a0b25b";
 	
@@ -109,10 +128,14 @@ public class YardManagementRestController {
 	public String urlPart;
 	
 
+	/**
+	 * Метод который запрашивае фото у двора и отдаёт клиенту
+	 * @param id
+	 * @return
+	 */
 	@GetMapping("/files/{id}")
     public ResponseEntity<Resource> getImage(@PathVariable("id") String id) {
         // URL на внешний сервер
-//        String externalUrl = "http://178.163.235.66:14000/quality/files/" + id;
         String externalUrl = urlPart + id;
 
         // Выполняем GET-запрос
@@ -157,6 +180,67 @@ public class YardManagementRestController {
 		response.put("time", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy; hh:MM:ss")));
 		return response;		
 	}
+	
+
+    private void processDefectGroup(String title,
+                                           Collection<? extends DefectBase> defects,
+                                           boolean isImport,
+                                           boolean withPC,
+                                           double sampleSize,
+                                           StringBuilder builder,
+                                           StringBuilder finalMessage,
+                                           boolean applyPC) {
+
+        final double pcThreshold = 10.0;
+        final double percentageFactor = 100.0;
+        final double pcFactorBeforeThreshold = isImport ? 160.0 : 140.0;
+        final double pcFactorAfterThreshold = 200.0;
+
+        double totalWeight = 0.0;
+        double totalPercentage = 0.0;
+        double totalPercentageWithPC = 0.0;
+
+        builder.append(title).append(":\n");
+        finalMessage.append(title).append(":\n");
+
+        for (DefectBase defect : defects) {
+            double weight = Optional.ofNullable(defect.getWeight()).orElse(0.0);
+            totalWeight += weight;
+
+            double percentage = sampleSize > 0 ? (weight / sampleSize) * percentageFactor : 0.0;
+            totalPercentage += percentage;
+
+            double percentageWithPC = 0.0;
+            if (applyPC && withPC && sampleSize > 0) {
+                percentageWithPC = percentage <= pcThreshold
+                        ? (weight / sampleSize) * pcFactorBeforeThreshold
+                        : (weight / sampleSize) * pcFactorAfterThreshold;
+                totalPercentageWithPC += percentageWithPC;
+            }
+
+//            builder.append("  - ")
+//                    .append(defect.getDescription()).append(" | вес: ").append(weight)
+//                    .append(" | %: ").append(String.format("%.2f", percentage));
+
+//            if (applyPC) {
+//                builder.append(" | % c ПК: ").append(String.format("%.2f", percentageWithPC));
+//            }
+//            builder.append("\n");
+        }
+
+//        builder.append("  Итого вес: ").append(roundNumber(totalWeight, 100)).append("\n");
+        builder.append("  Итого %: ").append(String.format("%.2f", totalPercentage)).append("%").append("\n");
+        finalMessage.append("  Итого %: ").append(String.format("%.2f", totalPercentage)).append("%").append("\n");
+        if (applyPC) {
+            builder.append("  Итого % с ПК: ").append(String.format("%.2f", totalPercentageWithPC)).append("%").append("\n");
+            finalMessage.append("  Итого % с ПК: ").append(String.format("%.2f", totalPercentageWithPC)).append("%").append("\n");
+        }
+    }
+
+    private static double roundNumber(double value, int factor) {
+        return Math.round(value * factor) / (double) factor;
+    }
+	
 	
 	@RequestMapping("/server")
 	public Map<String, String> getEchoServer(HttpServletRequest request) throws UnknownHostException, ClassNotFoundException, IOException {
@@ -326,9 +410,183 @@ public class YardManagementRestController {
 			@RequestParam("idAcceptanceFoodQuality") Long idAcceptanceFoodQuality) {
 
 		List<AcceptanceQualityFoodCardDTO> acceptanceQualityFoodCardDTOList =
-				acceptanceQualityFoodCardService.getAllAcceptanceQualityFoodCard(idAcceptanceFoodQuality,request);
+				acceptanceQualityFoodCardService.getAllAcceptanceQualityFoodCard(idAcceptanceFoodQuality,request); // этим методом можно получить урлы к фото
 
 		return ResponseEntity.ok(acceptanceQualityFoodCardDTOList);
+	}
+	
+	/**
+	 * Реализация подтверждения карточки товара.
+	 * Записывает сразу в базу данных
+	 * <b></b>
+	 * @param request
+	 * @param str
+	 * @return
+	 * @throws ParseException
+	 * @throws IOException
+	 * @throws TelegramApiException 
+	 */
+	@PostMapping("/aproofQualityFoodCard")
+	public Map<String, Object> setActStatus(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException, TelegramApiException {
+		Map<String, Object> response = new HashMap<>();
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		User user = getThisUser();
+		
+		Integer idCard = Integer.parseInt(jsonMainObject.get("idAcceptanceQualityFoodCard").toString());
+		String comment = jsonMainObject.get("comment") != null && !jsonMainObject.get("comment").toString().isEmpty() ? jsonMainObject.get("comment").toString() : null;
+		String percent = jsonMainObject.get("managerPercent") != null && !jsonMainObject.get("managerPercent").toString().isEmpty() ? jsonMainObject.get("managerPercent").toString() : null;
+		Integer status = jsonMainObject.get("status") != null ? Integer.parseInt(jsonMainObject.get("status").toString()) : null;
+		
+		AcceptanceQualityFoodCard foodCard = acceptanceQualityFoodCardService.getByIdAcceptanceQualityFoodCard(idCard.longValue());
+		
+		foodCard.setCardStatus(status);
+		foodCard.setCommentAproof(comment);	
+		foodCard.setManagerPercent(percent);
+		
+		foodCard.setLoginManagerAproof(user.getLogin());
+		foodCard.setIdManagerAproof(user.getIdUser());
+		foodCard.setFullnameManagerAproof(user.getSurname() +" "+ user.getName());
+		
+		acceptanceQualityFoodCardService.update(foodCard);
+		
+		//тут отпраляем сообщение в бот.
+		String statusStr = null;
+		switch (status) {
+		case 150:
+			statusStr = "Принимаем.";
+			break;
+		case 152:
+			statusStr = "Принимаем c переборкой.";
+			break;
+		case 154:
+			statusStr = "Принимаем с процентом брака.";
+			break;
+		case 156:
+			statusStr = "Принимаем под реализацию";
+			break;
+		case 140:
+			statusStr = "Не принимаем";
+			break;
+		default:
+			statusStr = "Ошибка чтения статуса";
+			break;
+		}
+		
+		StringBuilder message = new StringBuilder();
+		message.append("Поставщик: " + foodCard.getAcceptanceFoodQuality().getAcceptance().getFirmNameAccept() + ";  авто: " 
+				+ foodCard.getAcceptanceFoodQuality().getAcceptance().getCarNumber() + "; продукт: "
+				+ foodCard.getProductName() + "; Карточка товара №" + foodCard.getIdAcceptanceQualityFoodCard()
+				+ "\n");
+		message.append("<b>Статус по карточке: " + statusStr);
+		if((status == 150 || status == 152 || status == 156 || status == 140) && comment != null) message.append(" Комментарий: " + comment);
+		if(status == 154 && comment != null) message.append("Информация по процентам: " + percent + "\nКомментарий: " + comment);		
+		if(status == 154) message.append("Информация по процентам: " + percent);		
+		message.append("</b>\n");
+		message.append("Принял решение: " + user.getSurname() +" "+ user.getName() + ". Тел: " + user.getTelephone());
+		
+		
+		if(isRunTelegrammBot) {
+			telegrammBotQuantityYard.sendMessageInBot(message.toString(), null);				
+		}else {
+			telegramBotRoutingTEST.sendMessageInBot(message.toString(), null);	
+		}
+		
+		response.put("status", "200");
+		response.put("object", foodCard);
+		response.put("telegrammMessage", message.toString());
+		return response;
+	}
+	
+	/**
+	 * Главынй метод отправки сообщения телеграмм боту
+	 * <b></b>
+	 * @param request
+	 * @param idCar
+	 * @return
+	 * @throws TelegramApiException
+	 */
+	@GetMapping("/acceptanceQualityBot/{id}")
+	public Map<String, String> getAcceptanceQualityBot(HttpServletRequest request,
+			@PathVariable("id") String idCar) throws TelegramApiException {
+		Map<String, String> responce = new HashMap<String, String>();
+		List<AcceptanceQualityFoodCard> acceptanceQualityFoodCardList =	acceptanceQualityFoodCardService.getFoodCardByIdFoodQuality(Long.parseLong(idCar));
+		
+		List<Long> chatIds = telegramChatQualityService.getChatIdList().stream().map(s-> s.getChatId().longValue()).collect(Collectors.toList()); // список chatId--
+		
+		String finalName = null;
+		String finalCar = null;
+		StringBuilder finalProductCard = new StringBuilder();
+		List<String> tagsAll = new ArrayList<String>();
+		
+		for (AcceptanceQualityFoodCard acceptanceQualityFoodCard : acceptanceQualityFoodCardList) {
+			List<String> tags = new ArrayList<String>();
+			List<String> photoIds = new ArrayList<String>();
+			for (AcceptanceQualityFoodCardImageUrl acceptanceQualityFoodCardImageUrl : acceptanceQualityFoodCard.getAcceptanceQualityFoodCardImageUrls()) {
+				System.out.println(acceptanceQualityFoodCard.getIdAcceptanceQualityFoodCard() +" --> "+acceptanceQualityFoodCardImageUrl);	
+				photoIds.add(acceptanceQualityFoodCardImageUrl.getIdAcceptanceQualityFoodCardImageUrl().toString());	
+			}
+			
+			if(finalName == null) {
+				finalName = acceptanceQualityFoodCard.getAcceptanceFoodQuality().getAcceptance().getFirmNameAccept();
+				finalCar = acceptanceQualityFoodCard.getAcceptanceFoodQuality().getAcceptance().getCarNumber();
+				finalProductCard.append("Поставщик: " + finalName + ";  авто: " 
+					+ finalCar + "; \n");				
+			}
+			
+			
+			StringBuilder message = new StringBuilder();
+			message.append("Поставщик: " + finalName + ";  авто: " 
+					+ finalCar + "; продукт: "
+					+ acceptanceQualityFoodCard.getProductName() + "; Карточка товара №" + acceptanceQualityFoodCard.getIdAcceptanceQualityFoodCard()
+					+ "\n");
+//			if(acceptanceQualityFoodCard.getTasteQuality() != null) message.append("Вкусовые качества: " + acceptanceQualityFoodCard.getTasteQuality().trim() + "\n");
+			if(acceptanceQualityFoodCard.getCardInfo() != null) message.append("Примечания: " + acceptanceQualityFoodCard.getCardInfo().trim() + "\n");
+//			if(acceptanceQualityFoodCard.getCaliber() != null) message.append("Калибр: " + acceptanceQualityFoodCard.getCaliber().trim() + "\n");
+//			if(acceptanceQualityFoodCard.getMaturityLevel() != null) message.append("Уровень зрелости: " + acceptanceQualityFoodCard.getMaturityLevel().trim() + "\n");
+//			if(acceptanceQualityFoodCard.getAppearanceDefects() != null) message.append("Внешние дефекты: " + acceptanceQualityFoodCard.getAppearanceDefects().trim() + "\n");
+			
+			tags.add(acceptanceQualityFoodCard.getAcceptanceFoodQuality().getAcceptance().getFirmNameAccept());
+			if(!tagsAll.contains(acceptanceQualityFoodCard.getAcceptanceFoodQuality().getAcceptance().getFirmNameAccept())) {				
+				tagsAll.add(acceptanceQualityFoodCard.getAcceptanceFoodQuality().getAcceptance().getFirmNameAccept());
+			}
+			tags.add(acceptanceQualityFoodCard.getProductName());
+			if(!tagsAll.contains(acceptanceQualityFoodCard.getProductName())) {				
+				tagsAll.add(acceptanceQualityFoodCard.getProductName());
+			}	
+			
+			tags.add(finalCar);
+			if(!tagsAll.contains(finalCar)) {
+				tagsAll.add(finalCar);
+			}
+			
+			boolean isImport = Optional.ofNullable(acceptanceQualityFoodCard.getAcceptanceFoodQuality().getAcceptance().getIsImport()).orElse(false);
+            boolean withPC = acceptanceQualityFoodCard.getUnit() != null && !"шт".equalsIgnoreCase(acceptanceQualityFoodCard.getUnit());
+            double sampleSize = Optional.ofNullable(acceptanceQualityFoodCard.getSampleSize()).orElse(0.0);
+
+            finalProductCard.append("<b>Карточка товара №" + acceptanceQualityFoodCard.getIdAcceptanceQualityFoodCard() +
+            		" -> " + acceptanceQualityFoodCard.getProductName() + ":</b>\n");            
+            // Обработка трёх типов дефектов
+            processDefectGroup("Внутренние дефекты", acceptanceQualityFoodCard.getInternalDefectsQualityCardList(), isImport, withPC, sampleSize, message, finalProductCard, false);
+            processDefectGroup("Некондиция", acceptanceQualityFoodCard.getLightDefectsQualityCardList(), isImport, withPC, sampleSize, message, finalProductCard, false);
+            processDefectGroup("Брак / гниль", acceptanceQualityFoodCard.getTotalDefectQualityCardList(), isImport, withPC, sampleSize, message, finalProductCard, true);
+            finalProductCard.append("\n");
+			if(isRunTelegrammBot) {
+				telegrammBotQuantityYard.sendMessageWithPhotos(chatIds, message.toString(), photoIds, tags);				
+			}else {
+				telegramBotRoutingTEST.sendMessageWithPhotos(chatIds, message.toString(), photoIds, tags);		
+			}
+		}
+		
+		if(isRunTelegrammBot) {
+			telegrammBotQuantityYard.sendMessageInBot(finalProductCard.toString(), tagsAll);				
+		}else {
+			telegramBotRoutingTEST.sendMessageInBot(finalProductCard.toString(), tagsAll);	
+		}
+		responce.put("status", "200");		
+		responce.put("message", "ообщение отправлено в телеграмм бот");	
+
+		return responce;
 	}
 
 

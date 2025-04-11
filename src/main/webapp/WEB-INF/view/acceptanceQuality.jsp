@@ -14,6 +14,8 @@
 	<link rel="icon" href="${pageContext.request.contextPath}/resources/img/favicon.ico">
 	<script async src="${pageContext.request.contextPath}/resources/js/getInitData.js" type="module"></script>
 	<script src="${pageContext.request.contextPath}/resources/js/AG-Grid/ag-grid-enterprise.min.js"></script>
+	<script src="${pageContext.request.contextPath}/resources/js/jszip/jszip.min.js"></script>
+	<script src="${pageContext.request.contextPath}/resources/js/FileSaver/FileSaver.min.js"></script>
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/js/photoSwipe/photoswipe.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/js/photoSwipe/photoswipe-custom-caption.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/js/photoSwipe/photoswipe-thumbnails.css">
@@ -74,12 +76,12 @@
 		</div>
 	</div>
 
-	<!-- Модальное окно -->
-	<div class="modal fade" id="qualityCardModal" tabindex="-1" role="dialog" aria-labelledby="qualityCardModalLabel" aria-hidden="true">
+	<!-- Модальное окно отображения карточки качества товара-->
+	<div class="modal fade" id="qualityCardInfoModal" tabindex="-1" role="dialog" aria-labelledby="qualityCardInfoModalLabel" aria-hidden="true">
 		<div class="modal-dialog modal-xl" role="document">
 			<div class="modal-content p-0">
-				<div class="modal-header bg-primary text-white">
-					<h5 class="modal-title" id="qualityCardModalLabel">Карта качества продукции</h5>
+				<div class="modal-header bg-color text-white">
+					<h5 class="modal-title" id="qualityCardInfoModalLabel">Карта качества продукции</h5>
 					<button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
 						<span aria-hidden="true">&times;</span>
 					</button>
@@ -90,21 +92,21 @@
 						<div class="card-body">
 							<p><strong>Наименование продукта:</strong> <span id="productName"></span></p>
 							<div class="row">
-								<div class="col-md-4">
+								<div class="col-lg-4">
 									<p><strong>Дата:</strong> <span id="dateCard"></span></p>
 									<p><strong>Поставщик:</strong> <span id="firmNameAccept"></span></p>
 								</div>
-								<div class="col-md-4">
+								<div class="col-lg-4">
 									<p><strong>Номер документа:</strong> <span id="ttn"></span></p>
 									<p><strong>Номер машины:</strong> <span id="carNumber"></span></p>
 								</div>
-								<div class="col-md-4">
+								<div class="col-lg-4">
 									<p><strong>Масса поставки:</strong> <span id="cargoWeightCard"></span> кг</p>
-									<p><strong>Выборка:</strong> <span id="sampleSize"></span> кг</p>
+									<p><strong>Выборка:</strong> <span id="sampleSize"></span> <span class="sampleSizeUnit"></span></p>
 								</div>
 							</div>
 							<div class="row">
-								<div class="col-md-12 d-flex justify-content-center" id="showImagesBtnContainer"></div>
+								<div class="col-lg-12 d-flex justify-content-center" id="showImagesBtnContainer"></div>
 							</div>
 						</div>
 					</div>
@@ -116,7 +118,7 @@
 								<table class="table table-sm mb-0">
 									<thead>
 										<tr>
-											<th class="text-muted font-weight-bold">Вес</th>
+											<th class="text-muted font-weight-bold text-nowrap">Кол-во</th>
 											<th class="text-muted font-weight-bold">Процент</th>
 											<th class="text-muted font-weight-bold">Описание</th>
 										</tr>
@@ -125,11 +127,11 @@
 								</table>
 							</div>
 							<div class="row">
-								<div class="col-md-6">
-									<p class="font-weight-bold">Общий вес внутренних дефектов: <span id="totalInternalDefectWeight"></span> кг</p>
+								<div class="col-lg-6">
+									<p class="font-weight-bold">Всего: <span id="totalInternalDefectWeight"></span> <span class="sampleSizeUnit"></span></p>
 								</div>
-								<div class="col-md-6">
-									<p class="font-weight-bold">Общий процент внутренних дефектов: <span id="totalInternalDefectPercentage"></span>%</p>
+								<div class="col-lg-6">
+									<p class="font-weight-bold">Общий процент: <span id="totalInternalDefectPercentage"></span>%</p>
 								</div>
 							</div>
 						</div>
@@ -142,7 +144,7 @@
 								<table class="table table-sm mb-0">
 									<thead>
 										<tr>
-											<th class="text-muted font-weight-bold">Вес</th>
+											<th class="text-muted font-weight-bold text-nowrap">Кол-во</th>
 											<th class="text-muted font-weight-bold">Процент</th>
 											<th class="text-muted font-weight-bold">Процент с ПК</th>
 											<th class="text-muted font-weight-bold">Описание</th>
@@ -152,14 +154,14 @@
 								</table>
 							</div>
 							<div class="row">
-								<div class="col-md-4">
-									<p class="font-weight-bold">Общий вес дефектов: <span id="totalDefectWeight"></span> кг</p>
+								<div class="col-lg-2">
+									<p class="font-weight-bold">Всего: <span id="totalDefectWeight"></span> <span class="sampleSizeUnit"></span></p>
 								</div>
-								<div class="col-md-4">
-									<p class="font-weight-bold">Общий процент дефектов: <span id="totalDefectPercentage"></span>%</p>
+								<div class="col-lg-5">
+									<p class="font-weight-bold">Общий процент: <span id="totalDefectPercentage"></span>%</p>
 								</div>
-								<div class="col-md-4">
-									<p class="font-weight-bold">Общий процент дефектов с ПК: <span id="totalDefectPercentageWithPC"></span>%</p>
+								<div class="col-lg-5">
+									<p class="font-weight-bold">Общий процент с ПК: <span id="totalDefectPercentageWithPC"></span>%</p>
 								</div>
 							</div>
 						</div>
@@ -172,7 +174,7 @@
 								<table class="table table-sm mb-0">
 									<thead>
 										<tr>
-											<th class="text-muted font-weight-bold">Вес</th>
+											<th class="text-muted font-weight-bold text-nowrap">Кол-во</th>
 											<th class="text-muted font-weight-bold">Процент</th>
 											<th class="text-muted font-weight-bold">Описание</th>
 										</tr>
@@ -181,11 +183,11 @@
 								</table>
 							</div>
 							<div class="row">
-								<div class="col-md-6">
-									<p class="font-weight-bold">Общий вес легкой некондиции: <span id="totalLightDefectWeight"></span> кг</p>
+								<div class="col-lg-6">
+									<p class="font-weight-bold">Всего: <span id="totalLightDefectWeight"></span> <span class="sampleSizeUnit"></span></p>
 								</div>
-								<div class="col-md-6">
-									<p class="font-weight-bold">Общий процент легкой некондиции: <span id="totalLightDefectPercentage"></span>%</p>
+								<div class="col-lg-6">
+									<p class="font-weight-bold">Общий процент: <span id="totalLightDefectPercentage"></span>%</p>
 								</div>
 							</div>
 						</div>
@@ -195,47 +197,167 @@
 						<div class="card-header bg-light">Дополнительная информация</div>
 						<div class="card-body">
 							<div class="row">
-								<div class="col-md-4">
+								<div class="col-lg-4">
 									<p><strong>Класс:</strong> <span id="classType"></span></p>
 									<p><strong>Количество брендов:</strong> <span id="numberOfBrands"></span></p>
 									<p><strong>Качество упаковки:</strong> <span id="qualityOfProductPackaging"></span></p>
 									<p><strong>Термограмма:</strong> <span id="thermogram"></span></p>
-									<p><strong>Температура в кузове:</strong> <span id="bodyTemp"></span>°C</p>
+									<!-- <p><strong>Температура в кузове:</strong> <span id="bodyTemp"></span>°C</p> -->
 									<p><strong>Температура внутри плода:</strong> <span id="fruitTemp"></span>°C</p>
 								</div>
-								<div class="col-md-8">
-									<p><strong>Оценка внешнего вида:</strong> <span id="appearanceEvaluation"></span></p>
-									<p><strong>Дефекты внешнего вида:</strong> <span id="appearanceDefects"></span></p>
+								<div class="col-lg-8">
+									<!-- <p><strong>Оценка внешнего вида:</strong> <span id="appearanceEvaluation"></span></p> -->
+									<!-- <p><strong>Дефекты внешнего вида:</strong> <span id="appearanceDefects"></span></p> -->
 									<p><strong>Степень зрелости:</strong> <span id="maturityLevel"></span></p>
 									<p><strong>Вкусовые качества:</strong> <span id="tasteQuality"></span></p>
 									<p><strong>Калибр:</strong> <span id="caliber"></span></p>
-									<p><strong>Стикер: описание несоответствия:</strong> <span id="stickerDescription"></span></p>
+									<!-- <p><strong>Стикер: описание несоответствия:</strong> <span id="stickerDescription"></span></p> -->
 								</div>
 							</div>
 							<div class="row mt-2">
-								<div class="col-md-12">
+								<div class="col-lg-12">
 									<p><strong>Примечание:</strong> <span id="cardInfo"></span></p>
 								</div>
 							</div>
 						</div>
 					</div>
 
+					<div class="card mb-3 border-primary">
+						<div class="card-header bg-primary text-white">Подтверждение товара</div>
+
+						<h3 id="cardStatusText" class="p-3 d-none mb-0"></h3>
+
+						<form class="" id="approveCardForm2">
+							<div class="card-body">
+								<input type="hidden" name="idAcceptanceFoodQuality">
+								<input type="hidden" name="idAcceptanceQualityFoodCard">
+		
+								<div class="row">
+									<div class="col-lg-6">
+										<div class="form-group">
+											<label class="text-muted font-weight-bold mb-1" for="status2">Действие</label>
+											<select name="status" id="status2" class="form-control" required>
+												<option value="" selected hidden disabled>Выберите действие</option>
+												<option value="150">Принимаем</option>
+												<option value="152">Принимаем с переборкой</option>
+												<option value="154">Принимаем с процентом брака от коммерции</option>
+												<option value="156">Принимаем под реализацию</option>
+												<option value="140">Не принимаем</option>
+											</select>
+										</div>
+									</div>
+		
+									<div class="col-lg-4 managerPercentInput2 d-none">
+										<div class="form-group">
+											<label class="text-muted font-weight-bold mb-1" for="managerPercent_type2">Дефект</label>
+											<select name="managerPercent_type" id="managerPercent_type2" class="form-control">
+												<option value="" selected hidden disabled>Выберите дефект</option>
+												<option value="ВД">Внутренний дефект</option>
+												<option value="Брак">Брак</option>
+												<option value="ЛН">Легкая некондиция</option>
+											</select>
+										</div>
+									</div>
+		
+									<div class="col-lg-2 managerPercentInput2 d-none">
+										<div class="form-group">
+											<label class="text-muted font-weight-bold mb-1" for="managerPercent_value2">Процент</label>
+											<div class="input-group">
+												<input type="number" name="managerPercent_value" id="managerPercent_value2" min="0" max="100" class="form-control" aria-label="Процент брака">
+												<div class="input-group-append">
+													<span class="input-group-text">%</span>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+		
+								<div class="form-group">
+									<label class="text-muted font-weight-bold mb-1" for="commen2">Комментарий</label>
+									<textarea class="form-control" name="comment" id="comment2" rows="3"></textarea>
+								</div>
+			
+							</div>
+							<div class="card-footer d-flex justify-content-center">
+								<button type="submit" class="btn btn-success">Подтвердить действие</button>
+							</div>
+						</form>
+					</div>
+				</div>
+
 				<div class="modal-footer">
-					<form class="form-inline" id="cardActionForm">
-						<input type="hidden" name="idAcceptanceQualityFoodCard">
-						<div class="form-group mr-2">
-							<label for="cardAction" class="sr-only">Действие</label>
-							<select name="cardAction" class="form-control" required>
-								<option value="" selected hidden disabled>Выберите действие</option>
-								<option value="confirm">Принять товар</option>
-								<option value="rework">Отправить на переборку</option>
-								<option value="unconfirm">Не принимать товар</option>
-							</select>
-						</div>
-						<button type="submit" class="btn btn-primary">Подтвердить действие</button>
-					</form>
 					<button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
 				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Модальное окно указания статуса карточки товара -->
+	<div class="modal fade" id="approveCardModal" tabindex="-1" role="dialog" aria-labelledby="approveCardModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-xl" role="document">
+			<div class="modal-content p-0">
+				<div class="modal-header bg-color text-white">
+					<h5 class="modal-title" id="approveCardModalLabel">Подтверждение качества</h5>
+					<button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<form class="" id="approveCardForm">
+					<div class="modal-body">
+						<input type="hidden" name="idAcceptanceFoodQuality">
+						<input type="hidden" name="idAcceptanceQualityFoodCard">
+
+						<div class="row">
+							<div class="col-lg-6">
+								<div class="form-group">
+									<label class="text-muted font-weight-bold mb-1" for="status">Действие</label>
+									<select name="status" id="status" class="form-control" required>
+										<option value="" selected hidden disabled>Выберите действие</option>
+										<option value="150">Принимаем</option>
+										<option value="152">Принимаем с переборкой</option>
+										<option value="154">Принимаем с процентом брака от коммерции</option>
+										<option value="156">Принимаем под реализацию</option>
+										<option value="140">Не принимаем</option>
+									</select>
+								</div>
+							</div>
+
+							<div class="col-lg-4 managerPercentInput d-none">
+								<div class="form-group">
+									<label class="text-muted font-weight-bold mb-1" for="managerPercent_type">Дефект</label>
+									<select name="managerPercent_type" id="managerPercent_type" class="form-control">
+										<option value="" selected hidden disabled>Выберите дефект</option>
+										<option value="ВД">Внутренний дефект</option>
+										<option value="Брак">Брак</option>
+										<option value="ЛН">Легкая некондиция</option>
+									</select>
+								</div>
+							</div>
+
+							<div class="col-lg-2 managerPercentInput d-none">
+								<div class="form-group">
+									<label class="text-muted font-weight-bold mb-1" for="managerPercent_value">Процент</label>
+									<div class="input-group">
+										<input type="number" name="managerPercent_value" id="managerPercent_value" min="0" max="100" step="0.1" class="form-control" aria-label="Процент брака">
+										<div class="input-group-append">
+											<span class="input-group-text">%</span>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="form-group">
+							<label class="text-muted font-weight-bold mb-1" for="comment">Комментарий</label>
+							<textarea class="form-control" name="comment" id="comment" rows="3"></textarea>
+						</div>
+					</div>
+
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-success">Подтвердить действие</button>
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+					</div>
+				</form>
 			</div>
 		</div>
 	</div>

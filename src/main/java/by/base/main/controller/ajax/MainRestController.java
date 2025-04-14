@@ -583,7 +583,8 @@ public class MainRestController {
           String messageText = "Добрый день.\nПросьба подтвердить ротацию кода на увеличение коэффициента. Код товара " + rotation.getGoodIdNew() +
                 ".\nПодтвердить можно <a href=https://boxlogs.net/speedlogist/main/orl/rotations>здесь<a>";
 //        mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, emailsAdmins);
-          mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, emails);
+//          mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, emails);
+          mailService.sendEmailToUsersHTMLContent(request, "Подтверждение ротации", messageText, emails);
 
           if(!rotationNewCodeDuplicates.isEmpty()) {
              for (Rotation rotationNewCodeDuplicate : rotationNewCodeDuplicates) {

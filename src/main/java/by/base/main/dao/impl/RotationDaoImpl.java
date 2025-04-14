@@ -115,7 +115,7 @@ public class RotationDaoImpl implements RotationDao {
     }
 
 //    private static final String queryActualAndWaitingRotations= "from Rotation where startDate <= :currentDate and endDate > :currentDate and (status = 20 or status = 30)";
-    private static final String queryActualAndWaitingRotations= "from Rotation where endDate > :currentDate and (status = 20 or status = 30)";
+    private static final String queryActualAndWaitingRotations= "from Rotation where endDate >= :currentDate and (status = 20 or status = 30)";
 
     @Override
     public List<Rotation> getActualAndWaitingRotations() {

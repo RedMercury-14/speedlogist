@@ -1,6 +1,6 @@
 import { AG_GRID_LOCALE_RU } from './AG-Grid/ag-grid-locale-RU.js'
 import { gridColumnLocalState, gridFilterLocalState, ResetStateToolPanel } from './AG-Grid/ag-grid-utils.js'
-import { approveCreateRotationUrl, getActualRotationsExcelUrl, getRotationListUrl, loadRotationExcelUrl, preCreateRotationUrl, updateRotationUrl } from './globalConstants/urls.js'
+import { approveCreateRotationUrl, downloadRotationFAQUrl, getActualRotationsExcelUrl, getRotationListUrl, loadRotationExcelUrl, preCreateRotationUrl, updateRotationUrl } from './globalConstants/urls.js'
 import { snackbar } from './snackbar/snackbar.js'
 import { dateHelper, debounce, getData, hideLoadingSpinner, isAdmin, isObserver, isRetail, showLoadingSpinner } from './utils.js'
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
@@ -184,6 +184,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 	const downloadExcelBtn = document.getElementById('downloadExcel')
 	downloadExcelBtn.addEventListener('click', downloadExcelHandler)
 
+	// кнопка скачивания файла с инструкцией
+	const downloadFAQBtn = document.querySelector('#downloadFAQ')
+	downloadFAQBtn.addEventListener('click', () => window.open(downloadRotationFAQUrl, '_blank'))
+	// отмена мигания кнопки через 10 сек
+	setTimeout(() => downloadFAQBtn.classList.remove('softGreenBlink'), 10000)
+
 	$('#rotationModal').on('hidden.bs.modal', (e) => {
 		rotationForm.reset()
 	})
@@ -269,7 +275,6 @@ function rotationFormSubmitHandler(e) {
 	})
 }
 
-
 // обработчик отправки формы загрузки таблицы эксель
 function sendExcelFormHandler(e) {
 	e.preventDefault()
@@ -305,6 +310,7 @@ function sendExcelFormHandler(e) {
 	})
 }
 
+// обработчик отправки формы изменения коэффициента переноса продаж
 function updateCoefficientFormHandler(e) {
 	e.preventDefault()
 	const formData = new FormData(e.target)
@@ -439,7 +445,7 @@ function getMappingData(data) {
 }
 function mapCallback(item) {
 	const isValidByPeriod = isValidRotationByPeriod(item)
-	const statusText = getRotationStatusText(item.status, isValidByPeriod)
+	const statusText = getRotationStatusText(item)
 	return {
 		...item,
 		isValidByPeriod,
@@ -523,6 +529,48 @@ function deleteRotation(rowNode) {
 	updateRotation(payload, rowNode)
 }
 
+// определение, что ротация сейчас действует
+function isValidRotationByPeriod(rotation) {
+	const startDate = rotation.startDate
+	const endDate = rotation.endDate
+	if (!startDate || !endDate) return false
+	if (
+		NOW_DATE_MS >= startDate
+		&& NOW_DATE_MS < endDate
+	) return true
+	return false
+}
+
+// статус действующей ротации
+function getValidRotationStatusText(rotation) {
+	const startDate = rotation.startDate
+	const endDate = rotation.endDate
+	if (!startDate || !endDate) return 'Не действует'
+	if (NOW_DATE_MS < startDate) return 'Период действия ещё не наступил'
+	if (NOW_DATE_MS > endDate) return 'Период действия окончен'
+	if (
+		NOW_DATE_MS >= startDate
+		&& NOW_DATE_MS < endDate
+	) return 'Действует'
+	return 'Не действует'
+}
+
+// статус ротации
+function getRotationStatusText(rotation) {
+	const status = rotation.status
+
+	switch (status) {
+		case 10:
+			return 'Отменена'
+		case 20:
+			return 'Ожидает подтверждения'
+		case 30:
+			return getValidRotationStatusText(rotation)
+		default:
+			return `Неизвестный статус (${status})`
+	}
+}
+
 
 // конверторы дат для таблицы
 function dateComparator(date1, date2) {
@@ -563,29 +611,4 @@ function showMessageModal(message) {
 	const messageContainer = document.querySelector('#messageContainer')
 	messageContainer.innerHTML = message
 	$('#displayMessageModal').modal('show')
-}
-
-function isValidRotationByPeriod(rotation) {
-	const startDate = rotation.startDate
-	const endDate = rotation.endDate
-	if (!startDate || !endDate) return false
-	if (
-		NOW_DATE_MS >= startDate
-		&& NOW_DATE_MS < endDate
-	) return true
-	return false
-}
-
-function getRotationStatusText(status, isValidByPeriod) {
-	switch (status) {
-		case 10:
-			return 'Отменена'
-		case 20:
-			return 'Ожидает подтверждения'
-		case 30:
-			return isValidByPeriod
-				? 'Действует' : 'Период действия окончен'
-		default:
-			return `Неизвестный статус (${status})`
-	}
 }

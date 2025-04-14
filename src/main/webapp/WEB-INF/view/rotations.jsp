@@ -37,6 +37,9 @@
 	<div class="container-fluid my-container px-0 position-relative">
 		<div class="title-container">
 			<strong><h3>Ротации</h3></strong>
+			<button type="button" id="downloadFAQ" class="btn tools-btn font-weight-bold text-muted ml-auto py-1 softGreenBlink" title="Инструкция по работе">
+				Помощь
+			</button>
 		</div>
 		<div class="toolbar">
 			<button type="button" class="btn tools-btn font-weight-bold text-muted" data-toggle="modal" data-target="#rotationModal">

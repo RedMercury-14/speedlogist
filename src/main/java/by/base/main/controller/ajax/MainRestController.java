@@ -556,21 +556,21 @@ public class MainRestController {
 		List<Rotation> rotationAnalogCodeDuplicates = rotationService.getActualAnalogCodeDuplicates(goodIdAnalog);
 		Rotation rotationCrossCodeDuplicate = rotationService.getActualCrossCodeDuplicates(goodIdNew, goodIdAnalog);
 
-		if(goodIdNew == goodIdAnalog) {
-			rotation.setStatus(20);
-			String email = rotation.getUser().geteMail();
-			List<String> emails = new ArrayList<>();
-			emails.add(email);
-			StringBuilder sb = new StringBuilder(rotation.getHistory() != null ? rotation.getHistory() : "");
-			sb.append("подтверждена - ").append(getThisUser().getSurname()).append(" ").append(getThisUser().getName()).append("; ");
-			rotation.setHistory(sb.toString());
-			List<String> approveEmails = propertiesUtils.getValuesByPartialKey(servletContext, "email.ort.rotation");
-			emails.addAll(approveEmails);
-			List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
-			String messageText = "Добрый день.\nПросьба подтвердить ротацию кода на увеличение коэффициента. Код товара " + rotation.getGoodIdNew() +
-					".\nПодтвердить можно <a href=https://boxlogs.net/speedlogist/main/orl/rotations>здесь<a>";
-//			mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, emailsAdmins);
-			mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, emails);
+       if(goodIdNew == goodIdAnalog) {
+          rotation.setStatus(20);
+          String email = rotation.getUser().geteMail();
+          List<String> emails = new ArrayList<>();
+          emails.add(email);
+          StringBuilder sb = new StringBuilder(rotation.getHistory() != null ? rotation.getHistory() : "");
+          sb.append("подтверждена - ").append(getThisUser().getSurname()).append(" ").append(getThisUser().getName()).append("; ");
+          rotation.setHistory(sb.toString());
+          List<String> approveEmails = propertiesUtils.getValuesByPartialKey(servletContext, "email.ort.rotation");
+          emails.addAll(approveEmails);
+          List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+          String messageText = "Добрый день.\nПросьба подтвердить ротацию кода на увеличение коэффициента. Код товара " + rotation.getGoodIdNew() +
+                ".\nПодтвердить можно <a href=https://boxlogs.net/speedlogist/main/orl/rotations>здесь<a>";
+//        mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, emailsAdmins);
+          mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, emails);
 
 			if(!rotationNewCodeDuplicates.isEmpty()) {
 				for (Rotation rotationNewCodeDuplicate : rotationNewCodeDuplicates) {
@@ -635,12 +635,12 @@ public class MainRestController {
 		if(goodIdNew == goodIdAnalog) {
 			if(!rotationNewCodeDuplicates.isEmpty()) {
 				response.put("status", "205");
-				response.put("message", "Код товара и код аналог совпадают, а так же ротация с таким кодом товара уже существуют. Если Вы подтвердите создание новой ротации, существующая перестанет действовать, а новая будет отправлена на согласование в ОРТ.");
+				response.put("message", "Код товара и код аналог совпадают, а так же ротация с таким кодом товара уже существует. Если Вы подтвердите создание новой ротации, существующая перестанет действовать, а новая будет отправлена на согласование в ОРТ.");
 				return response;
 			}
 			if (!rotationAnalogCodeDuplicates.isEmpty()) {
 				response.put("status", "205");
-				response.put("message", "Код товара и код аналог совпадают, а так же ротация с таким кодом аналогом уже существуют. Если Вы подтвердите создание новой ротации, существующая перестанет действовать, а новая будет отправлена на согласование в ОРТ.");
+				response.put("message", "Код товара и код аналог совпадают, а так же ротация с таким кодом аналогом уже существует. Если Вы подтвердите создание новой ротации, существующая перестанет действовать, а новая будет отправлена на согласование в ОРТ.");
 				return response;
 
 			}
@@ -650,12 +650,12 @@ public class MainRestController {
 		} else {
 			if(!rotationNewCodeDuplicates.isEmpty()) {
 				response.put("status", "205");
-				response.put("message", "Ротация с таким кодом товара уже существуют. Если Вы подтвердите создание новой ротации, существующая перестанет действовать.");
+				response.put("message", "Ротация с таким кодом товара уже существует. Если Вы подтвердите создание новой ротации, существующая перестанет действовать.");
 				return response;
 			}
 			if (!rotationAnalogCodeDuplicates.isEmpty()) {
 				response.put("status", "205");
-				response.put("message", "Ротация с таким кодом аналогом уже существуют. Если Вы подтвердите создание новой ротации, существующая перестанет действовать.");
+				response.put("message", "Ротация с таким кодом аналогом уже существует. Если Вы подтвердите создание новой ротации, существующая перестанет действовать.");
 				return response;
 			}
 			if (rotationCrossCodeDuplicate != null) {

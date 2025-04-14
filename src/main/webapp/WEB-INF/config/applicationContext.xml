@@ -30,7 +30,7 @@
 	    <property name="driverClassName" value="com.mysql.cj.jdbc.Driver" />
 	    <property name="jdbcUrl" value="jdbc:mysql://localhost:3306/logistdb?useSSL=false&amp;serverTimezone=Europe/Moscow&amp;characterEncoding=utf8" />
 	    <property name="username" value="root" />
-	    <property name="password" value="Nis-1993Nis-1993" />
+	    <property name="password" value="5001020" />
 	    
 <!-- 	    <property name="jdbcUrl" value="jdbc:mysql://93.125.114.112:3311/logistdbNew7?serverTimezone=Europe/Moscow" /> -->
 <!-- 	    <property name="username" value="hdf" /> -->
@@ -119,11 +119,11 @@
 		<property name="maxUploadSize" value="80000000" />
 	</bean>
 	
-	<!-- Включаем планирование задач -->
-<!-- 	<task:annotation-driven/> -->
-	
-	<!-- Определяем ваши задачи -->
-<!--     <bean id="ScheduledTask" class="by.base.main.service.util.ScheduledTask"/> -->
+<!--&lt;!&ndash;	 Включаем планирование задач &ndash;&gt;-->
+ 	<task:annotation-driven/>
+<!--	-->
+<!--&lt;!&ndash;	 Определяем ваши задачи &ndash;&gt;-->
+     <bean id="ScheduledTask" class="by.base.main.service.util.ScheduledTask"/>
 	
 	
     <tx:annotation-driven transaction-manager="myTransactionManager" />

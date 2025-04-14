@@ -50,3 +50,10 @@
   top: auto !important; 
   left: 0 !important;
 }
+
+@media (max-width: 768px) {
+  .pswp__dynamic-caption--mobile {
+    top: 55px !important;
+    bottom: auto;
+  }
+}

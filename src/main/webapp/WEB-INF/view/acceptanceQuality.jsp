@@ -14,6 +14,8 @@
 	<link rel="icon" href="${pageContext.request.contextPath}/resources/img/favicon.ico">
 	<script async src="${pageContext.request.contextPath}/resources/js/getInitData.js" type="module"></script>
 	<script src="${pageContext.request.contextPath}/resources/js/AG-Grid/ag-grid-enterprise.min.js"></script>
+	<script src="${pageContext.request.contextPath}/resources/js/jszip/jszip.min.js"></script>
+	<script src="${pageContext.request.contextPath}/resources/js/FileSaver/FileSaver.min.js"></script>
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/js/photoSwipe/photoswipe.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/js/photoSwipe/photoswipe-custom-caption.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/js/photoSwipe/photoswipe-thumbnails.css">
@@ -200,16 +202,16 @@
 									<p><strong>Количество брендов:</strong> <span id="numberOfBrands"></span></p>
 									<p><strong>Качество упаковки:</strong> <span id="qualityOfProductPackaging"></span></p>
 									<p><strong>Термограмма:</strong> <span id="thermogram"></span></p>
-									<p><strong>Температура в кузове:</strong> <span id="bodyTemp"></span>°C</p>
+									<!-- <p><strong>Температура в кузове:</strong> <span id="bodyTemp"></span>°C</p> -->
 									<p><strong>Температура внутри плода:</strong> <span id="fruitTemp"></span>°C</p>
 								</div>
 								<div class="col-lg-8">
-									<p><strong>Оценка внешнего вида:</strong> <span id="appearanceEvaluation"></span></p>
-									<p><strong>Дефекты внешнего вида:</strong> <span id="appearanceDefects"></span></p>
+									<!-- <p><strong>Оценка внешнего вида:</strong> <span id="appearanceEvaluation"></span></p> -->
+									<!-- <p><strong>Дефекты внешнего вида:</strong> <span id="appearanceDefects"></span></p> -->
 									<p><strong>Степень зрелости:</strong> <span id="maturityLevel"></span></p>
 									<p><strong>Вкусовые качества:</strong> <span id="tasteQuality"></span></p>
 									<p><strong>Калибр:</strong> <span id="caliber"></span></p>
-									<p><strong>Стикер: описание несоответствия:</strong> <span id="stickerDescription"></span></p>
+									<!-- <p><strong>Стикер: описание несоответствия:</strong> <span id="stickerDescription"></span></p> -->
 								</div>
 							</div>
 							<div class="row mt-2">
@@ -336,7 +338,7 @@
 								<div class="form-group">
 									<label class="text-muted font-weight-bold mb-1" for="managerPercent_value">Процент</label>
 									<div class="input-group">
-										<input type="number" name="managerPercent_value" id="managerPercent_value" min="0" max="100" class="form-control" aria-label="Процент брака">
+										<input type="number" name="managerPercent_value" id="managerPercent_value" min="0" max="100" step="0.1" class="form-control" aria-label="Процент брака">
 										<div class="input-group-append">
 											<span class="input-group-text">%</span>
 										</div>

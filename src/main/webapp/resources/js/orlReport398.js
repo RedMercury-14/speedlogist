@@ -5,13 +5,14 @@ import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 import { addTask398Url, downloadReport398Url, getReport398List } from './globalConstants/urls.js'
 import { snackbar } from "./snackbar/snackbar.js"
 import { uiIcons } from './uiIcons.js'
-import { changeGridTableMarginTop, dateHelper, debounce, disableButton, enableButton, getData, hideLoadingSpinner, showLoadingSpinner } from './utils.js'
+import { changeGridTableMarginTop, dateHelper, debounce, disableButton, enableButton, getData, hideLoadingSpinner, isObserver, showLoadingSpinner } from './utils.js'
 
 const PAGE_NAME = 'orlReport398'
 const LOCAL_STORAGE_KEY = `AG_Grid_settings_to_${PAGE_NAME}`
 const DATES_KEY = `searchDates_to_${PAGE_NAME}`
 
 const token = $("meta[name='_csrf']").attr("content")
+const role = document.querySelector('#role').value
 
 const debouncedSaveColumnState = debounce(saveColumnState, 300)
 const debouncedSaveFilterState = debounce(saveFilterState, 300)
@@ -225,6 +226,11 @@ function addTableRow(gridOptions, rowData) {
 // обработчик отправки формы поиска заявок
 async function reportDataFormSubmitHandler(e) {
 	e.preventDefault()
+
+	if (isObserver(role)) {
+		snackbar.show('Недостаточно прав!')
+		return
+	}
 
 	const submitter = e.submitter
 	const submitType = submitter.dataset.submittype

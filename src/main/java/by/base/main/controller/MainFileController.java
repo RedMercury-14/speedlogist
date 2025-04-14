@@ -62,11 +62,13 @@ import by.base.main.dto.OrderBuyGroupDTO;
 import by.base.main.dto.ReportRow;
 import by.base.main.model.Order;
 import by.base.main.model.OrderProduct;
+import by.base.main.model.Rotation;
 import by.base.main.model.Route;
 import by.base.main.model.Truck;
 import by.base.main.service.MarketAPI;
 import by.base.main.service.OrderProductService;
 import by.base.main.service.OrderService;
+import by.base.main.service.RotationService;
 import by.base.main.service.RouteService;
 import by.base.main.service.ServiceException;
 import by.base.main.service.TruckService;
@@ -105,6 +107,9 @@ public class MainFileController {
 	private MarketAPI marketAPI;
 	
 	@Autowired
+	private RotationService rotationService;
+	
+	@Autowired
 	private OrderCreater orderCreater;
 	private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(Date.class, new JsonSerializer<Date>() {
@@ -114,6 +119,83 @@ public class MainFileController {
 				}
             })
             .create();
+	
+	/**
+	 * Скачивание таблицы с актуальными ротациями
+	 * @author Ira
+	 */
+	@RequestMapping("/rotations/get-actual-rotations-excel")
+	@TimedExecution
+	public void getActualRotationsExcel(HttpServletRequest request, HttpServletResponse response) throws IOException, ParseException {
+	    String appPath = request.getRealPath("/");
+
+	    String filepath = appPath + "resources/others/actual-rotations.xlsx";
+
+	    List<Rotation> rotations = rotationService.getActualRotations();
+	    try {
+	        poiExcel.generateActualRotationsExcel(rotations, filepath);
+	    } catch (IOException e) {
+	        // TODO Auto-generated catch block
+	        e.printStackTrace();
+	    }
+
+	    response.setHeader("content-disposition", "attachment;filename="+"actual-rotations.xlsx");
+	    response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+
+	    response.setHeader("content-disposition", "attachment;filename="+"actual-rotations.xlsx");
+	    response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+	    try (FileInputStream in = new FileInputStream(filepath); OutputStream out = response.getOutputStream()) {
+	        // Прочтите файл, который нужно загрузить, и сохраните его во входном потоке файла
+	        //  Создать выходной поток
+	        //  Создать буфер
+	        byte buffer[] = new byte[1024];
+	        int len = 0;
+	        //  Прочитать содержимое входного потока в буфер в цикле
+	        while ((len = in.read(buffer)) > 0) {
+	            out.write(buffer, 0, len);
+	        }
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	}
+	
+	/**
+	 * Метод отвечает за скачивание документа инструкции для ротаций
+	 * @param request
+	 * @param response
+	 * @return
+	 * @throws IOException
+	 * @author Ira
+	 */
+	@RequestMapping("/rotations/download/instruction-rotations")
+	public void downloadRotationsHelp(HttpServletRequest request, HttpServletResponse response) throws IOException {
+	    String appPath = request.getServletContext().getRealPath("");
+	    //File file = new File(appPath + "resources/others/Speedlogist.apk");
+	    response.setHeader("content-disposition", "attachment;filename="+"instruction-rotations.docx");
+	    response.setContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+	    FileInputStream in = null;
+	    OutputStream out = null;
+	    try {
+	        // Прочтите файл, который нужно загрузить, и сохраните его во входном потоке файла
+	        in = new FileInputStream(appPath + "resources/others/docs/instruction-rotations.docx");
+	        //  Создать выходной поток
+	        out = response.getOutputStream();
+	        //  Создать буфер
+	        byte buffer[] = new byte[1024];
+	        int len = 0;
+	        //  Прочитать содержимое входного потока в буфер в цикле
+	        while ((len = in.read(buffer)) > 0) {
+	            out.write(buffer, 0, len);
+	        }
+	        in.close();
+	        out.close();
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }finally {
+	        in.close();
+	        out.close();
+	    }
+	}
 	
     @RequestMapping(value="/echo", method=RequestMethod.GET)
     public @ResponseBody String handleFileUpload(HttpServletRequest request) throws IOException{

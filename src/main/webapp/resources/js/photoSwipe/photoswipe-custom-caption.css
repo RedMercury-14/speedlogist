@@ -16,6 +16,11 @@
 	/* text-shadow: 0px 0px 5px #000000; */
 	transform: translateX(-50%);
 }
+@media (max-width: 768px) {
+	.pswp__custom-caption {
+		top: 34px;
+	}
+}
 .pswp__custom-caption a {
 	color: #fff;
 	text-decoration: underline;

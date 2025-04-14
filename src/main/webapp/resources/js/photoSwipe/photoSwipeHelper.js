@@ -10,15 +10,24 @@ export const buttons = {
 				inner:'</use><path d="M20.5 14.3 17.1 18V10h-2.2v7.9l-3.4-3.6L10 16l6 6.1 6-6.1ZM23 23H9v2h14Z" id="pswp__icn-download"></path>',
 				outlineID: 'pswp__icn-download'
 			},
-			onClick: () => {
+			onClick: async () => {
 				const currentSlide = lightbox.pswp.currSlide
 				if (currentSlide) {
-					const imgSrc = currentSlide.data.src
-					const a = document.createElement('a')
-					a.href = imgSrc
-					a.target = '_blank'
-					a.download = imgSrc.split('/').pop()
-					a.click()
+					try {
+						const imgSrc = currentSlide.data.src
+						const image = await fetch(imgSrc)
+						const imageBlog = await image.blob()
+						const imageURL = URL.createObjectURL(imageBlog)
+						const a = document.createElement('a')
+						a.href = imageURL
+						a.download = imageURL.split('/').pop()
+						document.body.appendChild(a)
+						a.click()
+						document.body.removeChild(a)
+					} catch (error) {
+						console.error('Ошибка при скачивании изображения')
+						console.error(error)
+					}
 				}
 			}
 		})

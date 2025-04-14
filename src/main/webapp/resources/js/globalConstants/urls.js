@@ -451,5 +451,17 @@ export const aproofQualityFoodCardUrl = '/speedlogist/tsd/aproofQualityFoodCard'
 ///////////////////////////////////////////////
 export const loadRotationExcelUrl = '/speedlogist/api/rotations/load'
 export const getRotationListUrl = '/speedlogist/api/rotations/get-rotations'
-export const preCreateRotationUrl = '/speedlogist/api/rotations/preCreation'
+export const preCreateRotationUrl = '/speedlogist/api/rotations/pre-creation'
 export const approveCreateRotationUrl = '/speedlogist/api/rotations/create'
+export const sendEmailRotationsUrl = '/speedlogist/api/rotations/send-email-rotations'
+export const updateRotationUrl = '/speedlogist/api/rotations/update-rotation'
+export const getActualRotationsExcelUrl = '/speedlogist/file/rotations/get-actual-rotations-excel'
+export const downloadRotationFAQUrl = '/speedlogist/file/rotations/download/instruction-rotations'
+
+
+///////////////////////////////////////////////
+// Протокол согласования цены (713)
+///////////////////////////////////////////////
+export const getPriceProtocolListUrl = '/speedlogist/api/procurement/price-protocol/getList'
+export const createPriceProtocolUrl = '/speedlogist/api/procurement/price-protocol/create'
+export const createArrayOfPriceProtocolUrl = '/speedlogist/api/procurement/price-protocol/createArray'

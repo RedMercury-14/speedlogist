@@ -16,7 +16,7 @@ import {
 } from "./slots/calendarUtils.js"
 import {
 	blurActiveElem, cookieHelper, debounce, isAdmin, isLogist, isObserver,
-	isOrderSupport, isProcurement, isSlotsObserver, isStockProcurement
+	isOrderSupport, isProcurement, isQualityManagerAndProcurement, isSlotsObserver, isStockProcurement
 } from "./utils.js"
 import { uiIcons } from "./uiIcons.js"
 import { wsSlotUrl } from "./global.js"
@@ -458,7 +458,7 @@ function stockSelectOnChangeHandler(e, calendar) {
 	updatePallChart(pallLineChart, pallChartData)
 
 	// подключаем кнопку "Добавить заказ" для закупок
-	if (isProcurement(role) || isOrderSupport(role)) {
+	if (isProcurement(role) || isOrderSupport(role) || isQualityManagerAndProcurement(role)) {
 		const addNewOrderButton = document.querySelector("#addNewOrder")
 		addNewOrderButton.removeAttribute("disabled")
 	}

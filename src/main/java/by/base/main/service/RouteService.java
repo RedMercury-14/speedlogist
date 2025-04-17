@@ -164,4 +164,6 @@ public interface RouteService {
 	 * @author Ira
 	 */
 	Map<String, List<Message>> routesWithMessages(List<String> routesId);
+
+    List<Route> getInternationalRoutesByDates(Date dateStart, Date dateFinish);
 }

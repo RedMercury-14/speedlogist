@@ -304,4 +304,10 @@ public class RouteServiceImpl implements RouteService{
 	public Map<String, List<Message>> routesWithMessages(List<String> routesId) {
 		return routeDAO.routesWithMessages(routesId);
 	}
+
+	@Transactional
+	@Override
+	public List<Route> getInternationalRoutesByDates(Date dateStart, Date dateFinish) {
+		return routeDAO.getInternationalRoutesByDates(dateStart, dateFinish);
+	}
 }

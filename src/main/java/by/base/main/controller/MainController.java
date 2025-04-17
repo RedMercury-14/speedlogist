@@ -446,7 +446,17 @@ public class MainController {
 		request.setAttribute("stock", stock);	
 		return "reviewsForm";
 	}
-	
+
+	@GetMapping("/main/carrier-application-form")
+	public String getCarrierApplicationForm(Model model, HttpServletRequest request) {
+		return "carrierApplicationForm";
+	}
+
+	@GetMapping("/main/tender-preview")
+	public String getTenderPreview(Model model, HttpServletRequest request) {
+		return "tenderPreview";
+	}
+
 	@GetMapping("/main/orl/rotations")
 	public String getRotations(Model model, HttpServletRequest request) {
 	    return "rotations";

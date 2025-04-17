@@ -503,8 +503,7 @@ public class RouteDAOImpl implements RouteDAO {
 			+ "d.patronymic)";
 		
 	private static final String queryGetRouteListAsDateDTO = routeConstruct + " from Route r LEFT JOIN r.orders ord LEFT JOIN ord.addresses addr LEFT JOIN r.user u LEFT JOIN r.truck tr LEFT JOIN r.roteHasShop rhs LEFT JOIN r.driver d where r.dateLoadPreviously BETWEEN :frmdate and :todate ";
-	
-	
+
 	@Override
 	public List<RouteDTO> getRouteListAsDateDTO(Date dateStart, Date dateFinish) {
 		Session currentSession = sessionFactory.getCurrentSession();
@@ -681,4 +680,22 @@ public class RouteDAOImpl implements RouteDAO {
         }
 		return result;
 	}
+
+	private static final String queryGetInternationalRoutesByDates = "SELECT distinct r from Route r " +
+			"LEFT JOIN FETCH r.orders ord " +
+			"LEFT JOIN FETCH ord.addresses addr " +
+			"LEFT JOIN FETCH r.truck tr " +
+			"LEFT JOIN FETCH r.roteHasShop rhs " +
+			"where r.way ='Импорт' and r.dateLoadActually BETWEEN :frmdate and :todate";
+	@Override
+	public List<Route> getInternationalRoutesByDates(Date dateStart, Date dateFinish) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Route> theObject = currentSession.createQuery(queryGetInternationalRoutesByDates, Route.class);
+		theObject.setParameter("frmdate", dateStart, TemporalType.DATE);
+		theObject.setParameter("todate", dateFinish, TemporalType.DATE);
+
+		List<Route> routes = theObject.list();
+		return routes;
+	}
+
 }

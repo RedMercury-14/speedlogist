@@ -69,8 +69,8 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
-import org.springframework.security.access.annotation.Secured;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -140,7 +140,6 @@ import by.base.main.service.TGUserService;
 import by.base.main.service.TaskService;
 import by.base.main.service.TruckService;
 import by.base.main.service.UserService;
-import by.base.main.service.impl.MarketException;
 import by.base.main.service.impl.MarketExceptionBuilder;
 import by.base.main.service.util.CheckOrderNeeds;
 import by.base.main.service.util.CustomJSONParser;
@@ -374,27 +373,171 @@ public class MainRestController {
 	    return Date.valueOf(obj.toString()); // формат: "yyyy-MM-dd"
 	}
 
+
+	@MessageMapping("/chat")
+	@SendTo("/topic/messages")
+	public TenderMessageDto handleMessage(TenderMessageDto message) {
+		return message;
+	}
+
 	/**
-     * Загрузка информации о ротациях из excel в БД
-     * @author Ira
-     */
-    @RequestMapping(value = "/rotations/load", method = RequestMethod.POST, consumes = {
-          MediaType.MULTIPART_FORM_DATA_VALUE })
-    public Map<String, String> postLoadExcelRotations (HttpServletRequest request, @RequestParam(value = "excel", required = false) MultipartFile excel)
-            throws InvalidFormatException, IOException, ServiceException, java.text.ParseException {
+	 * <br>Метод для создания объекта обратной связи</br>.
+	 * @param request
+	 * @param str
+	 * @throws IOException
+	 * @throws ParseException
+	 * @author Ira
+	 */
+	@PostMapping("/carrier-application/create")
+	@TimedExecution
+	public Map<String, Object> createCarrierApplication(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+		Map<String, Object> response = new HashMap<>();
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		//Long idAct = jsonMainObject.get("idAct") != null ? Long.valueOf(jsonMainObject.get("idAct").toString()) : null;
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+		String dateTime = LocalDateTime.now().format(formatter);
+		String market = jsonMainObject.get("market") == null ? null : jsonMainObject.get("market").toString();
+		String ownership = jsonMainObject.get("ownership") == null ? null : jsonMainObject.get("ownership").toString();
+		String organization = jsonMainObject.get("organization") == null ? null : jsonMainObject.get("organization").toString();
+		int vehicleCount = jsonMainObject.get("vehicleCount") == null ? null : Integer.parseInt(jsonMainObject.get("vehicleCount").toString());
+		JSONArray capacitiesJsonArray = (JSONArray) jsonMainObject.get("capacity");
+		StringBuilder capacitiesBuilder = new StringBuilder();
+		for (Object obj : capacitiesJsonArray) {
+			capacitiesBuilder.append((String) obj).append(",");
+		}
+		String capacitiesString = capacitiesBuilder.toString();
+		JSONArray palletsJsonArray = (JSONArray) jsonMainObject.get("pallets");
+		StringBuilder palletsBuilder = new StringBuilder();
+		for (Object obj : palletsJsonArray) {
+			palletsBuilder.append((String) obj).append(",");
+		}
+		String palletsString = palletsBuilder.toString();
+		JSONArray bodyTypesJsonArray = (JSONArray) jsonMainObject.get("bodyType");
+		StringBuilder bodyTypesBuilder = new StringBuilder();
+		for (Object obj : bodyTypesJsonArray) {
+			bodyTypesBuilder.append((String) obj).append(",");
+		}
+		String bodyTypesString = bodyTypesBuilder.toString();
+		String tailLift = jsonMainObject.get("tail") == null ? null : jsonMainObject.get("tail").toString();
+		String navigation = jsonMainObject.get("navigation") == null ? null : jsonMainObject.get("navigation").toString();
+		String city = jsonMainObject.get("city") == null ? null : jsonMainObject.get("city").toString();
+		String phone = jsonMainObject.get("phone") == null ? null : jsonMainObject.get("phone").toString();
+		String email = jsonMainObject.get("email").equals("") ? null : jsonMainObject.get("email").toString();
+		String htmlContent = "Добрый день.\nПолучена новая заявка от грузоперевозчика.\n\n" +
+				"<table border=\"1\" cellpadding=\"5\" cellspacing=\"0\">\n" +
+				"  <tr>\n" +
+				"    <td>Дата оформления заявки</td>\n" +
+				"    <td>" + dateTime + "</td>\n" +
+				"  </tr>\n" +
+				"  <tr>\n" +
+				"    <td>Рынок грузоперевозок</td>\n" +
+				"    <td>" + market + "</td>\n" +
+				"  </tr>\n" +
+				"  <tr>\n" +
+				"    <td>Форма собственности</td>\n" +
+				"    <td>" + ownership + "</td>\n" +
+				"  </tr>\n" +
+				"  <tr>\n" +
+				"    <td>Название организации</td>\n" +
+				"    <td>" + organization + "</td>\n" +
+				"  </tr>\n" +
+				"  <tr>\n" +
+				"    <td>Кол-во предлагаемых авто</td>\n" +
+				"    <td>" + vehicleCount + "</td>\n" +
+				"  </tr>\n" +
+				"  <tr>\n" +
+				"    <td>Грузоподъемность</td>\n" +
+				"    <td>" + capacitiesString.substring(0, capacitiesString.length() - 1) + " (тонны) </td>\n" +
+				"  </tr>\n" +
+				"  <tr>\n" +
+				"    <td>Паллетовместимость</td>\n" +
+				"    <td>" + palletsString.substring(0, palletsString.length() - 1) + " (паллеты) </td>\n" +
+				"  </tr>\n" +
+				"  <tr>\n" +
+				"    <td>Тип кузова</td>\n" +
+				"    <td>" + bodyTypesString.substring(0, bodyTypesString.length() - 1) + "</td>\n" +
+				"  </tr>\n" +
+				"  <tr>\n" +
+				"    <td>Наличие гидроборта</td>\n" +
+				"    <td>" + tailLift + "</td>\n" +
+				"  </tr>\n" +
+				"  <tr>\n" +
+				"    <td>Наличие навигации</td>\n" +
+				"    <td>" + navigation + "</td>\n" +
+				"  </tr>\n" +
+				"  <tr>\n" +
+				"    <td>Город в котором расположен Ваш транспорт</td>\n" +
+				"    <td>" + city + "</td>\n" +
+				"  </tr>\n" +
+				"  <tr>\n" +
+				"    <td>Телефон для связи</td>\n" +
+				"    <td>" + phone + "</td>\n" +
+				"  </tr>\n" +
+				"  <tr>\n" +
+				"    <td>Адрес эл. почты</td>\n" +
+				"    <td>" + email + "</td>\n" +
+				"  </tr>\n" +
+				"</table>";
+		List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+		mailService.sendEmailToUsersHTMLContent(request, "Заявка от перевозчика", htmlContent, emailsAdmins);
 
-       Map<String, String> response = new HashMap<String, String>();
+		response.put("status", "200");
+		response.put("message", "Ваша заявка принята, спасибо.");
+		return response;
+	}
 
-       File file1 = poiExcel.getFileByMultipartTarget(excel, request, "rotations.xlsx");
-       List <Rotation> rotations = poiExcel.loadRotationExcel(file1);
-       for(Rotation rotation: rotations) {
-          rotationService.saveRotation(rotation);
-       }
+	@GetMapping("/get-tender-preview/{dateStart}&{dateEnd}")
+	@TimedExecution
+	public Map<String, Object> getTenderPreview(@PathVariable String dateStart, @PathVariable String dateEnd){
+		Map<String, Object> response = new HashMap<>();
+		Date dateFrom = Date.valueOf(dateStart);
+		Date dateTo = Date.valueOf(dateEnd);
+		List<Route> routes = routeService.getInternationalRoutesByDates(dateFrom, dateTo);
+		List<TenderPreviewDto> tenderPreviewDtos = new ArrayList<>();
+		for(Route route : routes) {
+			TenderPreviewDto tenderPreviewDto = new TenderPreviewDto();
+			tenderPreviewDto.setTenderId(route.getIdRoute());
+			tenderPreviewDto.setTruckType(route.getTypeTrailer());
+			tenderPreviewDto.setLoadType(route.getTypeLoad());
+			tenderPreviewDto.setDateLoadActual(route.getDateLoadActually());
+			tenderPreviewDto.setWeight(route.getTotalCargoWeight());
+			tenderPreviewDto.setPallets(route.getTotalLoadPall());
+			tenderPreviewDto.setLoadMethod(route.getMethodLoad());
+			tenderPreviewDto.setTemperature(route.getTemperature());
+			tenderPreviewDto.setCargo("ТНП");
+			String str = route.getRouteDirection();
+			String[] parts = str.split(">");
+			tenderPreviewDto.setRouteDirection(parts[1]);
+			tenderPreviewDtos.add(tenderPreviewDto);
+		}
+		tenderPreviewDtos.sort(Comparator.comparing(TenderPreviewDto::getTenderId));
+		response.put("tenderPreviewDtos", tenderPreviewDtos);
+		return response;
+	}
 
-       response.put("status", "200");
-       response.put("message", "Готово");
-       return response;
-    }
+	/**
+	 * Загрузка информации о ротациях из excel в БД
+	 *
+	 * @author Ira
+	 */
+	@RequestMapping(value = "/rotations/load", method = RequestMethod.POST, consumes = {
+			MediaType.MULTIPART_FORM_DATA_VALUE})
+	public Map<String, String> postLoadExcelRotations(HttpServletRequest request, @RequestParam(value = "excel", required = false) MultipartFile excel)
+			throws InvalidFormatException, IOException, ServiceException, java.text.ParseException {
+
+		Map<String, String> response = new HashMap<String, String>();
+
+		File file1 = poiExcel.getFileByMultipartTarget(excel, request, "rotations.xlsx");
+		List<Rotation> rotations = poiExcel.loadRotationExcel(file1);
+		for (Rotation rotation : rotations) {
+			rotationService.saveRotation(rotation);
+		}
+
+		response.put("status", "200");
+		response.put("message", "Готово");
+		return response;
+	}
 
 	/**
 	 * Обновление ротации (при удалении, подтверждении, изменении коэффициента)
@@ -432,8 +575,8 @@ public class MainRestController {
 					List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
 					String messageText = "Добрый день.\nВ ротации товара " + rotation.getGoodIdNew() + " изменён коэффициент: " + coefficient +
 							"пользователем " + getThisUser().getName() + " " + getThisUser().getSurname() + ".";
-//					mailService.sendEmailToUsers(appPath, "Изменение коэффициента ротации", messageText, emailsAdmins);
-					mailService.sendEmailToUsers(appPath, "Изменение коэффициента ротации", messageText, emails);
+					mailService.sendEmailToUsers(appPath, "Изменение коэффициента ротации", messageText, emailsAdmins);
+//					mailService.sendEmailToUsers(appPath, "Изменение коэффициента ротации", messageText, emails);
 				} catch (NullPointerException e) {
 					e.printStackTrace();
 				}
@@ -442,7 +585,7 @@ public class MainRestController {
 				rotation.setApproveDate(jsonMainObject.get("approveDate") != null ? Date.valueOf(jsonMainObject.get("approveDate").toString()) : null);
 				long goodIdNew = Long.parseLong(jsonMainObject.get("goodIdNew").toString());
 				long goodIdAnalog = Long.parseLong(jsonMainObject.get("goodIdAnalog").toString());
-				List<Rotation> rotationsNewDuplicates = rotationService.getActualNewCodeDuplicates(goodIdNew).stream().filter(r -> r.getStatus() == 30).toList();
+				List<Rotation> rotationsNewDuplicates = rotationService.getActualNewCodeDuplicates(goodIdNew).stream().filter(r -> r.getStatus() == 30).collect(Collectors.toList());
 				if (!rotationsNewDuplicates.isEmpty()) {
 					Rotation duplicateGoodIdNew = rotationsNewDuplicates.get(0);
 					duplicateGoodIdNew.setStatus(10);
@@ -465,8 +608,8 @@ public class MainRestController {
 					emails.addAll(approveEmails);
 					List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
 					String messageText = "Добрый день.\nРотация товара " + rotation.getGoodIdNew() + " подтверждена с коэффициентом " + coefficient + ".";
-//					mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, emailsAdmins);
-					mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, emails);
+					mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, emailsAdmins);
+//					mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, emails);
 
 				} catch (NullPointerException e) {
 					e.printStackTrace();
@@ -522,6 +665,7 @@ public class MainRestController {
 
 	/**
 	 * Создание новой ротации
+	 *
 	 * @author Ira
 	 */
 	@PostMapping("/rotations/create")
@@ -551,28 +695,28 @@ public class MainRestController {
 		rotation.setRotationInitiator(user.getSurname() + " " + user.getName() + " " + user.getPatronymic());
 		rotation.setStatus(30);
 		rotation.setUser(user);
-
+		StringBuilder sb = new StringBuilder(rotation.getHistory() != null ? rotation.getHistory() : "");
+		sb.append("создана - ").append(getThisUser().getSurname()).append(" ").append(getThisUser().getName()).append("; ");
+		rotation.setHistory(sb.toString());
 		List<Rotation> rotationNewCodeDuplicates = rotationService.getActualNewCodeDuplicates(goodIdNew);
 		List<Rotation> rotationAnalogCodeDuplicates = rotationService.getActualAnalogCodeDuplicates(goodIdAnalog);
 		Rotation rotationCrossCodeDuplicate = rotationService.getActualCrossCodeDuplicates(goodIdNew, goodIdAnalog);
 
-       if(goodIdNew == goodIdAnalog) {
-          rotation.setStatus(20);
-          String email = rotation.getUser().geteMail();
-          List<String> emails = new ArrayList<>();
-          emails.add(email);
-          StringBuilder sb = new StringBuilder(rotation.getHistory() != null ? rotation.getHistory() : "");
-          sb.append("подтверждена - ").append(getThisUser().getSurname()).append(" ").append(getThisUser().getName()).append("; ");
-          rotation.setHistory(sb.toString());
-          List<String> approveEmails = propertiesUtils.getValuesByPartialKey(servletContext, "email.ort.rotation");
-          emails.addAll(approveEmails);
-          List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
-          String messageText = "Добрый день.\nПросьба подтвердить ротацию кода на увеличение коэффициента. Код товара " + rotation.getGoodIdNew() +
-                ".\nПодтвердить можно <a href=https://boxlogs.net/speedlogist/main/orl/rotations>здесь<a>";
-//        mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, emailsAdmins);
-          mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, emails);
+		if (goodIdNew == goodIdAnalog) {
+			rotation.setStatus(20);
+			String email = rotation.getUser().geteMail();
+			List<String> emails = new ArrayList<>();
+			emails.add(email);
 
-			if(!rotationNewCodeDuplicates.isEmpty()) {
+			List<String> approveEmails = propertiesUtils.getValuesByPartialKey(servletContext, "email.ort.rotation");
+			emails.addAll(approveEmails);
+			List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+			String messageText = "Добрый день.\nПросьба подтвердить ротацию кода на увеличение коэффициента. Код товара " + rotation.getGoodIdNew() +
+					".\nПодтвердить можно <a href=https://boxlogs.net/speedlogist/main/orl/rotations>здесь<a>";
+			mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, emailsAdmins);
+//          mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, emails);
+
+			if (!rotationNewCodeDuplicates.isEmpty()) {
 				for (Rotation rotationNewCodeDuplicate : rotationNewCodeDuplicates) {
 					rotationNewCodeDuplicate.setStatus(10);
 					rotationService.updateRotation(rotationNewCodeDuplicate);
@@ -590,7 +734,7 @@ public class MainRestController {
 			}
 		} else {
 			rotation.setStatus(30);
-			if(!rotationNewCodeDuplicates.isEmpty()) {
+			if (!rotationNewCodeDuplicates.isEmpty()) {
 				for (Rotation rotationNewCodeDuplicate : rotationNewCodeDuplicates) {
 					rotationNewCodeDuplicate.setStatus(10);
 					rotationService.updateRotation(rotationNewCodeDuplicate);
@@ -9948,7 +10092,6 @@ public class MainRestController {
 				mailService.sendEmailToUsers(request, "Новая заявка", text, emails);
 				return response;
 		}
-	
 	/**
 	 * Метод сохраняет заявку заявки создание заявки ИМПОРТ И РБ
 	 * после этого метода ожидаются слоты
@@ -9960,6 +10103,207 @@ public class MainRestController {
 	 * @throws ServletException
 	 * @throws ParseException
 	 */
+	@RequestMapping(value = "/manager/addNewProcurementHasMarketNew", method = RequestMethod.POST)
+	public Map<String, String> addNewProcurement2New(@RequestBody String str, HttpServletRequest request)
+			throws IOException, ServletException, ParseException {
+		//загружаем почтовые ящики из файлов .properties
+		String appPath = request.getServletContext().getRealPath("");
+		FileInputStream fileInputStream = new FileInputStream(appPath + "resources/properties/email.properties");
+		properties = new Properties();
+		properties.load(fileInputStream);
+
+		HashMap<String, String> response = new HashMap<String, String>();
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		String points = jsonMainObject.get("points").toString();
+		String way = (String) jsonMainObject.get("way");
+		String needUnloadPoint =  jsonMainObject.get("needUnloadPoint") == null ? null : (String) jsonMainObject.get("needUnloadPoint");
+		Integer count = Integer.parseInt((String) jsonMainObject.get("orderCount"));
+
+		Order order = orderService.getOrderById(Integer.parseInt(jsonMainObject.get("idOrder").toString()));
+		if(order == null) {
+			response.put("status", "100");
+			response.put("message", "Отсутствует заявка с id = " + jsonMainObject.get("idOrder").toString());
+			return response;
+		}
+		order.setCounterparty((String) jsonMainObject.get("contertparty"));
+		order.setCargo((String) jsonMainObject.get("cargo"));
+		order.setContact((String) jsonMainObject.get("contact"));
+		order.setTypeLoad((String) jsonMainObject.get("typeLoad"));
+		order.setMethodLoad((String) jsonMainObject.get("methodLoad"));
+		order.setTypeTruck((String) jsonMainObject.get("typeTruck"));
+		order.setTemperature((String) jsonMainObject.get("temperature"));
+//		order.setMarketInfo(jsonMainObject.get("marketInfo") != null ? jsonMainObject.get("marketInfo").toString() : null);
+		order.setControl((boolean) jsonMainObject.get("control").toString().equals("true") ? true : false);
+		order.setComment((String) jsonMainObject.get("comment"));
+		order.setDateCreate(Date.valueOf(LocalDate.now()));
+		if(jsonMainObject.get("dateDelivery") != null) {
+			if(jsonMainObject.get("dateDelivery").toString().contains("-")) { // значит 10-10-2024
+				order.setDateDelivery(Date.valueOf((String) jsonMainObject.get("dateDelivery")));
+			}else {// значит миллисекунды
+				order.setDateDelivery(new Date(Long.parseLong(jsonMainObject.get("dateDelivery").toString())));
+			}
+		}else {
+			order.setDateDelivery(null);
+		}
+		User thisUser = getThisUser();
+		order.setMarketNumber((String) jsonMainObject.get("marketNumber"));
+		order.setManager(thisUser.getSurname() + " " + thisUser.getName() + " " + thisUser.getPatronymic() + "; " + thisUser.geteMail());
+		order.setTelephoneManager(thisUser.getTelephone());
+		order.setWay(way);
+		order.setLoadNumber(jsonMainObject.get("loadNumber") != null ? jsonMainObject.get("loadNumber").toString() : null);
+		order.setStacking(jsonMainObject.get("stacking").toString().equals("true") ? true : false);
+		order.setIncoterms(jsonMainObject.get("incoterms") == null ? null : jsonMainObject.get("incoterms").toString());
+		order.setIsInternalMovement(jsonMainObject.get("isInternalMovement") == null ? null : jsonMainObject.get("isInternalMovement").toString());
+		if(jsonMainObject.get("numStockDelivery") != null) {
+			order.setNumStockDelivery(jsonMainObject.get("numStockDelivery").toString()); // зачем?
+		}
+
+		if(jsonMainObject.get("status") != null) {
+			order.setStatus(Integer.parseInt(jsonMainObject.get("status").toString()));
+		}else {
+			response.put("status", "100");
+			response.put("message", "Отсутствует статус в заявке");
+			return response;
+		}
+		order.setChangeStatus("Создал: " + thisUser.getSurname() + " " + thisUser.getName() + " " + thisUser.getPatronymic() + " " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")));
+
+		//костыль для фруктов
+		boolean flag = true;
+		System.err.println(order.getManager());
+		if(order.getManager().split(";")[1].trim().equals("ShelestovA@dobronom.by")
+				|| order.getManager().split(";")[1].trim().equals("MarkevichK@dobronom.by")
+				|| order.getManager().split(";")[1].trim().equals("SickoO@dobronom.by")
+				|| order.getManager().split(";")[1].trim().equals("PozdnyakovR@dobronom.by")
+				|| order.getManager().split(";")[1].trim().equals("KuzmickayaE@dobronom.by")
+				|| order.getManager().split(";")[1].trim().equals("VegeroK@dobronom.by")
+				|| order.getManager().split(";")[1].trim().equals("KashickiyD@dobronom.by")
+				|| order.getManager().split(";")[1].trim().equals("ProrovskayaM@dobronom.by")
+				|| order.getManager().split(";")[1].trim().equals("YakzhikE@dobronom.by") // нет такого?
+				|| order.getManager().split(";")[1].trim().equals("TishalovichA@dobronom.by")){
+			flag = false;
+		}
+
+		if(needUnloadPoint != null) {
+			if(needUnloadPoint.equals("true")) {
+				order.setNeedUnloadPoint("true");
+				order.setStatus(15); // статус башкирова
+			}else {
+				//			order.setStatus(20);
+				if(!flag) {
+					order.setStatus(20);
+					System.out.println("Фрукты!");
+				}else {
+					System.out.println("Ожидаем слоты");
+				}
+			}
+		}
+
+		LocalDateTime dateTimeNow = LocalDateTime.now();
+		LocalDate dateNow = LocalDate.now();
+
+		String firstJsonRequest = points.substring(1, points.length() - 1);
+		Set<Address> addresses = new HashSet<Address>();
+		List<JSONObject> arrayJSON = new ArrayList<>();
+		String[] mass = firstJsonRequest.split("},");
+		List <Address> addressesLoad = new ArrayList<Address>(); // лист с отдельными адресами загрузок
+		for (String string : mass) {
+			if (string.charAt(string.length() - 1) != '}') {
+				string = string + "}";
+			}
+			JSONObject jsonpObject = (JSONObject) parser.parse(string);
+			Address address = new Address((String) jsonpObject.get("bodyAdress"),
+					jsonpObject.get("date").toString().isEmpty() ? null
+							: Date.valueOf((String) jsonpObject.get("date")),
+					(String) jsonpObject.get("type"),
+					jsonpObject.get("pall").toString().isEmpty() ? null : (String) jsonpObject.get("pall"),
+					jsonpObject.get("weight").toString().isEmpty() ? null : (String) jsonpObject.get("weight"),
+					jsonpObject.get("volume").toString().isEmpty() ? null : (String) jsonpObject.get("volume"),
+					jsonpObject.get("timeFrame").toString().isEmpty() ? null : (String) jsonpObject.get("timeFrame"),
+					jsonpObject.get("contact").toString().isEmpty() ? null : (String) jsonpObject.get("contact"),
+					jsonpObject.get("cargo").toString().isEmpty() ? null : (String) jsonpObject.get("cargo"));
+			address.setCustomsAddress(jsonpObject.get("customsAddress").toString().isEmpty() ? null
+					: (String) jsonpObject.get("customsAddress"));
+			address.setTnvd(jsonpObject.get("tnvd") != null ? jsonpObject.get("tnvd").toString() : null);
+			address.setPointNumber(jsonpObject.get("pointNumber") != null ? Integer.parseInt(jsonpObject.get("pointNumber").toString()) : null);
+
+			//новое
+//			address.setCountry(jsonpObject.get("country") != null ? jsonpObject.get("country").toString() : null);
+//			address.setRegion(jsonpObject.get("region") != null ? jsonpObject.get("region").toString() : null);
+//			address.setCity(jsonpObject.get("city") != null ? jsonpObject.get("city").toString() : null);
+//			address.setStreet(jsonpObject.get("street") != null ? jsonpObject.get("street").toString() : null);
+//			address.setBuilding(jsonpObject.get("building") != null ? jsonpObject.get("building").toString() : null);
+//			address.setBuilding(jsonpObject.get("buildingBody") != null ? jsonpObject.get("buildingBody").toString() : null);
+			//конец нового
+
+			if (!jsonpObject.get("time").toString().isEmpty()) {
+				address.setTime(Time.valueOf(
+						LocalTime.of(Integer.parseInt((String) jsonpObject.get("time").toString().split(":")[0]),
+								Integer.parseInt((String) jsonpObject.get("time").toString().split(":")[1]))));
+
+//				LocalDate targetDate = address.getDate().toLocalDate();
+
+				// реализация проверки по валидности даты ввода загрузки
+//				if (dateTimeNow.getHour() >= 12) {
+//					if (dateNow.plusDays(1) == targetDate || dateNow.plusDays(1).equals(targetDate)) {
+//						orderService.deleteOrderById(order.getIdOrder());
+//						response.put("status", "150");
+//						DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+//						response.put("message",
+//								"Недопустимая дата загрузки!\nТак как Вы пытаетесь создать заявку после 12:00, допустимая дата подачи машины :"
+//										+ dateNow.plusDays(2).format(formatter));
+//						System.err.println(
+//								"Недопустимая дата загрузки!\nТак как Вы пытаетесь создать заявку после 12:00, допустимая дата подачи машины :"
+//										+ dateNow.plusDays(2).format(formatter));
+//						return response;
+//					}
+//				}
+				// ОКОНЧАНИЕ реализации проверки по валидности даты ввода загрузки
+			} else {
+				address.setTime(null);
+			}
+			address.setIsCorrect(true);
+			address.setOrder(order);
+
+			addressService.saveAddress(address);
+			addresses.add(address);
+			if(address.getType().equals("Загрузка")) {
+				addressesLoad.add(address);
+			}
+		}
+		//тут просчитываем и записываем крайнюю точку загрузки
+		addressesLoad.sort(comparatorAddressForLastLoad);
+		Timestamp dateTimeLastLoad = Timestamp.valueOf(LocalDateTime.of(addressesLoad.get(0).getDate().toLocalDate(), addressesLoad.get(0).getTime().toLocalTime()));
+		order.setLastDatetimePointLoad(dateTimeLastLoad);
+		orderService.updateOrder(order); // не лишнее ли. возмоно отдельным запросом
+
+		response.put("status", "200");
+		response.put("message", "Заявка создана");
+		//отправляем на почту к логистам в отдельных потоках
+		String text = "Создана заявка №" + order.getIdOrder() + " " + order.getCounterparty() + " от менеджера " + order.getManager()+"\nНаправление: " + order.getWay();
+		if(order.getWay().equals("РБ") && !flag && order.getStatus() == 20 ) {
+			//отправляем не в отдельном потоке!
+			String textForSupport = "Создана заявка №" + order.getIdOrder() + " " + order.getCounterparty() + " от менеджера " + order.getManager()+"\nНаправление: " + order.getWay() +
+					"\nНеобходимо назначить слот на выгрузку";
+			mailService.sendSimpleEmailTwiceUsers(request, "Новая заявка", text, properties.getProperty("email.addNewProcurement.rb.1"), properties.getProperty("email.addNewProcurement.rb.2"));
+//			mailService.sendSimpleEmailTwiceUsers(request, "Новая заявка", textForSupport, properties.getProperty("email.orderSupport.1"), properties.getProperty("email.orderSupport.2"));
+		}else if(order.getWay().equals("Импорт") && order.getStatus() == 20 || order.getWay().equals("Экспорт") && order.getStatus() == 20 ){
+			mailService.sendSimpleEmailTwiceUsers(request, "Новая заявка", text, properties.getProperty("email.addNewProcurement.import.1"), properties.getProperty("email.addNewProcurement.import.2"));
+		}
+		return response;
+	}
+	/**
+	 * Метод сохраняет заявку заявки создание заявки ИМПОРТ И РБ
+	 * после этого метода ожидаются слоты
+	 * ожидает статус и idOrder!!
+	 * @param str
+	 * @param request
+	 * @return
+	 * @throws IOException
+	 * @throws ServletException
+	 * @throws ParseException
+	 */
+//	@Deprecated
 	@RequestMapping(value = "/manager/addNewProcurementHasMarket", method = RequestMethod.POST)
 	public Map<String, String> addNewProcurement2(@RequestBody String str, HttpServletRequest request)
 			throws IOException, ServletException, ParseException {
@@ -10140,7 +10484,243 @@ public class MainRestController {
 		}			
 		return response;
 		}
-	
+
+
+	/**
+	 * Метод сохраняет заявку заявки создание заявки ДЛЯ ЭКСПОРТА и заказов без слотов
+	 * @param str
+	 * @return
+	 *
+	 * @throws IOException
+	 * @throws ServletException
+	 * @throws ParseException
+	 */
+	@RequestMapping(value = "/manager/addNewProcurementNew", method = RequestMethod.POST)
+	public Map<String, String> addNewProcurementNew(@RequestBody String str, HttpServletRequest request)
+			throws IOException, ServletException, ParseException {
+		//загружаем почтовые ящики из файлов .properties
+		String appPath = request.getServletContext().getRealPath("");
+		FileInputStream fileInputStream = new FileInputStream(appPath + "resources/properties/email.properties");
+		properties = new Properties();
+		properties.load(fileInputStream);
+
+		HashMap<String, String> response = new HashMap<String, String>();
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		String points = jsonMainObject.get("points").toString();
+		String way = (String) jsonMainObject.get("way");
+		String needUnloadPoint =  jsonMainObject.get("needUnloadPoint") == null ? null : (String) jsonMainObject.get("needUnloadPoint");
+		Integer count = Integer.parseInt((String) jsonMainObject.get("orderCount"));
+
+		Order order = null;
+
+		if(jsonMainObject.get("idOrder") != null) {
+			order = orderService.getOrderById(Integer.parseInt(jsonMainObject.get("idOrder").toString()));
+		}
+
+		if(order == null) {
+			order = new Order((String) jsonMainObject.get("contertparty"), (String) jsonMainObject.get("contact"),
+					(String) jsonMainObject.get("cargo"), (String) jsonMainObject.get("typeLoad"),
+					(String) jsonMainObject.get("methodLoad"), (String) jsonMainObject.get("typeTruck"),
+					(String) jsonMainObject.get("temperature"),
+					(boolean) jsonMainObject.get("control").toString().equals("true") ? true : false,
+					(String) jsonMainObject.get("comment"), 20, Date.valueOf(LocalDate.now()),
+					null); // тут вместо null джолжно было стоять dateDelivery
+		}else {
+			order.setCounterparty((String) jsonMainObject.get("contertparty"));
+			order.setCargo((String) jsonMainObject.get("cargo"));
+			order.setContact((String) jsonMainObject.get("contact"));
+			order.setTypeLoad((String) jsonMainObject.get("typeLoad"));
+			order.setMethodLoad((String) jsonMainObject.get("methodLoad"));
+			order.setTypeTruck((String) jsonMainObject.get("typeTruck"));
+			order.setTemperature((String) jsonMainObject.get("temperature"));
+//			order.setMarketInfo(jsonMainObject.get("marketInfo") != null ? jsonMainObject.get("marketInfo").toString() : null);
+			order.setControl((boolean) jsonMainObject.get("control").toString().equals("true") ? true : false);
+			order.setComment((String) jsonMainObject.get("comment"));
+			order.setDateCreate(Date.valueOf(LocalDate.now()));
+		}
+
+		if(jsonMainObject.get("dateDelivery") != null) {
+			if(jsonMainObject.get("dateDelivery").toString().contains("-")) { // значит 10-10-2024
+				order.setDateDelivery(Date.valueOf((String) jsonMainObject.get("dateDelivery")));
+			}else {// значит миллисекунды
+				order.setDateDelivery(new Date(Long.parseLong(jsonMainObject.get("dateDelivery").toString())));
+			}
+		}else {
+			order.setDateDelivery(null);
+		}
+
+		User thisUser = getThisUser();
+		order.setMarketNumber((String) jsonMainObject.get("marketNumber"));
+		order.setManager(thisUser.getSurname() + " " + thisUser.getName() + " " + thisUser.getPatronymic() + "; " + thisUser.geteMail());
+		order.setTelephoneManager(thisUser.getTelephone());
+		order.setWay(way);
+		order.setLoadNumber(jsonMainObject.get("loadNumber") != null ? jsonMainObject.get("loadNumber").toString() : null);
+		order.setStacking(jsonMainObject.get("stacking").toString().equals("true") ? true : false);
+		order.setIncoterms(jsonMainObject.get("incoterms") == null ? null : jsonMainObject.get("incoterms").toString());
+		order.setIsInternalMovement(jsonMainObject.get("isInternalMovement") == null ? null : jsonMainObject.get("isInternalMovement").toString());
+//		order.setMarketInfo(jsonMainObject.get("marketInfo") != null ? jsonMainObject.get("marketInfo").toString() : null);
+
+		if(order.getIsInternalMovement().equals("true")) {// костыльно ставим время выгрузки для перемещения 1 час
+			order.setTimeUnload(Time.valueOf(LocalTime.of(1, 0)));
+		}
+
+		if(jsonMainObject.get("numStockDelivery") != null) {
+			order.setNumStockDelivery(jsonMainObject.get("numStockDelivery").toString()); // зачем?
+		}
+		if(jsonMainObject.get("status") != null) {
+			order.setStatus(Integer.parseInt(jsonMainObject.get("status").toString()));
+		}else {
+			response.put("status", "100");
+			response.put("message", "Отсутствует статус в заявке");
+			return response;
+		}
+		order.setChangeStatus("Создал: " + thisUser.getSurname() + " " + thisUser.getName() + " " + thisUser.getPatronymic() + " " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")));
+
+		//костыль для фруктов
+		boolean flag = true;
+
+		if(order.getManager().split(";")[1].trim().equals("ShelestovA@dobronom.by")
+				|| order.getManager().split(";")[1].trim().equals("MarkevichK@dobronom.by")
+				|| order.getManager().split(";")[1].trim().equals("SickoO@dobronom.by")
+				|| order.getManager().split(";")[1].trim().equals("PozdnyakovR@dobronom.by")
+				|| order.getManager().split(";")[1].trim().equals("KuzmickayaE@dobronom.by")
+				|| order.getManager().split(";")[1].trim().equals("VegeroK@dobronom.by")
+				|| order.getManager().split(";")[1].trim().equals("KashickiyD@dobronom.by")
+				|| order.getManager().split(";")[1].trim().equals("ProrovskayaM@dobronom.by")
+				|| order.getManager().split(";")[1].trim().equals("YakzhikE@dobronom.by") // нет такого?
+				|| order.getManager().split(";")[1].trim().equals("TishalovichA@dobronom.by")){
+			flag = false;
+		}
+
+		if(needUnloadPoint != null) {
+			if(needUnloadPoint.equals("true")) {
+				order.setNeedUnloadPoint("true");
+				order.setStatus(15); // статус башкирова
+			}else {
+				//			order.setStatus(20);
+				if(!flag) {
+					order.setStatus(20);
+					System.out.println("Фрукты!");
+				}else {
+					System.out.println("Ожидаем слоты");
+				}
+			}
+		}
+
+		LocalDateTime dateTimeNow = LocalDateTime.now();
+		LocalDate dateNow = LocalDate.now();
+
+
+		String firstJsonRequest = points.substring(1, points.length() - 1);
+		Set<Address> addresses = new HashSet<Address>();
+		List<JSONObject> arrayJSON = new ArrayList<>();
+		String[] mass = firstJsonRequest.split("},");
+
+		//вытягиваем паллеты из поинтов
+		String pall = null;
+		for (String string : mass) {
+			if (string.charAt(string.length() - 1) != '}') {
+				string = string + "}";
+			}
+			JSONObject jsonpObject = (JSONObject) parser.parse(string);
+			pall = (String) jsonpObject.get("pall");
+			if(pall != null) {
+				break;
+			}
+
+		}
+		order.setPall(pall);
+		if(order.getIdOrder() == null) {
+			order.setIdOrder(orderService.saveOrder(order));
+		}
+
+		List <Address> addressesLoad = new ArrayList<Address>(); // лист с отдельными адресами загрузок
+		for (String string : mass) {
+			if (string.charAt(string.length() - 1) != '}') {
+				string = string + "}";
+			}
+			JSONObject jsonpObject = (JSONObject) parser.parse(string);
+			Address address = new Address((String) jsonpObject.get("bodyAdress"),
+					jsonpObject.get("date").toString().isEmpty() ? null
+							: Date.valueOf((String) jsonpObject.get("date")),
+					(String) jsonpObject.get("type"),
+					jsonpObject.get("pall").toString().isEmpty() ? null : (String) jsonpObject.get("pall"),
+					jsonpObject.get("weight").toString().isEmpty() ? null : (String) jsonpObject.get("weight"),
+					jsonpObject.get("volume").toString().isEmpty() ? null : (String) jsonpObject.get("volume"),
+					jsonpObject.get("timeFrame").toString().isEmpty() ? null : (String) jsonpObject.get("timeFrame"),
+					jsonpObject.get("contact").toString().isEmpty() ? null : (String) jsonpObject.get("contact"),
+					jsonpObject.get("cargo").toString().isEmpty() ? null : (String) jsonpObject.get("cargo"));
+			address.setCustomsAddress(jsonpObject.get("customsAddress").toString().isEmpty() ? null
+					: (String) jsonpObject.get("customsAddress"));
+			address.setTnvd(jsonpObject.get("tnvd") != null ? jsonpObject.get("tnvd").toString() : null);
+			address.setPointNumber(jsonpObject.get("pointNumber") != null ? Integer.parseInt(jsonpObject.get("pointNumber").toString()) : null);
+
+			//новое
+//			address.setCountry(jsonpObject.get("country") != null ? jsonpObject.get("country").toString() : null);
+//			address.setRegion(jsonpObject.get("region") != null ? jsonpObject.get("region").toString() : null);
+//			address.setCity(jsonpObject.get("city") != null ? jsonpObject.get("city").toString() : null);
+//			address.setStreet(jsonpObject.get("street") != null ? jsonpObject.get("street").toString() : null);
+//			address.setBuilding(jsonpObject.get("building") != null ? jsonpObject.get("building").toString() : null);
+//			address.setBuilding(jsonpObject.get("buildingBody") != null ? jsonpObject.get("buildingBody").toString() : null);
+			//конец нового
+
+			if (!jsonpObject.get("time").toString().isEmpty()) {
+				address.setTime(Time.valueOf(
+						LocalTime.of(Integer.parseInt((String) jsonpObject.get("time").toString().split(":")[0]),
+								Integer.parseInt((String) jsonpObject.get("time").toString().split(":")[1]))));
+
+				LocalDate targetDate = address.getDate().toLocalDate();
+
+				// реализация проверки по валидности даты ввода загрузки
+				if (dateTimeNow.getHour() >= 12) {
+					if (dateNow.plusDays(1) == targetDate || dateNow.plusDays(1).equals(targetDate)) {
+						orderService.deleteOrderById(order.getIdOrder());
+						response.put("status", "150");
+						DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+						response.put("message",
+								"Недопустимая дата загрузки!\nТак как Вы пытаетесь создать заявку после 12:00, допустимая дата подачи машины :"
+										+ dateNow.plusDays(2).format(formatter));
+						System.err.println(
+								"Недопустимая дата загрузки!\nТак как Вы пытаетесь создать заявку после 12:00, допустимая дата подачи машины :"
+										+ dateNow.plusDays(2).format(formatter));
+						return response;
+					}
+				}
+				// ОКОНЧАНИЕ реализации проверки по валидности даты ввода загрузки
+			} else {
+				address.setTime(null);
+			}
+			address.setIsCorrect(true);
+			address.setOrder(order);
+			addressService.saveAddress(address);
+			addresses.add(address);
+			if(address.getType().equals("Загрузка")) {
+				addressesLoad.add(address);
+			}
+
+		}
+		//тут просчитываем и записываем крайнюю точку загрузки
+		addressesLoad.sort(comparatorAddressForLastLoad);
+		Timestamp dateTimeLastLoad = Timestamp.valueOf(LocalDateTime.of(addressesLoad.get(0).getDate().toLocalDate(), addressesLoad.get(0).getTime().toLocalTime()));
+		order.setLastDatetimePointLoad(dateTimeLastLoad);
+		orderService.updateOrder(order); // не лишнее ли. возмоно отдельным запросом
+
+		response.put("status", "200");
+		response.put("message", "Заявка создана");
+		//отправляем на почту к логистам в отдельных потоках
+		String text = "Создана заявка №" + order.getIdOrder() + " " + order.getCounterparty() + " от менеджера " + order.getManager()+"\nНаправление: " + order.getWay();
+		if(order.getWay().equals("РБ") && !flag && order.getStatus() == 20) {
+			//отправляем не в отдельном потоке!
+			String textForSupport = "Создана заявка №" + order.getIdOrder() + " " + order.getCounterparty() + " от менеджера " + order.getManager()+"\nНаправление: " + order.getWay() +
+					"\nНеобходимо назначить слот на выгрузку";
+			mailService.sendSimpleEmailTwiceUsers(request, "Новая заявка", text, properties.getProperty("email.addNewProcurement.rb.1"), properties.getProperty("email.addNewProcurement.rb.2"));
+//			mailService.sendSimpleEmailTwiceUsers(request, "Новая заявка", textForSupport, properties.getProperty("email.orderSupport.1"), properties.getProperty("email.orderSupport.2"));
+		}else if(order.getWay().equals("Импорт") || order.getWay().equals("Экспорт") && order.getStatus() == 20 ){
+			mailService.sendSimpleEmailTwiceUsers(request, "Новая заявка", text, properties.getProperty("email.addNewProcurement.import.1"), properties.getProperty("email.addNewProcurement.import.2"));
+		}
+		return response;
+	}
 	/**
 	 * Метод сохраняет заявку заявки создание заявки ДЛЯ ЭКСПОРТА и заказов без слотов
 	 * @param str
@@ -10150,6 +10730,7 @@ public class MainRestController {
 	 * @throws ServletException
 	 * @throws ParseException
 	 */
+//	@Deprecated
 	@RequestMapping(value = "/manager/addNewProcurement", method = RequestMethod.POST)
 	public Map<String, String> addNewProcurement(@RequestBody String str, HttpServletRequest request)
 			throws IOException, ServletException, ParseException {	

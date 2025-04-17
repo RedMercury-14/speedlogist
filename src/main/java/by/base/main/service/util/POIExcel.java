@@ -213,17 +213,20 @@ public class POIExcel {
                     coefficient = Double.parseDouble(coefficientString);
                 }
                 rotation.setCoefficient(coefficient);
+                String transferOldToNewString = row.getCell(11).getStringCellValue();
                 Boolean transferOldToNew = null;
-                if (countOldCodeRemainsString.equals("Да")) {
+                if (transferOldToNewString.equals("Да")) {
                     transferOldToNew = true;
-                } else if (countOldCodeRemainsString.equals("Нет")) {
+                } else if (transferOldToNewString.equals("Нет")) {
                     transferOldToNew = false;
                 }
+                String distributeNewPositionString = row.getCell(12).getStringCellValue();
+
                 rotation.setTransferOldToNew(transferOldToNew);
                 Boolean distributeNewPosition = null;
-                if (countOldCodeRemainsString.equals("Да")) {
+                if (distributeNewPositionString.equals("Да")) {
                     distributeNewPosition = true;
-                } else if (countOldCodeRemainsString.equals("Нет")) {
+                } else if (distributeNewPositionString.equals("Нет")) {
                     distributeNewPosition = false;
                 }
                 rotation.setDistributeNewPosition(distributeNewPosition);
@@ -388,7 +391,7 @@ public class POIExcel {
                 row.createCell(i);
                 row.getCell(i).setCellStyle(borderStyle);
             }
-            row.getCell(0).setCellValue(rowNum);
+            row.getCell(0).setCellValue(rowNum - 2);
             row.getCell(1).setCellValue(rotation.getGoodIdNew());
             row.getCell(2).setCellValue(rotation.getGoodNameNew());
             row.getCell(3).setCellValue(LocalDate.parse(rotation.getStartDate().toString()).format(localDateFormatter));

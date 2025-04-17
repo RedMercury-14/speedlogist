@@ -465,3 +465,16 @@ export const downloadRotationFAQUrl = '/speedlogist/file/rotations/download/inst
 export const getPriceProtocolListUrl = '/speedlogist/api/procurement/price-protocol/getList'
 export const createPriceProtocolUrl = '/speedlogist/api/procurement/price-protocol/create'
 export const createArrayOfPriceProtocolUrl = '/speedlogist/api/procurement/price-protocol/createArray'
+export const loadPriceProtocolExcelUrl = '/speedlogist/api/procurement/price-protocol/load'
+
+
+///////////////////////////////////////////////
+// Актуальные предложения международных перевозок
+///////////////////////////////////////////////
+export const getTenderPreviewBaseUrl = '/speedlogist/api/get-tender-preview/'
+
+///////////////////////////////////////////////
+// Форма отправки данных о сотрудничестве
+///////////////////////////////////////////////
+export const createCarrierApplicationUrl = '/speedlogist/api/carrier-application/create'
+

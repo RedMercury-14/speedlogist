@@ -388,6 +388,164 @@ public class MainRestController {
 	}
 	
 	/**
+     * Загрузка екселя с протоколом согласования цены (price agreement protocol)
+     */
+    @RequestMapping(value = "/procurement/price-protocol/load", method = RequestMethod.POST, consumes = {
+          MediaType.MULTIPART_FORM_DATA_VALUE })
+    public Map<String, String> postLoadPriceProtocol (HttpServletRequest request, @RequestParam(value = "excel", required = false) MultipartFile excel)
+            throws InvalidFormatException, IOException, ServiceException, java.text.ParseException {
+
+       Map<String, String> response = new HashMap<String, String>();
+
+       File file1 = poiExcel.getFileByMultipartTarget(excel, request, "rotations.xlsx");
+       
+       List <PriceProtocol> rotations = poiExcel.readPriceProtocolsFromExcel(file1, 1);
+       for(PriceProtocol priceProtocol: rotations) {
+          System.out.println(priceProtocol);
+       }
+
+       response.put("status", "200");
+       response.put("message", "Готово");
+       return response;
+    }
+    
+    @GetMapping("/get-tender-preview/{dateStart}&{dateEnd}")
+    @TimedExecution
+    public Map<String, Object> getTenderPreview(@PathVariable String dateStart, @PathVariable String dateEnd){
+        Map<String, Object> response = new HashMap<>();
+        Date dateFrom = Date.valueOf(dateStart);
+        Date dateTo = Date.valueOf(dateEnd);
+        List<Route> routes = routeService.getInternationalRoutesByDates(dateFrom, dateTo);
+        List<TenderPreviewDto> tenderPreviewDtos = new ArrayList<>();
+        for(Route route : routes) {
+           TenderPreviewDto tenderPreviewDto = new TenderPreviewDto();
+           tenderPreviewDto.setTenderId(route.getIdRoute());
+           tenderPreviewDto.setTruckType(route.getTypeTrailer());
+           tenderPreviewDto.setLoadType(route.getTypeLoad());
+           tenderPreviewDto.setDateLoadActual(route.getDateLoadActually());
+           tenderPreviewDto.setWeight(route.getTotalCargoWeight());
+           tenderPreviewDto.setPallets(route.getTotalLoadPall());
+           tenderPreviewDto.setLoadMethod(route.getMethodLoad());
+           tenderPreviewDto.setTemperature(route.getTemperature());
+           tenderPreviewDto.setCargo("ТНП");
+           String str = route.getRouteDirection();
+           String[] parts = str.split(">");
+           tenderPreviewDto.setRouteDirection(parts[1]);
+           tenderPreviewDtos.add(tenderPreviewDto);
+        }
+        tenderPreviewDtos.sort(Comparator.comparing(TenderPreviewDto::getTenderId));
+        response.put("tenderPreviewDtos", tenderPreviewDtos);
+        return response;
+    }
+    
+    /**
+     * <br>Метод для создания объекта обратной связи</br>.
+     * @param request
+     * @param str
+     * @throws IOException
+     * @throws ParseException
+     * @author Ira
+     */
+    @PostMapping("/carrier-application/create")
+    @TimedExecution
+    public Map<String, Object> createCarrierApplication(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+        Map<String, Object> response = new HashMap<>();
+        JSONParser parser = new JSONParser();
+        JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+        //Long idAct = jsonMainObject.get("idAct") != null ? Long.valueOf(jsonMainObject.get("idAct").toString()) : null;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+        String dateTime = LocalDateTime.now().format(formatter);
+        String market = jsonMainObject.get("market") == null ? null : jsonMainObject.get("market").toString();
+        String ownership = jsonMainObject.get("ownership") == null ? null : jsonMainObject.get("ownership").toString();
+        String organization = jsonMainObject.get("organization") == null ? null : jsonMainObject.get("organization").toString();
+        int vehicleCount = jsonMainObject.get("vehicleCount") == null ? null : Integer.parseInt(jsonMainObject.get("vehicleCount").toString());
+        JSONArray capacitiesJsonArray = (JSONArray) jsonMainObject.get("capacity");
+        StringBuilder capacitiesBuilder = new StringBuilder();
+        for (Object obj : capacitiesJsonArray) {
+           capacitiesBuilder.append((String) obj).append(",");
+        }
+        String capacitiesString = capacitiesBuilder.toString();
+        JSONArray palletsJsonArray = (JSONArray) jsonMainObject.get("pallets");
+        StringBuilder palletsBuilder = new StringBuilder();
+        for (Object obj : palletsJsonArray) {
+           palletsBuilder.append((String) obj).append(",");
+        }
+        String palletsString = palletsBuilder.toString();
+        JSONArray bodyTypesJsonArray = (JSONArray) jsonMainObject.get("bodyType");
+        StringBuilder bodyTypesBuilder = new StringBuilder();
+        for (Object obj : bodyTypesJsonArray) {
+           bodyTypesBuilder.append((String) obj).append(",");
+        }
+        String bodyTypesString = bodyTypesBuilder.toString();
+        String tailLift = jsonMainObject.get("tail") == null ? null : jsonMainObject.get("tail").toString();
+        String navigation = jsonMainObject.get("navigation") == null ? null : jsonMainObject.get("navigation").toString();
+        String city = jsonMainObject.get("city") == null ? null : jsonMainObject.get("city").toString();
+        String phone = jsonMainObject.get("phone") == null ? null : jsonMainObject.get("phone").toString();
+        String email = jsonMainObject.get("email").equals("") ? null : jsonMainObject.get("email").toString();
+        String htmlContent = "Добрый день.\nПолучена новая заявка от грузоперевозчика.\n\n" +
+              "<table border=\"1\" cellpadding=\"5\" cellspacing=\"0\">\n" +
+              "  <tr>\n" +
+              "    <td>Дата оформления заявки</td>\n" +
+              "    <td>" + dateTime + "</td>\n" +
+              "  </tr>\n" +
+              "  <tr>\n" +
+              "    <td>Рынок грузоперевозок</td>\n" +
+              "    <td>" + market + "</td>\n" +
+              "  </tr>\n" +
+              "  <tr>\n" +
+              "    <td>Форма собственности</td>\n" +
+              "    <td>" + ownership + "</td>\n" +
+              "  </tr>\n" +
+              "  <tr>\n" +
+              "    <td>Название организации</td>\n" +
+              "    <td>" + organization + "</td>\n" +
+              "  </tr>\n" +
+              "  <tr>\n" +
+              "    <td>Кол-во предлагаемых авто</td>\n" +
+              "    <td>" + vehicleCount + "</td>\n" +
+              "  </tr>\n" +
+              "  <tr>\n" +
+              "    <td>Грузоподъемность</td>\n" +
+              "    <td>" + capacitiesString.substring(0, capacitiesString.length() - 1) + " (тонны) </td>\n" +
+              "  </tr>\n" +
+              "  <tr>\n" +
+              "    <td>Паллетовместимость</td>\n" +
+              "    <td>" + palletsString.substring(0, palletsString.length() - 1) + " (паллеты) </td>\n" +
+              "  </tr>\n" +
+              "  <tr>\n" +
+              "    <td>Тип кузова</td>\n" +
+              "    <td>" + bodyTypesString.substring(0, bodyTypesString.length() - 1) + "</td>\n" +
+              "  </tr>\n" +
+              "  <tr>\n" +
+              "    <td>Наличие гидроборта</td>\n" +
+              "    <td>" + tailLift + "</td>\n" +
+              "  </tr>\n" +
+              "  <tr>\n" +
+              "    <td>Наличие навигации</td>\n" +
+              "    <td>" + navigation + "</td>\n" +
+              "  </tr>\n" +
+              "  <tr>\n" +
+              "    <td>Город в котором расположен Ваш транспорт</td>\n" +
+              "    <td>" + city + "</td>\n" +
+              "  </tr>\n" +
+              "  <tr>\n" +
+              "    <td>Телефон для связи</td>\n" +
+              "    <td>" + phone + "</td>\n" +
+              "  </tr>\n" +
+              "  <tr>\n" +
+              "    <td>Адрес эл. почты</td>\n" +
+              "    <td>" + email + "</td>\n" +
+              "  </tr>\n" +
+              "</table>";
+        List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.carrier.cooperation");
+        mailService.sendEmailToUsersHTMLContent(request, "Заявка от перевозчика", htmlContent, emailsAdmins);
+
+        response.put("status", "200");
+        response.put("message", "Ваша заявка принята, спасибо.");
+        return response;
+    }
+	
+	/**
      * Загрузка информации о ротациях из excel в БД
      * @author Ira
      */
@@ -455,13 +613,13 @@ public class MainRestController {
              rotation.setApproveDate(jsonMainObject.get("approveDate") != null ? Date.valueOf(jsonMainObject.get("approveDate").toString()) : null);
              long goodIdNew = Long.parseLong(jsonMainObject.get("goodIdNew").toString());
              long goodIdAnalog = Long.parseLong(jsonMainObject.get("goodIdAnalog").toString());
-             List<Rotation> rotationsNewDuplicates = rotationService.getActualNewCodeDuplicates(goodIdNew).stream().filter(r -> r.getStatus() == 30).toList();
+             List<Rotation> rotationsNewDuplicates = rotationService.getActualNewCodeDuplicates(goodIdNew).stream().filter(r -> r.getStatus() == 30).collect(Collectors.toList());
              if (!rotationsNewDuplicates.isEmpty()) {
                 Rotation duplicateGoodIdNew = rotationsNewDuplicates.get(0);
                 duplicateGoodIdNew.setStatus(10);
                 rotationService.updateRotation(duplicateGoodIdNew);
              }
-             List<Rotation> rotationsAnalogDuplicates = rotationService.getActualAnalogCodeDuplicates(goodIdAnalog).stream().filter(r -> r.getStatus() == 30).toList();
+             List<Rotation> rotationsAnalogDuplicates = rotationService.getActualAnalogCodeDuplicates(goodIdAnalog).stream().filter(r -> r.getStatus() == 30).collect(Collectors.toList());
              if (!rotationsAnalogDuplicates.isEmpty()) {
                 Rotation duplicateGoodIdAnalog = rotationsAnalogDuplicates.get(0);
                 duplicateGoodIdAnalog.setStatus(10);
@@ -695,6 +853,14 @@ public class MainRestController {
        return response;
     }
 	
+    /**
+     * Создание объекта протокола согласования цены
+     * @param request
+     * @param str
+     * @return
+     * @throws ParseException
+     * @throws IOException
+     */
 	@PostMapping("/procurement/price-protocol/createArray")
 	public Map<String, Object> createPriceProtocolArray(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
 		Map<String, Object> response = new HashMap<>();

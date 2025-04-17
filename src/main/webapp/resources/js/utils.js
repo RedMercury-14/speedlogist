@@ -1039,3 +1039,83 @@ export function detectMultipleTabs(callback) {
 		}
 	}
 }
+
+
+export class SmartWebSocket {
+	constructor(url, options = {}) {
+		this.url = url
+		this.reconnectInterval = options.reconnectInterval || 3000
+		this.maxReconnectAttempts = options.maxReconnectAttempts || 10
+		this.onMessageCallback = options.onMessage || (() => {})
+		this.onCloseCallback = options.onClose || (() => {})
+		this.onErrorCallback = options.onError || (() => {})
+
+		this.socket = null
+		this.reconnectAttempts = 0
+		this.isManuallyClosed = false
+		this.isConnected = false
+		this.messageQueue = []
+
+		this.connect()
+	}
+
+	connect() {
+		if (this.isManuallyClosed) return
+
+		this.socket = new WebSocket(this.url)
+
+		this.socket.addEventListener("open", () => {
+			this.isConnected = true
+			this.reconnectAttempts = 0
+
+			while (this.messageQueue.length > 0) {
+				this.socket.send(this.messageQueue.shift())
+			}
+		})
+
+		this.socket.addEventListener("message", this.onMessageCallback)
+
+		this.socket.addEventListener("close", (event) => {
+			this.isConnected = false
+			if (!this.isManuallyClosed) this.attemptReconnect()
+			else this.onCloseCallback(event)
+		})
+
+		this.socket.addEventListener("error", (error) => {
+			this.onErrorCallback(error)
+			this.socket.close()
+		})
+	}
+
+	attemptReconnect() {
+		if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+			console.error("Переподключение остановлено — превышено число попыток")
+			return
+		}
+
+		this.reconnectAttempts++
+		console.log(
+			`Попытка переподключения #${this.reconnectAttempts} через ${this.reconnectInterval / 1000} сек...`
+		)
+		setTimeout(() => this.connect(), this.reconnectInterval)
+	}
+
+	send(data) {
+		const message = typeof data === "string" ? data : JSON.stringify(data)
+		if (this.isConnected && this.socket.readyState === WebSocket.OPEN) {
+			this.socket.send(message)
+		} else {
+			console.warn("Сокет недоступен, сообщение сохранено в очередь")
+			this.messageQueue.push(message)
+		}
+	}
+
+	close() {
+		this.isManuallyClosed = true
+		this.isConnected = false
+		if (this.socket) {
+			this.socket.close()
+		}
+		console.log("Сокет закрыт вручную")
+	}
+}

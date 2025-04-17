@@ -139,4 +139,6 @@ public interface RouteDAO {
 	 * @return
 	 */
 	List<Route> getActualRoute(Date date);
+	
+	List<Route> getInternationalRoutesByDates(Date dateStart, Date dateFinish);
 }

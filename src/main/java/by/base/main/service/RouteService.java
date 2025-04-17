@@ -147,4 +147,6 @@ public interface RouteService {
 	 * @return
 	 */
 	Set<Route> getRouteListAsDateForInternational(Date dateStart, Date dateFinish);
+	
+	List<Route> getInternationalRoutesByDates(Date dateStart, Date dateFinish);
 }

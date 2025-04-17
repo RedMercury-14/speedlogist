@@ -39,6 +39,7 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
@@ -166,12 +167,130 @@ public class POIExcel {
 	}
 	
 	/**
+	 * Метод чтения ПСЦ файла ексель
+	 * @param file
+	 * @return
+	 * @throws IOException
+	 */
+	public List<PriceProtocol> readPriceProtocolsFromExcel(File file, int startRow) throws IOException {
+        List<PriceProtocol> protocols = new ArrayList<>();
+
+        try (FileInputStream fis = new FileInputStream(file);
+             Workbook workbook = new XSSFWorkbook(fis)) {
+
+            Sheet sheet = workbook.getSheetAt(0); // первая страница
+
+            for (int i = startRow; i <= sheet.getLastRowNum(); i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) continue;
+                if(getStringCell(row, 5) == null) continue;
+
+                PriceProtocol protocol = new PriceProtocol();
+
+                protocol.setSupplier(getStringCell(row, 0));
+                protocol.setDateArrival(getDateCell(row, 3));
+                protocol.setBarcode(getStringCell(row, 4));
+                protocol.setProductCode(getStringCell(row, 5));
+                protocol.setTnvCode(getStringCell(row, 6));
+                protocol.setName(getStringCell(row, 7));
+                protocol.setPriceProducer(getDoubleCell(row, 8));
+                protocol.setCostImporter(getDoubleCell(row, 9));
+                protocol.setMarkupImporterPercent(getDoubleCell(row, 10));
+                protocol.setDiscountPercent(getDoubleCell(row, 11));
+                protocol.setWholesaleDiscountPercent(getDoubleCell(row, 12));
+                protocol.setPriceWithoutVat(getDoubleCell(row, 13));
+                protocol.setWholesaleMarkupPercent(getDoubleCell(row, 14));
+                protocol.setVatRate(getDoubleCell(row, 15));
+                protocol.setPriceWithVat(getDoubleCell(row, 16));
+                protocol.setCountryOrigin(getStringCell(row, 17));
+                protocol.setManufacturer(getStringCell(row, 18));
+                protocol.setUnitPerPack(getStringCell(row, 19));
+                protocol.setShelfLifeDays(getIntegerCell(row, 20));
+                protocol.setCurrentPrice(getDoubleCell(row, 21));
+                protocol.setPriceChangePercent(getDoubleCell(row, 22));
+                protocol.setLastPriceChangeDate(getDateCell(row, 23));
+                
+
+                // ТУТ ДАТЫ!
+                protocol.setDateValidFrom(getDateCell(row, 2));
+
+                protocols.add(protocol);
+            }
+        }
+
+        return protocols;
+    }
+	
+	private String getStringCell(Row row, int col) {
+	    Cell cell = row.getCell(col, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
+	    if (cell == null) return null;
+
+	    switch (cell.getCellType()) {
+	        case STRING:
+	            return cell.getStringCellValue().trim();
+	        case NUMERIC:
+	            double num = cell.getNumericCellValue();
+	            if (num == (long) num) {
+	                return String.valueOf((long) num); // убираем .0
+	            } else {
+	                return String.valueOf(num); // оставляем как есть (если 4548.75 например)
+	            }
+	        case BOOLEAN:
+	            return String.valueOf(cell.getBooleanCellValue());
+	        case FORMULA:
+	            try {
+	                return String.valueOf(cell.getNumericCellValue());
+	            } catch (Exception e) {
+	                return cell.getStringCellValue();
+	            }
+	        default:
+	            return "";
+	    }
+	}
+
+
+    private Double getDoubleCell(Row row, int col) {
+        Cell cell = row.getCell(col, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
+        if (cell == null) return null;
+
+        if (cell.getCellType() == CellType.NUMERIC) {
+            return cell.getNumericCellValue();
+        } else {
+            try {
+                return Double.parseDouble(cell.toString().trim().replace(",", "."));
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        }
+    }
+
+    private Integer getIntegerCell(Row row, int col) {
+        Double d = getDoubleCell(row, col);
+        return d != null ? d.intValue() : null;
+    }
+
+    private Date getDateCell(Row row, int col) {
+        Cell cell = row.getCell(col, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
+        if (cell == null) return null;
+
+        if (cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
+            return new Date(cell.getDateCellValue().getTime());
+        }
+
+        try {
+            java.util.Date utilDate = new SimpleDateFormat("yyyy-MM-dd").parse(cell.toString().trim());
+            return new Date(utilDate.getTime());
+        } catch (Exception e) {
+            return null;
+        }
+    }
+		
+	/**
      * Парсинг excel-таблицы с ротациями для загрузки в БД
      * @author Ira
      */
     public List<Rotation> loadRotationExcel(File file) throws ServiceException, InvalidFormatException, IOException, ParseException {
-
-        XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
+    	XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
         XSSFSheet sheet = wb.getSheetAt(0);
         //по сути
         List<Rotation> rotations = new ArrayList<>();
@@ -244,7 +363,7 @@ public class POIExcel {
 
     public void generateActualRotationsExcel(List<Rotation> actualRotations, String filePath) throws IOException {
 
-        String dateFormat = "dd.MM.yyyy";
+    	String dateFormat = "dd.MM.yyyy";
         DateTimeFormatter localDateFormatter = DateTimeFormatter.ofPattern(dateFormat);
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Отчет");

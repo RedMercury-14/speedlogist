@@ -297,5 +297,10 @@ public class RouteServiceImpl implements RouteService{
 		return routes;
 	}
 
+	 @Transactional
+	 @Override
+	 public List<Route> getInternationalRoutesByDates(Date dateStart, Date dateFinish) {
+	     return routeDAO.getInternationalRoutesByDates(dateStart, dateFinish);
+	 }
 	
 }

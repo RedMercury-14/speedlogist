@@ -434,7 +434,7 @@
 							</c:when>
 
 							<c:otherwise>
-								<!-- <li><a class="nav-item nav-link" href="<spring:url value="/main/reviews"/>">Обратная связь</a></li> -->
+								<li><a class="nav-item nav-link" href="<spring:url value="/main/carrier-application-form" />">Предложить сотрудничество</a></li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/registration" />">Регистрация</a></li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/signin"/>">Вход в систему</a></li>
 							</c:otherwise>

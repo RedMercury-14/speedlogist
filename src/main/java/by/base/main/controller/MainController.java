@@ -447,6 +447,11 @@ public class MainController {
 		return "reviewsForm";
 	}
 
+	@GetMapping("/carrier-tenders/bid-place")
+	public String getBidPlace(Model model, HttpServletRequest request) {
+		return "bidPlace";
+	}
+
 	@GetMapping("/main/carrier-application-form")
 	public String getCarrierApplicationForm(Model model, HttpServletRequest request) {
 		return "carrierApplicationForm";

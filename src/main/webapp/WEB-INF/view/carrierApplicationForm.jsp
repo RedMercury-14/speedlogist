@@ -170,6 +170,11 @@
 						</div>
 
 						<div class="form-group">
+							<label class="text-muted font-weight-bold mb-2" for="phone">ФИО:</label>
+							<input type="text" class="form-control" id="fio" name="fio" required>
+						</div>
+
+						<div class="form-group">
 							<label class="text-muted font-weight-bold mb-2" for="email">Адрес эл. почты:</label>
 							<input type="email" class="form-control" id="email" name="email" required>
 						</div>

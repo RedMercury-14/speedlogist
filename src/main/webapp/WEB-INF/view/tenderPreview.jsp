@@ -28,15 +28,35 @@
 	<div class="container my-container">
 		<br>
 		<h3 class="mt-2 mb-2">Актуальные международные мершруты</h3>
-		<p class="mb-2">
-			Для того, чтобы стать участником биржи, 
-			<a class="text-primary" href="/speedlogist/main/registration">зарегистрируйтесь</a> 
-			на платформе или отправьте 
-			<a class="text-primary" href="/speedlogist/main/carrier-application-form">заявку на сотрудничество</a>.
-		</p>
+		<sec:authorize access="authenticated" var="authenticated" />
+		<c:choose>
+			<c:when test="${!authenticated}">
+				<p class="mb-2">
+					Для того, чтобы стать участником биржи, 
+					<a class="text-primary" href="/speedlogist/main/registration">зарегистрируйтесь</a> 
+					на платформе или отправьте 
+					<a class="text-primary" href="/speedlogist/main/carrier-application-form">заявку на сотрудничество</a>.
+				</p>
+			</c:when>
+		</c:choose>
+
+		<sec:authorize access="isAuthenticated()">
+			<sec:authentication property="principal.authorities" var="roles" />
+		</sec:authorize>
+		<c:choose>
+			<c:when test="${roles == '[ROLE_CARRIER]'}">
+				<p class="mb-2">
+					<a class="text-primary" href="/speedlogist/main/carrier/tender">Перейти на биржу</a> 
+				</p>
+			</c:when>
+		</c:choose>
 		<br>
 
 		<div class="row" id="cardsContainer"></div>
+
+		<div class="d-flex justify-content-center">
+			<button id="showMore" class="btn btn-outline-primary" type="button">Показать ещё...</button>
+		</div>
 
 		<div id="snackbar"></div>
 

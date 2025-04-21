@@ -1,0 +1,113 @@
+body {
+    background-image: url('../../resources/img/mainPage/images/bg.webp') !important;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-color: #0e377b !important;
+}
+
+.my-container {
+    margin-top: 100px;
+    margin-bottom: 140px;
+}
+.card-container {
+    margin: 0 auto;
+    width: 80%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    /* max-width: 1120px; */
+    justify-content: center;
+}
+.services-thumb {
+    margin: 25px 0;
+    width: 22%;
+}
+.services-thumb img {
+    border: 3px solid #acacac;
+}
+.services-thumb a:hover,
+.services-thumb a:focus {
+    color: #0057b3;
+}
+.st-caption {
+    background-color: #FFF;
+    z-index: 1;
+    position: relative;
+    margin: -45px 15px auto;
+    /* padding: 10px; */
+    border-bottom: solid 3px var(--secundary-color);
+    -webkit-transition: transform 0.3s ease-in-out 0s;
+    -moz-transition: transform 0.3s ease-in-out 0s;
+    -ms-transition: transform 0.3s ease-in-out 0s;
+    -o-transition: transform 0.3s ease-in-out 0s;
+    transition: transform 0.3s ease-in-out 0s;
+    text-align: center;
+    box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.7);
+}
+.st-caption:hover {
+    transform: translateY(-20px);
+}
+@media (max-width: 1080px) {
+    .card-container {
+        margin-bottom: 100px;
+        width: 90%;
+    }
+    .services-thumb {
+        margin: 15px 0;
+        width: 45%;
+    }
+}
+@media (max-width: 768px) {
+    .card-container {
+        margin-bottom: 90px;
+        gap: 10px;
+        width: 100%;
+    }
+    .services-thumb {
+        margin: 0 0;
+        width: 100%;
+    }
+    .services-thumb img {
+        display: none;
+    }
+    .st-caption {
+        margin: 0 15px auto;
+    }
+    .st-caption:hover {
+        margin: 0 15px auto;
+        transform: translateY(0px);
+    }
+}
+.sbt-icon {
+    width: 60px;
+    margin: auto;
+}
+.st-caption h5 {
+    font-weight: 600;
+    padding: 10px 20px;
+    margin: 0;
+}
+img {
+    width: 100%;
+}
+footer.to-bottom {
+    margin-top: 51px;
+    position: fixed;
+}
+
+.badge-new::before {
+    content: "new";
+    position: relative;
+    padding: .25em .4em;
+    font-size: 50%;
+    font-weight: 700;
+    line-height: 1;
+    color: red;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: top;
+    border-radius: .25rem;
+    transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+}

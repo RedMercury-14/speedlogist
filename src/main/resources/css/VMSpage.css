@@ -1,0 +1,218 @@
+body {
+    height: 100%;
+}
+.navbar {
+    background-color: #0e377b !important;
+}
+.my-container {
+    margin-top: 83px;
+}
+.my-container.smallHeader {
+	margin-top: 64px;
+}
+
+.row-flex-container {
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+}
+.inner-container {
+
+}
+.left-container {
+    flex: 5;
+}
+.right-container {
+    flex: 2;
+    min-width: 400px;
+}
+footer.to-bottom {
+    margin-top: 51px;
+    position: fixed;
+}
+
+.text-red {
+    color: red;
+}
+.error-message {
+    color: red;
+    font-size: 12px;
+    padding-top: 5px;
+}
+
+.my-container, 
+.modal {
+    font-family: var(--font-family-sans-serif);
+}
+.title-container,
+.toolbar {
+    min-height: 30px;
+    border-left: 1px solid #babfc7;
+    border-right: 1px solid #babfc7;
+    background-color: lightsteelblue;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 1px 10px;
+}
+.title-container {
+    position: relative;
+    align-items: center;
+    border-top: 1px solid #babfc7;
+    background-color: rgb(167, 186, 211) !important;
+}
+.title-container h3 {
+    margin-bottom: 0;
+    font-size: 22px;
+    color: #393737;
+}
+.toolbar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 2px 0;
+}
+.toolbar label {
+    text-wrap: nowrap;
+}
+.toolbar .form-control,
+.toolbar .btn {
+    padding: 0 8px;
+    height: 30px;
+}
+.toolbar input[type="date"] {
+    width: 120px;
+}
+.toolbar input[type="text"] {
+    width: 260px;
+}
+.toolbar .tools-btn {
+    padding: 0 0.75rem;
+    border: 2px solid rgb(202, 212, 224);
+    border-radius: 0px;
+    font-family: 'Open Sans', sans-serif;
+    letter-spacing: 0.5px;
+}
+.toolbar .tools-btn:hover {
+    border: 2px solid #0e377b;
+}
+.toolbar .tools-btn:focus {
+    box-shadow: none
+}
+.toolbar .tools-btn.active {
+    border: 2px solid lightsteelblue;
+    background-color: #8394af;
+    color: white;
+    font-weight: bold;
+}
+
+
+#numStockButtons {
+    display: flex;
+}
+#numStockButtons .stock-btn {
+    flex: 30%;
+    border-radius: 0;
+}
+
+#stockCard .badge {
+    font-size: 100%;
+}
+
+.inputs-container {
+    padding: 0 20px;
+}
+.input-row-container {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+.modal input::-webkit-outer-spin-button,
+.modal input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.modal input[type=number] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+.modal input::placeholder {
+    color: rgb(179, 179, 179);
+}
+.modal .close {
+	float: right;
+	font-size: 1.5rem;
+	font-weight: 700;
+	line-height: 1;
+	color: #000;
+	text-shadow: 0 1px 0 #fff;
+	opacity: .5;
+}
+
+#editGrid {
+    width: 100%;
+    height: calc(100vh - 155px);
+}
+#myGrid {
+    width: 100%;
+    height: calc(100vh - 155px);
+}
+#myGrid.smallHeader {
+	height: calc(100vh - 138px);
+}
+.ag-theme-alpine {
+    --ag-cell-horizontal-border: var(--ag-row-border-width) var(--ag-row-border-style) var(--ag-row-border-color);
+    --ag-control-panel-background-color: var(--control-panel-bg-color:);
+    --ag-cell-horizontal-padding: calc(var(--ag-grid-size)*1.5);
+    --ag-header-column-resize-handle-color: #0e377b;
+    --ag-odd-row-background-color: var(--white-color);
+}
+.ag-header-cell-label {
+    justify-content: center;
+    text-align: center;
+}
+.text-center .ag-cell-wrapper {
+    text-align: center;
+}
+
+#myGrid .ag-cell-value {
+    line-height: 20px !important;
+    word-break: normal;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+#myGrid .cell-wrap-text {
+    white-space: normal !important;
+}
+
+@media (max-width: 991px) {
+	.my-container {
+        margin-top: 60px;
+    }
+    .shopNumber-container {
+        flex-wrap: wrap;
+        gap: 0;
+    }
+}
+@media (max-width: 768px) {
+    #myGrid {
+        height: calc(100vh - 280px);
+        margin-bottom: 53px;
+    }
+	.container.my-container {
+        padding: 0;
+    }
+}
+
+form .form-check {
+    padding-left: 2rem;
+}
+form .form-check .form-check-input {
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-left: -2rem;
+}
+form .form-check .form-check-label {
+    margin-top: 0.5rem;
+}

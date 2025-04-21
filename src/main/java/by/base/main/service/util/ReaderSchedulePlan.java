@@ -814,10 +814,6 @@ public class ReaderSchedulePlan {
 		 }
 		 
 		 
-		
-		 
-		 
-		 
 		 if(dateRange == null) {
 //			 return new PlanResponce(0, "Действие заблокировано!\nПросчёт кол-ва товара на логистическое плечо невозможен, т.к. расчёт ОРЛ не совпадает с графиком поставок");
 			 return new PlanResponce(200, "Просчёт кол-ва товара на логистическое плечо невозможен, т.к. расчёт ОРЛ не совпадает с графиком поставок");
@@ -1746,11 +1742,11 @@ public class ReaderSchedulePlan {
 								return new ResultMethod("<span style=\"color: #bbaa00;\"><strong>Проверка по кол-ву в авто не проводилась!</strong> Расчётная реализация товара " + product.getName() + " (" + product.getCodeProduct()+") равна 0.0 !</span>\n", 200, order.getMarketNumber());
 							}
 							
-							if(balanceTruck > dateRange.stock) {
+							if(balanceTruck > (dateRange.stock+dateRange.stock)) {
 								isMistakeZAQ.set(true);
 								result.append("<span style=\"color: red;\">Запрещено, т.к. товара " + product.getName() + " (" + product.getCodeProduct()+") в машине на "+balanceTruck+" дней.  Сток согласно графику поставок составляет: " + dateRange.stock + " дн.</span>\n");
 								return new ResultMethod("<span style=\"color: red;\">Запрещено, т.к. товара " + product.getName() + " (" + product.getCodeProduct()+") в машине на "+balanceTruck+" дней.  Сток согласно графику поставок составляет: " + dateRange.stock + " дн.</span>\n", 
-										0, product.getName(), product.getCodeProduct(), balanceTruck, dateRange.stock, balanceStockAndReserves, order.getMarketNumber());
+										0, product.getName(), product.getCodeProduct(), balanceTruck, (dateRange.stock+dateRange.stock), balanceStockAndReserves, order.getMarketNumber()); // (dateRange.stock+dateRange.stock) - умноженый на два т.к. так надо
 //								return new ResultMethod("<span style=\"color: red;\">Запрещено, т.к. товара " + product.getName() + " (" + product.getCodeProduct()+") в машине на "+balanceTruck+" дней.  Сток согласно графику поставок составляет: " + dateRange.stock + " дн.</span>", 0);
 							}else {
 								result.append("<span>Инфо: товара " + product.getName() + " (" + product.getCodeProduct()+") в машине на "+balanceTruck+" дней.  Сток согласно графику поставок составляет: " + dateRange.stock + "дн.</span>\n");

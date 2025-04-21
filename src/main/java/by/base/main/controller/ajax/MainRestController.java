@@ -9484,6 +9484,14 @@ public class MainRestController {
 			Сортировка:			
 			    Используем Comparator с помощью метода Comparator.comparing, чтобы задать логику сортировки.
 		 */
+		for (Order order : orders) {
+//			System.out.println(order.getIdOrder() + " -> " + order.getTimeDelivery() + " -> " + order.getOnloadWindowDate()+ " -> " +order.getOnloadWindowTime());
+			if(order.getTimeDelivery() == null) {
+				response.put("status", "105");
+				response.put("message", "Заявка " + order.getMarketNumber() + " не поставлена в слоты! Обратитесь к менеджеру " + order.getManager());
+				return response;
+			}
+		}
 		orders.sort(Comparator.comparing(
 	            order -> Optional.ofNullable(order.getTimeDelivery())
 	                    .orElseGet(() -> combineDateAndTime(order.getOnloadWindowDate(), order.getOnloadWindowTime()))

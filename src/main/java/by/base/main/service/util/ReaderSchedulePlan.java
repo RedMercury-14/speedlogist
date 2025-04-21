@@ -205,6 +205,62 @@ public class ReaderSchedulePlan {
 	}
     
     /**
+     * Метод отдаёт диапазон дат, когда можно ставить текущий заказ, <b>где график поставок подтягивает относительно date_order_orl в заказе!</b>
+     * <br>Более простой метод, который работает от date_order_orl
+     * @param schedule
+     * @param order
+     * @return
+     */
+    public DateRange getDateRangeV2(Schedule schedule, Order order) {
+    	if(schedule == null || order.getDateOrderOrl() == null) {
+			return null;
+		}
+    	Map<String, String> days = schedule.getDaysMap();
+		Map<String, String> daysStep2 = days.entrySet().stream().filter(m->m.getValue().contains("понедельник")
+				|| m.getValue().contains("вторник")
+                || m.getValue().contains("среда")
+                || m.getValue().contains("четверг")
+                || m.getValue().contains("пятница")
+                || m.getValue().contains("суббота")
+                || m.getValue().contains("воскресенье")).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+		System.err.println("Расчёта заказов getDateRangeV2");
+		//мы всё равно считаем график поставок, для определения лог плеча (days)
+		
+		
+		//проверяем, есть ли по плану заказ
+		String dayOfPlanOrder = order.getDateOrderOrl().toLocalDate().getDayOfWeek().toString(); // планируемый день заказа
+				boolean flag = false;
+				String targetKey = null;
+				String targetValue = null;
+				for (Entry<String, String> entry : daysStep2.entrySet()) {
+					if(entry.getValue().contains(translateToRussianWeek(dayOfPlanOrder))) {
+						flag = true;
+						targetKey = entry.getKey();
+						targetValue = entry.getValue();
+						break;
+					}
+				}
+				long i = 0;
+		
+		i = parseWeekNumber(targetValue);			
+		LocalDate datePostavForCalc = LocalDate.of(2024, 7, DayOfWeek.valueOf(targetKey).getValue());			
+		if(targetValue.split("/").length>1) {
+			targetValue = targetValue.split("/")[targetValue.split("/").length - 1];
+		}			
+		LocalDate dateOrderCalc = LocalDate.of(2024, 7, RUSSIAN_DAYS.get(targetValue).getValue());			
+		int j = datePostavForCalc.getDayOfMonth() - dateOrderCalc.getDayOfMonth(); // лог плечо	
+		if(j < 0 && i == 0) {
+			j = j + 7;
+		}
+//		if(j==0) {
+//			j=7;
+//		}			
+		i = i+j;
+		Date finish = Date.valueOf(order.getDateOrderOrl().toLocalDate().plusDays(i));
+		return new DateRange(order.getDateOrderOrl(), finish, i, targetKey, order.getMarketContractType());
+    }
+    
+    /**
      * Метод отдаёт диапазон дат, когда можно ставить текущий заказ, <b>где график поставок подтягивает относительно сегодняшней даты</b>
      * @param schedule
      * @param product
@@ -236,6 +292,7 @@ public class ReaderSchedulePlan {
 					}
 				}
 				orderProductsHasMin.sort((o1, o2) -> o2.getDateCreate().compareTo(o1.getDateCreate())); // сортируемся от самой ранней даты
+				
 		
 		if(orderProductsHasMin.isEmpty()) {
 			System.err.println("Расчёта заказов по продуктам: невозможен, т.к. потребности нет в базе данных");
@@ -269,30 +326,22 @@ public class ReaderSchedulePlan {
 //		System.out.println("schedule = " + schedule);
 //		System.out.println("dayOfPlanOrder = "+dayOfPlanOrder);
 		
-		if(flag) {
-			
-			i = parseWeekNumber(targetValue);
-			
-			LocalDate datePostavForCalc = LocalDate.of(2024, 7, DayOfWeek.valueOf(targetKey).getValue());
-			
+		if(flag) {			
+			i = parseWeekNumber(targetValue);			
+			LocalDate datePostavForCalc = LocalDate.of(2024, 7, DayOfWeek.valueOf(targetKey).getValue());			
 			if(targetValue.split("/").length>1) {
 				targetValue = targetValue.split("/")[targetValue.split("/").length - 1];
-			}
-			
-			LocalDate dateOrderCalc = LocalDate.of(2024, 7, RUSSIAN_DAYS.get(targetValue).getValue());
-			
-			int j = datePostavForCalc.getDayOfMonth() - dateOrderCalc.getDayOfMonth(); // лог плечо
-							
+			}			
+			LocalDate dateOrderCalc = LocalDate.of(2024, 7, RUSSIAN_DAYS.get(targetValue).getValue());			
+			int j = datePostavForCalc.getDayOfMonth() - dateOrderCalc.getDayOfMonth(); // лог плечо						
 			
 			if(j < 0 && i == 0) {
 				j = j + 7;
 			}
 			if(j==0) {
 				j=7;
-			}
-			
-			i = i+j;
-			
+			}			
+			i = i+j;			
 		}else {
 			System.err.println("план расчёта не совпадает с графиком поставок");
 			return null;
@@ -746,18 +795,28 @@ public class ReaderSchedulePlan {
 		  * 
 		  */
 		 if(getTrueStock(order).equals("1200")) {
-			 if(dateRange == null) {
+			 DateRange dateRange2 = getDateRangeV2(schedule, order);
+			 
+			 if(dateRange2 == null) {
 //				 return new PlanResponce(0, "Действие заблокировано!\nПросчёт кол-ва товара на логистическое плечо невозможен, т.к. расчёт ОРЛ не совпадает с графиком поставок");
 				 return new PlanResponce(0, "Действие заблокировано!\nПросчёт кол-ва товара на логистическое плечо невозможен, т.к. расчёт ОРЛ не совпадает с графиком поставок");
 			 }
-			 if(dateRange.start == null && dateRange.days == 0) {
+			 if(dateRange2.start == null && dateRange2.days == 0) {
 				 //тут мы говорим что расчёты ОРЛ по товару отсутствуют но есть липовый график поставок и есть сток в днях. Всё равно проверяем по стоку!
 				 return new PlanResponce(0, "Действие заблокировано!\nРасчёта заказов по продукту: " + products.get(0).getName() + " ("+products.get(0).getCodeProduct()+") невозможен, т.к. нет в базе данных расчётов потребности");
 			 }
-			 if(!order.getTimeDelivery().toLocalDateTime().toLocalDate().equals(dateRange.end.toLocalDate()) ) {
-				 return new PlanResponce(0, "Действие заблокировано!\nЗаказ должен быть поставлен <b>согласно графиу постваок</b> " + dateRange.end.toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
-			 } // остановился тут
+			 System.out.println(dateRange2 + " <- dateRange2" );
+			 if(!order.getTimeDelivery().toLocalDateTime().toLocalDate().toString().equals(dateRange2.end.toLocalDate().toString())) {
+				 return new PlanResponce(0, "Действие заблокировано!\nЗаказ должен быть поставлен <b>согласно графиу постваок</b> " + dateRange2.end.toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
+			 }else {
+				 dateRange = dateRange2;
+			 }
 		 }
+		 
+		 
+		
+		 
+		 
 		 
 		 if(dateRange == null) {
 //			 return new PlanResponce(0, "Действие заблокировано!\nПросчёт кол-ва товара на логистическое плечо невозможен, т.к. расчёт ОРЛ не совпадает с графиком поставок");

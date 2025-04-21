@@ -25,7 +25,8 @@ function sendCost() {
 		currency: document.querySelector('select[id=currency]').value,
 		//nds: document.querySelector('select[id=nds]').value,
 		fullName: document.querySelector('#fullName').value,
-		status: "1"
+		status: "1",
+		comment: document.querySelector('input[name=comment]')?.value
 	})
 }
 function sendCostPOST() {
@@ -38,7 +39,8 @@ function sendCostPOST() {
 		currency: document.querySelector('select[id=currency]').value,
 		//nds: document.querySelector('select[id=nds]').value,
 		fullName: document.querySelector('#fullName').value,
-		status: "1"
+		status: "1",
+		comment: document.querySelector('input[name=comment]')?.value
 	}
 	ajaxUtils.postJSONdata({
 		url: setTenderCostFromCarrierUrl,

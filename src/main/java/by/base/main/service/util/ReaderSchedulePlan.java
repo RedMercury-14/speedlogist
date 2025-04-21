@@ -807,7 +807,7 @@ public class ReaderSchedulePlan {
 			 }
 			 System.out.println(dateRange2 + " <- dateRange2" );
 			 if(!order.getTimeDelivery().toLocalDateTime().toLocalDate().toString().equals(dateRange2.end.toLocalDate().toString())) {
-				 return new PlanResponce(0, "Действие заблокировано!\nЗаказ должен быть поставлен <b>согласно графиу постваок</b> " + dateRange2.end.toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
+				 return new PlanResponce(0, "Действие заблокировано!\nЗаказ должен быть поставлен <b>согласно графику поставок</b> " + dateRange2.end.toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
 			 }else {
 				 dateRange = dateRange2;
 			 }

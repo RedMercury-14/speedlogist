@@ -674,7 +674,9 @@ function routeFormSubmitHandler(e) {
 				updateTable(gridOptions, orderSearchForm)
 				closeRouteModal()
 			} else if (res.status === '100') {
-				snackbar.show(res.message)
+				res.message && snackbar.show(res.message)
+			} else if (res.status === '105') {
+				res.message && showMessageModal(res.message)
 			} else {
 				snackbar.show('Возникла ошибка - обновите страницу!')
 			}
@@ -770,4 +772,10 @@ function convertToDayMonthTime(eventDateStr) {
 		minute: '2-digit'
 	})
 	return formatter.format(date)
+}
+
+function showMessageModal(message) {
+	const messageContainer = document.querySelector('#messageContainer')
+	messageContainer.innerHTML = message
+	$('#displayMessageModal').modal('show')
 }

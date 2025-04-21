@@ -6,7 +6,7 @@ body {
 }
 .my-container {
 	margin-top: 60px;
-	margin-bottom: 50px;
+	margin-bottom: 80px;
 }
 
 footer.to-bottom {
@@ -76,7 +76,7 @@ button[type="submit"] {
 
 @media (max-width: 576px) {
 	.my-container {
-		margin-bottom: 80px;
+		margin-bottom: 100px;
 	}
 	.form-check-inline {
 		display: block;

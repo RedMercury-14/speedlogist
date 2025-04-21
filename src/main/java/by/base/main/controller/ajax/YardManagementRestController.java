@@ -59,19 +59,27 @@ import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 import org.springframework.web.bind.annotation.*;
 
 import com.google.gson.Gson;
+import com.graphhopper.GHRequest;
+import com.graphhopper.GHResponse;
+import com.graphhopper.GraphHopper;
+import com.graphhopper.ResponsePath;
+import com.graphhopper.util.PointList;
 
 import by.base.main.model.Act;
 import by.base.main.model.Address;
 import by.base.main.model.ClientRequest;
+import by.base.main.model.MapResponse;
 import by.base.main.model.Message;
 import by.base.main.model.Order;
 import by.base.main.model.Route;
+import by.base.main.model.Shop;
 import by.base.main.model.User;
 import by.base.main.service.OrderService;
 import by.base.main.service.TelegramChatQualityService;
 import by.base.main.service.UserService;
 import by.base.main.service.util.SocketClient;
 import by.base.main.util.SlotWebSocket;
+import by.base.main.util.GraphHopper.RoutingMachine;
 import by.base.main.util.bots.TelegramBotRoutingTEST;
 import by.base.main.util.bots.TelegrammBotQuantityYard;
 
@@ -116,6 +124,9 @@ public class YardManagementRestController {
 	
 	@Autowired
 	private TelegramBotRoutingTEST telegramBotRoutingTEST;
+	
+	@Autowired
+	private RoutingMachine routingMachine;
 	
 	@Value("${telegramm.bot.run}")
 	private boolean isRunTelegrammBot;
@@ -241,6 +252,7 @@ public class YardManagementRestController {
         return Math.round(value * factor) / (double) factor;
     }
 	
+    
 	
 	@RequestMapping("/server")
 	public Map<String, String> getEchoServer(HttpServletRequest request) throws UnknownHostException, ClassNotFoundException, IOException {
@@ -251,6 +263,61 @@ public class YardManagementRestController {
 		response.put("status", "200");
 		response.put("message", responce.toString());
 		return response;		
+	}
+	
+	/**
+	 * Основной метод постройки и отладки отдельных маршрутов по точкам принимает
+	 * номер маршрута, берет координаты из БД отдаёт информацию по магазинам в
+	 * ответе
+	 * 
+	 * @param str
+	 * @return
+	 * @throws ParseException
+	 */
+	@RequestMapping(value = "/map/way/4", method = RequestMethod.POST)
+	public List<MapResponse> getSplitWayHasNumShop(@RequestBody String str) throws ParseException {
+		List<GHRequest> ghRequests = routingMachine.parseJSONFromClientRequestSplit(str);
+		List<Shop[]> shopPoints = routingMachine.getShopAsPoint(str);
+		GraphHopper hopper = routingMachine.getGraphHopper();
+//		ghRequests.forEach(r->System.out.println(r.getCustomModel()));
+		List<MapResponse> listResult = new ArrayList<MapResponse>();
+		for (GHRequest req : ghRequests) {
+			int index = ghRequests.indexOf(req);
+
+			GHResponse rsp = hopper.route(req);
+			if (rsp.getAll().isEmpty()) {
+				rsp.getErrors().forEach(e -> System.out.println(e));
+				rsp.getErrors().forEach(e -> e.printStackTrace());
+				listResult.add(new MapResponse(null, null, null, 500.0, 500));
+			}
+//			System.err.println(rsp.getAll().size());
+			if (rsp.getAll().size() > 1) {
+//				rsp.getAll().forEach(p -> System.out.println(p.getDistance() + "    " + p.getTime()));
+			}
+			ResponsePath path = rsp.getBest();
+			List<ResponsePath> listPath = rsp.getAll();
+			for (ResponsePath pathI : listPath) {
+				if (pathI.getDistance() < path.getDistance()) {
+					path = pathI;
+				}
+			}
+//			System.out.println(roundВouble(path.getDistance()/1000, 2) + "km, " + path.getTime() + " time");
+			PointList pointList = path.getPoints();
+			path.getPathDetails();
+			List<Double[]> result = new ArrayList<Double[]>(); // возможна утечка помяти
+			pointList.forEach(p -> result.add(p.toGeoJson()));
+			List<Double[]> resultPoints = new ArrayList<Double[]>();
+			double cash = 0.0;
+			for (Double[] point : result) {
+				cash = point[0];
+				point[0] = point[1];
+				point[1] = cash;
+				resultPoints.add(point);
+			}
+			listResult.add(new MapResponse(resultPoints, path.getDistance(), path.getTime(), shopPoints.get(index)[0],
+					shopPoints.get(index)[1]));
+		}
+		return listResult;
 	}
 	
 	/**

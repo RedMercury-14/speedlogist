@@ -1,25 +1,57 @@
-import { getTenderPreviewBaseUrl } from "./globalConstants/urls.js";
-import { dateHelper, getData } from "./utils.js";
+import { getTenderPreviewBaseUrl } from "./globalConstants/urls.js"
+import { dateHelper, disableButton, enableButton, getData, hideLoadingSpinner, showLoadingSpinner } from "./utils.js"
+import { snackbar } from "./snackbar/snackbar.js"
 
 const PAGE_NAME = 'tenderPreview'
 const LOCAL_STORAGE_KEY = `AG_Grid_settings_to_${PAGE_NAME}`
 const DATES_KEY = `searchDates_to_${PAGE_NAME}`
+const DAYS_TO_FETCH = 7
+
+let currentPageSize = 1
 
 document.addEventListener("DOMContentLoaded", async () => {
-	const { dateStart, dateEnd } = dateHelper.getDatesToFetch(DATES_KEY, 0, 21)
+	const { dateStart, dateEnd } = dateHelper.getDatesToFetch(DATES_KEY, 0, DAYS_TO_FETCH * 3)
 	const tenders = await getTendersData(dateStart, dateEnd)
-	console.log("🚀 ~ document.addEventListener ~ tenders:", tenders)
 
+	// меньше карточкек для главной страницы
 	const currentUrl = window.location.href
 	if (!currentUrl.includes("tender-preview")) {
 		tenders.length = 6
 	}
 
+	// создание карточек маршрутов
+	addTendersToContainer(tenders)
+
+	const showMoreBtn = document.getElementById("showMore")
+	showMoreBtn && showMoreBtn.addEventListener("click", showMoreTenders)
+})
+
+async function showMoreTenders(e) {
+	const btn = e.target
+	try {
+		disableButton(btn)
+		showLoadingSpinner(btn)
+		const daysAgo = currentPageSize * DAYS_TO_FETCH
+		const daysAhead = DAYS_TO_FETCH - (currentPageSize * DAYS_TO_FETCH) - 1
+		const { dateStart, dateEnd } = dateHelper.getDatesToFetch(null, daysAgo, daysAhead)
+		const tenders = await getTendersData(dateStart, dateEnd)
+		addTendersToContainer(tenders)
+		currentPageSize ++
+	} catch (error) {
+		snackbar.show('Не удалось загрузить маршруты')
+	} finally {
+		enableButton(btn)
+		hideLoadingSpinner(btn, 'Показать ещё...')
+	}
+
+}
+
+function addTendersToContainer(tenders) {
 	const cardsContainer = document.getElementById("cardsContainer")
 	cardsContainer && tenders
 		.sort((a, b) => new Date(b.tenderId) - new Date(a.tenderId))
 		.forEach(tender => cardsContainer.appendChild(createCard(tender)))
-})
+}
 
 // получение данных
 async function getTendersData(dateStart, dateEnd) {

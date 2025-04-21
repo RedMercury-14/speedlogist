@@ -5028,7 +5028,6 @@ public class MainRestController {
 			response.put("message", "Тело запроса = null");
 			return response;
 		}
-		
 		Message message = new Message();
 		JSONParser parser = new JSONParser();
 		JSONObject jsonMainObject = (JSONObject) parser.parse(str);

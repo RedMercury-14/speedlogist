@@ -4,10 +4,12 @@ import java.sql.Date;
 import java.sql.Time;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.dto.RouteDTO;
 
+import by.base.main.model.Message;
 import by.base.main.model.Route;
 import by.base.main.model.Tender;
 import by.base.main.model.Truck;
@@ -149,4 +151,22 @@ public interface RouteService {
 	Set<Route> getRouteListAsDateForInternational(Date dateStart, Date dateFinish);
 	
 	List<Route> getInternationalRoutesByDates(Date dateStart, Date dateFinish);
+	
+	/**
+	 * <br>Возвращает список роутов за указанный интервал дат</br>
+	 * @param dateStart
+	 * @param dateFinish
+	 * @return
+	 * @author Ira
+	 */
+	List<Route> getRouteListByDatesCreate(Date dateStart, Date dateFinish);
+
+
+	/**
+	 * <br>Возвращает мапу пар route id - message по указанными idRoute</br>
+	 * @param routesId
+	 * @return
+	 * @author Ira
+	 */
+	Map<String, List<Message>> routesWithMessages(List<String> routesId);
 }

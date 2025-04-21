@@ -6,9 +6,11 @@ import java.sql.Time;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 
 import com.dto.RouteDTO;
 
+import by.base.main.model.Message;
 import by.base.main.model.Route;
 import by.base.main.model.Truck;
 import by.base.main.model.User;
@@ -141,4 +143,21 @@ public interface RouteDAO {
 	List<Route> getActualRoute(Date date);
 	
 	List<Route> getInternationalRoutesByDates(Date dateStart, Date dateFinish);
+	
+	/**
+	 * <br>Возвращает список роутов за указанный интервал дат</br>
+	 * @param dateStart
+	 * @param dateFinish
+	 * @return
+	 * @author Ira
+	 */
+	List<Route> getRouteListByDatesCreate(Date dateStart, Date dateFinish);
+
+	/**
+	 * <br>Возвращает мапу пар route id - message по указанными idRoute</br>
+	 * @param routesId
+	 * @return
+	 * @author Ira
+	 */
+	Map<String, List<Message>> routesWithMessages(List<String> routesId);
 }

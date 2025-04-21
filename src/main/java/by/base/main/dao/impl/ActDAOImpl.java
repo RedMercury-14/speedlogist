@@ -1,6 +1,7 @@
 package by.base.main.dao.impl;
 
 import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 import javax.persistence.TemporalType;
@@ -82,5 +83,20 @@ public class ActDAOImpl implements ActDAO{
 		List<Act> feedbacks = theObject.getResultList();
 		return feedbacks;
 	}
+	
+	private static final String queryGetActsByRouteId = "from Act a where a.date between :dateStart and :dateFinish " +
+		       "and a.documentsArrived is not null " +
+		       "and a.idRoutes like :idRoute";
+		@Override
+		public List<Act> getActsByRouteId(String id, LocalDate startDate, LocalDate finishDate) {
+		    Session currentSession = sessionFactory.getCurrentSession();
+		    Query<Act> theObject = currentSession.createQuery(queryGetActsByRouteId, Act.class);
+		    theObject.setParameter("dateStart", startDate);
+		    theObject.setParameter("dateFinish", finishDate.plusDays(7));
+		    theObject.setParameter("idRoute", id + "%");
+
+		    List<Act> acts = theObject.getResultList();
+		    return acts;
+		}
 
 }

@@ -401,7 +401,7 @@ public class MainRestController {
        
        List <PriceProtocol> rotations = poiExcel.readPriceProtocolsFromExcel(file1, 1);
        for(PriceProtocol priceProtocol: rotations) {
-          System.out.println(priceProtocol);
+          priceProtocolService.save(priceProtocol);
        }
 
        response.put("status", "200");

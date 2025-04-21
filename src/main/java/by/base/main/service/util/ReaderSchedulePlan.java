@@ -740,6 +740,25 @@ public class ReaderSchedulePlan {
 			 System.out.println("dateRange = " + dateRange);			 
 		 }
 		 
+		 /*
+		  * Временный блок
+		  * Тут запрет на 1200 склад по графику поставок, если поставка не ставится в день поставки согласн ографику поставок.
+		  * 
+		  */
+		 if(getTrueStock(order).equals("1200")) {
+			 if(dateRange == null) {
+//				 return new PlanResponce(0, "Действие заблокировано!\nПросчёт кол-ва товара на логистическое плечо невозможен, т.к. расчёт ОРЛ не совпадает с графиком поставок");
+				 return new PlanResponce(0, "Действие заблокировано!\nПросчёт кол-ва товара на логистическое плечо невозможен, т.к. расчёт ОРЛ не совпадает с графиком поставок");
+			 }
+			 if(dateRange.start == null && dateRange.days == 0) {
+				 //тут мы говорим что расчёты ОРЛ по товару отсутствуют но есть липовый график поставок и есть сток в днях. Всё равно проверяем по стоку!
+				 return new PlanResponce(0, "Действие заблокировано!\nРасчёта заказов по продукту: " + products.get(0).getName() + " ("+products.get(0).getCodeProduct()+") невозможен, т.к. нет в базе данных расчётов потребности");
+			 }
+			 if(!order.getTimeDelivery().toLocalDateTime().toLocalDate().equals(dateRange.end.toLocalDate()) ) {
+				 return new PlanResponce(0, "Действие заблокировано!\nЗаказ должен быть поставлен <b>согласно графиу постваок</b> " + dateRange.end.toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
+			 } // остановился тут
+		 }
+		 
 		 if(dateRange == null) {
 //			 return new PlanResponce(0, "Действие заблокировано!\nПросчёт кол-ва товара на логистическое плечо невозможен, т.к. расчёт ОРЛ не совпадает с графиком поставок");
 			 return new PlanResponce(200, "Просчёт кол-ва товара на логистическое плечо невозможен, т.к. расчёт ОРЛ не совпадает с графиком поставок");

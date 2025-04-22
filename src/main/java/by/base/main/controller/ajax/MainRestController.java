@@ -15,6 +15,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
@@ -371,6 +372,81 @@ public class MainRestController {
 
 	@Autowired
     private ServletContext servletContext;
+	
+	
+	@PostMapping("/logistics/internationalNew/confrom")
+	public Map<String, Object> confromCostNew(Model model, HttpServletRequest request,
+			@RequestBody String str) throws ParseException {
+		String appPath = request.getServletContext().getRealPath("");
+		Map<String, Object> response = new HashMap<String, Object>();
+		JSONParser parser = new JSONParser();
+        JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+        
+        Integer idRoute = Integer.parseInt(jsonMainObject.get("idRoute").toString().trim());
+        Integer cost = Integer.parseInt(jsonMainObject.get("cost").toString().trim());
+        String currency = jsonMainObject.get("currency").toString();
+        String status = jsonMainObject.get("status").toString();
+        String login = jsonMainObject.get("login").toString();
+		
+		//обработка, если удалось нажать на кнопку
+		Order order = orderService.getOrderByIdRoute(idRoute);
+		if(order != null && order.getStatus() == 10) {
+			response.put("status", "100");
+			response.put("message", "Заявка не найдена");
+			return response;
+		}
+		User user = userService.getUserByLogin(login.trim());
+		if (status == null) {
+			status = "4";
+			routeService.updateRouteInBase(idRoute, cost, currency, user, status);
+		}else {
+			routeService.updateRouteInBase(idRoute, cost, currency, user, status);
+			Route route = routeService.getRouteById(idRoute);				
+			String message = "На маршрут "+route.getRouteDirection()+" принят единственный заявившийся перевозчик: " + user.getCompanyName() 
+					+ ". Заявленная стоимость перевозки составляет "+ route.getFinishPrice() + " "+ route.getStartCurrency() + ". \nОптимальная стоимость составляет " + route.getOptimalCost()+" BYN";
+		}
+		List<Message> messages = new ArrayList<Message>();		
+		chatEnpoint.internationalMessegeList.stream()
+			.filter(mes->mes.getIdRoute().equals(idRoute.toString()))
+			.forEach(mes-> messages.add(mes));
+		messages.stream().forEach(mes->{
+			chatEnpoint.internationalMessegeList.remove(mes);
+			messageService.saveOrUpdateMessage(mes);
+		});
+		//аварийная сериализация кеша, на случай если сервер упадёт
+		try {
+			FileOutputStream fos =
+                     new FileOutputStream(appPath + "resources/others/hashmap.ser");
+                  ObjectOutputStream oos = new ObjectOutputStream(fos);
+                  oos.writeObject(chatEnpoint.internationalMessegeList);
+                  oos.close();
+                  fos.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		//меняем статус у Order если имеется
+		Route routeTarget = routeService.getRouteById(idRoute);
+		Set <Order> orders = routeTarget.getOrders();
+		if(orders != null && orders.size() != 0) {
+			orders.forEach(o->{
+				o.setStatus(60);
+				o.setChangeStatus(o.getChangeStatus() + "\nМаршрут "+idRoute+" выйгран  " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy hh:MM:ss")));
+				orderService.updateOrder(o);
+//				orderService.updateOrderFromStatus(o);
+			});			
+		}
+		
+		Set<Message> messagesJustDelete = new HashSet<Message>();
+		mainChat.messegeList.stream()
+			.filter(m-> m.getIdRoute() != null && m.getIdRoute().equals(idRoute) && m.getToUser().equals("international"))
+			.forEach(m-> messagesJustDelete.add(m));
+		messagesJustDelete.stream().forEach(m->mainChat.messegeList.remove(m));
+		response.put("status", "200");
+		response.put("message", "Маршут создан");
+		response.put("redirect", "/main/logistics/internationalNew");
+		response.put("route", routeTarget);
+		return response;
+	}
 	
 	private Double toDouble(Object obj) {
 	    if (obj == null || obj.toString().isEmpty()) return null;
@@ -9483,14 +9559,13 @@ public class MainRestController {
 			Сортировка:			
 			    Используем Comparator с помощью метода Comparator.comparing, чтобы задать логику сортировки.
 		 */
-		for (Order order : orders) {
-//			System.out.println(order.getIdOrder() + " -> " + order.getTimeDelivery() + " -> " + order.getOnloadWindowDate()+ " -> " +order.getOnloadWindowTime());
-			if(order.getTimeDelivery() == null) {
-				response.put("status", "105");
-				response.put("message", "Заявка " + order.getMarketNumber() + " не поставлена в слоты! Обратитесь к менеджеру " + order.getManager());
-				return response;
-			}
-		}
+//		for (Order order : orders) {
+//			if(order.getTimeDelivery() == null) {
+//				response.put("status", "105");
+//				response.put("message", "Заявка " + order.getMarketNumber() + " не поставлена в слоты! Обратитесь к менеджеру " + order.getManager());
+//				return response;
+//			}
+//		}
 		orders.sort(Comparator.comparing(
 	            order -> Optional.ofNullable(order.getTimeDelivery())
 	                    .orElseGet(() -> combineDateAndTime(order.getOnloadWindowDate(), order.getOnloadWindowTime()))

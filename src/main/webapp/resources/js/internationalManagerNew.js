@@ -70,7 +70,7 @@ const columnDefs = [
 	{ headerName: 'Температурные условия', field: 'temperature', wrapText: true, autoHeight: true, },
 	{ headerName: 'Контактное лицо контрагента', field: 'contact', wrapText: true, autoHeight: true, },
 	{ headerName: 'Общий вес', field: 'totalCargoWeight', valueFormatter: params => params.value + ' кг' },
-	{ headerName: 'Комментарии', field: 'userComments', wrapText: true, autoHeight: true, minWidth: 240, width: 640, },
+	{ headerName: 'Комментарии', field: 'userComments', filter: 'agTextColumnFilter', wrapText: true, autoHeight: true, minWidth: 240, width: 640, },
 	{ headerName: 'Логист', field: 'logistInfo', wrapText: true, autoHeight: true, },
 	{
 		headerName: 'Статус', field: 'statusRoute',

@@ -56,6 +56,23 @@
 		<div id="snackbar"></div>
 	</div>
 
+	<!-- Модальное окно для отображения текста -->
+	<div class="modal fade bg-light" style="z-index: 1051;" id="displayMessageModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="displayMessageModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-xl">
+			<div class="modal-content">
+				<div class="modal-header justify-content-center bg-color">
+					<h5 class="modal-title" id="displayMessageModalLabel">Сообщение</h5>
+				</div>
+				<div class="modal-body">
+					<div id="messageContainer"></div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Ок, понятно</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
 	<!-- Модальное окно -->
 	<div class="modal fade" id="routeModal" tabindex="-1" aria-labelledby="routeModalLabel" aria-hidden="true">
 		<div class="modal-dialog modal-xl">

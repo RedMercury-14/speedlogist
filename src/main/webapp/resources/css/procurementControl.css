@@ -5,6 +5,10 @@
 	margin-top: 60px;
 }
 
+.modal {
+	font-family: var(--font-family-sans-serif);
+}
+
 .title-container,
 .search-form-container {
 	min-height: 30px;

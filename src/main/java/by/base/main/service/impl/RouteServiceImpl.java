@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -297,5 +298,22 @@ public class RouteServiceImpl implements RouteService{
 		return routes;
 	}
 
+	 @Transactional
+	 @Override
+	 public List<Route> getInternationalRoutesByDates(Date dateStart, Date dateFinish) {
+	     return routeDAO.getInternationalRoutesByDates(dateStart, dateFinish);
+	 }
+	 
+	 @Transactional
+	 @Override
+	 public List<Route> getRouteListByDatesCreate(Date dateStart, Date dateFinish) {
+	     return routeDAO.getRouteListByDatesCreate(dateStart, dateFinish);
+	 }
+
+	 @Transactional
+	 @Override
+	 public Map<String, List<Message>> routesWithMessages(List<String> routesId) {
+	     return routeDAO.routesWithMessages(routesId);
+	 }
 	
 }

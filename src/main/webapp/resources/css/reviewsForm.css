@@ -29,6 +29,9 @@ footer.to-bottom {
 	flex: 1;
 }
 @media (max-width: 576px) {
+	.my-container {
+		margin-bottom: 120px;
+	}
 	.callback-group {
 		flex-direction: column;
 		align-items: flex-start;

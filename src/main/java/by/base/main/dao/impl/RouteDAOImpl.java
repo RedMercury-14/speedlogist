@@ -4,8 +4,10 @@ import java.sql.Date;
 import java.sql.Time;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -656,4 +658,60 @@ public class RouteDAOImpl implements RouteDAO {
 	    }
 		return objects;
 	}
+	
+	private static final String queryGetInternationalRoutesByDates = "SELECT distinct r from Route r " +
+            "LEFT JOIN FETCH r.orders ord " +
+            "LEFT JOIN FETCH ord.addresses addr " +
+            "LEFT JOIN FETCH r.truck tr " +
+            "LEFT JOIN FETCH r.roteHasShop rhs " +
+            "where r.way ='Импорт' and r.dateLoadActually BETWEEN :frmdate and :todate";
+
+    @Override
+    public List<Route> getInternationalRoutesByDates(Date dateStart, Date dateFinish) {
+        Session currentSession = sessionFactory.getCurrentSession();
+        Query<Route> theObject = currentSession.createQuery(queryGetInternationalRoutesByDates, Route.class);
+        theObject.setParameter("frmdate", dateStart, TemporalType.DATE);
+        theObject.setParameter("todate", dateFinish, TemporalType.DATE);
+
+        List<Route> routes = theObject.list();
+        return routes;
+
+    }
+    
+    private static final String queryGetRoutesByDatesCreate = "select distinct r from Route r LEFT JOIN FETCH r.orders ord "
+    	       + "LEFT JOIN FETCH ord.addresses addr "
+    	       + "LEFT JOIN FETCH r.user u "
+    	       + "LEFT JOIN FETCH r.truck tr "
+    	       + "LEFT JOIN FETCH r.roteHasShop rhs "
+    	       + "where r.createDate BETWEEN :frmdate and :todate ";
+    @Override
+    public List<Route> getRouteListByDatesCreate(Date dateStart, Date dateFinish) {
+        Session currentSession = sessionFactory.getCurrentSession();
+        Query<Route> theObject = currentSession.createQuery(queryGetRoutesByDatesCreate, Route.class);
+        theObject.setParameter("frmdate", dateStart, TemporalType.DATE);
+        theObject.setParameter("todate", dateFinish, TemporalType.DATE);
+        List<Route> routes = theObject.list();
+        return routes;
+    }
+
+    private static final String queryGetMessagesByRoutesId = "from Message m where m.idRoute in :idRoutes ";
+    @Override
+    public Map<String, List<Message>> routesWithMessages(List<String> routesId) {
+        Session currentSession = sessionFactory.getCurrentSession();
+        Query<Message> theObject = currentSession.createQuery(queryGetMessagesByRoutesId, Message.class);
+        theObject.setParameter("idRoutes", routesId);
+        List<Message> messages = theObject.getResultList();
+        Map<String, List<Message>> result = new HashMap<>();
+        for (Message message : messages) {
+               List<Message> list;
+               if (!result.containsKey(message.getIdRoute())) {
+                   list = new ArrayList<>();
+               } else {
+                   list = result.get(message.getIdRoute());
+               }
+               list.add(message);
+               result.put(message.getIdRoute(), list);
+           }
+        return result;
+    }
 }

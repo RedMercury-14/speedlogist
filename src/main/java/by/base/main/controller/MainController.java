@@ -354,6 +354,16 @@ public class MainController {
 		return "main";		
 	}
 	
+	@GetMapping("/main/carrier-application-form")
+	public String getCarrierApplicationForm(Model model, HttpServletRequest request) {
+	    return "carrierApplicationForm";
+	}
+	
+	 @GetMapping("/main/tender-preview")
+	 public String getTenderPreview(Model model, HttpServletRequest request) {
+		 return "tenderPreview";
+	    }
+	
 	/**
 	 * Переход на страницу с качеством (от двора)
 	 * @param request

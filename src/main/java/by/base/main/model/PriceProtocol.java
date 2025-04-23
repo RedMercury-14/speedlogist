@@ -91,9 +91,32 @@ public class PriceProtocol {
 
     @Column(name = "contract_number")
     private String contractNumber;
+    
+    @Column(name = "supplier")
+    private String supplier;
 
     @Column(name = "contract_date")
     private Date contractDate;
+    
+    @Column(name = "date_arrival")
+    private Date dateArrival;
+
+    
+	public Date getDateArrival() {
+		return dateArrival;
+	}
+
+	public void setDateArrival(Date dateArrival) {
+		this.dateArrival = dateArrival;
+	}
+
+	public String getSupplier() {
+		return supplier;
+	}
+
+	public void setSupplier(String supplier) {
+		this.supplier = supplier;
+	}
 
 	public int getIdPriceProtocol() {
 		return idPriceProtocol;
@@ -343,9 +366,12 @@ public class PriceProtocol {
 				+ ", vatRate=" + vatRate + ", priceWithVat=" + priceWithVat + ", countryOrigin=" + countryOrigin
 				+ ", manufacturer=" + manufacturer + ", unitPerPack=" + unitPerPack + ", shelfLifeDays=" + shelfLifeDays
 				+ ", currentPrice=" + currentPrice + ", priceChangePercent=" + priceChangePercent
-				+ ", lastPriceChangeDate=" + lastPriceChangeDate + ", validFrom=" + dateValidFrom + ", validTo=" + dateValidTo
-				+ ", contractNumber=" + contractNumber + ", contractDate=" + contractDate + "]";
+				+ ", lastPriceChangeDate=" + lastPriceChangeDate + ", dateValidFrom=" + dateValidFrom + ", dateValidTo="
+				+ dateValidTo + ", contractNumber=" + contractNumber + ", supplier=" + supplier + ", contractDate="
+				+ contractDate + ", dateArrival=" + dateArrival + "]";
 	}
+
+	
 
 	
     

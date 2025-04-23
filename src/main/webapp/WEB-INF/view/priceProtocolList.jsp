@@ -22,6 +22,11 @@
 
 	<jsp:include page="headerNEW.jsp" />
 
+	<sec:authorize access="isAuthenticated()">
+		<sec:authentication property="principal.authorities" var="roles" />
+		<sec:authentication property="name" var="login"/>
+	</sec:authorize>
+
 	<div id="overlay" class="none">
 		<div class="spinner-border text-primary" role="status">
 			<span class="sr-only">Загрузка...</span>
@@ -36,6 +41,17 @@
 			<button type="button" class="btn tools-btn font-weight-bold text-muted" data-toggle="modal" data-target="#createPriceProtocolModal">
 				+
 			</button>
+			<c:choose>
+				<c:when test="${roles == '[ROLE_ADMIN]'}">
+					<button type="button" class="btn tools-btn font-weight-bold text-muted" title="Загрузить Excel" data-toggle="modal" data-target="#sendExcelModal">
+						<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-upload" viewBox="0 0 16 16">
+							<path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+							<path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z"/>
+						</svg>
+						Excel
+					</button>
+				</c:when>
+			</c:choose>
 			<!-- <div class="search-form-container">
 				<form class="" action="" id="orderSearchForm">
 					<span class="font-weight-bold text-muted mb-0">Отобразить данные</span>
@@ -70,6 +86,36 @@
 				<div class="modal-footer">
 					<button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
 				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- модальное окно загрузки таблицы Эксель -->
+	<div class="modal fade" id="sendExcelModal" tabindex="-1" aria-labelledby="sendExcelModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h1 class="modal-title fs-5 mt-0" id="sendExcelModalLabel">Загрузить Excel</h1>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<form id="sendExcelForm" action="">
+					<div class="modal-body">
+						<div class="inputs-container">
+							<div class="form-group">
+								<label class="col-form-label text-muted font-weight-bold">Загрузите файл Excel</label>
+								<input type="file" class="form-control btn-outline-secondary p-1" name="excel"
+									id="excel" required
+									accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel">
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-primary">Загрузить</button>
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">Отменить</button>
+					</div>
+				</form>
 			</div>
 		</div>
 	</div>
@@ -359,26 +405,5 @@
 
 	<script src="${pageContext.request.contextPath}/resources/js/mainPage/nav-fixed-top.js"></script>
 	<script type="module" src="${pageContext.request.contextPath}/resources/js/priceProtocolList.js"></script>\
-	<!-- <script>
-		let productIndex = 0;
-
-		function addProductItem() {
-			const container = document.getElementById('productItemsContainer');
-			const template = document.getElementById('productItemTemplate');
-			const clone = template.content.cloneNode(true);
-
-			clone.querySelectorAll('[data-name]').forEach((el) => {
-				const field = el.getAttribute('data-name');
-				el.setAttribute('name', `${field}_${productIndex}`);
-			});
-
-			container.appendChild(clone);
-			productIndex++;
-		}
-
-		function removeProductItem(button) {
-			button.closest('.product-item').remove();
-		}
-	</script> -->
 </body>
 </html>

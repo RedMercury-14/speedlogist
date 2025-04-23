@@ -52,6 +52,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/mainPage/slick.min.css"> 
         <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/mainPage/owl.carousel.min.css">
         <link rel='stylesheet' href="${pageContext.request.contextPath}/resources/css/mainPage/flickity.min.css">
+        <link rel='stylesheet' href="${pageContext.request.contextPath}/resources/css/font-awesome/css/all.min.css">
 	</head>
 <body>
     <sec:authorize access="authenticated" var="authenticated" />
@@ -89,12 +90,20 @@
         <div class="hero-slider" data-carousel>
           <div class="carousel-cell" style="background-image:url(${pageContext.request.contextPath}/resources/img/mainPage/images/home-slider-7.jpg);">
             <div class="overlay"></div>
-            <div class="container slider-caption">
+            <div class="mt-3 mt-md-0 container slider-caption">
               <h5 class="subtitle">Доставка точно в сроки</h5>
               <h2 class="title">Биржа международных маршрутов<br>на склады компании Доброном</h2>
               <c:choose>
                   <c:when test="${!authenticated}">
-                    <a href="./main/registration"><button class="cargoy-btn-white">Зарегистрироваться</button></a>
+                    <div class="d-flex flex-md-row flex-column align-items-center">
+                        <a href="./main/registration" class="mb-md-2">
+                            <button class="cargoy-btn-white">Зарегистрироваться</button>
+                        </a>
+                        <span class="ml-md-4 ml-0 my-2 text-monospace subtitle">или</span>
+                        <a href="./main/carrier-application-form" class="ml-md-4 ml-0">
+                            <button class="cargoy-btn-white">Предложить сотрудничество</button>
+                        </a>
+                    </div>
                   </c:when>
               </c:choose>
             </div>
@@ -107,6 +116,8 @@
               <c:choose>
                   <c:when test="${!authenticated}">
                     <a href="./main/registration"><button class="cargoy-btn-white">Зарегистрироваться</button></a>
+                    <span class="ml-4 text-monospace subtitle">или</span>
+                    <a href="./main/carrier-application-form"><button class="ml-4 cargoy-btn-white">Предложить сотрудничество</button></a>
                   </c:when>
               </c:choose>
             </div>
@@ -123,48 +134,60 @@
         <!-- partial -->
     </div>
     <!--SLIDER END-->
-    
-        <!-- FRONT BOXES START -->
-        <div class="container services-carousel slider">
-            <div class="slide">
-                <div class="cargoy-sb">
-                    <figure class="sb-thumb green"><a href="#"><img src="${pageContext.request.contextPath}/resources/img/mainPage/images/tabor.jpg" alt=""></a></figure>
-                    <div class="sb-caption">
-                        <figure class="icon-caption"><img src="${pageContext.request.contextPath}/resources/img/mainPage/master/box.svg" alt=""></figure>
-                        <h4>Таборы</h4>
-                    </div>
-                </div>
-            </div>
-            <div class="slide">
-               <div class="cargoy-sb">
-                    <figure class="sb-thumb green"><a href="#"><img src="${pageContext.request.contextPath}/resources/img/mainPage/images/priles.jpg" alt=""></a></figure>
-                    <div class="sb-caption">
-                        <figure class="icon-caption"><img src="${pageContext.request.contextPath}/resources/img/mainPage/master/box.svg" alt=""></figure>
-                        <h4>Прилесье</h4>
-                    </div>
-                </div>
-            </div>
-            <div class="slide">
-               <div class="cargoy-sb">
-                    <figure class="sb-thumb green"><a href="#"><img src="${pageContext.request.contextPath}/resources/img/mainPage/images/kylik.jpg" alt=""></a></figure>
-                    <div class="sb-caption">
-                        <figure class="icon-caption"><img src="${pageContext.request.contextPath}/resources/img/mainPage/master/box.svg" alt=""></figure>
-                        <h4>Кулики</h4>
-                    </div>
-                </div>
-            </div>
-            <div class="slide">
-               <div class="cargoy-sb">
-                    <figure class="sb-thumb green"><a href="#"><img src="${pageContext.request.contextPath}/resources/img/mainPage/images/sovremenny_sklad.jpg" alt=""></a></figure>
-                    <div class="sb-caption">
-                        <figure class="icon-caption"><img src="${pageContext.request.contextPath}/resources/img/mainPage/master/box.svg" alt=""></figure>
-                        <h4>Наши склады</h4>
-                    </div>
+
+    <!-- FRONT BOXES START -->
+    <div class="container services-carousel slider">
+        <div class="slide">
+            <div class="cargoy-sb">
+                <figure class="sb-thumb green"><a href="#"><img src="${pageContext.request.contextPath}/resources/img/mainPage/images/tabor.jpg" alt=""></a></figure>
+                <div class="sb-caption">
+                    <figure class="icon-caption"><img src="${pageContext.request.contextPath}/resources/img/mainPage/master/box.svg" alt=""></figure>
+                    <h4>Таборы</h4>
                 </div>
             </div>
         </div>
-        <!-- FRONT BOXES END -->
-    
+        <div class="slide">
+           <div class="cargoy-sb">
+                <figure class="sb-thumb green"><a href="#"><img src="${pageContext.request.contextPath}/resources/img/mainPage/images/priles.jpg" alt=""></a></figure>
+                <div class="sb-caption">
+                    <figure class="icon-caption"><img src="${pageContext.request.contextPath}/resources/img/mainPage/master/box.svg" alt=""></figure>
+                    <h4>Прилесье</h4>
+                </div>
+            </div>
+        </div>
+        <div class="slide">
+           <div class="cargoy-sb">
+                <figure class="sb-thumb green"><a href="#"><img src="${pageContext.request.contextPath}/resources/img/mainPage/images/kylik.jpg" alt=""></a></figure>
+                <div class="sb-caption">
+                    <figure class="icon-caption"><img src="${pageContext.request.contextPath}/resources/img/mainPage/master/box.svg" alt=""></figure>
+                    <h4>Кулики</h4>
+                </div>
+            </div>
+        </div>
+        <div class="slide">
+           <div class="cargoy-sb">
+                <figure class="sb-thumb green"><a href="#"><img src="${pageContext.request.contextPath}/resources/img/mainPage/images/sovremenny_sklad.jpg" alt=""></a></figure>
+                <div class="sb-caption">
+                    <figure class="icon-caption"><img src="${pageContext.request.contextPath}/resources/img/mainPage/master/box.svg" alt=""></figure>
+                    <h4>Наши склады</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- FRONT BOXES END -->
+
+    <section>
+        <div class="container">
+            <div class="card bg-light mb-3 p-3">
+                <h4 class="mb-0">Международные перевозки</h4>
+            </div>
+            <div class="row" id="cardsContainer"></div>
+            <div class="d-flex justify-content-center mb-3">
+                <a href="./main/tender-preview"><button class="cargoy-btn-white bg-color text-nowrap">Посмотреть больше маршрутов...</button></a>
+            </div>
+        </div>
+    </section>
+
     <!-- CONTENT START -->
     <section>
         <!-- WIDE SECTION COUNTER START -->
@@ -220,6 +243,7 @@
     <script src="${pageContext.request.contextPath}/resources/js/mainPage/slider.js"></script>
     <script src='${pageContext.request.contextPath}/resources/js/mainPage/nav-fixed-top.js'></script>
     <script src="${pageContext.request.contextPath}/resources/js/myMessage.js" type="module"></script>
+    <script src="${pageContext.request.contextPath}/resources/js/tenderPreview.js" type="module"></script>
     <!-- JAVASCRIPTS END -->
     
     </body>

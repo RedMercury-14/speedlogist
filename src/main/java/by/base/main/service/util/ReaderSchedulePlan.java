@@ -232,7 +232,7 @@ public class ReaderSchedulePlan {
 				boolean flag = false;
 				String targetKey = null;
 				String targetValue = null;
-				for (Entry<String, String> entry : daysStep2.entrySet()) {
+				for (Entry<String, String> entry : daysStep2.entrySet()) {					
 					if(entry.getValue().contains(translateToRussianWeek(dayOfPlanOrder))) {
 						flag = true;
 						targetKey = entry.getKey();
@@ -240,7 +240,7 @@ public class ReaderSchedulePlan {
 						break;
 					}
 				}
-				long i = 0;
+		long i = 0;
 		
 		i = parseWeekNumber(targetValue);			
 		LocalDate datePostavForCalc = LocalDate.of(2024, 7, DayOfWeek.valueOf(targetKey).getValue());			

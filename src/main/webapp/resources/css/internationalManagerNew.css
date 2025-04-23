@@ -139,19 +139,22 @@ footer.to-bottom {
 	border-right: 3px solid lightslategray;
 }
 
-#myGrid .ag-cell-value {
+#myGrid .ag-cell-value,
+#tenderOffers .ag-cell-value {
 	line-height: 20px !important;
 	word-break: normal;
 	padding-top: 10px;
 	padding-bottom: 10px;
 }
-#myGrid .ag-cell-value.group-cell {
+#myGrid .ag-cell-value.group-cell,
+#tenderOffers .ag-cell-value.group-cell {
 	line-height: 20px !important;
 	word-break: normal;
 	padding-top: 0;
 	padding-bottom: 0;
 }
-#myGrid .ag-cell-value.group-cell .ag-group-value{
+#myGrid .ag-cell-value.group-cell .ag-group-value,
+#tenderOffers .ag-cell-value.group-cell .ag-group-value {
 	padding-top: 10px;
 	padding-bottom: 10px;
 }
@@ -188,6 +191,13 @@ footer.to-bottom {
 }
 #myGrid .savedRow {
 	border: 2px solid #06bed5;
+}
+
+#tenderOffers .bestOffer {
+	background-color: #b8e6c1;
+}
+#tenderOffers .badOffer {
+	background-color: #f5b7b1;
 }
 
 .none {

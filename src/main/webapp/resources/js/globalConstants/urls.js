@@ -203,6 +203,7 @@ export const toRouteEndBaseUrl = '/speedlogist/main/logistics/international/rout
 export const getNumMessageBaseUrl ='/speedlogist/api/info/message/numroute/'
 export const getRoutesBaseUrl = '/speedlogist/api/manager/getRouteForInternational/' // получение данных маршрутов
 export const getProposalBaseUrl = `/speedlogist/api/logistics/getProposal/` // скачивание заявки на перевозку
+export const confirmTenderOfferUrl = '/speedlogist/api/logistics/internationalNew/confrom'
 
 
 ///////////////////////////////////////////////

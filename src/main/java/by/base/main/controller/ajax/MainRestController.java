@@ -384,9 +384,9 @@ public class MainRestController {
         
         Integer idRoute = Integer.parseInt(jsonMainObject.get("idRoute").toString().trim());
         Integer cost = Integer.parseInt(jsonMainObject.get("cost").toString().trim());
-        String currency = jsonMainObject.get("currency").toString();
-        String status = jsonMainObject.get("status").toString();
-        String login = jsonMainObject.get("login").toString();
+        String currency = jsonMainObject.get("currency") != null || !jsonMainObject.get("currency").toString().isEmpty() ? jsonMainObject.get("currency").toString() : null;
+        String status = jsonMainObject.get("status") != null || !jsonMainObject.get("status").toString().isEmpty() ? jsonMainObject.get("status").toString() : null;
+        String login = jsonMainObject.get("login") != null || !jsonMainObject.get("login").toString().isEmpty() ? jsonMainObject.get("login").toString() : null;
 		
 		//обработка, если удалось нажать на кнопку
 		Order order = orderService.getOrderByIdRoute(idRoute);

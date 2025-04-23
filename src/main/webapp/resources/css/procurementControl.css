@@ -83,6 +83,27 @@
 	overflow: visible;
 }
 
+.form-check-input {
+	width: 1.5em;
+	height: 1.5em;
+	margin-top: 0.3em;
+}
+.form-check-label {
+	font-size: 1.1em;
+	cursor: pointer;
+	font-weight: 600;
+	opacity: 0.6;
+	padding: 0.2em 0.5em;
+	border-radius: 0.4em;
+	transition: all 0.2s ease;
+	background-color: transparent;
+}
+.form-check-input:checked + .form-check-label {
+	opacity: 1;
+	background-color: #e0f0ff;
+	box-shadow: 0 0 0 2px #007bff40;
+}
+
 #myGrid {
 	width: 100%;
 	height: calc(100vh - 133px);
@@ -266,6 +287,7 @@
 	display: flex;
 	max-height: 76vh;
 	overflow-y: scroll;
+	overflow-x: hidden;
 }
 .routeInfo-container {
 	display: flex;

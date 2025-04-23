@@ -703,12 +703,15 @@ function routeFormDataFormatter(routeForm) {
 		? points[points.length - 1].date
 		: ''
 
+	// const forReduction = data.forReduction === 'on'
+
 	return {
 		...data,
 		idOrders,
 		dateDelivery,
 		points: updatedPoints,
-		comment: getComment(data)
+		comment: getComment(data),
+		// forReduction,
 	}
 }
 

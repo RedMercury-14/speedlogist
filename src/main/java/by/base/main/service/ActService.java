@@ -24,4 +24,6 @@ public interface ActService {
 	 * @author Ira
 	 */
 	List<Act> getActsByRouteId(String id, LocalDate startDate, LocalDate finishDate);
+
+	List<Act> getActsByDates(LocalDate startDate, LocalDate finishDate);
 }

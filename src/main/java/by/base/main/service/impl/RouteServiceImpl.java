@@ -310,4 +310,10 @@ public class RouteServiceImpl implements RouteService{
 	public List<Route> getInternationalRoutesByDates(Date dateStart, Date dateFinish) {
 		return routeDAO.getInternationalRoutesByDates(dateStart, dateFinish);
 	}
+
+	@Transactional
+	@Override
+	public List<Route> getAllActualRoute(Date date) {
+		return routeDAO.getAllActualRoute(date);
+	}
 }

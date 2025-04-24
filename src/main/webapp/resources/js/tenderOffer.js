@@ -70,6 +70,10 @@ $.getJSON(`${getInfoRouteMessageBaseUrl}${idRoute}`, function(data) {
 			});
 		}
 
+		let td5 = document.createElement("td");
+		td5.innerText = val.datetime;
+		let td6 = document.createElement("td");
+		td6.innerText = val.comment;
 		let input = document.createElement("input");
 		input.type = 'hidden';
 		input.id = 'id';
@@ -78,9 +82,11 @@ $.getJSON(`${getInfoRouteMessageBaseUrl}${idRoute}`, function(data) {
 		td3.appendChild(button);
 		row.appendChild(td0);
 		row.appendChild(td1);
+		row.appendChild(td5);
 		row.appendChild(td2);
 		row.appendChild(td3);
 		row.appendChild(td4);
+		row.appendChild(td6);
 		document.querySelector("#sort").appendChild(row);
 	});
 	setTimeout(() => doOptimalCost(), 600);
@@ -164,6 +170,10 @@ function onMessage(msg) {
 				});
 			});
 		}
+		let td5 = document.createElement("td");
+		td5.innerText = msg.datetime;
+		let td6 = document.createElement("td");
+		td6.innerText = msg.comment;
 		let input = document.createElement("input");
 		input.type = 'hidden';
 		input.id = 'id'
@@ -172,9 +182,11 @@ function onMessage(msg) {
 		td3.appendChild(button);
 		row.appendChild(td0);
 		row.appendChild(td1);
+		row.appendChild(td5);
 		row.appendChild(td2);
 		row.appendChild(td3);
 		row.appendChild(td4);
+		row.appendChild(td6);
 		document.querySelector("#sort").appendChild(row);
 		//	row.querySelector("input[type=button]").addEventListener("mousedown", event => {
 		//		confrom(event.target.id, event.target.className, idRoute)
@@ -407,15 +419,21 @@ function history() {
 					});
 				});
 			}
+			let td5 = document.createElement("td");
+			td5.innerText = val.datetime;
+			let td6 = document.createElement("td");
+			td6.innerText = val.comment;
 			let input = document.createElement("input");
 			input.type = 'hidden';
 			input.id = 'id'
 			input.innerHTML = val.idRoute;
 			td3.appendChild(input);
 			row.appendChild(td1);
+			row.appendChild(td5);
 			row.appendChild(td2);
 			row.appendChild(td3);
 			row.appendChild(td4);
+			row.appendChild(td6);
 			document.querySelector("#sort").appendChild(row);
 		});
 	})

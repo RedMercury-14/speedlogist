@@ -1,13 +1,13 @@
 import { AG_GRID_LOCALE_RU } from "./AG-Grid/ag-grid-locale-RU.js"
-import { ResetStateToolPanel, dateComparator, gridColumnLocalState, gridFilterLocalState } from "./AG-Grid/ag-grid-utils.js"
+import { BtnCellRenderer, ResetStateToolPanel, dateComparator, gridColumnLocalState, gridFilterLocalState } from "./AG-Grid/ag-grid-utils.js"
 import { dateHelper, debounce, getData, getRouteStatus, isAdmin, isObserver } from "./utils.js"
-import { ws } from './global.js'
+import { EUR, KZT, RUB, USD, ws } from './global.js'
 import { wsHead } from './global.js'
 import { snackbar } from "./snackbar/snackbar.js"
 import { uiIcons } from "./uiIcons.js"
 import { bootstrap5overlay } from "./bootstrap5overlay/bootstrap5overlay.js"
 import { ajaxUtils } from "./ajaxUtils.js"
-import { getMemoryRouteMessageBaseUrl, getNumMessageBaseUrl, getProposalBaseUrl, getRoutesBaseUrl, routeUpdateBaseUrl } from "./globalConstants/urls.js"
+import { checkOrderForStatusBaseUrl, confirmTenderOfferUrl, getInfoRouteMessageBaseUrl, getMemoryRouteMessageBaseUrl, getNumMessageBaseUrl, getProposalBaseUrl, getRoutesBaseUrl, nbrbExratesRatesBaseUrl, routeUpdateBaseUrl } from "./globalConstants/urls.js"
 
 const token = $("meta[name='_csrf']").attr("content")
 const PAGE_NAME = 'internationalManagerNew'
@@ -16,6 +16,12 @@ const DATES_KEY = `searchDates_to_${PAGE_NAME}`
 const ROW_INDEX_KEY = `AG_Grid_rowIndex_to_${PAGE_NAME}`
 const role = document.querySelector('#role').value
 
+const currencyDict = {
+	'EUR': EUR,
+	'USD': USD,
+	'RUB': RUB,
+	'KZT': KZT,
+}
 
 export const rowClassRules = {
 	'finishRow': params => params.data && params.data.statusRoute === '4',
@@ -33,6 +39,8 @@ const debouncedSaveFilterState = debounce(saveFilterState, 300)
 
 let table
 let isInitDataLoaded = false
+let currentOpenRouteId = null
+let cancelUpdateOfferCount = false
 
 const columnDefs = [
 	// {
@@ -47,7 +55,7 @@ const columnDefs = [
 	{ headerName: 'Тип', field: 'simpleWay', minWidth: 50, width: 50, },
 	{ headerName: 'Название маршрута', field: 'routeDirection', minWidth: 240, width: 640, wrapText: true, autoHeight: true, },
 	{ headerName: 'Контрагент', field: 'counterparty', wrapText: true, autoHeight: true, },
-	{ headerName: 'Дата загрузки', field: 'simpleDateStart', comparator: dateComparator, },
+	{ headerName: 'Дата загрузки', field: 'simpleDateStart', comparator: dateStringComparator, },
 	{ headerName: 'Время загрузки (планируемое)', field: 'timeLoadPreviously', },
 	{ headerName: 'Дата и время выгрузки', field: 'unloadToView', wrapText: true, autoHeight: true, },
 	{ headerName: 'Выставляемая стоимость', field: 'finishPriceToView', },
@@ -70,7 +78,7 @@ const columnDefs = [
 	{ headerName: 'Температурные условия', field: 'temperature', wrapText: true, autoHeight: true, },
 	{ headerName: 'Контактное лицо контрагента', field: 'contact', wrapText: true, autoHeight: true, },
 	{ headerName: 'Общий вес', field: 'totalCargoWeight', valueFormatter: params => params.value + ' кг' },
-	{ headerName: 'Комментарии', field: 'userComments', wrapText: true, autoHeight: true, minWidth: 240, width: 640, },
+	{ headerName: 'Комментарии', field: 'userComments', filter: 'agTextColumnFilter', wrapText: true, autoHeight: true, minWidth: 240, width: 640, },
 	{ headerName: 'Логист', field: 'logistInfo', wrapText: true, autoHeight: true, },
 	{
 		headerName: 'Статус', field: 'statusRoute',
@@ -155,11 +163,94 @@ const gridOptions = {
 	}
 }
 
+const gridOptionsForOffers = {
+	columnDefs: [
+		{ field: "companyName", headerName: "Предложение от", flex: 3, },
+		{
+			field: "datetimeConverted", headerName: "Дата", flex: 2, sort: 'desc',
+			valueFormatter: dateTimeValueFormatter,
+			comparator: dateComparator,
+			filterParams: { valueFormatter: dateTimeValueFormatter, },
+		},
+		{
+			field: "originalCost", headerName: "Стоимость",
+			valueFormatter: (params) => {
+				return params.value ? `${params.value} ${params.data.currency}` : ""
+			},
+		},
+		{
+			field: "convertedCost", headerName: "По курсу НБРБ",
+			cellClass: 'px-2 text-center font-weight-bold',
+			valueFormatter: (params) => {
+				return params.value ? `${params.value} BYN` : ""
+			},
+		},
+		{
+			headerName: "Действие", field: 'action',
+			minWidth: 110,
+			cellClass: 'px-0 text-center',
+			// cellRenderer: BtnCellRenderer,
+			// cellRendererParams: {
+			// 	onClick: offerAccept,
+			// 	dynamicLabel: params => params.data.action === 'confirm' ? 'Подтвердить' : 'Принять',
+			// 	className: 'btn btn-success btn-sm',
+			// },
+			cellRenderer: params => {
+				if (!params.data.action) return ''
+				const button = document.createElement("button")
+				button.textContent = params.data.action === 'confirm' ? 'Подтвердить' : 'Принять'
+				const classes = params.data.action === 'confirm' ? 'btn btn-success btn-sm' : 'btn btn-primary btn-sm'
+				button.classList.add(...classes.split(' '))
+				button.addEventListener("click", () => offerAccept(params))
+				return button
+			}
+		},
+		{ field: "comment", headerName: "Комментарий", flex: 2, },
+	],
+	defaultColDef: {
+		headerClass: 'px-2',
+		cellClass: 'px-2 text-center',
+		flex: 1,
+		resizable: true,
+		sortable: true,
+		suppressMenu: true,
+		filter: true,
+		floatingFilter: true,
+		wrapHeaderText: true,
+		autoHeaderHeight: true,
+		wrapText: true,
+		autoHeight: true,
+	},
+	localeText: AG_GRID_LOCALE_RU,
+	suppressMovableColumns: true,
+	animateRows: true,
+	suppressDragLeaveHidesColumns: true,
+	suppressRowClickSelection: true,
+	enableBrowserTooltips: true,
+	rowData: [],
+	context: {},
+	rowClassRules: {
+		'bestOffer': params => {
+			const { minCost } = params.context;
+			return minCost !== null && params.data.convertedCost === minCost
+		},
+		'badOffer': params => {
+			const { maxCost } = params.context;
+			return params.data.convertedCost === maxCost
+		}
+	},
+	onGridReady: params => params.api.showLoadingOverlay()
+}
+
 
 document.addEventListener('DOMContentLoaded', async () => {
 	const routeSearchForm = document.querySelector('#routeSearchForm')
 	const date_fromInput = document.querySelector('#date_from')
 	const date_toInput = document.querySelector('#date_to')
+
+	// отрисовка таблицы предложений
+	const gridTenderOffersDiv = document.getElementById("tenderOffers")
+	renderTable(gridTenderOffersDiv, gridOptionsForOffers)
 
 	// отрисовка таблицы
 	const gridDiv = document.querySelector('#myGrid')
@@ -186,6 +277,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 	// обработчик получения сообщений о предложениях
 	ws.onmessage = onMessageHandler
+
+	// закрытие модалки с предложениями
+	$('#tenderOffersModal').on('hidden.bs.modal', () => {
+		currentOpenRouteId = null
+	})
 
 	bootstrap5overlay.hideOverlay()
 })
@@ -227,11 +323,29 @@ async function onMessageHandler(e) {
 
 	// обновляем количество предложений
 	if (message.idRoute !== null) {
+		// отмена обновления, если обновляем всю строку через рест
+		if (cancelUpdateOfferCount) {
+			cancelUpdateOfferCount = true
+			return
+		}
+
 		const idRoute = +message.idRoute
 		updateOfferCount(idRoute)
 	}
+
+	// ОБНОВЛЕНИЕ ПРЕДЛОЖЕНИЙ В ОТКРЫТОМ МОДАЛЬНОМ ОКНЕ
+	// отсекаем лишние сообщения
+	if (!currentOpenRouteId
+		|| message.idRoute !== currentOpenRouteId
+		|| message.fromUser === 'system'
+	) return
+
+	await updateOffersInModal(message)
 }
 
+function sendMessage(message) {
+	ws.send(JSON.stringify(message))
+}
 function sendHeadMessage(message) {
 	wsHead.send(JSON.stringify(message))
 }
@@ -362,7 +476,7 @@ async function updateTable(gridOptions, searchForm, data) {
 		gridOptions.api.showNoRowsOverlay()
 		return
 	}
-	// console.log(data)
+
 	const mappingData = await getMappingData(routes)
 
 	gridOptions.api.setRowData(mappingData)
@@ -370,58 +484,59 @@ async function updateTable(gridOptions, searchForm, data) {
 }
 
 async function getMappingData(data) {
-	return await Promise.all(data.map( async (route) => {
-		const idRoute = route.idRoute
-		const unloadToView = getUnloadToView(route)
-		const finishPriceToView = getFinishPriceToView(route)
-		const economy = getEconomy(route)
-		const carrier = getCarrier(route)
-		const truckOwner = getTruckOwner(route)
-		const truckInfo = getTruckInfo(route)
-		const driverInfo = getDriverInfo(route)
-		const cargoInfo = getCargoInfo(route)
-		const startRouteCostInfo = getStartRouteCostInfo(route)
-		const statusRouteToView = getRouteStatus(route.statusRoute)
-		const counterparty = getCounterparty(route)
-		const offerCount = route.statusRoute === '1'
-			? await getData(getNumMessageBaseUrl + idRoute)
-			: 0
+	return await Promise.all(data.map(routeMapCallback))
+}
+async function routeMapCallback(route) {
+	const idRoute = route.idRoute
+	const unloadToView = getUnloadToView(route)
+	const finishPriceToView = getFinishPriceToView(route)
+	const economy = getEconomy(route)
+	const carrier = getCarrier(route)
+	const truckOwner = getTruckOwner(route)
+	const truckInfo = getTruckInfo(route)
+	const driverInfo = getDriverInfo(route)
+	const cargoInfo = getCargoInfo(route)
+	const startRouteCostInfo = getStartRouteCostInfo(route)
+	const statusRouteToView = getRouteStatus(route.statusRoute)
+	const counterparty = getCounterparty(route)
+	const offerCount = route.statusRoute === '1'
+		? await getData(getNumMessageBaseUrl + idRoute)
+		: 0
 
-		const isSavedRow = false
-		const orderInfo = getOrderInfo(route)
-		const idOrder =  orderInfo.idOrder
-		const contact = orderInfo.contact
-		const ukz = orderInfo.control
-		const cargo = orderInfo.cargo
-		const typeLoad = orderInfo.typeLoad
-		const typeTruck = orderInfo.typeTruck
-		const methodLoad = orderInfo.methodLoad
-		const temperature = orderInfo.temperature
-		return {
-			...route,
-			offerCount,
-			isSavedRow,
-			unloadToView,
-			finishPriceToView,
-			economy,
-			carrier,
-			truckOwner,
-			truckInfo,
-			driverInfo,
-			cargoInfo,
-			startRouteCostInfo,
-			statusRouteToView,
-			counterparty,
-			idOrder,
-			contact,
-			ukz,
-			cargo,
-			// typeLoad,
-			// typeTruck,
-			// methodLoad,
-			temperature,
-		}
-	}))
+	const isSavedRow = false
+	const orderInfo = getOrderInfo(route)
+	const idOrder =  orderInfo.idOrder
+	const contact = orderInfo.contact
+	const ukz = orderInfo.control
+	const cargo = orderInfo.cargo
+	const typeLoad = orderInfo.typeLoad
+	const typeTruck = orderInfo.typeTruck
+	const methodLoad = orderInfo.methodLoad
+	const temperature = orderInfo.temperature
+	return {
+		...route,
+		offerCount,
+		isSavedRow,
+		unloadToView,
+		finishPriceToView,
+		economy,
+		carrier,
+		truckOwner,
+		truckInfo,
+		driverInfo,
+		cargoInfo,
+		startRouteCostInfo,
+		statusRouteToView,
+		counterparty,
+		idOrder,
+		contact,
+		ukz,
+		cargo,
+		// typeLoad,
+		// typeTruck,
+		// methodLoad,
+		temperature,
+	}
 }
 
 function getContextMenuItems(params) {
@@ -440,7 +555,14 @@ function getContextMenuItems(params) {
 			name: `Истоpия предложений`,
 			icon: uiIcons.offer,
 			action: () => {
-				displayTenderOffer(idRoute)
+				displayTenderOffer(idRoute, status)
+			},
+		},
+		{
+			name: `Истоpия предложений (отдельная страница)`,
+			icon: uiIcons.offer,
+			action: () => {
+				displayTenderOfferOld(idRoute, status)
 			},
 		},
 		{
@@ -591,6 +713,15 @@ function updateCellData(id, columnName, newValue) {
 	rowNode.setDataValue(columnName, newValue)
 }
 
+// функция обновления данных строки таблицы
+function updateTableRow(gridOptions, rowData) {
+	const rowNode = gridOptions.api.getRowNode(rowData.idRoute)
+	gridOptions.api.applyTransactionAsync(
+		{ update: [rowData] },
+		() => highlightRow(rowNode)
+	)
+}
+
 // выделение ("мигание") строки с изменениями
 function highlightRow(rowNode) {
 	gridOptions.api.flashCells({ rowNodes: [rowNode] })
@@ -638,17 +769,82 @@ function restoreFilterState() {
 	gridFilterLocalState.restoreState(gridOptions, LOCAL_STORAGE_KEY)
 }
 
+// форматтер для дат в мс
+function dateTimeValueFormatter(params) {
+	const date = params.value
+	if (!date) return ''
+	return dateHelper.getFormatDateTime(date)
+}
 
+// компаратор для дат с виде реверсивных строк
+function dateStringComparator(date1, date2) {
+	const date1Number = dateToNum(date1)
+	const date2Number = dateToNum(date2)
+
+	if (date1Number === null && date2Number === null) return 0
+	if (date1Number === null) return -1
+	if (date2Number === null) return 1
+	return date1Number - date2Number
+}
+function dateToNum(date) {
+	if (date === undefined || date === null || date.length !== 10) {
+		return null
+	}
+
+	// форматируем даты, которые начинаются с года
+	const arr = date.split('-')
+	if (arr[0].length === 4) {
+		arr.reverse()
+	}
+	date = arr.join('-')
+
+	const yearNumber = date.substring(6, 10)
+	const monthNumber = date.substring(3, 5)
+	const dayNumber = date.substring(0, 2)
+
+	return yearNumber * 10000 + monthNumber * 100 + dayNumber
+}
 
 
 //--------------------------------------------------------------------------------------------------------------------------
 // функции для контекстного меню
-function displayTenderOffer(idRoute, status) {
+async function displayTenderOfferOld(idRoute, status) {
 	const url = status === '8'
 		? `../admin/internationalNew/tenderOffer?idRoute=${idRoute}`
 		: `./internationalNew/tenderOffer?idRoute=${idRoute}`
 	saveRowId(ROW_INDEX_KEY, idRoute)
 	window.location.href = url
+}
+async function displayTenderOffer(idRoute, status) {
+	bootstrap5overlay.showOverlay()
+
+	currentOpenRouteId = idRoute
+	let offers = []
+
+	// подтвердить предложение
+	if (status === '8') {
+		if (!checkOrderStatus(idRoute)) return
+		const offersData = await getData(`${getMemoryRouteMessageBaseUrl}${idRoute}`)
+		offers = await getMappingOffers(offersData, 'confirm')
+		
+	// показать предложения для принятия
+	} else if (status === '1') {
+		if (!checkOrderStatus(idRoute)) return
+		const offersData = await getData(`${getInfoRouteMessageBaseUrl}${idRoute}`)
+		offers = await getMappingOffers(offersData, 'accept')
+
+	// история предложений
+	} else {
+		const offersData = await getData(`${getMemoryRouteMessageBaseUrl}${idRoute}`)
+		offers = await getMappingOffers(offersData, '')
+	}
+	
+	setCostGridContext(gridOptionsForOffers, offers)
+	gridOptionsForOffers.api.setRowData(offers)
+	gridOptionsForOffers.api.hideOverlay()
+	setRouteDirection(idRoute)
+	bootstrap5overlay.hideOverlay()
+	$('#tenderOffersModal').modal('show')
 }
 function sendTender(idRoute, routeDirection) {
 	const newStatus = '1'
@@ -755,7 +951,6 @@ function errorCallback(error, timeoutId) {
 function getProposal(idRoute) {
 	fetch(getProposalBaseUrl + idRoute)
 		.then(res => {
-			console.log("🚀 ~ getProposal ~ res:", res)
 			if (!res.ok) {
 				throw new Error('Ошибка при получении файла')
 			}
@@ -769,6 +964,26 @@ function getProposal(idRoute) {
 		.catch(err => errorCallback(err, null))
 }
 
+async function checkOrderStatus(idRoute) {
+	const orderData = await getData(`${checkOrderForStatusBaseUrl}${idRoute}`)
+	if (orderData.status !== '200') {
+		alert('Невозможно проверить заявку, обновите страницу!')
+		return false
+	}
+
+	if (!orderData.message) {
+		alert('Заявка на транспорт по данному маршруту не найдена!')
+		return false
+	}
+
+	const orderStatus = Number(orderData.message)
+	if (orderStatus === 10) {
+		alert('Заявка на транспорт по данному маршруту была отменена!')
+		return false
+	}
+
+	return true
+}
 
 // функции получения данных для таблицы
 function getUnloadToView(route) {
@@ -880,4 +1095,244 @@ function getOrderInfo(route) {
 		methodLoad: processField('methodLoad'),
 		temperature: processField('temperature'),
 	}
+}
+
+// подготовка данных о предложениях
+async function getMappingOffers(data, action) {
+	return await Promise.all(data
+		.filter(item => item.toUser === null)
+		.map(item => ({ ...item, action}))
+		.map(offerMapCallback)
+	)
+}
+async function offerMapCallback(data) {
+	let converted = Number(data.text)
+
+	if (data.currency !== 'BYN') {
+		try {
+			const currencyCode = currencyDict[data.currency]
+			const res = await fetch(`${nbrbExratesRatesBaseUrl}${currencyCode}`)
+			const rate = await res.json()
+			converted = Math.round(rate.Cur_OfficialRate * data.text / rate.Cur_Scale)
+		} catch (error) {
+			converted = 'Ошибка получения курса'
+		}
+	}
+
+	let datetimeConverted = data.datetimeConverted
+
+	if (!datetimeConverted && data.datetime) {
+		const [ dateStr, timeStr ] = data.datetime.split('; ')
+		if (dateStr && timeStr) {
+			const date = dateStr.split('-').reverse().join('-')
+			const timeArr = timeStr.split(':')
+			const dateObj = new Date(date)
+			dateObj.setHours(timeArr[0], timeArr[1], timeArr[2])
+			datetimeConverted = dateObj.getTime()
+		}
+	}
+
+	return {
+		...data,
+		datetimeConverted,
+		originalCost: `${data.text}`,
+		convertedCost: converted,
+	}
+}
+
+// установка контекста высокой и низкой стоимости предложений
+function setCostGridContext(gridOptions, offers) {
+	const costs = offers
+		.filter(item => Number.isInteger(item.convertedCost))
+		.map(item => item.convertedCost)
+	const minCost = Math.min(...costs)
+	const maxCost = Math.max(...costs)
+
+	// Обновляем context: если одно предложение — оно невыгодное
+	if (offers.length === 1) {
+		gridOptions.context = {
+			minCost: null,
+			maxCost: offers[0].convertedCost
+		}
+	} else {
+		gridOptions.context = { minCost, maxCost }
+	}
+}
+
+// обновление предложений в открытом модальном окне
+async function updateOffersInModal(message) {
+	const currentData = []
+	gridOptionsForOffers.api.forEachNode(node => currentData.push(node.data))
+
+	// удаляем старое предложение от этого пользователя, если оно есть
+	const updatedData = currentData.filter(item => item.fromUser !== message.fromUser)
+
+	// добавляем новое предложение
+	if (message.comment !== 'delete' && message.currency) {
+		const newOffer = await offerMapCallback({ ...message, action: 'accept' })
+		updatedData.push(newOffer)
+	}
+
+	// Обновим контекст и таблицу
+	setCostGridContext(gridOptionsForOffers, updatedData)
+	gridOptionsForOffers.api.setRowData(updatedData)
+	gridOptionsForOffers.api.flashCells({ force: true })
+}
+
+function offerAccept(params) {
+	const { data, api, context } = params
+	const { minCost, maxCost } = context
+	const offersCount = api.getDisplayedRowCount()
+
+	const isAdmin = role === '[ROLE_ADMIN]' || role === '[ROLE_TOPMANAGER]'
+	const isSingleOffer = offersCount === 1
+	const offerCost = parseInt(data.convertedCost)
+	const currentData = []
+	gridOptionsForOffers.api.forEachNode(node => currentData.push(node.data))
+	const otherUsers = currentData.map(item => item.fromUser).filter(item => item !== data.fromUser)
+
+	const confirmAction = () => {
+		confrom(data, '4', otherUsers)
+	}
+	const confirmWithStatus = () => {
+		confrom(data, '8', null)
+	}
+	const confirmWithPass = () => {
+		const pass = prompt("Требуется дополнительное подтверждение от администратора")
+		if (pass === "goodboy") {
+			alert("Цена принята")
+			confirmAction()
+		} else {
+			alert("Уведомление перевозчику не отправлено! Требуется дополнительное подтверждение")
+			confirmWithStatus()
+		}
+	}
+
+	// Подтверждение (контроль цены)
+	if (data.action === 'confirm') {
+		confirmAction()
+		return
+	}
+
+	// Единственное предложение
+	if (isSingleOffer) {
+		if (!confirm("Выбрано единственное предложение. Вы уверены, что хотите его принять?")) return
+		confirmWithPass()
+		return
+	}
+
+	// Не оптимальное предложение
+	if (minCost !== null && offerCost > minCost) {
+		if (confirm("Выбрана не самая оптимальная цена, Вы уверены?")) {
+			confirmAction()
+			return
+		}
+	}
+
+	// Оптимальное предложение
+	if (!confirm("Вы уверены, что хотите принять данное предложение?")) return
+	confirmAction()
+}
+
+function confrom(offer, status, otherUsers) {
+	const withoutConfirm = status !== '8'
+
+	const successMessage = withoutConfirm
+		? 'Предложение принято!'
+		: 'Предложение принято! Требуется подтверждение'
+
+	const payload = {
+		login: offer.fromUser,
+		cost: offer.convertedCost,
+		idRoute: offer.idRoute,
+		currency: offer.currency,
+		status
+	}
+
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 300)
+
+	ajaxUtils.postJSONdata({
+		url: confirmTenderOfferUrl,
+		token,
+		data: payload,
+		successCallback: async (res) => {
+			if (!res || !res.status) {
+				clearTimeout(timeoutId)
+				bootstrap5overlay.hideOverlay()
+				snackbar.show('Возникла ошибка - обновите страницу!')
+				return
+			}
+
+			if (res.status === '200') {
+				cancelUpdateOfferCount = true
+				const route = res.route
+				const mappedRoute = await routeMapCallback(route)
+				withoutConfirm && send(offer, route.routeDirection, otherUsers)
+				updateTableRow(gridOptions, mappedRoute)
+				snackbar.show(successMessage)
+				$('#tenderOffersModal').modal('hide')
+
+			} else if (res.status === '100') {
+				const errorMessage = res.message || 'Ошибка при подтверждении предложения'
+				snackbar.show(errorMessage)
+			}
+
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+		},
+		errorCallback: () => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+		}
+	})
+}
+
+function send(offer, routeDirection, otherUsers) {
+	const { idRoute, fromUser: login, convertedCost: cost, currency } = offer
+
+	// сообщение системе
+	sendMessage({
+		fromUser: "system",
+		text: idRoute,
+		idRoute: idRoute,
+		status: "1"
+	})
+
+	// сообщение пользователю с принятым предложением
+	sendHeadMessage({
+		fromUser: "logist",
+		toUser: login,
+		text: 'Ваше предложение к маршруту ' + routeDirection
+			+ ' с ценой ' + cost + ' ' + currency
+			+ ' одобрено! Необходимо назначить машину и водителя.',
+		idRoute: idRoute,
+		url: '/speedlogist/main/carrier/transportation',
+		status: "1"
+	})
+
+	// сообщение остальным пользователям
+	if (!otherUsers) return
+	if (otherUsers.length === 0) return
+	otherUsers.forEach(user => {
+		sendHeadMessage({
+			fromUser: "logist",
+			toUser: user,
+			text: 'К сожалению, предложенная Вами цена для маршрута ' + routeDirection + ' нам не подходит.',
+			idRoute: idRoute,
+			status: "1"
+		})
+	})
+}
+
+function setRouteDirection(idRoute) {
+	const rowNode = gridOptions.api.getRowNode(idRoute)
+	if (!rowNode) return
+	const route = rowNode.data
+	if (!route) return
+	const routeDirection = route.routeDirection ? route.routeDirection : ''
+
+	const routeDirectionElement = document.querySelector('#routeDirection')
+	if (!routeDirectionElement) return
+
+	routeDirectionElement.textContent = routeDirection
 }

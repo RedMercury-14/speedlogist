@@ -80,6 +80,27 @@ public class Address {
 	@JsonBackReference
 	private Order order;
 
+//	@Column (name = "country")
+//	private String country;
+//
+//	@Column (name = "post_index")
+//	private String postIndex;
+//
+//	@Column (name = "region")
+//	private String region;
+//
+//	@Column (name = "city")
+//	private String city;
+//
+//	@Column (name = "street")
+//	private String street;
+//
+//	@Column (name = "building")
+//	private String building;
+//
+//	@Column (name = "buildingBody")
+//	private String buildingBody;
+
 	public Address() {
 		super();
 	}
@@ -258,6 +279,66 @@ public class Address {
 	public void setPointNumber(Integer pointNumber) {
 		this.pointNumber = pointNumber;
 	}
+
+	//новое
+//
+//	public String getBuildingBody() {
+//		return buildingBody;
+//	}
+//
+//	public void setBuildingBody(String buildingBody) {
+//		this.buildingBody = buildingBody;
+//	}
+//
+//	public String getBuilding() {
+//		return building;
+//	}
+//
+//	public void setBuilding(String building) {
+//		this.building = building;
+//	}
+//
+//	public String getStreet() {
+//		return street;
+//	}
+//
+//	public void setStreet(String street) {
+//		this.street = street;
+//	}
+//
+//	public String getCity() {
+//		return city;
+//	}
+//
+//	public void setCity(String city) {
+//		this.city = city;
+//	}
+//
+//	public String getRegion() {
+//		return region;
+//	}
+//
+//	public void setRegion(String region) {
+//		this.region = region;
+//	}
+//
+//	public String getPostIndex() {
+//		return postIndex;
+//	}
+//
+//	public void setPostIndex(String postIndex) {
+//		this.postIndex = postIndex;
+//	}
+//
+//	public String getCountry() {
+//		return country;
+//	}
+//
+//	public void setCountry(String country) {
+//		this.country = country;
+//	}
+
+	//конец нового
 
 
 

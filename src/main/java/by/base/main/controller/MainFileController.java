@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Type;
 import java.sql.Date;
+import java.sql.Timestamp;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -230,6 +231,13 @@ public class MainFileController {
         for (Route route : routes) {
             idRoutes.add(route.getIdRoute().toString());
         }
+
+        List<Act> acts = actService.getActsByDates(startDate, finishDate);
+        Set<Act> actsFiltered = new HashSet<>();
+        for (String id : idRoutes) {
+            actsFiltered.addAll(acts.stream().filter(a -> a.getIdRoutes().contains(id)).collect(Collectors.toList()));
+        }
+
         Map<String, List<Message>> messageMap = routeService.routesWithMessages(idRoutes);
         List<RoadTransportDto> roadTransportDTOList = new ArrayList<>();
 
@@ -239,12 +247,22 @@ public class MainFileController {
 
 //            java.util.Date actService1 = new java.util.Date();
 
-            List<Act> acts = actService.getActsByRouteId(route.getIdRoute().toString(), startDate, finishDate);
+            List<Act> actsLong = actService.getActsByRouteId(route.getIdRoute().toString(), startDate, finishDate);
 //            java.util.Date actService2 = new java.util.Date();
 //            System.out.println(actService2.getTime() - actService1.getTime() + " ms - act service");
-            if (!acts.isEmpty() && acts.get(0).getDocumentsArrived() != null) {
-                roadTransportDTO.setDocumentsArrived(acts.get(0).getDocumentsArrived());
+//            Timestamp timestamp = null;
+            for (Act act: actsFiltered) {
+                if (act.getIdRoutes().contains(route.getIdRoute().toString())) {
+                    if (act.getDocumentsArrived() != null) {
+//                        timestamp = new Timestamp(act.getDocumentsArrived().getTime());
+                        roadTransportDTO.setDocumentsArrived(act.getDocumentsArrived());
+                        break;
+                    }
+                }
             }
+//            if (!acts.isEmpty() && acts.get(0).getDocumentsArrived() != null) {
+//                roadTransportDTO.setDocumentsArrived(acts.get(0).getDocumentsArrived());
+//            }
             if (route.getWay() != null) {
                 if (route.getWay().equals("Импортный") || route.getWay().equals("Импорт") || route.getWay().equals("РБ")) {
                     roadTransportDTO.setImportOrExport("Импорт");
@@ -284,7 +302,19 @@ public class MainFileController {
             roadTransportDTO.setResponsibleLogist(route.getLogistInfo() != null ? route.getLogistInfo().split(";")[0] : null);
             roadTransportDTO.setActualLoading(route.getDateLoadActually());
             roadTransportDTO.setCarrier(route.getUser() == null ? null : route.getUser().getCompanyName());
-            roadTransportDTO.setTenderParticipants(messageMap.get(route.getIdRoute().toString()) == null ? null : String.valueOf(messageMap.get(route.getIdRoute().toString()).size()));
+            List<Message> messages = messageMap.get(route.getIdRoute().toString());
+            if (messages != null) {
+                int participants = 0;
+
+                for (Message message: messages) {
+                    if (message.getStatus()!= null && message.getStatus().equals("1")) {
+                        participants++;
+                    }
+                }
+                roadTransportDTO.setTenderParticipants(participants == 0 ? null : String.valueOf(participants));
+            } else {
+                roadTransportDTO.setTenderParticipants(null);
+            }
 
             if (messageMap.get(route.getIdRoute().toString()) != null) {
                 for (Message message : messageMap.get(route.getIdRoute().toString())) {

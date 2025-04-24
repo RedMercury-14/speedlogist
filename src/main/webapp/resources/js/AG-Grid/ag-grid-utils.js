@@ -262,32 +262,10 @@ export function cell(text, styleId) {
 }
 
 export function dateComparator(date1, date2) {
-	const date1Number = dateToNum(date1)
-	const date2Number = dateToNum(date2)
-
-	if (date1Number === null && date2Number === null) return 0
-	if (date1Number === null) return -1
-	if (date2Number === null) return 1
-	return date1Number - date2Number
-}
-
-function dateToNum(date) {
-	if (date === undefined || date === null || date.length !== 10) {
-		return null
-	}
-
-	// форматируем даты, которые начинаются с года
-	const arr = date.split('-')
-	if (arr[0].length === 4) {
-		arr.reverse()
-	}
-	date = arr.join('-')
-
-	const yearNumber = date.substring(6, 10)
-	const monthNumber = date.substring(3, 5)
-	const dayNumber = date.substring(0, 2)
-
-	return yearNumber * 10000 + monthNumber * 100 + dayNumber
+	if (!date1 || !date2) return 0
+	const date1Value = new Date(date1).getTime()
+	const date2Value = new Date(date2).getTime()
+	return date1Value - date2Value
 }
 
 // выделение ("мигание") строки с изменениями

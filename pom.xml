@@ -339,6 +339,12 @@
 			<artifactId>javax.mail</artifactId>
 			<version>1.6.0</version>
 		</dependency>
+
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-messaging</artifactId>
+			<version>5.3.33</version> <!-- или любая совместимая с твоим spring -->
+		</dependency>
 	</dependencies>
 	<build>
 		<finalName>speedlogist</finalName>

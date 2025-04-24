@@ -55,4 +55,10 @@ public class ActServiceImpl implements ActService{
 	public List<Act> getActsByRouteId(String id, LocalDate startDate, LocalDate finishDate) {
 		return actDAO.getActsByRouteId(id,startDate, finishDate);
 	}
+
+	@Transactional
+	@Override
+	public List<Act> getActsByDates(LocalDate startDate, LocalDate finishDate) {
+		return actDAO.getActsByDates(startDate, finishDate);
+	}
 }

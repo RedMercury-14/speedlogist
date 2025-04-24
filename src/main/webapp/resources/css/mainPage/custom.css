@@ -354,6 +354,11 @@ hr.separator {
   background-color: #FFF;
 }
 
+.cargoy-btn-white.bg-color:hover,
+.cargoy-btn-white.bg-color.hover {
+  background-color: #0E377B;
+}
+
 .cargoy-btn-white:hover:before,
 .cargoy-btn-white.hover:before,
 .cargoy-btn-white:hover:after,

@@ -80,6 +80,27 @@
 		</div>
 	</div>
 
+	<!-- Модальное окно с основной информацией о маршруте -->
+	<div class="modal fade" id="tenderOffersModal" tabindex="-1" data-backdrop="static" data-keyboard="false" aria-labelledby="tenderOffersModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-xl">
+			<div class="modal-content">
+				<div class="modal-header align-items-center bg-primary text-white">
+					<h5 class="modal-title" id="tenderOffersModalLabel">Предложения</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<div class="mb-3 h5 text-center px-3 text-muted font-weight-bold" id="routeDirection"></div>
+					<div id="tenderOffers" style="height: 60vh; width: 100%;" class="ag-theme-alpine"></div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
 	<script src='${pageContext.request.contextPath}/resources/js/mainPage/nav-fixed-top.js'></script>
 	<script	src="${pageContext.request.contextPath}/resources/js/internationalManagerNew.js" type="module"></script>
 </body>

@@ -8,7 +8,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.sql.Date;
-import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -20,7 +19,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,9 +29,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.transaction.Transactional;
 
+import by.base.main.model.*;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -52,38 +49,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.SessionAttribute;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.itextpdf.text.BaseColor;
-import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
-import com.itextpdf.text.Element;
-import com.itextpdf.text.Font;
-import com.itextpdf.text.PageSize;
-import com.itextpdf.text.Paragraph;
-import com.itextpdf.text.Phrase;
-import com.itextpdf.text.pdf.ColumnText;
-import com.itextpdf.text.pdf.PdfContentByte;
-import com.itextpdf.text.pdf.PdfGState;
-import com.itextpdf.text.pdf.PdfStructTreeController.returnType;
-import com.itextpdf.text.pdf.PdfWriter;
 
 import by.base.main.aspect.TimedExecution;
 import by.base.main.controller.ajax.MainRestController;
-import by.base.main.model.Act;
-import by.base.main.model.Address;
-import by.base.main.model.Currency;
-import by.base.main.model.Feedback;
-import by.base.main.model.Message;
-import by.base.main.model.Order;
-import by.base.main.model.Permission;
-import by.base.main.model.Rates;
-import by.base.main.model.Role;
-import by.base.main.model.Route;
-import by.base.main.model.RouteHasShop;
-import by.base.main.model.Shop;
-import by.base.main.model.TGUser;
-import by.base.main.model.Tender;
-import by.base.main.model.Truck;
-import by.base.main.model.User;
 import by.base.main.service.ActService;
 import by.base.main.service.FeedbackService;
 import by.base.main.service.MessageService;
@@ -447,9 +416,15 @@ public class MainController {
 		return "reviewsForm";
 	}
 
-	@GetMapping("/carrier-tenders/bid-place")
-	public String getBidPlace(Model model, HttpServletRequest request) {
-		return "bidPlace";
+	@RequestMapping("/carrier/tenders/tenderpage")
+	public String tender(Model model, HttpServletRequest request, HttpSession session,
+							 @RequestParam(value = "routeId", required = false) Integer routeId) {
+		return "tender";
+	}
+
+	@GetMapping("/carrier/tenders")
+	public String getTenders(Model model, HttpServletRequest request) {
+		return "carrierTendersList";
 	}
 
 	@GetMapping("/main/carrier-application-form")
@@ -1439,22 +1414,54 @@ public class MainController {
 			request.setAttribute("errorMessage", "Маршрут № "+routeId+ " удалён, или не создан.");
 			return "errorPage";
 		}
-		if (route.getComments() != null && route.getComments().equals("international")) {
-			for (Message message : chatEnpoint.internationalMessegeList) {
-				if (message.getIdRoute().equals(routeId.toString()) && message.getYnp().equals(user.getNumYNP())) { // <-- исправлено тут
-					
+		if (route.getForReduction()) {
+//			for (Message message : chatEnpoint.internationalMessegeList) {
+//				if (message.getIdRoute().equals(routeId.toString()) && message.getYnp().equals(user.getNumYNP())) { // <-- исправлено тут
+
+					Set<CarrierBid> carrierBids = route.getCarrierBids();
+					List<CarrierBid> sortedBids = carrierBids.stream()
+							.sorted(Comparator.comparing(CarrierBid::getPrice).reversed())
+							.collect(Collectors.toList());
+
+					request.setAttribute("userBid", null);
+
 					flag = true;
-					request.setAttribute("userCost", message.getText());
-					request.setAttribute("userCurrency", message.getCurrency());
-					break;
-				}
-			}
+					if (!sortedBids.isEmpty()) {
+						for (CarrierBid carrierBid : sortedBids) {
+							if (carrierBid.getCarrier().equals(getThisUser())) {
+								request.setAttribute("userBid", carrierBid);
+								break;
+							}
+						}
+						request.setAttribute("actualBid", sortedBids.get(0));
+					} else {
+						request.setAttribute("actualBid", null);
+					}
+
+//					break;
+//				}
+//			}
 			model.addAttribute("route", route);
 			request.setAttribute("flag", flag);
-		}else {
-			model.addAttribute("route", addCostForRoute(route));
-			request.setAttribute("regionalRoute", true);
-		}		
+		} else {
+			if (route.getComments() != null && route.getComments().equals("international")) {
+				for (Message message : chatEnpoint.internationalMessegeList) {
+					if (message.getIdRoute().equals(routeId.toString()) && message.getYnp().equals(user.getNumYNP())) { // <-- исправлено тут
+
+						flag = true;
+						request.setAttribute("userCost", message.getText());
+						request.setAttribute("userCurrency", message.getCurrency());
+						break;
+					}
+				}
+				model.addAttribute("route", route);
+				request.setAttribute("flag", flag);
+			}else {
+				model.addAttribute("route", addCostForRoute(route));
+				request.setAttribute("regionalRoute", true);
+			}
+		}
+
 		model.addAttribute("user", user);
 		return "tenderPage";
 	}

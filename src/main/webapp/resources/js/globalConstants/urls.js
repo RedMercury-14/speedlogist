@@ -203,6 +203,7 @@ export const toRouteEndBaseUrl = '/speedlogist/main/logistics/international/rout
 export const getNumMessageBaseUrl ='/speedlogist/api/info/message/numroute/'
 export const getRoutesBaseUrl = '/speedlogist/api/manager/getRouteForInternational/' // получение данных маршрутов
 export const getProposalBaseUrl = `/speedlogist/api/logistics/getProposal/` // скачивание заявки на перевозку
+export const confirmTenderOfferUrl = '/speedlogist/api/logistics/internationalNew/confrom'
 
 
 ///////////////////////////////////////////////
@@ -380,9 +381,11 @@ export const setRouteTimeUrl = "/speedlogist/api/route/time"
 ///////////////////////////////////////////////
 // Текущие тендеры
 ///////////////////////////////////////////////
-export const getActiveTendersUrl = `/speedlogist/api/carrier/getActiveInternationalTenders`
+export const getActiveTendersUrl = `/speedlogist/api/carrier/tenders/all`
 export const getInfoRouteMessageBaseUrl = `/speedlogist/api/info/message/routes/`
 export const getThisUserUrl = '/speedlogist/api/getThisUser'
+export const setTenderForReductionOfferUrl = '/speedlogist/api/carrier/tenders/get-bid'
+export const cancelTenderForReductionOfferUrl = '/speedlogist/api/carrier/tenders/get-bid'
 
 
 ///////////////////////////////////////////////
@@ -465,3 +468,16 @@ export const downloadRotationFAQUrl = '/speedlogist/file/rotations/download/inst
 export const getPriceProtocolListUrl = '/speedlogist/api/procurement/price-protocol/getList'
 export const createPriceProtocolUrl = '/speedlogist/api/procurement/price-protocol/create'
 export const createArrayOfPriceProtocolUrl = '/speedlogist/api/procurement/price-protocol/createArray'
+export const loadPriceProtocolExcelUrl = '/speedlogist/api/procurement/price-protocol/load'
+
+
+///////////////////////////////////////////////
+// Актуальные предложения международных перевозок
+///////////////////////////////////////////////
+export const getTenderPreviewBaseUrl = '/speedlogist/api/get-tender-preview/'
+
+///////////////////////////////////////////////
+// Форма отправки данных о сотрудничестве
+///////////////////////////////////////////////
+export const createCarrierApplicationUrl = '/speedlogist/api/carrier-application/create'
+

@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
-import java.util.Set;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "carrier_bid")
@@ -18,7 +18,7 @@ public class CarrierBid {
 
     @ManyToOne
     @JoinColumn(name = "carrier_iduser", nullable = false)
-    @JsonBackReference
+    @JsonIgnore
     private User carrier;
 
     @Column(name = "price")
@@ -27,19 +27,26 @@ public class CarrierBid {
     @Column(name = "date_time")
     private Timestamp dateTime;
 
-    @ManyToMany(fetch = FetchType.LAZY,
-//			cascade = { CascadeType.ALL }
-            cascade = {CascadeType.MERGE, CascadeType.PERSIST}
-    )
-    @JoinTable(name = "route_has_carrier_bid", joinColumns = @JoinColumn(name = "idcarrier_bid"), inverseJoinColumns = @JoinColumn(name = "route_idroute"))
-//	@JsonBackReference // ТУТ БЫЛО ВКЛЮЧЕНО!!!!
-    @JsonIgnore
-    private Set<Route> orders;
-
-
+    @ManyToOne
+    @JoinColumn(name = "route_idroute", nullable = false)
+    @JsonBackReference
+    private Route route;
 
     @Column(name = "winner")
     private Boolean winner;
+
+    @Column(name = "percent")
+    private Integer percent;
+
+    @Column(name = "currency")
+    private String currency;
+
+    @Column(name = "comment")
+    private String comment;
+
+    @Column(name = "idUser")
+    private Integer idUser;
+
 
     public Long getIdCarrierBid() {
         return idCarrierBid;
@@ -73,12 +80,12 @@ public class CarrierBid {
         this.dateTime = dateTime;
     }
 
-    public Set<Route> getOrders() {
-        return orders;
+    public Route getRoute() {
+        return route;
     }
 
-    public void setOrders(Set<Route> orders) {
-        this.orders = orders;
+    public void setRoute(Route route) {
+        this.route = route;
     }
 
     public Boolean getWinner() {
@@ -87,5 +94,37 @@ public class CarrierBid {
 
     public void setWinner(Boolean winner) {
         this.winner = winner;
+    }
+
+    public Integer getPercent() {
+        return percent;
+    }
+
+    public void setPercent(Integer percent) {
+        this.percent = percent;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
+
+    public String getComment() {
+        return comment;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
+    }
+
+    public Integer getIdUser() {
+        return idUser;
+    }
+
+    public void setIdUser(Integer idUser) {
+        this.idUser = idUser;
     }
 }

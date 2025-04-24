@@ -139,3 +139,17 @@ footer.to-bottom {
     }
     
 }
+
+
+.offer-container .badge-success {
+    border-radius: .25rem;
+}
+.input-group.discount-group {
+    width: 115px;
+}
+.input-group.discount-group .btn {
+    width: 35px;
+}
+.input-group.userPrice-group {
+    width: 115px;
+}

@@ -5676,7 +5676,7 @@ public class POIExcel {
         // Устанавливаем заморозку первых двух строк
         // Первый параметр: количество фиксированных столбцов (0 — без заморозки столбцов)
         // Второй параметр: количество фиксированных строк (2 строки)
-        sheet.createFreezePane(6, 0);
+        sheet.createFreezePane(6, 1);
 
         try (FileOutputStream fileOut = new FileOutputStream(filePath)) {
             workbook.write(fileOut);

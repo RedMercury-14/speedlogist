@@ -33,6 +33,8 @@
 				<form:form method="get" id="tenderOfferForm" action="./tenderOffer">
 					<input type="hidden" value="${route.idRoute}" name="id" />
 					<input type="hidden" value="${userCost}" name="userCost" />
+					<input type="hidden" value="${actualBid}" name="userCost" />
+					<input type="hidden" value="${userBid}" name="userCost" />
 					<h3 class="route-title">Маршрут ${route.routeDirection} от ${route.simpleDateStart}</h3>
 					<div class="card route-card">
 						<div class="card-header offer-container">
@@ -42,17 +44,100 @@
 									<input type="submit" value="Отменить" name="notagree" class="notagreeinternational btn btn-danger">
 								</c:when>
 								<c:otherwise>
-									<h5 class="route-subtitle">Предложение</h5>
-									<input type="number" name="cost" size="3" required="true" class="raz form-control" step="1" min="0">
-									<select class="form-control" id="currency">
-										<option>BYN</option>
-										<option>USD</option>
-										<option>EUR</option>
-										<option>RUB</option>
-										<option>KZT</option>
-									</select>
-									<input type="submit" value="Поддержать цену" name="agree" class="agreeinternational btn btn-success">
-									<input type="hidden" value="0" name="price" size="1" />
+									<c:choose>
+										<%-- установка цены тендера на понижение --%>
+										<c:when test="${route.forReduction == true}">
+											<div class="d-flex flex-column align-items-center">
+												<h5 class="route-subtitle">Тендер на понижение</h5>
+												<p class="route-subtitle mb-2 h6">(цена уменьшается на размер скидки)</p>
+												<div class="offer-container align-items-center mb-2">
+													<input type="hidden" id="startPriceForReduction" value="${route.startPriceForReduction}"/>
+													<input type="hidden" name="currency" value="${route.currencyForReduction}"/>
+													<div class="text-muted font-weight-bold">
+														Начальная цена:
+														<span class="text-primary">${route.startPriceForReduction} ${route.currencyForReduction}</span>
+													</div>
+													<c:choose>
+														<c:when test="${actualBid}">
+															<div class="text-muted font-weight-bold">
+																Текущее предложение:
+																<span class="text-primary">${actualBid.price} ${actualBid.currency} (скидка ${actualBid.percent}%)</span>
+																<input type="hidden" name="idActualBid" value="${actualBid.id}"/>
+															</div>
+														</c:when>
+														<c:otherwise>
+															<div class="badge-success font-weight-bold p-1">
+																Предложений пока нет. Станьте первым!
+															</div>
+														</c:otherwise>
+													</c:choose>
+												</div>
+												<div class="border mb-2 w-100"></div>
+												<c:choose>
+													<c:when test="${userBid}">
+														<div class="offer-container align-items-center mb-2">
+															<div class="text-muted font-weight-bold">
+																Ваше предложение:
+																<span class="text-primary">${userBid.price} ${userBid.currency} (скидка ${userBid.percent}%)</span>
+																<input type="hidden" name="idUserBid" value="${userBid.id}"/>
+															</div>
+															<input type="button" id="cancelOfferForReduction" data-action="cancelOffer" value="Отменить предложение" class="btn btn-danger btn-sm">
+														</div>
+														<div class="border mb-2 w-100"></div>
+													</c:when>
+												</c:choose>
+												<div class="offer-container align-items-center">
+													<div class="form-group mb-0 d-flex align-items-center">
+														<span class="text-muted font-weight-bold mr-2 mb-0">Скидка:</span>
+														<div class="input-group discount-group">
+															<div class="input-group-prepend">
+																<button class="btn btn-outline-secondary font-weight-bold" type="button" id="decrease">-</button>
+															</div>
+															<c:choose>
+																<c:when test="${actualBid.percent == null}">
+																	<input type="number" class="form-control pl-2 pr-0 text-center font-weight-bold" id="discount" name="discount" value="0" min="0" max="99" readonly>
+																</c:when>
+																<c:otherwise>
+																	<input type="number" class="form-control pl-2 pr-0 text-center font-weight-bold" id="discount" name="discount" value="${actualBid.percent + 1}" min="${actualBid.percent + 1}" max="99" readonly>
+																</c:otherwise>
+															</c:choose>
+															<div class="input-group-append">
+																<button class="btn btn-outline-secondary font-weight-bold" type="button" id="increase">+</button>
+															</div>
+														</div>
+														<div class="input-group ml-2 userPrice-group">
+															<input type="number" class="form-control pl-2 pr-0" id="final-price" name="userPriceForReduction" readonly>
+															<div class="input-group-append">
+																<span class="input-group-text" id="final-price">${route.currencyForReduction}</span>
+															</div>
+														</div>
+													</div>
+													<div class="mb-0 form-group">
+														<input type="text" name="comment" class="form-control" placeholder="Комментарий">
+													</div>
+													<input type="submit" value="Поддержать цену" data-action="sendOffer" class="btn btn-success">
+												</div>
+											</div>
+										</c:when>
+
+										<%-- установка цены обычного закрытого тендера --%>
+										<c:otherwise>
+											<h5 class="route-subtitle">Предложение</h5>
+											<input type="number" name="cost" size="3" required="true" class="raz form-control" step="1" min="0" placeholder="Целое число">
+											<div class="mb-0 form-group">
+												<input type="text" name="comment" class="form-control" placeholder="Комментарий">
+											</div>
+											<select class="form-control" id="currency">
+												<option>BYN</option>
+												<option>USD</option>
+												<option>EUR</option>
+												<option>RUB</option>
+												<option>KZT</option>
+											</select>
+											<input type="submit" value="Поддержать цену" name="agree" class="agreeinternational btn btn-success">
+											<input type="hidden" value="0" name="price" size="1" />
+										</c:otherwise>
+									</c:choose>
 								</c:otherwise>
 							</c:choose>
 						</div>

@@ -99,4 +99,16 @@ public class ActDAOImpl implements ActDAO{
 		List<Act> acts = theObject.getResultList();
 		return acts;
 	}
+
+	private static final String queryGetActsByDates = "from Act a where a.date between :dateStart and :dateFinish " +
+			"and a.documentsArrived is not null ";
+
+	@Override
+	public List<Act> getActsByDates(LocalDate startDate, LocalDate finishDate){
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Act> theObject = currentSession.createQuery(queryGetActsByDates, Act.class);
+		theObject.setParameter("dateStart", startDate);
+		theObject.setParameter("dateFinish", finishDate.plusDays(7));
+		return theObject.getResultList();
+	}
 }

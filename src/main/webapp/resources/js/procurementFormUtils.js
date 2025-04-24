@@ -591,6 +591,14 @@ export function changeForm(orderData, formType) {
 		hideFormField('control')
 	}
 
+	// возможность создать тендер на понижение
+	if (isInternalMovement || way === 'РБ' || way === 'Импорт' || way === 'Экспорт') {
+		// const forReductionContainer = document.getElementById('forReduction-container')
+		// forReductionContainer.classList.remove('none')
+
+		showFormField('forReduction', 'on')
+	}
+
 	showIncotermsInput(typeTruck)
 	changeTemperatureInputRequired(typeTruck)
 }
@@ -618,6 +626,9 @@ export function changeFormToDefault() {
 	// hideFormField('veterinary')
 	// hideFormField('dangerous')
 	transformToDefaultComment()
+
+	hideFormField('startPriceForReduction')
+	hideFormField('currencyForReduction')
 }
 
 // установка слушателей для полей точек в формах заявок и маршрута
@@ -782,5 +793,16 @@ function changePointInfo(inputName, value) {
 		const point = points[i]
 		const pointIndex = i + 1
 		setInputValue(point, `#${inputName}_${pointIndex}`, value)
+	}
+}
+
+// переключение видимости полей для установки цены на понижение
+export function toggleForReductionInputsVisible(isVisible) {
+	if (isVisible) {
+		showFormField('startPriceForReduction', '', true)
+		showFormField('currencyForReduction', '', true)
+	} else {
+		hideFormField('startPriceForReduction')
+		hideFormField('currencyForReduction')
 	}
 }

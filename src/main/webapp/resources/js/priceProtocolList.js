@@ -1,8 +1,8 @@
 import { AG_GRID_LOCALE_RU } from './AG-Grid/ag-grid-locale-RU.js'
 import { BtnCellRenderer, BtnsCellRenderer, gridColumnLocalState, gridFilterLocalState, ResetStateToolPanel } from './AG-Grid/ag-grid-utils.js'
-import { aproofQualityFoodCardUrl, createArrayOfPriceProtocolUrl, createPriceProtocolUrl, getAllAcceptanceQualityFoodCardUrl, getClosedAcceptanceQualityBaseUrl, getPriceProtocolListUrl } from './globalConstants/urls.js'
+import { aproofQualityFoodCardUrl, createArrayOfPriceProtocolUrl, createPriceProtocolUrl, getAllAcceptanceQualityFoodCardUrl, getClosedAcceptanceQualityBaseUrl, getPriceProtocolListUrl, loadPriceProtocolExcelUrl } from './globalConstants/urls.js'
 import { snackbar } from './snackbar/snackbar.js'
-import { dateHelper, debounce, getData } from './utils.js'
+import { dateHelper, debounce, getData, hideLoadingSpinner, isAdmin, showLoadingSpinner } from './utils.js'
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 import { uiIcons } from './uiIcons.js'
 import { ajaxUtils } from './ajaxUtils.js'
@@ -155,6 +155,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 	// orderSearchForm.addEventListener('submit', searchFormSubmitHandler)
 	// листнер на отправку формы установки статуса карточки
 	createPriceProtocolForm.addEventListener('submit', createPriceProtocolFormSubmitHandler)
+	sendExcelForm.addEventListener('submit', sendExcelFormHandler)
 
 	$('#createPriceProtocolModal').on('hidden.bs.modal', (e) => {
 		createPriceProtocolForm.reset()
@@ -211,6 +212,41 @@ async function searchFormSubmitHandler(e) {
 		console.error(error)
 		snackbar.show('Ошибка получения данных')
 	}
+}
+// обработчик отправки формы загрузки таблицы эксель
+function sendExcelFormHandler(e) {
+	e.preventDefault()
+
+	if (!isAdmin(role)) return
+
+	const submitButton = e.submitter
+	const file = new FormData(e.target)
+
+	showLoadingSpinner(submitButton)
+
+	ajaxUtils.postMultipartFformData({
+		url: loadPriceProtocolExcelUrl,
+		data: file,
+		successCallback: async (res) => {
+			hideLoadingSpinner(submitButton, 'Загрузить')
+
+			if (res.status === '200') {
+				const data = await getPriceProtocolData()
+				updateTable(gridOptions, data)
+				snackbar.show('Данные успешно загружены')
+				e.target.reset()
+				$(`#sendExcelModal`).modal('hide')
+				return
+			}
+
+			if (res.status === '100') {
+				const errorMessage = res.message || 'Ошибка загрузки данных'
+				snackbar.show(errorMessage)
+				return
+			}
+		},
+		errorCallback: () => hideLoadingSpinner(submitButton, 'Загрузить')
+	})
 }
 // обработчик отправки формы статуса карточки
 function createPriceProtocolFormSubmitHandler(e) {

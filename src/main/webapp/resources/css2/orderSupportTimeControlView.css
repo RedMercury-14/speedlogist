@@ -1,0 +1,16 @@
+.navbar {
+	background-color: #0e377b !important;
+}
+.my-container {
+	margin-top: 60px;
+	font-family: 'Roboto', sans-serif;
+}
+footer.to-bottom {
+	margin-top: 51px;
+	position: fixed;
+}
+
+.my-container input[type=file] {
+	height: 100%;
+	cursor: pointer;
+}

@@ -120,7 +120,7 @@ public class OrderDAOImpl implements OrderDAO{
 		return trucks;
 	}
 
-	private static final String queryGetObjByPeriodCreate = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH r.truck t LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH o.addresses a where o.dateCreate BETWEEN :dateStart and :dateEnd";
+	private static final String queryGetObjByPeriodCreate = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH r.truck t LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH o.addresses a LEFT JOIN FETCH r.carrierBids rc where o.dateCreate BETWEEN :dateStart and :dateEnd";
 	
 	@Override
 	@Transactional

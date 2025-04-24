@@ -1,0 +1,36 @@
+/* 
+	custom caption
+*/
+.pswp__custom-caption {
+	font-size: 1.2rem;
+	font-weight: bold;
+	text-align: center;
+	font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+	color: #fff;
+	max-width: 400px;
+	padding: 8px;
+	border-radius: 4px;
+	position: absolute;
+	left: 50%;
+	top: 14px;
+	/* text-shadow: 0px 0px 5px #000000; */
+	transform: translateX(-50%);
+}
+.pswp__custom-caption a {
+	color: #fff;
+	text-decoration: underline;
+}
+.hidden-caption-content {
+	display: none;
+}
+
+.pswp__counter {
+	font-size: 1rem;
+	font-weight: bold;
+	font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+	/* text-shadow: 0px 0px 5px #000000; */
+}
+
+.pswp__top-bar {
+	background-color: rgba(0, 0, 0, 0.4);
+}

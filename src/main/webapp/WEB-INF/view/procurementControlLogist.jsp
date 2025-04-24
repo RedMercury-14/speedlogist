@@ -56,6 +56,23 @@
 		<div id="snackbar"></div>
 	</div>
 
+	<!-- Модальное окно для отображения текста -->
+	<div class="modal fade bg-light" style="z-index: 1051;" id="displayMessageModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="displayMessageModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-xl">
+			<div class="modal-content">
+				<div class="modal-header justify-content-center bg-color">
+					<h5 class="modal-title" id="displayMessageModalLabel">Сообщение</h5>
+				</div>
+				<div class="modal-body">
+					<div id="messageContainer"></div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Ок, понятно</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
 	<!-- Модальное окно -->
 	<div class="modal fade" id="routeModal" tabindex="-1" aria-labelledby="routeModalLabel" aria-hidden="true">
 		<div class="modal-dialog modal-xl">
@@ -332,6 +349,31 @@
 
 							<h4>Точки маршрута:</h4>
 							<div class="point-container" id="pointList"></div>
+
+							<div class="input-row-container" id="forReduction-container">
+								<div class="form-check form-check-inline py-3 none">
+									<input class="form-check-input" type="checkbox" id="forReduction" name="forReduction">
+									<label class="form-check-label" for="forReduction">Создать маршрут на понижение</label>
+								</div>
+								<div  class="input-row-container align-items-end">
+									<div class="form-group mb-0 none">
+										<span class="text-muted font-weight-bold mb-1">Стартовая цена:</span>
+										<input type="number" class="form-control" min="0" step="1" name="startPriceForReduction" id="startPriceForReduction" placeholder="Целое число" >
+									</div>
+									<div class="form-group mb-0 none">
+										<span class="text-muted font-weight-bold mb-1">Валюта:</span>
+										<select class="form-control" id="currencyForReduction" name="currencyForReduction">
+											<option value="" hidden disabled selected>Выберите</option>
+											<option>BYN</option>
+											<option>USD</option>
+											<option>EUR</option>
+											<option>RUB</option>
+											<option>KZT</option>
+										</select>
+									</div>
+								</div>
+							</div>
+							<br>
 						</div>
 					</div>
 					<div class="modal-footer">

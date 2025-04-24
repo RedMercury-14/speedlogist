@@ -166,4 +166,6 @@ public interface RouteService {
 	Map<String, List<Message>> routesWithMessages(List<String> routesId);
 
     List<Route> getInternationalRoutesByDates(Date dateStart, Date dateFinish);
+
+	List<Route> getAllActualRoute(Date date);
 }

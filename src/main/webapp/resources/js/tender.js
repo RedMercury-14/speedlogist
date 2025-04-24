@@ -78,6 +78,13 @@ const columnDefsForPC = [
 		comparator: dateComparator,
 	},
 	{ headerName: "Направление", field: "way", cellClass: 'px-2 font-weight-bold text-center', minWidth: 63, },
+	{
+		headerName: "На понижение", field: "forReduction",
+		cellClass: 'px-2 text-center',
+		minWidth: 85, cellDataType: false,
+		valueFormatter: (params) => params.value ? "Да" : "Нет",
+		filterParams: { valueFormatter: (params) => params.value ? "Да" : "Нет", },
+	},
 	{ headerName: "Дата загрузки", field: 'loadDateTimeToView', flex: 1, minWidth: 85, },
 	{ headerName: "Дата выгрузки", field: 'unloadDateTimeToView', flex: 1, minWidth: 85, },
 	{
@@ -106,6 +113,13 @@ const detailCellRendererParams = {
 		columnDefs: [
 			{ headerName: "Дата загрузки", field: 'loadDateTimeToView', flex: 2, minWidth: 85, },
 			{ headerName: "Дата выгрузки", field: 'unloadDateTimeToView', flex: 2, minWidth: 85, },
+			{
+				headerName: "На понижение", field: "forReduction",
+				cellClass: 'px-2 text-center',
+				minWidth: 85, cellDataType: false,
+				valueFormatter: (params) => params.value ? "Да" : "Нет",
+				filterParams: { valueFormatter: (params) => params.value ? "Да" : "Нет", },
+			},
 			{
 				headerName: "Машина", field: 'carInfo',
 				flex: 2, minWidth: 160,
@@ -141,7 +155,7 @@ const gridOptions = {
 	headerHeight: 35,
 	floatingFiltersHeight: 35,
 	defaultColDef: {
-		headerClass: 'px-2',
+		headerClass: 'px-1',
 		cellClass: 'px-2',
 		flex: 1,
 		resizable: true,
@@ -170,7 +184,8 @@ window.onload = async () => {
 
 	const gridDiv = document.querySelector('#myGrid')
 	const filterTextBox = document.querySelector('#filterTextBox')
-	const tenders = await getData(getActiveTendersUrl)
+	const tendersData = await getData(getActiveTendersUrl)
+	const tenders = tendersData.routes
 	const myMessages = await getData(getInfoRouteMessageBaseUrl + 'from_me')
 	const user = await getData(getThisUserUrl)
 
@@ -212,8 +227,6 @@ async function renderTable(gridDiv, gridOptions, data, messages, user) {
 	gridOptions.api.hideOverlay()
 }
 async function updateTable(gridOptions, data, messages, user) {
-	console.log('UPDATE TABLE')
-
 	const mappingData = await getMappingData(data, messages, user)
 
 	gridOptions.api.setRowData(mappingData)

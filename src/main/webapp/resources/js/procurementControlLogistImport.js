@@ -18,6 +18,7 @@ import {
 	orderCargoInputOnChangeHandler,
 	orderPallInputOnChangeHandler,
 	orderWeightInputOnChangeHandler,
+	toggleForReductionInputsVisible,
 	typeTruckOnChangeHandler,
 } from "./procurementFormUtils.js"
 import { checkCombineRoutes, excelStyles, mapCallbackForProcurementControl, mergeRoutePoints, procurementExcelExportParams } from './procurementControlUtils.js'
@@ -239,6 +240,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 	const typeTruckInput = document.querySelector('#typeTruck')
 	const wayInput = document.querySelector('#way')
 	const dangerousInput = document.querySelector('#dangerous')
+	const forReduction = document.querySelector('#forReduction')
 
 	// отрисовка таблицы
 	const gridDiv = document.querySelector('#myGrid')
@@ -283,6 +285,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 	// обработчик на поле Опасный груз
 	// dangerousInput && dangerousInput.addEventListener('change', dangerousInputOnChangeHandler)
+
+	forReduction.addEventListener('change', (e) => toggleForReductionInputsVisible(e.target.checked))
 
 	// листнер на очистку формы маршрута при закрытии модального окна
 	$('#routeModal').on('hide.bs.modal', (e) => {
@@ -674,7 +678,9 @@ function routeFormSubmitHandler(e) {
 				updateTable(gridOptions, orderSearchForm)
 				closeRouteModal()
 			} else if (res.status === '100') {
-				snackbar.show(res.message)
+				res.message && snackbar.show(res.message)
+			} else if (res.status === '105') {
+				res.message && showMessageModal(res.message)
 			} else {
 				snackbar.show('Возникла ошибка - обновите страницу!')
 			}
@@ -701,12 +707,19 @@ function routeFormDataFormatter(routeForm) {
 		? points[points.length - 1].date
 		: ''
 
+	const forReduction = data.forReduction === 'on'
+	const startPriceForReduction = data.startPriceForReduction ? Number(data.startPriceForReduction) : null
+	const currencyForReduction = data.currencyForReduction ? data.currencyForReduction : null
+
 	return {
 		...data,
 		idOrders,
 		dateDelivery,
 		points: updatedPoints,
-		comment: getComment(data)
+		comment: getComment(data),
+		forReduction,
+		startPriceForReduction,
+		currencyForReduction,
 	}
 }
 
@@ -770,4 +783,10 @@ function convertToDayMonthTime(eventDateStr) {
 		minute: '2-digit'
 	})
 	return formatter.format(date)
+}
+
+function showMessageModal(message) {
+	const messageContainer = document.querySelector('#messageContainer')
+	messageContainer.innerHTML = message
+	$('#displayMessageModal').modal('show')
 }

@@ -1,0 +1,14 @@
+.navbar {
+    background-color: #0e377b !important;
+}
+.my-container {
+    margin-top: 80px;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.container .table {
+    font-family: Arial, Helvetica, sans-serif;
+}
+.table a {
+    color: #007bff;
+}
+

@@ -44,7 +44,7 @@ public class RouteDAOImpl implements RouteDAO {
 
 	}
 
-	private static final String queryGetObjById = "from Route r LEFT JOIN FETCH r.orders ord LEFT JOIN FETCH ord.addresses addr LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d where r.idRoute=:idRoute";
+	private static final String queryGetObjById = "from Route r LEFT JOIN FETCH r.orders ord LEFT JOIN FETCH ord.addresses addr LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d LEFT JOIN FETCH r.carrierBids c where r.idRoute=:idRoute";
 
 	@Override	
 	public Route getRouteById(int id) {
@@ -542,6 +542,7 @@ public class RouteDAOImpl implements RouteDAO {
 			+ "LEFT JOIN FETCH r.truck tr "
 			+ "LEFT JOIN FETCH r.roteHasShop rhs "
 			+ "LEFT JOIN FETCH r.driver d "
+			+ "LEFT JOIN FETCH r.carrierBids "
 			+ "where r.comments ='international' AND r.statusRoute =1 AND r.dateLoadPreviously >= :dateNow";
 	@Override
 	public List<Route> getActualRoute(Date date) {
@@ -558,6 +559,7 @@ public class RouteDAOImpl implements RouteDAO {
 			+ "LEFT JOIN FETCH r.truck tr "
 			+ "LEFT JOIN FETCH r.roteHasShop rhs "
 			+ "LEFT JOIN FETCH r.driver d "
+			+ "LEFT JOIN FETCH r.carrierBids c "
 			+ "where r.dateLoadPreviously BETWEEN :frmdate and :todate "
 			+ "AND r.comments='international' ";
 //			+ "AND CAST(r.statusRoute AS integer) <= 8";
@@ -696,6 +698,25 @@ public class RouteDAOImpl implements RouteDAO {
 
 		List<Route> routes = theObject.list();
 		return routes;
+	}
+// r.way like '%Импорт%' or r.way like '%Экспор%' or r.way =: 'РБ' AND
+	private static final String queryGetAllActualRoute = "from Route r "
+			+ "LEFT JOIN FETCH r.orders ord "
+			+ "LEFT JOIN FETCH ord.addresses addr "
+			+ "LEFT JOIN FETCH r.user u "
+			+ "LEFT JOIN FETCH r.truck tr "
+			+ "LEFT JOIN FETCH r.roteHasShop rhs "
+			+ "LEFT JOIN FETCH r.driver d "
+			+ "LEFT JOIN FETCH r.carrierBids c "
+		    + "LEFT JOIN FETCH c.carrier crr "
+			+ "where (r.way like '%Импорт%' or r.way like '%Экспор%' or r.way = 'РБ') AND r.statusRoute =1 AND r.dateLoadPreviously >= :dateNow";
+	@Override
+	public List<Route> getAllActualRoute(Date date) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Route> theObject = currentSession.createQuery(queryGetAllActualRoute, Route.class);
+		theObject.setParameter("dateNow", date, TemporalType.DATE);
+		List<Route> objects = theObject.getResultList();
+		return new ArrayList<Route>(new HashSet<Route>(objects));
 	}
 
 }

@@ -55,11 +55,11 @@
 										<input name="name" id="name" placeholder="ФИО" class="form-control" required />
 										<input name="tel" id="tel" placeholder="Телефон: +375YYXXXXXXX" class="form-control" required />
 										<input name="mail" id="mail" type="email" placeholder="Электронная почта (E-mail)" class="form-control" required />
-										<div class="form-group">
+										<!-- <div class="form-group">
 											<h6>Фото соглашения о соблюдении порядка обработки персональных данных</h6>
 											<div class="error-message">Важно: загружайте файлы только формата .png, .jpg или .jpeg</div>
 											<input name="agreePersonalData" id="agreePersonalData" type="file" accept=".png, .jpg, .jpeg, " class="form-control" required/>
-										</div>
+										</div> -->
 									</div>
 									<input type="button" name="next" id="step1Btn" class="next action-button" value="Вперед" />
 								</fieldset>

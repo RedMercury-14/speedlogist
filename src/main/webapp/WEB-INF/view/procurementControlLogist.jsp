@@ -350,10 +350,31 @@
 							<h4>Точки маршрута:</h4>
 							<div class="point-container" id="pointList"></div>
 
-							<!-- <div class="form-check form-check-inline mb-4">
-								<input class="form-check-input" type="checkbox" id="forReduction" name="forReduction">
-								<label class="form-check-label" for="forReduction">Создать маршрут на понижение</label>
-							</div> -->
+							<!-- ТЕНДЕРЫ НА ПОНИЖЕНИЕ -->
+							<!-- <div class="input-row-container" id="forReduction-container">
+								<div class="form-check form-check-inline py-3 none">
+									<input class="form-check-input" type="checkbox" id="forReduction" name="forReduction">
+									<label class="form-check-label" for="forReduction">Создать маршрут на понижение</label>
+								</div>
+								<div  class="input-row-container align-items-end">
+									<div class="form-group mb-0 none">
+										<span class="text-muted font-weight-bold mb-1">Стартовая цена:</span>
+										<input type="number" class="form-control" min="0" step="1" name="startPriceForReduction" id="startPriceForReduction" placeholder="Целое число" >
+									</div>
+									<div class="form-group mb-0 none">
+										<span class="text-muted font-weight-bold mb-1">Валюта:</span>
+										<select class="form-control" id="currencyForReduction" name="currencyForReduction">
+											<option value="" hidden disabled selected>Выберите</option>
+											<option>BYN</option>
+											<option>USD</option>
+											<option>EUR</option>
+											<option>RUB</option>
+											<option>KZT</option>
+										</select>
+									</div>
+								</div>
+							</div>
+							<br> -->
 						</div>
 					</div>
 					<div class="modal-footer">

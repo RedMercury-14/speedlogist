@@ -92,7 +92,7 @@
             <div class="overlay"></div>
             <div class="mt-3 mt-md-0 container slider-caption">
               <h5 class="subtitle">Доставка точно в сроки</h5>
-              <h2 class="title">Биржа международных маршрутов<br>на склады компании Доброном</h2>
+              <h2 class="title">Транспортная биржа грузов<br>компании ЗАО «Доброном»</h2>
               <c:choose>
                   <c:when test="${!authenticated}">
                     <div class="d-flex flex-md-row flex-column align-items-center">
@@ -155,7 +155,7 @@
                 </div>
             </div>
         </div>
-        <div class="slide">
+        <!-- <div class="slide">
            <div class="cargoy-sb">
                 <figure class="sb-thumb green"><a href="#"><img src="${pageContext.request.contextPath}/resources/img/mainPage/images/kylik.jpg" alt=""></a></figure>
                 <div class="sb-caption">
@@ -163,7 +163,7 @@
                     <h4>Кулики</h4>
                 </div>
             </div>
-        </div>
+        </div> -->
         <div class="slide">
            <div class="cargoy-sb">
                 <figure class="sb-thumb green"><a href="#"><img src="${pageContext.request.contextPath}/resources/img/mainPage/images/sovremenny_sklad.jpg" alt=""></a></figure>
@@ -179,7 +179,7 @@
     <section>
         <div class="container">
             <div class="card bg-light mb-3 p-3">
-                <h4 class="mb-0">Международные перевозки</h4>
+                <h4 class="mb-0">Наши актуальные грузы</h4>
             </div>
             <div class="row" id="cardsContainer"></div>
             <div class="d-flex justify-content-center mb-3">

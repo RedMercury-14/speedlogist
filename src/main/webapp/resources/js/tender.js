@@ -1,6 +1,6 @@
-import { ws } from './global.js';
+import { ws, wsTenderMessagesUrl } from './global.js';
 import { AG_GRID_LOCALE_RU } from '../js/AG-Grid/ag-grid-locale-RU.js'
-import { cookieHelper, dateHelper, debounce, getData, isMobileDevice } from './utils.js';
+import { cookieHelper, dateHelper, debounce, getData, isMobileDevice, SmartWebSocket } from './utils.js';
 import { dateComparator, gridFilterLocalState } from './AG-Grid/ag-grid-utils.js';
 import { getActiveTendersUrl, getInfoRouteMessageBaseUrl, getThisUserUrl } from './globalConstants/urls.js';
 
@@ -53,7 +53,7 @@ const columnDefsForMobile = [
 		comparator: dateComparator,
 	},
 	{ 
-		headerName: "Предложенная цена", field: "price",
+		headerName: "Актуальная цена", field: "price",
 		cellClass: 'px-1 font-weight-bold text-center',
 		minWidth: 90,
 		wrapText: true, autoHeight: true,
@@ -78,6 +78,14 @@ const columnDefsForPC = [
 		comparator: dateComparator,
 	},
 	{ headerName: "Направление", field: "way", cellClass: 'px-2 font-weight-bold text-center', minWidth: 63, },
+	// ТЕНДЕРЫ НА ПОНИЖЕНИЕ
+	// {
+	// 	headerName: "На понижение", field: "forReduction",
+	// 	cellClass: 'px-2 text-center',
+	// 	minWidth: 85, cellDataType: false,
+	// 	valueFormatter: (params) => params.value ? "Да" : "Нет",
+	// 	filterParams: { valueFormatter: (params) => params.value ? "Да" : "Нет", },
+	// },
 	{ headerName: "Дата загрузки", field: 'loadDateTimeToView', flex: 1, minWidth: 85, },
 	{ headerName: "Дата выгрузки", field: 'unloadDateTimeToView', flex: 1, minWidth: 85, },
 	{
@@ -89,7 +97,7 @@ const columnDefsForPC = [
 		flex: 2, minWidth: 160,
 	},
 	{ 
-		headerName: "Предложенная цена", field: "price",
+		headerName: "Актуальная цена", field: "price",
 		cellClass: 'px-2 font-weight-bold text-center',
 		minWidth: 60,
 	},
@@ -106,6 +114,14 @@ const detailCellRendererParams = {
 		columnDefs: [
 			{ headerName: "Дата загрузки", field: 'loadDateTimeToView', flex: 2, minWidth: 85, },
 			{ headerName: "Дата выгрузки", field: 'unloadDateTimeToView', flex: 2, minWidth: 85, },
+			// ТЕНДЕРЫ НА ПОНИЖЕНИЕ
+			// {
+			// 	headerName: "На понижение", field: "forReduction",
+			// 	cellClass: 'px-2 text-center',
+			// 	minWidth: 85, cellDataType: false,
+			// 	valueFormatter: (params) => params.value ? "Да" : "Нет",
+			// 	filterParams: { valueFormatter: (params) => params.value ? "Да" : "Нет", },
+			// },
 			{
 				headerName: "Машина", field: 'carInfo',
 				flex: 2, minWidth: 160,
@@ -141,7 +157,7 @@ const gridOptions = {
 	headerHeight: 35,
 	floatingFiltersHeight: 35,
 	defaultColDef: {
-		headerClass: 'px-2',
+		headerClass: 'px-1',
 		cellClass: 'px-2',
 		flex: 1,
 		resizable: true,
@@ -171,6 +187,9 @@ window.onload = async () => {
 	const gridDiv = document.querySelector('#myGrid')
 	const filterTextBox = document.querySelector('#filterTextBox')
 	const tenders = await getData(getActiveTendersUrl)
+	// ТЕНДЕРЫ НА ПОНИЖЕНИЕ
+	// const tendersData = await getData(getActiveTendersUrl)
+	// const tenders = tendersData.routes
 	const myMessages = await getData(getInfoRouteMessageBaseUrl + 'from_me')
 	const user = await getData(getThisUserUrl)
 
@@ -184,6 +203,14 @@ window.onload = async () => {
 
 	goTGBotBtn.addEventListener('click', goTGBotBtnClickHandler)
 	resetTableFiltersBtn.addEventListener('click', resetFilterState)
+
+	// const forReductionSocket = new SmartWebSocket(wsTenderMessagesUrl, {
+	// 	reconnectInterval: 5000,
+	// 	maxReconnectAttempts: 5,
+	// 	onMessage: forReductionSocketOnMessage,
+	// 	onClose: () => alert('Соединение с сервером потеряно. Перезагрузите страницу')
+	// })
+
 
 	tgBotModal()
 
@@ -212,8 +239,6 @@ async function renderTable(gridDiv, gridOptions, data, messages, user) {
 	gridOptions.api.hideOverlay()
 }
 async function updateTable(gridOptions, data, messages, user) {
-	console.log('UPDATE TABLE')
-
 	const mappingData = await getMappingData(data, messages, user)
 
 	gridOptions.api.setRowData(mappingData)
@@ -223,7 +248,6 @@ async function updateTable(gridOptions, data, messages, user) {
 
 async function getMappingData(data, messages, user) {
 	return await Promise.all(data.map( async (tender) => {
-		const userUnp = user.numYNP
 		const idRoute = tender.idRoute
 		const rhsItem = tender.roteHasShop[0]
 		const cargo = rhsItem && rhsItem.cargo ? rhsItem.cargo : ''
@@ -244,16 +268,8 @@ async function getMappingData(data, messages, user) {
 
 		const routeMessages = await getData(getInfoRouteMessageBaseUrl + idRoute)
 
-		const price = routeMessages && routeMessages.length !== 0
-			? `${routeMessages[0].text} ${routeMessages[0].currency}`
-			: tender.startPrice
-				? `${tender.startPrice} BYN` : ''
-
-		const myOffer = routeMessages && routeMessages.length !== 0 && routeMessages[0].ynp === userUnp
-			? `${routeMessages[0].text} ${routeMessages[0].currency}`
-			: myMessage
-				? `${myMessage.text} ${myMessage.currency}` : ''
-
+		const price = getPrice(routeMessages, user, tender)
+		const myOffer = getMyOffer(routeMessages, user, myMessage, tender)
 		const carInfo = getCarInfo(tender)
 		const cargoInfo = getCargoInfo(tender)
 		const unloadDateToView = getUnloadDateToView(tender)
@@ -305,6 +321,14 @@ function textInColumnRenderer(params) {
 	`
 }
 
+// действия на сообщения от сокета тендеров
+function forReductionSocketOnMessage(e) {
+	console.log(e)
+
+	const data = JSON.parse(e.data)
+	console.log("🚀 ~ forReductionSocketOnMessage ~ data:", data)
+}
+
 // функции для модального окна ТГ бота
 function tgBotModal() {
 	const value = cookieHelper.getCookie('_speedLogistBot')
@@ -341,6 +365,43 @@ function resetFilterState() {
 	gridFilterLocalState.resetState(gridOptions, LOCAL_STORAGE_KEY)
 }
 
+function getPrice(routeMessages, user, tender) {
+	const forReductionTender = tender.forReduction
+
+	if (forReductionTender) {
+		const offers = tender.carrierBids
+		if (offers.length === 0) {
+			return tender.startPriceForReduction && tender.currencyForReduction
+				? `${tender.startPriceForReduction} ${tender.currencyForReduction}` : ''
+		}
+		const actualOffer = offers.sort((a, b) => b.idCarrierBid - a.idCarrierBid)[0]
+		return `${actualOffer.price} ${actualOffer.currency}`
+	}
+
+	// return routeMessages && routeMessages.length !== 0
+	// 	? `${routeMessages[0].text} ${routeMessages[0].currency}`
+	// 	: tender.startPrice
+	// 		? `${tender.startPrice} BYN` : ''
+	
+	return ''
+}
+function getMyOffer(routeMessages, user, myMessage, tender) {
+	const userUnp = user.numYNP
+	const userId = user.idUser
+	const forReductionTender = tender.forReduction
+
+	if (forReductionTender) {
+		const offers = tender.carrierBids
+		if (offers.length === 0) return ''
+		const myOffer = offers.filter(offer => offer.idUser === userId)[0]
+		return myOffer ? `${myOffer.price} ${myOffer.currency}` : ''
+	}
+
+	return routeMessages && routeMessages.length !== 0 && routeMessages[0].ynp === userUnp
+		? `${routeMessages[0].text} ${routeMessages[0].currency}`
+		: myMessage
+			? `${myMessage.text} ${myMessage.currency}` : ''
+}
 function getCargoInfo(tender) {
 	if (!tender) return ''
 	const rhsItem = tender.roteHasShop[0]

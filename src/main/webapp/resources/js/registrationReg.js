@@ -37,7 +37,7 @@ $(document).ready(function() {
 	const nameInput = $('#name')
 	const telInput = $('#tel')
 	const mailInput = $('#mail')
-	const filedataInput = document.getElementsByName("agreePersonalData")
+	// const filedataInput = document.getElementsByName("agreePersonalData")
 
 	// инпуты шага 2
 	const contractInput = $('#contract')
@@ -67,8 +67,8 @@ $(document).ready(function() {
 		passwordInput.val() &&
 		nameInput.val() &&
 		telInput.val() &&
-		mailRegex.test(mailInput.val()) &&
-		filedataInput[0].files[0]
+		mailRegex.test(mailInput.val())
+		// && filedataInput[0].files[0]
 
 	// валидация шага 2
 	const isValidStep2Data = () =>

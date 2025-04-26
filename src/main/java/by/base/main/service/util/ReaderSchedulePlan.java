@@ -1153,7 +1153,8 @@ public class ReaderSchedulePlan {
 	        } else {
 	            sb.append("<td style='padding: 10px; border: 1px solid #ddd;'>В пределах нормы</td>");
 	        }
-
+	        
+	        
 	        // Сток согласно графику, дн (всегда черный + жирный)
 	        sb.append("<td style='padding: 10px; border: 1px solid #ddd; font-weight: bold;'>").append(aggregated.getBaseStock()).append("</td>");
 
@@ -1327,7 +1328,7 @@ public class ReaderSchedulePlan {
 	 * @throws Exception 
 	 */
 	private boolean createPermission(Order order, HttpServletRequest request, List<ResultMethod> resultMethods, User user) throws Exception {
-		if(user.getRoles().stream().findFirst().get().getIdRole() != 1) { // отключение согласования для админов
+		if(user.getRoles().stream().findFirst().get().getIdRole() != 2) { // отключение согласования для админов
 			String text = "Требуется согласование на размещение заказа <b>" + order.getMarketNumber() + "</b> "
 					 + order.getCounterparty() + " менеджером " + user.getSurname()+ " " + user.getName() + " на <b>" 
 					 + order.getTimeDelivery().toLocalDateTime().toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + "</b>.<br>"
@@ -1742,11 +1743,14 @@ public class ReaderSchedulePlan {
 								return new ResultMethod("<span style=\"color: #bbaa00;\"><strong>Проверка по кол-ву в авто не проводилась!</strong> Расчётная реализация товара " + product.getName() + " (" + product.getCodeProduct()+") равна 0.0 !</span>\n", 200, order.getMarketNumber());
 							}
 							
-							if(balanceTruck > (dateRange.stock+dateRange.stock)) {
+							if(balanceTruck > (dateRange.stock + dateRange.stock)) {
 								isMistakeZAQ.set(true);
 								result.append("<span style=\"color: red;\">Запрещено, т.к. товара " + product.getName() + " (" + product.getCodeProduct()+") в машине на "+balanceTruck+" дней.  Сток согласно графику поставок составляет: " + dateRange.stock + " дн.</span>\n");
+								System.err.println(balanceTruck + ">" + (dateRange.stock + dateRange.stock));
 								return new ResultMethod("<span style=\"color: red;\">Запрещено, т.к. товара " + product.getName() + " (" + product.getCodeProduct()+") в машине на "+balanceTruck+" дней.  Сток согласно графику поставок составляет: " + dateRange.stock + " дн.</span>\n", 
-										0, product.getName(), product.getCodeProduct(), balanceTruck, (dateRange.stock+dateRange.stock), balanceStockAndReserves, order.getMarketNumber()); // (dateRange.stock+dateRange.stock) - умноженый на два т.к. так надо
+										0, product.getName(), product.getCodeProduct(), balanceTruck, dateRange.stock, balanceStockAndReserves, order.getMarketNumber());
+								
+								// (dateRange.stock+dateRange.stock) - умноженый на два т.к. так надо
 //								return new ResultMethod("<span style=\"color: red;\">Запрещено, т.к. товара " + product.getName() + " (" + product.getCodeProduct()+") в машине на "+balanceTruck+" дней.  Сток согласно графику поставок составляет: " + dateRange.stock + " дн.</span>", 0);
 							}else {
 								result.append("<span>Инфо: товара " + product.getName() + " (" + product.getCodeProduct()+") в машине на "+balanceTruck+" дней.  Сток согласно графику поставок составляет: " + dateRange.stock + "дн.</span>\n");

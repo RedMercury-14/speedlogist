@@ -1328,7 +1328,7 @@ public class ReaderSchedulePlan {
 	 * @throws Exception 
 	 */
 	private boolean createPermission(Order order, HttpServletRequest request, List<ResultMethod> resultMethods, User user) throws Exception {
-		if(user.getRoles().stream().findFirst().get().getIdRole() != 2) { // отключение согласования для админов
+		if(user.getRoles().stream().findFirst().get().getIdRole() != 1) { // отключение согласования для админов
 			String text = "Требуется согласование на размещение заказа <b>" + order.getMarketNumber() + "</b> "
 					 + order.getCounterparty() + " менеджером " + user.getSurname()+ " " + user.getName() + " на <b>" 
 					 + order.getTimeDelivery().toLocalDateTime().toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + "</b>.<br>"

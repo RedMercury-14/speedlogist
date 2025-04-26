@@ -3061,8 +3061,8 @@ public class POIExcel {
 		XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
 		XSSFSheet sheet = wb.getSheetAt(0);
 		
-//		Date dateStart = Date.valueOf("2025-01-03");
-//		Date dateEnd = Date.valueOf("2025-01-08");
+		Date dateStart = Date.valueOf("2025-04-26");
+		Date dateEnd = Date.valueOf("2025-04-29");
 		
 		for (int i = 1; i < sheet.getLastRowNum() + 1; i++) {
 			XSSFRow rowI = sheet.getRow(i);
@@ -3089,9 +3089,11 @@ public class POIExcel {
 	        XSSFCell cellValueQuant= rowI.getCell(23);
 	        
 	        Schedule schedule = new Schedule();
-			schedule.setCounterpartyCode(Long.parseLong(getCellValue(cellCodeCounter).split("\\.")[0]));
+	        String cellCodeCounterStr = getCellValue(cellCodeCounter).split("\\.")[0];
+	        String cellNumContractStr = getCellValue(cellNumContract).split("\\.")[0];
+			schedule.setCounterpartyCode(Long.parseLong(cellCodeCounterStr));
             schedule.setName(getCellValue(cellNameCount));
-            schedule.setCounterpartyContractCode(Long.parseLong(getCellValue(cellNumContract).split("\\.")[0]));
+            schedule.setCounterpartyContractCode(Long.parseLong(cellNumContractStr));
             schedule.setNote(getCellValue(cellWeek));
             schedule.setMonday(getCellValue(cellMonday));
             schedule.setTuesday(getCellValue(cellTuesday));
@@ -3108,8 +3110,8 @@ public class POIExcel {
             schedule.setQuantumMeasurements(getCellValue(cellValueQuant));
             schedule.setToType(getCellValue(cellStockType));
             schedule.setIsDayToDay(getCellValue(cellDayToDay) != null ? getCellValue(cellDayToDay).equals("true") : null);
-//            schedule.setStartDateTemp(dateStart);
-//            schedule.setEndDateTemp(dateEnd);			
+            schedule.setStartDateTemp(dateStart); // время
+            schedule.setEndDateTemp(dateEnd);			//время
             schedule.setDateLoadExcel(Timestamp.valueOf(LocalDateTime.now()));
             schedule.setIsNotCalc(false);
             schedule.setIsImport(false);

@@ -138,6 +138,20 @@
 											<input type="hidden" value="0" name="price" size="1" />
 										</c:otherwise>
 									</c:choose>
+									<h5 class="route-subtitle">Предложение</h5>
+									<input type="number" name="cost" size="3" required="true" class="raz form-control" step="1" min="0" placeholder="Целое число">
+									<div class="mb-0 form-group">
+										<input type="text" name="comment" class="form-control" placeholder="Комментарий">
+									</div>
+									<select class="form-control" id="currency">
+										<option>BYN</option>
+										<option>USD</option>
+										<option>EUR</option>
+										<option>RUB</option>
+										<option>KZT</option>
+									</select>
+									<input type="submit" value="Поддержать цену" name="agree" class="agreeinternational btn btn-success">
+									<input type="hidden" value="0" name="price" size="1" />
 								</c:otherwise>
 							</c:choose>
 						</div>

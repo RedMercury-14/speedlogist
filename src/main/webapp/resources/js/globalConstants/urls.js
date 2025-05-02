@@ -386,6 +386,7 @@ export const getInfoRouteMessageBaseUrl = `/speedlogist/api/info/message/routes/
 export const getThisUserUrl = '/speedlogist/api/getThisUser'
 export const setTenderForReductionOfferUrl = '/speedlogist/api/carrier/tenders/get-bid'
 export const cancelTenderForReductionOfferUrl = '/speedlogist/api/carrier/tenders/get-bid'
+export const getThisUserIdUrl = '/speedlogist/api/get-this-user'
 
 
 ///////////////////////////////////////////////

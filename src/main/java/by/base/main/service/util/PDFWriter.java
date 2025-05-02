@@ -10,7 +10,9 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.crypto.Cipher;
@@ -145,6 +147,31 @@ public class PDFWriter {
 	    if(addresses.get(0).getType().equalsIgnoreCase("выгрузка")) {
 	    	Collections.reverse(addresses);
 	    }
+	    /*
+	     * Определяем одинаковые адреса на загрузке, чтобы сложить паллеты и наиминование груза
+	     */
+	    Map<String, Address> loadAddresses = new HashMap<String, Address>();
+	    if(route.getOrders().size()>1) {
+	    	for (Order orderForArdess : route.getOrders()) {
+				for (Address address : orderForArdess.getAddresses()) {
+					if(address.getType().toLowerCase().equals("загрузка") && !loadAddresses.containsKey(address.getBodyAddress())) {
+						loadAddresses.put(address.getBodyAddress(), address);
+					}else if(address.getType().toLowerCase().equals("загрузка") && loadAddresses.containsKey(address.getBodyAddress())) {
+						Address addressOld = loadAddresses.get(address.getBodyAddress());
+						Integer summPall = Integer.parseInt(addressOld.getPall()) + Integer.parseInt(address.getPall());
+						addressOld.setPall(summPall.toString());
+						Integer summWeigth = Integer.parseInt(addressOld.getWeight()) + Integer.parseInt(address.getWeight());
+						addressOld.setWeight(summWeigth.toString());
+						Integer summVolume = Integer.parseInt(addressOld.getVolume()) + Integer.parseInt(address.getVolume());
+						addressOld.setVolume(summVolume.toString());
+						if(!addressOld.getCargo().trim().equals(address.getCargo().trim())) {
+							addressOld.setCargo(addressOld.getCargo() + "; " + address.getCargo());
+						}						
+						loadAddresses.put(addressOld.getBodyAddress(), addressOld);
+					}
+				}
+			}
+	    }
 	    
 	    for (Address point : addresses) {
 	        // Внутренние строки для точки
@@ -165,7 +192,13 @@ public class PDFWriter {
 
 	        
 	        addRowToTable(table, "Контактное лицо контрагента:", order.getContact(), fontMainTextBold, fontMainText, false, false, true);
-	        addRowToTable(table, "Адрес склада:", point.getBodyAddress(), fontMainTextBold, fontMainText, false, false, true);
+	        Address linkLoadAdress = null;
+	        if(loadAddresses.containsKey(point.getBodyAddress())) {
+	        	linkLoadAdress = loadAddresses.get(point.getBodyAddress());
+	        	addRowToTable(table, "Адрес склада:", linkLoadAdress.getBodyAddress(), fontMainTextBold, fontMainText, false, false, true);
+	        }else {
+	        	addRowToTable(table, "Адрес склада:", point.getBodyAddress(), fontMainTextBold, fontMainText, false, false, true);	        	
+	        }
 	        
 	        if(order != null && order.getWay().toLowerCase().equals("импорт") || order != null && order.getWay().toLowerCase().equals("экспорт")) {
 	        	addRowToTable(table, "Адрес таможенного пункта: ", point.getCustomsAddress(), fontMainTextBold, fontMainText, false, false, true);
@@ -175,10 +208,19 @@ public class PDFWriter {
 	        addRowToTable(table, "Контактное лицо на складе:", point.getContact(), fontMainTextBold, fontMainText, false, false, true);
 	        
 	        if(point.getType().equalsIgnoreCase("загрузка")) {
-	        	String cargoInfo = point.getCargo() + "; ";
-		        if (point.getPall() != null) cargoInfo += point.getPall() + " палл; ";
-		        if (point.getWeight() != null) cargoInfo += point.getWeight() + " кг; ";
-		        if (point.getVolume() != null) cargoInfo += point.getVolume() + " м.куб;";
+	        	String cargoInfo = "";
+	        	if(linkLoadAdress != null) {
+	        		cargoInfo = linkLoadAdress.getCargo() + "; ";
+	        		if (point.getPall() != null) cargoInfo += linkLoadAdress.getPall() + " палл; ";
+	        		if (point.getWeight() != null) cargoInfo += linkLoadAdress.getWeight() + " кг; ";
+			        if (point.getVolume() != null) cargoInfo += linkLoadAdress.getVolume() + " м.куб;";
+	        	}else {
+	        		cargoInfo = point.getCargo() + "; ";
+	        		if (point.getPall() != null) cargoInfo += point.getPall() + " палл; ";
+	        		if (point.getWeight() != null) cargoInfo += point.getWeight() + " кг; ";
+			        if (point.getVolume() != null) cargoInfo += point.getVolume() + " м.куб;";
+	        	}
+		        
 		        addRowToTable(table, "Информация о грузе:", cargoInfo, fontMainTextBold, fontMainText, false, false, true);
 		        addRowToTable(table, "Тип загрузки:", order.getTypeLoad(), fontMainTextBold, fontMainText, false, false, true);
 		        addRowToTable(table, "Способ загрузки:", order.getMethodLoad(), fontMainTextBold, fontMainText, false, false, true);

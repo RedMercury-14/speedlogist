@@ -11,6 +11,7 @@ import java.util.Map;
 import by.base.main.model.Message;
 import com.dto.RouteDTO;
 
+import by.base.main.model.Message;
 import by.base.main.model.Route;
 import by.base.main.model.Truck;
 import by.base.main.model.User;
@@ -142,6 +143,8 @@ public interface RouteDAO {
 	 */
 	List<Route> getActualRoute(Date date);
 
+	List<Route> getInternationalRoutesByDates(Date dateStart, Date dateFinish);
+
 	/**
 	 * <br>Возвращает список роутов за указанный интервал дат</br>
 	 * @param dateStart
@@ -159,7 +162,6 @@ public interface RouteDAO {
 	 */
 	Map<String, List<Message>> routesWithMessages(List<String> routesId);
 
-    List<Route> getInternationalRoutesByDates(Date dateStart, Date dateFinish);
 
 	List<Route> getAllActualRoute(Date date);
 }

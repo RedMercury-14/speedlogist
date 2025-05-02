@@ -10,6 +10,11 @@ import java.util.Set;
 import by.base.main.model.*;
 import com.dto.RouteDTO;
 
+import by.base.main.model.Message;
+import by.base.main.model.Route;
+import by.base.main.model.Tender;
+import by.base.main.model.Truck;
+import by.base.main.model.User;
 import javax.transaction.Transactional;
 
 public interface RouteService {
@@ -147,6 +152,8 @@ public interface RouteService {
 	 */
 	Set<Route> getRouteListAsDateForInternational(Date dateStart, Date dateFinish);
 
+	List<Route> getInternationalRoutesByDates(Date dateStart, Date dateFinish);
+
 	/**
 	 * <br>Возвращает список роутов за указанный интервал дат</br>
 	 * @param dateStart
@@ -156,7 +163,6 @@ public interface RouteService {
 	 */
 	List<Route> getRouteListByDatesCreate(Date dateStart, Date dateFinish);
 
-
 	/**
 	 * <br>Возвращает мапу пар route id - message по указанными idRoute</br>
 	 * @param routesId
@@ -164,8 +170,6 @@ public interface RouteService {
 	 * @author Ira
 	 */
 	Map<String, List<Message>> routesWithMessages(List<String> routesId);
-
-    List<Route> getInternationalRoutesByDates(Date dateStart, Date dateFinish);
 
 	List<Route> getAllActualRoute(Date date);
 }

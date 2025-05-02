@@ -34,8 +34,10 @@
 
 					<form id="carrierDataForm">
 
+						<div class="mb-3"><span class="text-danger"> *</span> - поля обязательные для заполнения</div>
+
 						<div class="form-group">
-							<label class="text-muted font-weight-bold mb-2">Рынок грузоперевозок:</label><br>
+							<label class="text-muted font-weight-bold mb-2">Рынок грузоперевозок:<span class="text-danger"> *</span></label><br>
 							<div class="form-check form-check-inline mb-2">
 								<input class="form-check-input" type="radio" name="market" id="market1" value="Рынок РБ" required>
 								<label class="form-check-label" for="market1">Рынок РБ</label>
@@ -51,7 +53,7 @@
 						</div>
 
 						<div class="form-group">
-							<label class="text-muted font-weight-bold mb-2" for="ownership">Форма собственности:</label>
+							<label class="text-muted font-weight-bold mb-2" for="ownership">Форма собственности:<span class="text-danger"> *</span></label>
 							<select class="form-control" id="ownership" name="ownership" required>
 								<option value="" selected disabled>Укажите форму собственности</option>
 								<option value="ОАО">ОАО</option>
@@ -85,17 +87,17 @@
 						</div>
 
 						<div class="form-group">
-							<label class="text-muted font-weight-bold mb-2" for="organization">Название организации:</label>
-							<input type="text" class="form-control" id="organization" name="organization" required>
+							<label class="text-muted font-weight-bold mb-2" for="organization">Название организации:<span class="text-danger"> *</span></label>
+							<input type="text" class="form-control" id="organization" name="organization" placeholder="Например: МойТранспорт" required>
 						</div>
 
 						<div class="form-group">
-							<label class="text-muted font-weight-bold mb-2" for="vehicleCount">Кол-во предлагаемых авто:</label>
+							<label class="text-muted font-weight-bold mb-2" for="vehicleCount">Кол-во предлагаемых авто:<span class="text-danger"> *</span></label>
 							<input type="number" class="form-control" id="vehicleCount" name="vehicleCount" min="1" step="1" placeholder="Целое число" required>
 						</div>
 
 						<div class="form-group required-group">
-							<label class="text-muted font-weight-bold mb-2">Грузоподъемность (т):</label><br>
+							<label class="text-muted font-weight-bold mb-2">Грузоподъемность (т):<span class="text-danger"> *</span></label><br>
 							<div id="capCheckboxes" class="checkbox-container d-flex flex-wrap"></div>
 							<div class="invalid-feedback">
 								Пожалуйста, выберите хотя бы один вариант.
@@ -103,7 +105,7 @@
 						</div>
 
 						<div class="form-group required-group">
-							<label class="text-muted font-weight-bold mb-2">Паллетовместимость:</label><br>
+							<label class="text-muted font-weight-bold mb-2">Паллетовместимость:<span class="text-danger"> *</span></label><br>
 							<div id="pallCheckboxes" class="checkbox-container d-flex flex-wrap"></div>
 							<div class="invalid-feedback">
 								Пожалуйста, выберите хотя бы один вариант.
@@ -111,7 +113,7 @@
 						</div>
 
 						<div class="form-group required-group">
-							<label class="text-muted font-weight-bold mb-2">Тип кузова:</label><br>
+							<label class="text-muted font-weight-bold mb-2">Тип кузова:<span class="text-danger"> *</span></label><br>
 							<div class="checkbox-container d-flex flex-wrap">
 								<div class="form-check form-check-inline">
 									<input class="form-check-input" type="checkbox" id="type1" name="bodyType_1" value="реф">
@@ -136,7 +138,7 @@
 						</div>
 
 						<div class="form-group">
-							<label class="text-muted font-weight-bold mb-2">Наличие гидроборта:</label><br>
+							<label class="text-muted font-weight-bold mb-2">Наличие гидроборта:<span class="text-danger"> *</span></label><br>
 							<div class="form-check form-check-inline">
 								<input class="form-check-input" type="radio" name="tail" id="tailYes" value="Да" required>
 								<label class="form-check-label" for="tailYes">Да</label>
@@ -148,7 +150,7 @@
 						</div>
 
 						<div class="form-group">
-							<label class="text-muted font-weight-bold mb-2">Наличие навигации:</label><br>
+							<label class="text-muted font-weight-bold mb-2">Наличие навигации:<span class="text-danger"> *</span></label><br>
 							<div class="form-check form-check-inline">
 								<input class="form-check-input" type="radio" name="navigation" id="navigationYes" value="Да" required>
 								<label class="form-check-label" for="navigationYes">Да</label>
@@ -160,23 +162,26 @@
 						</div>
 
 						<div class="form-group">
-							<label class="text-muted font-weight-bold mb-2" for="city">Город, в котором расположен транспорт:</label>
-							<input type="text" class="form-control" id="city" name="city" required>
+							<label class="text-muted font-weight-bold mb-2" for="city">Город, в котором расположен транспорт:<span class="text-danger"> *</span></label>
+							<input type="text" class="form-control" id="city" name="city" placeholder="Например: Минск" required>
 						</div>
 
 						<div class="form-group">
-							<label class="text-muted font-weight-bold mb-2" for="phone">Телефон для связи:</label>
-							<input type="tel" class="form-control" id="phone" name="phone" required>
+							<label class="text-muted font-weight-bold mb-2" for="phone">Телефон для связи:<span class="text-danger"> *</span></label>
+							<input type="tel" class="form-control" id="phone" name="phone" placeholder="+375XXYYYYYYY" required>
+							<div class="invalid-feedback">
+								Введите корректный номер телефона (например, +375 29 123-45-67).
+							  </div>
 						</div>
 
 						<div class="form-group">
-							<label class="text-muted font-weight-bold mb-2" for="phone">ФИО:</label>
-							<input type="text" class="form-control" id="fio" name="fio" required>
+							<label class="text-muted font-weight-bold mb-2" for="phone">ФИО:<span class="text-danger"> *</span></label>
+							<input type="text" class="form-control" id="fio" name="fio" placeholder="Иванов Иван Иванович" required>
 						</div>
 
 						<div class="form-group">
-							<label class="text-muted font-weight-bold mb-2" for="email">Адрес эл. почты:</label>
-							<input type="email" class="form-control" id="email" name="email" required>
+							<label class="text-muted font-weight-bold mb-2" for="email">Адрес эл. почты:<span class="text-danger"> *</span></label>
+							<input type="email" class="form-control" id="email" name="email" placeholder="example@gmail.com" required>
 						</div>
 
 						<div class="d-flex justify-content-center">
@@ -202,6 +207,7 @@
 
 	<jsp:include page="footer.jsp" />
 
+	<script src='${pageContext.request.contextPath}/resources/js/inputMask/jquery.inputmask.min.js'></script>
 	<script src="${pageContext.request.contextPath}/resources/js/carrierApplicationForm.js" type="module"></script>
 	<script src='${pageContext.request.contextPath}/resources/js/mainPage/nav-fixed-top.js'></script>
 </body>

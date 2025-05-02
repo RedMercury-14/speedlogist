@@ -440,6 +440,10 @@ async function createRouteBySingleOrder(orderData) {
 			+ ` Пожалуйста, проверьте/отредактируйте название и точки маршрута.`
 		)
 		const linkedOrders = await getLinkedOrders(orderLink)
+		if (!linkedOrders || linkedOrders.length === 0) {
+			alert(`Не удалось получить данные связанных заказов.`)
+			return
+		}
 		createRouteByOrders(linkedOrders)
 		return
 	}
@@ -652,6 +656,12 @@ function routeFormSubmitHandler(e) {
 	// проверка наличия хотя бы одной точки выгрузки
 	if (!data.points.find(point => point.type === 'Выгрузка')) {
 		snackbar.show('Необходимо добавить точку выгрузки!')
+		return
+	}
+
+	// проверка начала маршрута следования с точки загрузки
+	if (data.points[0].type !== 'Загрузка') {
+		snackbar.show('Маршрут должен начинаться с точки загрузки!')
 		return
 	}
 

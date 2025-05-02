@@ -826,7 +826,7 @@ async function displayTenderOffer(idRoute, status) {
 		if (!checkOrderStatus(idRoute)) return
 		const offersData = await getData(`${getMemoryRouteMessageBaseUrl}${idRoute}`)
 		offers = await getMappingOffers(offersData, 'confirm')
-		
+
 	// показать предложения для принятия
 	} else if (status === '1') {
 		if (!checkOrderStatus(idRoute)) return
@@ -838,7 +838,7 @@ async function displayTenderOffer(idRoute, status) {
 		const offersData = await getData(`${getMemoryRouteMessageBaseUrl}${idRoute}`)
 		offers = await getMappingOffers(offersData, '')
 	}
-	
+
 	setCostGridContext(gridOptionsForOffers, offers)
 	gridOptionsForOffers.api.setRowData(offers)
 	gridOptionsForOffers.api.hideOverlay()
@@ -1243,7 +1243,7 @@ function confrom(offer, status, otherUsers) {
 
 	const payload = {
 		login: offer.fromUser,
-		cost: offer.convertedCost,
+		cost: offer.originalCost,
 		idRoute: offer.idRoute,
 		currency: offer.currency,
 		status

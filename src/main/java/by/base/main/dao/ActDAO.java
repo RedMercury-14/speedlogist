@@ -14,6 +14,16 @@ public interface ActDAO {
 	List<Act> getActBynumAct(String id);
 	List<Act> getActBySecretCode(String code);
 	List<Act> getActListAsDate(Date dateStart, Date dateFinish);
+	
+	/**
+	 * <br>Возвращает список актов по указанному id и за указанный диапазон времени</br>
+	 * @param id
+	 * @param startDate
+	 * @param finishDate
+	 * @return
+	 * @author Ira
+	 */
+	   List<Act> getActsByRouteId(String id, LocalDate startDate, LocalDate finishDate);
 
 	/**
 	 * <br>Возвращает список актов по указанному id и за указанный диапазон времени</br>

@@ -5,6 +5,18 @@ import static com.graphhopper.json.Statement.Op.LIMIT;
 import static com.graphhopper.json.Statement.Op.MULTIPLY;
 
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.io.*;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
@@ -70,6 +82,8 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -139,6 +153,7 @@ import by.base.main.service.TGUserService;
 import by.base.main.service.TaskService;
 import by.base.main.service.TruckService;
 import by.base.main.service.UserService;
+import by.base.main.service.impl.MarketException;
 import by.base.main.service.impl.MarketExceptionBuilder;
 import by.base.main.service.util.CheckOrderNeeds;
 import by.base.main.service.util.CustomJSONParser;
@@ -150,6 +165,10 @@ import by.base.main.service.util.POIExcel;
 import by.base.main.service.util.PropertiesUtils;
 import by.base.main.service.util.ReaderSchedulePlan;
 import by.base.main.service.util.ServiceLevel;
+import by.base.main.util.ChatEnpoint;
+import by.base.main.util.MainChat;
+import by.base.main.util.SlotWebSocket;
+import by.base.main.util.TsdWebSocket;
 import by.base.main.util.GraphHopper.CustomJsonFeature;
 import by.base.main.util.GraphHopper.JSpiritMachine;
 import by.base.main.util.GraphHopper.RoutingMachine;
@@ -357,6 +376,81 @@ public class MainRestController {
 
 	@Autowired
     private ServletContext servletContext;
+
+
+	@PostMapping("/logistics/internationalNew/confrom")
+	public Map<String, Object> confromCostNew(Model model, HttpServletRequest request,
+			@RequestBody String str) throws ParseException {
+		String appPath = request.getServletContext().getRealPath("");
+		Map<String, Object> response = new HashMap<String, Object>();
+		JSONParser parser = new JSONParser();
+        JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+
+        Integer idRoute = Integer.parseInt(jsonMainObject.get("idRoute").toString().trim());
+        Integer cost = Integer.parseInt(jsonMainObject.get("cost").toString().trim());
+        String currency = jsonMainObject.get("currency") != null || !jsonMainObject.get("currency").toString().isEmpty() ? jsonMainObject.get("currency").toString() : null;
+        String status = jsonMainObject.get("status") != null || !jsonMainObject.get("status").toString().isEmpty() ? jsonMainObject.get("status").toString() : null;
+        String login = jsonMainObject.get("login") != null || !jsonMainObject.get("login").toString().isEmpty() ? jsonMainObject.get("login").toString() : null;
+
+		//обработка, если удалось нажать на кнопку
+		Order order = orderService.getOrderByIdRoute(idRoute);
+		if(order != null && order.getStatus() == 10) {
+			response.put("status", "100");
+			response.put("message", "Заявка не найдена");
+			return response;
+		}
+		User user = userService.getUserByLogin(login.trim());
+		if (status == null) {
+			status = "4";
+			routeService.updateRouteInBase(idRoute, cost, currency, user, status);
+		}else {
+			routeService.updateRouteInBase(idRoute, cost, currency, user, status);
+			Route route = routeService.getRouteById(idRoute);
+			String message = "На маршрут "+route.getRouteDirection()+" принят единственный заявившийся перевозчик: " + user.getCompanyName()
+					+ ". Заявленная стоимость перевозки составляет "+ route.getFinishPrice() + " "+ route.getStartCurrency() + ". \nОптимальная стоимость составляет " + route.getOptimalCost()+" BYN";
+		}
+		List<Message> messages = new ArrayList<Message>();
+		chatEnpoint.internationalMessegeList.stream()
+			.filter(mes->mes.getIdRoute().equals(idRoute.toString()))
+			.forEach(mes-> messages.add(mes));
+		messages.stream().forEach(mes->{
+			chatEnpoint.internationalMessegeList.remove(mes);
+			messageService.saveOrUpdateMessage(mes);
+		});
+		//аварийная сериализация кеша, на случай если сервер упадёт
+		try {
+			FileOutputStream fos =
+                     new FileOutputStream(appPath + "resources/others/hashmap.ser");
+                  ObjectOutputStream oos = new ObjectOutputStream(fos);
+                  oos.writeObject(chatEnpoint.internationalMessegeList);
+                  oos.close();
+                  fos.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		//меняем статус у Order если имеется
+		Route routeTarget = routeService.getRouteById(idRoute);
+		Set <Order> orders = routeTarget.getOrders();
+		if(orders != null && orders.size() != 0) {
+			orders.forEach(o->{
+				o.setStatus(60);
+				o.setChangeStatus(o.getChangeStatus() + "\nМаршрут "+idRoute+" выйгран  " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy hh:MM:ss")));
+				orderService.updateOrder(o);
+//				orderService.updateOrderFromStatus(o);
+			});
+		}
+
+		Set<Message> messagesJustDelete = new HashSet<Message>();
+		mainChat.messegeList.stream()
+			.filter(m-> m.getIdRoute() != null && m.getIdRoute().equals(idRoute) && m.getToUser().equals("international"))
+			.forEach(m-> messagesJustDelete.add(m));
+		messagesJustDelete.stream().forEach(m->mainChat.messegeList.remove(m));
+		response.put("status", "200");
+		response.put("message", "Маршут создан");
+		response.put("redirect", "/main/logistics/internationalNew");
+		response.put("route", routeTarget);
+		return response;
+	}
 
 	private Double toDouble(Object obj) {
 	    if (obj == null || obj.toString().isEmpty()) return null;
@@ -671,6 +765,165 @@ public class MainRestController {
 		return response;
 	}
 
+
+	/**
+     * Загрузка екселя с протоколом согласования цены (price agreement protocol)
+     */
+    @RequestMapping(value = "/procurement/price-protocol/load", method = RequestMethod.POST, consumes = {
+          MediaType.MULTIPART_FORM_DATA_VALUE })
+    public Map<String, String> postLoadPriceProtocol (HttpServletRequest request, @RequestParam(value = "excel", required = false) MultipartFile excel)
+            throws InvalidFormatException, IOException, ServiceException, java.text.ParseException {
+
+       Map<String, String> response = new HashMap<String, String>();
+
+       File file1 = poiExcel.getFileByMultipartTarget(excel, request, "rotations.xlsx");
+
+       List <PriceProtocol> rotations = poiExcel.readPriceProtocolsFromExcel(file1, 1);
+       for(PriceProtocol priceProtocol: rotations) {
+          priceProtocolService.save(priceProtocol);
+       }
+
+       response.put("status", "200");
+       response.put("message", "Готово");
+       return response;
+    }
+
+    @GetMapping("/get-tender-preview/{dateStart}&{dateEnd}")
+    @TimedExecution
+    public Map<String, Object> getTenderPreview(@PathVariable String dateStart, @PathVariable String dateEnd){
+        Map<String, Object> response = new HashMap<>();
+        Date dateFrom = Date.valueOf(dateStart);
+        Date dateTo = Date.valueOf(dateEnd);
+        List<Route> routes = routeService.getInternationalRoutesByDates(dateFrom, dateTo);
+        List<TenderPreviewDto> tenderPreviewDtos = new ArrayList<>();
+        for(Route route : routes) {
+           TenderPreviewDto tenderPreviewDto = new TenderPreviewDto();
+           tenderPreviewDto.setTenderId(route.getIdRoute());
+           tenderPreviewDto.setTruckType(route.getTypeTrailer());
+           tenderPreviewDto.setLoadType(route.getTypeLoad());
+           tenderPreviewDto.setDateLoadActual(route.getDateLoadActually());
+           tenderPreviewDto.setWeight(route.getTotalCargoWeight());
+           tenderPreviewDto.setPallets(route.getTotalLoadPall());
+           tenderPreviewDto.setLoadMethod(route.getMethodLoad());
+           tenderPreviewDto.setTemperature(route.getTemperature());
+           tenderPreviewDto.setCargo("ТНП");
+           String str = route.getRouteDirection();
+           String[] parts = str.split(">");
+           tenderPreviewDto.setRouteDirection(parts[1]);
+           tenderPreviewDtos.add(tenderPreviewDto);
+        }
+        tenderPreviewDtos.sort(Comparator.comparing(TenderPreviewDto::getTenderId));
+        response.put("tenderPreviewDtos", tenderPreviewDtos);
+        return response;
+    }
+
+    /**
+     * <br>Метод для создания объекта обратной связи</br>.
+     * @param request
+     * @param str
+     * @throws IOException
+     * @throws ParseException
+     * @author Ira
+     */
+    @PostMapping("/carrier-application/create")
+    @TimedExecution
+    public Map<String, Object> createCarrierApplication(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+        Map<String, Object> response = new HashMap<>();
+        JSONParser parser = new JSONParser();
+        JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+        //Long idAct = jsonMainObject.get("idAct") != null ? Long.valueOf(jsonMainObject.get("idAct").toString()) : null;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+        String dateTime = LocalDateTime.now().format(formatter);
+        String market = jsonMainObject.get("market") == null ? null : jsonMainObject.get("market").toString();
+        String ownership = jsonMainObject.get("ownership") == null ? null : jsonMainObject.get("ownership").toString();
+        String organization = jsonMainObject.get("organization") == null ? null : jsonMainObject.get("organization").toString();
+        int vehicleCount = jsonMainObject.get("vehicleCount") == null ? null : Integer.parseInt(jsonMainObject.get("vehicleCount").toString());
+        JSONArray capacitiesJsonArray = (JSONArray) jsonMainObject.get("capacity");
+        StringBuilder capacitiesBuilder = new StringBuilder();
+        for (Object obj : capacitiesJsonArray) {
+           capacitiesBuilder.append((String) obj).append(",");
+        }
+        String capacitiesString = capacitiesBuilder.toString();
+        JSONArray palletsJsonArray = (JSONArray) jsonMainObject.get("pallets");
+        StringBuilder palletsBuilder = new StringBuilder();
+        for (Object obj : palletsJsonArray) {
+           palletsBuilder.append((String) obj).append(",");
+        }
+        String palletsString = palletsBuilder.toString();
+        JSONArray bodyTypesJsonArray = (JSONArray) jsonMainObject.get("bodyType");
+        StringBuilder bodyTypesBuilder = new StringBuilder();
+        for (Object obj : bodyTypesJsonArray) {
+           bodyTypesBuilder.append((String) obj).append(",");
+        }
+        String bodyTypesString = bodyTypesBuilder.toString();
+        String tailLift = jsonMainObject.get("tail") == null ? null : jsonMainObject.get("tail").toString();
+        String navigation = jsonMainObject.get("navigation") == null ? null : jsonMainObject.get("navigation").toString();
+        String city = jsonMainObject.get("city") == null ? null : jsonMainObject.get("city").toString();
+        String phone = jsonMainObject.get("phone") == null ? null : jsonMainObject.get("phone").toString();
+        String email = jsonMainObject.get("email").equals("") ? null : jsonMainObject.get("email").toString();
+        String htmlContent = "Добрый день.\nПолучена новая заявка от грузоперевозчика.\n\n" +
+              "<table border=\"1\" cellpadding=\"5\" cellspacing=\"0\">\n" +
+              "  <tr>\n" +
+              "    <td>Дата оформления заявки</td>\n" +
+              "    <td>" + dateTime + "</td>\n" +
+              "  </tr>\n" +
+              "  <tr>\n" +
+              "    <td>Рынок грузоперевозок</td>\n" +
+              "    <td>" + market + "</td>\n" +
+              "  </tr>\n" +
+              "  <tr>\n" +
+              "    <td>Форма собственности</td>\n" +
+              "    <td>" + ownership + "</td>\n" +
+              "  </tr>\n" +
+              "  <tr>\n" +
+              "    <td>Название организации</td>\n" +
+              "    <td>" + organization + "</td>\n" +
+              "  </tr>\n" +
+              "  <tr>\n" +
+              "    <td>Кол-во предлагаемых авто</td>\n" +
+              "    <td>" + vehicleCount + "</td>\n" +
+              "  </tr>\n" +
+              "  <tr>\n" +
+              "    <td>Грузоподъемность</td>\n" +
+              "    <td>" + capacitiesString.substring(0, capacitiesString.length() - 1) + " (тонны) </td>\n" +
+              "  </tr>\n" +
+              "  <tr>\n" +
+              "    <td>Паллетовместимость</td>\n" +
+              "    <td>" + palletsString.substring(0, palletsString.length() - 1) + " (паллеты) </td>\n" +
+              "  </tr>\n" +
+              "  <tr>\n" +
+              "    <td>Тип кузова</td>\n" +
+              "    <td>" + bodyTypesString.substring(0, bodyTypesString.length() - 1) + "</td>\n" +
+              "  </tr>\n" +
+              "  <tr>\n" +
+              "    <td>Наличие гидроборта</td>\n" +
+              "    <td>" + tailLift + "</td>\n" +
+              "  </tr>\n" +
+              "  <tr>\n" +
+              "    <td>Наличие навигации</td>\n" +
+              "    <td>" + navigation + "</td>\n" +
+              "  </tr>\n" +
+              "  <tr>\n" +
+              "    <td>Город в котором расположен Ваш транспорт</td>\n" +
+              "    <td>" + city + "</td>\n" +
+              "  </tr>\n" +
+              "  <tr>\n" +
+              "    <td>Телефон для связи</td>\n" +
+              "    <td>" + phone + "</td>\n" +
+              "  </tr>\n" +
+              "  <tr>\n" +
+              "    <td>Адрес эл. почты</td>\n" +
+              "    <td>" + email + "</td>\n" +
+              "  </tr>\n" +
+              "</table>";
+        List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.carrier.cooperation");
+        mailService.sendEmailToUsersHTMLContent(request, "Заявка от перевозчика", htmlContent, emailsAdmins);
+
+        response.put("status", "200");
+        response.put("message", "Ваша заявка принята, спасибо.");
+        return response;
+    }
+
 	/**
 	 * Загрузка информации о ротациях из excel в БД
 	 *
@@ -736,35 +989,35 @@ public class MainRestController {
 					e.printStackTrace();
 				}
 
-			} else if (rotation.getStatus() == 20) {
-				rotation.setApproveDate(jsonMainObject.get("approveDate") != null ? Date.valueOf(jsonMainObject.get("approveDate").toString()) : null);
-				long goodIdNew = Long.parseLong(jsonMainObject.get("goodIdNew").toString());
-				long goodIdAnalog = Long.parseLong(jsonMainObject.get("goodIdAnalog").toString());
-				List<Rotation> rotationsNewDuplicates = rotationService.getActualNewCodeDuplicates(goodIdNew).stream().filter(r -> r.getStatus() == 30).collect(Collectors.toList());
-				if (!rotationsNewDuplicates.isEmpty()) {
-					Rotation duplicateGoodIdNew = rotationsNewDuplicates.get(0);
-					duplicateGoodIdNew.setStatus(10);
-					rotationService.updateRotation(duplicateGoodIdNew);
-				}
-				List<Rotation> rotationsAnalogDuplicates = rotationService.getActualAnalogCodeDuplicates(goodIdAnalog).stream().filter(r -> r.getStatus() == 30).toList();
-				if (!rotationsAnalogDuplicates.isEmpty()) {
-					Rotation duplicateGoodIdAnalog = rotationsAnalogDuplicates.get(0);
-					duplicateGoodIdAnalog.setStatus(10);
-					rotationService.updateRotation(duplicateGoodIdAnalog);
-				}
-				try {
-					String email = rotation.getUser().geteMail();
-					List<String> emails = new ArrayList<>();
-					emails.add(email);
-					StringBuilder sb = new StringBuilder(rotation.getHistory() != null ? rotation.getHistory() : "");
-					sb.append("подтверждена - ").append(getThisUser().getSurname()).append(" ").append(getThisUser().getName()).append("; ");
-					rotation.setHistory(sb.toString());
-					List<String> approveEmails = propertiesUtils.getValuesByPartialKey(servletContext, "email.ort.rotation");
-					emails.addAll(approveEmails);
-					List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
-					String messageText = "Добрый день.\nРотация товара " + rotation.getGoodIdNew() + " подтверждена с коэффициентом " + coefficient + ".";
-					mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, emailsAdmins);
-//					mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, emails);
+          } else if (rotation.getStatus() == 20) {
+             rotation.setApproveDate(jsonMainObject.get("approveDate") != null ? Date.valueOf(jsonMainObject.get("approveDate").toString()) : null);
+             long goodIdNew = Long.parseLong(jsonMainObject.get("goodIdNew").toString());
+             long goodIdAnalog = Long.parseLong(jsonMainObject.get("goodIdAnalog").toString());
+             List<Rotation> rotationsNewDuplicates = rotationService.getActualNewCodeDuplicates(goodIdNew).stream().filter(r -> r.getStatus() == 30).collect(Collectors.toList());
+             if (!rotationsNewDuplicates.isEmpty()) {
+                Rotation duplicateGoodIdNew = rotationsNewDuplicates.get(0);
+                duplicateGoodIdNew.setStatus(10);
+                rotationService.updateRotation(duplicateGoodIdNew);
+             }
+             List<Rotation> rotationsAnalogDuplicates = rotationService.getActualAnalogCodeDuplicates(goodIdAnalog).stream().filter(r -> r.getStatus() == 30).collect(Collectors.toList());
+             if (!rotationsAnalogDuplicates.isEmpty()) {
+                Rotation duplicateGoodIdAnalog = rotationsAnalogDuplicates.get(0);
+                duplicateGoodIdAnalog.setStatus(10);
+                rotationService.updateRotation(duplicateGoodIdAnalog);
+             }
+             try {
+                String email = rotation.getUser().geteMail();
+                List<String> emails = new ArrayList<>();
+                emails.add(email);
+                StringBuilder sb = new StringBuilder(rotation.getHistory() != null ? rotation.getHistory() : "");
+                sb.append("подтверждена - ").append(getThisUser().getSurname()).append(" ").append(getThisUser().getName()).append("; ");
+                rotation.setHistory(sb.toString());
+                List<String> approveEmails = propertiesUtils.getValuesByPartialKey(servletContext, "email.ort.rotation");
+                emails.addAll(approveEmails);
+                List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+                String messageText = "Добрый день.\nРотация товара " + rotation.getGoodIdNew() + " подтверждена с коэффициентом " + coefficient + ".";
+//              mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, emailsAdmins);
+                mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, emails);
 
 				} catch (NullPointerException e) {
 					e.printStackTrace();
@@ -857,20 +1110,22 @@ public class MainRestController {
 		List<Rotation> rotationAnalogCodeDuplicates = rotationService.getActualAnalogCodeDuplicates(goodIdAnalog);
 		Rotation rotationCrossCodeDuplicate = rotationService.getActualCrossCodeDuplicates(goodIdNew, goodIdAnalog);
 
-		if (goodIdNew == goodIdAnalog) {
-			rotation.setStatus(20);
-			String email = rotation.getUser().geteMail();
-			List<String> emails = new ArrayList<>();
-			emails.add(email);
-
-			List<String> approveEmails = propertiesUtils.getValuesByPartialKey(servletContext, "email.ort.rotation");
-			emails.addAll(approveEmails);
-			List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
-			String messageText = "Добрый день.\nПросьба подтвердить ротацию кода на увеличение коэффициента. Код товара " + rotation.getGoodIdNew() +
-					".\nПодтвердить можно <a href=https://boxlogs.net/speedlogist/main/orl/rotations>здесь<a>";
-			mailService.sendEmailToUsersHTMLContent(request,  "Подтверждение ротации", messageText, emails);
-//			mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, emailsAdmins);
+       if(goodIdNew == goodIdAnalog) {
+          rotation.setStatus(20);
+          String email = rotation.getUser().geteMail();
+          List<String> emails = new ArrayList<>();
+          emails.add(email);
+          StringBuilder sb = new StringBuilder(rotation.getHistory() != null ? rotation.getHistory() : "");
+          sb.append("подтверждена - ").append(getThisUser().getSurname()).append(" ").append(getThisUser().getName()).append("; ");
+          rotation.setHistory(sb.toString());
+          List<String> approveEmails = propertiesUtils.getValuesByPartialKey(servletContext, "email.ort.rotation");
+          emails.addAll(approveEmails);
+          List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+          String messageText = "Добрый день.\nПросьба подтвердить ротацию кода на увеличение коэффициента. Код товара " + rotation.getGoodIdNew() +
+                ".\nПодтвердить можно <a href=https://boxlogs.net/speedlogist/main/orl/rotations>здесь<a>";
+//        mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, emailsAdmins);
 //          mailService.sendEmailToUsers(appPath, "Подтверждение ротации", messageText, emails);
+          mailService.sendEmailToUsersHTMLContent(request, "Подтверждение ротации", messageText, emails);
 
 			if (!rotationNewCodeDuplicates.isEmpty()) {
 				for (Rotation rotationNewCodeDuplicate : rotationNewCodeDuplicates) {
@@ -969,18 +1224,26 @@ public class MainRestController {
 		return response;
 	}
 
-	/**
-	 * Получение списка ротаций для отображения на фронте
-	 * @author Ira
-	 */
-	@GetMapping("/rotations/get-rotations")
-	public Map<String, Object> getRotations(){
-		Map<String, Object> response = new HashMap<>();
-		response.put("reviews", rotationService.getActualAndWaitingRotations());
-		response.put("status", "200");
-		return response;
-	}
+    /**
+     * Получение списка ротаций для отображения на фронте
+     * @author Ira
+     */
+    @GetMapping("/rotations/get-rotations")
+    public Map<String, Object> getRotations(){
+       Map<String, Object> response = new HashMap<>();
+       response.put("reviews", rotationService.getActualAndWaitingRotations());
+       response.put("status", "200");
+       return response;
+    }
 
+    /**
+     * Создание объекта протокола согласования цены
+     * @param request
+     * @param str
+     * @return
+     * @throws ParseException
+     * @throws IOException
+     */
 	@PostMapping("/procurement/price-protocol/createArray")
 	public Map<String, Object> createPriceProtocolArray(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
 		Map<String, Object> response = new HashMap<>();
@@ -5152,7 +5415,6 @@ public class MainRestController {
 			response.put("message", "Тело запроса = null");
 			return response;
 		}
-		
 		Message message = new Message();
 		JSONParser parser = new JSONParser();
 		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
@@ -5836,7 +6098,7 @@ public class MainRestController {
 	}
 	
 	@GetMapping("/carrier/getStatusTenderForMe")
-	public Set<Route> getStatusTenderForMe(HttpServletRequest request) {
+	public List<Route> getStatusTenderForMe(HttpServletRequest request) {
 		User user = getThisUser();
 		Set<Route> result = new HashSet<Route>();
 		List<Route> vin = routeService.getRouteListByUserHasPeriod(user, LocalDate.now().minusDays(15), LocalDate.now().plusDays(15)); // получаем выйгранные тендеры
@@ -5878,7 +6140,9 @@ public class MainRestController {
 				result.add(r);
 			}
 		});
-		return result;
+		List<Route> resultLIst = new ArrayList<Route>(result);
+		resultLIst.sort((o1,o2) -> o2.getIdRoute().hashCode() - o1.getIdRoute().hashCode());
+		return resultLIst;
 	}
 	
 	@GetMapping("/message")
@@ -9825,6 +10089,13 @@ public class MainRestController {
 			Сортировка:
 			    Используем Comparator с помощью метода Comparator.comparing, чтобы задать логику сортировки.
 		 */
+//		for (Order order : orders) {
+//			if(order.getTimeDelivery() == null) {
+//				response.put("status", "105");
+//				response.put("message", "Заявка " + order.getMarketNumber() + " не поставлена в слоты! Обратитесь к менеджеру " + order.getManager());
+//				return response;
+//			}
+//		}
 		orders.sort(Comparator.comparing(
 				order -> Optional.ofNullable(order.getTimeDelivery())
 						.orElseGet(() -> combineDateAndTime(order.getOnloadWindowDate(), order.getOnloadWindowTime()))

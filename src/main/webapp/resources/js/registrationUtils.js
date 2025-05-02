@@ -144,7 +144,7 @@ export function registration(e, isInternational, token) {
 		dataType: "json",
 		success: function (html) {
 			console.log("success")
-			sendFileAgree(formData, token, body.numYNP)
+			// sendFileAgree(formData, token, body.numYNP)
 			sendContract(formData, token, body.companyName)
 		},
 		error: function (err) {

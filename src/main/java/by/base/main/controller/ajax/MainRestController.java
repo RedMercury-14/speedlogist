@@ -5787,7 +5787,7 @@ public class MainRestController {
 	}
 	
 	@GetMapping("/carrier/getStatusTenderForMe")
-	public Set<Route> getStatusTenderForMe(HttpServletRequest request) {
+	public List<Route> getStatusTenderForMe(HttpServletRequest request) {
 		User user = getThisUser();
 		Set<Route> result = new HashSet<Route>();
 		List<Route> vin = routeService.getRouteListByUserHasPeriod(user, LocalDate.now().minusDays(15), LocalDate.now().plusDays(15)); // получаем выйгранные тендеры
@@ -5829,7 +5829,9 @@ public class MainRestController {
 				result.add(r);
 			}
 		});
-		return result;
+		List<Route> resultLIst = new ArrayList<Route>(result);
+		resultLIst.sort((o1,o2) -> o2.getIdRoute().hashCode() - o1.getIdRoute().hashCode());
+		return resultLIst;
 	}
 	
 	@GetMapping("/message")

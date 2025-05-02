@@ -240,7 +240,13 @@ public class RouteDAOImpl implements RouteDAO {
 		return objects;
 	}
 
-	private static final String queryGetListObjByUser = "from Route r LEFT JOIN FETCH r.orders ord LEFT JOIN FETCH ord.addresses addr LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d where r.user=:user";
+	private static final String queryGetListObjByUser = "from Route r "
+			+ "LEFT JOIN FETCH r.orders ord "
+			+ "LEFT JOIN FETCH ord.addresses addr "
+			+ "LEFT JOIN FETCH r.truck tr "
+			+ "LEFT JOIN FETCH r.roteHasShop rhs "
+			+ "LEFT JOIN FETCH r.driver d where r.user=:user ";
+//			+ "ORDER BY r.idRoute DESC";
 
 	@Override	
 	public List<Route> getRouteListByUser(User user) {

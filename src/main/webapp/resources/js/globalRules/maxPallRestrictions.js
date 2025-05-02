@@ -35,18 +35,74 @@ export const MAX_PALL_RESTRICTIONS = [
 	// ------------------------------------
 	{
 		stockId: '1200',
-		date: '2025-01-14',
+		date: '2025-04-26',
 		maxPall: {
-			externalMovement: 600,
-			internalMovement: 500,
+			externalMovement: 500,
+			internalMovement: 400,
 		},
 	},
 	{
 		stockId: '1200',
-		date: '2025-01-15',
+		date: '2025-04-27',
 		maxPall: {
-			externalMovement: 600,
-			internalMovement: 500,
+			externalMovement: 500,
+			internalMovement: 400,
+		},
+	},
+	{
+		stockId: '1200',
+		date: '2025-04-28',
+		maxPall: {
+			externalMovement: 500,
+			internalMovement: 400,
+		},
+	},
+	{
+		stockId: '1200',
+		date: '2025-04-29',
+		maxPall: {
+			externalMovement: 500,
+			internalMovement: 400,
+		},
+	},
+	{
+		stockId: '1200',
+		date: '2025-04-30',
+		maxPall: {
+			externalMovement: 500,
+			internalMovement: 400,
+		},
+	},
+	{
+		stockId: '1200',
+		date: '2025-05-01',
+		maxPall: {
+			externalMovement: 500,
+			internalMovement: 400,
+		},
+	},
+	{
+		stockId: '1200',
+		date: '2025-05-02',
+		maxPall: {
+			externalMovement: 500,
+			internalMovement: 400,
+		},
+	},
+	{
+		stockId: '1200',
+		date: '2025-05-03',
+		maxPall: {
+			externalMovement: 500,
+			internalMovement: 400,
+		},
+	},
+	{
+		stockId: '1200',
+		date: '2025-05-04',
+		maxPall: {
+			externalMovement: 500,
+			internalMovement: 400,
 		},
 	},
 

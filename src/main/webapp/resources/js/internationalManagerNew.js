@@ -555,14 +555,14 @@ function getContextMenuItems(params) {
 			name: `Истоpия предложений`,
 			icon: uiIcons.offer,
 			action: () => {
-				displayTenderOffer(idRoute)
+				displayTenderOffer(idRoute, status)
 			},
 		},
 		{
 			name: `Истоpия предложений (отдельная страница)`,
 			icon: uiIcons.offer,
 			action: () => {
-				displayTenderOfferOld(idRoute)
+				displayTenderOfferOld(idRoute, status)
 			},
 		},
 		{
@@ -1243,7 +1243,7 @@ function confrom(offer, status, otherUsers) {
 
 	const payload = {
 		login: offer.fromUser,
-		cost: offer.convertedCost,
+		cost: offer.originalCost,
 		idRoute: offer.idRoute,
 		currency: offer.currency,
 		status

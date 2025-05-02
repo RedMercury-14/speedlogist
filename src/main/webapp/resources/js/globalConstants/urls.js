@@ -382,8 +382,13 @@ export const setRouteTimeUrl = "/speedlogist/api/route/time"
 // Текущие тендеры
 ///////////////////////////////////////////////
 export const getActiveTendersUrl = `/speedlogist/api/carrier/getActiveInternationalTenders`
+// ТЕНДЕРЫ НА ПОНИЖЕНИЕ
+// export const getActiveTendersUrl = `/speedlogist/api/carrier/tenders/all`
 export const getInfoRouteMessageBaseUrl = `/speedlogist/api/info/message/routes/`
 export const getThisUserUrl = '/speedlogist/api/getThisUser'
+export const setTenderForReductionOfferUrl = '/speedlogist/api/carrier/tenders/get-bid'
+export const cancelTenderForReductionOfferUrl = '/speedlogist/api/carrier/tenders/get-bid'
+export const getThisUserIdUrl = '/speedlogist/api/get-this-user'
 
 
 ///////////////////////////////////////////////

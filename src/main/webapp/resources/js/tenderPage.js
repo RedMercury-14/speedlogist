@@ -2,11 +2,79 @@ var idRoute = document.querySelector('input[name=id]').value;
 changeCost();
 import { ajaxUtils } from './ajaxUtils.js';
 import { ws } from './global.js';
-import { getInfoParticipantsMessageBaseUrl, getInfoRouteMessageBaseUrl, getRouteBaseUrl, setTenderCostFromCarrierUrl } from './globalConstants/urls.js';
+import { cancelTenderForReductionOfferUrl, getInfoParticipantsMessageBaseUrl, getInfoRouteMessageBaseUrl, getRouteBaseUrl, setTenderCostFromCarrierUrl, setTenderForReductionOfferUrl } from './globalConstants/urls.js';
 const token = $("meta[name='_csrf']").attr("content")
 ws.onopen = () => onOpenSock();
 ws.onmessage = (e) => onMessage(JSON.parse(e.data));
 ws.onclose = (e) => onClose();
+
+document.addEventListener('DOMContentLoaded', () => {
+	const startPriceForReduction = document.getElementById('startPriceForReduction')?.value
+	if (startPriceForReduction) initTenderForReduction(startPriceForReduction)
+
+})
+
+function isTenderForReduction() {
+	const startPriceForReduction = document.getElementById('startPriceForReduction')?.value
+	return !!startPriceForReduction
+}
+
+function initTenderForReduction(startPriceForReduction) {
+	const cancelOfferForReductionBtn = document.getElementById('cancelOfferForReduction')
+	cancelOfferForReductionBtn && cancelOfferForReductionBtn.addEventListener('click', () => {
+		// ajaxUtils.get({
+		// 	url: cancelTenderForReductionOfferUrl,
+		// 	successCallback: (res) => {
+		// 		if (res.status === '200') {
+		// 			backToTender()
+		// 		} else {
+		// 			alert(res.message)
+		// 		}
+		// 	}
+		// })
+	})
+
+	const discountInput = document.getElementById('discount')
+	const increaseBtn = document.getElementById('increase')
+	const decreaseBtn = document.getElementById('decrease')
+	const finalPriceInput = document.getElementById('final-price')
+
+	const basePrice = parseInt(startPriceForReduction)
+	const min = parseInt(discountInput.min)
+	const max = parseInt(discountInput.max)
+
+	function updateButtons() {
+		const value = parseInt(discountInput.value)
+		decreaseBtn.disabled = value <= min
+		increaseBtn.disabled = value >= max
+	}
+	function updateUI() {
+		updateButtons()
+		updateFinalPrice()
+	}
+	function updateFinalPrice() {
+		const discount = parseInt(discountInput.value)
+		const finalPrice = basePrice * (1 - discount / 100)
+		finalPriceInput.value = Math.round(finalPrice)
+	}
+
+	increaseBtn.addEventListener('click', () => {
+		let value = parseInt(discountInput.value)
+		if (value < max) {
+			discountInput.value = value + 1
+			updateUI()
+		}
+	})
+	decreaseBtn.addEventListener('click', () => {
+		let value = parseInt(discountInput.value)
+		if (value > min) {
+			discountInput.value = value - 1
+			updateUI()
+		}
+	})
+
+	updateUI()
+}
 
 function getCost() {
 	const costInput = document.querySelector('input[name=cost]')
@@ -74,6 +142,34 @@ function cancelCostPOST() {
 	}
 	ajaxUtils.postJSONdata({
 		url: setTenderCostFromCarrierUrl,
+		token: token,
+		data: data,
+		successCallback: (res) => {
+			if (res.status === '200') {
+				backToTender()
+			} else {
+				alert(res.message)
+			}
+		},
+	})
+}
+function sendCostForReduction(data) {
+	ajaxUtils.postJSONdata({
+		url: setTenderForReductionOfferUrl,
+		token: token,
+		data: data,
+		successCallback: (res) => {
+			if (res.status === '200') {
+				backToTender()
+			} else {
+				alert(res.message)
+			}
+		},
+	})
+}
+function cancelCostForReduction(data) {
+	ajaxUtils.postJSONdata({
+		url: cancelTenderForReductionOfferUrl,
 		token: token,
 		data: data,
 		successCallback: (res) => {
@@ -195,6 +291,23 @@ buttonRegionalAgree && buttonRegionalAgree.addEventListener('mousedown', ()=>{
 const tenderOfferForm = document.querySelector('#tenderOfferForm')
 tenderOfferForm.addEventListener('submit', (e)=>{
 	e.preventDefault()
+
+	if (isTenderForReduction()) {
+		const formdata = new FormData(e.target)
+		const data = Object.fromEntries(formdata)
+		const payload = {
+			idRoute: data.id ? Number(data.id) : null,
+			percent: data.discount ? Number(data.discount) : null,
+			price: data.userPriceForReduction ? Number(data.userPriceForReduction) : null,
+			comment: data.comment ? data.comment : null,
+			currency: data.currency ? data.currency : null,
+			idCarrierBid: data.idUserBid ? Number(data.idUserBid) : null,
+		}
+
+		sendCostForReduction(payload)
+		return
+	}
+
 
 	const submitBtn = e.target.querySelector('input[type=submit]')
 	const submitBtnName = submitBtn.name

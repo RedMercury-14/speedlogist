@@ -18,6 +18,7 @@ import {
 	orderCargoInputOnChangeHandler,
 	orderPallInputOnChangeHandler,
 	orderWeightInputOnChangeHandler,
+	toggleForReductionInputsVisible,
 	typeTruckOnChangeHandler,
 } from "./procurementFormUtils.js"
 import { checkCombineRoutes, excelStyles, mapCallbackForProcurementControl, mergeRoutePoints, procurementExcelExportParams } from './procurementControlUtils.js'
@@ -239,6 +240,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 	const typeTruckInput = document.querySelector('#typeTruck')
 	const wayInput = document.querySelector('#way')
 	const dangerousInput = document.querySelector('#dangerous')
+	// ТЕНДЕРЫ НА ПОНИЖЕНИЕ
+	// const forReduction = document.querySelector('#forReduction')
 
 	// отрисовка таблицы
 	const gridDiv = document.querySelector('#myGrid')
@@ -283,6 +286,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 	// обработчик на поле Опасный груз
 	// dangerousInput && dangerousInput.addEventListener('change', dangerousInputOnChangeHandler)
+
+	// ТЕНДЕРЫ НА ПОНИЖЕНИЕ
+	// forReduction.addEventListener('change', (e) => toggleForReductionInputsVisible(e.target.checked))
 
 	// листнер на очистку формы маршрута при закрытии модального окна
 	$('#routeModal').on('hide.bs.modal', (e) => {
@@ -436,6 +442,10 @@ async function createRouteBySingleOrder(orderData) {
 			+ ` Пожалуйста, проверьте/отредактируйте название и точки маршрута.`
 		)
 		const linkedOrders = await getLinkedOrders(orderLink)
+		if (!linkedOrders || linkedOrders.length === 0) {
+			alert(`Не удалось получить данные связанных заказов.`)
+			return
+		}
 		createRouteByOrders(linkedOrders)
 		return
 	}
@@ -651,6 +661,12 @@ function routeFormSubmitHandler(e) {
 		return
 	}
 
+	// проверка начала маршрута следования с точки загрузки
+	if (data.points[0].type !== 'Загрузка') {
+		snackbar.show('Маршрут должен начинаться с точки загрузки!')
+		return
+	}
+
 	if (!isValidTnvdValue(data)) {
 		snackbar.show('Неверное значение кода ТН ВЭД!')
 		return
@@ -703,7 +719,10 @@ function routeFormDataFormatter(routeForm) {
 		? points[points.length - 1].date
 		: ''
 
+	// ТЕНДЕРЫ НА ПОНИЖЕНИЕ
 	// const forReduction = data.forReduction === 'on'
+	// const startPriceForReduction = data.startPriceForReduction ? Number(data.startPriceForReduction) : null
+	// const currencyForReduction = data.currencyForReduction ? data.currencyForReduction : null
 
 	return {
 		...data,
@@ -711,7 +730,10 @@ function routeFormDataFormatter(routeForm) {
 		dateDelivery,
 		points: updatedPoints,
 		comment: getComment(data),
+		// ТЕНДЕРЫ НА ПОНИЖЕНИЕ
 		// forReduction,
+		// startPriceForReduction,
+		// currencyForReduction,
 	}
 }
 

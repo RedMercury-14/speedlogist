@@ -291,6 +291,7 @@
 							</c:when>
 
 							<c:when test="${roles == '[ROLE_CARRIER]'}">
+								<li><a class="nav-item nav-link" href="<spring:url value="/main" />">На главную</a></li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/carrier"/>">Мой кабинет</a></li>
 								<li class="dropdown">
 									<a href="#" class="nav-item nav-link" data-toggle="dropdown">Меню</a>
@@ -434,6 +435,7 @@
 							</c:when>
 
 							<c:otherwise>
+								<li><a class="nav-item nav-link" href="<spring:url value="/main" />">На главную</a></li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/carrier-application-form" />">Предложить сотрудничество</a></li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/registration" />">Регистрация</a></li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/signin"/>">Вход в систему</a></li>

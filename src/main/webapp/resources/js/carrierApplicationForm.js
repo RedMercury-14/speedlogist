@@ -9,6 +9,38 @@ const token = $("meta[name='_csrf']").attr("content")
 const capacityValues = [ 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 20, 24 ]
 const palletsValues = [ 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 32, 36 ]
 
+let isErrorFormData = false
+
+const phoneMaskOption = {
+	mask: "+375 (99) 999-99-99",
+	definitions: {
+		'9': {
+			validator: "[0-9]"
+		}
+	},
+	placeholder: "_",
+	showMaskOnHover: false,
+	autoUnmask: false,
+	oncomplete: (e) => {
+		if (!phoneValidation(e.target)) {
+			e.target.classList.add("is-invalid")
+			isErrorFormData = true
+		} else {
+			e.target.classList.remove("is-invalid")
+			isErrorFormData = false
+		}
+	},
+	onincomplete: (e) => {
+		if (!phoneValidation(e.target)) {
+			e.target.classList.add("is-invalid")
+			isErrorFormData = true
+		} else {
+			e.target.classList.remove("is-invalid")
+			isErrorFormData = false
+		}
+	},
+}
+
 
 document.addEventListener('DOMContentLoaded', () => {
 	const capCheckboxContainer = document.getElementById('capCheckboxes')
@@ -25,7 +57,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const requiredCheckboxes = document.querySelectorAll(".required-group input[type='checkbox']")
 	requiredCheckboxes.forEach(cb => cb.addEventListener("change", toggleInvalidMessage))
+
+	const phoneInput = document.getElementById("phone")
+	Inputmask(phoneMaskOption).mask(phoneInput)
 })
+
+function phoneValidation(phoneInput) {
+	const raw = phoneInput.inputmask.unmaskedvalue()
+	const operatorCode = raw.slice(0, 2)
+	const validOperators = ['25', '29', '33', '44']
+	const isValid = raw.length === 9 && validOperators.includes(operatorCode)
+	return isValid
+}
 
 function toggleInvalidMessage(e) {
 	const group = e.target.closest(".required-group")
@@ -44,10 +87,14 @@ function carrierDataFormSubmitHandler(e) {
 		return
 	}
 
+	if (isErrorFormData) {
+		snackbar.show('Некорректный номер телефона!')
+		return
+	}
+
 	const formData = new FormData(e.target)
 	const data = Object.fromEntries(formData)
 	const groupedData = groupFieldsByPrefix(data)
-	console.log("🚀 ~ carrierDataFormSubmitHandler ~ groupedData:", groupedData)
 
 	disableButton(e.submitter)
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 300)

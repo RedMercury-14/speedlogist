@@ -1,6 +1,6 @@
 import { AG_GRID_LOCALE_RU } from "./AG-Grid/ag-grid-locale-RU.js"
 import { BtnCellRenderer, ResetStateToolPanel, dateComparator, gridColumnLocalState, gridFilterLocalState } from "./AG-Grid/ag-grid-utils.js"
-import { dateHelper, debounce, getData, getRouteStatus, isAdmin, isObserver, SmartWebSocket } from "./utils.js"
+import { copyTextToClipboard, dateHelper, debounce, getData, getRouteStatus, isAdmin, isObserver, SmartWebSocket } from "./utils.js"
 import { EUR, KZT, RUB, USD, ws, wsTenderMessagesUrl } from './global.js'
 import { wsHead } from './global.js'
 import { snackbar } from "./snackbar/snackbar.js"
@@ -627,13 +627,6 @@ function getContextMenuItems(params) {
 
 	const result = [
 		{
-			name: `Анализ цены`,
-			icon: uiIcons.offer,
-			action: () => {
-				showPriceAnalisys(routeDirection)
-			},
-		},
-		{
 			name: `Истоpия предложений`,
 			icon: uiIcons.offer,
 			action: () => {
@@ -705,7 +698,15 @@ function getContextMenuItems(params) {
 			action: () => {
 				getProposal(idRoute)
 			},
-		}
+		},
+		"separator",
+		{
+			name: `Аналитика по маршруту`,
+			icon: uiIcons.graphUp,
+			action: () => {
+				showPriceAnalisys(routeDirection)
+			},
+		},
 	]
 
 	return result
@@ -903,7 +904,7 @@ async function displayTenderOfferOld(idRoute, status) {
 async function displayTenderOffer(idRoute, status, forReduction) {
 	bootstrap5overlay.showOverlay()
 
-	const tenderForReduction = forReduction === 'true'
+	const tenderForReduction = forReduction === 'true' || forReduction === true
 
 	currentOpenRouteId = idRoute
 	let offers = []

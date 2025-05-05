@@ -1119,3 +1119,14 @@ export class SmartWebSocket {
 		console.log("Сокет закрыт вручную")
 	}
 }
+
+export function copyTextToClipboard(text) {
+	navigator.clipboard.writeText(text)
+		.then(() => {
+			snackbar.show('Скопировано')
+		})
+		.catch(err => {
+			snackbar.show('Ошибка копирования')
+			console.error('Ошибка копирования: ', err)
+		})
+}

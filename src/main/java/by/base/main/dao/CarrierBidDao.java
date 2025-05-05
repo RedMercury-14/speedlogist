@@ -12,6 +12,10 @@ public interface CarrierBidDao {
 
     void delete(CarrierBid carrierBid);
 
+    void update(CarrierBid carrierBid);
+
+    CarrierBid getById(Long bidId);
+
     List<CarrierBid> getCarrierBidsByDate(Date dateStart, Date dateFinish);
 
     List<CarrierBid> getCarrierBidsByRouteId(Integer routeId);

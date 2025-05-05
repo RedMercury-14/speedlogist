@@ -350,6 +350,7 @@
 							<h4>Точки маршрута:</h4>
 							<div class="point-container" id="pointList"></div>
 
+							<!-- ТЕНДЕРЫ НА ПОНИЖЕНИЕ -->
 							<div class="input-row-container" id="forReduction-container">
 								<div class="form-check form-check-inline py-3 none">
 									<input class="form-check-input" type="checkbox" id="forReduction" name="forReduction">

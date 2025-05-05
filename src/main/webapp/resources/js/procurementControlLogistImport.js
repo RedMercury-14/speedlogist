@@ -240,6 +240,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 	const typeTruckInput = document.querySelector('#typeTruck')
 	const wayInput = document.querySelector('#way')
 	const dangerousInput = document.querySelector('#dangerous')
+	// ТЕНДЕРЫ НА ПОНИЖЕНИЕ
 	const forReduction = document.querySelector('#forReduction')
 
 	// отрисовка таблицы
@@ -286,6 +287,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 	// обработчик на поле Опасный груз
 	// dangerousInput && dangerousInput.addEventListener('change', dangerousInputOnChangeHandler)
 
+	// ТЕНДЕРЫ НА ПОНИЖЕНИЕ
 	forReduction.addEventListener('change', (e) => toggleForReductionInputsVisible(e.target.checked))
 
 	// листнер на очистку формы маршрута при закрытии модального окна
@@ -717,6 +719,7 @@ function routeFormDataFormatter(routeForm) {
 		? points[points.length - 1].date
 		: ''
 
+	// ТЕНДЕРЫ НА ПОНИЖЕНИЕ
 	const forReduction = data.forReduction === 'on'
 	const startPriceForReduction = data.startPriceForReduction ? Number(data.startPriceForReduction) : null
 	const currencyForReduction = data.currencyForReduction ? data.currencyForReduction : null
@@ -727,6 +730,7 @@ function routeFormDataFormatter(routeForm) {
 		dateDelivery,
 		points: updatedPoints,
 		comment: getComment(data),
+		// ТЕНДЕРЫ НА ПОНИЖЕНИЕ
 		forReduction,
 		startPriceForReduction,
 		currencyForReduction,

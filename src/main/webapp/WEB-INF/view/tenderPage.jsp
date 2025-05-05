@@ -31,7 +31,7 @@
 			<div class="container my-container px-0">
 				<input type="hidden" value="1" />
 				<form:form method="get" id="tenderOfferForm" action="./tenderOffer">
-					<input type="hidden" value="${route.idRoute}" name="id" />
+					<input type="hidden" value="${route.idRoute}" name="idRoute" />
 					<input type="hidden" value="${userCost}" name="userCost" />
 					<input type="hidden" value="${actualBid}" name="userCost" />
 					<input type="hidden" value="${userBid}" name="userCost" />
@@ -58,11 +58,11 @@
 														<span class="text-primary">${route.startPriceForReduction} ${route.currencyForReduction}</span>
 													</div>
 													<c:choose>
-														<c:when test="${actualBid}">
+														<c:when test="${actualBid != null}">
 															<div class="text-muted font-weight-bold">
 																Текущее предложение:
 																<span class="text-primary">${actualBid.price} ${actualBid.currency} (скидка ${actualBid.percent}%)</span>
-																<input type="hidden" name="idActualBid" value="${actualBid.id}"/>
+																<input type="hidden" name="idActualBid" value="${actualBid.idCarrierBid}"/>
 															</div>
 														</c:when>
 														<c:otherwise>
@@ -74,14 +74,14 @@
 												</div>
 												<div class="border mb-2 w-100"></div>
 												<c:choose>
-													<c:when test="${userBid}">
+													<c:when test="${userBid != null}">
 														<div class="offer-container align-items-center mb-2">
 															<div class="text-muted font-weight-bold">
 																Ваше предложение:
 																<span class="text-primary">${userBid.price} ${userBid.currency} (скидка ${userBid.percent}%)</span>
-																<input type="hidden" name="idUserBid" value="${userBid.id}"/>
+																<input type="hidden" name="idCarrierBid" value="${userBid.idCarrierBid}"/>
 															</div>
-															<input type="button" id="cancelOfferForReduction" data-action="cancelOffer" value="Отменить предложение" class="btn btn-danger btn-sm">
+															<button type="button" id="cancelOfferForReduction" data-action="cancelOffer" class="btn btn-danger btn-sm">Отменить предложение</button>
 														</div>
 														<div class="border mb-2 w-100"></div>
 													</c:when>
@@ -98,7 +98,14 @@
 																	<input type="number" class="form-control pl-2 pr-0 text-center font-weight-bold" id="discount" name="discount" value="0" min="0" max="99" readonly>
 																</c:when>
 																<c:otherwise>
-																	<input type="number" class="form-control pl-2 pr-0 text-center font-weight-bold" id="discount" name="discount" value="${actualBid.percent + 1}" min="${actualBid.percent + 1}" max="99" readonly>
+																	<c:choose>
+																		<c:when test="${actualBid.percent == 99}">
+																			<input type="number" class="form-control pl-2 pr-0 text-center font-weight-bold" id="discount" name="discount" value="${actualBid.percent }" min="${actualBid.percent}" max="99" readonly>
+																		</c:when>
+																		<c:otherwise>
+																			<input type="number" class="form-control pl-2 pr-0 text-center font-weight-bold" id="discount" name="discount" value="${actualBid.percent + 1}" min="${actualBid.percent + 1}" max="99" readonly>
+																		</c:otherwise>
+																	</c:choose>
 																</c:otherwise>
 															</c:choose>
 															<div class="input-group-append">
@@ -115,7 +122,7 @@
 													<div class="mb-0 form-group">
 														<input type="text" name="comment" class="form-control" placeholder="Комментарий">
 													</div>
-													<input type="submit" value="Поддержать цену" data-action="sendOffer" class="btn btn-success">
+													<button type="submit" data-action="sendOffer" class="btn btn-success">Поддержать цену!</button>
 												</div>
 											</div>
 										</c:when>
@@ -138,20 +145,6 @@
 											<input type="hidden" value="0" name="price" size="1" />
 										</c:otherwise>
 									</c:choose>
-									<h5 class="route-subtitle">Предложение</h5>
-									<input type="number" name="cost" size="3" required="true" class="raz form-control" step="1" min="0" placeholder="Целое число">
-									<div class="mb-0 form-group">
-										<input type="text" name="comment" class="form-control" placeholder="Комментарий">
-									</div>
-									<select class="form-control" id="currency">
-										<option>BYN</option>
-										<option>USD</option>
-										<option>EUR</option>
-										<option>RUB</option>
-										<option>KZT</option>
-									</select>
-									<input type="submit" value="Поддержать цену" name="agree" class="agreeinternational btn btn-success">
-									<input type="hidden" value="0" name="price" size="1" />
 								</c:otherwise>
 							</c:choose>
 						</div>
@@ -312,7 +305,7 @@
 			<div class="container my-container">
 				<input type="hidden" value="2" />
 				<form:form method="get" action="./tenderOffer">
-					<input type="hidden" value="${route.idRoute}" name="id" />
+					<input type="hidden" value="${route.idRoute}" name="idRoute" />
 					<h3 class="route-title">Маршрут №${route.idRoute} ${route.routeDirection}</h3>
 					<div class="card route-card">
 						
@@ -513,7 +506,7 @@
 				<input type="hidden" value="3" />
 				<form:form method="post" action="./tenderUpdate">
 					<div class="card route-card">
-						<input type="hidden" value="${route.idRoute}" name="id" />
+						<input type="hidden" value="${route.idRoute}" name="idRoute" />
 						<c:set var="rate" value="${user.rate}" />
 						<div class="card-header offer-container">
 							<h3 class="route-title">Маршрут №${route.idRoute} ${route.routeDirection}</h3>
@@ -728,7 +721,7 @@
 							<c:set var="rate" value="${user.rate}" />
 						</thead>
 						<form:form method="post" action="./tenderUpdate">
-							<input type="hidden" value="${route.idRoute}" name="id" />
+							<input type="hidden" value="${route.idRoute}" name="idRoute" />
 							<tr>
 								<td>${route.routeDirection}</td>
 								<td>${route.dateLoadPreviously}</td>
@@ -824,7 +817,7 @@
 				<h1>Просмотр маршрута по магазинам</h1>
 				<form:form method="post" action="./tenderUpdate">
 					<div class="card route-card">
-						<input type="hidden" value="${route.idRoute}" name="id" />
+						<input type="hidden" value="${route.idRoute}" name="idRoute" />
 						<c:set var="rate" value="${user.rate}" />
 						<div class="card-header offer-container">
 							<h3 class="route-title">Маршрут №${route.idRoute} ${route.routeDirection}</h3>
@@ -1015,7 +1008,7 @@
 							<c:set var="rate" value="${user.rate}" />
 						</thead>
 						<form:form method="post" action="./tenderUpdate">
-							<input type="hidden" value="${route.idRoute}" name="id" />
+							<input type="hidden" value="${route.idRoute}" name="idRoute" />
 							<tr>
 								<td>${route.routeDirection}</td>
 								<td>${route.simpleDateStart}</td>

@@ -30,7 +30,7 @@ public class OrderDAOImpl implements OrderDAO{
 	@Autowired
 	private SessionFactory sessionFactory;
 
-	private static final String queryGetObjByIdOrder = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs  LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH o.addresses a where o.idOrder=:idOrder";
+	private static final String queryGetObjByIdOrder = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs  LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH o.addresses a LEFT JOIN FETCH r.carrierBids rc where o.idOrder=:idOrder";
 	
 	@Override
 	@Transactional
@@ -46,7 +46,7 @@ public class OrderDAOImpl implements OrderDAO{
 		return object;
 	}
 	
-	private static final String queryGetObjByDate = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH o.addresses a where o.dateCreate=:date";
+	private static final String queryGetObjByDate = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH o.addresses a LEFT JOIN FETCH r.carrierBids rc where o.dateCreate=:date";
 	
 	@Override
 	@Transactional
@@ -58,7 +58,7 @@ public class OrderDAOImpl implements OrderDAO{
 		return trucks;
 	}
 
-	private static final String queryGetObjByDateDelivery = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH o.addresses a where o.dateDelivery=:date";
+	private static final String queryGetObjByDateDelivery = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH o.addresses a LEFT JOIN FETCH r.carrierBids rc where o.dateDelivery=:date";
 	
 	@Override
 	@Transactional
@@ -78,6 +78,7 @@ public class OrderDAOImpl implements OrderDAO{
 			+ "LEFT JOIN FETCH r.truck rt "
 			+ "LEFT JOIN FETCH r.driver rd "
 			+ "LEFT JOIN FETCH o.addresses a "
+			+ "LEFT JOIN FETCH r.carrierBids rc "
 			+ "where o.status !=10 AND o.link=:link";
 	
 	@Override
@@ -90,7 +91,7 @@ public class OrderDAOImpl implements OrderDAO{
 		return new ArrayList<Order>(new HashSet<Order>(trucks));
 	}
 
-	private static final String queryGetObjByRoute = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH o.addresses a where r=:route";
+	private static final String queryGetObjByRoute = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH o.addresses a LEFT JOIN FETCH r.carrierBids rc  where r=:route";
 	
 	@Override
 	@Transactional
@@ -107,7 +108,7 @@ public class OrderDAOImpl implements OrderDAO{
 		}		
 	}
 
-	private static final String queryGetObjByPeriodDelivery = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH o.addresses a where o.dateDelivery BETWEEN :dateStart and :dateEnd";
+	private static final String queryGetObjByPeriodDelivery = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH o.addresses a LEFT JOIN FETCH r.carrierBids rc where o.dateDelivery BETWEEN :dateStart and :dateEnd";
 	
 	@Override
 	@Transactional
@@ -120,7 +121,29 @@ public class OrderDAOImpl implements OrderDAO{
 		return trucks;
 	}
 
-	private static final String queryGetObjByPeriodCreate = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH r.truck t LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH o.addresses a LEFT JOIN FETCH r.carrierBids rc where o.dateCreate BETWEEN :dateStart and :dateEnd";
+//	private static final String queryGetObjByPeriodCreate = "from Order o "
+//			+ "LEFT JOIN FETCH o.orderLines ol "
+//			+ "LEFT JOIN FETCH o.routes r "
+//			+ "LEFT JOIN FETCH r.roteHasShop rhs "
+//			+ "LEFT JOIN FETCH r.user ru "
+//			+ "LEFT JOIN FETCH r.truck rt "
+//			+ "LEFT JOIN FETCH r.driver rd "
+//			+ "LEFT JOIN FETCH r.truck t "
+//			+ "LEFT JOIN FETCH r.roteHasShop rhs "
+//			+ "LEFT JOIN FETCH o.addresses a "
+//			+ "where o.dateCreate BETWEEN :dateStart and :dateEnd";
+	private static final String queryGetObjByPeriodCreate = "from Order o "
+			+ "LEFT JOIN FETCH o.orderLines ol "
+			+ "LEFT JOIN FETCH o.routes r "
+			+ "LEFT JOIN FETCH r.roteHasShop rhs "
+			+ "LEFT JOIN FETCH r.user ru "
+			+ "LEFT JOIN FETCH r.truck rt "
+			+ "LEFT JOIN FETCH r.driver rd "
+			+ "LEFT JOIN FETCH r.truck t "
+			+ "LEFT JOIN FETCH r.roteHasShop rhs "
+			+ "LEFT JOIN FETCH o.addresses a "
+			+ "LEFT JOIN FETCH r.carrierBids rc "
+			+ "where o.dateCreate BETWEEN :dateStart and :dateEnd";
 	
 	@Override
 	@Transactional
@@ -168,7 +191,7 @@ public class OrderDAOImpl implements OrderDAO{
 	@Override
 	@Transactional
 	public List<Order> getOrderByPeriodCreateAndCounterparty(Date dateStart, Date dateEnd, String counterparty) {
-		final String queryGetOrderByPeriodCreateAndCounterparty = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH o.addresses a LEFT JOIN FETCH r.truck t LEFT JOIN FETCH r.roteHasShop rhs where o.dateCreate BETWEEN :dateStart and :dateEnd and o.counterparty LIKE '%"+counterparty+"%'";
+		final String queryGetOrderByPeriodCreateAndCounterparty = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH o.addresses a LEFT JOIN FETCH r.truck t LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.carrierBids rc where o.dateCreate BETWEEN :dateStart and :dateEnd and o.counterparty LIKE '%"+counterparty+"%'";
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<Order> theObject = currentSession.createQuery(queryGetOrderByPeriodCreateAndCounterparty, Order.class);
 		theObject.setParameter("dateStart", dateStart, TemporalType.DATE);
@@ -178,7 +201,7 @@ public class OrderDAOImpl implements OrderDAO{
 	}
 
 	
-	private static final String queryGetObjByIdRoute = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH o.addresses a where r.idRoute=:idRoute";
+	private static final String queryGetObjByIdRoute = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH o.addresses a LEFT JOIN FETCH r.carrierBids rc where r.idRoute=:idRoute";
 	
 	@Override
 	@Transactional
@@ -207,7 +230,7 @@ public class OrderDAOImpl implements OrderDAO{
 		theQuery.executeUpdate();
 	}
 
-	private static final String queryCheckOrderHasMarketCode = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH o.addresses a where o.marketNumber=:marketNumber and o.status != 10";
+	private static final String queryCheckOrderHasMarketCode = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH o.addresses a LEFT JOIN FETCH r.carrierBids rc where o.marketNumber=:marketNumber and o.status != 10";
 	
 	@Override
 	@Transactional
@@ -223,7 +246,7 @@ public class OrderDAOImpl implements OrderDAO{
 		}
 	}
 
-	private static final String queryGetOrderHasMarketCode = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH o.addresses a where o.marketNumber=:marketNumber AND o.status != 10";
+	private static final String queryGetOrderHasMarketCode = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH o.addresses a LEFT JOIN FETCH r.carrierBids rc where o.marketNumber=:marketNumber AND o.status != 10";
 	
 	@Override
 	@Transactional
@@ -240,7 +263,7 @@ public class OrderDAOImpl implements OrderDAO{
 	}
 
 	public static final Comparator<Order> comparatorTimeDeliveryBefore = (Order e1, Order e2) -> (e2.getTimeDelivery().hashCode() - e1.getTimeDelivery().hashCode());
-	private static final String queryGetOrderBeforeTimeDeliveryHasStockAndRamp = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH o.addresses a where o.timeDelivery BETWEEN :dateStart and :dateEnd AND o.idRamp=:idRamp AND o.numStockDelivery=:numStockDelivery AND o.status!=10";
+	private static final String queryGetOrderBeforeTimeDeliveryHasStockAndRamp = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH o.addresses a LEFT JOIN FETCH r.carrierBids rc where o.timeDelivery BETWEEN :dateStart and :dateEnd AND o.idRamp=:idRamp AND o.numStockDelivery=:numStockDelivery AND o.status!=10";
 	
 	@Override
 	@Transactional
@@ -274,7 +297,7 @@ public class OrderDAOImpl implements OrderDAO{
 	}
 
 	public static final Comparator<Order> comparatorTimeDeliveryAfter = (Order e1, Order e2) -> (e1.getTimeDelivery().hashCode() - e2.getTimeDelivery().hashCode());
-	private static final String queryGetOrderAfterTimeDeliveryHasStockAndRamp = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH o.addresses a where o.timeDelivery BETWEEN :dateStart and :dateEnd AND o.idRamp=:idRamp AND o.numStockDelivery=:numStockDelivery AND o.status!=10";
+	private static final String queryGetOrderAfterTimeDeliveryHasStockAndRamp = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH o.addresses a LEFT JOIN FETCH r.carrierBids rc where o.timeDelivery BETWEEN :dateStart and :dateEnd AND o.idRamp=:idRamp AND o.numStockDelivery=:numStockDelivery AND o.status!=10";
 	
 	@Override
 	@Transactional
@@ -309,7 +332,7 @@ public class OrderDAOImpl implements OrderDAO{
 		}
 	}
 
-	private static final String queryGetOrderByMarketNumber = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH o.addresses a where o.marketNumber=:marketNumber AND o.status!=10";
+	private static final String queryGetOrderByMarketNumber = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH o.addresses a LEFT JOIN FETCH r.carrierBids rc where o.marketNumber=:marketNumber AND o.status!=10";
 	
 	@Override
 	@Transactional
@@ -325,7 +348,7 @@ public class OrderDAOImpl implements OrderDAO{
 		}
 	}
 
-	private static final String queryGetOrderByPeriodCreateMarket = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH r.truck t LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH o.addresses a where o.dateCreateMarket BETWEEN :dateStart and :dateEnd AND o.dateCreate=NULL";
+	private static final String queryGetOrderByPeriodCreateMarket = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH r.truck t LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH o.addresses a LEFT JOIN FETCH r.carrierBids rc where o.dateCreateMarket BETWEEN :dateStart and :dateEnd AND o.dateCreate=NULL";
 	
 	@Override
 	@Transactional
@@ -338,7 +361,7 @@ public class OrderDAOImpl implements OrderDAO{
 		return trucks;
 	}
 
-	private static final String queryGetOrderByTimeDelivery = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH r.truck t LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH o.addresses a " +
+	private static final String queryGetOrderByTimeDelivery = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH r.truck t LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH o.addresses a LEFT JOIN FETCH r.carrierBids rc " +
 			"where o.status !=10 AND o.status !=40 " +
 			"AND o.timeDelivery BETWEEN :dateStart and :dateEnd";
 	
@@ -368,6 +391,7 @@ public class OrderDAOImpl implements OrderDAO{
 				+ "LEFT JOIN FETCH o.addresses a "
 				+ "LEFT JOIN FETCH r.truck t "
 				+ "LEFT JOIN FETCH r.roteHasShop rhs "
+				+ "LEFT JOIN FETCH r.carrierBids rc "
 				+ "where o.timeDelivery BETWEEN :dateStart and :dateEnd and o.status !=10 AND o.idRamp LIKE '%"+stockTarget+"%'";
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<Order> theObject = currentSession.createQuery(queryGetSummPallInStock, Order.class);
@@ -419,7 +443,18 @@ public class OrderDAOImpl implements OrderDAO{
 		    }
 	}
 
-	private static final String queryGetListOrdersLogist = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH r.truck t LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH o.addresses a where o.status >= 17 AND o.dateCreate BETWEEN :dateStart and :dateEnd";
+	private static final String queryGetListOrdersLogist = "from Order o "
+			+ "LEFT JOIN FETCH o.orderLines ol "
+			+ "LEFT JOIN FETCH o.routes r "
+			+ "LEFT JOIN FETCH r.roteHasShop rhs "
+			+ "LEFT JOIN FETCH r.user ru "
+			+ "LEFT JOIN FETCH r.truck rt "
+			+ "LEFT JOIN FETCH r.driver rd "
+			+ "LEFT JOIN FETCH r.truck t "
+			+ "LEFT JOIN FETCH r.roteHasShop rhs "
+			+ "LEFT JOIN FETCH o.addresses a "
+			+ "LEFT JOIN FETCH r.carrierBids rc "
+			+ "where o.status >= 17 AND o.dateCreate BETWEEN :dateStart and :dateEnd";
 	
 	@Override
 	@Transactional
@@ -432,7 +467,7 @@ public class OrderDAOImpl implements OrderDAO{
 		return trucks;
 	}
 
-	private static final String queryGetOrderByPeriodDeliveryAndSlots = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH o.addresses a where \r\n"
+	private static final String queryGetOrderByPeriodDeliveryAndSlots = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH o.addresses a LEFT JOIN FETCH r.carrierBids rc where \r\n"
 			+ "(CASE \r\n"
 			+ "    WHEN o.timeDelivery IS NOT NULL THEN o.timeDelivery \r\n"
 			+ "    ELSE o.dateDelivery \r\n"
@@ -590,6 +625,7 @@ public class OrderDAOImpl implements OrderDAO{
 			+ "LEFT JOIN FETCH r.truck t "
 			+ "LEFT JOIN FETCH r.roteHasShop rhs "
 			+ "LEFT JOIN FETCH o.addresses a "
+			+ "LEFT JOIN FETCH r.carrierBids rc "
 			+ "where o.status !=10 AND o.marketContractType =:marketContractType AND o.timeDelivery BETWEEN :dateStart and :dateEnd";
 	
 	@Override
@@ -611,7 +647,7 @@ public class OrderDAOImpl implements OrderDAO{
 		    "LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru " +
 		    "LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd " +
 		    "LEFT JOIN FETCH r.truck t LEFT JOIN FETCH r.roteHasShop rhs " +
-		    "LEFT JOIN FETCH o.addresses a " +
+		    "LEFT JOIN FETCH o.addresses a LEFT JOIN FETCH r.carrierBids rc " +
 		    "where o.status != 10 AND o.marketContractType IN :marketContractTypes " +
 		    "AND o.timeDelivery BETWEEN :dateStart and :dateEnd";
 
@@ -632,7 +668,18 @@ public class OrderDAOImpl implements OrderDAO{
 	    return new ArrayList<>(orders); 
 	}
 
-	private static final String queryGetOrderByTimeAfterUnload = "from Order o LEFT JOIN FETCH o.orderLines ol LEFT JOIN FETCH o.routes r LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.user ru LEFT JOIN FETCH r.truck rt LEFT JOIN FETCH r.driver rd LEFT JOIN FETCH r.truck t LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH o.addresses a where o.status !=10 AND o.timeDelivery BETWEEN :dateStart and :dateEnd";
+	private static final String queryGetOrderByTimeAfterUnload = "from Order o "
+			+ "LEFT JOIN FETCH o.orderLines ol "
+			+ "LEFT JOIN FETCH o.routes r "
+			+ "LEFT JOIN FETCH r.roteHasShop rhs "
+			+ "LEFT JOIN FETCH r.user ru "
+			+ "LEFT JOIN FETCH r.truck rt "
+			+ "LEFT JOIN FETCH r.driver rd "
+			+ "LEFT JOIN FETCH r.truck t "
+			+ "LEFT JOIN FETCH r.roteHasShop rhs "
+			+ "LEFT JOIN FETCH o.addresses a "
+			+ "LEFT JOIN FETCH r.carrierBids rc "
+			+ "where o.status !=10 AND o.timeDelivery BETWEEN :dateStart and :dateEnd";
 	
 	@Override
 	@Transactional
@@ -650,6 +697,7 @@ public class OrderDAOImpl implements OrderDAO{
 			+ "LEFT JOIN FETCH r.truck t "
 			+ "LEFT JOIN FETCH r.roteHasShop rhs "
 			+ "LEFT JOIN FETCH o.addresses a "
+			+ "LEFT JOIN FETCH r.carrierBids rc "
 			+ "where o.status !=10 AND o.status >= 20 AND o.status !=40 AND ol.goodsId =:goodsId AND o.timeDelivery BETWEEN :dateStart and :dateEnd";
 	
 	@Override
@@ -680,6 +728,7 @@ public class OrderDAOImpl implements OrderDAO{
 	        + "LEFT JOIN FETCH r.truck t "
 	        + "LEFT JOIN FETCH r.roteHasShop rhs "
 	        + "LEFT JOIN FETCH o.addresses a "
+	        + "LEFT JOIN FETCH r.carrierBids rc "
 	        + "where o.status != 10 AND o.status >= 20 AND o.status != 40 "
 	        + "AND ol.goodsId IN (:goodsIds) AND o.timeDelivery BETWEEN :dateStart AND :dateEnd";
 
@@ -774,6 +823,7 @@ public class OrderDAOImpl implements OrderDAO{
 				+ "LEFT JOIN FETCH r.truck t "
 				+ "LEFT JOIN FETCH r.roteHasShop rhs "
 				+ "LEFT JOIN FETCH o.addresses a "
+				+ "LEFT JOIN FETCH r.carrierBids rc "
 				+ "where o.status !=10 AND o.status !=40 AND o.idRamp LIKE '%"+numStock+"%' AND o.timeDelivery BETWEEN :dateStart and :dateEnd";
 		
 		Timestamp dateStartFinal = Timestamp.valueOf(LocalDateTime.of(dateStart.toLocalDate(), LocalTime.of(00, 00)));
@@ -831,6 +881,7 @@ public class OrderDAOImpl implements OrderDAO{
 	        + "LEFT JOIN FETCH r.truck t "
 	        + "LEFT JOIN FETCH r.roteHasShop rhs "
 	        + "LEFT JOIN FETCH o.addresses a "
+	        + "LEFT JOIN FETCH r.carrierBids rc "
 	        + "where o.status !=10 AND o.marketNumber IN (:marketNumber)";
 	
 	@Override
@@ -862,6 +913,7 @@ public class OrderDAOImpl implements OrderDAO{
 				+ "LEFT JOIN FETCH r.truck t "
 				+ "LEFT JOIN FETCH r.roteHasShop rhs "
 				+ "LEFT JOIN FETCH o.addresses a "
+				+ "LEFT JOIN FETCH r.carrierBids rc "
 				+ "where o.status !=10 AND o.status !=40 AND o.idRamp LIKE '%"+numStock+"%' AND o.dateOrderOrl =:dateOrderORL";
 
 		Session currentSession = sessionFactory.getCurrentSession();

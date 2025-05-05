@@ -26,6 +26,12 @@ public class CarrierBidServiceImpl implements CarrierBidService {
 
     @Transactional
     @Override
+    public void update(CarrierBid carrierBid) {
+        carrierBidDao.update(carrierBid);
+    }
+
+    @Transactional
+    @Override
     public void delete(CarrierBid carrierBid) {
         carrierBidDao.delete(carrierBid);
     }
@@ -46,5 +52,11 @@ public class CarrierBidServiceImpl implements CarrierBidService {
     @Override
     public CarrierBid getCarrierBidByRouteAndUser(Integer routeId, User user) {
         return carrierBidDao.getCarrierBidByRouteAndUser(routeId, user);
+    }
+
+    @Transactional
+    @Override
+    public CarrierBid getById(Long bidId){
+        return carrierBidDao.getById(bidId);
     }
 }

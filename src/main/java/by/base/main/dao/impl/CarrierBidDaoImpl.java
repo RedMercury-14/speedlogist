@@ -35,6 +35,26 @@ public class CarrierBidDaoImpl implements CarrierBidDao {
         currentSession.delete(carrierBid);
     }
 
+    @Override
+    public void update(CarrierBid carrierBid) {
+        Session currentSession = sessionFactory.getCurrentSession();
+        currentSession.update(carrierBid);
+    }
+
+    private static final String queryGetBidById = "from CarrierBid where idCarrierBid =: bidId";
+
+    @Override
+    public CarrierBid getById(Long bidId){
+        Session currentSession = sessionFactory.getCurrentSession();
+        Query<CarrierBid> theObject = currentSession.createQuery(queryGetBidById, CarrierBid.class);
+        theObject.setParameter("bidId", bidId);
+        if (theObject.getResultList().isEmpty()) {
+            return null;
+        } else {
+            return theObject.getResultList().get(0);
+        }
+    }
+
     private static final String queryGetCarrierBidListByPeriod = "from CarrierBid where dateTime BETWEEN :dateStart and :dateEnd";
 
     @Override

@@ -22,7 +22,7 @@ public class CarrierBid {
     private User carrier;
 
     @Column(name = "price")
-    private Double price;
+    private Integer price;
 
     @Column(name = "date_time")
     private Timestamp dateTime;
@@ -47,6 +47,9 @@ public class CarrierBid {
     @Column(name = "idUser")
     private Integer idUser;
 
+    @Column(name = "company_name")
+    private String companyName;
+
 
     public Long getIdCarrierBid() {
         return idCarrierBid;
@@ -64,11 +67,11 @@ public class CarrierBid {
         this.carrier = carrier;
     }
 
-    public Double getPrice() {
+    public Integer getPrice() {
         return price;
     }
 
-    public void setPrice(Double price) {
+    public void setPrice(Integer price) {
         this.price = price;
     }
 
@@ -126,5 +129,28 @@ public class CarrierBid {
 
     public void setIdUser(Integer idUser) {
         this.idUser = idUser;
+    }
+
+    public String getCompanyName() {
+        return companyName;
+    }
+
+    public void setCompanyName(String companyName) {
+        this.companyName = companyName;
+    }
+
+    @Override
+    public String toString() {
+        return "CarrierBid[" +
+                "idCarrierBid=" + idCarrierBid +
+                ", price=" + price +
+                ", dateTime=" + dateTime +
+                ", routeId=" + route.getIdRoute() +
+                ", winner=" + winner +
+                ", percent=" + percent +
+                ", currency='" + currency + '\'' +
+                ", comment='" + comment + '\'' +
+                ", idUser=" + idUser +
+                ']';
     }
 }

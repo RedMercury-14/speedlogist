@@ -12,6 +12,8 @@ public interface CarrierBidService {
 
     Long save(CarrierBid carrierBid);
 
+    void update(CarrierBid carrierBid);
+
     void delete(CarrierBid carrierBid);
 
     List<CarrierBid> getCarrierBidsByDate(Date dateStart, Date dateFinish);
@@ -19,4 +21,6 @@ public interface CarrierBidService {
     List<CarrierBid> getCarrierBidsByRouteId(Integer routeId);
 
     CarrierBid getCarrierBidByRouteAndUser(Integer routeId, User user);
+
+    CarrierBid getById(Long bidId);
 }

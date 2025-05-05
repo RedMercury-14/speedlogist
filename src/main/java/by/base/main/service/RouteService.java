@@ -171,5 +171,10 @@ public interface RouteService {
 	 */
 	Map<String, List<Message>> routesWithMessages(List<String> routesId);
 
+	/**
+	 * <br>Возвращает актуальные тендеры</br>
+	 * @return
+	 * @author Ira
+	 */
 	List<Route> getAllActualRoute(Date date);
 }

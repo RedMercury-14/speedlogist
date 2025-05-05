@@ -163,7 +163,7 @@ export const saveDocumentsArrivedDateUrl = `/speedlogist/api/logistics/documentf
 // список водителей
 ///////////////////////////////////////////////
 /** получение списка водителей */
-export const getDriversUrl ='/speedlogist/api/carrier/getMyDrivers'
+export const getThisCarrierDriversUrl ='/speedlogist/api/carrier/getMyDrivers'
 /** создание нового водителя */
 export const saveNewDriverUrl = '/speedlogist/api/carrier/saveNewDriver'
 /** редактирование водителя */
@@ -203,7 +203,9 @@ export const toRouteEndBaseUrl = '/speedlogist/main/logistics/international/rout
 export const getNumMessageBaseUrl ='/speedlogist/api/info/message/numroute/'
 export const getRoutesBaseUrl = '/speedlogist/api/manager/getRouteForInternational/' // получение данных маршрутов
 export const getProposalBaseUrl = `/speedlogist/api/logistics/getProposal/` // скачивание заявки на перевозку
-export const confirmTenderOfferUrl = '/speedlogist/api/logistics/internationalNew/confrom'
+export const confirmTenderOfferUrl = '/speedlogist/api/logistics/internationalNew/confrom' // подтверждение предложения (старые предложения)
+export const getOffersForReductionByIdRouteBaseUrl = '/speedlogist/api/logistics/tenders/get-bids-by-id-route/' // получение предложжений для тендера на понижение
+export const makeWinnerTenderForReductionOfferUrl = '/speedlogist/api/logistics/tenders/make-bid-winner' // подтверждение предложения тендера на понижение
 
 
 ///////////////////////////////////////////////
@@ -381,11 +383,14 @@ export const setRouteTimeUrl = "/speedlogist/api/route/time"
 ///////////////////////////////////////////////
 // Текущие тендеры
 ///////////////////////////////////////////////
+// export const getActiveTendersUrl = `/speedlogist/api/carrier/getActiveInternationalTenders`
+// ТЕНДЕРЫ НА ПОНИЖЕНИЕ
+export const getActiveTendersUrl = `/speedlogist/api/carrier/tenders/all`
 export const getActiveTendersUrl = `/speedlogist/api/carrier/tenders/all`
 export const getInfoRouteMessageBaseUrl = `/speedlogist/api/info/message/routes/`
 export const getThisUserUrl = '/speedlogist/api/getThisUser'
 export const setTenderForReductionOfferUrl = '/speedlogist/api/carrier/tenders/get-bid'
-export const cancelTenderForReductionOfferUrl = '/speedlogist/api/carrier/tenders/get-bid'
+export const deleteTenderForReductionOfferUrl = '/speedlogist/api/carrier/tenders/delete-bid'
 export const getThisUserIdUrl = '/speedlogist/api/get-this-user'
 
 

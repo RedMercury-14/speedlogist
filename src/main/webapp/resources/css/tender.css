@@ -139,6 +139,9 @@ footer.to-bottom {
 	white-space: normal !important;
 }
 
+#myGrid .purpleRow {
+    background-color: #f5c4ffdb;
+}
 #myGrid .activRow {
     background-color: #c4ffe1db;
 }

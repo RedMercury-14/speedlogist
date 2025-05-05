@@ -591,11 +591,9 @@ export function changeForm(orderData, formType) {
 		hideFormField('control')
 	}
 
+	// ТЕНДЕРЫ НА ПОНИЖЕНИЕ
 	// возможность создать тендер на понижение
 	if (isInternalMovement || way === 'РБ' || way === 'Импорт' || way === 'Экспорт') {
-		// const forReductionContainer = document.getElementById('forReduction-container')
-		// forReductionContainer.classList.remove('none')
-
 		showFormField('forReduction', 'on')
 	}
 
@@ -627,6 +625,7 @@ export function changeFormToDefault() {
 	// hideFormField('dangerous')
 	transformToDefaultComment()
 
+	// ТЕНДЕРЫ НА ПОНИЖЕНИЕ
 	hideFormField('startPriceForReduction')
 	hideFormField('currencyForReduction')
 }

@@ -241,7 +241,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 	const wayInput = document.querySelector('#way')
 	const dangerousInput = document.querySelector('#dangerous')
 	// ТЕНДЕРЫ НА ПОНИЖЕНИЕ
-	// const forReduction = document.querySelector('#forReduction')
+	const forReduction = document.querySelector('#forReduction')
 
 	// отрисовка таблицы
 	const gridDiv = document.querySelector('#myGrid')
@@ -288,7 +288,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 	// dangerousInput && dangerousInput.addEventListener('change', dangerousInputOnChangeHandler)
 
 	// ТЕНДЕРЫ НА ПОНИЖЕНИЕ
-	// forReduction.addEventListener('change', (e) => toggleForReductionInputsVisible(e.target.checked))
+	forReduction.addEventListener('change', (e) => toggleForReductionInputsVisible(e.target.checked))
 
 	// листнер на очистку формы маршрута при закрытии модального окна
 	$('#routeModal').on('hide.bs.modal', (e) => {
@@ -720,9 +720,9 @@ function routeFormDataFormatter(routeForm) {
 		: ''
 
 	// ТЕНДЕРЫ НА ПОНИЖЕНИЕ
-	// const forReduction = data.forReduction === 'on'
-	// const startPriceForReduction = data.startPriceForReduction ? Number(data.startPriceForReduction) : null
-	// const currencyForReduction = data.currencyForReduction ? data.currencyForReduction : null
+	const forReduction = data.forReduction === 'on'
+	const startPriceForReduction = data.startPriceForReduction ? Number(data.startPriceForReduction) : null
+	const currencyForReduction = data.currencyForReduction ? data.currencyForReduction : null
 
 	return {
 		...data,
@@ -731,9 +731,9 @@ function routeFormDataFormatter(routeForm) {
 		points: updatedPoints,
 		comment: getComment(data),
 		// ТЕНДЕРЫ НА ПОНИЖЕНИЕ
-		// forReduction,
-		// startPriceForReduction,
-		// currencyForReduction,
+		forReduction,
+		startPriceForReduction,
+		currencyForReduction,
 	}
 }
 

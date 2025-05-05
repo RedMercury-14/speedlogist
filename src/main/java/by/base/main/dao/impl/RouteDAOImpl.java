@@ -3,6 +3,7 @@ package by.base.main.dao.impl;
 import java.sql.Date;
 import java.sql.Time;
 import java.time.LocalDate;
+import java.util.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,14 +13,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.TemporalType;
-import javax.transaction.Transactional;
 
-import org.glassfish.grizzly.utils.ArraySet;
-import org.hibernate.Criteria;
-import org.hibernate.FetchMode;
+import by.base.main.model.*;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.query.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -42,7 +39,7 @@ public class RouteDAOImpl implements RouteDAO {
 	@Autowired
 	private SessionFactory sessionFactory;
 
-	private static final String queryGetList = "from Route r LEFT JOIN FETCH r.orders ord LEFT JOIN FETCH ord.addresses addr LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d order by r.idroute";
+	private static final String queryGetList = "from Route r LEFT JOIN FETCH r.orders ord LEFT JOIN FETCH ord.addresses addr LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d LEFT JOIN FETCH r.carrierBids c order by r.idroute";
 
 	@Override	
 	public List<Route> getRouteList() {
@@ -59,7 +56,7 @@ public class RouteDAOImpl implements RouteDAO {
 
 	}
 
-	private static final String queryGetObjById = "from Route r LEFT JOIN FETCH r.orders ord LEFT JOIN FETCH ord.addresses addr LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d where r.idRoute=:idRoute";
+	private static final String queryGetObjById = "from Route r LEFT JOIN FETCH r.orders ord LEFT JOIN FETCH ord.addresses addr LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d LEFT JOIN FETCH r.carrierBids c where r.idRoute=:idRoute";
 
 	@Override	
 	public Route getRouteById(int id) {
@@ -71,7 +68,7 @@ public class RouteDAOImpl implements RouteDAO {
 		return object;
 	}
 
-	private static final String queryGetListObj = "from Route r LEFT JOIN FETCH r.orders ord LEFT JOIN FETCH ord.addresses addr LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d where r.routeDirection=:setNumTruck";
+	private static final String queryGetListObj = "from Route r LEFT JOIN FETCH r.orders ord LEFT JOIN FETCH ord.addresses addr LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d LEFT JOIN FETCH r.carrierBids c where r.routeDirection=:setNumTruck";
 
 	@Override	
 	public Route getRouteByDirection(String login) {
@@ -123,6 +120,7 @@ public class RouteDAOImpl implements RouteDAO {
 			+ "LEFT JOIN FETCH r.truck tr "
 			+ "LEFT JOIN FETCH r.roteHasShop rhs "
 			+ "LEFT JOIN FETCH r.driver d "
+			+ "LEFT JOIN FETCH r.carrierBids c "
 			+ "where r.dateLoadPreviously BETWEEN :frmdate and :todate";
 
 	@Override	
@@ -207,7 +205,15 @@ public class RouteDAOImpl implements RouteDAO {
 		return objects;
 	}
 
-	private static final String queryGetListAsDateAndStatus = "from Route r LEFT JOIN FETCH r.orders ord LEFT JOIN FETCH ord.addresses addr LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d where r.dateLoadPreviously BETWEEN :frmdate and :todate AND where r.statusRoute BETWEEN :frstat and :tostat";
+	private static final String queryGetListAsDateAndStatus = "from Route r "
+			+ "LEFT JOIN FETCH r.orders ord "
+			+ "LEFT JOIN FETCH ord.addresses addr "
+			+ "LEFT JOIN FETCH r.user u "
+			+ "LEFT JOIN FETCH r.truck tr "
+			+ "LEFT JOIN FETCH r.roteHasShop rhs "
+			+ "LEFT JOIN FETCH r.driver d "
+			+ "LEFT JOIN FETCH r.carrierBids c "
+			+ "where r.dateLoadPreviously BETWEEN :frmdate and :todate AND where r.statusRoute BETWEEN :frstat and :tostat";
 
 	@Override	
 	public List<Route> getRouteListAsDateAndStatus(Date dateStart, Date dateFinish, String stat1, String stat2) {
@@ -221,8 +227,8 @@ public class RouteDAOImpl implements RouteDAO {
 		return objects;
 	}
 
-	private static final String queryGetListAsStatus = "from Route r LEFT JOIN FETCH r.orders ord LEFT JOIN FETCH ord.addresses addr LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d where r.statusRoute BETWEEN :frstat and :tostat";
-	private static final String queryGetListAsStatus1And1 = "from Route r LEFT JOIN FETCH r.orders ord LEFT JOIN FETCH ord.addresses addr LEFT JOIN FETCH r.roteHasShop rhs where r.statusRoute BETWEEN :frstat and :tostat";
+	private static final String queryGetListAsStatus = "from Route r LEFT JOIN FETCH r.orders ord LEFT JOIN FETCH ord.addresses addr LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d LEFT JOIN FETCH r.carrierBids c where r.statusRoute BETWEEN :frstat and :tostat";
+	private static final String queryGetListAsStatus1And1 = "from Route r LEFT JOIN FETCH r.orders ord LEFT JOIN FETCH ord.addresses addr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.carrierBids c where r.statusRoute BETWEEN :frstat and :tostat";
 
 	@Override	
 	public List<Route> getRouteListAsStatus(String stat1, String stat2) {
@@ -245,7 +251,9 @@ public class RouteDAOImpl implements RouteDAO {
 			+ "LEFT JOIN FETCH ord.addresses addr "
 			+ "LEFT JOIN FETCH r.truck tr "
 			+ "LEFT JOIN FETCH r.roteHasShop rhs "
-			+ "LEFT JOIN FETCH r.driver d where r.user=:user ";
+			+ "LEFT JOIN FETCH r.driver d "
+			+ "LEFT JOIN FETCH r.carrierBids c "
+			+ "where r.user=:user ";
 //			+ "ORDER BY r.idRoute DESC";
 
 	@Override	
@@ -257,7 +265,7 @@ public class RouteDAOImpl implements RouteDAO {
 		return objects;
 	}
 
-	private static final String queryGetListAsComment = "from Route r LEFT JOIN FETCH r.orders ord LEFT JOIN FETCH ord.addresses addr LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d where r.comments=:comment";
+	private static final String queryGetListAsComment = "from Route r LEFT JOIN FETCH r.orders ord LEFT JOIN FETCH ord.addresses addr LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d LEFT JOIN FETCH r.carrierBids c where r.comments=:comment";
 
 	@Override	
 	public List<Route> getRouteListAsComment(String comment) {
@@ -310,7 +318,7 @@ public class RouteDAOImpl implements RouteDAO {
 		return theObject;
 	}
 
-	private static final String queryGetListAsDateAndUser = "from Route r LEFT JOIN FETCH r.orders LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d where r.dateLoadPreviously BETWEEN :frmdate and :todate AND r.user =:user";
+	private static final String queryGetListAsDateAndUser = "from Route r LEFT JOIN FETCH r.orders LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d LEFT JOIN FETCH r.carrierBids c where r.dateLoadPreviously BETWEEN :frmdate and :todate AND r.user =:user";
 
 	@Override	
 	public List<Route> getRouteListAsDateAndUser(Date dateStart, Date dateFinish, User user) {
@@ -404,7 +412,14 @@ public class RouteDAOImpl implements RouteDAO {
 		return routes.stream().collect(Collectors.toList());
 	}
 
-	private static final String queryПetRouteListByUserHasPeriod = "from Route r LEFT JOIN FETCH r.orders LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d where r.user =:user AND r.dateLoadPreviously BETWEEN :frmdate and :todate";
+	private static final String queryПetRouteListByUserHasPeriod = "from Route r "
+			+ "LEFT JOIN FETCH r.orders "
+			+ "LEFT JOIN FETCH r.user u "
+			+ "LEFT JOIN FETCH r.truck tr "
+			+ "LEFT JOIN FETCH r.roteHasShop rhs "
+			+ "LEFT JOIN FETCH r.driver d "
+			+ "LEFT JOIN FETCH r.carrierBids c "
+			+ "where r.user =:user AND r.dateLoadPreviously BETWEEN :frmdate and :todate";
 
 	
 	@Override
@@ -422,7 +437,15 @@ public class RouteDAOImpl implements RouteDAO {
 		return objects;
 	}
 
-	private static final String queryGetMaintenanceListAsDate = "from Route r LEFT JOIN FETCH r.orders ord LEFT JOIN FETCH ord.addresses addr LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d where r.comments ='maintenance' AND r.dateLoadPreviously BETWEEN :frmdate and :todate";
+	private static final String queryGetMaintenanceListAsDate = "from Route r "
+			+ "LEFT JOIN FETCH r.orders ord "
+			+ "LEFT JOIN FETCH ord.addresses addr "
+			+ "LEFT JOIN FETCH r.user u "
+			+ "LEFT JOIN FETCH r.truck tr "
+			+ "LEFT JOIN FETCH r.roteHasShop rhs "
+			+ "LEFT JOIN FETCH r.driver d "
+			+ "LEFT JOIN FETCH r.carrierBids c "
+			+ "where r.comments ='maintenance' AND r.dateLoadPreviously BETWEEN :frmdate and :todate";
 
 	@Override	
 	public List<Route> getMaintenanceListAsDate(Date dateStart, Date dateFinish) {
@@ -434,7 +457,15 @@ public class RouteDAOImpl implements RouteDAO {
 		return objects;
 	}
 
-	private static final String queryGetMaintenanceListAsDateAndLogin = "from Route r LEFT JOIN FETCH r.orders ord LEFT JOIN FETCH ord.addresses addr LEFT JOIN FETCH r.user u LEFT JOIN FETCH r.truck tr LEFT JOIN FETCH r.roteHasShop rhs LEFT JOIN FETCH r.driver d where r.comments ='maintenance' AND r.user =:user AND r.dateLoadPreviously BETWEEN :frmdate and :todate";
+	private static final String queryGetMaintenanceListAsDateAndLogin = "from Route r "
+			+ "LEFT JOIN FETCH r.orders ord "
+			+ "LEFT JOIN FETCH ord.addresses addr "
+			+ "LEFT JOIN FETCH r.user u "
+			+ "LEFT JOIN FETCH r.truck tr "
+			+ "LEFT JOIN FETCH r.roteHasShop rhs "
+			+ "LEFT JOIN FETCH r.driver d "
+			+ "LEFT JOIN FETCH r.carrierBids c "
+			+ "where r.comments ='maintenance' AND r.user =:user AND r.dateLoadPreviously BETWEEN :frmdate and :todate";
 
 	
 	@Override
@@ -523,9 +554,8 @@ public class RouteDAOImpl implements RouteDAO {
 			+ "d.surname,"
 			+ "d.patronymic)";
 		
-	private static final String queryGetRouteListAsDateDTO = routeConstruct + " from Route r LEFT JOIN r.orders ord LEFT JOIN ord.addresses addr LEFT JOIN r.user u LEFT JOIN r.truck tr LEFT JOIN r.roteHasShop rhs LEFT JOIN r.driver d where r.dateLoadPreviously BETWEEN :frmdate and :todate ";
-	
-	
+	private static final String queryGetRouteListAsDateDTO = routeConstruct + " from Route r LEFT JOIN r.orders ord LEFT JOIN ord.addresses addr LEFT JOIN r.user u LEFT JOIN r.truck tr LEFT JOIN r.roteHasShop rhs LEFT JOIN r.driver d LEFT JOIN FETCH r.carrierBids c where r.dateLoadPreviously BETWEEN :frmdate and :todate ";
+
 	@Override
 	public List<RouteDTO> getRouteListAsDateDTO(Date dateStart, Date dateFinish) {
 		Session currentSession = sessionFactory.getCurrentSession();
@@ -564,6 +594,7 @@ public class RouteDAOImpl implements RouteDAO {
 			+ "LEFT JOIN FETCH r.truck tr "
 			+ "LEFT JOIN FETCH r.roteHasShop rhs "
 			+ "LEFT JOIN FETCH r.driver d "
+			+ "LEFT JOIN FETCH r.carrierBids c "
 			+ "where r.comments ='international' AND r.statusRoute =1 AND r.dateLoadPreviously >= :dateNow";
 	@Override
 	public List<Route> getActualRoute(Date date) {
@@ -580,6 +611,7 @@ public class RouteDAOImpl implements RouteDAO {
 			+ "LEFT JOIN FETCH r.truck tr "
 			+ "LEFT JOIN FETCH r.roteHasShop rhs "
 			+ "LEFT JOIN FETCH r.driver d "
+			+ "LEFT JOIN FETCH r.carrierBids c "
 			+ "where r.dateLoadPreviously BETWEEN :frmdate and :todate "
 			+ "AND r.comments='international' ";
 //			+ "AND CAST(r.statusRoute AS integer) <= 8";
@@ -664,12 +696,13 @@ public class RouteDAOImpl implements RouteDAO {
 	    }
 		return objects;
 	}
-	
+
 	private static final String queryGetInternationalRoutesByDates = "SELECT distinct r from Route r " +
             "LEFT JOIN FETCH r.orders ord " +
             "LEFT JOIN FETCH ord.addresses addr " +
             "LEFT JOIN FETCH r.truck tr " +
-            "LEFT JOIN FETCH r.roteHasShop rhs " +
+            "LEFT JOIN FETCH r.roteHasShop rhs "
+            + "LEFT JOIN FETCH r.carrierBids c " +
             "where r.way ='Импорт' and r.dateLoadActually BETWEEN :frmdate and :todate";
 
     @Override
@@ -683,12 +716,13 @@ public class RouteDAOImpl implements RouteDAO {
         return routes;
 
     }
-    
+
     private static final String queryGetRoutesByDatesCreate = "select distinct r from Route r LEFT JOIN FETCH r.orders ord "
     	       + "LEFT JOIN FETCH ord.addresses addr "
     	       + "LEFT JOIN FETCH r.user u "
     	       + "LEFT JOIN FETCH r.truck tr "
     	       + "LEFT JOIN FETCH r.roteHasShop rhs "
+    	       + "LEFT JOIN FETCH r.carrierBids c "
     	       + "where r.createDate BETWEEN :frmdate and :todate ";
     @Override
     public List<Route> getRouteListByDatesCreate(Date dateStart, Date dateFinish) {
@@ -720,4 +754,26 @@ public class RouteDAOImpl implements RouteDAO {
            }
         return result;
     }
+
+// r.way like '%Импорт%' or r.way like '%Экспор%' or r.way =: 'РБ' AND
+	private static final String queryGetAllActualRoute = "from Route r "
+			+ "LEFT JOIN FETCH r.orders ord "
+			+ "LEFT JOIN FETCH ord.addresses addr "
+			+ "LEFT JOIN FETCH r.user u "
+			+ "LEFT JOIN FETCH r.truck tr "
+			+ "LEFT JOIN FETCH r.roteHasShop rhs "
+			+ "LEFT JOIN FETCH r.driver d "
+			+ "LEFT JOIN FETCH r.carrierBids c "
+		    + "LEFT JOIN FETCH c.carrier crr "
+		    + "LEFT JOIN FETCH r.carrierBids c "
+			+ "where (r.way like '%Импорт%' or r.way like '%Экспор%' or r.way = 'РБ') AND r.statusRoute =1 AND r.dateLoadPreviously >= :dateNow";
+	@Override
+	public List<Route> getAllActualRoute(Date date) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Route> theObject = currentSession.createQuery(queryGetAllActualRoute, Route.class);
+		theObject.setParameter("dateNow", date, TemporalType.DATE);
+		List<Route> objects = theObject.getResultList();
+		return new ArrayList<Route>(new HashSet<Route>(objects));
+	}
+
 }

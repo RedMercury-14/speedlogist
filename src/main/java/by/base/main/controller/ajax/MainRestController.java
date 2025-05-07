@@ -6788,7 +6788,13 @@ public class MainRestController {
 		
 		if(!checkDeepImport(order, request)) {
 			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {
-				PlanResponce planResponce = readerSchedulePlan.getPlanResponce(order);
+				PlanResponce planResponce;
+				if(getTrueStock(order).equals("1200")) {
+					planResponce = readerSchedulePlan.getPlanResponceShedulesOnly(order);
+				}else {
+					planResponce = readerSchedulePlan.getPlanResponce(order);
+				}
+				
 				
 				if(planResponce.getStatus() == 0) {
 					response.put("status", "100");

@@ -59,9 +59,10 @@
 													</div>
 													<c:choose>
 														<c:when test="${actualBid != null}">
-															<div class="text-muted font-weight-bold">
-																Текущее предложение:
-																<span class="text-primary">${actualBid.price} ${actualBid.currency} (скидка ${actualBid.percent}%)</span>
+															<div class="text-muted font-weight-bold text-center">
+																<span class="text-nowrap">Текущее предложение:</span>
+																<span class="text-primary text-nowrap">${actualBid.price} ${actualBid.currency}</span>
+																<span class="text-primary text-nowrap">(скидка ${actualBid.percent}%)</span>
 																<input type="hidden" name="idActualBid" value="${actualBid.idCarrierBid}"/>
 															</div>
 														</c:when>
@@ -76,9 +77,10 @@
 												<c:choose>
 													<c:when test="${userBid != null}">
 														<div class="offer-container align-items-center mb-2">
-															<div class="text-muted font-weight-bold">
-																Ваше предложение:
-																<span class="text-primary">${userBid.price} ${userBid.currency} (скидка ${userBid.percent}%)</span>
+															<div class="text-muted font-weight-bold text-center">
+																<span class=" text-nowrap">Ваше предложение:</span>
+																<span class="text-primary text-nowrap">${userBid.price} ${userBid.currency}</span>
+																<span class="text-primary text-nowrap">(скидка ${userBid.percent}%)</span>
 																<input type="hidden" name="idCarrierBid" value="${userBid.idCarrierBid}"/>
 															</div>
 															<button type="button" id="cancelOfferForReduction" data-action="cancelOffer" class="btn btn-danger btn-sm">Отменить предложение</button>
@@ -88,7 +90,7 @@
 												</c:choose>
 												<div class="offer-container align-items-center">
 													<div class="form-group mb-0 d-flex align-items-center">
-														<span class="text-muted font-weight-bold mr-2 mb-0">Скидка:</span>
+														<span class="text-muted font-weight-bold mr-2 mb-0 text-nowrap">Скидка, %:</span>
 														<div class="input-group discount-group">
 															<div class="input-group-prepend">
 																<button class="btn btn-outline-secondary font-weight-bold" type="button" id="decrease">-</button>

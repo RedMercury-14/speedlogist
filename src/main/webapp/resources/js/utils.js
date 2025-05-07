@@ -1,4 +1,5 @@
 import { RULES_FOR_MIN_UNLOAD_DATE } from "./globalRules/minUnloadDateRules.js"
+import { snackbar } from "./snackbar/snackbar.js"
 
 /**
  * Функция `getData` является асинхронной функцией, которая извлекает данные из указанного URL-адреса

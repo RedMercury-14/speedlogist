@@ -26,21 +26,15 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
 
 import com.dto.OrderDTO;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.itextpdf.text.pdf.PdfStructTreeController.returnType;
 
 @DynamicUpdate
 @DynamicInsert
@@ -287,7 +281,22 @@ public class Route implements Serializable{
 	
 	@Column(name="method_load")
 	private String methodLoad;
-	
+
+	@OneToMany (fetch=FetchType.LAZY, orphanRemoval = true,
+			mappedBy="route",
+			cascade= {CascadeType.MERGE,
+					CascadeType.PERSIST})
+	private Set<CarrierBid> carrierBids;
+
+	@Column (name = "for_reduction")
+	private Boolean forReduction;
+
+	@Column (name = "start_price_for_reduction")
+	private Integer startPriceForReduction;
+
+	@Column (name = "currency_for_reduction")
+	private String currencyForReduction;
+
 	@Transient
 	private Map<String, String> cost = new HashMap<String, String>();
 	/**
@@ -1071,6 +1080,38 @@ public class Route implements Serializable{
 
 	public void setLogistInfo(String logistInfo) {
 		this.logistInfo = logistInfo;
+	}
+
+	public Boolean getForReduction() {
+		return forReduction;
+	}
+
+	public void setForReduction(Boolean tenderForPromotion) {
+		this.forReduction = tenderForPromotion;
+	}
+
+	public Set<CarrierBid> getCarrierBids() {
+		return carrierBids;
+	}
+
+	public void setCarrierBids(Set<CarrierBid> carrierBids) {
+		this.carrierBids = carrierBids;
+	}
+
+	public Integer getStartPriceForReduction() {
+		return startPriceForReduction;
+	}
+
+	public void setStartPriceForReduction(Integer startPriceForReduction) {
+		this.startPriceForReduction = startPriceForReduction;
+	}
+
+	public String getCurrencyForReduction() {
+		return currencyForReduction;
+	}
+
+	public void setCurrencyForReduction(String currency) {
+		this.currencyForReduction = currency;
 	}
 
 	@Override

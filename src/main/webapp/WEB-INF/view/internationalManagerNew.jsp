@@ -80,7 +80,7 @@
 		</div>
 	</div>
 
-	<!-- Модальное окно с основной информацией о маршруте -->
+	<!-- Модальное окно предложений по маршруту -->
 	<div class="modal fade" id="tenderOffersModal" tabindex="-1" data-backdrop="static" data-keyboard="false" aria-labelledby="tenderOffersModalLabel" aria-hidden="true">
 		<div class="modal-dialog modal-xl">
 			<div class="modal-content">
@@ -93,6 +93,57 @@
 				<div class="modal-body">
 					<div class="mb-3 h5 text-center px-3 text-muted font-weight-bold" id="routeDirection"></div>
 					<div id="tenderOffers" style="height: 60vh; width: 100%;" class="ag-theme-alpine"></div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Модальное окно аналитики цены -->
+	<div class="modal fade" id="priceAnalisysModal" tabindex="-1" data-backdrop="static" data-keyboard="false" aria-labelledby="priceAnalisysModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-xl">
+			<div class="modal-content">
+				<div class="modal-header align-items-center bg-primary text-white">
+					<h5 class="modal-title" id="priceAnalisysModalLabel">Аналитика</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<div class="h5 text-center px-3 text-muted font-weight-bold" id="priceAnalisys_routeDirection"></div>
+					<div class="d-flex justify-content-end mb-4">
+						<div class="d-flex align-items-center mr-3">
+							<p id="" class="mb-0 mr-2">
+								<strong>Логин:</strong>
+								<span id="pbLogin">
+									powerbi@proanalysesl.com
+								</span>
+							</p>
+							<button id="copyPBLogin" type="button" class="btn px-1 py-0" title="Копировать">
+								<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#999999">
+									<path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z"/>
+								</svg>
+							</button>
+						</div>
+						<div class="d-flex align-items-center">
+							<p class="mb-0 mr-2">
+								<strong>Пароль:</strong>
+								<span id="pbPass">
+									Unks!89r
+								</span>
+							</p>
+							<button id="copyPBPass" type="button" class="btn px-1 py-0" title="Копировать">
+								<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#999999">
+									<path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z"/>
+								</svg>
+							</button>
+						</div>
+					</div>
+					<iframe id="priceAnalisysReportFrame" width="100%" height="500px" frameborder="0" allowFullScreen="true"></iframe>
+					<div id="priceAnalisys_container">
+					</div>
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>

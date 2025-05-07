@@ -4,7 +4,7 @@ import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 import { dateHelper, getData, getDocumentValues } from './utils.js'
 import { ajaxUtils } from './ajaxUtils.js'
 import { uiIcons } from './uiIcons.js'
-import { deleteDriverBaseUrl, getDriversUrl, saveNewDriverUrl, updateDriverUrl } from './globalConstants/urls.js'
+import { deleteDriverBaseUrl, getThisCarrierDriversUrl, saveNewDriverUrl, updateDriverUrl } from './globalConstants/urls.js'
 
 const token = $("meta[name='_csrf']").attr("content")
 
@@ -58,7 +58,7 @@ const gridOptions = {
 
 window.onload = async () => {
 	const gridDiv = document.querySelector('#myGrid')
-	const drivers = await getData(getDriversUrl)
+	const drivers = await getData(getThisCarrierDriversUrl)
 
 	renderTable(gridDiv, gridOptions, drivers)
 
@@ -93,7 +93,7 @@ function renderTable(gridDiv, gridOptions, data) {
 async function updateTable() {
 	gridOptions.api.showLoadingOverlay()
 
-	const drivers = await getData(getDriversUrl)
+	const drivers = await getData(getThisCarrierDriversUrl)
 
 	if (!drivers || !drivers.length) {
 		gridOptions.api.setRowData([])

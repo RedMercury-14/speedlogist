@@ -166,6 +166,7 @@ import by.base.main.service.util.POIExcel;
 import by.base.main.service.util.PropertiesUtils;
 import by.base.main.service.util.ReaderSchedulePlan;
 import by.base.main.service.util.ServiceLevel;
+import by.base.main.util.CarrierTenderWebSocket;
 import by.base.main.util.ChatEnpoint;
 import by.base.main.util.MainChat;
 import by.base.main.util.SlotWebSocket;
@@ -324,6 +325,12 @@ public class MainRestController {
 	@Autowired
 	private RotationService rotationService;
 	
+	@Autowired
+	private CarrierBidService carrierBidService;
+	
+	@Autowired
+	private CarrierTenderWebSocket carrierTenderWebSocket;
+	
 	
 	private static String classLog;
 	public static String marketJWT;
@@ -373,6 +380,239 @@ public class MainRestController {
 	@Autowired
     private ServletContext servletContext;
 	
+    /**
+     * <br>getThisUser для фронта</br>.
+     * @author Ira
+     */
+    @GetMapping("/get-this-user")
+    @TimedExecution
+    public Map<String, Object> getThisUserToFront(HttpServletRequest request) throws ParseException, IOException {
+       Map<String, Object> response = new HashMap<>();
+       Integer userId =  getThisUser().getIdUser();
+       response.put("userId", userId);
+       return response;
+    }
+
+    /**
+     * <br>Метод для получения списка ставок</br>.
+     * @param request
+     * @throws IOException
+     * @throws ParseException
+     * @author Ira
+     */
+    @GetMapping("/carrier-tenders/get-carrier-bids-list/{dateStart}&{dateEnd}")
+    @TimedExecution
+    public Map<String, Object> getCarrierBidsList(@PathVariable String dateStart, @PathVariable String dateEnd) {
+       Map<String, Object> response = new HashMap<>();
+       Date dateFrom = Date.valueOf(dateStart);
+       Date dateTo = Date.valueOf(dateEnd);
+       List<CarrierBid> carrierBids = carrierBidService.getCarrierBidsByDate(dateFrom, dateTo);
+       response.put("bidList", carrierBids);
+       return response;
+    }
+
+    /**
+     * <br>Метод для выбора ставки-победителя</br>.
+     * @param request
+     * @param str
+     * @throws IOException
+     * @throws ParseException
+     * @author Ira
+     */
+    @PostMapping("/logistics/tenders/make-bid-winner")
+    @TimedExecution
+    public Map<String, Object> makeBidWinner(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+       String appPath = request.getServletContext().getRealPath("");
+       Map<String, Object> response = new HashMap<String, Object>();
+       JSONParser parser = new JSONParser();
+       JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+       Long idCarrierBid = jsonMainObject.get("idCarrierBid") != null || !jsonMainObject.get("idCarrierBid").toString().isEmpty() ? Long.parseLong(jsonMainObject.get("idCarrierBid").toString()) : null;
+       String status = jsonMainObject.get("status") != null || !jsonMainObject.get("status").toString().isEmpty() ? jsonMainObject.get("status").toString() : null;
+       CarrierBid carrierBid = carrierBidService.getById(idCarrierBid);
+       if (carrierBid == null) {
+          response.put("status", "100");
+          response.put("message", "Выбранное предложение было отменено.");
+          return response;
+       }
+
+       int idRoute = carrierBid.getRoute().getIdRoute();
+       int idUser = carrierBid.getIdUser();
+       int cost = carrierBid.getPrice();
+       String currency = carrierBid.getCurrency();
+       //обработка, если удалось нажать на кнопку
+       Order order = orderService.getOrderByIdRoute(idRoute);
+       if(order != null && order.getStatus() == 10) {
+          response.put("status", "100");
+          response.put("message", "Заявка не найдена");
+          return response;
+       }
+       User user = userService.getUserById(idUser);
+       if (status == null) {
+          status = "4";
+          routeService.updateRouteInBase(idRoute, cost, currency, user, status);
+       } else {
+          routeService.updateRouteInBase(idRoute, cost, currency, user, status);
+          Route route = routeService.getRouteById(idRoute);
+       }
+
+       carrierBid.setWinner(true);
+       carrierBidService.update(carrierBid);
+
+       //меняем статус у Order если имеется
+       Route routeTarget = routeService.getRouteById(idRoute);
+       Set <Order> orders = routeTarget.getOrders();
+       if(orders != null && !orders.isEmpty()) {
+          orders.forEach(o->{
+             o.setStatus(60);
+             o.setChangeStatus(o.getChangeStatus() + "\nМаршрут " + idRoute + " выигран " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy hh:MM:ss")));
+             orderService.updateOrder(o);
+//           orderService.updateOrderFromStatus(o);
+          });
+       }
+
+       response.put("status", "200");
+       response.put("message", "Маршрут создан");
+       response.put("route", routeTarget);
+       return response;
+    }
+
+    /**
+     * <br>Метод для получения предложений по idRoute</br>.
+     * @param request
+     * @param str
+     * @throws IOException
+     * @throws ParseException
+     * @author Ira
+     */
+    @GetMapping("/logistics/tenders/get-bids-by-id-route/{idRoute}")
+    @TimedExecution
+    public List<CarrierBid> getBidsByRouteId(@PathVariable String idRoute) throws ParseException, IOException {
+       Map<String, Object> response = new HashMap<>();
+       Integer routeId = Integer.parseInt(idRoute);
+       List<CarrierBid> bids = carrierBidService.getCarrierBidsByRouteId(routeId);
+       return bids;
+    }
+
+    /**
+     * <br>Метод для удаления ставки</br>.
+     * @param request
+     * @param str
+     * @throws IOException
+     * @throws ParseException
+     * @author Ira
+     */
+    @PostMapping("/carrier/tenders/delete-bid")
+    @TimedExecution
+    public Map<String, Object> deleteBid(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+       Map<String, Object> response = new HashMap<>();
+       JSONParser parser = new JSONParser();
+       JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+       User user = getThisUser();
+       Long bidId = jsonMainObject.get("idCarrierBid") == null ? null : Long.parseLong(jsonMainObject.get("idCarrierBid").toString());
+       CarrierBid carrierBid = carrierBidService.getById(bidId);
+
+       carrierBidService.delete(carrierBidService.getById(bidId));
+       Integer routeId = jsonMainObject.get("idRoute") == null ? null : Integer.parseInt(jsonMainObject.get("idRoute").toString());
+
+       CarrierTenderMessage message = new CarrierTenderMessage();
+        message.setIdRoute(routeId.toString());
+       message.setAction("delete");
+       message.setStatus("200");
+       message.setCarrierBid(carrierBid);
+       message.setWSPath("carrier-tenders");
+       carrierTenderWebSocket.broadcast(message);
+       response.put("bid", carrierBid);
+       response.put("status", "200");
+       return response;
+    }
+    /**
+     * <br>Метод для получения ставки</br>.
+     * @param request
+     * @param str
+     * @throws IOException
+     * @throws ParseException
+     * @author Ira
+     */
+    @PostMapping("/carrier/tenders/get-bid")
+    @TimedExecution
+    public Map<String, Object> getBid(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+       Map<String, Object> response = new HashMap<>();
+       JSONParser parser = new JSONParser();
+       JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+       CarrierBid carrierBid = new CarrierBid();
+       User user = getThisUser();
+       carrierBid.setCarrier(user);
+       carrierBid.setPrice(jsonMainObject.get("price") == null ? null : Integer.parseInt(jsonMainObject.get("price").toString()));
+       carrierBid.setComment(jsonMainObject.get("comment") == null ? null : jsonMainObject.get("comment").toString());
+       carrierBid.setPercent(jsonMainObject.get("percent") == null ? null : Integer.parseInt(jsonMainObject.get("percent").toString()));
+       carrierBid.setCurrency(jsonMainObject.get("currency") == null ? null : jsonMainObject.get("currency").toString());
+       carrierBid.setDateTime(new Timestamp(System.currentTimeMillis()));
+       Integer routeId = jsonMainObject.get("idRoute") == null ? null : Integer.parseInt(jsonMainObject.get("idRoute").toString());
+       carrierBid.setIdUser(user.getIdUser());
+       carrierBid.setCompanyName(user.getCompanyName());
+       Route route = routeService.getRouteById(routeId);
+       carrierBid.setRoute(route);
+       carrierBid.setWinner(false);
+       List<CarrierBid> bids = carrierBidService.getCarrierBidsByRouteId(routeId);
+
+       if (!bids.isEmpty()) {
+          CarrierBid latestBid = bids.stream().sorted(Comparator.comparing(CarrierBid::getPrice)).collect(Collectors.toList()).get(0);
+          for (CarrierBid bid: bids) {
+             if (bid.getWinner()) {
+                response.put("status", "100");
+                response.put("message", "Тендер завершён. Ставки больше не принимаются");
+                return response;
+             }
+          }
+          if (carrierBid.getPercent() != 99 && latestBid.getPrice() <= carrierBid.getPrice()) {
+             response.put("status", "100");
+             response.put("message", "Ваша ставка не последняя. Актуальная цена " + latestBid.getPrice() + " " + latestBid.getCurrency() + ".");
+             return response;
+          }
+
+       }
+       CarrierBid carrierBidOld = carrierBidService.getCarrierBidByRouteAndUser(routeId, user);
+       if (carrierBidOld != null) {
+          carrierBid.setIdCarrierBid(carrierBidOld.getIdCarrierBid());
+          carrierBidService.update(carrierBid);
+       } else {
+          Long carrierBidId = carrierBidService.save(carrierBid);
+          carrierBid.setIdCarrierBid(carrierBidId);
+       }
+
+       CarrierTenderMessage message = new CarrierTenderMessage();
+       message.setIdRoute(route.getIdRoute().toString());
+       message.setAction("create");
+       message.setCarrierBid(carrierBid);
+       message.setStatus("200");
+       message.setWSPath("carrier-tenders");
+       carrierTenderWebSocket.broadcast(message);
+//     carrierTenderWebSocket.sendMessage(message);
+       response.put("bid", carrierBid);
+       response.put("status", "200");
+       return response;
+    }
+
+    /**
+     * <br>Метод для отправки на фронт всех тендеров</br>.
+     * @param request
+     * @param str
+     * @throws IOException
+     * @throws ParseException
+     * @author Ira
+     */
+    @GetMapping("/carrier/tenders/all")
+    @TimedExecution
+    public Map<String, Object> getActualTenders(HttpServletRequest request) throws ParseException, IOException {
+       Map<String, Object> response = new HashMap<>();
+       LocalDate dateNow = LocalDate.now();
+       List<Route> routes = routeService.getAllActualRoute(Date.valueOf(dateNow.toString()));
+       response.put("routes", routes);
+       return response;
+    }
+    /*
+     * ----------------------------------------------
+     */
 	
 	@PostMapping("/logistics/internationalNew/confrom")
 	public Map<String, Object> confromCostNew(Model model, HttpServletRequest request,
@@ -6548,7 +6788,13 @@ public class MainRestController {
 		
 		if(!checkDeepImport(order, request)) {
 			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {
-				PlanResponce planResponce = readerSchedulePlan.getPlanResponce(order);
+				PlanResponce planResponce;
+				if(getTrueStock(order).equals("1200")) {
+					planResponce = readerSchedulePlan.getPlanResponceShedulesOnly(order);
+				}else {
+					planResponce = readerSchedulePlan.getPlanResponce(order);
+				}
+				
 				
 				if(planResponce.getStatus() == 0) {
 					response.put("status", "100");
@@ -9512,228 +9758,241 @@ public class MainRestController {
         return new Timestamp(date.getTime() + timeInMillis);
     }
 
-	/**
-	 * создание маршрута через заявку
-	 * @param str
-	 * @return
-	 * @throws IOException
-	 * @throws ServletException
-	 * @throws ParseException
-	 */
-	@RequestMapping(value = "/manager/createNewRoute", method = RequestMethod.POST)
-	public Map<String, String> createNewRoute(@RequestBody String str)
-			throws IOException, ServletException, ParseException {
-		HashMap<String, String> response = new HashMap<String, String>();
-		JSONParser parser = new JSONParser();
-		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
-		String points = jsonMainObject.get("points").toString();
-		JSONArray idOrdersJSON = (JSONArray) parser.parse(jsonMainObject.get("idOrders").toString());
-		List<Order> orders = new ArrayList<Order>();
-		
-		for (Object string : idOrdersJSON) {
-			Order order = orderService.getOrderById(Integer.parseInt(string.toString()));
-			//блок определеящий обязательность постановки окна на выгруцзку от Карины (временно отключен)
-			if(order.getOnloadWindowDate() == null && order.getWay().equals("РБ") && order.getStatus().equals("17")) {
-				response.put("status", "100");
-				response.put("message", "Невозможно создать маршрут без окна на выгрузку");
-				System.out.println("Невозможно создать маршрут без окна на выгрузку");
-				return response;
-			}else if(order.getOnloadWindowDate() != null && order.getOnloadWindowDate().toLocalDate().isBefore(LocalDate.now()) && order.getWay().equals("РБ") && !order.getWay().equals("Экспорт")) {
-				response.put("status", "100");
-				response.put("message", "Окно на выгрузку просрочено! Необходимо назначить новое коно на выгрузку!");
-				System.out.println("Окно на выгрузку просрочено! Необходимо назначить новое коно на выгрузку!");
-				//возможна доп обработка самого ордера
-				return response;
-			}
-			
-			
-			orders.add(order);			
-		}
-		//тут я фильтруюсь по ордеру который выгружается раньше.
-		/*
-		 * Основной принцип сортировки:			
-			    Если timeDelivery не null, используется он.
-			    Если timeDelivery == null, создаем Timestamp из onloadWindowDate и onloadWindowTime. Если оба тоже null, сортировка поставит объект в конец.
-			
-			Метод combineDateAndTime:
-			    Объединяет дату (onloadWindowDate) и время (onloadWindowTime) в Timestamp.
-			
-			Сортировка:			
-			    Используем Comparator с помощью метода Comparator.comparing, чтобы задать логику сортировки.
-		 */
-//		for (Order order : orders) {
-//			if(order.getTimeDelivery() == null) {
-//				response.put("status", "105");
-//				response.put("message", "Заявка " + order.getMarketNumber() + " не поставлена в слоты! Обратитесь к менеджеру " + order.getManager());
-//				return response;
-//			}
-//		}
-		orders.sort(Comparator.comparing(
-	            order -> Optional.ofNullable(order.getTimeDelivery())
-	                    .orElseGet(() -> combineDateAndTime(order.getOnloadWindowDate(), order.getOnloadWindowTime()))
-	        ));
-		
-		
-		Order order = orders.stream().findFirst().get();	
-		//проверяем не отменена ли заявка
-		if(order.getStatus() == 10) {
-			response.put("status", "100");
-			response.put("message", "Заявка " + order.getCounterparty() + " отменена!");
-			return response;
-		}
+    /**
+     * создание маршрута через заявку c forPromotion
+     * @param str
+     * @return
+     * @throws IOException
+     * @throws ServletException
+     * @throws ParseException
+     */
+    @RequestMapping(value = "/manager/createNewRoute", method = RequestMethod.POST)
+    public Map<String, String> createNewRoute(@RequestBody String str)
+          throws IOException, ServletException, ParseException {
+       HashMap<String, String> response = new HashMap<String, String>();
+       JSONParser parser = new JSONParser();
+       JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+       String points = jsonMainObject.get("points").toString();
+       JSONArray idOrdersJSON = (JSONArray) parser.parse(jsonMainObject.get("idOrders").toString());
+       List<Order> orders = new ArrayList<Order>();
 
-		Route route = new Route();
-		User thisUser = getThisUser();
-		route.setStatusRoute("0");
-		route.setStatusStock("0");
-		route.setComments("international");
-		route.setTime(LocalTime.of(0, 5));
-		route.setWay((String) jsonMainObject.get("way"));
-		route.setTypeTrailer((String) jsonMainObject.get("typeTruck"));
-		route.setUserComments((String) jsonMainObject.get("comment"));
-		route.setTemperature((String) jsonMainObject.get("temperature"));
-		route.setTypeLoad(jsonMainObject.get("typeLoad") != null ? jsonMainObject.get("typeLoad").toString() : null);
-		route.setMethodLoad(jsonMainObject.get("methodLoad") != null ? jsonMainObject.get("methodLoad").toString() : null);
-		route.setCustomer(order.getManager());
-		route.setLogistInfo(thisUser.getSurname() +" " + thisUser.getName() + " " + thisUser.getPatronymic() + "; "+thisUser.getTelephone());
-		route.setOnloadWindowDate(order.getOnloadWindowDate());
-		route.setOnloadWindowTime(order.getOnloadWindowTime());
-		route.setLoadNumber(order.getLoadNumber());
-		String tnvd="";
-		
+       for (Object string : idOrdersJSON) {
+          Order order = orderService.getOrderById(Integer.parseInt(string.toString()));
+          //блок определеящий обязательность постановки окна на выгруцзку от Карины (временно отключен)
+          if(order.getOnloadWindowDate() == null && order.getWay().equals("РБ") && order.getStatus().equals("17")) {
+             response.put("status", "100");
+             response.put("message", "Невозможно создать маршрут без окна на выгрузку");
+             System.out.println("Невозможно создать маршрут без окна на выгрузку");
+             return response;
+          }else if(order.getOnloadWindowDate() != null && order.getOnloadWindowDate().toLocalDate().isBefore(LocalDate.now()) && order.getWay().equals("РБ") && !order.getWay().equals("Экспорт")) {
+             response.put("status", "100");
+             response.put("message", "Окно на выгрузку просрочено! Необходимо назначить новое коно на выгрузку!");
+             System.out.println("Окно на выгрузку просрочено! Необходимо назначить новое коно на выгрузку!");
+             //возможна доп обработка самого ордера
+             return response;
+          }
 
-		route.setOrders(orders.stream().collect(Collectors.toSet()));
-//		route.setStartPrice(target.getStartPrice());
-		route.setIdRoute(routeService.saveRouteAndReturnId(route));
 
-		
-//		orders.forEach(o -> {
-//			List<Route> routes = o.getRoutes();
-//			System.err.println(routes.size() + " - кол-во routes");
-//			routes.add(route);
-//			o.setRoutes(routes);
-//			o.setStatus(30);
-////			orderService.updateOrderFromStatus(order);		
-//			o.setLogist(thisUser.getSurname() +" " + thisUser.getName() + " " + thisUser.getPatronymic() + "; ");
-//			o.setLogistTelephone(thisUser.getTelephone());
-//			orderService.updateOrder(o);
-//		});
-		
-		orders.forEach(o -> {
-			o.setStatus(30);
-			o.setLogist(thisUser.getSurname() +" " + thisUser.getName() + " " + thisUser.getPatronymic() + "; ");
-			o.setLogistTelephone(thisUser.getTelephone());
-			o.setChangeStatus(o.getChangeStatus() + "\nМаршрут создал: " + thisUser.getSurname() + thisUser.getName() + thisUser.getPatronymic() + " " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:SS")));
-			orderService.updateOrder(o);
-		});
+          orders.add(order);
+       }
+       
+       
+       
+       //тут я фильтруюсь по ордеру который выгружается раньше.
+       /*
+        * Основной принцип сортировки:
+              Если timeDelivery не null, используется он.
+              Если timeDelivery == null, создаем Timestamp из onloadWindowDate и onloadWindowTime. Если оба тоже null, сортировка поставит объект в конец.
 
-		String firstJsonRequest = points.substring(1, points.length() - 1);
-		List<RouteHasShop> routeHasShopsArray = new ArrayList<RouteHasShop>();
-		List<JSONObject> arrayJSON = new ArrayList<>();
-		String[] mass = firstJsonRequest.split("},");
-		JSONObject jsonpFirstObject = (JSONObject) parser.parse(mass[0] + "}");
-		JSONObject jsonpLastObject = (JSONObject) parser.parse(mass[mass.length - 1]);
-		route.setDateLoadPreviously(jsonpFirstObject.get("date").toString().isEmpty() ? null
-				: Date.valueOf(jsonpFirstObject.get("date").toString()));
-		if (!jsonpFirstObject.get("time").toString().isEmpty()) {
-			route.setTimeLoadPreviously(
-					LocalTime.of(Integer.parseInt(jsonpFirstObject.get("time").toString().split(":")[0]),
-							Integer.parseInt(jsonpFirstObject.get("time").toString().split(":")[1])));
-		} else {
-			route.setTimeLoadPreviously(null);
-		}
+          Метод combineDateAndTime:
+              Объединяет дату (onloadWindowDate) и время (onloadWindowTime) в Timestamp.
 
-		//тут доработать: выяснить какой из ордеров раньше выгружается - и внести эту инфу туда!
-		if(order.getTimeDelivery() == null) {
-			route.setDateUnloadPreviouslyStock(order.getOnloadWindowDate() == null ? null : order.getOnloadWindowDate().toLocalDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
-			route.setTimeUnloadPreviouslyStock(order.getOnloadWindowTime() == null ? null : order.getOnloadTime().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")));
-			}else {
-			route.setDateUnloadPreviouslyStock(order.getTimeDelivery().toLocalDateTime().toLocalDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
-			route.setTimeUnloadPreviouslyStock(order.getTimeDelivery().toLocalDateTime().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")));
-			}
-		Integer summPall = 0;
-		Integer summWeight = 0;
-		for (String string : mass) {
-			if (string.charAt(string.length() - 1) != '}') {
-				string = string + "}";
-			}
-			JSONObject jsonpObject = (JSONObject) parser.parse(string);
-			RouteHasShop routeHasShop = new RouteHasShop();
-			routeHasShop.setRoute(route);
-			String header = jsonpObject.get("type").toString() + " " + jsonpObject.get("number").toString();
-			if (!jsonpObject.get("customsAddress").toString().isEmpty()) { // добавление таможни в комментарий
-				route.setUserComments(route.getUserComments() + "\n" + header + " - Таможня: "
-						+ (String) jsonpObject.get("customsAddress"));
-				routeHasShop.setCustomsAddress((String) jsonpObject.get("customsAddress")); // добавление таможни в объект!
-			}
-			if (!jsonpObject.get("timeFrame").toString().isEmpty()) {
-				route.setUserComments(route.getUserComments() + "\n" + header + " - Время работы: "
-						+ (String) jsonpObject.get("timeFrame"));
-			}
-			if (!jsonpObject.get("contact").toString().isEmpty()) {
-				route.setUserComments(route.getUserComments() + "\n" + header + " - Контакт : "
-						+ (String) jsonpObject.get("contact"));
-			}
-			String tnvdI = jsonpObject.get("tnvd") == null ? "" : (String) jsonpObject.get("tnvd");
-			if(!tnvdI.isEmpty() || !tnvdI.equals("")) {
-				String out = Pattern.compile("\r\n").matcher(tnvdI).replaceAll(" ");
-				String out2 = Pattern.compile("\n").matcher(out).replaceAll(" ");
-				tnvd = tnvd + out2;
-			}
-			
-			routeHasShop.setPosition((String) jsonpObject.get("type"));
-			routeHasShop.setOrder(Integer.parseInt(jsonpObject.get("number").toString()));
-			routeHasShop.setAddress((String) jsonpObject.get("bodyAdress"));
-			routeHasShop.setCargo((String) jsonpObject.get("cargo"));
-			routeHasShop
-					.setPall(jsonpObject.get("pall").toString().isEmpty() ? null : (String) jsonpObject.get("pall"));
-			Integer targetPall = jsonpObject.get("pall").toString().isEmpty() ? 0
-					: Integer.parseInt(jsonpObject.get("pall").toString());
-			routeHasShop.setWeight(
-					jsonpObject.get("weight").toString().isEmpty() ? null : (String) jsonpObject.get("weight"));
-			Integer targetWeigth = jsonpObject.get("weight").toString().isEmpty() ? 0
-					: Integer.parseInt((String) jsonpObject.get("weight"));
-			if (jsonpObject.get("type").toString().equals("Загрузка")) {
-				summPall = summPall + targetPall;
-				summWeight = summWeight + targetWeigth;
-			}
-			routeHasShop.setVolume(
-					jsonpObject.get("volume").toString().isEmpty() ? null : (String) jsonpObject.get("volume"));
-			routeHasShopsArray.add(routeHasShop);
-		}
+          Сортировка:
+              Используем Comparator с помощью метода Comparator.comparing, чтобы задать логику сортировки.
+        */
+//     for (Order order : orders) {
+//        if(order.getTimeDelivery() == null) {
+//           response.put("status", "105");
+//           response.put("message", "Заявка " + order.getMarketNumber() + " не поставлена в слоты! Обратитесь к менеджеру " + order.getManager());
+//           return response;
+//        }
+//     }
+       orders.sort(Comparator.comparing(
+             order -> Optional.ofNullable(order.getTimeDelivery())
+                   .orElseGet(() -> combineDateAndTime(order.getOnloadWindowDate(), order.getOnloadWindowTime()))
+       ));
+       
+     
+       
 
-		route.setTnvd(tnvd);
-		route.setTotalCargoWeight(summWeight.toString());
-		route.setTotalLoadPall(summPall.toString());
-//		route.setRouteDirection(order.getCounterparty() + " - "
-//				+ routeHasShopsArray.get(routeHasShopsArray.size() - 1).getAddress().split("; ")[1] + " N"
-//				+ route.getIdRoute());
-		
-		//тут ставим название маршрута
-		String routeDirection = "";
-		for (int i = 0; i < routeHasShopsArray.size(); i++) {
-			RouteHasShop rhs = routeHasShopsArray.get(i);
-			if(routeDirection.isEmpty()) {
-				routeDirection = "<" + order.getCounterparty() + "> " + rhs.getAddress().split("; ")[1];
-			}else {
-				if(i == routeHasShopsArray.size()-1) {
-					routeDirection = routeDirection +" - "+ rhs.getAddress().split("; ")[1] + " N" + route.getIdRoute();
-				}else {
-					routeDirection = routeDirection +" - "+ rhs.getAddress().split("; ")[1];
-				}				
-			}
-		}
-		route.setRouteDirection(routeDirection);
-		
-		route.setOptimalCost(getOptimalCost(route)); // ===============================================ПРОВЕРИТЬ=======================================
-		
-		routeService.saveOrUpdateRoute(route);
-		routeHasShopsArray.forEach(rhs -> routeHasShopService.saveOrUpdateRouteHasShop(rhs));
 
-		response.put("status", "200");
-		response.put("message", "метод отработал");
-		return response;
-	}
+       Order order = orders.stream().findFirst().get();
+       //проверяем не отменена ли заявка
+       if(order.getStatus() == 10) {
+          response.put("status", "100");
+          response.put("message", "Заявка " + order.getCounterparty() + " отменена!");
+          return response;
+       }
+     //тут я записываю самый ранний на выгрузку
+       
+
+       Route route = new Route();
+       User thisUser = getThisUser();
+       route.setStatusRoute("0");
+       route.setStatusStock("0");
+       route.setComments("international");
+       route.setTime(LocalTime.of(0, 5));
+       route.setWay((String) jsonMainObject.get("way"));
+       route.setTypeTrailer((String) jsonMainObject.get("typeTruck"));
+       route.setUserComments((String) jsonMainObject.get("comment"));
+       route.setTemperature((String) jsonMainObject.get("temperature"));
+       route.setTypeLoad(jsonMainObject.get("typeLoad") != null ? jsonMainObject.get("typeLoad").toString() : null);
+       route.setMethodLoad(jsonMainObject.get("methodLoad") != null ? jsonMainObject.get("methodLoad").toString() : null);
+       route.setCustomer(order.getManager());
+       route.setLogistInfo(thisUser.getSurname() +" " + thisUser.getName() + " " + thisUser.getPatronymic() + "; "+thisUser.getTelephone());
+       route.setOnloadWindowDate(order.getOnloadWindowDate());
+       route.setOnloadWindowTime(order.getOnloadWindowTime());
+       if(order.getTimeDelivery() != null) {
+    	   route.setDateUnloadPreviouslyStock(order.getTimeDelivery().toLocalDateTime().toLocalDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+    	   route.setTimeUnloadPreviouslyStock(order.getTimeDelivery().toLocalDateTime().toLocalTime().format(DateTimeFormatter.ofPattern("hh:mm:SS")));
+       }
+       route.setLoadNumber(order.getLoadNumber());
+       String tnvd="";
+       route.setForReduction(jsonMainObject.get("forReduction") != null ? Boolean.parseBoolean(jsonMainObject.get("forReduction").toString()) : null);
+       route.setStartPriceForReduction(jsonMainObject.get("startPriceForReduction") != null ? Integer.parseInt(jsonMainObject.get("startPriceForReduction").toString()) : null);
+       route.setCurrencyForReduction(jsonMainObject.get("currencyForReduction") != null ? jsonMainObject.get("currencyForReduction").toString() : null);
+       route.setOrders(orders.stream().collect(Collectors.toSet()));
+//     route.setStartPrice(target.getStartPrice());
+       route.setIdRoute(routeService.saveRouteAndReturnId(route));
+
+
+//     orders.forEach(o -> {
+//        List<Route> routes = o.getRoutes();
+//        System.err.println(routes.size() + " - кол-во routes");
+//        routes.add(route);
+//        o.setRoutes(routes);
+//        o.setStatus(30);
+////          orderService.updateOrderFromStatus(order);
+//        o.setLogist(thisUser.getSurname() +" " + thisUser.getName() + " " + thisUser.getPatronymic() + "; ");
+//        o.setLogistTelephone(thisUser.getTelephone());
+//        orderService.updateOrder(o);
+//     });
+
+       orders.forEach(o -> {
+          o.setStatus(30);
+          o.setLogist(thisUser.getSurname() +" " + thisUser.getName() + " " + thisUser.getPatronymic() + "; ");
+          o.setLogistTelephone(thisUser.getTelephone());
+          o.setChangeStatus(o.getChangeStatus() + "\nМаршрут создал: " + thisUser.getSurname() + thisUser.getName() + thisUser.getPatronymic() + " " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:SS")));
+          orderService.updateOrder(o);
+       });
+
+       String firstJsonRequest = points.substring(1, points.length() - 1);
+       List<RouteHasShop> routeHasShopsArray = new ArrayList<RouteHasShop>();
+       List<JSONObject> arrayJSON = new ArrayList<>();
+       String[] mass = firstJsonRequest.split("},");
+       JSONObject jsonpFirstObject = (JSONObject) parser.parse(mass[0] + "}");
+       JSONObject jsonpLastObject = (JSONObject) parser.parse(mass[mass.length - 1]);
+       route.setDateLoadPreviously(jsonpFirstObject.get("date").toString().isEmpty() ? null
+             : Date.valueOf(jsonpFirstObject.get("date").toString()));
+       if (!jsonpFirstObject.get("time").toString().isEmpty()) {
+          route.setTimeLoadPreviously(
+                LocalTime.of(Integer.parseInt(jsonpFirstObject.get("time").toString().split(":")[0]),
+                      Integer.parseInt(jsonpFirstObject.get("time").toString().split(":")[1])));
+       } else {
+          route.setTimeLoadPreviously(null);
+       }
+
+       //тут доработать: выяснить какой из ордеров раньше выгружается - и внести эту инфу туда!
+       if(order.getTimeDelivery() == null) {
+          route.setDateUnloadPreviouslyStock(order.getOnloadWindowDate() == null ? null : order.getOnloadWindowDate().toLocalDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+          route.setTimeUnloadPreviouslyStock(order.getOnloadWindowTime() == null ? null : order.getOnloadTime().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")));
+       }else {
+          route.setDateUnloadPreviouslyStock(order.getTimeDelivery().toLocalDateTime().toLocalDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+          route.setTimeUnloadPreviouslyStock(order.getTimeDelivery().toLocalDateTime().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")));
+       }
+       Integer summPall = 0;
+       Integer summWeight = 0;
+       for (String string : mass) {
+          if (string.charAt(string.length() - 1) != '}') {
+             string = string + "}";
+          }
+          JSONObject jsonpObject = (JSONObject) parser.parse(string);
+          RouteHasShop routeHasShop = new RouteHasShop();
+          routeHasShop.setRoute(route);
+          String header = jsonpObject.get("type").toString() + " " + jsonpObject.get("number").toString();
+          if (!jsonpObject.get("customsAddress").toString().isEmpty()) { // добавление таможни в комментарий
+             route.setUserComments(route.getUserComments() + "\n" + header + " - Таможня: "
+                   + (String) jsonpObject.get("customsAddress"));
+             routeHasShop.setCustomsAddress((String) jsonpObject.get("customsAddress")); // добавление таможни в объект!
+          }
+          if (!jsonpObject.get("timeFrame").toString().isEmpty()) {
+             route.setUserComments(route.getUserComments() + "\n" + header + " - Время работы: "
+                   + (String) jsonpObject.get("timeFrame"));
+          }
+          if (!jsonpObject.get("contact").toString().isEmpty()) {
+             route.setUserComments(route.getUserComments() + "\n" + header + " - Контакт : "
+                   + (String) jsonpObject.get("contact"));
+          }
+          String tnvdI = jsonpObject.get("tnvd") == null ? "" : (String) jsonpObject.get("tnvd");
+          if(!tnvdI.isEmpty() || !tnvdI.equals("")) {
+             String out = Pattern.compile("\r\n").matcher(tnvdI).replaceAll(" ");
+             String out2 = Pattern.compile("\n").matcher(out).replaceAll(" ");
+             tnvd = tnvd + out2;
+          }
+
+          routeHasShop.setPosition((String) jsonpObject.get("type"));
+          routeHasShop.setOrder(Integer.parseInt(jsonpObject.get("number").toString()));
+          routeHasShop.setAddress((String) jsonpObject.get("bodyAdress"));
+          routeHasShop.setCargo((String) jsonpObject.get("cargo"));
+          routeHasShop
+                .setPall(jsonpObject.get("pall").toString().isEmpty() ? null : (String) jsonpObject.get("pall"));
+          Integer targetPall = jsonpObject.get("pall").toString().isEmpty() ? 0
+                : Integer.parseInt(jsonpObject.get("pall").toString());
+          routeHasShop.setWeight(
+                jsonpObject.get("weight").toString().isEmpty() ? null : (String) jsonpObject.get("weight"));
+          Integer targetWeigth = jsonpObject.get("weight").toString().isEmpty() ? 0
+                : Integer.parseInt((String) jsonpObject.get("weight"));
+          if (jsonpObject.get("type").toString().equals("Загрузка")) {
+             summPall = summPall + targetPall;
+             summWeight = summWeight + targetWeigth;
+          }
+          routeHasShop.setVolume(
+                jsonpObject.get("volume").toString().isEmpty() ? null : (String) jsonpObject.get("volume"));
+          routeHasShopsArray.add(routeHasShop);
+       }
+
+       route.setTnvd(tnvd);
+       route.setTotalCargoWeight(summWeight.toString());
+       route.setTotalLoadPall(summPall.toString());
+//     route.setRouteDirection(order.getCounterparty() + " - "
+//           + routeHasShopsArray.get(routeHasShopsArray.size() - 1).getAddress().split("; ")[1] + " N"
+//           + route.getIdRoute());
+
+       //тут ставим название маршрута
+       String routeDirection = "";
+       for (int i = 0; i < routeHasShopsArray.size(); i++) {
+          RouteHasShop rhs = routeHasShopsArray.get(i);
+          if(routeDirection.isEmpty()) {
+             routeDirection = "<" + order.getCounterparty() + "> " + rhs.getAddress().split("; ")[1];
+          }else {
+             if(i == routeHasShopsArray.size()-1) {
+                routeDirection = routeDirection +" - "+ rhs.getAddress().split("; ")[1] + " N" + route.getIdRoute();
+             }else {
+                routeDirection = routeDirection +" - "+ rhs.getAddress().split("; ")[1];
+             }
+          }
+       }
+       route.setRouteDirection(routeDirection);
+
+       route.setOptimalCost(getOptimalCost(route)); // ===============================================ПРОВЕРИТЬ=======================================
+
+       routeService.saveOrUpdateRoute(route);
+       routeHasShopsArray.forEach(rhs -> routeHasShopService.saveOrUpdateRouteHasShop(rhs));
+
+       response.put("status", "200");
+       response.put("message", "метод отработал");
+       return response;
+    }
 	
 	/**
 	 * отдаёт заявки по дате только 5 статуса

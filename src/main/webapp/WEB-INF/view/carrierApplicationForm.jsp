@@ -171,7 +171,7 @@
 							<input type="tel" class="form-control" id="phone" name="phone" placeholder="+375XXYYYYYYY" required>
 							<div class="invalid-feedback">
 								Введите корректный номер телефона (например, +375 29 123-45-67).
-							  </div>
+							</div>
 						</div>
 
 						<div class="form-group">
@@ -182,6 +182,11 @@
 						<div class="form-group">
 							<label class="text-muted font-weight-bold mb-2" for="email">Адрес эл. почты:<span class="text-danger"> *</span></label>
 							<input type="email" class="form-control" id="email" name="email" placeholder="example@gmail.com" required>
+						</div>
+
+						<div class="form-group">
+							<label class="text-muted font-weight-bold mb-2" for="comment">Примечание:</label>
+							<textarea rows="3" class="form-control" id="comment" name="comment" placeholder="До 150 символов" maxlength="150"></textarea>
 						</div>
 
 						<div class="d-flex justify-content-center">

@@ -593,9 +593,9 @@ export function changeForm(orderData, formType) {
 
 	// ТЕНДЕРЫ НА ПОНИЖЕНИЕ
 	// возможность создать тендер на понижение
-	// if (isInternalMovement || way === 'РБ' || way === 'Импорт' || way === 'Экспорт') {
-	// 	showFormField('forReduction', 'on')
-	// }
+	if (isInternalMovement || way === 'РБ' || way === 'Импорт' || way === 'Экспорт') {
+		showFormField('forReduction', 'on')
+	}
 
 	showIncotermsInput(typeTruck)
 	changeTemperatureInputRequired(typeTruck)
@@ -626,8 +626,8 @@ export function changeFormToDefault() {
 	transformToDefaultComment()
 
 	// ТЕНДЕРЫ НА ПОНИЖЕНИЕ
-	// hideFormField('startPriceForReduction')
-	// hideFormField('currencyForReduction')
+	hideFormField('startPriceForReduction')
+	hideFormField('currencyForReduction')
 }
 
 // установка слушателей для полей точек в формах заявок и маршрута

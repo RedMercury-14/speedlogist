@@ -520,7 +520,6 @@ public class ReaderSchedulePlan {
 		 }
 		Date dateNow = Date.valueOf(LocalDate.now());
 		Date dateOld2Week = Date.valueOf(LocalDate.now().minusDays(14));
-//		List <Order> orders = orderService.getOrderByPeriodDeliveryAndCodeContract(dateNow, dateOld2Week, numContract);
 		List <Order> orders = orderService.getOrderByPeriodDeliveryAndCodeContractNotJOIN(dateNow, dateOld2Week, numContract); // заменил метод, на метод без join.
 		
 		
@@ -530,9 +529,6 @@ public class ReaderSchedulePlan {
 		
 		//берем по первой строке заказа и делаем запрос в бд потребности с выгрузкой пяти заказов с совпадениями		
 		Set<OrderLine> lines = order.getOrderLines(); // каждая первая строка в заказе
-//		for (Order orderI : orders) {  // закоментил эту часть
-//			lines.add(orderI.getOrderLines().stream().findFirst().get());
-//		}
 		
 		Date dateNowOrderProducts = Date.valueOf(order.getTimeDelivery().toLocalDateTime().toLocalDate());
 		Date dateOld3WeekOrderProducts = Date.valueOf(order.getTimeDelivery().toLocalDateTime().toLocalDate().minusDays(30));
@@ -549,6 +545,60 @@ public class ReaderSchedulePlan {
 		
 		return new PlanResponce(200, "Информация о датах заказа", result, null);		
 	}
+    
+    /**
+     * Новый метод предоставления дат заказов, на фронт. Берет даты согласно графику поставок.
+     * @param order
+     * @return
+     */
+    @TimedExecution
+	public PlanResponce getPlanResponceShedulesOnly(Order order) {
+		String numContract = order.getMarketContractType();
+		if(numContract == null) {
+			 System.err.println("ReaderSchedulePlan.process: numContract = null");
+			 return new PlanResponce(0, "Действие заблокировано!\nНе найден номер контракта в заказе");
+		 }
+		Date dateNow = Date.valueOf(LocalDate.now());
+		Date dateOld2Week = Date.valueOf(LocalDate.now().minusDays(29));
+		Schedule schedule = scheduleService.getScheduleByNumContract(Long.parseLong(order.getMarketContractType()));
+		
+		List<Date> result = getDatesWithZ(schedule, dateOld2Week, dateNow);
+		result.sort((o1, o2) -> o2.compareTo(o1));// сортируемся от самой ранней даты
+		
+		result.forEach(r-> System.err.println(r));
+		
+		return new PlanResponce(200, "Информация о датах заказа", result, null);		
+	}
+    
+    /**
+     * Метод, который выдаёт даты (именно числа) заказов, согласно графику контрактов
+     * <br> в заданном диапазоне
+     * @param days
+     * @param startDate
+     * @param endDate
+     * @return
+     */
+    public List<Date> getDatesWithZ(Schedule schedule, Date startDate, Date endDate) {
+        // Выбираем дни недели, где есть "з"
+    	Map<String, String> days = schedule.getDaysMap();
+        Set<DayOfWeek> targetDays = days.entrySet().stream()
+            .filter(e -> e.getValue().contains("з"))
+            .map(e -> DayOfWeek.valueOf(e.getKey()))
+            .collect(Collectors.toSet());
+
+        
+        List<Date> result = new ArrayList<>();
+        LocalDate start = startDate.toLocalDate();
+        LocalDate end = endDate.toLocalDate();
+
+        // Проходим по диапазону дат
+        for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
+            if (targetDays.contains(date.getDayOfWeek())) {
+                result.add(Date.valueOf(date));
+            }
+        }
+        return result;
+    }
 	
 	
 	private static final int targetDayForBalance = 20;

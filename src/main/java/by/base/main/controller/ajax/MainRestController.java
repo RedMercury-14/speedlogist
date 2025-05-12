@@ -331,6 +331,9 @@ public class MainRestController {
 	@Autowired
 	private CarrierTenderWebSocket carrierTenderWebSocket;
 	
+	@Autowired
+	private GoodAccommodationService goodAccommodationService;
+	
 	
 	private static String classLog;
 	public static String marketJWT;
@@ -6789,12 +6792,33 @@ public class MainRestController {
 		if(!checkDeepImport(order, request)) {
 			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {
 				PlanResponce planResponce;
+				
 				if(getTrueStock(order).equals("1200")) {
 					planResponce = readerSchedulePlan.getPlanResponceShedulesOnly(order);
 				}else {
 					planResponce = readerSchedulePlan.getPlanResponce(order);
 				}
 				
+				/*
+				 * тут происходит проверка по разрешению на склады
+				 */
+				List<Long> codeProductList = new ArrayList<Long>(order.getOrderLinesMap().keySet());
+				Map<Long,GoodAccommodation> mapOfPermissionOnStock = goodAccommodationService.getActualGoodAccommodationByCodeProductList(codeProductList);
+				StringBuilder stopMessage = new StringBuilder();
+				
+				for (Long long1 : codeProductList) {
+					if(mapOfPermissionOnStock.containsKey(long1)) {
+						if(!mapOfPermissionOnStock.get(long1).getStocks().contains(";"+getTrueStock(order)+";")) {
+							GoodAccommodation goodAccommodation = mapOfPermissionOnStock.get(long1);
+							String text = "Товар " + goodAccommodation.getProductCode() + " ("+ goodAccommodation.getGoodName() +") запрещен к доставке на " + getTrueStock(order)+" склад!";
+							stopMessage.append(text+"\n"); // остановился тут
+							//разрешения нет, записываем в запрет
+						}
+					}else {
+						//создаём строку
+						//записываем в данные для создания письма
+					}
+				}
 				
 				if(planResponce.getStatus() == 0) {
 					response.put("status", "100");

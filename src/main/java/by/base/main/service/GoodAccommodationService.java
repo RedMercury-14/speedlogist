@@ -29,5 +29,5 @@ public interface GoodAccommodationService {
      */
     Map<Long,GoodAccommodation> getActualGoodAccommodationByCodeProductList(List<Long> productCode);
     
-    
+    List<GoodAccommodation> getAll();
 }

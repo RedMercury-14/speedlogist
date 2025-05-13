@@ -355,6 +355,11 @@ public class MainController {
 		return "main";		
 	}
 	
+	@GetMapping("/main/procurement/create-accommodation")
+	public String getGoodAccommodations(Model model, HttpServletRequest request) {
+	    return "goodAccommodations";
+	}
+	
 	@GetMapping("/main/carrier-application-form")
 	public String getCarrierApplicationForm(Model model, HttpServletRequest request) {
 	    return "carrierApplicationForm";

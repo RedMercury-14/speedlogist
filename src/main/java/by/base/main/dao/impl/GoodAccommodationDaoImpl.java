@@ -84,4 +84,14 @@ public class GoodAccommodationDaoImpl implements GoodAccommodationDao {
             return result;
         }
 	}
+
+	private static final String queryGetList = "from GoodAccommodation order by idGoodAccommodation";
+	@Override
+	public List<GoodAccommodation> getAll() {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<GoodAccommodation> theRole = currentSession.createQuery(queryGetList, GoodAccommodation.class);
+		List <GoodAccommodation> roles = theRole.getResultList();
+		return roles;
+
+	}
 }

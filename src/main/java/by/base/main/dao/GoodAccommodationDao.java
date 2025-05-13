@@ -27,4 +27,6 @@ public interface GoodAccommodationDao {
      * @return
      */
     Map<Long,GoodAccommodation> getActualGoodAccommodationByCodeProductList(List<Long> productCode);
+    
+    List<GoodAccommodation> getAll();
 }

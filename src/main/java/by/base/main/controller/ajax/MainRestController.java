@@ -383,6 +383,77 @@ public class MainRestController {
 	@Autowired
     private ServletContext servletContext;
 	
+	/**
+	 * Редактирование правил код товара - склад
+	 * @param request
+	 * @param str
+	 * @return
+	 * @throws ParseException
+	 * @throws IOException
+	 */
+	@PostMapping("/procurement/product-control/edit")
+    @TimedExecution
+    public Map<String, Object> postGoodAccommodationEdit(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+       Map<String, Object> response = new HashMap<>();
+       JSONParser parser = new JSONParser();
+       JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+//       User user = getThisUser();
+       
+       Long id = Long.parseLong(jsonMainObject.get("idGoodAccommodation").toString());       
+       GoodAccommodation goodAccommodation = goodAccommodationService.getGoodAccommodationById(id);
+       if(goodAccommodation == null) {
+    	   response.put("status", "100");
+    	   response.put("message", "Директива не найдена");
+           return response;
+       }
+       goodAccommodation.setBarcode(Long.parseLong(jsonMainObject.get("barcode").toString()));
+       goodAccommodation.setGoodName(jsonMainObject.get("goodName").toString());
+       goodAccommodation.setProductCode(Long.parseLong(jsonMainObject.get("productCode").toString()));
+       goodAccommodation.setProductGroup(jsonMainObject.get("productGroup").toString());
+       goodAccommodation.setStatus(Integer.parseInt("status"));
+       goodAccommodation.setStocks(jsonMainObject.get("stocks").toString());
+       goodAccommodationService.save(goodAccommodation);       
+       response.put("status", "200");
+       response.put("object", goodAccommodation);
+       return response;
+    }
+	
+	/**
+	 * Метод отдаёт все GoodAccommodation на фронт
+	 * @param request
+	 * @return
+	 * @throws ParseException
+	 * @throws IOException
+	 */
+	@GetMapping("/procurement/product-control/getAll")
+    public Map<String, Object> getProductControlAll(HttpServletRequest request) throws ParseException, IOException {
+       Map<String, Object> response = new HashMap<>();
+       response.put("objects", goodAccommodationService.getAll());
+       response.put("status", "200");
+       return response;
+    }
+	
+	/**
+	 * Метод отвечает за загрузку данных товар-склад из екселя
+	 * @param model
+	 * @param request
+	 * @param session
+	 * @param excel
+	 * @return
+	 * @throws IOException
+	 */
+	@RequestMapping(value = "/procurement/product-control/load", method = RequestMethod.POST, consumes = {MediaType.MULTIPART_FORM_DATA_VALUE })
+	public Map<String, String> postProductControlLoad(Model model, HttpServletRequest request, HttpSession session,
+			@RequestParam(value = "excel", required = false) MultipartFile excel) throws IOException {
+		Map<String, String> response = new HashMap<String, String>();	
+//		File file1 = poiExcel.getFileByMultipart(excel);
+		poiExcel.importGoodAccommodation(excel.getInputStream());
+		response.put("status", "200");
+		response.put("message", "Готово");
+		return response;
+	}
+	
+	
     /**
      * <br>getThisUser для фронта</br>.
      * @author Ira
@@ -6765,7 +6836,7 @@ public class MainRestController {
 		order.setDateOrderOrl(jsonMainObject.get("dateOrderOrl") == null ? null : Date.valueOf(jsonMainObject.get("dateOrderOrl").toString()));
 
 		//главные проверки		
-		/*
+		/*<b></b>
 		 * тут происходит проверка по разрешению на склады для каждого кода товара
 		 */
 		List<Long> codeProductList = new ArrayList<Long>(order.getOrderLinesMap().keySet());
@@ -6783,13 +6854,19 @@ public class MainRestController {
 				}else if(!mapOfPermissionOnStock.get(long1).getStocks().contains(";"+getTrueStock(order)+";")) {
 					GoodAccommodation goodAccommodation = mapOfPermissionOnStock.get(long1);
 					String text = "Товар " + goodAccommodation.getProductCode() + " ("+ goodAccommodation.getGoodName() +") запрещен к доставке на " + getTrueStock(order)+" склад!";
+					if(stopMessage.isEmpty()) {
+						stopMessage.append("<b>Действие заблокировано!</b><br>");
+					}
 					stopMessage.append(text+"<br>"); //разрешения нет, записываем в запрет							
 				}				
-			}else {
-				String goodName = order.getOrderLinesMapFull().get(long1).getGoodsName();
+			}else {				
+				OrderLine orderLine = order.getOrderLinesMapFull().get(long1);
+				String goodName = orderLine.getGoodsName();
 				String text = "Товар " + goodName + " ("+ long1 +") отсутствует в системе разрешений по складам. Создана заявка на добавление. Ожидайте подтверждения специалистами отдела ОСиУЗ.";
 				allertMessage.append(text+"<br>");
 				GoodAccommodation newGoodAccommodation = new GoodAccommodation(long1, getTrueStock(order)+";", 10, user.getSurname()+" " + user.getName(), user.geteMail(), Date.valueOf(LocalDate.now()), goodName);
+				newGoodAccommodation.setBarcode(Long.parseLong(orderLine.getBarcode()));
+				newGoodAccommodation.setProductGroup(orderLine.getGoodsGroupName());
 				goodAccommodationService.save(newGoodAccommodation);//создаём строку
 				listOfCodeProduct.append(long1.toString()+" - "+goodName+"\n");
 				//записываем в данные для создания письма
@@ -6895,43 +6972,13 @@ public class MainRestController {
 		return response;
 	}
 	
-	@RequestMapping(value = "/order-support/control/loadSchedules", method = RequestMethod.POST, consumes = {
-			MediaType.MULTIPART_FORM_DATA_VALUE })
+	@RequestMapping(value = "/order-support/control/loadSchedules", method = RequestMethod.POST, consumes = {MediaType.MULTIPART_FORM_DATA_VALUE })
 	public Map<String, String> postLoadSchedulesHasTime(Model model, HttpServletRequest request, HttpSession session,
-			@RequestParam(value = "excel", required = false) MultipartFile excel)
-			throws InvalidFormatException, IOException, ServiceException {
+			@RequestParam(value = "excel", required = false) MultipartFile excel) throws InvalidFormatException, IOException, ServiceException {
 		Map<String, String> response = new HashMap<String, String>();	
 
-		float quality = 0.5f; // Уровень качества
-
-		File file1 = poiExcel.getFileByMultipartTarget(excel, request, "666.jpg");
-
-		// Чтение исходного изображения
-        BufferedImage image = ImageIO.read(file1);
-
-        // Получение ImageWriter для JPEG
-        ImageWriter writer = ImageIO.getImageWritersByFormatName("jpg").next();
-        ImageWriteParam param = writer.getDefaultWriteParam();
-
-        // Настройка параметров для сжатия
-        if (param.canWriteCompressed()) {
-            param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-            param.setCompressionQuality(quality); // Качество (0.0 - 1.0)
-        }
-        String appPath = request.getServletContext().getRealPath("");
-
-        // Запись сжатого изображения
-        try (FileOutputStream fos = new FileOutputStream(appPath + "resources/others/docs/333.jpg");
-             ImageOutputStream ios = ImageIO.createImageOutputStream(fos)) {
-            writer.setOutput(ios);
-            writer.write(null, new IIOImage(image, null, null), param);
-        }
-
-        writer.dispose();
-
-        System.out.println(appPath + "resources/others/docs/333.jpg");
-
-//		response.put("200", text);
+//		File file1 = poiExcel.getFileByMultipart(excel);
+		poiExcel.importGoodAccommodation(excel.getInputStream());		
 		return response;
 	}
 	

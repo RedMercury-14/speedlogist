@@ -53,4 +53,10 @@ public class GoodAccommodationServiceImpl implements GoodAccommodationService {
 		return goodAccommodationDao.getActualGoodAccommodationByCodeProductList(productCode);
 	}
 
+    @Transactional
+	@Override
+	public List<GoodAccommodation> getAll() {
+		return goodAccommodationDao.getAll();
+	}
+
 }

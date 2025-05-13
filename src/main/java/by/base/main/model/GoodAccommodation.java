@@ -35,6 +35,12 @@ public class GoodAccommodation {
     @Column(name = "good_name")
     private String goodName;
     
+    @Column(name = "product_group")
+    private String productGroup;
+    
+    @Column(name = "barcode")
+    private Long barcode;
+    
     public GoodAccommodation() {};
 
     public GoodAccommodation(Long productCode, String stocks, Integer status,
@@ -47,6 +53,22 @@ public class GoodAccommodation {
 		this.initiatorEmail = initiatorEmail;
 		this.dateCreate = dateCreate;
 		this.goodName = goodName;
+	}
+
+	public String getProductGroup() {
+		return productGroup;
+	}
+
+	public void setProductGroup(String productGroup) {
+		this.productGroup = productGroup;
+	}
+
+	public Long getBarcode() {
+		return barcode;
+	}
+
+	public void setBarcode(Long barcode) {
+		this.barcode = barcode;
 	}
 
 	public Long getIdGoodAccommodation() {

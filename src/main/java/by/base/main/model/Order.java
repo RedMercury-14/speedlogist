@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.persistence.CascadeType;
@@ -342,6 +343,24 @@ public class Order {
 				    	OrderLine::getGoodsId, 
 				    	OrderLine::getQuantityOrder,
 				    	Double::sum // Суммируем количество, если ключ уже существует
+				    ));
+			return responce;
+		}else {
+			return null;
+		}
+		
+	}
+	/**
+	 * Возвращает Map<код товара, OrderLine>
+	 * @return
+	 */
+	@JsonIgnore
+	public Map<Long, OrderLine> getOrderLinesMapFull() {
+		if(orderLines!=null) {
+			Map<Long, OrderLine> responce = orderLines.stream()
+				    .collect(Collectors.toMap(
+				    	OrderLine::getGoodsId, 
+				    	Function.identity()
 				    ));
 			return responce;
 		}else {

@@ -6755,31 +6755,6 @@ public class MainRestController {
 			response.put("info", "Ошибка доступа. Заказ не зафиксирован. Данный заказ уже поставлен другим пользователем");
 			return response;
 		}
-//		Schedule schedule = scheduleService.getScheduleByNumContract(Long.parseLong(order.getMarketContractType()));
-//		//временная фунция. Проверяет на то, стоит ли кратность машины.
-//		if(schedule.getMachineMultiplicity() == null && schedule.getMultipleOfTruck()) {
-//			response.put("status", "200");
-//			response.put("message", "По текущему графику поставок необходимо установить количетсво паллет перевозимых в одной машине (кратность машины)");
-//			response.put("info", "По текущему графику поставок необходимо установить количетсво паллет перевозимых в одной машине (кратность машины)");
-//			response.put("schedule", schedule);
-//			return response;
-//		}
-//		if(order.getStatus() == 6 && Integer.parseInt(jsonMainObject.get("status").toString()) == 8) {
-//			//означает что манагер заранее создал маршрут с 8 статусом а потом создал заявку на него
-//			response.put("status", "100");
-//			response.put("message", "Вы пытаетесь установить слот от поставщика как слот на самовывоз.");
-//			response.put("info", "Вы пытаетесь установить слот от поставщика как слот на самовывоз.");
-//			return response;
-//		}
-
-		//главные проверки		
-		if(order.getDateOrderOrl() != null) {
-			response.put("status", "200");
-			response.put("info", "Дата заказа ОРЛ уже установлена");
-			java.util.Date t2 = new java.util.Date();
-			System.out.println(t2.getTime()-t1.getTime() + " ms - preload" );
-			return response;
-		}
 		
 		Timestamp timestamp = Timestamp.valueOf(jsonMainObject.get("timeDelivery").toString());
 		Integer idRamp = Integer.parseInt(jsonMainObject.get("idRamp").toString());
@@ -6788,6 +6763,67 @@ public class MainRestController {
 		order.setLoginManager(user.getLogin());
 //		order.setStatus(jsonMainObject.get("status") == null ? 7 : Integer.parseInt(jsonMainObject.get("status").toString()));
 		order.setDateOrderOrl(jsonMainObject.get("dateOrderOrl") == null ? null : Date.valueOf(jsonMainObject.get("dateOrderOrl").toString()));
+
+		//главные проверки		
+		/*
+		 * тут происходит проверка по разрешению на склады для каждого кода товара
+		 */
+		List<Long> codeProductList = new ArrayList<Long>(order.getOrderLinesMap().keySet());
+		Map<Long,GoodAccommodation> mapOfPermissionOnStock = goodAccommodationService.getActualGoodAccommodationByCodeProductList(codeProductList);
+		StringBuilder stopMessage = new StringBuilder();
+		StringBuilder allertMessage = new StringBuilder();
+		StringBuilder listOfCodeProduct = new StringBuilder();
+		
+		for (Long long1 : codeProductList) {
+			if(mapOfPermissionOnStock.containsKey(long1)) {
+				if(mapOfPermissionOnStock.get(long1).getStatus() == 10) {//если ожидает пождтверждения
+					GoodAccommodation goodAccommodation = mapOfPermissionOnStock.get(long1);
+					String text = "Товар " + goodAccommodation.getGoodName() + " ("+ long1 +") Ожидает подтверждения специалистами отдела ОСиУЗ.";
+					allertMessage.append(text+"<br>");
+				}else if(!mapOfPermissionOnStock.get(long1).getStocks().contains(";"+getTrueStock(order)+";")) {
+					GoodAccommodation goodAccommodation = mapOfPermissionOnStock.get(long1);
+					String text = "Товар " + goodAccommodation.getProductCode() + " ("+ goodAccommodation.getGoodName() +") запрещен к доставке на " + getTrueStock(order)+" склад!";
+					stopMessage.append(text+"<br>"); //разрешения нет, записываем в запрет							
+				}				
+			}else {
+				String goodName = order.getOrderLinesMapFull().get(long1).getGoodsName();
+				String text = "Товар " + goodName + " ("+ long1 +") отсутствует в системе разрешений по складам. Создана заявка на добавление. Ожидайте подтверждения специалистами отдела ОСиУЗ.";
+				allertMessage.append(text+"<br>");
+				GoodAccommodation newGoodAccommodation = new GoodAccommodation(long1, getTrueStock(order)+";", 10, user.getSurname()+" " + user.getName(), user.geteMail(), Date.valueOf(LocalDate.now()), goodName);
+				goodAccommodationService.save(newGoodAccommodation);//создаём строку
+				listOfCodeProduct.append(long1.toString()+" - "+goodName+"\n");
+				//записываем в данные для создания письма
+			}
+		}	
+		
+		if(!listOfCodeProduct.isEmpty()) {//тут отправляем сообщение на мыло
+			StringBuilder emailText = new StringBuilder();
+			emailText.append("Пользователь " + user.getSurname()+" " + user.getName() + " пытается поставить на склад поставку со сл. товарами, на которые нет разрешения: \n");
+			emailText.append(listOfCodeProduct.toString());
+			List<String> emails = propertiesUtils.getValuesByPartialKey(request.getServletContext(), "email.accommodation");
+			mailService.sendAsyncEmailToUsers(request, "Поставка товара на склад: отсутствует правило", emailText.toString(), emails);
+		}
+		
+		if(!stopMessage.isEmpty() || !allertMessage.isEmpty()) {
+			response.put("status", "105");
+			response.put("message", stopMessage.toString() + "\n" + allertMessage.toString());
+			response.put("info", stopMessage.toString() + "\n" + allertMessage.toString());
+			return response;
+		}
+		/*
+		 * 15мс на сохранение одного кода, 2 мс на вывод одного кода
+		 * END тут происходит проверка по разрешению на склады
+		 */
+		
+		
+		if(order.getDateOrderOrl() != null) {
+			response.put("status", "200");
+			response.put("info", "Дата заказа ОРЛ уже установлена");
+			java.util.Date t2 = new java.util.Date();
+			System.out.println(t2.getTime()-t1.getTime() + " ms - preload" );
+			return response;
+		}
+		
 		
 		if(!checkDeepImport(order, request)) {
 			if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) {
@@ -6797,27 +6833,6 @@ public class MainRestController {
 					planResponce = readerSchedulePlan.getPlanResponceShedulesOnly(order);
 				}else {
 					planResponce = readerSchedulePlan.getPlanResponce(order);
-				}
-				
-				/*
-				 * тут происходит проверка по разрешению на склады
-				 */
-				List<Long> codeProductList = new ArrayList<Long>(order.getOrderLinesMap().keySet());
-				Map<Long,GoodAccommodation> mapOfPermissionOnStock = goodAccommodationService.getActualGoodAccommodationByCodeProductList(codeProductList);
-				StringBuilder stopMessage = new StringBuilder();
-				
-				for (Long long1 : codeProductList) {
-					if(mapOfPermissionOnStock.containsKey(long1)) {
-						if(!mapOfPermissionOnStock.get(long1).getStocks().contains(";"+getTrueStock(order)+";")) {
-							GoodAccommodation goodAccommodation = mapOfPermissionOnStock.get(long1);
-							String text = "Товар " + goodAccommodation.getProductCode() + " ("+ goodAccommodation.getGoodName() +") запрещен к доставке на " + getTrueStock(order)+" склад!";
-							stopMessage.append(text+"\n"); // остановился тут
-							//разрешения нет, записываем в запрет
-						}
-					}else {
-						//создаём строку
-						//записываем в данные для создания письма
-					}
 				}
 				
 				if(planResponce.getStatus() == 0) {

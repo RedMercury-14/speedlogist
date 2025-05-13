@@ -35,7 +35,7 @@ public class GoodAccommodation {
     @Column(name = "good_name")
     private String goodName;
     
-    
+    public GoodAccommodation() {};
 
     public GoodAccommodation(Long productCode, String stocks, Integer status,
 			String initiatorName, String initiatorEmail, Date dateCreate, String goodName) {

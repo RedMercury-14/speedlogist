@@ -132,7 +132,17 @@
     <aop:aspectj-autoproxy />
 
 <!--     Регистрация аспекта -->
-    <bean id="performanceAspect" class="by.base.main.aspect.PerformanceAspect" />   
+    <bean id="performanceAspect" class="by.base.main.aspect.PerformanceAspect" /> 
+    
+    <!--  запускаем асинхронные аннотации -->
+    <task:annotation-driven executor="asyncExecutor" />
+
+	<bean id="asyncExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+	    <property name="corePoolSize" value="5" />
+	    <property name="maxPoolSize" value="10" />
+	    <property name="queueCapacity" value="100" />
+	    <property name="threadNamePrefix" value="AsyncExecutor-" />
+	</bean>  
     
     <mvc:resources location="/resources/" mapping="/resources/**"/>
 </beans>

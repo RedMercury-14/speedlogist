@@ -364,6 +364,9 @@ public class MainRestController {
 	@Value("${market.passwordMarket}")
 	public String passwordMarketProp;
 	
+	@Value("${stockBalance.run}")
+	public Boolean stockBalanceRun;
+	
 	@PostConstruct
     public void init() {
 		marketUrl = marketUrlProp;
@@ -2259,7 +2262,7 @@ public class MainRestController {
 
 		Order order = orderService.getOrderById(Integer.parseInt(idOrder));
 		order.getOrderLines().forEach(o-> System.out.println(o));
-		List<Product> products = readerSchedulePlan.checkBalanceBetweenStock(order);
+		List<Product> products = readerSchedulePlan.checkBalanceBetweenStock(order, stockBalanceRun);
 
 		responseMap.put("products", products);
 		return responseMap;
@@ -2527,7 +2530,7 @@ public class MainRestController {
 		int summpall = 0;
 		for (Order order : orders) {
 			Map<String, Object> responseOrder = new HashMap<>();
-			List<Product> products = readerSchedulePlan.checkBalanceBetweenStock(order);
+			List<Product> products = readerSchedulePlan.checkBalanceBetweenStock(order, stockBalanceRun);
 			int i=1;
 			order.setSlotInfo(null);
 			
@@ -6839,54 +6842,57 @@ public class MainRestController {
 		/*<b></b>
 		 * тут происходит проверка по разрешению на склады для каждого кода товара
 		 */
-		List<Long> codeProductList = new ArrayList<Long>(order.getOrderLinesMap().keySet());
-		Map<Long,GoodAccommodation> mapOfPermissionOnStock = goodAccommodationService.getActualGoodAccommodationByCodeProductList(codeProductList);
-		StringBuilder stopMessage = new StringBuilder();
-		StringBuilder allertMessage = new StringBuilder();
-		StringBuilder listOfCodeProduct = new StringBuilder();
-		
-		for (Long long1 : codeProductList) {
-			if(mapOfPermissionOnStock.containsKey(long1)) {
-				if(mapOfPermissionOnStock.get(long1).getStatus() == 10) {//если ожидает пождтверждения
-					GoodAccommodation goodAccommodation = mapOfPermissionOnStock.get(long1);
-					String text = "Товар " + goodAccommodation.getGoodName() + " ("+ long1 +") Ожидает подтверждения специалистами отдела ОСиУЗ.";
+		if(!stockBalanceRun) {
+			List<Long> codeProductList = new ArrayList<Long>(order.getOrderLinesMap().keySet());
+			Map<Long,GoodAccommodation> mapOfPermissionOnStock = goodAccommodationService.getActualGoodAccommodationByCodeProductList(codeProductList);
+			StringBuilder stopMessage = new StringBuilder();
+			StringBuilder allertMessage = new StringBuilder();
+			StringBuilder listOfCodeProduct = new StringBuilder();
+			
+			for (Long long1 : codeProductList) {
+				if(mapOfPermissionOnStock.containsKey(long1)) {
+					if(mapOfPermissionOnStock.get(long1).getStatus() == 10) {//если ожидает пождтверждения
+						GoodAccommodation goodAccommodation = mapOfPermissionOnStock.get(long1);
+						String text = "Товар " + goodAccommodation.getGoodName() + " ("+ long1 +") Ожидает подтверждения специалистами отдела ОСиУЗ.";
+						allertMessage.append(text+"<br>");
+					}else if(!mapOfPermissionOnStock.get(long1).getStocks().contains(";"+getTrueStock(order)+";")) {
+						GoodAccommodation goodAccommodation = mapOfPermissionOnStock.get(long1);
+						String text = "Товар " + goodAccommodation.getProductCode() + " ("+ goodAccommodation.getGoodName() +") запрещен к доставке на " + getTrueStock(order)+" склад!";
+						if(stopMessage.isEmpty()) {
+							stopMessage.append("<b>Действие заблокировано!</b><br>");
+						}
+						stopMessage.append(text+"<br>"); //разрешения нет, записываем в запрет							
+					}				
+				}else {				
+					OrderLine orderLine = order.getOrderLinesMapFull().get(long1);
+					String goodName = orderLine.getGoodsName();
+					String text = "Товар " + goodName + " ("+ long1 +") отсутствует в системе разрешений по складам. Создана заявка на добавление. Ожидайте подтверждения специалистами отдела ОСиУЗ.";
 					allertMessage.append(text+"<br>");
-				}else if(!mapOfPermissionOnStock.get(long1).getStocks().contains(";"+getTrueStock(order)+";")) {
-					GoodAccommodation goodAccommodation = mapOfPermissionOnStock.get(long1);
-					String text = "Товар " + goodAccommodation.getProductCode() + " ("+ goodAccommodation.getGoodName() +") запрещен к доставке на " + getTrueStock(order)+" склад!";
-					if(stopMessage.isEmpty()) {
-						stopMessage.append("<b>Действие заблокировано!</b><br>");
-					}
-					stopMessage.append(text+"<br>"); //разрешения нет, записываем в запрет							
-				}				
-			}else {				
-				OrderLine orderLine = order.getOrderLinesMapFull().get(long1);
-				String goodName = orderLine.getGoodsName();
-				String text = "Товар " + goodName + " ("+ long1 +") отсутствует в системе разрешений по складам. Создана заявка на добавление. Ожидайте подтверждения специалистами отдела ОСиУЗ.";
-				allertMessage.append(text+"<br>");
-				GoodAccommodation newGoodAccommodation = new GoodAccommodation(long1, getTrueStock(order)+";", 10, user.getSurname()+" " + user.getName(), user.geteMail(), Date.valueOf(LocalDate.now()), goodName);
-				newGoodAccommodation.setBarcode(Long.parseLong(orderLine.getBarcode()));
-				newGoodAccommodation.setProductGroup(orderLine.getGoodsGroupName());
-				goodAccommodationService.save(newGoodAccommodation);//создаём строку
-				listOfCodeProduct.append(long1.toString()+" - "+goodName+"\n");
-				//записываем в данные для создания письма
+					GoodAccommodation newGoodAccommodation = new GoodAccommodation(long1, getTrueStock(order)+";", 10, user.getSurname()+" " + user.getName(), user.geteMail(), Date.valueOf(LocalDate.now()), goodName);
+					newGoodAccommodation.setBarcode(Long.parseLong(orderLine.getBarcode()));
+					newGoodAccommodation.setProductGroup(orderLine.getGoodsGroupName());
+					goodAccommodationService.save(newGoodAccommodation);//создаём строку
+					listOfCodeProduct.append(long1.toString()+" - "+goodName+"\n");
+					//записываем в данные для создания письма
+				}
+			}	
+			
+			if(!listOfCodeProduct.isEmpty()) {//тут отправляем сообщение на мыло
+				StringBuilder emailText = new StringBuilder();
+				emailText.append("Пользователь " + user.getSurname()+" " + user.getName() + " пытается поставить на склад поставку со сл. товарами, на которые нет разрешения: \n");
+				emailText.append(listOfCodeProduct.toString());
+				List<String> emails = propertiesUtils.getValuesByPartialKey(request.getServletContext(), "email.accommodation");
+				mailService.sendAsyncEmailToUsers(request, "Поставка товара на склад: отсутствует правило", emailText.toString(), emails);
 			}
-		}	
-		
-		if(!listOfCodeProduct.isEmpty()) {//тут отправляем сообщение на мыло
-			StringBuilder emailText = new StringBuilder();
-			emailText.append("Пользователь " + user.getSurname()+" " + user.getName() + " пытается поставить на склад поставку со сл. товарами, на которые нет разрешения: \n");
-			emailText.append(listOfCodeProduct.toString());
-			List<String> emails = propertiesUtils.getValuesByPartialKey(request.getServletContext(), "email.accommodation");
-			mailService.sendAsyncEmailToUsers(request, "Поставка товара на склад: отсутствует правило", emailText.toString(), emails);
+			
+			if(!stopMessage.isEmpty() || !allertMessage.isEmpty()) {
+				response.put("status", "105");
+				response.put("message", stopMessage.toString() + "\n" + allertMessage.toString());
+				response.put("info", stopMessage.toString() + "\n" + allertMessage.toString());
+				return response;
+			}
 		}
 		
-		if(!stopMessage.isEmpty() || !allertMessage.isEmpty()) {
-			response.put("status", "105");
-			response.put("message", stopMessage.toString() + "\n" + allertMessage.toString());
-			response.put("info", stopMessage.toString() + "\n" + allertMessage.toString());
-			return response;
-		}
 		/*
 		 * 15мс на сохранение одного кода, 2 мс на вывод одного кода
 		 * END тут происходит проверка по разрешению на склады

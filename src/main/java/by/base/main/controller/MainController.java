@@ -1738,7 +1738,6 @@ public class MainController {
 	}
 	
 	//получение страницы с маршрутами перевозчика!
-	@TimedExecution
 	@RequestMapping("/main/carrier/transportation")
 	public String transportationGet(Model model, HttpServletRequest request, HttpSession session) {	
 		User user = getThisUser();

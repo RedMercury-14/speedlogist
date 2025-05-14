@@ -253,6 +253,7 @@ public class RouteDAOImpl implements RouteDAO {
 			+ "LEFT JOIN FETCH r.roteHasShop rhs "
 			+ "LEFT JOIN FETCH r.driver d "
 			+ "LEFT JOIN FETCH r.carrierBids c "
+			+ "LEFT JOIN FETCH r.user u "
 			+ "where r.user=:user ";
 //			+ "ORDER BY r.idRoute DESC";
 

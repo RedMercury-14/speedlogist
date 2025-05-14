@@ -63,8 +63,8 @@ public class CarrierTenderWebSocket extends TextWebSocketHandler {
         }
 //        userSessions.values().removeIf(s -> s.getId().equals(session.getId()));
 //        sessions.remove(session);
-        System.out.println("All sessions: " + sessions.size());
-        System.out.println("User sessions: " + userSessions.size());
+//        System.out.println("All sessions: " + sessions.size());
+//        System.out.println("User sessions: " + userSessions.size());
     }
 
     /**

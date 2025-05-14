@@ -389,11 +389,13 @@ public class MainRestController {
 	 //получение страницы с маршрутами перевозчика!
     @GetMapping("/carrier/get-actual-carrier-routes")
     public List<Route> transportationGet(HttpServletRequest request) {
-        List<Route> routes = routeService.getRouteListByUser();
-        List<Route> resultRoutes = new ArrayList<Route>();
-        routes.stream().filter(r-> Integer.parseInt(r.getStatusRoute())<=4).filter(r-> !resultRoutes.contains(r)).forEach(resultRoutes::add);
+		List<Route> routes = routeService.getRouteListByUser();
+		List<Route> resultRoutes = new ArrayList<Route>();
+		routes.stream().filter(r-> Integer.parseInt(r.getStatusRoute())<=4).filter(r-> !resultRoutes.contains(r)).forEach(r->resultRoutes.add(r));
         return resultRoutes;
     }
+    
+    
     
     
     /**

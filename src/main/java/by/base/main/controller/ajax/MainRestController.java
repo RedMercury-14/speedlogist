@@ -409,7 +409,7 @@ public class MainRestController {
     	   response.put("message", "Директива не найдена");
            return response;
        }
-       goodAccommodation.setBarcode(Long.parseLong(jsonMainObject.get("barcode").toString()));
+       goodAccommodation.setBarcode(!jsonMainObject.get("barcode").toString().isEmpty() && jsonMainObject.get("barcode").toString().equals("null") ? Long.parseLong(jsonMainObject.get("barcode").toString()) : null);
        goodAccommodation.setGoodName(jsonMainObject.get("goodName").toString());
        goodAccommodation.setProductCode(Long.parseLong(jsonMainObject.get("productCode").toString()));
        goodAccommodation.setProductGroup(jsonMainObject.get("productGroup").toString());

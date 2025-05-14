@@ -190,8 +190,8 @@ public class POIExcel {
 
 	                GoodAccommodation good = new GoodAccommodation();
 	                good.setProductCode(getLongValue(row.getCell(0)));
-	                good.setGoodName(getStringValue(row.getCell(1)));
-	                good.setBarcode(getLongValue(row.getCell(2)));
+	                good.setGoodName(getStringValue(row.getCell(2)));
+	                good.setBarcode(getStringValue(row.getCell(1)) != null && !getStringValue(row.getCell(1)).isEmpty() ? Long.parseLong(getStringValue(row.getCell(1))): null);
 	                good.setProductGroup(getStringValue(row.getCell(3)));
 	                good.setStocks(parseStocks(row));
 	                good.setStatus(20); // например, статус по умолчанию

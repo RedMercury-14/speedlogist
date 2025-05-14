@@ -2,6 +2,7 @@ package by.base.main.dao.impl;
 
 import by.base.main.dao.CarrierBidDao;
 import by.base.main.model.CarrierBid;
+import by.base.main.model.Route;
 import by.base.main.model.User;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -95,5 +96,14 @@ public class CarrierBidDaoImpl implements CarrierBidDao {
         } else {
             return theObject.getResultList().get(0);
         }
+    }
+
+    private static final String queryDeleteIrrelevantCarrierBidsForRoute = "delete from CarrierBid c where c.route =: route";
+    @Override
+    public void deleteIrrelevantBidsForRoute(Route route) {
+        Session currentSession = sessionFactory.getCurrentSession();
+        Query<?> theObject = currentSession.createQuery(queryDeleteIrrelevantCarrierBidsForRoute);
+        theObject.setParameter("route", route);
+        theObject.executeUpdate();
     }
 }

@@ -1,7 +1,7 @@
 import { AG_GRID_LOCALE_RU } from "../AG-Grid/ag-grid-locale-RU.js"
-import { dateComparator } from "../AG-Grid/ag-grid-utils.js"
-import { dateHelper, rowClassRules } from "../utils.js"
-import { convertToDDMMYYYY, convertToDayMonthTime, getEndTime } from "./dataUtils.js"
+import { dateComparator, dateValueFormatter } from "../AG-Grid/ag-grid-utils.js"
+import { rowClassRules } from "../utils.js"
+import { convertToDayMonthTime, getEndTime } from "./dataUtils.js"
 
 const columnDefs = [
 	{
@@ -12,8 +12,17 @@ const columnDefs = [
 		suppressMovable: true, suppressMenu: true,
 		resizable: false, sortable: false, filter: false,
 	},
-	{ headerName: "Дата доставки", field: "dateDeliveryToView", width: 80, comparator: dateComparator, },
-	{ headerName: "Дата начала выгрузки", field: "timeDeliveryStartDate", width: 80, comparator: dateComparator, cellClass: 'px-1 text-center font-weight-bold',},
+	{
+		headerName: "Дата доставки", field: "dateDelivery", width: 80,
+		valueFormatter: dateValueFormatter, comparator: dateComparator,
+		filterParams: { valueFormatter: dateValueFormatter, },
+	},
+	{
+		headerName: "Дата начала выгрузки", field: "timeDelivery", width: 80,
+		cellClass: 'px-1 text-center font-weight-bold',
+		valueFormatter: dateValueFormatter, comparator: dateComparator,
+		filterParams: { valueFormatter: dateValueFormatter, },
+	},
 	{ headerName: "Склад доставки (из Маркета)", field: "numStockDelivery", width: 120, },
 	{ headerName: "ID", field: "idOrder", width: 100, cellRenderer: idOrderRenderer},
 	{ headerName: "Номер из Маркета", field: "marketNumber", width: 100, },
@@ -106,7 +115,6 @@ function getMappingData(data) {
 }
 
 function mapCallback(order) {
-	const dateDeliveryToView = dateHelper.getFormatDate(order.dateDelivery)
 	const idRamp = order.idRamp ? `${order.idRamp}` : ''
 
 	let timeDeliveryInfo
@@ -118,16 +126,13 @@ function mapCallback(order) {
 	}
 
 	const loadAddress = getLoadAddress(order)
-	const timeDeliveryStartDate = order.timeDelivery ? convertToDDMMYYYY(order.timeDelivery) : ''
 	const isLogistEdited = order.slotInfo ? 'Да' : ''
 
 	return {
 		...order,
 		idRamp,
-		dateDeliveryToView,
 		timeDeliveryInfo,
 		loadAddress,
-		timeDeliveryStartDate,
 		isLogistEdited,
 	}
 }

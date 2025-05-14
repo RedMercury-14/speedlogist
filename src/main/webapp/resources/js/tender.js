@@ -3,8 +3,11 @@ import { AG_GRID_LOCALE_RU } from '../js/AG-Grid/ag-grid-locale-RU.js'
 import { cookieHelper, dateHelper, debounce, getData, isMobileDevice, SmartWebSocket } from './utils.js';
 import { dateComparator, gridFilterLocalState } from './AG-Grid/ag-grid-utils.js';
 import { getActiveTendersUrl, getInfoRouteMessageBaseUrl, getThisUserUrl } from './globalConstants/urls.js';
+import { createToast, playNewToastSound } from './Toast.js';
 
+const login = document.querySelector('#login')?.value
 let user
+let myMessages
 
 const LOCAL_STORAGE_KEY = 'tenders_page'
 
@@ -81,14 +84,6 @@ const columnDefsForPC = [
 		comparator: dateComparator,
 	},
 	{ headerName: "Направление", field: "way", cellClass: 'px-2 font-weight-bold text-center', minWidth: 63, },
-	// ТЕНДЕРЫ НА ПОНИЖЕНИЕ
-	// {
-	// 	headerName: "На понижение", field: "forReduction",
-	// 	cellClass: 'px-2 text-center',
-	// 	minWidth: 85, cellDataType: false,
-	// 	valueFormatter: (params) => params.value ? "Да" : "Нет",
-	// 	filterParams: { valueFormatter: (params) => params.value ? "Да" : "Нет", },
-	// },
 	{ headerName: "Дата загрузки", field: 'loadDateTimeToView', flex: 1, minWidth: 85, },
 	{ headerName: "Дата выгрузки", field: 'unloadDateTimeToView', flex: 1, minWidth: 85, },
 	{
@@ -117,14 +112,6 @@ const detailCellRendererParams = {
 		columnDefs: [
 			{ headerName: "Дата загрузки", field: 'loadDateTimeToView', flex: 2, minWidth: 85, },
 			{ headerName: "Дата выгрузки", field: 'unloadDateTimeToView', flex: 2, minWidth: 85, },
-			// ТЕНДЕРЫ НА ПОНИЖЕНИЕ
-			// {
-			// 	headerName: "На понижение", field: "forReduction",
-			// 	cellClass: 'px-2 text-center',
-			// 	minWidth: 85, cellDataType: false,
-			// 	valueFormatter: (params) => params.value ? "Да" : "Нет",
-			// 	filterParams: { valueFormatter: (params) => params.value ? "Да" : "Нет", },
-			// },
 			{
 				headerName: "Машина", field: 'carInfo',
 				flex: 2, minWidth: 160,
@@ -191,14 +178,12 @@ window.onload = async () => {
 
 	const gridDiv = document.querySelector('#myGrid')
 	const filterTextBox = document.querySelector('#filterTextBox')
-	// const tenders = await getData(getActiveTendersUrl)
-	// ТЕНДЕРЫ НА ПОНИЖЕНИЕ
 	const tendersData = await getData(getActiveTendersUrl)
 	const tenders = tendersData.routes
-	const myMessages = await getData(getInfoRouteMessageBaseUrl + 'from_me')
+	myMessages = await getData(getInfoRouteMessageBaseUrl + 'from_me')
 	user = await getData(getThisUserUrl)
 
-	await renderTable(gridDiv, gridOptions, tenders, myMessages, user)
+	await renderTable(gridDiv, gridOptions, tenders)
 
 	restoreFilterState()
 
@@ -209,10 +194,11 @@ window.onload = async () => {
 	goTGBotBtn.addEventListener('click', goTGBotBtnClickHandler)
 	resetTableFiltersBtn.addEventListener('click', resetFilterState)
 
-	const forReductionSocket = new SmartWebSocket(wsTenderMessagesUrl, {
+	// вэбсокет тендеров
+	new SmartWebSocket(`${wsTenderMessagesUrl}?user=${login}`, {
 		reconnectInterval: 5000,
 		maxReconnectAttempts: 5,
-		onMessage: forReductionSocketOnMessage,
+		onMessage: tenderSocketOnMessage,
 		onClose: () => alert('Соединение с сервером потеряно. Перезагрузите страницу')
 	})
 
@@ -224,12 +210,12 @@ window.onload = async () => {
 		if (msg.currency) {
 			// обновляем таблицу только на свои сообщения
 			const userUnp = user.numYNP
-			if (msg.ynp === userUnp) updateTable(gridOptions, tenders, myMessages, user)
+			if (msg.ynp === userUnp) updateTable(gridOptions, tenders)
 		}
 	}
 }
 
-async function renderTable(gridDiv, gridOptions, data, messages, user) {
+async function renderTable(gridDiv, gridOptions, data) {
 	new agGrid.Grid(gridDiv, gridOptions)
 
 	if (!data || !data.length) {
@@ -237,59 +223,62 @@ async function renderTable(gridDiv, gridOptions, data, messages, user) {
 		return
 	}
 
-	const mappingData = await getMappingData(data, messages, user)
+	const mappingData = await getMappingData(data)
 
 	gridOptions.api.setRowData(mappingData)
 	gridOptions.api.hideOverlay()
 }
-async function updateTable(gridOptions, data, messages, user) {
-	const mappingData = await getMappingData(data, messages, user)
+async function updateTable(gridOptions, data) {
+	const mappingData = await getMappingData(data)
 
 	gridOptions.api.setRowData(mappingData)
 	gridOptions.api.hideOverlay()
 	!data.length && gridOptions.api.showNoRowsOverlay()
 }
 
-async function getMappingData(data, messages, user) {
-	return await Promise.all(data.map( async (tender) => {
-		const idRoute = tender.idRoute
-		const loadDateToView = tender.dateLoadPreviously ? tender.dateLoadPreviously.split('-').reverse().join('.') : ''
-		const loadDateTimeToView = `${loadDateToView},  ${tender.timeLoadPreviously}`
-		const myMessage = messages.find(m => m.idRoute === idRoute.toString()) || null
+async function getMappingData(data) {
+	return await Promise.all(data.map(tenderMapCallback))
+}
+async function tenderMapCallback(tender) {
+	const idRoute = tender.idRoute
+	const loadDateToView = tender.dateLoadPreviously ? tender.dateLoadPreviously.split('-').reverse().join('.') : ''
+	const loadDateTimeToView = `${loadDateToView},  ${tender.timeLoadPreviously}`
+	const myMessage = myMessages.find(m => m.idRoute === idRoute.toString()) || null
 
-		const loadPoints = tender.roteHasShop
-			.filter(point => point.position === "Загрузка")
-			.map((point, i) => `${i + 1}) ${point.address}`)
-			.join(' ')
-		const unloadPoints = tender.roteHasShop
-			.filter(point => point.position === "Выгрузка")
-			.map((point, i) => `${i + 1}) ${point.address}`)
-			.join(' ')
+	const loadPoints = tender.roteHasShop
+		.filter(point => point.position === "Загрузка")
+		.map((point, i) => `${i + 1}) ${point.address}`)
+		.join(' ')
+	const unloadPoints = tender.roteHasShop
+		.filter(point => point.position === "Выгрузка")
+		.map((point, i) => `${i + 1}) ${point.address}`)
+		.join(' ')
 
-		const routeMessages = await getData(getInfoRouteMessageBaseUrl + idRoute)
+	const routeMessages = tender.forReduction
+		? await getData(getInfoRouteMessageBaseUrl + idRoute)
+		: null
 
-		const price = getPrice(routeMessages, user, tender)
-		const myOffer = getMyOffer(routeMessages, user, myMessage, tender)
-		const carInfo = getCarInfo(tender)
-		const cargoInfo = getCargoInfo(tender)
-		const unloadDateToView = getUnloadDateToView(tender)
-		const unloadDateTimeToView = getUnloadDateTimeToView(tender)
+	const price = getPrice(tender)
+	const myOffer = getMyOffer(routeMessages, user, myMessage, tender)
+	const carInfo = getCarInfo(tender)
+	const cargoInfo = getCargoInfo(tender)
+	const unloadDateToView = getUnloadDateToView(tender)
+	const unloadDateTimeToView = getUnloadDateTimeToView(tender)
 
-		return {
-			...tender,
-			loadDateToView,
-			loadDateTimeToView,
-			myMessage,
-			myOffer,
-			price,
-			loadPoints,
-			unloadPoints,
-			cargoInfo,
-			carInfo,
-			unloadDateToView,
-			unloadDateTimeToView,
-		}
-	}))
+	return {
+		...tender,
+		loadDateToView,
+		loadDateTimeToView,
+		myMessage,
+		myOffer,
+		price,
+		loadPoints,
+		unloadPoints,
+		cargoInfo,
+		carInfo,
+		unloadDateToView,
+		unloadDateTimeToView,
+	}
 }
 
 function routeLinkRenderer(params) {
@@ -321,7 +310,7 @@ function textInColumnRenderer(params) {
 }
 
 // действия на сообщения от сокета тендеров
-function forReductionSocketOnMessage(e) {
+async function tenderSocketOnMessage(e) {
 	const data = JSON.parse(e.data)
 
 	if (data.status === '120') {
@@ -332,18 +321,19 @@ function forReductionSocketOnMessage(e) {
 		if (data.wspath !== 'carrier-tenders') return
 
 		const { action, idRoute: targetIdRoute, carrierBid: bid } = data
-
-		if (!bid) return
 		if (!action) return
-		if (!targetIdRoute) return
 
 		const routeNode = gridOptions.api.getRowNode(targetIdRoute)
-		if (!routeNode) return
-
-		const route = routeNode.data
-		const offers = route.carrierBids
-
+		
+		// установка нового предложения
 		if (action === 'create') {
+			if (!routeNode) return
+
+			const route = routeNode.data
+			const offers = route.carrierBids
+
+			if (!bid) return
+			if (!targetIdRoute) return
 			// обновляем предложение, если оно актуальное
 			// удаляем старое предложение с тем же id
 			const filteredOffers = offers.filter(offer => offer.idCarrierBid !== bid.idCarrierBid)
@@ -352,26 +342,69 @@ function forReductionSocketOnMessage(e) {
 			// обновляем маршрут
 			const newRoute = { ...route, carrierBids: newOffers }
 			// обновляем стоимость маршрута
-			const newRoutePrice = getPrice([], null, newRoute)
+			const newRoutePrice = getPrice(newRoute)
 			// обновляем предложение
 			const newMyOffer = getMyOffer([], user, null, newRoute)
 			// обновляем строку в таблице
 			const updatedRoute = { ...newRoute, price: newRoutePrice, myOffer: newMyOffer }
 			gridOptions.api.applyTransaction({ update: [ updatedRoute ] })
 
+		// отмена предложения
 		} else if (action === 'delete') {
+			if (!routeNode) return
+
+			const route = routeNode.data
+			const offers = route.carrierBids
+
+			if (!bid) return
+			if (!targetIdRoute) return
 			// удаляем предложение и, если нужно, обновляем актуальное предложение
 			// удаляем старое предложение с тем же id
 			const filteredOffers = offers.filter(offer => offer.idCarrierBid !== bid.idCarrierBid)
 			// обновляем маршрут
 			const newRoute = { ...route, carrierBids: filteredOffers }
 			// обновляем стоимость маршрута
-			const newRoutePrice = getPrice([], null, newRoute)
+			const newRoutePrice = getPrice(newRoute)
 			// обновляем предложение
 			const newMyOffer = getMyOffer([], user, null, newRoute)
 			// обновляем строку в таблице
 			const updatedRoute = { ...newRoute, price: newRoutePrice, myOffer: newMyOffer }
 			gridOptions.api.applyTransaction({ update: [ updatedRoute ] })
+		}
+
+		// превражение закрытого тендера в тендер на понижение
+		else if (action === 'change-tender-type') {
+			if (!routeNode) return
+
+			const updatedRoute = data.route
+			if (!updatedRoute) return
+
+			const mappedRoute = await tenderMapCallback(updatedRoute)
+			gridOptions.api.applyTransaction({ update: [ mappedRoute ] })
+		}
+
+		else if (action === 'cancel-tender') {
+			if (!routeNode) return
+
+			const route = routeNode.data
+			if (!route) return
+
+			gridOptions.api.applyTransaction({ remove: [ route ] })
+		}
+
+		// уведомления перевозчикам
+		else if (action === 'notification') {
+
+			const toastOption = {
+				date: new Date().getTime(),
+				toUser: data.toUser,
+				text: data.text,
+				url: data.url,
+				autoCloseTime: 7000
+			}
+
+			createToast(toastOption)
+			playNewToastSound()
 		}
 	}
 }
@@ -412,7 +445,7 @@ function resetFilterState() {
 	gridFilterLocalState.resetState(gridOptions, LOCAL_STORAGE_KEY)
 }
 
-function getPrice(routeMessages, user, tender) {
+function getPrice(tender) {
 	const forReductionTender = tender.forReduction
 
 	if (forReductionTender) {
@@ -425,18 +458,15 @@ function getPrice(routeMessages, user, tender) {
 		return `${actualOffer.price} ${actualOffer.currency}`
 	}
 
-	// return routeMessages && routeMessages.length !== 0
-	// 	? `${routeMessages[0].text} ${routeMessages[0].currency}`
-	// 	: tender.startPrice
-	// 		? `${tender.startPrice} BYN` : ''
-	
 	return ''
 }
 function getMyOffer(routeMessages, user, myMessage, tender) {
 	const forReductionTender = tender.forReduction
 	const userId = user.idUser
 
-	if (forReductionTender) {
+	const isNewTenderSystem = tender.carrierBids.length !== 0
+
+	if (forReductionTender || isNewTenderSystem) {
 		const offers = tender.carrierBids
 		if (offers.length === 0) return ''
 		const myOffer = offers.filter(offer => offer.idUser === userId)[0]

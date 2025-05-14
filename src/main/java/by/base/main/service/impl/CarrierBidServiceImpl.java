@@ -2,6 +2,7 @@ package by.base.main.service.impl;
 
 import by.base.main.dao.CarrierBidDao;
 import by.base.main.model.CarrierBid;
+import by.base.main.model.Route;
 import by.base.main.model.User;
 import by.base.main.service.CarrierBidService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,11 +19,13 @@ public class CarrierBidServiceImpl implements CarrierBidService {
     @Autowired
     private CarrierBidDao carrierBidDao;
 
+
     @Transactional
     @Override
     public Long save(CarrierBid carrierBid) {
         return carrierBidDao.save(carrierBid);
     }
+
 
     @Transactional
     @Override
@@ -30,11 +33,13 @@ public class CarrierBidServiceImpl implements CarrierBidService {
         carrierBidDao.update(carrierBid);
     }
 
+
     @Transactional
     @Override
     public void delete(CarrierBid carrierBid) {
         carrierBidDao.delete(carrierBid);
     }
+
 
     @Transactional
     @Override
@@ -58,5 +63,11 @@ public class CarrierBidServiceImpl implements CarrierBidService {
     @Override
     public CarrierBid getById(Long bidId){
         return carrierBidDao.getById(bidId);
+    }
+
+    @Transactional
+    @Override
+    public void deleteIrrelevantBidsForRoute(Route route) {
+        carrierBidDao.deleteIrrelevantBidsForRoute(route);
     }
 }

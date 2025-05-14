@@ -32,6 +32,6 @@ C <input type="date" name="dateStart" id="dateStart" value="<c:out value="${date
 
 <script src='${pageContext.request.contextPath}/resources/js/mainPage/nav-fixed-top.js'></script>
 <script	src="${pageContext.request.contextPath}/resources/js/archive.js" type="module"></script>
-<script src="${pageContext.request.contextPath}/resources/js/myMessage.js" type="module"></script>
+<script src="${pageContext.request.contextPath}/resources/js/tenderNotifications.js" type="module"></script>
 </body>
 </html>

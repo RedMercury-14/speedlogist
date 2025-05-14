@@ -87,6 +87,7 @@
 										<a class="dropdown-item" href="<spring:url value="/main/procurement/permission/list" />">История решений по заказам</a>
 										<a class="dropdown-item" href="<spring:url value="/main/acceptanceQuality" />">Подтверждение качества</a>
 										<a class="dropdown-item" href="<spring:url value="/main/procurement/price-protocol/list" />">Протокол согласования цены</a>
+										<a class="dropdown-item" href="<spring:url value="/main/procurement/create-accommodation" />">Управление разрешениями товар-склад</a>
 									</div>
 								</li>
 								<li class="dropdown">
@@ -321,6 +322,7 @@
 								<li class="dropdown">
 									<a href="#" class="nav-item nav-link" data-toggle="dropdown">Cопровождение заказов</a>
 									<div class="dropdown-menu">
+										<a class="dropdown-item" href="<spring:url value="/main/procurement/create-accommodation" />">Управление разрешениями товар-склад</a>
 										<a class="dropdown-item" href="<spring:url value="/main/order-support/orders" />">Остаток товара</a>
 										<a class="dropdown-item" href="<spring:url value="/main/order-support/control" />">Загрузить отчёт</a>
 									</div>

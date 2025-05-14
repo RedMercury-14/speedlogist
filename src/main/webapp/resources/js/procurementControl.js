@@ -1,5 +1,5 @@
 import { AG_GRID_LOCALE_RU } from '../js/AG-Grid/ag-grid-locale-RU.js'
-import { ResetStateToolPanel, dateComparator, deselectAllCheckboxes, gridColumnLocalState, gridFilterLocalState } from './AG-Grid/ag-grid-utils.js'
+import { ResetStateToolPanel, dateComparator, dateValueFormatter, deselectAllCheckboxes, gridColumnLocalState, gridFilterLocalState } from './AG-Grid/ag-grid-utils.js'
 import { debounce, getData, dateHelper, getStatus, rowClassRules, isAdmin, isStockProcurement, isSlotsObserver, isObserver } from './utils.js'
 import { snackbar } from './snackbar/snackbar.js'
 import { uiIcons } from './uiIcons.js'
@@ -41,9 +41,21 @@ const columnDefs = [
 		headerName: 'Наименование контрагента', field: 'counterparty', colId: 'counterparty',
 		pinned: 'left', width: 240, wrapText: true, autoHeight: true,
 	},
-	{ headerName: 'Дата создания заявки', field: 'dateCreateToView', comparator: dateComparator, },
-	{ headerName: 'Дата загрузки (первая)', field: 'loadDateToView', comparator: dateComparator, },
-	{ headerName: 'Дата выгрузки (последняя)', field: 'unloadDateToView', comparator: dateComparator, },
+	{
+		headerName: 'Дата создания заявки', field: 'dateCreate',
+		valueFormatter: dateValueFormatter, comparator: dateComparator,
+		filterParams: { valueFormatter: dateValueFormatter, },
+	},
+	{
+		headerName: 'Дата загрузки (первая)', field: 'loadDateToView',
+		valueFormatter: dateValueFormatter, comparator: dateComparator,
+		filterParams: { valueFormatter: dateValueFormatter, },
+	},
+	{
+		headerName: 'Дата выгрузки (последняя)', field: 'unloadDateToView',
+		valueFormatter: dateValueFormatter, comparator: dateComparator,
+		filterParams: { valueFormatter: dateValueFormatter, },
+	},
 	{ headerName: 'Слот на выгрузку', field: 'timeDeliveryToView', },
 	// { headerName: 'Дата и время выгрузки', field: 'unloadWindowToView', width: 200, },
 	// { headerName: 'Продолжительность выгрузки', field: 'onloadTime', width: 200, },

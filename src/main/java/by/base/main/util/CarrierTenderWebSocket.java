@@ -46,8 +46,8 @@ public class CarrierTenderWebSocket extends TextWebSocketHandler {
             }
         }
         sessions.add(session);
-        System.out.println("All sessions: " + sessions.size());
-        System.out.println("User sessions: " + userSessions.size());
+//        System.out.println("All sessions: " + sessions.size());
+//        System.out.println("User sessions: " + userSessions.size());
     }
 
     /**

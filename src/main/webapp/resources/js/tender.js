@@ -169,21 +169,24 @@ const gridOptions = {
 	localeText: AG_GRID_LOCALE_RU,
 	masterDetail: isMobileView,
 	detailRowHeight: 230,
-	detailCellRendererParams: detailCellRendererParams
+	detailCellRendererParams: detailCellRendererParams,
+	overlayNoRowsTemplate: '<span class="h3">Нет актуальных тендеров</span>',
 }
 
-window.onload = async () => {
+document.addEventListener('DOMContentLoaded', async () => {
 	const goTGBotBtn = document.querySelector('#goTGBotBtn')
 	const resetTableFiltersBtn = document.querySelector('#resetTableFilters')
 
 	const gridDiv = document.querySelector('#myGrid')
+	renderTable(gridDiv, gridOptions)
+
 	const filterTextBox = document.querySelector('#filterTextBox')
 	const tendersData = await getData(getActiveTendersUrl)
 	const tenders = tendersData.routes
+
 	myMessages = await getData(getInfoRouteMessageBaseUrl + 'from_me')
 	user = await getData(getThisUserUrl)
-
-	await renderTable(gridDiv, gridOptions, tenders)
+	await updateTable(gridOptions, tenders)
 
 	restoreFilterState()
 
@@ -213,11 +216,14 @@ window.onload = async () => {
 			if (msg.ynp === userUnp) updateTable(gridOptions, tenders)
 		}
 	}
-}
+})
 
-async function renderTable(gridDiv, gridOptions, data) {
+function renderTable(gridDiv, gridOptions) {
 	new agGrid.Grid(gridDiv, gridOptions)
-
+	gridOptions.api.setRowData([])
+	gridOptions.api.showLoadingOverlay()
+}
+async function updateTable(gridOptions, data) {
 	if (!data || !data.length) {
 		gridOptions.api.showNoRowsOverlay()
 		return
@@ -227,13 +233,6 @@ async function renderTable(gridDiv, gridOptions, data) {
 
 	gridOptions.api.setRowData(mappingData)
 	gridOptions.api.hideOverlay()
-}
-async function updateTable(gridOptions, data) {
-	const mappingData = await getMappingData(data)
-
-	gridOptions.api.setRowData(mappingData)
-	gridOptions.api.hideOverlay()
-	!data.length && gridOptions.api.showNoRowsOverlay()
 }
 
 async function getMappingData(data) {

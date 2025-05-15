@@ -817,6 +817,7 @@ public class MainRestController {
     
     /**
      * <br>Метод для получения ставки</br>.
+     * Главный метод плучения ставки
      * @param request
      * @param str
      * @throws IOException
@@ -824,7 +825,6 @@ public class MainRestController {
      * @author Ira
      */
     @PostMapping("/carrier/tenders/get-bid")
-    @TimedExecution
     public Map<String, Object> getBid(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
         Map<String, Object> response = new HashMap<>();
         JSONParser parser = new JSONParser();
@@ -843,46 +843,33 @@ public class MainRestController {
         Route route = routeService.getRouteById(routeId);
         carrierBid.setRoute(route);
         carrierBid.setWinner(false);
+        carrierBid.setRouteDirection(route.getRouteDirection());
         List<CarrierBid> bids = carrierBidService.getCarrierBidsByRouteId(routeId);
 
         if (!bids.isEmpty()) {
-            CarrierBid latestBid = bids.stream().sorted(Comparator.comparing(CarrierBid::getPrice)).collect(Collectors.toList()).get(0);
-            for (CarrierBid bid : bids) {
-                if (bid.getWinner()) {
-                    response.put("status", "100");
-                    response.put("message", "Тендер завершён. Ставки больше не принимаются");
-                    return response;
-                }
-            }
-
-            if (carrierBid.getPercent() != null && carrierBid.getPercent() != 99 && latestBid.getPrice() <= carrierBid.getPrice()) {
-                response.put("status", "100");
-                response.put("message", "Ваша ставка не последняя. Актуальная цена " + latestBid.getPrice() + " " + latestBid.getCurrency() + ".");
-                return response;
-            }
-
-            if (route.getForReduction()) {
-                CarrierTenderMessage messageForLooser = new CarrierTenderMessage();
-                messageForLooser.setUrl("/speedlogist/main/carrier/tender/tenderpage?routeId=" + routeId);
-                messageForLooser.setIdRoute(routeId.toString());
-                messageForLooser.setToUser(latestBid.getCarrier().getLogin());
-                messageForLooser.setAction("notification");
-                messageForLooser.setText("Ваша ставка по маршруту " + route.getRouteDirection() + " была <b>перебита</b>."
-                        + "<br>Текущая ставка: <b>" + carrierBid.getPrice() + " " + carrierBid.getCurrency() + "</b>"
-                        + "<br>Вы можете снизить свою ставку.");
-                messageForLooser.setStatus("200");
-                messageForLooser.setWSPath("carrier-tenders");
-                carrierTenderWebSocket.broadcastWithException(carrierBid.getCarrier().getLogin(), messageForLooser);
-            }
-
+           CarrierBid latestBid = bids.stream().sorted(Comparator.comparing(CarrierBid::getPrice)).collect(Collectors.toList()).get(0);
+           for (CarrierBid bid: bids) {
+              if (bid.getWinner()) {
+                 response.put("status", "100");
+                 response.put("message", "Тендер завершён. Ставки больше не принимаются");
+                 return response;
+              }
+           }
+           if (route.getForReduction()) {
+               if (carrierBid.getPercent() != 99 && latestBid.getPrice() <= carrierBid.getPrice()) {
+                   response.put("status", "100");
+                   response.put("message", "Ваша ставка не последняя. Актуальная цена " + latestBid.getPrice() + " " + latestBid.getCurrency() + ".");
+                   return response;
+               }
+           }
         }
         CarrierBid carrierBidOld = carrierBidService.getCarrierBidByRouteAndUser(routeId, user);
         if (carrierBidOld != null) {
-            carrierBid.setIdCarrierBid(carrierBidOld.getIdCarrierBid());
-            carrierBidService.update(carrierBid);
+           carrierBid.setIdCarrierBid(carrierBidOld.getIdCarrierBid());
+           carrierBidService.update(carrierBid);
         } else {
-            Long carrierBidId = carrierBidService.save(carrierBid);
-            carrierBid.setIdCarrierBid(carrierBidId);
+           Long carrierBidId = carrierBidService.save(carrierBid);
+           carrierBid.setIdCarrierBid(carrierBidId);
         }
 
         CarrierTenderMessage message = new CarrierTenderMessage();
@@ -892,10 +879,11 @@ public class MainRestController {
         message.setStatus("200");
         message.setWSPath("carrier-tenders");
         carrierTenderWebSocket.broadcast(message);
+//      carrierTenderWebSocket.sendMessage(message);
         response.put("bid", carrierBid);
         response.put("status", "200");
         return response;
-    }
+     }
 
     /**
      * <br>Метод для отправки на фронт всех тендеров</br>.

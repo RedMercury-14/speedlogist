@@ -261,7 +261,20 @@ export function cell(text, styleId) {
 	}
 }
 
+export function dateValueFormatter(params) {
+	const date = params.value
+	if (!date) return ''
+	return dateHelper.getFormatDate(date)
+}
+export function dateTimeValueFormatter(params) {
+	const date = params.value
+	if (!date) return ''
+	return dateHelper.getFormatDateTime(date)
+	
+}
 export function dateComparator(date1, date2) {
+	if (!date1) return -1
+	if (!date2) return 1
 	if (!date1 || !date2) return 0
 	const date1Value = new Date(date1).getTime()
 	const date2Value = new Date(date2).getTime()

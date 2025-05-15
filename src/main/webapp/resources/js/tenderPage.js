@@ -2,28 +2,27 @@ var idRoute = document.querySelector('input[name=idRoute]').value;
 changeCost();
 import { ajaxUtils } from './ajaxUtils.js';
 import { ws } from './global.js';
-import { deleteTenderForReductionOfferUrl, getInfoParticipantsMessageBaseUrl, getInfoRouteMessageBaseUrl, getRouteBaseUrl, setTenderCostFromCarrierUrl, setTenderForReductionOfferUrl } from './globalConstants/urls.js';
+import { deleteTenderOfferUrl, getInfoParticipantsMessageBaseUrl, getInfoRouteMessageBaseUrl, getRouteBaseUrl, setTenderCostFromCarrierUrl, setTenderOfferUrl } from './globalConstants/urls.js';
 import { disableButton, enableButton } from './utils.js';
+
 const token = $("meta[name='_csrf']").attr("content")
-ws.onopen = () => onOpenSock();
-ws.onmessage = (e) => onMessage(JSON.parse(e.data));
-ws.onclose = (e) => onClose();
+// ws.onopen = () => onOpenSock();
+// ws.onmessage = (e) => onMessage(JSON.parse(e.data));
 
 document.addEventListener('DOMContentLoaded', () => {
 	const startPriceForReduction = document.getElementById('startPriceForReduction')?.value
 	if (startPriceForReduction) initTenderForReduction(startPriceForReduction)
+
+	// отмена предложения по тендеру
+	const deleteOfferBtn = document.getElementById('deleteOffer')
+	deleteOfferBtn && deleteOfferBtn.addEventListener('click', deleteOfferBtnClickHandler)
+
+	// форма установки предложения по тендеру
+	const tenderOfferForm = document.querySelector('#tenderOfferForm')
+	tenderOfferForm && tenderOfferForm.addEventListener('submit', tenderOfferFormSubmitHandler)
 })
 
-function isTenderForReduction() {
-	const startPriceForReduction = document.getElementById('startPriceForReduction')?.value
-	return !!startPriceForReduction
-}
-
 function initTenderForReduction(startPriceForReduction) {
-	const cancelOfferForReductionBtn = document.getElementById('cancelOfferForReduction')
-	cancelOfferForReductionBtn
-	&& cancelOfferForReductionBtn.addEventListener('click', cancelOfferForReductionBtnClickHandler)
-
 	const discountInput = document.getElementById('discount')
 	const increaseBtn = document.getElementById('increase')
 	const decreaseBtn = document.getElementById('decrease')
@@ -66,77 +65,47 @@ function initTenderForReduction(startPriceForReduction) {
 	updateUI()
 }
 
-function cancelOfferForReductionBtnClickHandler() {
+// удаление предложения
+function deleteOfferBtnClickHandler() {
 	const idCarrierBid = tenderOfferForm.idCarrierBid?.value
 	const idRoute = tenderOfferForm.idRoute.value
 
 	if (!idCarrierBid || !idRoute) return
 
 	const payload = { idCarrierBid, idRoute }
-	deleteCostForReduction(payload)
+	deleteOffer(payload)
 }
 
-function getCost() {
-	const costInput = document.querySelector('input[name=cost]')
-	if (!costInput) return null
-	if (!costInput.value) return null
-	return parseInt(costInput.value, 10)
-}
+// форма установки предложения
+function tenderOfferFormSubmitHandler(e) {
+	e.preventDefault()
 
-function sendCost() {
-	const cost = getCost()
-	if (!cost) return
-	sendMessage({
-		fromUser: document.querySelector('input[id=login]').value,
-		text: cost,
-		idRoute: idRoute,
-		currency: document.querySelector('select[id=currency]').value,
-		//nds: document.querySelector('select[id=nds]').value,
-		fullName: document.querySelector('#fullName').value,
-		status: "1",
-		comment: document.querySelector('input[name=comment]')?.value
-	})
-}
-function sendCostPOST(submitter) {
-	const cost = getCost()
-	if (!cost) {
-		enableButton(submitter)
+	const submitter = e.submitter
+	disableButton(submitter)
+
+	// отмена предложения
+	const submitBtnName = submitter.name
+	if (submitBtnName === 'notagree') {
+		cancelCostPOST_Old(submitter)
 		return
 	}
-	const data = {
-		fromUser: document.querySelector('input[id=login]').value,
-		text: cost,
-		idRoute: idRoute,
-		currency: document.querySelector('select[id=currency]').value,
-		//nds: document.querySelector('select[id=nds]').value,
-		fullName: document.querySelector('#fullName').value,
-		status: "1",
-		comment: document.querySelector('input[name=comment]')?.value
+	
+	const formdata = new FormData(e.target)
+	const data = Object.fromEntries(formdata)
+	const payload = {
+		idRoute: data.idRoute ? Number(data.idRoute) : null,
+		percent: data.discount ? Number(data.discount) : null,
+		price: data.price ? Number(data.price) : null,
+		comment: data.comment ? data.comment : null,
+		currency: data.currency ? data.currency : null,
+		idCarrierBid: data.idCarrierBid ? Number(data.idCarrierBid) : null,
 	}
-	ajaxUtils.postJSONdata({
-		url: setTenderCostFromCarrierUrl,
-		token: token,
-		data: data,
-		successCallback: (res) => {
-			if (res.status === '200') {
-				backToTender()
-			} else {
-				enableButton(submitter)
-				alert(res.message)
-			}
-		},
-	})
+
+	sendOffer(payload, submitter)
 }
-function cancelCost() {
-	sendMessage({
-		fromUser: document.querySelector('input[id=login]').value,
-		text: document.querySelector('input[name=userCost]').value,
-		idRoute: idRoute,
-		comment: 'delete',
-		status: "1"
-	})
-}
-function cancelCostPOST(submitter) {
+
+// отмена предложения по старой системе
+function cancelCostPOST_Old(submitter) {
 	const data = {
 		fromUser: document.querySelector('input[id=login]').value,
 		text: document.querySelector('input[name=userCost]').value,
@@ -158,10 +127,10 @@ function cancelCostPOST(submitter) {
 		},
 	})
 }
-// установка предложения тендера на понижения
-function sendCostForReduction(data, submitter) {
+// установка предложения тендера
+function sendOffer(data, submitter) {
 	ajaxUtils.postJSONdata({
-		url: setTenderForReductionOfferUrl,
+		url: setTenderOfferUrl,
 		token: token,
 		data: data,
 		successCallback: (res) => {
@@ -174,10 +143,10 @@ function sendCostForReduction(data, submitter) {
 		},
 	})
 }
-// отмена предложения тендера на понижения
-function deleteCostForReduction(data) {
+// отмена предложения тендера
+function deleteOffer(data) {
 	ajaxUtils.postJSONdata({
-		url: deleteTenderForReductionOfferUrl,
+		url: deleteTenderOfferUrl,
 		token: token,
 		data: data,
 		successCallback: (res) => {
@@ -189,38 +158,6 @@ function deleteCostForReduction(data) {
 		},
 	})
 }
-// try {
-// 	document.querySelector('.agreeinternational').addEventListener("mousedown", (event) => {
-// 		if (parseInt(document.querySelector('input[name=cost]').value) > 0) {
-// 			if (document.querySelector('#startPriceChoice') != null) {
-// 				if (parseInt(document.querySelector('.lastCost').innerHTML) > parseInt(document.querySelector('input[name=cost]').value)) {
-// 					sendCost();
-// 				} else {
-// 					alert('Недопустимое цена! Ваша цена должна быть меньше последней предложенной');
-// 				}
-// 			} else {
-// 				sendCost();
-// 			}
-// 		}
-// 	})
-// } catch (e) { };
-// try {
-// 	document.querySelector('.notagreeinternational').addEventListener("mousedown", (event) => {
-// 		cancelCost();
-// 	})
-// } catch (e) { };
-
-function onOpenSock() {
-};
-
-function onMessage(msg) {
-	// отключено для закрытых тендеров
-	// changeCost();
-};
-
-function onClose() {
-	console.log('stop!')
-};
 
 function sendMessage(message) {
 	ws.send(JSON.stringify(message));
@@ -296,70 +233,8 @@ buttonRegionalAgree && buttonRegionalAgree.addEventListener('mousedown', ()=>{
 	})
 })
 
-const tenderOfferForm = document.querySelector('#tenderOfferForm')
-tenderOfferForm.addEventListener('submit', (e)=>{
-	e.preventDefault()
-
-	const submitter = e.submitter
-
-	disableButton(submitter)
-
-	if (isTenderForReduction()) {
-		const formdata = new FormData(e.target)
-		const data = Object.fromEntries(formdata)
-
-		const payload = {
-			idRoute: data.idRoute ? Number(data.idRoute) : null,
-			percent: data.discount ? Number(data.discount) : null,
-			price: data.userPriceForReduction ? Number(data.userPriceForReduction) : null,
-			comment: data.comment ? data.comment : null,
-			currency: data.currency ? data.currency : null,
-			idCarrierBid: data.idCarrierBid ? Number(data.idCarrierBid) : null,
-		}
-
-		sendCostForReduction(payload, submitter)
-		return
-	}
-
-
-	const submitBtn = e.target.querySelector('input[type=submit]')
-	const submitBtnName = submitBtn.name
-	const cost = getCost()
-
-	// кнопка Поддержать цену
-	if (submitBtnName === 'agree') {
-		if (cost > 0) {
-			if (document.querySelector('#startPriceChoice') != null) {
-				if (parseInt(document.querySelector('.lastCost').innerHTML) > cost) {
-					// sendCost();
-					// backToTender()
-					sendCostPOST(submitter)
-				} else {
-					alert('Недопустимое цена! Ваша цена должна быть меньше последней предложенной')
-					enableButton(submitter)
-				}
-			} else {
-				// sendCost();
-				// backToTender()
-				sendCostPOST(submitter)
-			}
-		}
-	}
-
-	// кнопка Отменить
-	if (submitBtnName === 'notagree') {
-		// cancelCost()
-		// backToTender()
-		cancelCostPOST(submitter)
-	}
-})
-
 function backToTender() {
 	setTimeout(() => {
 		window.location.href = '../tender'
 	}, 300);
-}
-
-function isInteger(num) {
-	return (num ^ 0) === num;
 }

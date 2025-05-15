@@ -111,8 +111,8 @@
 						<span aria-hidden="true">&times;</span>
 					</button>
 				</div>
-				<div class="modal-body">
-					<div class="h5 text-center px-3 text-muted font-weight-bold" id="priceAnalisys_routeDirection"></div>
+				<div class="modal-body pb-0">
+					<div class="mb-2 text-center px-3 text-muted font-weight-bold" id="priceAnalisys_routeDirection"></div>
 					<div class="d-flex justify-content-end mb-4">
 						<div class="d-flex align-items-center mr-3">
 							<p id="" class="mb-0 mr-2">
@@ -141,7 +141,7 @@
 							</button>
 						</div>
 					</div>
-					<iframe id="priceAnalisysReportFrame" width="100%" height="500px" frameborder="0" allowFullScreen="true"></iframe>
+					<iframe id="priceAnalisysReportFrame" frameborder="0" allowFullScreen="true"></iframe>
 					<div id="priceAnalisys_container">
 					</div>
 				</div>

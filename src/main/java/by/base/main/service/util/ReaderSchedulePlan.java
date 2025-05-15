@@ -145,6 +145,9 @@ public class ReaderSchedulePlan {
 	@Value("${url.order.reject}")
 	public String urlReject;
 	
+	@Value("${stockBalance.run}")
+	public Boolean stockBalanceRun;
+	
 	private final Integer minDayFromUnloadFile = 3;
 	
 	private static final Map<String, DayOfWeek> RUSSIAN_DAYS = new HashMap<>();
@@ -607,132 +610,137 @@ public class ReaderSchedulePlan {
 	 * где больше товара, где меньше
 	 * @return
 	 */
-	public List<Product> checkBalanceBetweenStock(Order order) {
-		Integer targetStock = Integer.parseInt(getTrueStock(order));
-		if(targetStock != 1700 && targetStock != 1800) {
+	public List<Product> checkBalanceBetweenStock(Order order, boolean isRun) {
+		if(isRun) {
+			Integer targetStock = Integer.parseInt(getTrueStock(order));
+			if(targetStock != 1700 && targetStock != 1800) {
+				return null;
+			}
+			
+			Map<Long, Double> orderProducts = order.getOrderLinesMap(); //заказанные строки
+			List<Long> goodsIds = orderProducts.entrySet().stream()
+				    .map(en -> en.getKey())
+				    .collect(Collectors.toList()); // отдельный лист с кодами товаров заказанных в заказе
+			List<Integer> goodsIdsIntegers = orderProducts.entrySet().stream()
+					.map(en -> en.getKey().intValue())
+					.collect(Collectors.toList()); // отдельный лист с кодами товаров заказанных в заказе
+			Map<Integer, Product> productsMap = productService.getProductMapHasGroupByCode(goodsIdsIntegers);
+			List<Product> productsHasBalance = new ArrayList<Product>(); // результирующий лист с продуктами и балансами
+
+			List<Order> orders = null;
+
+//			productsMap.forEach((k,v) -> System.out.println(k + " -- " + v));
+			/*
+			 * Далее по каждому товару проверяем его остаток с учётом установленных слотов.
+			 * !Всегда ратгетимся по дефицитному товару!
+			 */
+			for (Entry<Long, Double> entry : orderProducts.entrySet()) {
+				if(productsMap == null) {
+					break;
+				}			
+				Product generalProduct = productsMap.get(entry.getKey().intValue());
+				
+//				System.err.println("--> "+generalProduct);
+
+				if(generalProduct == null) {
+					continue;
+				}
+				
+				//считаем разницу в днях сегодняшнеего дня и непосредственно записи
+				LocalDateTime startLocalDateTime = order.getTimeDelivery().toLocalDateTime();
+				LocalDateTime endLocalDateTime;
+				if(generalProduct.getDateUnload() != null) {
+					endLocalDateTime = LocalDateTime.of(generalProduct.getDateUnload().toLocalDate(), LocalTime.now());
+				}else {
+					endLocalDateTime = order.getTimeDelivery().toLocalDateTime();
+				}
+				
+				Duration duration = Duration.between(startLocalDateTime, endLocalDateTime);
+				Double currentDate = (double) duration.toDays();
+
+				Double remainderInDay1700 = generalProduct.getBalanceStockAndReserves1700() !=null ? roundВouble(generalProduct.getBalanceStockAndReserves1700() +currentDate, 0) : null; // записываем остаток в днях по записи для 1700.
+				Double remainderInDay1800 = generalProduct.getBalanceStockAndReserves1800() !=null ? roundВouble(generalProduct.getBalanceStockAndReserves1800() +currentDate, 0) : null;// записываем остаток в днях по записи для 1800.
+				Double calculatedPerDay1700 = generalProduct.getCalculatedPerDay1700();  //расчётная реализация в день для 1700 склада
+				Double calculatedPerDay1800 = generalProduct.getCalculatedPerDay1800();  //расчётная реализация в день для 1700 склада
+				
+				if(remainderInDay1700 != null && remainderInDay1700 < 0) remainderInDay1700 = 0.0;
+				if(remainderInDay1800 != null && remainderInDay1800 < 0) remainderInDay1800 = 0.0;
+
+				if(generalProduct.getNumStock() == null) {
+					continue;
+				}
+
+				if(remainderInDay1700 == null || remainderInDay1800 == null || remainderInDay1700 == 9999 || remainderInDay1800 == 9999) {
+					System.out.println("vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv ");
+					System.out.println("Для продукта " + generalProduct.getName() + " (" + generalProduct.getCodeProduct()+"):");
+					System.out.println("Oстаток в днях по записи для 1700 = " + remainderInDay1700);
+					System.out.println("Oстаток в днях по записи для 1800 = " + remainderInDay1800);
+					System.out.println("Реализация в день для 1700 склада = " + calculatedPerDay1700);
+					System.out.println("Реализация в день для 1800 склада = " + calculatedPerDay1800);
+					System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ");
+					continue;
+				}
+				//далее просматриваем что стоит в слотах (должно приехать) и переводем в дни, для суммирования
+				Date start;
+//				if(generalProduct.getDateUnload() == null) {
+//					start = generalProduct.getDateUnload();
+//				}else {
+//					start = Date.valueOf(generalProduct.getDateCreate().toLocalDateTime().toLocalDate());
+//				}
+				start = Date.valueOf(order.getTimeDelivery().toLocalDateTime().toLocalDate());
+				Date finish = Date.valueOf(LocalDate.now().plusDays(30));
+				Double quantityOrderSum1700 = 0.0; // сумма всех заказов товара за заданный период
+				Double quantityOrderSum1800 = 0.0; // сумма всех заказов товара за заданный период
+				
+				if(orders == null) {
+					orders = orderService.getOrderGroupByPeriodSlotsAndProductNotJOIN(start, finish, goodsIds);
+				}
+				
+				for (Order order2 : orders) {
+					//не учитываем таргетный заказ
+					if(order2.getIdOrder().intValue() == order.getIdOrder().intValue()) {
+						continue;
+					}
+					if(order2.getOrderLinesMap().get(Long.parseLong(generalProduct.getCodeProduct()+"")) != null) {
+						if(getTrueStock(order2).equals("1700")) {
+							quantityOrderSum1700 = quantityOrderSum1700 + order2.getOrderLinesMap().get(Long.parseLong(generalProduct.getCodeProduct()+""));
+						}else {
+							quantityOrderSum1800 = quantityOrderSum1800 + order2.getOrderLinesMap().get(Long.parseLong(generalProduct.getCodeProduct()+""));
+						}
+					}
+					
+				}
+				
+				
+				Integer expectedDays1700 = 0; // ожидаемый приход в днях
+				Integer expectedDays1800 = 0; // ожидаемый приход в днях
+				if(calculatedPerDay1700 != 0 ) {
+					expectedDays1700 = (int) roundВouble(quantityOrderSum1700/calculatedPerDay1700, 0);
+				}
+				if(calculatedPerDay1800 != 0 ) {
+					expectedDays1800 = (int) roundВouble(quantityOrderSum1800/calculatedPerDay1800, 0);
+				}
+//				System.err.println(generalProduct.getCodeProduct() + " 1700 -- " + remainderInDay1700 + " + " + expectedDays1700 + " ("+quantityOrderSum1700 + "/" +calculatedPerDay1700+")");
+//				System.err.println(generalProduct.getCodeProduct() + " 1800 -- " + remainderInDay1800 + " + " + expectedDays1800 + " ("+quantityOrderSum1800 + "/" +calculatedPerDay1800+")");
+				
+				Double finalDays1700 = remainderInDay1700 + expectedDays1700; // потом разделить на 1700 и 1800
+				Double finalDays1800 = remainderInDay1800 + expectedDays1800; // потом разделить на 1700 и 1800
+				
+				generalProduct.setCalculatedDayStock1700(finalDays1700);
+				generalProduct.setCalculatedDayStock1800(finalDays1800);
+				generalProduct.setCalculatedDayMax(Double.parseDouble(targetDayForBalance+""));
+				generalProduct.setOrderProducts(null);
+				generalProduct.setCalculatedHistory(generalProduct.getCodeProduct() + " 1700 -- " + remainderInDay1700 + " + " + expectedDays1700 + " ("+quantityOrderSum1700 + "/" +calculatedPerDay1700+")\n"
+						+ generalProduct.getCodeProduct() + " 1800 -- " + remainderInDay1800 + " + " + expectedDays1800 + " ("+quantityOrderSum1800 + "/" +calculatedPerDay1800+")");
+				productsHasBalance.add(generalProduct);
+			}
+			
+			
+			return productsHasBalance;	
+		}else {
 			return null;
 		}
 		
-		Map<Long, Double> orderProducts = order.getOrderLinesMap(); //заказанные строки
-		List<Long> goodsIds = orderProducts.entrySet().stream()
-			    .map(en -> en.getKey())
-			    .collect(Collectors.toList()); // отдельный лист с кодами товаров заказанных в заказе
-		List<Integer> goodsIdsIntegers = orderProducts.entrySet().stream()
-				.map(en -> en.getKey().intValue())
-				.collect(Collectors.toList()); // отдельный лист с кодами товаров заказанных в заказе
-		Map<Integer, Product> productsMap = productService.getProductMapHasGroupByCode(goodsIdsIntegers);
-		List<Product> productsHasBalance = new ArrayList<Product>(); // результирующий лист с продуктами и балансами
-
-		List<Order> orders = null;
-
-//		productsMap.forEach((k,v) -> System.out.println(k + " -- " + v));
-		/*
-		 * Далее по каждому товару проверяем его остаток с учётом установленных слотов.
-		 * !Всегда ратгетимся по дефицитному товару!
-		 */
-		for (Entry<Long, Double> entry : orderProducts.entrySet()) {
-			if(productsMap == null) {
-				break;
-			}			
-			Product generalProduct = productsMap.get(entry.getKey().intValue());
-			
-//			System.err.println("--> "+generalProduct);
-
-			if(generalProduct == null) {
-				continue;
-			}
-			
-			//считаем разницу в днях сегодняшнеего дня и непосредственно записи
-			LocalDateTime startLocalDateTime = order.getTimeDelivery().toLocalDateTime();
-			LocalDateTime endLocalDateTime;
-			if(generalProduct.getDateUnload() != null) {
-				endLocalDateTime = LocalDateTime.of(generalProduct.getDateUnload().toLocalDate(), LocalTime.now());
-			}else {
-				endLocalDateTime = order.getTimeDelivery().toLocalDateTime();
-			}
-			
-			Duration duration = Duration.between(startLocalDateTime, endLocalDateTime);
-			Double currentDate = (double) duration.toDays();
-
-			Double remainderInDay1700 = generalProduct.getBalanceStockAndReserves1700() !=null ? roundВouble(generalProduct.getBalanceStockAndReserves1700() +currentDate, 0) : null; // записываем остаток в днях по записи для 1700.
-			Double remainderInDay1800 = generalProduct.getBalanceStockAndReserves1800() !=null ? roundВouble(generalProduct.getBalanceStockAndReserves1800() +currentDate, 0) : null;// записываем остаток в днях по записи для 1800.
-			Double calculatedPerDay1700 = generalProduct.getCalculatedPerDay1700();  //расчётная реализация в день для 1700 склада
-			Double calculatedPerDay1800 = generalProduct.getCalculatedPerDay1800();  //расчётная реализация в день для 1700 склада
-			
-			if(remainderInDay1700 != null && remainderInDay1700 < 0) remainderInDay1700 = 0.0;
-			if(remainderInDay1800 != null && remainderInDay1800 < 0) remainderInDay1800 = 0.0;
-
-			if(generalProduct.getNumStock() == null) {
-				continue;
-			}
-
-			if(remainderInDay1700 == null || remainderInDay1800 == null || remainderInDay1700 == 9999 || remainderInDay1800 == 9999) {
-				System.out.println("vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv ");
-				System.out.println("Для продукта " + generalProduct.getName() + " (" + generalProduct.getCodeProduct()+"):");
-				System.out.println("Oстаток в днях по записи для 1700 = " + remainderInDay1700);
-				System.out.println("Oстаток в днях по записи для 1800 = " + remainderInDay1800);
-				System.out.println("Реализация в день для 1700 склада = " + calculatedPerDay1700);
-				System.out.println("Реализация в день для 1800 склада = " + calculatedPerDay1800);
-				System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ");
-				continue;
-			}
-			//далее просматриваем что стоит в слотах (должно приехать) и переводем в дни, для суммирования
-			Date start;
-//			if(generalProduct.getDateUnload() == null) {
-//				start = generalProduct.getDateUnload();
-//			}else {
-//				start = Date.valueOf(generalProduct.getDateCreate().toLocalDateTime().toLocalDate());
-//			}
-			start = Date.valueOf(order.getTimeDelivery().toLocalDateTime().toLocalDate());
-			Date finish = Date.valueOf(LocalDate.now().plusDays(30));
-			Double quantityOrderSum1700 = 0.0; // сумма всех заказов товара за заданный период
-			Double quantityOrderSum1800 = 0.0; // сумма всех заказов товара за заданный период
-			
-			if(orders == null) {
-				orders = orderService.getOrderGroupByPeriodSlotsAndProductNotJOIN(start, finish, goodsIds);
-			}
-			
-			for (Order order2 : orders) {
-				//не учитываем таргетный заказ
-				if(order2.getIdOrder().intValue() == order.getIdOrder().intValue()) {
-					continue;
-				}
-				if(order2.getOrderLinesMap().get(Long.parseLong(generalProduct.getCodeProduct()+"")) != null) {
-					if(getTrueStock(order2).equals("1700")) {
-						quantityOrderSum1700 = quantityOrderSum1700 + order2.getOrderLinesMap().get(Long.parseLong(generalProduct.getCodeProduct()+""));
-					}else {
-						quantityOrderSum1800 = quantityOrderSum1800 + order2.getOrderLinesMap().get(Long.parseLong(generalProduct.getCodeProduct()+""));
-					}
-				}
-				
-			}
-			
-			
-			Integer expectedDays1700 = 0; // ожидаемый приход в днях
-			Integer expectedDays1800 = 0; // ожидаемый приход в днях
-			if(calculatedPerDay1700 != 0 ) {
-				expectedDays1700 = (int) roundВouble(quantityOrderSum1700/calculatedPerDay1700, 0);
-			}
-			if(calculatedPerDay1800 != 0 ) {
-				expectedDays1800 = (int) roundВouble(quantityOrderSum1800/calculatedPerDay1800, 0);
-			}
-//			System.err.println(generalProduct.getCodeProduct() + " 1700 -- " + remainderInDay1700 + " + " + expectedDays1700 + " ("+quantityOrderSum1700 + "/" +calculatedPerDay1700+")");
-//			System.err.println(generalProduct.getCodeProduct() + " 1800 -- " + remainderInDay1800 + " + " + expectedDays1800 + " ("+quantityOrderSum1800 + "/" +calculatedPerDay1800+")");
-			
-			Double finalDays1700 = remainderInDay1700 + expectedDays1700; // потом разделить на 1700 и 1800
-			Double finalDays1800 = remainderInDay1800 + expectedDays1800; // потом разделить на 1700 и 1800
-			
-			generalProduct.setCalculatedDayStock1700(finalDays1700);
-			generalProduct.setCalculatedDayStock1800(finalDays1800);
-			generalProduct.setCalculatedDayMax(Double.parseDouble(targetDayForBalance+""));
-			generalProduct.setOrderProducts(null);
-			generalProduct.setCalculatedHistory(generalProduct.getCodeProduct() + " 1700 -- " + remainderInDay1700 + " + " + expectedDays1700 + " ("+quantityOrderSum1700 + "/" +calculatedPerDay1700+")\n"
-					+ generalProduct.getCodeProduct() + " 1800 -- " + remainderInDay1800 + " + " + expectedDays1800 + " ("+quantityOrderSum1800 + "/" +calculatedPerDay1800+")");
-			productsHasBalance.add(generalProduct);
-		}
-		
-		
-		return productsHasBalance;	
 	}
 	
 	/**
@@ -878,7 +886,7 @@ public class ReaderSchedulePlan {
 		 AtomicBoolean isBalanceMistake = new AtomicBoolean(false); //ошибка баланса
 		 AtomicBoolean isMistakeZAQ = new AtomicBoolean(false); // ошибка заказа, которую стоит подтвердить
 		 
-		 List<Product> balance = checkBalanceBetweenStock(order); // проерка балансов
+		 List<Product> balance = checkBalanceBetweenStock(order,stockBalanceRun); // проерка балансов
 		 
 		 if(!checkHasLog(dateRange, order)) {
 			 result.append("<b>Данный заказ " + order.getMarketNumber() + " " + order.getCounterparty() + " установлен не по графику поставок. Он должен быть установлен в диапазоне: с "
@@ -940,17 +948,24 @@ public class ReaderSchedulePlan {
 						//далее проверяем суммарный заказ. А суммарный звказ - это сумма заказов относящихся к дню расчётов и складу.
 						if(zaq > orlZaqMax) {
 							//пошла проверка балансов
-							ResultMethod checkBalanceHasStock = checkBalanceHasStock(balance, product, order, orderLine, isMistakeZAQ, isBalanceMistake, result, user);
+							if(stockBalanceRun) {
+								ResultMethod checkBalanceHasStock = checkBalanceHasStock(balance, product, order, orderLine, isMistakeZAQ, isBalanceMistake, result, user);
+							}
+							
 						}
 					}else {	// если заказ БОЛЬШЕ чем 80% от того что заказал ОРЛ
 						if(zaq > orlZaqMax) {
 							//пошла проверка балансов
-							ResultMethod checkBalanceHasStock = checkBalanceHasStock(balance, product, order, orderLine, isMistakeZAQ, isBalanceMistake, result, user);
+							if(stockBalanceRun) {
+								ResultMethod checkBalanceHasStock = checkBalanceHasStock(balance, product, order, orderLine, isMistakeZAQ, isBalanceMistake, result, user);
+							}
 						}
 					}
 					
 				}else { // если отсутствует заказ ОРЛ
-					ResultMethod checkBalanceHasStock = checkBalanceHasStock(balance, product, order, orderLine, isMistakeZAQ, isBalanceMistake, result, user);
+					if(stockBalanceRun) {
+						ResultMethod checkBalanceHasStock = checkBalanceHasStock(balance, product, order, orderLine, isMistakeZAQ, isBalanceMistake, result, user);
+					}
 				}
 			}
 			

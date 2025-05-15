@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
+import java.util.Objects;
 
 @Entity
 @Table(name = "carrier_bid")
@@ -48,6 +49,12 @@ public class CarrierBid {
 
     @Column(name = "company_name")
     private String companyName;
+    
+    @Column(name = "route_direction")
+    private String routeDirection;
+
+    @Column(name = "logist_comment")
+    private String logistComment;
 
 
     public Long getIdCarrierBid() {
@@ -138,7 +145,49 @@ public class CarrierBid {
         this.companyName = companyName;
     }
 
-    @Override
+    public String getRouteDirection() {
+		return routeDirection;
+	}
+
+	public void setRouteDirection(String routeDirection) {
+		this.routeDirection = routeDirection;
+	}
+
+	public String getLogistComment() {
+		return logistComment;
+	}
+
+	public void setLogistComment(String logistComment) {
+		this.logistComment = logistComment;
+	}
+	
+	
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(carrier, comment, companyName, currency, dateTime, idCarrierBid, idUser, logistComment,
+				percent, price, route, routeDirection, winner);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		CarrierBid other = (CarrierBid) obj;
+		return Objects.equals(carrier, other.carrier) && Objects.equals(comment, other.comment)
+				&& Objects.equals(companyName, other.companyName) && Objects.equals(currency, other.currency)
+				&& Objects.equals(dateTime, other.dateTime) && Objects.equals(idCarrierBid, other.idCarrierBid)
+				&& Objects.equals(idUser, other.idUser) && Objects.equals(logistComment, other.logistComment)
+				&& Objects.equals(percent, other.percent) && Objects.equals(price, other.price)
+				&& Objects.equals(route, other.route) && Objects.equals(routeDirection, other.routeDirection)
+				&& Objects.equals(winner, other.winner);
+	}
+
+	@Override
     public String toString() {
         return "CarrierBid[" +
                 "idCarrierBid=" + idCarrierBid +

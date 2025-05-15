@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.nio.file.Paths;
 import java.sql.Date;
@@ -93,6 +94,7 @@ import by.base.main.dao.ShopDAO;
 import by.base.main.dto.ReportRow;
 import by.base.main.dto.RoadTransportDto;
 import by.base.main.service.ActService;
+import by.base.main.service.GoodAccommodationService;
 import by.base.main.service.MessageService;
 import by.base.main.service.OrderService;
 import by.base.main.service.ProductService;
@@ -135,6 +137,9 @@ public class POIExcel {
 	
 	@Autowired
     private ServletContext servletContext;
+	
+	@Autowired
+	private GoodAccommodationService goodAccommodationService;
 
 	private ArrayList<Shop> shops;
 	private ArrayList<RouteHasShop> arrayRouteHasShop;
@@ -167,6 +172,71 @@ public class POIExcel {
 
 		return convFile;
 	}
+	
+	/**
+	 * Импорт данных по товарам на складах с екселя
+	 * @param file
+	 * @throws IOException
+	 */
+	public void importGoodAccommodation(InputStream inputStream) throws IOException {
+		try (Workbook workbook = new XSSFWorkbook(inputStream)) {
+
+	            Sheet sheet = workbook.getSheetAt(0); // первый лист
+	            Iterator<Row> rowIterator = sheet.iterator();
+	            if (rowIterator.hasNext()) rowIterator.next(); // пропустить заголовки
+
+	            while (rowIterator.hasNext()) {
+	                Row row = rowIterator.next();
+
+	                GoodAccommodation good = new GoodAccommodation();
+	                good.setProductCode(getLongValue(row.getCell(0)));
+	                good.setGoodName(getStringValue(row.getCell(2)));
+	                good.setBarcode(getStringValue(row.getCell(1)) != null && !getStringValue(row.getCell(1)).isEmpty() ? Long.parseLong(getStringValue(row.getCell(1))): null);
+	                good.setProductGroup(getStringValue(row.getCell(3)));
+	                good.setStocks(parseStocks(row));
+	                good.setStatus(20); // например, статус по умолчанию
+	                good.setDateCreate(new java.sql.Date(System.currentTimeMillis()));
+
+	                // можно задать фиксированные инициаторы
+	                good.setInitiatorName("Импорт");
+	                good.setInitiatorEmail("import@system.local");
+	                goodAccommodationService.save(good);
+	            }
+	        }
+	}	
+	private String parseStocks(Row row) {
+	    Cell cell = row.getCell(4); // колонка E (индекс 4)
+	    if (cell == null) return null;
+
+	    String raw = cell.getCellType() == CellType.NUMERIC
+	        ? String.valueOf((int) cell.getNumericCellValue())
+	        : cell.getStringCellValue();
+
+	    if (raw == null || raw.trim().isEmpty()) return null;
+
+	    // разбиваем по пробелам и добавляем обрамление ";...;"
+	    String[] parts = raw.trim().split("\\s+");
+	    StringBuilder sb = new StringBuilder();
+	    for (String part : parts) {
+	        sb.append(";").append(part.trim());
+	    }
+	    sb.append(";");
+
+	    return sb.toString();
+	}
+	
+	private String getStringValue(Cell cell) {
+        return cell == null ? null : cell.getStringCellValue().trim();
+    }
+
+    private Long getLongValue(Cell cell) {
+        if (cell == null) return null;
+        try {
+            return (long) cell.getNumericCellValue();
+        } catch (Exception e) {
+            return null;
+        }
+    }
 	
 	/**
 	 * оздание новых актов по бирже 

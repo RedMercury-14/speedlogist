@@ -12,13 +12,10 @@ $(document).ready(function() {
 	});
 });
 
-import { wsHead } from './global.js';
-wsHead.onmessage = (e) => onMessage(JSON.parse(e.data));
+// wsHead.onmessage = (e) => onMessage(JSON.parse(e.data));
 var role = document.querySelector('input[id=role]').value;
 var sessionCheck = document.querySelector('#sessionCheck').value;
-if (document.querySelector('#login') != null) {
-	var login = document.querySelector('#login').value;
-}
+var login = document.querySelector('#login')?.value;
 
 let systemMessage = new Set();
 let allMessage = new Set();

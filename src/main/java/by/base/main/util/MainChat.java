@@ -52,8 +52,15 @@ public class MainChat {
 
 	@OnError
 	public void onError(Session session, Throwable throwable) {
-		sessionList.remove(session);
 		throwable.printStackTrace();
+		if (session != null) {
+	        sessionList.remove(session); // Удаляем ошибочную сессию из списка
+	        try {
+	            session.close(); // Закрываем сессию, если она ещё не закрыта
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	        }
+	    }
 	}
 
 	@OnMessage

@@ -1,5 +1,5 @@
 import { AG_GRID_LOCALE_RU } from "./AG-Grid/ag-grid-locale-RU.js"
-import { BtnCellRenderer, ResetStateToolPanel, dateComparator, gridColumnLocalState, gridFilterLocalState } from "./AG-Grid/ag-grid-utils.js"
+import { ResetStateToolPanel, dateComparator, dateTimeValueFormatter, gridColumnLocalState, gridFilterLocalState } from "./AG-Grid/ag-grid-utils.js"
 import { copyTextToClipboard, dateHelper, debounce, getData, getRouteStatus, isAdmin, isObserver, SmartWebSocket } from "./utils.js"
 import { EUR, KZT, RUB, USD, ws, wsTenderMessagesUrl } from './global.js'
 import { wsHead } from './global.js'
@@ -7,14 +7,29 @@ import { snackbar } from "./snackbar/snackbar.js"
 import { uiIcons } from "./uiIcons.js"
 import { bootstrap5overlay } from "./bootstrap5overlay/bootstrap5overlay.js"
 import { ajaxUtils } from "./ajaxUtils.js"
-import { checkOrderForStatusBaseUrl, confirmTenderOfferUrl, getInfoRouteMessageBaseUrl, getMemoryRouteMessageBaseUrl, getNumMessageBaseUrl, getOffersForReductionByIdRouteBaseUrl, getProposalBaseUrl, getRoutesBaseUrl, makeWinnerTenderForReductionOfferUrl, nbrbExratesRatesBaseUrl, routeUpdateBaseUrl } from "./globalConstants/urls.js"
+import {
+	checkOrderForStatusBaseUrl,
+	confirmTenderOfferUrl,
+	getInfoRouteMessageBaseUrl,
+	getMemoryRouteMessageBaseUrl,
+	getNumMessageBaseUrl,
+	getOffersForReductionByIdRouteBaseUrl,
+	getProposalBaseUrl,
+	getRoutesBaseUrl,
+	makeTenderForReductionUrl,
+	makeWinnerTenderForReductionOfferUrl,
+	nbrbExratesRatesBaseUrl,
+	routeUpdateBaseUrl
+} from "./globalConstants/urls.js"
 
 const token = $("meta[name='_csrf']").attr("content")
 const PAGE_NAME = 'internationalManagerNew'
 const LOCAL_STORAGE_KEY = `AG_Grid_settings_to_${PAGE_NAME}`
 const DATES_KEY = `searchDates_to_${PAGE_NAME}`
 const ROW_INDEX_KEY = `AG_Grid_rowIndex_to_${PAGE_NAME}`
-const role = document.querySelector('#role').value
+const role = document.querySelector('#role')?.value
+const login = document.querySelector('#login')?.value
+
 
 const currencyDict = {
 	'EUR': EUR,
@@ -57,9 +72,15 @@ const columnDefs = [
 	{ headerName: 'Контрагент', field: 'counterparty', wrapText: true, autoHeight: true, },
 	{ headerName: 'Дата загрузки', field: 'simpleDateStart', comparator: dateStringComparator, },
 	{ headerName: 'Время загрузки (планируемое)', field: 'timeLoadPreviously', },
-	{ headerName: 'Дата и время выгрузки', field: 'unloadToView', wrapText: true, autoHeight: true, },
+	{
+		headerName: 'Дата и время выгрузки', field: 'unloadToView',
+		wrapText: true, autoHeight: true,
+		valueFormatter: dateTimeValueFormatter, comparator: dateComparator,
+		filterParams: { valueFormatter: dateTimeValueFormatter, },
+	},
+	{ headerName: 'Начальная стоимость', field: 'startPriceForReduction', },
 	{ headerName: 'Выставляемая стоимость', field: 'finishPriceToView', },
-	// { headerName: 'Экономия', field: 'economy', },
+	{ headerName: 'Экономия', field: 'economy', },
 	{ headerName: 'Перевозчик', field: 'carrier', wrapText: true, autoHeight: true, },
 	{
 		headerName: 'Номер машины / прицепа', field: 'truckInfo',
@@ -80,6 +101,7 @@ const columnDefs = [
 	{ headerName: 'Общий вес', field: 'totalCargoWeight', valueFormatter: params => params.value + ' кг' },
 	{ headerName: 'Комментарии', field: 'userComments', filter: 'agTextColumnFilter', wrapText: true, autoHeight: true, minWidth: 240, width: 640, },
 	{ headerName: 'Логист', field: 'logistInfo', wrapText: true, autoHeight: true, },
+	{ headerName: 'Тип тендера', field: 'tenderType', wrapText: true, autoHeight: true, cellClass: 'px-2 text-center font-weight-bold',},
 	{
 		headerName: 'Статус', field: 'statusRoute',
 		cellClass: 'px-2 text-center font-weight-bold',
@@ -189,12 +211,6 @@ const gridOptionsForOffers = {
 			headerName: "Действие", field: 'action',
 			minWidth: 110,
 			cellClass: 'px-0 text-center',
-			// cellRenderer: BtnCellRenderer,
-			// cellRendererParams: {
-			// 	onClick: offerAccept,
-			// 	dynamicLabel: params => params.data.action === 'confirm' ? 'Подтвердить' : 'Принять',
-			// 	className: 'btn btn-success btn-sm',
-			// },
 			cellRenderer: params => {
 				if (!params.data.action) return ''
 				const button = document.createElement("button")
@@ -222,6 +238,49 @@ const gridOptionsForOffers = {
 		autoHeight: true,
 	},
 	localeText: AG_GRID_LOCALE_RU,
+	getContextMenuItems: (params) => {
+		if (!params.node) return
+	
+		const offer = params.node.data
+		const idRoute = offer.idRoute || currentOpenRouteId
+
+		const routeNode = gridOptions.api.getRowNode(idRoute)
+		if (!routeNode) return
+
+		const route = routeNode.data
+		const forReduction = route.forReduction
+	
+		const result = [
+			{
+				disabled: forReduction,
+				name: `Превратить в тендер на понижение на основе выбранной ставки`,
+				icon: uiIcons.graphDownArrow,
+				action: () => {
+					if (!confirm(
+						'Создание тендера на понижение приведет к отмене всех ставок,'
+						+ ' кроме выбранной. Выбранная ставка станет начальной ценой'
+						+ ' тендера и будет считаться первой ставкой по этому тендеру.'
+						+ ' Вы действительно хотите это сделать?')
+					) return
+					
+					const payload = {
+						idRoute: Number(idRoute),
+						price: Number(offer.originalCost),
+						login: offer.fromUser ? offer.fromUser : null,
+						currency: offer.currency,
+						comment: offer.comment,
+						idCarrierBid: offer.idCarrierBid ? offer.idCarrierBid : null
+					}
+
+					makeTenderForReduction(payload)
+				},
+			},
+			"separator",
+			"excelExport",
+		]
+	
+		return result
+	},
 	suppressMovableColumns: true,
 	animateRows: true,
 	suppressDragLeaveHidesColumns: true,
@@ -278,10 +337,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 	// обработчик получения сообщений о предложениях
 	ws.onmessage = onMessageHandler
 
-	const forReductionSocket = new SmartWebSocket(wsTenderMessagesUrl, {
+	new SmartWebSocket(`${wsTenderMessagesUrl}?user=${encodeURIComponent(login)}`, {
 		reconnectInterval: 5000,
 		maxReconnectAttempts: 5,
-		onMessage: forReductionSocketOnMessage,
+		onMessage: tenderSocketOnMessage,
 		onClose: () => alert('Соединение с сервером потеряно. Перезагрузите страницу')
 	})
 
@@ -371,7 +430,7 @@ function sendHeadMessage(message) {
 }
 
 // обработка сообщений от сокета тендеров на понижение
-async function forReductionSocketOnMessage(e) {
+async function tenderSocketOnMessage(e) {
 	const data = JSON.parse(e.data)
 
 	if (data.status === '120') {
@@ -402,7 +461,7 @@ async function forReductionSocketOnMessage(e) {
 			gridOptions.api.applyTransaction({ update: [ newRoute ] }, () => highlightRow(routeNode))
 
 			// обновляем таблицу предложений, если модалка открыта
-			if (currentOpenRouteId && currentOpenRouteId === targetIdRoute) {
+			if (currentOpenRouteId && Number(currentOpenRouteId) === Number(targetIdRoute)) {
 				await updateOffersInModal(data)
 			}
 
@@ -414,7 +473,7 @@ async function forReductionSocketOnMessage(e) {
 			gridOptions.api.applyTransaction({ update: [ newRoute ] }, () => highlightRow(routeNode))
 
 			// обновляем таблицу предложений, если модалка открыта
-			if (currentOpenRouteId && currentOpenRouteId === targetIdRoute) {
+			if (currentOpenRouteId && Number(currentOpenRouteId) === Number(targetIdRoute)) {
 				await updateOffersInModal(data)
 			}
 		}
@@ -429,9 +488,9 @@ function gridTableClickHandler(e) {
 	if (target.id === 'tenderOfferLink') {
 		e.preventDefault()
 		const idRoute = target.dataset.idroute
-		const status = target.dataset.status
-		const forReduction = target.dataset.forreduction
-		displayTenderOffer(idRoute, status, forReduction)
+		const rowNode = gridOptions.api.getRowNode(idRoute)
+		const route = rowNode.data
+		displayTenderOffer(route)
 		return
 	}
 
@@ -559,10 +618,10 @@ async function getMappingData(data) {
 	return await Promise.all(data.map(routeMapCallback))
 }
 async function routeMapCallback(route) {
-	const idRoute = route.idRoute
 	const unloadToView = getUnloadToView(route)
+	const startPriceForReduction = getStartPriceToView(route)
 	const finishPriceToView = getFinishPriceToView(route)
-	const economy = getEconomy(route)
+	const economy = getForReductionEconomy(route)
 	const carrier = getCarrier(route)
 	const truckOwner = getTruckOwner(route)
 	const truckInfo = getTruckInfo(route)
@@ -571,12 +630,8 @@ async function routeMapCallback(route) {
 	const startRouteCostInfo = getStartRouteCostInfo(route)
 	const statusRouteToView = getRouteStatus(route.statusRoute)
 	const counterparty = getCounterparty(route)
-	const offerCount = route.statusRoute === '1'
-		? route.forReduction
-			? route.carrierBids.length
-			: await getData(getNumMessageBaseUrl + idRoute)
-				: 0
-
+	const tenderType = getTenderType(route)
+	const offerCount = await getOfferCount(route)
 	const isSavedRow = false
 	const orderInfo = getOrderInfo(route)
 	const idOrder =  orderInfo.idOrder
@@ -592,6 +647,7 @@ async function routeMapCallback(route) {
 		offerCount,
 		isSavedRow,
 		unloadToView,
+		startPriceForReduction,
 		finishPriceToView,
 		economy,
 		carrier,
@@ -602,6 +658,7 @@ async function routeMapCallback(route) {
 		startRouteCostInfo,
 		statusRouteToView,
 		counterparty,
+		tenderType,
 		idOrder,
 		contact,
 		ukz,
@@ -630,17 +687,17 @@ function getContextMenuItems(params) {
 			name: `Истоpия предложений`,
 			icon: uiIcons.offer,
 			action: () => {
-				displayTenderOffer(idRoute, status, forReduction)
+				displayTenderOffer(routeData)
 			},
 		},
-		{
-			name: `Истоpия предложений (отдельная страница)`,
-			icon: uiIcons.offer,
-			disabled: routeData.forReduction,
-			action: () => {
-				displayTenderOfferOld(idRoute, status)
-			},
-		},
+		// {
+		// 	name: `Истоpия предложений (отдельная страница)`,
+		// 	icon: uiIcons.offer,
+		// 	disabled: routeData.forReduction,
+		// 	action: () => {
+		// 		displayTenderOfferOld(idRoute, status)
+		// 	},
+		// },
 		{
 			name: `Отправить тендер`,
 			disabled: status !== '0' || isObserver(role),
@@ -726,17 +783,16 @@ function tenderStatusRenderer(params) {
 	const data = params.node.data
 	const idRoute = data.idRoute
 	const offerCount = data.offerCount
-	const forReduction = data.forReduction
 	const status = data.statusRoute
 	const statusText = getRouteStatus(status)
 
 	if (status === '8') {
 		const link = `../admin/internationalNew/tenderOffer?idRoute=${idRoute}`
-		const linkHTML = `<a class="text-primary" id="tenderOfferLink" data-idroute="${idRoute}" data-status="${status}" data-forreduction="${forReduction}" href="${link}">Посмотреть предложение</a>`
+		const linkHTML = `<a class="text-primary" id="tenderOfferLink" data-idroute="${idRoute}" href="${link}">Посмотреть предложение</a>`
 		return `${statusText} ${linkHTML}`
 	} else if (status === '1') {
 		const link = `./internationalNew/tenderOffer?idRoute=${idRoute}`
-		const linkHTML = `<a class="text-primary" id="tenderOfferLink" data-idroute="${idRoute}" data-status="${status}" data-forreduction="${forReduction}" href="${link}">Посмотреть предложения (${offerCount})</a>`
+		const linkHTML = `<a class="text-primary" id="tenderOfferLink" data-idroute="${idRoute}" href="${link}">Посмотреть предложения (${offerCount})</a>`
 		return `${statusText} ${linkHTML}`
 	} else {
 		return statusText
@@ -748,20 +804,19 @@ function offerCountRenderer(params) {
 	const data = params.node.data
 	const idRoute = data.idRoute
 	const offerCount = data.offerCount
-	const forReduction = data.forReduction
 	const status = data.statusRoute
 
 	if (status === '8') {
 		const link = `../admin/internationalNew/tenderOffer?idRoute=${idRoute}`
-		const linkHTML = `<a class="text-primary" id="tenderOfferLink" data-idroute="${idRoute}" data-status="${status}" data-forreduction="${forReduction}" href="${link}">Подтвердить предложение</a>`
+		const linkHTML = `<a class="text-primary" id="tenderOfferLink" data-idroute="${idRoute}" href="${link}">Подтвердить предложение</a>`
 		return `${linkHTML}`
 	} else if (status === '1') {
 		const link = `./internationalNew/tenderOffer?idRoute=${idRoute}`
-		const linkHTML = `<a class="text-primary" id="tenderOfferLink" data-idroute="${idRoute}" data-status="${status}" data-forreduction="${forReduction}" href="${link}">Посмотреть предложения (${offerCount})</a>`
+		const linkHTML = `<a class="text-primary" id="tenderOfferLink" data-idroute="${idRoute}" href="${link}">Посмотреть предложения (${offerCount})</a>`
 		return `${linkHTML}`
 	} else {
 		const link = `../admin/internationalNew/tenderOffer?idRoute=${idRoute}`
-		const linkHTML = `<a class="text-primary" id="tenderOfferLink" data-idroute="${idRoute}" data-status="${status}" data-forreduction="${forReduction}" href="${link}">История предложений</a>`
+		const linkHTML = `<a class="text-primary" id="tenderOfferLink" data-idroute="${idRoute}" href="${link}">История предложений</a>`
 		return `${linkHTML}`
 	}
 }
@@ -855,13 +910,6 @@ function restoreFilterState() {
 	gridFilterLocalState.restoreState(gridOptions, LOCAL_STORAGE_KEY)
 }
 
-// форматтер для дат в мс
-function dateTimeValueFormatter(params) {
-	const date = params.value
-	if (!date) return ''
-	return dateHelper.getFormatDateTime(date)
-}
-
 // компаратор для дат с виде реверсивных строк
 function dateStringComparator(date1, date2) {
 	const date1Number = dateToNum(date1)
@@ -901,18 +949,24 @@ async function displayTenderOfferOld(idRoute, status) {
 	saveRowId(ROW_INDEX_KEY, idRoute)
 	window.location.href = url
 }
-async function displayTenderOffer(idRoute, status, forReduction) {
+async function displayTenderOffer(route) {
 	bootstrap5overlay.showOverlay()
 
-	const tenderForReduction = forReduction === 'true' || forReduction === true
+	const idRoute = route.idRoute
+	const status = route.statusRoute
+	const forReduction = route.forReduction
+
+	const isForReduction = forReduction === 'true' || forReduction === true
+	const isNewTenderSystem = route.carrierBids.length !== 0
 
 	currentOpenRouteId = idRoute
+
 	let offers = []
 
 	// подтвердить предложение
 	if (status === '8') {
 		if (!checkOrderStatus(idRoute)) return
-		const offersData = tenderForReduction
+		const offersData = isForReduction || isNewTenderSystem
 			? await getData(`${getOffersForReductionByIdRouteBaseUrl}${idRoute}`)
 			: await getData(`${getMemoryRouteMessageBaseUrl}${idRoute}`)
 		offers = await getMappingOffers(offersData, 'confirm')
@@ -920,14 +974,14 @@ async function displayTenderOffer(idRoute, status, forReduction) {
 	// показать предложения для принятия
 	} else if (status === '1') {
 		if (!checkOrderStatus(idRoute)) return
-		const offersData = tenderForReduction
+		const offersData = isForReduction || isNewTenderSystem
 			? await getData(`${getOffersForReductionByIdRouteBaseUrl}${idRoute}`)
 			: await getData(`${getInfoRouteMessageBaseUrl}${idRoute}`)
 		offers = await getMappingOffers(offersData, 'accept')
 
 	// история предложений
 	} else {
-		const offersData = tenderForReduction
+		const offersData = isForReduction || isNewTenderSystem
 			? await getData(`${getOffersForReductionByIdRouteBaseUrl}${idRoute}`)
 			: await getData(`${getMemoryRouteMessageBaseUrl}${idRoute}`)
 		offers = await getMappingOffers(offersData, '')
@@ -936,7 +990,7 @@ async function displayTenderOffer(idRoute, status, forReduction) {
 	setCostGridContext(gridOptionsForOffers, offers)
 	gridOptionsForOffers.api.setRowData(offers)
 	gridOptionsForOffers.api.hideOverlay()
-	setRouteDirection(idRoute)
+	setRouteDirection(idRoute, isForReduction)
 	bootstrap5overlay.hideOverlay()
 	$('#tenderOffersModal').modal('show')
 }
@@ -1083,8 +1137,15 @@ async function checkOrderStatus(idRoute) {
 function getUnloadToView(route) {
 	if (!route) return ''
 	const dateUnload = route.dateUnloadPreviouslyStock ? route.dateUnloadPreviouslyStock : ''
-	const timeUnload = route.timeUnloadPreviouslyStock ? route.timeUnloadPreviouslyStock.slice(0,5) : ''
-	return `${dateUnload} ${timeUnload}`
+	const timeUnload = route.timeUnloadPreviouslyStock ? route.timeUnloadPreviouslyStock : ''
+	if (!dateUnload || !timeUnload) return ''
+	return new Date(`${dateUnload}T${timeUnload}`).getTime()
+}
+function getStartPriceToView(route) {
+	if (!route) return ''
+	const startPrice = route.startPriceForReduction ? route.startPriceForReduction : ''
+	const currency = route.currencyForReduction ? route.currencyForReduction : ''
+	return `${startPrice} ${currency}`
 }
 function getFinishPriceToView(route) {
 	if (!route) return ''
@@ -1098,8 +1159,16 @@ function getFinishPriceToView(route) {
 
 	return res
 }
-function getEconomy(route) {
-	return ''
+function getForReductionEconomy(route) {
+	const startPrice = route.startPriceForReduction ? route.startPriceForReduction : ''
+	const finishPrice = route.finishPrice ? route.finishPrice : ''
+	const currency = route.currencyForReduction ? route.currencyForReduction : ''
+
+	if (!startPrice || !finishPrice) return ''
+
+	const economy = Number(startPrice) - Number(finishPrice)
+
+	return `${economy} ${currency}`
 }
 function getCarrier(route) {
 	if (!route) return ''
@@ -1190,6 +1259,27 @@ function getOrderInfo(route) {
 		temperature: processField('temperature'),
 	}
 }
+function getTenderType(route) {
+	if (!route) return ''
+	if (route.forReduction) return 'Тендер на понижение'
+	return 'Закрытый тендер'
+}
+async function getOfferCount(route) {
+	if (!route) return 0
+	if (route.statusRoute !== '1') return 0
+
+	if (route.forReduction) {
+		return route.carrierBids.length
+	}
+
+	if (route.carrierBids.length !== 0) {
+		return route.carrierBids.length
+	}
+
+	const offerCount = await getData(getNumMessageBaseUrl + route.idRoute)
+
+	return offerCount
+}
 
 // подготовка данных о предложениях
 async function getMappingOffers(data, action) {
@@ -1272,7 +1362,8 @@ async function updateOffersInModal(message) {
 
 	// добавляем новое предложение
 	if ((message.comment !== 'delete' && message.currency) || message.action === 'create') {
-		const newOffer = await offerMapCallback({ ...message.carrierBid, action: 'accept' })
+		const offer = isForReductionMessage ? message.carrierBid : message
+		const newOffer = await offerMapCallback({ ...offer, action: 'accept' })
 		updatedData.push(newOffer)
 	}
 
@@ -1284,26 +1375,30 @@ async function updateOffersInModal(message) {
 
 // подтверждение предложения по маршруту
 function offerAccept(params) {
+	if (isObserver(role)) {
+		alert("Недостаточно прав!")
+		return
+	}
+
 	const { data, api, context } = params
 	const { minCost, maxCost } = context
 	const offersCount = api.getDisplayedRowCount()
 
-	const isAdmin = role === '[ROLE_ADMIN]' || role === '[ROLE_TOPMANAGER]'
 	const isSingleOffer = offersCount === 1
-	const isForReductionOffer = !!data.idCarrierBid
+	const isNewTenderSystem = !!data.idCarrierBid
 	const offerCost = parseInt(data.convertedCost)
 	const currentData = []
 	gridOptionsForOffers.api.forEachNode(node => currentData.push(node.data))
 	const otherUsers = currentData.map(item => item.fromUser).filter(item => item !== data.fromUser)
 
 	const confirmAction = () => {
-		isForReductionOffer
-			? confirmForReductionOffer(data, '4')
+		isNewTenderSystem
+			? confirmOffer(data, '4')
 			: confrom(data, '4', otherUsers)
 	}
 	const confirmWithStatus = () => {
-		isForReductionOffer
-			? confirmForReductionOffer(data, '8')
+		isNewTenderSystem
+			? confirmOffer(data, '8')
 			: confrom(data, '8', null)
 	}
 	const confirmWithPass = () => {
@@ -1395,7 +1490,7 @@ function confrom(offer, status, otherUsers) {
 	})
 }
 
-function confirmForReductionOffer(offer, status) {
+function confirmOffer(offer, status) {
 	const withoutConfirm = status !== '8'
 
 	const successMessage = withoutConfirm
@@ -1490,7 +1585,7 @@ function send(offer, routeDirection, otherUsers) {
 	})
 }
 
-function setRouteDirection(idRoute) {
+function setRouteDirection(idRoute, isForReduction) {
 	const rowNode = gridOptions.api.getRowNode(idRoute)
 	if (!rowNode) return
 	const route = rowNode.data
@@ -1500,14 +1595,22 @@ function setRouteDirection(idRoute) {
 	const routeDirectionElement = document.querySelector('#routeDirection')
 	if (!routeDirectionElement) return
 
+	routeDirectionElement.innerHTML = ''
 	routeDirectionElement.textContent = routeDirection
+
+	if (isForReduction) {
+		const span = document.createElement('span')
+		span.className = 'text-danger'
+		span.textContent = ' (тендер на понижение)'
+		routeDirectionElement.append(span)
+	}
 }
 
 // модальное окно с аналитикой по маршруту
 function showPriceAnalisys(routeDirection) {
 	const reportId = '7d03e0b1-287e-40c9-b17c-0f7f04d9be58&autoAuth=true&ctid=a9af5edf-b4be-4591-ba34-a3a96434b108'
 	const basePowerBiUrl = `https://app.powerbi.com/reportEmbed?reportId=${reportId}`
-	const tableName = "Route"
+	const tableName = "SummaryTable"
 	const columnName = "Clean_route"
 
 	const reportFrame = document.getElementById('priceAnalisysReportFrame')
@@ -1522,4 +1625,47 @@ function showPriceAnalisys(routeDirection) {
 	reportFrame.src = powerBiUrl(routeDirection.slice(0, -7).replace(/[\s,\.\/\'\<\>]/g, ''))
 	$('#priceAnalisys_routeDirection').text(routeDirection)
 	setTimeout(() => $('#priceAnalisysModal').modal('show'), 300)
+}
+
+// превращение обычного тендера в тендер на понижение на основе предложения
+function makeTenderForReduction(data) {
+	if (isObserver(role)) {
+		alert("Недостаточно прав!")
+		return
+	}
+
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 300)
+
+	ajaxUtils.postJSONdata({
+		url: makeTenderForReductionUrl,
+		token,
+		data: data,
+		successCallback: async (res) => {
+			if (!res || !res.status) {
+				clearTimeout(timeoutId)
+				bootstrap5overlay.hideOverlay()
+				snackbar.show('Возникла ошибка - обновите страницу!')
+				return
+			}
+
+			if (res.status === '200') {
+				const route = res.route
+				const mappedRoute = await routeMapCallback(route)
+				updateTableRow(gridOptions, mappedRoute)
+				snackbar.show('Тендер на понижение создан!')
+				$('#tenderOffersModal').modal('hide')
+
+			} else if (res.status === '100') {
+				const errorMessage = res.message || 'Ошибка при создании предложения'
+				snackbar.show(errorMessage)
+			}
+
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+		},
+		errorCallback: () => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+		}
+	})
 }

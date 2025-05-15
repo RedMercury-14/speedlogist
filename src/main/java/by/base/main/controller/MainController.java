@@ -355,6 +355,11 @@ public class MainController {
 		return "main";		
 	}
 	
+	@GetMapping("/main/procurement/create-accommodation")
+	public String getGoodAccommodations(Model model, HttpServletRequest request) {
+	    return "goodAccommodations";
+	}
+
 	@GetMapping("/main/carrier-application-form")
 	public String getCarrierApplicationForm(Model model, HttpServletRequest request) {
 	    return "carrierApplicationForm";
@@ -1433,74 +1438,98 @@ public class MainController {
 	
 	@RequestMapping("/main/carrier/tender/tenderpage")
 	public String tenderPage(Model model, HttpServletRequest request, HttpSession session,
-	       @RequestParam(value = "routeId", required = false) Integer routeId) {
-	    User user = getThisUser();
-	    if(user.getNumYNP() != null && user.getNumYNP().split("&").length >1) {
-	       request.setAttribute("blockMessage", "Доступ к тендерам запрещен! Обратитесь к администратору");
-	       return "blockPage";
-	    }
-	    if (isBlockTender) {
-	       request.setAttribute("blockMessage", "Тендеры завершены. Идёт обработка поступивших предложений.");
-	       return "blockPage";
-	    }
-	    if(user.getCheck() != null && user.getCheck().split("&").length >1) {
-	       request.setAttribute("blockMessage", "В доступе отказано! Необходимо пройти верификацию. Обратитесь к администратору");
-	       return "blockPage";
-	    }
-	    if (routeId == null) {
-	       routeId = (Integer) session.getAttribute("idRoute");
-	    }
-	    Route route = routeService.getRouteById(routeId);
-	    boolean flag = false;
-	    if (routeService.getRouteById(routeId) == null) {
-	       request.setAttribute("errorMessage", "Маршрут № "+routeId+ " удалён, или не создан.");
-	       return "errorPage";
-	    }
-	    if (route.getForReduction()) {
-	             Set<CarrierBid> carrierBids = route.getCarrierBids();
-	             List<CarrierBid> sortedBids = carrierBids.stream()
-	                   .sorted(Comparator.comparing(CarrierBid::getPrice))
-	                   .collect(Collectors.toList());
+	           @RequestParam(value = "routeId", required = false) Integer routeId) {
+	        User user = getThisUser();
+	        if(user.getNumYNP() != null && user.getNumYNP().split("&").length >1) {
+	           request.setAttribute("blockMessage", "Доступ к тендерам запрещен! Обратитесь к администратору");
+	           return "blockPage";
+	        }
+	        if (isBlockTender) {
+	           request.setAttribute("blockMessage", "Тендеры завершены. Идёт обработка поступивших предложений.");
+	           return "blockPage";
+	        }
+	        if(user.getCheck() != null && user.getCheck().split("&").length >1) {
+	           request.setAttribute("blockMessage", "В доступе отказано! Необходимо пройти верификацию. Обратитесь к администратору");
+	           return "blockPage";
+	        }
+	        if (routeId == null) {
+	           routeId = (Integer) session.getAttribute("idRoute");
+	        }
+	        Route route = routeService.getRouteById(routeId);
+	        boolean flag = false;
+	        if (routeService.getRouteById(routeId) == null) {
+	           request.setAttribute("errorMessage", "Маршрут № "+routeId+ " удалён, или не создан.");
+	           return "errorPage";
+	        }
 
-	             request.setAttribute("userBid", null);
+	       Set<CarrierBid> carrierBids = route.getCarrierBids();
+	       request.setAttribute("userBid", null);
 
-	             if (!sortedBids.isEmpty()) {
-	                for (CarrierBid carrierBid : sortedBids) {
-	                   if (carrierBid.getCarrier().equals(getThisUser())) {
-	                      request.setAttribute("userBid", carrierBid);
-	                      break;
-	                   }
-	                }
-	                request.setAttribute("actualBid", sortedBids.get(0));
-	             } else {
-	                request.setAttribute("actualBid", null);
-	             }
-
-	       model.addAttribute("route", route);
-	       request.setAttribute("flag", flag);
-	    } else {
-	       if (route.getComments() != null && route.getComments().equals("international")) {
-	          for (Message message : chatEnpoint.internationalMessegeList) {
-	             if (message.getIdRoute().equals(routeId.toString()) && message.getYnp().equals(user.getNumYNP())) { // <-- исправлено тут
-
-	                flag = true;
-	                request.setAttribute("userCost", message.getText());
-	                request.setAttribute("userCurrency", message.getCurrency());
+	       if (!carrierBids.isEmpty()) {
+	          List<CarrierBid> sortedBids = carrierBids.stream()
+	                .sorted(Comparator.comparing(CarrierBid::getPrice))
+	                .collect(Collectors.toList());
+	          for (CarrierBid carrierBid : sortedBids) {
+	             if (carrierBid.getCarrier().equals(getThisUser())) {
+	                request.setAttribute("userBid", carrierBid);
 	                break;
 	             }
 	          }
-	          model.addAttribute("route", route);
-	          request.setAttribute("flag", flag);
-	       }else {
-	          model.addAttribute("route", addCostForRoute(route));
-	          request.setAttribute("regionalRoute", true);
+	          if (route.getForReduction()) {
+	             request.setAttribute("actualBid", sortedBids.get(0));
+	          }
+
+	       }  else {
+	          request.setAttribute("actualBid", null);
 	       }
+
+	       model.addAttribute("route", route);
+	       request.setAttribute("flag", flag);
+//	      if (route.getForReduction()) {
+//	               Set<CarrierBid> carrierBids = route.getCarrierBids();
+//	               List<CarrierBid> sortedBids = carrierBids.stream()
+//	                     .sorted(Comparator.comparing(CarrierBid::getPrice))
+//	                     .collect(Collectors.toList());
+	//
+//	               request.setAttribute("userBid", null);
+	//
+//	               if (!sortedBids.isEmpty()) {
+//	                  for (CarrierBid carrierBid : sortedBids) {
+//	                     if (carrierBid.getCarrier().equals(getThisUser())) {
+//	                        request.setAttribute("userBid", carrierBid);
+//	                        break;
+//	                     }
+//	                  }
+//	                  request.setAttribute("actualBid", sortedBids.get(0));
+//	               } else {
+//	                  request.setAttribute("actualBid", null);
+//	               }
+	//
+//	         model.addAttribute("route", route);
+//	         request.setAttribute("flag", flag);
+//	      } else {
+//	         if (route.getComments() != null && route.getComments().equals("international")) {
+//	            for (Message message : chatEnpoint.internationalMessegeList) {
+//	               if (message.getIdRoute().equals(routeId.toString()) && message.getYnp().equals(user.getNumYNP())) { // <-- исправлено тут
+	//
+//	                  flag = true;
+//	                  request.setAttribute("userCost", message.getText());
+//	                  request.setAttribute("userCurrency", message.getCurrency());
+//	                  break;
+//	               }
+//	            }
+//	            model.addAttribute("route", route);
+//	            request.setAttribute("flag", flag);
+//	         }else {
+//	            model.addAttribute("route", addCostForRoute(route));
+//	            request.setAttribute("regionalRoute", true);
+//	         }
+//	      }
+
+	        model.addAttribute("user", user);
+	        return "tenderPage";
 	    }
-
-	    model.addAttribute("user", user);
-	    return "tenderPage";
-	}
-
+	
 //	@RequestMapping("/main/carrier/tender/tenderpage")
 //	public String tenderPage(Model model, HttpServletRequest request, HttpSession session,
 //			@RequestParam(value = "routeId", required = false) Integer routeId) {
@@ -1529,7 +1558,7 @@ public class MainController {
 //		if (route.getComments() != null && route.getComments().equals("international")) {
 //			for (Message message : chatEnpoint.internationalMessegeList) {
 //				if (message.getIdRoute().equals(routeId.toString()) && message.getYnp().equals(user.getNumYNP())) { // <-- исправлено тут
-//
+//					
 //					flag = true;
 //					request.setAttribute("userCost", message.getText());
 //					request.setAttribute("userCurrency", message.getCurrency());
@@ -1541,14 +1570,14 @@ public class MainController {
 //		}else {
 //			model.addAttribute("route", addCostForRoute(route));
 //			request.setAttribute("regionalRoute", true);
-//		}
+//		}		
 //		model.addAttribute("user", user);
 //		return "tenderPage";
 //	}
-
-
-
-
+	
+	
+	
+	
 	//интерфейс листа тендера
 	@SuppressWarnings("static-access")
 	@RequestMapping("/main/carrier/tender/tenderUpdate")
@@ -1754,7 +1783,6 @@ public class MainController {
 	}
 	
 	//получение страницы с маршрутами перевозчика!
-	@TimedExecution
 	@RequestMapping("/main/carrier/transportation")
 	public String transportationGet(Model model, HttpServletRequest request, HttpSession session) {	
 		User user = getThisUser();

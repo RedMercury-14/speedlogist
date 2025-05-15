@@ -1119,6 +1119,12 @@ export class SmartWebSocket {
 		}
 		console.log("Сокет закрыт вручную")
 	}
+
+	onMessage(callback) {
+		if (typeof callback === 'function') {
+			this._onMessage = callback
+		}
+	}
 }
 
 export function copyTextToClipboard(text) {

@@ -1,31 +1,40 @@
 import { ajaxUtils } from "./ajaxUtils.js"
 import { saveMainchatMessageUrl } from "./globalConstants/urls.js"
+import { dateHelper } from "./utils.js"
 
 const audio = new Audio('/speedlogist/resources/audio/notification.mp3')
 
-export function createToast(token, message) {
+export function createToast(option) {
 	const container = document.querySelector('#toasts')
 	const toast = document.createElement('div')
-	const id = message.idMessage
-	const dateTime = getDateTimeToView(message.datetime)
-	const text = message.url ? `${message.text} <a href="${message.url}">Перейти</a>` : message.text
+	const dateTime = getDateTimeToView(option.date)
+	const messageBoby = option.url ? `${option.text} <a href="${option.url}">Перейти</a>` : option.text
+	const title = option.title || 'Уведомление'
+	const autoCloseTime = option.autoCloseTime
 
+	toast.id = `${option.date}`
 	toast.className = ('toast fade show')
-	toast.id = id
 	toast.setAttribute('role', 'alert')
 	toast.setAttribute('aria-live', 'assertive')
 	toast.setAttribute('aria-atomic', 'true')
-	toast.setAttribute('data-autohide', 'false')
+	toast.setAttribute('data-autohide', 'true')
+	toast.setAttribute('data-animation', 'true')
+	toast.setAttribute('data-delay', `${autoCloseTime}`)
 
-	toast.innerHTML = createToastHtml('Непрочитанное сообщение', dateTime, text)
+	toast.innerHTML = createToastHtml(title, dateTime, messageBoby)
 
 	addCloseListener(toast)
-	addClickLinkListner(toast, token, message)
+	addClickLinkListner(toast)
 
 	container && container.appendChild(toast)
 
 	// запись сообщения в базу данных при закрытии окна сообщения
-	$(`#${id}`).on('hidden.bs.toast', () => saveMessage(token, message))
+	// $(`#${id}`).on('hidden.bs.toast', () => saveMessage(token, option))
+
+	// автозакрытие сообщения
+	autoCloseTime && setTimeout(() => {
+		$(`#${toast.id}`).toast('hide')
+	}, autoCloseTime)
 
 	return toast
 }
@@ -59,13 +68,13 @@ function addCloseListener(toast) {
 }
 
 // добавление обработчика для ссылки в сообщении и запись ее в базу данных для
-function addClickLinkListner(toast, token, message) {
+function addClickLinkListner(toast) {
 	const link = toast.querySelector('a')
 	link && link.addEventListener('click', (e) => {
 		e.preventDefault()
 
 		// запись сообщения в базу данных
-		saveMessage(token, message)
+		// saveMessage(token, message)
 
 		// переход по ссылке через 200 мс
 		setTimeout(() => {
@@ -85,15 +94,6 @@ function saveMessage(token, message) {
 }
 
 function getDateTimeToView(dateTime) {
-	const [ date, time ] = dateTime.split('; ')
-	const reverseDate = date.split('-').reverse().join('-')
-	const dateObj = new Date(reverseDate)
-	dateObj.setSeconds(1)
-
-	const now = new Date()
-	now.setHours(0)
-	now.setMinutes(0)
-	now.setSeconds(0)
-
-	return dateObj < now ? dateTime : time
+	const dateObj = new Date(dateTime)
+	return dateHelper.getFormatDateTime(dateObj)
 }

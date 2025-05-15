@@ -197,7 +197,7 @@ function drawBasic() {
 
 
       var options = {
-		title: 'График изминения цены',
+		title: 'График изменения цены',
         hAxis: {
           title: 'Дата'
         },

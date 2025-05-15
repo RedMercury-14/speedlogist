@@ -206,7 +206,7 @@ export const getProposalBaseUrl = `/speedlogist/api/logistics/getProposal/` // �
 export const confirmTenderOfferUrl = '/speedlogist/api/logistics/internationalNew/confrom' // подтверждение предложения (старые предложения)
 export const getOffersForReductionByIdRouteBaseUrl = '/speedlogist/api/logistics/tenders/get-bids-by-id-route/' // получение предложжений для тендера на понижение
 export const makeWinnerTenderForReductionOfferUrl = '/speedlogist/api/logistics/tenders/make-bid-winner' // подтверждение предложения тендера на понижение
-
+export const makeTenderForReductionUrl = '/speedlogist/api/logistics/tenders/make-tender-for-reduction' // превращение обычного тендера в тендер на понижение
 
 ///////////////////////////////////////////////
 // internationalStockSopport.js - Таблица Башкирова
@@ -383,15 +383,21 @@ export const setRouteTimeUrl = "/speedlogist/api/route/time"
 ///////////////////////////////////////////////
 // Текущие тендеры
 ///////////////////////////////////////////////
-// export const getActiveTendersUrl = `/speedlogist/api/carrier/getActiveInternationalTenders`
-// ТЕНДЕРЫ НА ПОНИЖЕНИЕ
 export const getActiveTendersUrl = `/speedlogist/api/carrier/tenders/all`
 export const getActiveTendersUrl = `/speedlogist/api/carrier/tenders/all`
 export const getInfoRouteMessageBaseUrl = `/speedlogist/api/info/message/routes/`
 export const getThisUserUrl = '/speedlogist/api/getThisUser'
-export const setTenderForReductionOfferUrl = '/speedlogist/api/carrier/tenders/get-bid'
-export const deleteTenderForReductionOfferUrl = '/speedlogist/api/carrier/tenders/delete-bid'
+export const setTenderOfferUrl = '/speedlogist/api/carrier/tenders/get-bid'
+export const deleteTenderOfferUrl = '/speedlogist/api/carrier/tenders/delete-bid'
 export const getThisUserIdUrl = '/speedlogist/api/get-this-user'
+
+
+
+///////////////////////////////////////////////
+// Текущие маршруты
+///////////////////////////////////////////////
+export const getMyActualRoutesUrl = '/speedlogist/api/carrier/get-actual-carrier-routes'
+export const setRouteParametersUrl = '/speedlogist/api/carrier/transportation/set-route-parameters'
 
 
 ///////////////////////////////////////////////
@@ -482,8 +488,17 @@ export const loadPriceProtocolExcelUrl = '/speedlogist/api/procurement/price-pro
 ///////////////////////////////////////////////
 export const getTenderPreviewBaseUrl = '/speedlogist/api/get-tender-preview/'
 
+
 ///////////////////////////////////////////////
 // Форма отправки данных о сотрудничестве
 ///////////////////////////////////////////////
 export const createCarrierApplicationUrl = '/speedlogist/api/carrier-application/create'
+
+
+///////////////////////////////////////////////
+// 
+///////////////////////////////////////////////
+export const getAllProductControlUrl = '/speedlogist/api/procurement/product-control/getAll'
+export const loadProductControlExcelUrl = '/speedlogist/api/procurement/product-control/load'
+export const editProductControlUrl = '/speedlogist/api/procurement/product-control/edit'
 

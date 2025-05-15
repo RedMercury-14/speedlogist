@@ -314,8 +314,10 @@ public class YardManagementRestController {
 				point[1] = cash;
 				resultPoints.add(point);
 			}
-			listResult.add(new MapResponse(resultPoints, path.getDistance(), path.getTime(), shopPoints.get(index)[0],
-					shopPoints.get(index)[1]));
+//			listResult.add(new MapResponse(resultPoints, path.getDistance(), path.getTime(), shopPoints.get(index)[0],
+//					shopPoints.get(index)[1]));
+			listResult.add(new MapResponse(null, path.getDistance(), path.getTime(), shopPoints.get(index)[0],
+			shopPoints.get(index)[1])); // важно. Здесь нет точек!!!
 		}
 		return listResult;
 	}

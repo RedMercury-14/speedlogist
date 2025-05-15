@@ -162,8 +162,19 @@ public class PDFWriter {
 						addressOld.setPall(summPall.toString());
 						Integer summWeigth = Integer.parseInt(addressOld.getWeight()) + Integer.parseInt(address.getWeight());
 						addressOld.setWeight(summWeigth.toString());
-						Integer summVolume = Integer.parseInt(addressOld.getVolume()) + Integer.parseInt(address.getVolume());
-						addressOld.setVolume(summVolume.toString());
+						if(addressOld.getVolume() != null && address.getVolume() != null) {
+							Integer summVolume = Integer.parseInt(addressOld.getVolume()) + Integer.parseInt(address.getVolume());
+							addressOld.setVolume(summVolume.toString());
+						}else if(addressOld.getVolume() == null && address.getVolume() != null) {
+							Integer summVolume = Integer.parseInt(address.getVolume());
+							addressOld.setVolume(summVolume.toString());
+						}else if (addressOld.getVolume() != null && address.getVolume() == null) {
+							Integer summVolume = Integer.parseInt(addressOld.getVolume());
+							addressOld.setVolume(summVolume.toString());
+						}else {
+							addressOld.setVolume(null);
+						}
+						
 						if(!addressOld.getCargo().trim().equals(address.getCargo().trim())) {
 							addressOld.setCargo(addressOld.getCargo() + "; " + address.getCargo());
 						}						

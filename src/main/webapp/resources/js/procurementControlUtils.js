@@ -2,8 +2,6 @@ import { cell } from "./AG-Grid/ag-grid-utils.js"
 import { dateHelper, getStatus } from "./utils.js"
 
 export function mapCallbackForProcurementControl(order) {
-	const dateCreateToView = dateHelper.getFormatDate(order.dateCreate)
-	const dateDeliveryToView = dateHelper.getFormatDate(order.dateDelivery)
 	const controlToView = order.control ? 'Да' : 'Нет'
 	const telephoneManagerToView = order.telephoneManager ? `; тел. ${order.telephoneManager}` : ''
 	const managerToView = `${order.manager}${telephoneManagerToView}`
@@ -72,8 +70,6 @@ export function mapCallbackForProcurementControl(order) {
 
 	return {
 		...order,
-		dateCreateToView,
-		dateDeliveryToView,
 		controlToView,
 		addressesToView,
 		loadDateToView,
@@ -199,7 +195,8 @@ function getFirstLoadDateToView(addressesToView) {
 	if (!addressesToView) return ''
 	const loadPoints = addressesToView.filter(address => address.type === "Загрузка")
 	if (!loadPoints.length || loadPoints.length === 0) return ''
-	return loadPoints[0].dateToView
+	if (!loadPoints[0].dateToView) return ''
+	return new Date(dateHelper.changeFormatToInput(loadPoints[0].dateToView)).getTime()
 }
 
 function getLastUnloadDateToView(addressesToView) {
@@ -208,7 +205,8 @@ function getLastUnloadDateToView(addressesToView) {
 		.filter(address => address.type === "Выгрузка")
 		.sort((a, b) => b.date - a.date)
 	if (!unloadPoints.length || unloadPoints.length === 0) return ''
-	return unloadPoints[0].dateToView
+	if (!unloadPoints[0].dateToView) return ''
+	return new Date(dateHelper.changeFormatToInput(unloadPoints[0].dateToView)).getTime()
 }
 
 function getRouteInfo(order) {

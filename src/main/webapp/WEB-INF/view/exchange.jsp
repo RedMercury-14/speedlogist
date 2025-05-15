@@ -150,7 +150,7 @@
 
 	<script src='${pageContext.request.contextPath}/resources/js/mainPage/main.js'></script>
 	<script src='${pageContext.request.contextPath}/resources/js/mainPage/nav-fixed-top.js'></script>
-	<script src="${pageContext.request.contextPath}/resources/js/myMessage.js" type="module"></script>
+	<script src="${pageContext.request.contextPath}/resources/js/tenderNotifications.js" type="module"></script>
 </body>
 
 </html>

@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import javax.persistence.*;
 import java.sql.Timestamp;
 import java.util.Objects;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "carrier_bid")
@@ -50,13 +49,21 @@ public class CarrierBid {
 
     @Column(name = "company_name")
     private String companyName;
-
+    
     @Column(name = "route_direction")
     private String routeDirection;
 
     @Column(name = "logist_comment")
     private String logistComment;
 
+    @Column(name = "status")
+    private Integer status;
+
+    @Column(name = "user_has_change")
+    private String userHasChange;
+
+    @Column(name = "datetime_change")
+    private Timestamp datetimeChange;
 
     public Long getIdCarrierBid() {
         return idCarrierBid;
@@ -162,7 +169,29 @@ public class CarrierBid {
 		this.logistComment = logistComment;
 	}
 
+	public Integer getStatus() {
+		return status;
+	}
 
+	public void setStatus(Integer status) {
+		this.status = status;
+	}
+
+	public String getUserHasChange() {
+		return userHasChange;
+	}
+
+	public void setUserHasChange(String userHasChange) {
+		this.userHasChange = userHasChange;
+	}
+
+	public Timestamp getDatetimeChange() {
+		return datetimeChange;
+	}
+
+	public void setDatetimeChange(Timestamp datetimeChange) {
+		this.datetimeChange = datetimeChange;
+	}
 
 	@Override
 	public int hashCode() {

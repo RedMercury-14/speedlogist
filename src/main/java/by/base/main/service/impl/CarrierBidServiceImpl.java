@@ -70,4 +70,10 @@ public class CarrierBidServiceImpl implements CarrierBidService {
     public void deleteIrrelevantBidsForRoute(Route route) {
         carrierBidDao.deleteIrrelevantBidsForRoute(route);
     }
+    
+    @Transactional
+    @Override
+    public List<CarrierBid> getActualCarrierBidsByRouteId(Integer routeId) {
+        return carrierBidDao.getActualCarrierBidsByRouteId(routeId);
+    }
 }

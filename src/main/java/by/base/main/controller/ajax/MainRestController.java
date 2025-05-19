@@ -407,7 +407,6 @@ public class MainRestController {
      * @author Ira
      */
     @PostMapping("/logistics/tenders/make-tender-for-reduction")
-    @TimedExecution
     public Map<String, Object> makeTenderForReduction(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
         Map<String, Object> response = new HashMap<String, Object>();
         JSONParser parser = new JSONParser();
@@ -436,8 +435,8 @@ public class MainRestController {
         if (carrierBidId != null) {
             carrierBid = carrierBidService.getById(carrierBidId);
             carrierBid.setPercent(0);
-            List <CarrierBid> carrierBids = carrierBidService.getCarrierBidsByRouteId(routeId);
-            carrierBids.remove(carrierBid);
+            List <CarrierBid> carrierBids = carrierBidService.getCarrierBidsByRouteId(routeId).stream().filter(c -> c.getStatus().equals(20)).collect(Collectors.toList());
+            carrierBids.removeIf(c -> c.getCarrier().equals(carrierBid.getCarrier()));
             for (CarrierBid carrierBid1 : carrierBids) {
                 if (!carrierBid1.getIdCarrierBid().equals(carrierBidId)) {
                     carrierBidService.delete(carrierBid1);
@@ -449,8 +448,9 @@ public class MainRestController {
             messageForWinner.setIdRoute(routeId.toString());
             messageForWinner.setToUser(carrierBid.getCarrier().getLogin());
             messageForWinner.setAction("notification");
-            messageForWinner.setText("Тендер " + route.getRouteDirection() + " переведён в формат понижения ставки." +
-                    "<br>Ваша ставка установлена как начальная цена этого тендера.");
+            messageForWinner.setText("Тендер для маршрута №" + route.getIdRoute() + " : " + route.getRouteDirection().substring(0, 100)
+                    + "... переведён в формат понижения ставки."
+                    + "<br>Ваша ставка установлена как начальная цена этого тендера.");
             messageForWinner.setStatus("200");
             messageForWinner.setWSPath("carrier-tenders");
             carrierTenderWebSocket.sendToUser(carrierBid.getCarrier().getLogin(), messageForWinner);
@@ -459,12 +459,16 @@ public class MainRestController {
             messageForLoosers.setUrl("/speedlogist/main/carrier/tender/tenderpage?routeId=" + routeId);
             messageForLoosers.setIdRoute(routeId.toString());
             messageForLoosers.setAction("notification");
-            messageForLoosers.setText("Тендер " + route.getRouteDirection() + " переведён в формат понижения ставки." +
-                    "<br>Ваша предыдущая ставка отменена — подайте новую, чтобы участвовать.");
+            messageForLoosers.setText("Тендер для маршрута №" + route.getIdRoute() + " : " + route.getRouteDirection().substring(0, 100)
+                    + "... переведён в формат понижения ставки."
+                    + "<br>Ваша предыдущая ставка отменена — подайте новую, чтобы участвовать.");
             messageForLoosers.setStatus("200");
             messageForLoosers.setWSPath("carrier-tenders");
-            carrierTenderWebSocket.broadcastWithException(carrierBid.getCarrier().getLogin(), messageForLoosers);
-
+            for (CarrierBid carrierBid1 : carrierBids) {
+                messageForLoosers.setToUser(carrierBid1.getCarrier().getLogin());
+                carrierTenderWebSocket.sendToUser(carrierBid1.getCarrier().getLogin(), messageForLoosers);
+            }
+            
         } else {
             carrierBid = new CarrierBid();
             carrierBid.setDateTime(new Timestamp(System.currentTimeMillis()));
@@ -675,81 +679,269 @@ public class MainRestController {
      * @author Ira
      */
     @PostMapping("/logistics/tenders/make-bid-winner")
-    @TimedExecution
     public Map<String, Object> makeBidWinner(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
         Map<String, Object> response = new HashMap<String, Object>();
         JSONParser parser = new JSONParser();
         JSONObject jsonMainObject = (JSONObject) parser.parse(str);
         Long idCarrierBid = jsonMainObject.get("idCarrierBid") != null || !jsonMainObject.get("idCarrierBid").toString().isEmpty() ? Long.parseLong(jsonMainObject.get("idCarrierBid").toString()) : null;
-        String status = jsonMainObject.get("status") != null || !jsonMainObject.get("status").toString().isEmpty() ? jsonMainObject.get("status").toString() : null;
+        String status = jsonMainObject.get("status") == null ? null : jsonMainObject.get("status").toString();
+        String logistComment = jsonMainObject.get("logistComment") == null ? null : jsonMainObject.get("logistComment").toString();
         CarrierBid carrierBid = carrierBidService.getById(idCarrierBid);
         if (carrierBid == null) {
-           response.put("status", "100");
-           response.put("message", "Выбранное предложение было отменено.");
-           return response;
+            response.put("status", "100");
+            response.put("message", "Выбранное предложение было отменено.");
+            return response;
         }
 
         Integer idRoute = carrierBid.getRoute().getIdRoute();
         int idUser = carrierBid.getIdUser();
         int cost = carrierBid.getPrice();
         String currency = carrierBid.getCurrency();
-        //обработка, если удалось нажать на кнопку
         Order order = orderService.getOrderByIdRoute(idRoute);
-        if(order != null && order.getStatus() == 10) {
-           response.put("status", "100");
-           response.put("message", "Заявка не найдена");
-           return response;
+        if (order != null && order.getStatus() == 10) {
+            response.put("status", "100");
+            response.put("message", "Заявка не найдена");
+            return response;
         }
         User user = userService.getUserById(idUser);
         if (status == null) {
-           status = "4";
-           routeService.updateRouteInBase(idRoute, cost, currency, user, status);
+            status = "4";
+            routeService.updateRouteInBase(idRoute, cost, currency, user, status);
         } else {
-           routeService.updateRouteInBase(idRoute, cost, currency, user, status);
-           Route route = routeService.getRouteById(idRoute);
+            routeService.updateRouteInBase(idRoute, cost, currency, user, status);
         }
 
         carrierBid.setWinner(true);
+        carrierBid.setLogistComment(logistComment);
         carrierBidService.update(carrierBid);
 
         //меняем статус у Order если имеется
         Route routeTarget = routeService.getRouteById(idRoute);
-        Set <Order> orders = routeTarget.getOrders();
-        if(orders != null && !orders.isEmpty()) {
-           orders.forEach(o->{
-              o.setStatus(60);
-              o.setChangeStatus(o.getChangeStatus() + "\nМаршрут " + idRoute + " выигран " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy hh:MM:ss")));
-              orderService.updateOrder(o);
-//            orderService.updateOrderFromStatus(o);
-           });
+        Set<Order> orders = routeTarget.getOrders();
+        if (orders != null && !orders.isEmpty()) {
+            orders.forEach(o -> {
+                o.setStatus(60);
+                o.setChangeStatus(o.getChangeStatus() + "\nМаршрут " + idRoute + " выигран " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy hh:MM:ss")));
+                orderService.updateOrder(o);
+            });
         }
 
-         CarrierTenderMessage messageForWinner = new CarrierTenderMessage();
-         messageForWinner.setUrl("/speedlogist/main/carrier/transportation");
-         messageForWinner.setIdRoute(idRoute.toString());
-         messageForWinner.setToUser(carrierBid.getCarrier().getLogin());
-         messageForWinner.setAction("notification");
-         messageForWinner.setText("Ваше предложение к маршруту " + routeTarget.getRouteDirection() + " с ценой " + cost + " " + currency + " <b>одобрено!</b>" +
-                 "<br>Необходимо назначить машину и водителя.");
-         messageForWinner.setStatus("200");
-         messageForWinner.setWSPath("carrier-tenders");
-         carrierTenderWebSocket.sendToUser(carrierBid.getCarrier().getLogin(), messageForWinner);
+        if (!status.equals("8")) {
+            CarrierTenderMessage messageForWinner = new CarrierTenderMessage();
+            messageForWinner.setUrl("/speedlogist/main/carrier/transportation");
+            messageForWinner.setIdRoute(idRoute.toString());
+            messageForWinner.setToUser(carrierBid.getCarrier().getLogin());
+            messageForWinner.setAction("notification");
+            messageForWinner.setText("Ваше предложение к маршруту №" + routeTarget.getIdRoute() + " : " + routeTarget.getRouteDirection().substring(0, 100)
+                    + "... с ценой " + cost + " " + currency + " <b>одобрено!</b>"
+                    + "<br>Необходимо назначить машину и водителя.");
+            messageForWinner.setStatus("200");
+            messageForWinner.setWSPath("carrier-tenders");
+            carrierTenderWebSocket.sendToUser(carrierBid.getCarrier().getLogin(), messageForWinner);
+        }
 
-
-         CarrierTenderMessage messageForLooser = new CarrierTenderMessage();
-         messageForLooser.setIdRoute(idRoute.toString());
-         messageForLooser.setToUser(carrierBid.getCarrier().getLogin());
-         messageForLooser.setAction("notification");
-         messageForLooser.setText("К сожалению, предложенная Вами цена для маршрута " + routeTarget.getRouteDirection() + " нам <b>не подходит</b>.");
-         messageForLooser.setStatus("200");
-         messageForLooser.setWSPath("carrier-tenders");
-         carrierTenderWebSocket.broadcastWithException(carrierBid.getCarrier().getLogin(), messageForLooser);
+        List<CarrierBid> actualBids = carrierBidService.getActualCarrierBidsByRouteId(carrierBid.getRoute().getIdRoute());
+        actualBids.removeIf(c -> c.getCarrier().equals(carrierBid.getCarrier()));
+        CarrierTenderMessage messageForLooser = new CarrierTenderMessage();
+        messageForLooser.setIdRoute(idRoute.toString());
+        messageForLooser.setToUser(carrierBid.getCarrier().getLogin());
+        messageForLooser.setAction("notification");
+        messageForLooser.setText("К сожалению, предложенная Вами цена для маршрута №"
+                + routeTarget.getIdRoute() + " : " + routeTarget.getRouteDirection().substring(0, 100)
+                + "... нам <b>не подходит</b>.");
+        messageForLooser.setStatus("200");
+        messageForLooser.setWSPath("carrier-tenders");
+        for(CarrierBid bid : actualBids) {
+            messageForLooser.setToUser(bid.getCarrier().getLogin());
+            carrierTenderWebSocket.sendToUser(bid.getCarrier().getLogin(), messageForLooser);
+        }
+        CarrierTenderMessage message = new CarrierTenderMessage();
+        message.setIdRoute(idRoute.toString());
+        message.setAction("finish-tender");
+        message.setStatus("200");
+        message.setWSPath("carrier-tenders");
+        carrierTenderWebSocket.broadcast(message);
 
         response.put("status", "200");
         response.put("message", "Маршрут создан");
         response.put("route", routeTarget);
         return response;
-     }
+    }
+    
+    /**
+     * <br>Метод для удаления ставки ЛОГИСТОМ</br>.
+     * @param request
+     * @param str
+     * @throws IOException
+     * @throws ParseException
+     * @author Ira
+     */
+    @PostMapping("/logistics/tenders/delete-bid")
+    @TimedExecution
+    public Map<String, Object> deleteBidByLogist(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+        Map<String, Object> response = new HashMap<>();
+        User user = getThisUser();
+        JSONParser parser = new JSONParser();
+        JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+        Long bidId = jsonMainObject.get("idCarrierBid") == null ? null : Long.parseLong(jsonMainObject.get("idCarrierBid").toString());
+        CarrierBid carrierBid = carrierBidService.getById(bidId);
+        if (carrierBid == null) {
+            response.put("status", "100");
+            response.put("message", "Такая ставка не найдена");
+            return response;
+        }
+        Integer routeId = jsonMainObject.get("idRoute") == null ? null : Integer.parseInt(jsonMainObject.get("idRoute").toString());
+        Route route = routeService.getRouteById(routeId);
+        if(!route.getForReduction()) {
+        	response.put("status", "100");
+            response.put("message", "Запрещено! Только для тендеров на понижение");
+            return response;
+        }
+        String logistComment = jsonMainObject.get("logistComment") == null ? null : jsonMainObject.get("logistComment").toString();
+        carrierBid.setLogistComment(logistComment);
+        carrierBid.setStatus(10);
+        carrierBid.setUserHasChange(user.getSurname() +" "+ user.getName());
+        carrierBid.setDatetimeChange(Timestamp.valueOf(LocalDateTime.now()));
+        carrierBidService.update(carrierBid);
+        
+        List<CarrierBid> bids = carrierBidService.getCarrierBidsByRouteId(routeId);
+        List<CarrierBid> sortedBids = bids.stream().sorted(Comparator.comparing(CarrierBid::getPrice)).collect(Collectors.toList());
+        List<CarrierBid> filteredBids = sortedBids.stream().filter(c -> c.getStatus().equals(20)).collect(Collectors.toList());
+
+        CarrierTenderMessage messageForCancelled = new CarrierTenderMessage();
+
+        messageForCancelled.setUrl("/speedlogist/main/carrier/tender/tenderpage?routeId=" + routeId);
+        messageForCancelled.setIdRoute(routeId.toString());
+        messageForCancelled.setToUser(carrierBid.getCarrier().getLogin());
+        messageForCancelled.setAction("notification");
+        messageForCancelled.setText("Ваша ставка для маршрута №"
+                + route.getIdRoute() + " : " + route.getRouteDirection().substring(0, 100)
+                + "... была <b>удалена логистом</b>.");
+        messageForCancelled.setStatus("200");
+        messageForCancelled.setWSPath("carrier-tenders");
+        carrierTenderWebSocket.sendToUser(carrierBid.getCarrier().getLogin(), messageForCancelled);
+
+        if (route.getForReduction()) {
+            if (!filteredBids.isEmpty()) {
+
+                if (!filteredBids.get(0).getCarrier().equals(carrierBid.getCarrier())) {
+
+                    CarrierBid latestBid = filteredBids.get(0);
+
+                    CarrierTenderMessage messageForWinnerAgain = new CarrierTenderMessage();
+                    messageForWinnerAgain.setUrl("/speedlogist/main/carrier/tender/tenderpage?routeId=" + routeId);
+                    messageForWinnerAgain.setIdRoute(routeId.toString());
+                    messageForWinnerAgain.setToUser(latestBid.getCarrier().getLogin());
+                    messageForWinnerAgain.setAction("notification");
+                    messageForWinnerAgain.setText("Ваша ставка для маршрута №"
+                            + route.getIdRoute() + " : " + route.getRouteDirection().substring(0, 100)
+                            + "... <b>снова актуальна</b>.");
+                    messageForWinnerAgain.setStatus("200");
+                    messageForWinnerAgain.setWSPath("carrier-tenders");
+                    carrierTenderWebSocket.sendToUser(latestBid.getCarrier().getLogin(), messageForWinnerAgain);
+                    filteredBids.remove(latestBid);
+                }
+
+                filteredBids.remove(carrierBid);
+
+                for (CarrierBid bid : filteredBids) {
+                    CarrierTenderMessage messageForOthers = new CarrierTenderMessage();
+                    messageForOthers.setUrl("/speedlogist/main/carrier/tender/tenderpage?routeId=" + routeId);
+                    messageForOthers.setIdRoute(routeId.toString());
+                    messageForOthers.setToUser(bid.getCarrier().getLogin());
+                    messageForOthers.setAction("notification");
+                    messageForOthers.setText("Лидирующая ставка для маршрута №"
+                            + route.getIdRoute() + " : " + route.getRouteDirection().substring(0, 100) + "... <b>отменена</b>."
+                            + "<br>Актуальная цена <b>" + bid.getPrice() + " " + bid.getCurrency() + "</b>.");
+                    messageForOthers.setStatus("200");
+                    messageForOthers.setWSPath("carrier-tenders");
+                    carrierTenderWebSocket.sendToUser(bid.getCarrier().getLogin(), messageForOthers);
+                }
+            }
+        }
+
+        CarrierTenderMessage message = new CarrierTenderMessage();
+        message.setIdRoute(routeId.toString());
+        message.setAction("delete");
+        message.setStatus("200");
+        message.setCarrierBid(carrierBid);
+        message.setWSPath("carrier-tenders");
+        carrierTenderWebSocket.broadcast(message);
+        response.put("bid", carrierBid);
+        response.put("status", "200");
+        return response;
+    }
+    
+    /**
+     * <br>Метод для удаления ставки ПЕРЕВОЗЧИКОМ</br>.
+     * @param request
+     * @param str
+     * @throws IOException
+     * @throws ParseException
+     * @author Ira
+     */
+    @PostMapping("/carrier/tenders/delete-bid")
+    public Map<String, Object> deleteBidByCarrier(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+        Map<String, Object> response = new HashMap<>();
+        JSONParser parser = new JSONParser();
+        JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+        Long bidId = jsonMainObject.get("idCarrierBid") == null ? null : Long.parseLong(jsonMainObject.get("idCarrierBid").toString());
+        Integer routeId = jsonMainObject.get("idRoute") == null ? null : Integer.parseInt(jsonMainObject.get("idRoute").toString());
+        List<CarrierBid> bids = carrierBidService.getCarrierBidsByRouteId(routeId);
+        Route route = routeService.getRouteById(routeId);
+
+        if (route.getStatusRoute().equals("4") || route.getStatusRoute().equals("8")) {
+            response.put("status", "100");
+            response.put("message", "Тендер по данному маршруту уже закрыт. Обновите страницу.");
+            return response;
+        }
+
+        CarrierBid carrierBid = carrierBidService.getById(bidId);
+        carrierBidService.delete(carrierBidService.getById(bidId));
+        if (!bids.isEmpty()) {
+            List<CarrierBid> actualBids = bids.stream().filter(c -> c.getStatus().equals(20)).sorted(Comparator.comparing(CarrierBid::getPrice)).collect(Collectors.toList());
+            if(!actualBids.isEmpty()) {
+                CarrierBid latestBid = actualBids.get(0);
+                if (latestBid.getPrice() > carrierBid.getPrice()) {
+                    CarrierTenderMessage messageForWinnerAgain = new CarrierTenderMessage();
+                    messageForWinnerAgain.setUrl("/speedlogist/main/carrier/tender/tenderpage?routeId=" + routeId);
+                    messageForWinnerAgain.setIdRoute(routeId.toString());
+                    messageForWinnerAgain.setToUser(latestBid.getCarrier().getLogin());
+                    messageForWinnerAgain.setAction("notification");
+                    messageForWinnerAgain.setText("Ваша ставка для маршрута №" + route.getIdRoute() + " : " + route.getRouteDirection().substring(0, 100)
+                            + "... <b>снова актуальна</b>.");
+                    messageForWinnerAgain.setStatus("200");
+                    messageForWinnerAgain.setWSPath("carrier-tenders");
+                    carrierTenderWebSocket.sendToUser(latestBid.getCarrier().getLogin(), messageForWinnerAgain);
+
+                    actualBids.remove(latestBid);
+                    for (CarrierBid bid : actualBids) {
+                        CarrierTenderMessage messageForOthers = new CarrierTenderMessage();
+                        messageForOthers.setUrl("/speedlogist/main/carrier/tender/tenderpage?routeId=" + routeId);
+                        messageForOthers.setIdRoute(routeId.toString());
+                        messageForOthers.setToUser(bid.getCarrier().getLogin());
+                        messageForOthers.setAction("notification");
+                        messageForOthers.setText("Лидирующая ставка для маршрута №"
+                                + route.getIdRoute() + " : " + route.getRouteDirection().substring(0, 100) + "... <b>отменена</b>." +
+                                "<br>Актуальная цена <b>" + bid.getPrice() + " " + bid.getCurrency() + "</b>.");
+                        messageForOthers.setStatus("200");
+                        messageForOthers.setWSPath("carrier-tenders");
+                        carrierTenderWebSocket.sendToUser(bid.getCarrier().getLogin(), messageForOthers);
+                    }
+                }
+            }
+        }
+        CarrierTenderMessage message = new CarrierTenderMessage();
+        message.setIdRoute(routeId.toString());
+        message.setAction("delete");
+        message.setStatus("200");
+        message.setCarrierBid(carrierBid);
+        message.setWSPath("carrier-tenders");
+        carrierTenderWebSocket.broadcast(message);
+        response.put("bid", carrierBid);
+        response.put("status", "200");
+        return response;
+    }
 
     /**
      * <br>Метод для получения предложений по idRoute</br>.
@@ -775,45 +967,45 @@ public class MainRestController {
      * @throws ParseException
      * @author Ira
      */
-    @PostMapping("/carrier/tenders/delete-bid")
-    public Map<String, Object> deleteBid(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
-        Map<String, Object> response = new HashMap<>();
-        JSONParser parser = new JSONParser();
-        JSONObject jsonMainObject = (JSONObject) parser.parse(str);
-        User user = getThisUser();
-        Long bidId = jsonMainObject.get("idCarrierBid") == null ? null : Long.parseLong(jsonMainObject.get("idCarrierBid").toString());
-        CarrierBid carrierBid = carrierBidService.getById(bidId);
-        carrierBidService.delete(carrierBidService.getById(bidId));
-        Integer routeId = jsonMainObject.get("idRoute") == null ? null : Integer.parseInt(jsonMainObject.get("idRoute").toString());
-        List<CarrierBid> bids = carrierBidService.getCarrierBidsByRouteId(routeId);
-        if (!bids.isEmpty()) {
-            CarrierBid latestBid = bids.stream().sorted(Comparator.comparing(CarrierBid::getPrice)).collect(Collectors.toList()).get(0);
-            if (latestBid.getPrice() > carrierBid.getPrice()) {
-                Route route = routeService.getRouteById(routeId);
-                CarrierTenderMessage messageForWinnerAgain = new CarrierTenderMessage();
-                messageForWinnerAgain.setUrl("/speedlogist/main/carrier/tender/tenderpage?routeId=" + routeId);
-                messageForWinnerAgain.setIdRoute(routeId.toString());
-                messageForWinnerAgain.setToUser(latestBid.getCarrier().getLogin());
-                messageForWinnerAgain.setAction("notification");
-                messageForWinnerAgain.setText("Ваша ставка для маршрута " + route.getRouteDirection() + " <b>снова актуальна</b>.");
-                messageForWinnerAgain.setStatus("200");
-                messageForWinnerAgain.setWSPath("carrier-tenders");
-                carrierTenderWebSocket.sendToUser(latestBid.getCarrier().getLogin(), messageForWinnerAgain);
-            }
-
-        }
-
-        CarrierTenderMessage message = new CarrierTenderMessage();
-        message.setIdRoute(routeId.toString());
-        message.setAction("delete");
-        message.setStatus("200");
-        message.setCarrierBid(carrierBid);
-        message.setWSPath("carrier-tenders");
-        carrierTenderWebSocket.broadcast(message);
-        response.put("bid", carrierBid);
-        response.put("status", "200");
-        return response;
-    }
+//    @PostMapping("/carrier/tenders/delete-bid")
+//    public Map<String, Object> deleteBid(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+//        Map<String, Object> response = new HashMap<>();
+//        JSONParser parser = new JSONParser();
+//        JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+//        User user = getThisUser();
+//        Long bidId = jsonMainObject.get("idCarrierBid") == null ? null : Long.parseLong(jsonMainObject.get("idCarrierBid").toString());
+//        CarrierBid carrierBid = carrierBidService.getById(bidId);
+//        carrierBidService.delete(carrierBidService.getById(bidId));
+//        Integer routeId = jsonMainObject.get("idRoute") == null ? null : Integer.parseInt(jsonMainObject.get("idRoute").toString());
+//        List<CarrierBid> bids = carrierBidService.getCarrierBidsByRouteId(routeId);
+//        if (!bids.isEmpty()) {
+//            CarrierBid latestBid = bids.stream().sorted(Comparator.comparing(CarrierBid::getPrice)).collect(Collectors.toList()).get(0);
+//            if (latestBid.getPrice() > carrierBid.getPrice()) {
+//                Route route = routeService.getRouteById(routeId);
+//                CarrierTenderMessage messageForWinnerAgain = new CarrierTenderMessage();
+//                messageForWinnerAgain.setUrl("/speedlogist/main/carrier/tender/tenderpage?routeId=" + routeId);
+//                messageForWinnerAgain.setIdRoute(routeId.toString());
+//                messageForWinnerAgain.setToUser(latestBid.getCarrier().getLogin());
+//                messageForWinnerAgain.setAction("notification");
+//                messageForWinnerAgain.setText("Ваша ставка для маршрута " + route.getRouteDirection() + " <b>снова актуальна</b>.");
+//                messageForWinnerAgain.setStatus("200");
+//                messageForWinnerAgain.setWSPath("carrier-tenders");
+//                carrierTenderWebSocket.sendToUser(latestBid.getCarrier().getLogin(), messageForWinnerAgain);
+//            }
+//
+//        }
+//
+//        CarrierTenderMessage message = new CarrierTenderMessage();
+//        message.setIdRoute(routeId.toString());
+//        message.setAction("delete");
+//        message.setStatus("200");
+//        message.setCarrierBid(carrierBid);
+//        message.setWSPath("carrier-tenders");
+//        carrierTenderWebSocket.broadcast(message);
+//        response.put("bid", carrierBid);
+//        response.put("status", "200");
+//        return response;
+//    }
     
     /**
      * <br>Метод для получения ставки</br>.
@@ -844,27 +1036,50 @@ public class MainRestController {
         carrierBid.setRoute(route);
         carrierBid.setWinner(false);
         carrierBid.setRouteDirection(route.getRouteDirection());
+        carrierBid.setStatus(20);
         List<CarrierBid> bids = carrierBidService.getCarrierBidsByRouteId(routeId);
 
         if (!bids.isEmpty()) {
-           CarrierBid latestBid = bids.stream().sorted(Comparator.comparing(CarrierBid::getPrice)).collect(Collectors.toList()).get(0);
-           for (CarrierBid bid: bids) {
-              if (bid.getWinner()) {
-                 response.put("status", "100");
-                 response.put("message", "Тендер завершён. Ставки больше не принимаются");
-                 return response;
-              }
-           }
-           if (route.getForReduction()) {
-               if (carrierBid.getPercent() != 99 && latestBid.getPrice() <= carrierBid.getPrice()) {
-                   response.put("status", "100");
-                   response.put("message", "Ваша ставка не последняя. Актуальная цена " + latestBid.getPrice() + " " + latestBid.getCurrency() + ".");
-                   return response;
+            for (CarrierBid bid: bids) {
+                if (bid.getWinner()) {
+                    response.put("status", "100");
+                    response.put("message", "Тендер завершён. Ставки больше не принимаются");
+                    return response;
+                }
+            }
+            List<CarrierBid> actualBids = bids.stream().filter(c -> c.getStatus().equals(20)).sorted(Comparator.comparing(CarrierBid::getPrice)).collect(Collectors.toList());
+           if(!actualBids.isEmpty()) {
+               CarrierBid latestBid = actualBids.get(0);
+               if (route.getForReduction()) {
+                   if (carrierBid.getPercent() != 99 && latestBid.getPrice() <= carrierBid.getPrice()) {
+                       response.put("status", "100");
+                       response.put("message", "Ваша ставка не последняя. Актуальная цена " + latestBid.getPrice() + " " + latestBid.getCurrency() + ".");
+                       return response;
+                   }
+               }
+
+               if (route.getForReduction()) {
+                   if (!carrierBid.getCarrier().equals(latestBid.getCarrier())) {
+                       CarrierTenderMessage messageForLooser = new CarrierTenderMessage();
+                       messageForLooser.setUrl("/speedlogist/main/carrier/tender/tenderpage?routeId=" + routeId);
+                       messageForLooser.setIdRoute(routeId.toString());
+                       messageForLooser.setToUser(actualBids.get(0).getCarrier().getLogin());
+                       messageForLooser.setAction("notification");
+                       messageForLooser.setText("Ваша ставка по маршруту №"
+                               + route.getIdRoute() + " : " + route.getRouteDirection().substring(0, 100) + "... была <b>перебита</b>."
+                               + "<br>Текущая ставка: <b>" + carrierBid.getPrice() + " " + carrierBid.getCurrency() + "</b>"
+                               + "<br>Вы можете снизить свою ставку.");
+                       messageForLooser.setStatus("200");
+                       messageForLooser.setWSPath("carrier-tenders");
+                       carrierTenderWebSocket.sendToUser(actualBids.get(0).getCarrier().getLogin(), messageForLooser);
+                       // цикл
+                   }
                }
            }
         }
+
         CarrierBid carrierBidOld = carrierBidService.getCarrierBidByRouteAndUser(routeId, user);
-        if (carrierBidOld != null) {
+        if (carrierBidOld != null && carrierBidOld.getStatus().equals(20)) {
            carrierBid.setIdCarrierBid(carrierBidOld.getIdCarrierBid());
            carrierBidService.update(carrierBid);
         } else {
@@ -879,7 +1094,6 @@ public class MainRestController {
         message.setStatus("200");
         message.setWSPath("carrier-tenders");
         carrierTenderWebSocket.broadcast(message);
-//      carrierTenderWebSocket.sendMessage(message);
         response.put("bid", carrierBid);
         response.put("status", "200");
         return response;
@@ -2894,91 +3108,101 @@ public class MainRestController {
      * @return
      */
     @GetMapping("/logistics/routeUpdate/{idRoute}&{status}")
-    @TimedExecution
-    public Map<String, Object> getRouteUpdate(HttpServletRequest request, HttpServletResponse response, @PathVariable String idRoute, @PathVariable String status) {
-        Map<String, Object> responseMap = new HashMap<String, Object>();   
+    public Map<String, Object> getRouteUpdate(HttpServletRequest request, HttpServletResponse response, @PathVariable String idRoute, @PathVariable String status, @RequestParam(value = "logistComment", required = false) String logistComment) {
+        Map<String, Object> responseMap = new HashMap<String, Object>();
         Route route = routeService.getRouteById(Integer.parseInt(idRoute));
         switch (Integer.parseInt(status.trim())) {
-       case 1:
-          route.setStatusRoute(status);
-          String orderMailStatus = ""; //переменная для письма, указывает создавался ли заказ, или нет
-          Set<Order> orders = route.getOrders();
-          
-          if(orders != null && orders.size() != 0) { //поменять метод в ДАО чтобы сразу база записывала изменения
-             for (Order o : orders) {
-                o.setStatus(50);
-                orderService.updateOrderFromStatus(o);
-                orderMailStatus = orderMailStatus + "Заказ номер "+ o.getIdOrder() + " от " + o.getManager()+".\n";
-             }                 
-          }else {
-             orderMailStatus = "Маршрут создан без заказа.";
-          }
-          String textStatus = orderMailStatus;
-          String appPath = request.getServletContext().getRealPath("");
-          //отправляем письмо, запускаем его в отдельном потоке, т.к. отправка проходит в среднем 2 секунды
-          new Thread(new Runnable() {                
-             @Override
-             public void run() {
-                telegramBot.sendMessageHasSubscription("Маршрут " +route.getRouteDirection() + " с загрузкой от " +route.getDateLoadPreviously()+ " стал доступен для торгов!");
-                mailService.sendSimpleEmail(appPath, "Статус маршрута", "Маршрут "+route.getRouteDirection() + " стал доступен для торгов "
-                      +LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yyy")) 
-                      + " в " 
-                      + LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))+"."
-                      +"\n"+textStatus, "ArtyuhevichO@dobronom.by"); 
-//              +"\n"+textStatus, "GrushevskiyD@dobronom.by"); 
-             }
-             
-          }).start();             
-          break;
-       case 5: // обработчик отмены заказов
-          route.setStatusRoute(status);
-          Set<Order> orders2 = route.getOrders();
-          if(orders2 != null && orders2.size() != 0) { //поменять метод в ДАО чтобы сразу база записывала изменения
-             for (Order o : orders2) {
-                if(o.getStatus() != 10) {
-                   o.setStatus(40);
-                   orderService.updateOrder(o);
+            case 1:
+                route.setStatusRoute(status);
+                String orderMailStatus = ""; //переменная для письма, указывает создавался ли заказ, или нет
+                Set<Order> orders = route.getOrders();
+
+                if (orders != null && orders.size() != 0) { //поменять метод в ДАО чтобы сразу база записывала изменения
+                    for (Order o : orders) {
+                        o.setStatus(50);
+                        orderService.updateOrderFromStatus(o);
+                        orderMailStatus = orderMailStatus + "Заказ номер " + o.getIdOrder() + " от " + o.getManager() + ".\n";
+                    }
+                } else {
+                    orderMailStatus = "Маршрут создан без заказа.";
                 }
-             }                 
-          }
+                String textStatus = orderMailStatus;
+                String appPath = request.getServletContext().getRealPath("");
 
-            CarrierTenderMessage messagAboutCancelling = new CarrierTenderMessage();
+                CarrierTenderMessage createMessage = new CarrierTenderMessage();
+                createMessage.setRoute(route);
+                createMessage.setIdRoute(idRoute);
+                createMessage.setAction("create-tender");
+                createMessage.setStatus("200");
+                createMessage.setWSPath("carrier-tenders");
+                carrierTenderWebSocket.broadcast(createMessage);
 
-            messagAboutCancelling.setIdRoute(idRoute.toString());
-            messagAboutCancelling.setUrl("/speedlogist/main/carrier/tender");
-            messagAboutCancelling.setAction("notification");
-            messagAboutCancelling.setText("Тендер для маршрута " + route.getRouteDirection() + " был <b>отменён</b>.");
-            messagAboutCancelling.setStatus("200");
-            messagAboutCancelling.setWSPath("carrier-tenders");
-            Set<CarrierBid> carrierBids = route.getCarrierBids();
-            for (CarrierBid bid : carrierBids) {
-                messagAboutCancelling.setToUser(bid.getCarrier().getLogin());
-                carrierTenderWebSocket.sendToUser(bid.getCarrier().getLogin(), messagAboutCancelling);
+                //отправляем письмо, запускаем его в отдельном потоке, т.к. отправка проходит в среднем 2 секунды
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        telegramBot.sendMessageHasSubscription("Маршрут " + route.getRouteDirection() + " с загрузкой от " + route.getDateLoadPreviously() + " стал доступен для торгов!");
+                        mailService.sendSimpleEmail(appPath, "Статус маршрута", "Маршрут " + route.getRouteDirection() + " стал доступен для торгов "
+                                + LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yyy"))
+                                + " в "
+                                + LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")) + "."
+                                + "\n" + textStatus, "ArtyuhevichO@dobronom.by");
+//              +"\n"+textStatus, "GrushevskiyD@dobronom.by"); 
+                    }
 
-            }
+                }).start();
+                break;
+            case 5: // обработчик отмены заказов
+                route.setStatusRoute(status);
+                String oldLogistComment = route.getLogistComment() == null ? "" : route.getLogistComment() + "; ";
+                route.setLogistComment(oldLogistComment + "Причина отмены: " + logistComment);
+                Set<Order> orders2 = route.getOrders();
+                if (orders2 != null && orders2.size() != 0) { //поменять метод в ДАО чтобы сразу база записывала изменения
+                    for (Order o : orders2) {
+                        if (o.getStatus() != 10) {
+                            o.setStatus(40);
+                            orderService.updateOrder(o);
+                        }
+                    }
+                }
 
-            CarrierTenderMessage message = new CarrierTenderMessage();
-            message.setIdRoute(idRoute);
-            message.setAction("cancel-tender");
-            message.setStatus("200");
-            message.setWSPath("carrier-tenders");
-            carrierTenderWebSocket.broadcast(message);
+                CarrierTenderMessage messagAboutCancelling = new CarrierTenderMessage();
 
-          break;
+                messagAboutCancelling.setIdRoute(idRoute.toString());
+                messagAboutCancelling.setUrl("/speedlogist/main/carrier/tender");
+                messagAboutCancelling.setAction("notification");
+                messagAboutCancelling.setText("Тендер для маршрута №" + route.getIdRoute() + " : " + route.getRouteDirection().substring(0, 100) + "... был <b>отменён</b>.");
+                messagAboutCancelling.setStatus("200");
+                messagAboutCancelling.setWSPath("carrier-tenders");
+                Set<CarrierBid> carrierBids = route.getCarrierBids();
+                for (CarrierBid bid : carrierBids) {
+                    messagAboutCancelling.setToUser(bid.getCarrier().getLogin());
+                    carrierTenderWebSocket.sendToUser(bid.getCarrier().getLogin(), messagAboutCancelling);
 
-       default:
-          //вставить обработчик
-          break;
-       }
-        
-        if(route.getTime() == null) {
-          route.setTime(LocalTime.parse("00:05"));
-       }
-       routeService.saveOrUpdateRoute(route);
-             
-        responseMap.put("status", "200");  
+                }
+
+                CarrierTenderMessage cancelMessage = new CarrierTenderMessage();
+                cancelMessage.setIdRoute(idRoute);
+                cancelMessage.setAction("cancel-tender");
+                cancelMessage.setStatus("200");
+                cancelMessage.setWSPath("carrier-tenders");
+                carrierTenderWebSocket.broadcast(cancelMessage);
+
+                break;
+
+            default:
+                //вставить обработчик
+                break;
+        }
+
+        if (route.getTime() == null) {
+            route.setTime(LocalTime.parse("00:05"));
+        }
+        routeService.saveOrUpdateRoute(route);
+
+        responseMap.put("status", "200");
         responseMap.put("object", new TGTruck());
-        return responseMap;        
+        return responseMap;
     }
     
     @GetMapping("/carrier/delivery-shop/get")

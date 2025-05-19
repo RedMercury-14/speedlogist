@@ -1,11 +1,13 @@
 var idRoute = document.querySelector('input[name=idRoute]').value;
 changeCost();
 import { ajaxUtils } from './ajaxUtils.js';
-import { ws } from './global.js';
+import { ws, wsTenderMessagesUrl } from './global.js';
 import { deleteTenderOfferUrl, getInfoParticipantsMessageBaseUrl, getInfoRouteMessageBaseUrl, getRouteBaseUrl, setTenderCostFromCarrierUrl, setTenderOfferUrl } from './globalConstants/urls.js';
-import { disableButton, enableButton } from './utils.js';
+import { createToast, playNewToastSound } from './Toast.js';
+import { disableButton, enableButton, SmartWebSocket } from './utils.js';
 
 const token = $("meta[name='_csrf']").attr("content")
+const login = document.querySelector('#login')?.value
 // ws.onopen = () => onOpenSock();
 // ws.onmessage = (e) => onMessage(JSON.parse(e.data));
 
@@ -20,6 +22,13 @@ document.addEventListener('DOMContentLoaded', () => {
 	// форма установки предложения по тендеру
 	const tenderOfferForm = document.querySelector('#tenderOfferForm')
 	tenderOfferForm && tenderOfferForm.addEventListener('submit', tenderOfferFormSubmitHandler)
+
+	new SmartWebSocket(`${wsTenderMessagesUrl}?user=${login}`, {
+		reconnectInterval: 5000,
+		maxReconnectAttempts: 5,
+		onMessage: tenderSocketOnMessage,
+		onClose: () => alert('Соединение с сервером потеряно. Перезагрузите страницу')
+	})
 })
 
 function initTenderForReduction(startPriceForReduction) {
@@ -64,6 +73,57 @@ function initTenderForReduction(startPriceForReduction) {
 
 	updateUI()
 }
+
+// действия на сообщения от сокета тендеров
+async function tenderSocketOnMessage(e) {
+	const data = JSON.parse(e.data)
+
+	if (data.status === '120') {
+		return
+	}
+
+	if (data.status === '200') {
+		if (data.wspath !== 'carrier-tenders') return
+
+		const { action, idRoute: targetIdRoute, } = data
+		if (!action) return
+		if (targetIdRoute !== idRoute) return
+
+		// превращение закрытого тендера в тендер на понижение
+		if (action === 'change-tender-type') {
+			alert('Тип тендера изменен - страница будет обновлена')
+			document.location.reload()
+		}
+
+		// отмена тендера
+		else if (action === 'cancel-tender') {
+			alert('Тендер отменен - страница будет обновлена')
+			document.location.reload()
+		}
+
+		// тендер завершен
+		else if (action === 'finish-tender') {
+			alert('Тендер завершен - страница будет обновлена')
+			document.location.reload()
+		}
+
+		// уведомления перевозчикам
+		else if (action === 'notification') {
+
+			const toastOption = {
+				date: new Date().getTime(),
+				toUser: data.toUser,
+				text: data.text,
+				url: data.url,
+				autoCloseTime: 10000
+			}
+
+			createToast(toastOption)
+			playNewToastSound()
+		}
+	}
+}
+
 
 // удаление предложения
 function deleteOfferBtnClickHandler() {

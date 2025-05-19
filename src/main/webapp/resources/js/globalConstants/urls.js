@@ -207,6 +207,7 @@ export const confirmTenderOfferUrl = '/speedlogist/api/logistics/internationalNe
 export const getOffersForReductionByIdRouteBaseUrl = '/speedlogist/api/logistics/tenders/get-bids-by-id-route/' // получение предложжений для тендера на понижение
 export const makeWinnerTenderForReductionOfferUrl = '/speedlogist/api/logistics/tenders/make-bid-winner' // подтверждение предложения тендера на понижение
 export const makeTenderForReductionUrl = '/speedlogist/api/logistics/tenders/make-tender-for-reduction' // превращение обычного тендера в тендер на понижение
+export const cancelOfferForLogistUrl = '/speedlogist/api/logistics/tenders/delete-bid' // отмена предложения по тендеру логистом
 
 ///////////////////////////////////////////////
 // internationalStockSopport.js - Таблица Башкирова

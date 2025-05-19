@@ -1,13 +1,12 @@
-import { ws, wsTenderMessagesUrl } from './global.js';
+import { wsTenderMessagesUrl } from './global.js';
 import { AG_GRID_LOCALE_RU } from '../js/AG-Grid/ag-grid-locale-RU.js'
 import { cookieHelper, dateHelper, debounce, getData, isMobileDevice, SmartWebSocket } from './utils.js';
 import { dateComparator, gridFilterLocalState } from './AG-Grid/ag-grid-utils.js';
-import { getActiveTendersUrl, getInfoRouteMessageBaseUrl, getThisUserUrl } from './globalConstants/urls.js';
+import { getActiveTendersUrl, getThisUserUrl } from './globalConstants/urls.js';
 import { createToast, playNewToastSound } from './Toast.js';
 
 const login = document.querySelector('#login')?.value
 let user
-let myMessages
 
 const LOCAL_STORAGE_KEY = 'tenders_page'
 
@@ -174,27 +173,26 @@ const gridOptions = {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-	const goTGBotBtn = document.querySelector('#goTGBotBtn')
-	const resetTableFiltersBtn = document.querySelector('#resetTableFilters')
-
 	const gridDiv = document.querySelector('#myGrid')
 	renderTable(gridDiv, gridOptions)
 
-	const filterTextBox = document.querySelector('#filterTextBox')
 	const tendersData = await getData(getActiveTendersUrl)
 	const tenders = tendersData.routes
 
-	myMessages = await getData(getInfoRouteMessageBaseUrl + 'from_me')
 	user = await getData(getThisUserUrl)
 	await updateTable(gridOptions, tenders)
 
 	restoreFilterState()
 
+	const filterTextBox = document.querySelector('#filterTextBox')
 	filterTextBox.addEventListener('input', (e) => {
 		gridOptions.api.setQuickFilter(e.target.value)
 	})
 
+	const goTGBotBtn = document.querySelector('#goTGBotBtn')
 	goTGBotBtn.addEventListener('click', goTGBotBtnClickHandler)
+
+	const resetTableFiltersBtn = document.querySelector('#resetTableFilters')
 	resetTableFiltersBtn.addEventListener('click', resetFilterState)
 
 	// вэбсокет тендеров
@@ -207,15 +205,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 	tgBotModal()
 
-	ws.onmessage = (e) => onMessage(JSON.parse(e.data))
+	// ws.onmessage = (e) => onMessage(JSON.parse(e.data))
 
-	function onMessage(msg) {
-		if (msg.currency) {
-			// обновляем таблицу только на свои сообщения
-			const userUnp = user.numYNP
-			if (msg.ynp === userUnp) updateTable(gridOptions, tenders)
-		}
-	}
+	// function onMessage(msg) {
+	// 	if (msg.currency) {
+	// 		// обновляем таблицу только на свои сообщения
+	// 		const userUnp = user.numYNP
+	// 		if (msg.ynp === userUnp) updateTable(gridOptions, tenders)
+	// 	}
+	// }
 })
 
 function renderTable(gridDiv, gridOptions) {
@@ -239,10 +237,8 @@ async function getMappingData(data) {
 	return await Promise.all(data.map(tenderMapCallback))
 }
 async function tenderMapCallback(tender) {
-	const idRoute = tender.idRoute
 	const loadDateToView = tender.dateLoadPreviously ? tender.dateLoadPreviously.split('-').reverse().join('.') : ''
 	const loadDateTimeToView = `${loadDateToView},  ${tender.timeLoadPreviously}`
-	const myMessage = myMessages.find(m => m.idRoute === idRoute.toString()) || null
 
 	const loadPoints = tender.roteHasShop
 		.filter(point => point.position === "Загрузка")
@@ -253,12 +249,9 @@ async function tenderMapCallback(tender) {
 		.map((point, i) => `${i + 1}) ${point.address}`)
 		.join(' ')
 
-	const routeMessages = tender.forReduction
-		? await getData(getInfoRouteMessageBaseUrl + idRoute)
-		: null
-
-	const price = getPrice(tender)
-	const myOffer = getMyOffer(routeMessages, user, myMessage, tender)
+	const actualCarrierBids = tender.carrierBids.filter(o => o.status === 20)
+	const price = getPrice(tender, actualCarrierBids)
+	const myOffer = getMyOffer(user, actualCarrierBids)
 	const carInfo = getCarInfo(tender)
 	const cargoInfo = getCargoInfo(tender)
 	const unloadDateToView = getUnloadDateToView(tender)
@@ -268,7 +261,6 @@ async function tenderMapCallback(tender) {
 		...tender,
 		loadDateToView,
 		loadDateTimeToView,
-		myMessage,
 		myOffer,
 		price,
 		loadPoints,
@@ -277,6 +269,7 @@ async function tenderMapCallback(tender) {
 		carInfo,
 		unloadDateToView,
 		unloadDateTimeToView,
+		actualCarrierBids,
 	}
 }
 
@@ -329,7 +322,7 @@ async function tenderSocketOnMessage(e) {
 			if (!routeNode) return
 
 			const route = routeNode.data
-			const offers = route.carrierBids
+			const offers = route.actualCarrierBids
 
 			if (!bid) return
 			if (!targetIdRoute) return
@@ -339,11 +332,11 @@ async function tenderSocketOnMessage(e) {
 			// добавляем новое предложение в список
 			const newOffers = [...filteredOffers, bid]
 			// обновляем маршрут
-			const newRoute = { ...route, carrierBids: newOffers }
+			const newRoute = { ...route, actualCarrierBids: newOffers }
 			// обновляем стоимость маршрута
-			const newRoutePrice = getPrice(newRoute)
+			const newRoutePrice = getPrice(newRoute, newOffers)
 			// обновляем предложение
-			const newMyOffer = getMyOffer([], user, null, newRoute)
+			const newMyOffer = getMyOffer(user, newOffers)
 			// обновляем строку в таблице
 			const updatedRoute = { ...newRoute, price: newRoutePrice, myOffer: newMyOffer }
 			gridOptions.api.applyTransaction({ update: [ updatedRoute ] })
@@ -353,7 +346,7 @@ async function tenderSocketOnMessage(e) {
 			if (!routeNode) return
 
 			const route = routeNode.data
-			const offers = route.carrierBids
+			const offers = route.actualCarrierBids
 
 			if (!bid) return
 			if (!targetIdRoute) return
@@ -361,17 +354,26 @@ async function tenderSocketOnMessage(e) {
 			// удаляем старое предложение с тем же id
 			const filteredOffers = offers.filter(offer => offer.idCarrierBid !== bid.idCarrierBid)
 			// обновляем маршрут
-			const newRoute = { ...route, carrierBids: filteredOffers }
+			const newRoute = { ...route, actualCarrierBids: filteredOffers }
 			// обновляем стоимость маршрута
-			const newRoutePrice = getPrice(newRoute)
+			const newRoutePrice = getPrice(newRoute, filteredOffers)
 			// обновляем предложение
-			const newMyOffer = getMyOffer([], user, null, newRoute)
+			const newMyOffer = getMyOffer(user, filteredOffers)
 			// обновляем строку в таблице
 			const updatedRoute = { ...newRoute, price: newRoutePrice, myOffer: newMyOffer }
 			gridOptions.api.applyTransaction({ update: [ updatedRoute ] })
 		}
 
-		// превражение закрытого тендера в тендер на понижение
+		// тендер отправлен на биржу
+		else if (action === 'create-tender') {
+			const newRoute = data.route
+			if (!newRoute) return
+
+			const mappedRoute = await tenderMapCallback(newRoute)
+			gridOptions.api.applyTransaction({ add: [ mappedRoute ] })
+		}
+
+		// превращение закрытого тендера в тендер на понижение
 		else if (action === 'change-tender-type') {
 			if (!routeNode) return
 
@@ -382,7 +384,18 @@ async function tenderSocketOnMessage(e) {
 			gridOptions.api.applyTransaction({ update: [ mappedRoute ] })
 		}
 
+		// отмена тендера
 		else if (action === 'cancel-tender') {
+			if (!routeNode) return
+
+			const route = routeNode.data
+			if (!route) return
+
+			gridOptions.api.applyTransaction({ remove: [ route ] })
+		}
+
+		// тендер завершен
+		else if (action === 'finish-tender') {
 			if (!routeNode) return
 
 			const route = routeNode.data
@@ -399,7 +412,7 @@ async function tenderSocketOnMessage(e) {
 				toUser: data.toUser,
 				text: data.text,
 				url: data.url,
-				autoCloseTime: 7000
+				autoCloseTime: 10000
 			}
 
 			createToast(toastOption)
@@ -444,40 +457,25 @@ function resetFilterState() {
 	gridFilterLocalState.resetState(gridOptions, LOCAL_STORAGE_KEY)
 }
 
-function getPrice(tender) {
+function getPrice(tender, actualCarrierBids) {
 	const forReductionTender = tender.forReduction
 
 	if (forReductionTender) {
-		const offers = tender.carrierBids
-		if (offers.length === 0) {
+		if (actualCarrierBids.length === 0) {
 			return tender.startPriceForReduction && tender.currencyForReduction
 				? `${tender.startPriceForReduction} ${tender.currencyForReduction}` : ''
 		}
-		const actualOffer = offers.sort((a, b) => a.price - b.price)[0]
+		const actualOffer = actualCarrierBids.sort((a, b) => a.price - b.price)[0]
 		return `${actualOffer.price} ${actualOffer.currency}`
 	}
 
 	return ''
 }
-function getMyOffer(routeMessages, user, myMessage, tender) {
-	const forReductionTender = tender.forReduction
+function getMyOffer(user, actualCarrierBids) {
 	const userId = user.idUser
-
-	const isNewTenderSystem = tender.carrierBids.length !== 0
-
-	if (forReductionTender || isNewTenderSystem) {
-		const offers = tender.carrierBids
-		if (offers.length === 0) return ''
-		const myOffer = offers.filter(offer => offer.idUser === userId)[0]
-		return myOffer ? `${myOffer.price} ${myOffer.currency}` : ''
-	}
-
-	const userUnp = user.numYNP
-
-	return routeMessages && routeMessages.length !== 0 && routeMessages[0].ynp === userUnp
-		? `${routeMessages[0].text} ${routeMessages[0].currency}`
-		: myMessage
-			? `${myMessage.text} ${myMessage.currency}` : ''
+	if (actualCarrierBids.length === 0) return ''
+	const myOffer = actualCarrierBids.filter(offer => offer.idUser === userId)[0]
+	return myOffer ? `${myOffer.price} ${myOffer.currency}` : ''
 }
 function getCargoInfo(tender) {
 	if (!tender) return ''

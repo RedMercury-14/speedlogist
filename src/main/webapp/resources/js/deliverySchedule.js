@@ -47,7 +47,7 @@ const debouncedSaveFilterState = debounce(saveFilterState, 300)
 let error = false
 let table
 let scheduleData
-const stocks = ['1700', '1250', '1200']
+const stocks = ['1700', '1800', '1250', '1200']
 
 const columnDefs = [
 	...deliveryScheduleColumnDefs,

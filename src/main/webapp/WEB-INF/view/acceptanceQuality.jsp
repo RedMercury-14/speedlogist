@@ -317,6 +317,8 @@
 										<option value="152">Принимаем с переборкой</option>
 										<option value="154">Принимаем с процентом брака от коммерции</option>
 										<option value="156">Принимаем под реализацию</option>
+										<!-- <option value="158">«Своя» допвыборка</option> -->
+										<!-- <option value="159">«Чужая» допвыборка</option> -->
 										<option value="140">Не принимаем</option>
 									</select>
 								</div>

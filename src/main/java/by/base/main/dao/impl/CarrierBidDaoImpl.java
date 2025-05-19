@@ -94,8 +94,18 @@ public class CarrierBidDaoImpl implements CarrierBidDao {
         if (theObject.getResultList().isEmpty()) {
             return null;
         } else {
-            return theObject.getResultList().get(0);
+            List<CarrierBid> carrierBids = theObject.getResultList();
+            return carrierBids.get(carrierBids.size() - 1);
         }
+    }
+    
+    private static final String queryGetActualCarrierBidListByRouteId = "from CarrierBid c LEFT JOIN FETCH c.route r where r.idRoute =: routeId AND c.status = 20";
+    @Override
+    public List<CarrierBid> getActualCarrierBidsByRouteId(Integer routeId) {
+        Session currentSession = sessionFactory.getCurrentSession();
+        Query<CarrierBid> theObject = currentSession.createQuery(queryGetActualCarrierBidListByRouteId, CarrierBid.class);
+        theObject.setParameter("routeId", routeId);
+        return theObject.getResultList();
     }
 
     private static final String queryDeleteIrrelevantCarrierBidsForRoute = "delete from CarrierBid c where c.route =: route";

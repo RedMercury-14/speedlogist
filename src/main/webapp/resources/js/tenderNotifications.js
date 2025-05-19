@@ -33,7 +33,7 @@ function socketMessageHandler(e) {
 				toUser: data.toUser,
 				text: data.text,
 				url: data.url,
-				autoCloseTime: 7000
+				autoCloseTime: 10000
 			}
 		
 			createToast(toastOption)

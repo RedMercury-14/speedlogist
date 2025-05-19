@@ -29,7 +29,7 @@
 	    <security:custom-filter before="BEARER_TOKEN_AUTH_FILTER" ref="jwtAuthenticationFilter"/>
 	</security:http>
 
-	<security:http pattern="/tsd/**" create-session="stateless" entry-point-ref="restAuthenticationEntryPoint">
+	<security:http pattern="/tsd/**" entry-point-ref="restAuthenticationEntryPoint">
 	    <security:csrf disabled="true"/>
 	</security:http>
 	

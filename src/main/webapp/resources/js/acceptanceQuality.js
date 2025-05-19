@@ -105,7 +105,7 @@ const detailColumnDefs = [
 		},
 	},
 ]
-const detailGridOptions = {
+const childCardsDetailGridOptions = {
 	columnDefs: detailColumnDefs,
 	defaultColDef: {
 		headerClass: 'px-1',
@@ -124,6 +124,41 @@ const detailGridOptions = {
 	localeText: AG_GRID_LOCALE_RU,
 	getContextMenuItems: getContextMenuItems,
 	getRowId: (params) => params.data.idAcceptanceQualityFoodCard,
+}
+const detailGridOptions = {
+	// columnDefs: [
+	// 	{
+	// 		headerName: 'Продукт', field: 'productName', flex: 5,
+	// 		cellRenderer: 'agGroupCellRenderer',
+	// 	},
+	// 	...detailColumnDefs.filter(col => col.field !== productName),
+	// ],
+	columnDefs: detailColumnDefs,
+	defaultColDef: {
+		headerClass: 'px-1',
+		cellClass: 'px-2 text-center',
+		wrapText: true,
+		autoHeight: true,
+		resizable: true,
+		flex: 2,
+		minWidth: 100,
+		suppressMenu: true,
+		wrapHeaderText: true,
+		autoHeaderHeight: true,
+	},
+	suppressMovableColumns: true,
+	enableBrowserTooltips: true,
+	localeText: AG_GRID_LOCALE_RU,
+	getContextMenuItems: getContextMenuItems,
+	getRowId: (params) => params.data.idAcceptanceQualityFoodCard,
+	// masterDetail: true,
+	// detailRowAutoHeight: true,
+	// detailCellRendererParams: {
+	// 	detailGridOptions: childCardsDetailGridOptions,
+	// 	getDetailRowData: (params) => {
+	// 		params.successCallback(params.data.childCards);
+	// 	},
+	// },
 }
 
 const columnDefs = [
@@ -624,6 +659,7 @@ function recalculateCard(card) {
 		...recalculateDefects("internalDefectsQualityCardList", sampleSize, card.internalDefectsQualityCardList, card.isImport, withPC),
 		...recalculateDefects("totalDefectQualityCardList", sampleSize, card.totalDefectQualityCardList, card.isImport, withPC),
 		...recalculateDefects("lightDefectsQualityCardList", sampleSize, card.lightDefectsQualityCardList, card.isImport, withPC),
+		childCards: []
 	}
 }
 

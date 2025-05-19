@@ -55,7 +55,15 @@ public class CarrierBid {
 
     @Column(name = "logist_comment")
     private String logistComment;
-
+    
+    @Column(name = "status")
+    private Integer status;
+    
+    @Column(name = "user_has_change")
+    private String userHasChange;
+    
+    @Column(name = "datetime_change")
+    private Timestamp datetimeChange;
 
     public Long getIdCarrierBid() {
         return idCarrierBid;
@@ -160,8 +168,30 @@ public class CarrierBid {
 	public void setLogistComment(String logistComment) {
 		this.logistComment = logistComment;
 	}
+
+	public Integer getStatus() {
+		return status;
+	}
+
+	public void setStatus(Integer status) {
+		this.status = status;
+	}
 	
-	
+	public String getUserHasChange() {
+		return userHasChange;
+	}
+
+	public void setUserHasChange(String userHasChange) {
+		this.userHasChange = userHasChange;
+	}
+
+	public Timestamp getDatetimeChange() {
+		return datetimeChange;
+	}
+
+	public void setDatetimeChange(Timestamp datetimeChange) {
+		this.datetimeChange = datetimeChange;
+	}
 
 	@Override
 	public int hashCode() {

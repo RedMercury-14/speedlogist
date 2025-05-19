@@ -61,4 +61,10 @@ public interface CarrierBidService {
      * @author Ira
      */
     void deleteIrrelevantBidsForRoute(Route route);
+    
+    /**
+     * Метод для получения списка действующих ставок для определённого маршрута
+     * @author Ira
+     */
+    List<CarrierBid> getActualCarrierBidsByRouteId(Integer routeId);
 }

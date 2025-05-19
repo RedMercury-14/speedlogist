@@ -8,6 +8,7 @@ import { uiIcons } from "./uiIcons.js"
 import { bootstrap5overlay } from "./bootstrap5overlay/bootstrap5overlay.js"
 import { ajaxUtils } from "./ajaxUtils.js"
 import {
+	cancelOfferForLogistUrl,
 	checkOrderForStatusBaseUrl,
 	confirmTenderOfferUrl,
 	getInfoRouteMessageBaseUrl,
@@ -68,6 +69,19 @@ const columnDefs = [
 	// },
 	{ headerName: 'ID', field: 'idRoute', minWidth: 60, width: 80, pinned: 'left',},
 	{ headerName: 'Тип', field: 'simpleWay', minWidth: 50, width: 50, },
+	{
+		headerName: 'Статус', field: 'statusRoute',
+		cellClass: 'px-2 text-center font-weight-bold',
+		minWidth: 160, width: 160,
+		wrapText: true, autoHeight: true,
+		valueGetter: params => getRouteStatus(params.data.statusRoute),
+	},
+	{
+		headerName: 'Предложения', field: 'offerCount',
+		minWidth: 160, width: 160,
+		wrapText: true, autoHeight: true,
+		cellRenderer: offerCountRenderer,
+	},
 	{ headerName: 'Название маршрута', field: 'routeDirection', minWidth: 240, width: 640, wrapText: true, autoHeight: true, },
 	{ headerName: 'Контрагент', field: 'counterparty', wrapText: true, autoHeight: true, },
 	{ headerName: 'Дата загрузки', field: 'simpleDateStart', comparator: dateStringComparator, },
@@ -101,20 +115,7 @@ const columnDefs = [
 	{ headerName: 'Общий вес', field: 'totalCargoWeight', valueFormatter: params => params.value + ' кг' },
 	{ headerName: 'Комментарии', field: 'userComments', filter: 'agTextColumnFilter', wrapText: true, autoHeight: true, minWidth: 240, width: 640, },
 	{ headerName: 'Логист', field: 'logistInfo', wrapText: true, autoHeight: true, },
-	{ headerName: 'Тип тендера', field: 'tenderType', wrapText: true, autoHeight: true, cellClass: 'px-2 text-center font-weight-bold',},
-	{
-		headerName: 'Статус', field: 'statusRoute',
-		cellClass: 'px-2 text-center font-weight-bold',
-		minWidth: 160, width: 160,
-		wrapText: true, autoHeight: true,
-		valueGetter: params => getRouteStatus(params.data.statusRoute),
-	},
-	{
-		headerName: 'Предложения', field: 'offerCount',
-		minWidth: 160, width: 160,
-		wrapText: true, autoHeight: true,
-		cellRenderer: offerCountRenderer,
-	},
+	{ headerName: 'Комментарий логиста', field: 'logistComment', wrapText: true, autoHeight: true,},
 ]
 const gridOptions = {
 	columnDefs: columnDefs,
@@ -209,19 +210,41 @@ const gridOptionsForOffers = {
 		},
 		{
 			headerName: "Действие", field: 'action',
-			minWidth: 110,
+			minWidth: 140, flex: 2,
 			cellClass: 'px-0 text-center',
 			cellRenderer: params => {
 				if (!params.data.action) return ''
-				const button = document.createElement("button")
-				button.textContent = params.data.action === 'confirm' ? 'Подтвердить' : 'Принять'
+
+				const container = document.createElement('div')
+
+				const successBtn = document.createElement("button")
+				successBtn.textContent = params.data.action === 'confirm' ? 'Подтвердить' : 'Принять'
 				const classes = params.data.action === 'confirm' ? 'btn btn-success btn-sm' : 'btn btn-primary btn-sm'
-				button.classList.add(...classes.split(' '))
-				button.addEventListener("click", () => offerAccept(params))
-				return button
+				successBtn.classList.add(...classes.split(' '))
+				successBtn.addEventListener("click", () => offerAccept(params))
+
+				if (params.data.action === 'confirm') {
+					return successBtn
+				}
+
+				const cancelBtn = document.createElement("button")
+				cancelBtn.innerHTML = uiIcons.trash
+				cancelBtn.className = 'ml-2 btn btn-danger btn-sm'
+				cancelBtn.title = 'Отменить ставку'
+				cancelBtn.addEventListener("click", () => offerCancel(params))
+
+				container.append(successBtn, cancelBtn)
+				return container
 			}
 		},
 		{ field: "comment", headerName: "Комментарий", flex: 2, },
+		{
+			field: "status", headerName: "Статус", flex: 2,
+			cellClass: "px-2 text-center font-weight-bold",
+			valueFormatter: getOfferStatusToView,
+			filterParams: { valueFormatter: getOfferStatusToView, },
+		},
+		{ field: "logistComment", headerName: "Комментарий логиста", flex: 2, },
 	],
 	defaultColDef: {
 		headerClass: 'px-2',
@@ -249,10 +272,11 @@ const gridOptionsForOffers = {
 
 		const route = routeNode.data
 		const forReduction = route.forReduction
+		const status = route.statusRoute
 	
 		const result = [
 			{
-				disabled: forReduction,
+				disabled: forReduction || (status !== '1' && status !== '8'),
 				name: `Превратить в тендер на понижение на основе выбранной ставки`,
 				icon: uiIcons.graphDownArrow,
 				action: () => {
@@ -450,14 +474,14 @@ async function tenderSocketOnMessage(e) {
 		if (!routeNode) return
 
 		const route = routeNode.data
-		const offers = route.carrierBids
+		const offers = route.actualCarrierBids
 
 		if (action === 'create') {
 			// обновляем предложение, если оно актуальное
 			const filteredOffers = offers.filter(offer => offer.idCarrierBid !== bid.idCarrierBid)
 			const newOffers = [...filteredOffers, bid]
 			const newOfferCount = newOffers.length
-			const newRoute = { ...route, carrierBids: newOffers , offerCount: newOfferCount }
+			const newRoute = { ...route, actualCarrierBids: newOffers , offerCount: newOfferCount }
 			gridOptions.api.applyTransaction({ update: [ newRoute ] }, () => highlightRow(routeNode))
 
 			// обновляем таблицу предложений, если модалка открыта
@@ -469,7 +493,7 @@ async function tenderSocketOnMessage(e) {
 			// удаляем предложение и, если нужно, обновляем актуальное предложение
 			const filteredOffers = offers.filter(offer => offer.idCarrierBid !== bid.idCarrierBid)
 			const newOfferCount = filteredOffers.length
-			const newRoute = { ...route, carrierBids: filteredOffers, offerCount: newOfferCount }
+			const newRoute = { ...route, actualCarrierBids: filteredOffers, offerCount: newOfferCount }
 			gridOptions.api.applyTransaction({ update: [ newRoute ] }, () => highlightRow(routeNode))
 
 			// обновляем таблицу предложений, если модалка открыта
@@ -631,16 +655,14 @@ async function routeMapCallback(route) {
 	const statusRouteToView = getRouteStatus(route.statusRoute)
 	const counterparty = getCounterparty(route)
 	const tenderType = getTenderType(route)
-	const offerCount = await getOfferCount(route)
+	const actualCarrierBids = route.carrierBids.filter(o => o.status === 20)
+	const offerCount = await getOfferCount(route, actualCarrierBids)
 	const isSavedRow = false
 	const orderInfo = getOrderInfo(route)
 	const idOrder =  orderInfo.idOrder
 	const contact = orderInfo.contact
 	const ukz = orderInfo.control
 	const cargo = orderInfo.cargo
-	const typeLoad = orderInfo.typeLoad
-	const typeTruck = orderInfo.typeTruck
-	const methodLoad = orderInfo.methodLoad
 	const temperature = orderInfo.temperature
 	return {
 		...route,
@@ -663,10 +685,8 @@ async function routeMapCallback(route) {
 		contact,
 		ukz,
 		cargo,
-		// typeLoad,
-		// typeTruck,
-		// methodLoad,
 		temperature,
+		actualCarrierBids,
 	}
 }
 
@@ -963,31 +983,30 @@ async function displayTenderOffer(route) {
 
 	let offers = []
 
-	// подтвердить предложение
-	if (status === '8') {
-		if (!checkOrderStatus(idRoute)) return
-		const offersData = isForReduction || isNewTenderSystem
-			? await getData(`${getOffersForReductionByIdRouteBaseUrl}${idRoute}`)
-			: await getData(`${getMemoryRouteMessageBaseUrl}${idRoute}`)
-		offers = await getMappingOffers(offersData, 'confirm')
-
 	// показать предложения для принятия
-	} else if (status === '1') {
+	if (status === '8' || status === '1') {
 		if (!checkOrderStatus(idRoute)) return
-		const offersData = isForReduction || isNewTenderSystem
-			? await getData(`${getOffersForReductionByIdRouteBaseUrl}${idRoute}`)
-			: await getData(`${getInfoRouteMessageBaseUrl}${idRoute}`)
-		offers = await getMappingOffers(offersData, 'accept')
+		const action = status === '8' ? 'confirm' : 'accept'
+		const offersData = await getData(`${getOffersForReductionByIdRouteBaseUrl}${idRoute}`)
+		const allOffers = await getMappingOffers(offersData, action)
+		offers = allOffers.filter(offer => offer.status === 20)
+		// сокрытие колонок статуса и комментария логиста
+		gridOptionsForOffers.columnApi.setColumnVisible('status', false)
+		gridOptionsForOffers.columnApi.setColumnVisible('logistComment', false)
 
 	// история предложений
 	} else {
-		const offersData = isForReduction || isNewTenderSystem
-			? await getData(`${getOffersForReductionByIdRouteBaseUrl}${idRoute}`)
+		const offersData = isNewTenderSystem
+			? route.carrierBids
 			: await getData(`${getMemoryRouteMessageBaseUrl}${idRoute}`)
 		offers = await getMappingOffers(offersData, '')
+		// отображение колонок статуса и комментария логиста
+		gridOptionsForOffers.columnApi.setColumnVisible('status', true)
+		gridOptionsForOffers.columnApi.setColumnVisible('logistComment', true)
 	}
-	
+
 	setCostGridContext(gridOptionsForOffers, offers)
+	gridOptionsForOffers.context.idRoute = Number(idRoute)
 	gridOptionsForOffers.api.setRowData(offers)
 	gridOptionsForOffers.api.hideOverlay()
 	setRouteDirection(idRoute, isForReduction)
@@ -999,14 +1018,14 @@ function sendTender(idRoute, routeDirection) {
 	const url = `${routeUpdateBaseUrl}${idRoute}&${newStatus}`
 	const columnName = 'statusRoute'
 
-	const headMessage = {
-		fromUser: "logist",
-		toUser: "international",
-		text: 'Маршрут ' + routeDirection + ' доступен для торгов.',
-		url: `/speedlogist/main/carrier/tender/tenderpage?routeId=${idRoute}`,
-		idRoute: idRoute,
-		status: newStatus
-	}
+	// const headMessage = {
+	// 	fromUser: "logist",
+	// 	toUser: "international",
+	// 	text: 'Маршрут ' + routeDirection + ' доступен для торгов.',
+	// 	url: `/speedlogist/main/carrier/tender/tenderpage?routeId=${idRoute}`,
+	// 	idRoute: idRoute,
+	// 	status: newStatus
+	// }
 
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 500)
 
@@ -1016,7 +1035,7 @@ function sendTender(idRoute, routeDirection) {
 			if (res && res.status && res.status === '200') {
 				updateCellData(idRoute, columnName, newStatus)
 				snackbar.show('Тендер отправлен на биржу')
-				sendHeadMessage(headMessage)
+				// sendHeadMessage(headMessage)
 			}
 			clearTimeout(timeoutId)
 			bootstrap5overlay.hideOverlay()
@@ -1068,7 +1087,21 @@ async function completeRoute(idRoute) {
 }
 function cancelTender(idRoute) {
 	const newStatus = '5'
-	const url = `${routeUpdateBaseUrl}${idRoute}&${newStatus}`
+
+	const comment = prompt(
+		`Пожалуйста, укажите приничну отмены тендера`
+		+ ` (необходим внятный и понятный комментарий):`
+	)
+
+	if (!comment || !comment.trim()) {
+		alert('Необходим комментарий, тендер не отменен!')
+		return
+	}
+
+	const trimmedComment = comment.trim()
+	const logistComment = encodeURIComponent(trimmedComment)
+
+	const url = `${routeUpdateBaseUrl}${idRoute}&${newStatus}?logistComment=${comment}`
 	const columnName = 'statusRoute'
 
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 500)
@@ -1078,6 +1111,7 @@ function cancelTender(idRoute) {
 		successCallback: (res) => {
 			if (res && res.status && res.status === '200') {
 				updateCellData(idRoute, columnName, newStatus)
+				updateCellData(idRoute, 'logistComment', `Причина отмены: ${comment}`)
 				snackbar.show('Маршрут отменен')
 			}
 			clearTimeout(timeoutId)
@@ -1264,16 +1298,16 @@ function getTenderType(route) {
 	if (route.forReduction) return 'Тендер на понижение'
 	return 'Закрытый тендер'
 }
-async function getOfferCount(route) {
+async function getOfferCount(route, actualCarrierBids) {
 	if (!route) return 0
 	if (route.statusRoute !== '1') return 0
 
 	if (route.forReduction) {
-		return route.carrierBids.length
+		return actualCarrierBids.length
 	}
 
-	if (route.carrierBids.length !== 0) {
-		return route.carrierBids.length
+	if (actualCarrierBids.length !== 0) {
+		return actualCarrierBids.length
 	}
 
 	const offerCount = await getData(getNumMessageBaseUrl + route.idRoute)
@@ -1339,12 +1373,11 @@ function setCostGridContext(gridOptions, offers) {
 
 	// Обновляем context: если одно предложение — оно невыгодное
 	if (offers.length === 1) {
-		gridOptions.context = {
-			minCost: null,
-			maxCost: offers[0].convertedCost
-		}
+		gridOptions.context.minCost = null
+		gridOptions.context.maxCost = offers[0].convertedCost
 	} else {
-		gridOptions.context = { minCost, maxCost }
+		gridOptions.context.minCost = minCost
+		gridOptions.context.maxCost = maxCost
 	}
 }
 
@@ -1369,6 +1402,7 @@ async function updateOffersInModal(message) {
 
 	// Обновим контекст и таблицу
 	setCostGridContext(gridOptionsForOffers, updatedData)
+	
 	gridOptionsForOffers.api.setRowData(updatedData)
 	gridOptionsForOffers.api.flashCells({ force: true })
 }
@@ -1391,14 +1425,14 @@ function offerAccept(params) {
 	gridOptionsForOffers.api.forEachNode(node => currentData.push(node.data))
 	const otherUsers = currentData.map(item => item.fromUser).filter(item => item !== data.fromUser)
 
-	const confirmAction = () => {
+	const confirmAction = (logistComment) => {
 		isNewTenderSystem
-			? confirmOffer(data, '4')
+			? confirmOffer(data, '4', logistComment)
 			: confrom(data, '4', otherUsers)
 	}
-	const confirmWithStatus = () => {
+	const confirmWithStatus = (logistComment) => {
 		isNewTenderSystem
-			? confirmOffer(data, '8')
+			? confirmOffer(data, '8', logistComment)
 			: confrom(data, '8', null)
 	}
 	const confirmWithPass = () => {
@@ -1427,8 +1461,16 @@ function offerAccept(params) {
 
 	// Не оптимальное предложение
 	if (minCost !== null && offerCost > minCost) {
-		if (!confirm("Выбрана не самая оптимальная цена, Вы уверены?")) return
-		confirmAction()
+		const logistComment = prompt(
+			`Выбрана не самая оптимальная цена. Пожалуйста, укажите приничну выбора этого предложения`
+			+ ` (необходим внятный и понятный комментарий):`
+		)
+
+		if (!logistComment || !logistComment.trim()) {
+			alert('Необходим комментарий, предложение не принято!')
+			return
+		}
+		confirmAction(logistComment.trim())
 		return
 	}
 
@@ -1436,7 +1478,31 @@ function offerAccept(params) {
 	if (!confirm("Вы уверены, что хотите принять данное предложение?")) return
 	confirmAction()
 }
+// отмена предложения по маршруту
+function offerCancel(params) {
+	if (isObserver(role)) {
+		alert("Недостаточно прав!")
+		return
+	}
 
+	const { data, context } = params
+	const idRoute = context.idRoute
+	const idCarrierBid = data.idCarrierBid
+
+	const logistComment = prompt(
+		`Укажите причину отмены предложения`
+		+ ` (необходим внятный и понятный комментарий):`
+	)
+
+	if (!logistComment || !logistComment.trim()) {
+		alert('Необходим комментарий, предложение не отменено!')
+		return
+	}
+
+	cancelOfferForLogist(idRoute, idCarrierBid, logistComment.trim())
+}
+
+// старый метод отправки данных для подтверждения предложения
 function confrom(offer, status, otherUsers) {
 	const withoutConfirm = status !== '8'
 
@@ -1470,7 +1536,7 @@ function confrom(offer, status, otherUsers) {
 				cancelUpdateOfferCount = true
 				const route = res.route
 				const mappedRoute = await routeMapCallback(route)
-				withoutConfirm && send(offer, route.routeDirection, otherUsers)
+				// withoutConfirm && send(offer, route.routeDirection, otherUsers)
 				updateTableRow(gridOptions, mappedRoute)
 				snackbar.show(successMessage)
 				$('#tenderOffersModal').modal('hide')
@@ -1490,7 +1556,8 @@ function confrom(offer, status, otherUsers) {
 	})
 }
 
-function confirmOffer(offer, status) {
+// новый метод отправки данных для подтверждения предложения
+function confirmOffer(offer, status, logistComment) {
 	const withoutConfirm = status !== '8'
 
 	const successMessage = withoutConfirm
@@ -1499,7 +1566,8 @@ function confirmOffer(offer, status) {
 
 	const payload = {
 		idCarrierBid: offer.idCarrierBid,
-		status
+		status,
+		logistComment: logistComment || null
 	}
 
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 300)
@@ -1520,21 +1588,58 @@ function confirmOffer(offer, status) {
 				cancelUpdateOfferCount = true
 				const route = res.route
 				const mappedRoute = await routeMapCallback(route)
-				withoutConfirm && send(
-					{
-						...offer,
-						fromUser: route.user?.login,
-						idRoute: route.idRoute,
-					},
-					route.routeDirection,
-					null
-				)
+				// withoutConfirm && send(
+				// 	{
+				// 		...offer,
+				// 		fromUser: route.user?.login,
+				// 		idRoute: route.idRoute,
+				// 	},
+				// 	route.routeDirection,
+				// 	null
+				// )
 				updateTableRow(gridOptions, mappedRoute)
 				snackbar.show(successMessage)
 				$('#tenderOffersModal').modal('hide')
 
 			} else if (res.status === '100') {
 				const errorMessage = res.message || 'Ошибка при подтверждении предложения'
+				snackbar.show(errorMessage)
+			}
+
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+		},
+		errorCallback: () => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+		}
+	})
+}
+
+// метод отмены предложения логистом
+function cancelOfferForLogist(idRoute, idCarrierBid, logistComment) {
+	if (!idCarrierBid || !idRoute || !logistComment) return
+
+	const payload = { idCarrierBid, idRoute, logistComment }
+
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 300)
+
+	ajaxUtils.postJSONdata({
+		url: cancelOfferForLogistUrl,
+		data: payload,
+		successCallback: async (res) => {
+			if (!res || !res.status) {
+				clearTimeout(timeoutId)
+				bootstrap5overlay.hideOverlay()
+				snackbar.show('Возникла ошибка - обновите страницу!')
+				return
+			}
+
+			if (res.status === '200') {
+				// обновление происходит через WS
+
+			} else if (res.status === '100') {
+				const errorMessage = res.message || 'Ошибка при отмене предложения'
 				snackbar.show(errorMessage)
 			}
 
@@ -1603,6 +1708,18 @@ function setRouteDirection(idRoute, isForReduction) {
 		span.className = 'text-danger'
 		span.textContent = ' (тендер на понижение)'
 		routeDirectionElement.append(span)
+	}
+}
+
+function getOfferStatusToView(params) {
+	const status = params.value
+	switch (status) {
+		case 10:
+			return "Отменено";
+		case 20:
+			return "Действует";
+		default:
+			return `Неизвестный статус (${status})`;
 	}
 }
 

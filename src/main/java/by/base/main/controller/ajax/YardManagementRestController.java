@@ -1,17 +1,10 @@
 package by.base.main.controller.ajax;
 
-import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.sql.Date;
-import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -20,11 +13,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import javax.imageio.IIOImage;
-import javax.imageio.ImageIO;
-import javax.imageio.ImageWriteParam;
-import javax.imageio.ImageWriter;
-import javax.imageio.stream.ImageOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -34,7 +22,6 @@ import by.base.main.model.yard.AcceptanceFoodQuality;
 import by.base.main.model.yard.AcceptanceQualityFoodCard;
 import by.base.main.model.yard.AcceptanceQualityFoodCardImageUrl;
 import by.base.main.model.yard.DefectBase;
-import by.base.main.model.yard.TtnIn;
 import by.base.main.service.yardService.AcceptanceFoodQualityService;
 import by.base.main.service.yardService.AcceptanceQualityFoodCardImageUrlService;
 import by.base.main.service.yardService.AcceptanceQualityFoodCardService;
@@ -46,32 +33,24 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
-import org.springframework.security.web.csrf.DefaultCsrfToken;
-import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 import org.springframework.web.bind.annotation.*;
 
-import com.google.gson.Gson;
 import com.graphhopper.GHRequest;
 import com.graphhopper.GHResponse;
 import com.graphhopper.GraphHopper;
 import com.graphhopper.ResponsePath;
 import com.graphhopper.util.PointList;
 
-import by.base.main.model.Act;
-import by.base.main.model.Address;
 import by.base.main.model.ClientRequest;
 import by.base.main.model.MapResponse;
 import by.base.main.model.Message;
 import by.base.main.model.Order;
-import by.base.main.model.Route;
 import by.base.main.model.Shop;
 import by.base.main.model.User;
 import by.base.main.service.OrderService;
@@ -83,10 +62,7 @@ import by.base.main.util.GraphHopper.RoutingMachine;
 import by.base.main.util.bots.TelegramBotRoutingTEST;
 import by.base.main.util.bots.TelegrammBotQuantityYard;
 
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
 import org.springframework.http.*;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
@@ -189,6 +165,7 @@ public class YardManagementRestController {
 		response.put("status", "200");
 		response.put("message", text);
 		response.put("time", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy; hh:MM:ss")));
+		response.put("user", SecurityContextHolder.getContext().getAuthentication().getName());
 		return response;		
 	}
 	

@@ -9,17 +9,17 @@ const PBI_DATA = {
 		title: 'Аналитика Биржи',
 		src: 'https://app.powerbi.com/reportEmbed?reportId=36af3ce2-6396-414b-bf00-ac156158500b&autoAuth=true&ctid=a9af5edf-b4be-4591-ba34-a3a96434b108',
 	},
-	slots: {
-		title: 'Аналитика нулей',
-		src: 'https://app.powerbi.com/reportEmbed?reportId=3880d301-7fd1-4114-a6ac-8a3821046315&autoAuth=true&ctid=a9af5edf-b4be-4591-ba34-a3a96434b108',
-	},
 	zero: {
-		title: 'Изменения матрицы',
+		title: 'Аналитика нулей',
 		src: 'https://app.powerbi.com/reportEmbed?reportId=5f56609f-d984-4cf5-a5ed-53d8eb4f2e03&autoAuth=true&ctid=a9af5edf-b4be-4591-ba34-a3a96434b108',
 	},
 	changeMatrix: {
-		title: 'Аналитика Слотов',
+		title: 'Изменения матрицы',
 		src: 'https://app.powerbi.com/reportEmbed?reportId=4f272d07-3afa-43ad-ad2a-eee2a38bb656&autoAuth=true&ctid=a9af5edf-b4be-4591-ba34-a3a96434b108',
+	},
+	slots: {
+		title: 'Аналитика Слотов',
+		src: 'https://app.powerbi.com/reportEmbed?reportId=3880d301-7fd1-4114-a6ac-8a3821046315&autoAuth=true&ctid=a9af5edf-b4be-4591-ba34-a3a96434b108',
 	},
 	serviceLvl: {
 		title: 'Сервис Lvl',

@@ -8,6 +8,8 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import javax.persistence.Column;
+
 
 public class AcceptanceQualityFoodCardDTO {
 
@@ -44,6 +46,8 @@ public class AcceptanceQualityFoodCardDTO {
     private Boolean isImport;
     private String unit;
     private String managerPercent;
+    private String type;
+    private Long idMotherCard;
     
 
 
@@ -53,7 +57,23 @@ public class AcceptanceQualityFoodCardDTO {
 
     private List<String> images;
 
-    public String getManagerPercent() {
+    public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	public Long getIdMotherCard() {
+		return idMotherCard;
+	}
+
+	public void setIdMotherCard(Long idMotherCard) {
+		this.idMotherCard = idMotherCard;
+	}
+
+	public String getManagerPercent() {
 		return managerPercent;
 	}
 

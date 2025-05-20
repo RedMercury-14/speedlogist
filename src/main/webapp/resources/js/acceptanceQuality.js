@@ -126,14 +126,13 @@ const childCardsDetailGridOptions = {
 	getRowId: (params) => params.data.idAcceptanceQualityFoodCard,
 }
 const detailGridOptions = {
-	// columnDefs: [
-	// 	{
-	// 		headerName: 'Продукт', field: 'productName', flex: 5,
-	// 		cellRenderer: 'agGroupCellRenderer',
-	// 	},
-	// 	...detailColumnDefs.filter(col => col.field !== productName),
-	// ],
-	columnDefs: detailColumnDefs,
+	columnDefs: [
+		{
+			headerName: 'Продукт', field: 'productName', flex: 5,
+			cellRenderer: 'agGroupCellRenderer',
+		},
+		...detailColumnDefs.filter(col => col.field !== 'productName'),
+	],
 	defaultColDef: {
 		headerClass: 'px-1',
 		cellClass: 'px-2 text-center',
@@ -151,14 +150,18 @@ const detailGridOptions = {
 	localeText: AG_GRID_LOCALE_RU,
 	getContextMenuItems: getContextMenuItems,
 	getRowId: (params) => params.data.idAcceptanceQualityFoodCard,
-	// masterDetail: true,
-	// detailRowAutoHeight: true,
-	// detailCellRendererParams: {
-	// 	detailGridOptions: childCardsDetailGridOptions,
-	// 	getDetailRowData: (params) => {
-	// 		params.successCallback(params.data.childCards);
-	// 	},
-	// },
+	masterDetail: true,
+	groupDefaultExpanded: 1,
+	isRowMaster: (dataItem) => {
+		return dataItem.childCards && dataItem.childCards.length !== 0
+	},
+	detailRowAutoHeight: true,
+	detailCellRendererParams: {
+		detailGridOptions: childCardsDetailGridOptions,
+		getDetailRowData: (params) => {
+			params.successCallback(params.data.childCards);
+		},
+	},
 }
 
 const columnDefs = [
@@ -287,6 +290,9 @@ const gridOptions = {
 			},
 		],
 	},
+	defaultExcelExportParams: {
+		processCellCallback: ({ value, formatValue }) => formatValue(value)
+	}
 }
 
 const photoSwipeOptions = {
@@ -496,6 +502,18 @@ function approveCardFormSubmitHandler(e) {
 						if (card.idAcceptanceQualityFoodCard === cardData.idAcceptanceQualityFoodCard) {
 							return recalculateCard(cardData)
 						}
+						if (card.childCards) {
+							return {
+								...card,
+								childCards: card.childCards.map(childCard => {
+									if (childCard.idAcceptanceQualityFoodCard === cardData.idAcceptanceQualityFoodCard) {
+										return recalculateCard(cardData)
+									}
+									return childCard
+								})
+							}
+						}
+						
 						return card
 					})
 				}
@@ -638,6 +656,7 @@ function getCardsData (params) {
 			.then(cards => {
 				if (cards.length) {
 					cards = cards.map(recalculateCard)
+					cards = groupChildCards(cards)
 				}
 				gridOptions.api.applyTransaction({ update: [{ ...rowData, cards, }]})
 				params.successCallback(rowData.cards)
@@ -659,8 +678,24 @@ function recalculateCard(card) {
 		...recalculateDefects("internalDefectsQualityCardList", sampleSize, card.internalDefectsQualityCardList, card.isImport, withPC),
 		...recalculateDefects("totalDefectQualityCardList", sampleSize, card.totalDefectQualityCardList, card.isImport, withPC),
 		...recalculateDefects("lightDefectsQualityCardList", sampleSize, card.lightDefectsQualityCardList, card.isImport, withPC),
-		childCards: []
 	}
+}
+
+// перемещение дочерних карточек в материнскую по idMotherCard
+function groupChildCards(cards) {
+	const map = new Map(cards.map(card => [card.idAcceptanceQualityFoodCard, { ...card }]))
+
+	cards.forEach(card => {
+		if (card.idMotherCard) {
+			const mother = map.get(card.idMotherCard)
+			mother.childCards = mother.childCards || []
+			mother.childCards.push(map.get(card.idAcceptanceQualityFoodCard))
+		}
+	})
+
+	return cards
+		.filter(card => !card.idMotherCard)
+		.map(card => map.get(card.idAcceptanceQualityFoodCard))
 }
 
 // конверторы дат для таблицы
@@ -911,6 +946,10 @@ function getCardStatusText(card) {
 			return 'Принята с процентом брака'
 		case 156:
 			return 'Принята под реализацию'
+		case 158:
+			return 'Требуется дополнительная выборка (своими силами)'
+		case 160:
+			return 'Принята с дополнительной выборкой (силами поставщика)'
 		default:
 			return `Неизвестный статус (${status})`
 	}

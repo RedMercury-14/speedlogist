@@ -390,6 +390,8 @@ export const getThisUserUrl = '/speedlogist/api/getThisUser'
 export const setTenderOfferUrl = '/speedlogist/api/carrier/tenders/get-bid'
 export const deleteTenderOfferUrl = '/speedlogist/api/carrier/tenders/delete-bid'
 export const getThisUserIdUrl = '/speedlogist/api/get-this-user'
+export const getNewTenderNotificationFlagUrl = '/speedlogist/api/user/get-new-tender-notification' // получение флага для получения уведомлений о новых тендерах
+export const setNewTenderNotificationFlagUrl = '/speedlogist/api/user/new-tender-notification' // изменение флага для получения уведомлений о новых тендерах
 
 
 

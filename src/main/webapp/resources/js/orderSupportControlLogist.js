@@ -141,6 +141,9 @@ const gridOptions = {
 	onColumnPinned: debouncedSaveColumnState,
 	onFilterChanged: debouncedSaveFilterState,
 	suppressDragLeaveHidesColumns: true,
+	defaultExcelExportParams: {
+		processCellCallback: ({ value, formatValue }) => formatValue(value)
+	},
 	sideBar: {
 		toolPanels: [
 			{

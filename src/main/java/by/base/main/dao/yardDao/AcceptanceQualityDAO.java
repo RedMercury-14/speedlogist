@@ -18,5 +18,7 @@ public interface AcceptanceQualityDAO {
     AcceptanceFoodQuality getByIdAndStatusLessThan(Long id, int status);
 
     AcceptanceFoodQuality getByIdAcceptanceFoodQuality(Long id);
+    
+    void update(AcceptanceFoodQuality acceptanceFoodQuality);
 
 }

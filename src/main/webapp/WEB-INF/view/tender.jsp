@@ -32,6 +32,14 @@
 				<button class="ml-1 text-nowrap">Проверить тендеры</button>
 			</a>
 		</div>
+		<div class="d-flex py-2">
+			<div class="form-check d-flex align-items-center">
+				<input class="form-check-input mt-0" type="checkbox" id="newTenderNotification">
+				<label class="form-check-label font-weight-bold text-primary ml-1" for="newTenderNotification">
+					Получать уведомления о новых тендерах
+				</label>
+			</div>
+		</div>
 	</div>
 	<div class="container-fluid px-0">
 		<div id="myGrid" class="ag-theme-alpine"></div>

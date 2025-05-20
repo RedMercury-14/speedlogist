@@ -395,7 +395,13 @@ public class MainRestController {
         return resultRoutes;
     }
     
-    
+    @GetMapping("/test")
+    public String test123(HttpServletRequest request) throws ParseException, IOException {
+        String appPath = request.getServletContext().getRealPath("");
+        File file = new File(appPath + "resources/others/" + "Список активных контрактов по складам 19.05.xlsx");
+        poiExcel.parseSchedules(file);
+        return "Done!";
+    }
     
     
     /**
@@ -6077,6 +6083,7 @@ public class MainRestController {
 		MarketRequestDto requestDto = new MarketRequestDto("", packetDto);
 		//запрашиваем jwt
 		String str;
+		System.err.println(gson.toJson(requestDto));
 		try {
 			str = postRequest(marketUrl, gson.toJson(requestDto));
 		} catch (Exception e) {
@@ -7444,7 +7451,8 @@ public class MainRestController {
 		Map<String, String> response = new HashMap<String, String>();	
 
 //		File file1 = poiExcel.getFileByMultipart(excel);
-		poiExcel.importGoodAccommodation(excel.getInputStream());		
+		poiExcel.importGoodAccommodation(excel.getInputStream());	
+		
 		return response;
 	}
 	

@@ -16,7 +16,7 @@ public interface AcceptanceFoodQualityService {
 
     AcceptanceFoodQuality getByIdAcceptanceFoodQuality(Long idAcceptanceFoodQuality);
 
-
+    void update(AcceptanceFoodQuality acceptanceFoodQuality);
 
 
 }

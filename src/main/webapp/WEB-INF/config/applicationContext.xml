@@ -50,12 +50,12 @@
 	
 	<bean id="myDataSourceYard" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
 		<property name="driverClassName" value="com.mysql.cj.jdbc.Driver" />
-		<property name="jdbcUrl" value="jdbc:mysql://localhost:3306/test?useSSL=false&amp;serverTimezone=Europe/Moscow&amp;characterEncoding=utf8" />
-		<property name="username" value="root" />
-		<property name="password" value="5001020" />
-<!-- 		<property name="jdbcUrl" value="jdbc:mysql://10.10.1.22:3306/test?useSSL=false&amp;serverTimezone=Europe/Moscow&amp;characterEncoding=utf8" /> -->
-<!-- 		<property name="username" value="speedlogist" /> -->
-<!-- 		<property name="password" value="eps6sh" /> -->
+<!-- 		<property name="jdbcUrl" value="jdbc:mysql://localhost:3306/test?useSSL=false&amp;serverTimezone=Europe/Moscow&amp;characterEncoding=utf8" /> -->
+<!-- 		<property name="username" value="root" /> -->
+<!-- 		<property name="password" value="5001020" /> -->
+		<property name="jdbcUrl" value="jdbc:mysql://10.10.1.21:3306/test?useSSL=false&amp;serverTimezone=Europe/Moscow&amp;characterEncoding=utf8" />
+		<property name="username" value="speedlogist" />
+		<property name="password" value="eps6sh" />
 		
 <!-- 		<property name="jdbcUrl" value="jdbc:mysql://10.200.0.102:3306/test?useSSL=false&amp;serverTimezone=Europe/Moscow&amp;characterEncoding=utf8" /> -->
 <!-- 		<property name="username" value="speedlogist" /> -->

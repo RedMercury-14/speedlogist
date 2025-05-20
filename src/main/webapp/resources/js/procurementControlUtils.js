@@ -95,6 +95,7 @@ export function mapCallbackForProcurementControl(order) {
 // шаблон для экспорта таблицы заявок
 export const procurementExcelExportParams = {
 	getCustomContentBelowRow: (params) => getRows(params),
+	processCellCallback: ({ value, formatValue }) => formatValue(value),
 	columnWidth: 120,
 	fileName: "orders.xlsx",
 }

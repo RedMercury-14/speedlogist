@@ -114,6 +114,10 @@ public class AcceptanceQualityFoodCard {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime dateTimeEndCard;
     
+    @Column(name = "date_time_create")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime dateTimeCreate;
+    
     @Column(name = "comment_aproof", columnDefinition = "TEXT")
     private String commentAproof;  
     
@@ -122,14 +126,46 @@ public class AcceptanceQualityFoodCard {
     
     @Column(name = "manager_percent")
     private String managerPercent;
+    
+    @Column(name = "type")
+    private String type;
+    
+    @Column(name = "id_mother_card")
+    private Long idMotherCard;
+    
+    
 
     // Getters and Setters   
 
-    public LocalDateTime getDateCard() {
+    public LocalDateTime getDateTimeCreate() {
+		return dateTimeCreate;
+	}
+
+	public void setDateTimeCreate(LocalDateTime dateTimeCreate) {
+		this.dateTimeCreate = dateTimeCreate;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	public LocalDateTime getDateCard() {
         return dateCard;
     }
 
-    public String getManagerPercent() {
+    public Long getIdMotherCard() {
+		return idMotherCard;
+	}
+
+	public void setIdMotherCard(Long idMotherCard) {
+		this.idMotherCard = idMotherCard;
+	}
+
+	public String getManagerPercent() {
 		return managerPercent;
 	}
 

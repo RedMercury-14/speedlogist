@@ -2,16 +2,22 @@ var idRoute = document.querySelector('input[name=idRoute]').value;
 changeCost();
 import { ajaxUtils } from './ajaxUtils.js';
 import { ws, wsTenderMessagesUrl } from './global.js';
-import { deleteTenderOfferUrl, getInfoParticipantsMessageBaseUrl, getInfoRouteMessageBaseUrl, getRouteBaseUrl, setTenderCostFromCarrierUrl, setTenderOfferUrl } from './globalConstants/urls.js';
+import {
+	deleteTenderOfferUrl, getInfoParticipantsMessageBaseUrl, getInfoRouteMessageBaseUrl,
+	getNewTenderNotificationFlagUrl, getRouteBaseUrl, setTenderCostFromCarrierUrl, setTenderOfferUrl
+} from './globalConstants/urls.js';
 import { createToast, playNewToastSound } from './Toast.js';
-import { disableButton, enableButton, SmartWebSocket } from './utils.js';
+import { disableButton, enableButton, getData, SmartWebSocket } from './utils.js';
 
 const token = $("meta[name='_csrf']").attr("content")
 const login = document.querySelector('#login')?.value
+let newTenderNotificationFlag = false
 // ws.onopen = () => onOpenSock();
 // ws.onmessage = (e) => onMessage(JSON.parse(e.data));
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+	newTenderNotificationFlag = await getData(getNewTenderNotificationFlagUrl)
+
 	const startPriceForReduction = document.getElementById('startPriceForReduction')?.value
 	if (startPriceForReduction) initTenderForReduction(startPriceForReduction)
 
@@ -87,28 +93,32 @@ async function tenderSocketOnMessage(e) {
 
 		const { action, idRoute: targetIdRoute, } = data
 		if (!action) return
-		if (targetIdRoute !== idRoute) return
 
 		// превращение закрытого тендера в тендер на понижение
 		if (action === 'change-tender-type') {
+			if (targetIdRoute !== idRoute) return
 			alert('Тип тендера изменен - страница будет обновлена')
 			document.location.reload()
 		}
 
 		// отмена тендера
 		else if (action === 'cancel-tender') {
+			if (targetIdRoute !== idRoute) return
 			alert('Тендер отменен - страница будет обновлена')
 			document.location.reload()
 		}
 
 		// тендер завершен
 		else if (action === 'finish-tender') {
+			if (targetIdRoute !== idRoute) return
 			alert('Тендер завершен - страница будет обновлена')
 			document.location.reload()
 		}
 
 		// уведомления перевозчикам
-		else if (action === 'notification') {
+		else if (action === 'notification' || action === 'new-tender') {
+
+			if (action === 'new-tender' && !newTenderNotificationFlag) return
 
 			const toastOption = {
 				date: new Date().getTime(),

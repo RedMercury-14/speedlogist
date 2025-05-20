@@ -172,6 +172,9 @@ const gridOptions = {
 	getContextMenuItems: getContextMenuItems,
 	enableBrowserTooltips: true,
 	localeText: AG_GRID_LOCALE_RU,
+	defaultExcelExportParams: {
+		processCellCallback: ({ value, formatValue }) => formatValue(value)
+	},
 	sideBar: {
 		toolPanels: [
 			{

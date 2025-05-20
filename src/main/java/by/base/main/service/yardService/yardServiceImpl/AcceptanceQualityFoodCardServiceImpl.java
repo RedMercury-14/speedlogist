@@ -84,6 +84,8 @@ public class AcceptanceQualityFoodCardServiceImpl implements AcceptanceQualityFo
             acceptanceQualityFoodCardDTO.setUnit(acceptanceQualityFoodCard.getUnit());
             acceptanceQualityFoodCardDTO.setIsImport(acceptanceFoodQuality.getAcceptance().getIsImport());
             acceptanceQualityFoodCardDTO.setManagerPercent(acceptanceQualityFoodCard.getManagerPercent());
+            acceptanceQualityFoodCardDTO.setIdMotherCard(acceptanceQualityFoodCard.getIdMotherCard());
+            acceptanceQualityFoodCardDTO.setType(acceptanceQualityFoodCard.getType());
 
             acceptanceQualityFoodCardDTO.setInternalDefectsQualityCardList(
                     new ArrayList<>(acceptanceQualityFoodCard.getInternalDefectsQualityCardList()));

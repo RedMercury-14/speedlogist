@@ -403,7 +403,6 @@ public class MainRestController {
         return "Done!";
     }
     
-    
     /**
      * <br>Метод для превращения закрытого тендера в тендер на понижение</br>.
      * @param request
@@ -4699,17 +4698,21 @@ public class MainRestController {
 	public Map<String, Object> getSendEmailRC(HttpServletRequest request) {
 		// Получаем текущую дату для имени файла
 		Map<String, Object> response = new HashMap<String, Object>();
+		User user = getThisUser();
+		
+		// Получаем текущую дату для имени файла
         LocalDate currentTime = LocalDate.now();
         String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-        String appPath = request.getServletContext().getRealPath("");
-        User user = getThisUser();
-		List<String> emails = propertiesUtils.getValuesByPartialKey(request.getServletContext(), "email.orl.rc");
-		List<String> emailsSupport = propertiesUtils.getValuesByPartialKey(request.getServletContext(), "email.orderSupport");
+        
+		List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.rc");
+		List<String> emailsSupport = propertiesUtils.getValuesByPartialKey(servletContext, "email.orderSupport");
 		emails.addAll(emailsSupport);
+		String appPath = servletContext.getRealPath("/");
 		
 		String fileName1200 = "1200.xlsx";
 		String fileName1250 = "1250.xlsx";
 		String fileName1700 = "1700.xlsx";
+		String fileName1800 = "1800.xlsx";
 		
 		try {
 			poiExcel.exportToExcelScheduleListRC(scheduleService.getSchedulesByStock(1200).stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
@@ -4718,6 +4721,8 @@ public class MainRestController {
 					appPath + "resources/others/" + fileName1250);
 			poiExcel.exportToExcelScheduleListRC(scheduleService.getSchedulesByStock(1700).stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
 					appPath + "resources/others/" + fileName1700);
+			poiExcel.exportToExcelScheduleListRC(scheduleService.getSchedulesByStock(1800).stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+					appPath + "resources/others/" + fileName1800);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.err.println("Ошибка формирование EXCEL");
@@ -4728,12 +4733,11 @@ public class MainRestController {
 		files.add(new File(appPath + "resources/others/" + fileName1200));
 		files.add(new File(appPath + "resources/others/" + fileName1250));
 		files.add(new File(appPath + "resources/others/" + fileName1700));
-		
+		files.add(new File(appPath + "resources/others/" + fileName1800));
 		
 		mailService.sendEmailWithFilesToUsers(request.getServletContext(), "Графики поставок (РЦ) на " + currentTimeString, "Сообщение отправлено вручную пользователем : " + user.getSurname() + " " + user.getName() , files, emails);
 		response.put("status", "200");
-		response.put("message", "Сообщение отправлено");
-		
+		response.put("message", "Сообщение отправлено");		
 		return response;		
 	}
 	

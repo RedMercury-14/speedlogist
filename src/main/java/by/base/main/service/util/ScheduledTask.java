@@ -154,6 +154,7 @@ public class ScheduledTask {
 		String fileName1200 = "1200.xlsx";
 		String fileName1250 = "1250.xlsx";
 		String fileName1700 = "1700.xlsx";
+		String fileName1800 = "1800.xlsx";
 		
 		try {
 			poiExcel.exportToExcelScheduleListRC(scheduleService.getSchedulesByStock(1200).stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
@@ -162,6 +163,8 @@ public class ScheduledTask {
 					appPath + "resources/others/" + fileName1250);
 			poiExcel.exportToExcelScheduleListRC(scheduleService.getSchedulesByStock(1700).stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
 					appPath + "resources/others/" + fileName1700);
+			poiExcel.exportToExcelScheduleListRC(scheduleService.getSchedulesByStock(1800).stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+					appPath + "resources/others/" + fileName1800);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.err.println("Ошибка формирование EXCEL");
@@ -172,6 +175,7 @@ public class ScheduledTask {
 		files.add(new File(appPath + "resources/others/" + fileName1200));
 		files.add(new File(appPath + "resources/others/" + fileName1250));
 		files.add(new File(appPath + "resources/others/" + fileName1700));
+		files.add(new File(appPath + "resources/others/" + fileName1800));
 		
 		
 		mailService.sendEmailWithFilesToUsers(servletContext, "Графики поставок на РЦ от " + currentTimeString, "Автоматическая отправка", files, emails);

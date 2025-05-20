@@ -533,6 +533,7 @@ public class YardManagementRestController {
 			foodCard2.setCardStatus(10);
 			foodCard2.setType("Переборка");
 			foodCard2.setDateTimeCreate(LocalDateTime.now());
+			foodCard2.setDateCard(foodCard.getDateCard());
 			foodCard2.setInternalDefectsQualityCardList(null);
 			foodCard2.setLightDefectsQualityCardList(null);
 			foodCard2.setTotalDefectQualityCardList(null);
@@ -570,6 +571,7 @@ public class YardManagementRestController {
 			foodCard3.setCardStatus(10);
 			foodCard3.setType("Дополнительная выборка");
 			foodCard3.setDateTimeCreate(LocalDateTime.now());
+			foodCard3.setDateCard(foodCard.getDateCard());
 			foodCard3.setInternalDefectsQualityCardList(null);
 			foodCard3.setLightDefectsQualityCardList(null);
 			foodCard3.setTotalDefectQualityCardList(null);

@@ -395,12 +395,30 @@ public class MainRestController {
         return resultRoutes;
     }
     
-    @GetMapping("/test")
-    public String test123(HttpServletRequest request) throws ParseException, IOException {
-        String appPath = request.getServletContext().getRealPath("");
-        File file = new File(appPath + "resources/others/" + "Список активных контрактов по складам 19.05.xlsx");
-        poiExcel.parseSchedules(file);
-        return "Done!";
+    /**
+     * <br>Нужно ли уведомлять о новом тендере</br>.
+     * @author Ira
+     */
+    @GetMapping("/user/get-new-tender-notification")
+    public Boolean getNewTenderNotification(HttpServletRequest request) throws ParseException, IOException {
+        return getThisUser().getNewTenderNotification();
+    }
+    
+    /**
+     * <br>Внести в инфу в БД, нужно ли уведомлять о новых тендерах</br>.
+     * @author Ira
+     */
+    @PostMapping("/user/new-tender-notification")
+    public Map<String, Object> getNewTenderNotification(@RequestBody String str) throws ParseException {
+        Map<String, Object> response = new HashMap<String, Object>();
+        JSONParser parser = new JSONParser();
+        JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+        Boolean newTenderNotification =  jsonMainObject.get("newTenderNotification") == null ? null : Boolean.parseBoolean(jsonMainObject.get("newTenderNotification").toString());
+        User user = getThisUser();
+        user.setNewTenderNotification(newTenderNotification);
+        userService.saveOrUpdateUser(user, 0);
+        response.put("status", "200");
+        return response;
     }
     
     /**
@@ -3141,6 +3159,15 @@ public class MainRestController {
                 createMessage.setStatus("200");
                 createMessage.setWSPath("carrier-tenders");
                 carrierTenderWebSocket.broadcast(createMessage);
+
+                CarrierTenderMessage messageForCarriers = new CarrierTenderMessage();
+                messageForCarriers.setIdRoute(route.getIdRoute().toString());
+                messageForCarriers.setUrl("/speedlogist/main/carrier/tender/tenderpage?routeId=" + route.getIdRoute());
+                messageForCarriers.setAction("new-tender");
+                messageForCarriers.setText("<b>Открыт новый тендер</b> для маршрута №" + route.getIdRoute() + " " + route.getRouteDirection().substring(0, 100) + "...");
+                messageForCarriers.setStatus("200");
+                messageForCarriers.setWSPath("carrier-tenders");
+                carrierTenderWebSocket.broadcast(messageForCarriers);
 
                 //отправляем письмо, запускаем его в отдельном потоке, т.к. отправка проходит в среднем 2 секунды
                 new Thread(new Runnable() {

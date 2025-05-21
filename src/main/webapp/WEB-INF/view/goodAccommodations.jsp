@@ -10,7 +10,7 @@
 	<meta charset="UTF-8">
 	<meta name="${_csrf.parameterName}" content="${_csrf.token}">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Тестовая</title>
+	<title>Управление разрешениями товар-склад</title>
 	<link rel="icon" href="${pageContext.request.contextPath}/resources/img/favicon.ico">
 	<script async src="${pageContext.request.contextPath}/resources/js/getInitData.js" type="module"></script>
 	<script src="${pageContext.request.contextPath}/resources/js/AG-Grid/ag-grid-enterprise.min.js"></script>

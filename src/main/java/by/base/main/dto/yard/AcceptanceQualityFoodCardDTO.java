@@ -5,8 +5,11 @@ import by.base.main.model.yard.LightDefectsQualityCard;
 import by.base.main.model.yard.TotalDefectQualityCard;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import javax.persistence.Column;
 
 
 public class AcceptanceQualityFoodCardDTO {
@@ -39,11 +42,13 @@ public class AcceptanceQualityFoodCardDTO {
     private String caliber;
     private String stickerDescription;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime dateCard;
+    private Timestamp dateCard;
     
     private Boolean isImport;
     private String unit;
     private String managerPercent;
+    private String type;
+    private Long idMotherCard;
     
 
 
@@ -53,7 +58,23 @@ public class AcceptanceQualityFoodCardDTO {
 
     private List<String> images;
 
-    public String getManagerPercent() {
+    public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	public Long getIdMotherCard() {
+		return idMotherCard;
+	}
+
+	public void setIdMotherCard(Long idMotherCard) {
+		this.idMotherCard = idMotherCard;
+	}
+
+	public String getManagerPercent() {
 		return managerPercent;
 	}
 
@@ -254,12 +275,15 @@ public class AcceptanceQualityFoodCardDTO {
         this.stickerDescription = stickerDescription;
     }
 
-    public LocalDateTime getDateCard() {
+    public Timestamp getDateCard() {
         return dateCard;
     }
 
-    public void setDateCard(LocalDateTime dateCard) {
+    public void setDateCard(Timestamp dateCard) {
         this.dateCard = dateCard;
+    }
+    public void setDateCard(LocalDateTime dateCard) {
+    	this.dateCard = Timestamp.valueOf(dateCard);
     }
 
     public List<InternalDefectsQualityCard> getInternalDefectsQualityCardList() {

@@ -109,5 +109,12 @@ public class AcceptanceQualityDAOImpl implements AcceptanceQualityDAO {
         return query.uniqueResult();
     }
 
+	@Override
+	@Transactional(transactionManager = "myTransactionManagerYard")
+	public void update(AcceptanceFoodQuality acceptanceFoodQuality) {
+		Session currentSession = sessionFactoryYard.getCurrentSession();
+		currentSession.update(acceptanceFoodQuality);		
+	}
+
 
 }

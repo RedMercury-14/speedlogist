@@ -1,10 +1,13 @@
 import { createToast, playNewToastSound } from './Toast.js'
 import { wsTenderMessagesUrl } from './global.js'
-import { SmartWebSocket } from './utils.js'
+import { getNewTenderNotificationFlagUrl } from './globalConstants/urls.js'
+import { getData, SmartWebSocket } from './utils.js'
 
 const token = $("meta[name='_csrf']").attr("content")
 const role = document.querySelector('input[id=role]').value
 const login = document.querySelector('#login').value
+
+let newTenderNotificationFlag = false
 
 if (role === '[ROLE_CARRIER]') {
 	new SmartWebSocket(`${wsTenderMessagesUrl}?user=${encodeURIComponent(login)}`, {
@@ -13,6 +16,8 @@ if (role === '[ROLE_CARRIER]') {
 		onMessage: socketMessageHandler,
 		onClose: () => alert('Соединение с сервером потеряно. Перезагрузите страницу')
 	})
+
+	newTenderNotificationFlag = await getData(getNewTenderNotificationFlagUrl)
 }
 
 // обработчик сообщений от сервера для текущего логина и всех international
@@ -26,7 +31,9 @@ function socketMessageHandler(e) {
 		const action = data.action
 
 		// уведомления перевозчикам
-		if (action === 'notification') {
+		if (action === 'notification' || action === 'new-tender') {
+
+			if (action === 'new-tender' && !newTenderNotificationFlag) return
 
 			const toastOption = {
 				date: new Date().getTime(),

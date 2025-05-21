@@ -485,6 +485,7 @@ public class YardManagementRestController {
 		Integer status = jsonMainObject.get("status") != null ? Integer.parseInt(jsonMainObject.get("status").toString()) : null;
 		
 		AcceptanceQualityFoodCard foodCard = acceptanceQualityFoodCardService.getByIdAcceptanceQualityFoodCard(idCard.longValue());
+		AcceptanceFoodQuality acceptanceFoodQuality = foodCard.getAcceptanceFoodQuality();
 		
 		foodCard.setCardStatus(status);
 		foodCard.setCommentAproof(comment);	
@@ -494,8 +495,13 @@ public class YardManagementRestController {
 		foodCard.setIdManagerAproof(user.getIdUser());
 		foodCard.setFullnameManagerAproof(user.getSurname() +" "+ user.getName());
 		
-		acceptanceQualityFoodCardService.update(foodCard);
 		
+		
+		acceptanceQualityFoodCardService.update(foodCard);		
+		
+		/*
+		 * Интересует только доп выборка и переборка
+		 */
 		//тут отпраляем сообщение в бот.
 		String statusStr = null;
 		switch (status) {
@@ -503,7 +509,36 @@ public class YardManagementRestController {
 			statusStr = "Принимаем.";
 			break;
 		case 152:
-			statusStr = "Принимаем c переборкой.";
+			statusStr = "Оправляем на переборку";
+			
+			acceptanceFoodQuality.setQualityProcessStatus(70); //70 статус доп работа
+			acceptanceFoodQuality.setDateStopProcess(null); 
+			acceptanceFoodQualityService.update(acceptanceFoodQuality);
+			
+			AcceptanceQualityFoodCard foodCard2 = new AcceptanceQualityFoodCard();
+			foodCard2.setAcceptanceFoodQuality(acceptanceFoodQuality);
+			foodCard2.setProductName(foodCard.getProductName());
+			foodCard2.setProductType(foodCard.getProductType());
+			foodCard2.setClassType(foodCard.getClassType());
+			foodCard2.setNumberOfBrands(foodCard.getNumberOfBrands());
+			foodCard2.setQualityOfProductPackaging(foodCard.getQualityOfProductPackaging());
+			foodCard2.setThermogram(foodCard.getThermogram());
+			foodCard2.setBodyTemp(foodCard.getBodyTemp());
+			foodCard2.setFruitTemp(foodCard.getFruitTemp());
+			foodCard2.setAppearanceEvaluation(foodCard.getAppearanceEvaluation());
+			foodCard2.setTasteQuality(foodCard.getTasteQuality());
+//			foodCard2.setLoginManagerAproof(user.getSurname() + " " + user.getName());			
+			foodCard2.setIdAcceptanceQualityFoodCard(null);
+			foodCard2.setIdMotherCard(foodCard.getIdMotherCard() != null ? foodCard.getIdMotherCard() : foodCard.getIdAcceptanceQualityFoodCard());
+			foodCard2.setCardStatus(10);
+			foodCard2.setType("Переборка");
+			foodCard2.setDateTimeCreate(Timestamp.valueOf(LocalDateTime.now()));
+			foodCard2.setDateCard(foodCard.getDateCard());
+			foodCard2.setInternalDefectsQualityCardList(null);
+			foodCard2.setLightDefectsQualityCardList(null);
+			foodCard2.setTotalDefectQualityCardList(null);
+			foodCard2.setAcceptanceQualityFoodCardImageUrls(null);
+			acceptanceQualityFoodCardService.save(foodCard2);
 			break;
 		case 154:
 			statusStr = "Принимаем с процентом брака.";
@@ -511,17 +546,52 @@ public class YardManagementRestController {
 		case 156:
 			statusStr = "Принимаем под реализацию";
 			break;
+		case 158:
+			statusStr = "Требуется дополнительная выборка (своими силами)";
+			
+			acceptanceFoodQuality.setQualityProcessStatus(70); //70 статус доп работа
+			acceptanceFoodQuality.setDateStopProcess(null); 
+			acceptanceFoodQualityService.update(acceptanceFoodQuality);
+			
+			AcceptanceQualityFoodCard foodCard3 = new AcceptanceQualityFoodCard();
+			foodCard3.setAcceptanceFoodQuality(acceptanceFoodQuality);
+			foodCard3.setProductName(foodCard.getProductName());
+			foodCard3.setProductType(foodCard.getProductType());
+			foodCard3.setClassType(foodCard.getClassType());
+			foodCard3.setNumberOfBrands(foodCard.getNumberOfBrands());
+			foodCard3.setQualityOfProductPackaging(foodCard.getQualityOfProductPackaging());
+			foodCard3.setThermogram(foodCard.getThermogram());
+			foodCard3.setBodyTemp(foodCard.getBodyTemp());
+			foodCard3.setFruitTemp(foodCard.getFruitTemp());
+			foodCard3.setAppearanceEvaluation(foodCard.getAppearanceEvaluation());
+			foodCard3.setTasteQuality(foodCard.getTasteQuality());
+//			foodCard2.setLoginManagerAproof(user.getSurname() + " " + user.getName());			
+			foodCard3.setIdAcceptanceQualityFoodCard(null);
+			foodCard3.setIdMotherCard(foodCard.getIdMotherCard() != null ? foodCard.getIdMotherCard() : foodCard.getIdAcceptanceQualityFoodCard());
+			foodCard3.setCardStatus(10);
+			foodCard3.setType("Дополнительная выборка");
+			foodCard3.setDateTimeCreate(Timestamp.valueOf(LocalDateTime.now()));
+			foodCard3.setDateCard(foodCard.getDateCard());
+			foodCard3.setInternalDefectsQualityCardList(null);
+			foodCard3.setLightDefectsQualityCardList(null);
+			foodCard3.setTotalDefectQualityCardList(null);
+			foodCard3.setAcceptanceQualityFoodCardImageUrls(null);
+			acceptanceQualityFoodCardService.save(foodCard3);
+			break;
+		case 160:
+			statusStr = "Принимаем с дополнительной выборкой (силами поставщика)";
+			break;
 		case 140:
 			statusStr = "Не принимаем";
 			break;
 		default:
 			statusStr = "Ошибка чтения статуса";
 			break;
-		}
+		}		
 		
 		StringBuilder message = new StringBuilder();
-		message.append("Поставщик: " + foodCard.getAcceptanceFoodQuality().getAcceptance().getFirmNameAccept() + ";  авто: " 
-				+ foodCard.getAcceptanceFoodQuality().getAcceptance().getCarNumber() + "; продукт: "
+		message.append("Поставщик: " + acceptanceFoodQuality.getAcceptance().getFirmNameAccept() + ";  авто: " 
+				+ acceptanceFoodQuality.getAcceptance().getCarNumber() + "; продукт: "
 				+ foodCard.getProductName() + "; Карточка товара №" + foodCard.getIdAcceptanceQualityFoodCard()
 				+ "\n");
 		message.append("<b>Статус по карточке: " + statusStr);
@@ -535,7 +605,7 @@ public class YardManagementRestController {
 		if(isRunTelegrammBot) {
 			telegrammBotQuantityYard.sendMessageInBot(message.toString(), null);				
 		}else {
-			telegramBotRoutingTEST.sendMessageInBot(message.toString(), null);	
+//			telegramBotRoutingTEST.sendMessageInBot(message.toString(), null);	
 		}
 		
 		response.put("status", "200");

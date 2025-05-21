@@ -83,6 +83,9 @@ export const gridOptions = {
 	suppressDragLeaveHidesColumns: true,
 	enableBrowserTooltips: true,
 	localeText: AG_GRID_LOCALE_RU,
+	defaultExcelExportParams: {
+		processCellCallback: ({ value, formatValue }) => formatValue(value)
+	}
 }
 
 export function renderTable(gridDiv, gridOptions, data) {

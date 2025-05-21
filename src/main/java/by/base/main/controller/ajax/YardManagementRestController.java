@@ -529,10 +529,10 @@ public class YardManagementRestController {
 			foodCard2.setTasteQuality(foodCard.getTasteQuality());
 //			foodCard2.setLoginManagerAproof(user.getSurname() + " " + user.getName());			
 			foodCard2.setIdAcceptanceQualityFoodCard(null);
-			foodCard2.setIdMotherCard(foodCard.getIdAcceptanceQualityFoodCard());
+			foodCard2.setIdMotherCard(foodCard.getIdMotherCard() != null ? foodCard.getIdMotherCard() : foodCard.getIdAcceptanceQualityFoodCard());
 			foodCard2.setCardStatus(10);
 			foodCard2.setType("Переборка");
-			foodCard2.setDateTimeCreate(LocalDateTime.now());
+			foodCard2.setDateTimeCreate(Timestamp.valueOf(LocalDateTime.now()));
 			foodCard2.setDateCard(foodCard.getDateCard());
 			foodCard2.setInternalDefectsQualityCardList(null);
 			foodCard2.setLightDefectsQualityCardList(null);
@@ -567,10 +567,10 @@ public class YardManagementRestController {
 			foodCard3.setTasteQuality(foodCard.getTasteQuality());
 //			foodCard2.setLoginManagerAproof(user.getSurname() + " " + user.getName());			
 			foodCard3.setIdAcceptanceQualityFoodCard(null);
-			foodCard3.setIdMotherCard(foodCard.getIdAcceptanceQualityFoodCard());
+			foodCard3.setIdMotherCard(foodCard.getIdMotherCard() != null ? foodCard.getIdMotherCard() : foodCard.getIdAcceptanceQualityFoodCard());
 			foodCard3.setCardStatus(10);
 			foodCard3.setType("Дополнительная выборка");
-			foodCard3.setDateTimeCreate(LocalDateTime.now());
+			foodCard3.setDateTimeCreate(Timestamp.valueOf(LocalDateTime.now()));
 			foodCard3.setDateCard(foodCard.getDateCard());
 			foodCard3.setInternalDefectsQualityCardList(null);
 			foodCard3.setLightDefectsQualityCardList(null);

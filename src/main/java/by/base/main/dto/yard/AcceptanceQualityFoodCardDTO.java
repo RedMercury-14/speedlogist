@@ -5,6 +5,7 @@ import by.base.main.model.yard.LightDefectsQualityCard;
 import by.base.main.model.yard.TotalDefectQualityCard;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -41,7 +42,7 @@ public class AcceptanceQualityFoodCardDTO {
     private String caliber;
     private String stickerDescription;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime dateCard;
+    private Timestamp dateCard;
     
     private Boolean isImport;
     private String unit;
@@ -274,12 +275,15 @@ public class AcceptanceQualityFoodCardDTO {
         this.stickerDescription = stickerDescription;
     }
 
-    public LocalDateTime getDateCard() {
+    public Timestamp getDateCard() {
         return dateCard;
     }
 
-    public void setDateCard(LocalDateTime dateCard) {
+    public void setDateCard(Timestamp dateCard) {
         this.dateCard = dateCard;
+    }
+    public void setDateCard(LocalDateTime dateCard) {
+    	this.dateCard = Timestamp.valueOf(dateCard);
     }
 
     public List<InternalDefectsQualityCard> getInternalDefectsQualityCardList() {

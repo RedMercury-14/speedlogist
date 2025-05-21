@@ -1,10 +1,9 @@
 package by.base.main.model.yard;
 
-import by.base.main.model.yard.AcceptanceFoodQuality;
 import com.fasterxml.jackson.annotation.*;
 import javax.persistence.*;
 
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
 import java.util.Set;
 
 @Entity
@@ -94,8 +93,8 @@ public class AcceptanceQualityFoodCard {
     private String stickerDescription;
 
     @Column(name = "date_card")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime dateCard;
+//    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private Timestamp dateCard;
     
     @Column(name = "login_manager_aproof", columnDefinition = "TEXT")
     private String loginManagerAproof;
@@ -107,16 +106,16 @@ public class AcceptanceQualityFoodCard {
     private Integer idManagerAproof;
     
     @Column(name = "date_time_aproof")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime dateTimeAproof;
+//    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private Timestamp dateTimeAproof;
     
     @Column(name = "date_time_end_card")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime dateTimeEndCard;
+//    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private Timestamp dateTimeEndCard;
     
     @Column(name = "date_time_create")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime dateTimeCreate;
+//    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private Timestamp dateTimeCreate;
     
     @Column(name = "comment_aproof", columnDefinition = "TEXT")
     private String commentAproof;  
@@ -137,11 +136,11 @@ public class AcceptanceQualityFoodCard {
 
     // Getters and Setters   
 
-    public LocalDateTime getDateTimeCreate() {
+    public Timestamp getDateTimeCreate() {
 		return dateTimeCreate;
 	}
 
-	public void setDateTimeCreate(LocalDateTime dateTimeCreate) {
+	public void setDateTimeCreate(Timestamp dateTimeCreate) {
 		this.dateTimeCreate = dateTimeCreate;
 	}
 
@@ -153,7 +152,7 @@ public class AcceptanceQualityFoodCard {
 		this.type = type;
 	}
 
-	public LocalDateTime getDateCard() {
+	public Timestamp getDateCard() {
         return dateCard;
     }
 
@@ -181,9 +180,9 @@ public class AcceptanceQualityFoodCard {
 		this.unit = unit;
 	}
 
-	public void setDateCard(LocalDateTime dateCard) {
-        this.dateCard = dateCard;
-    }
+	public void setDateCard(Timestamp dateCard) {
+		this.dateCard = dateCard;
+	}
 
     public Long getIdAcceptanceQualityFoodCard() {
         return idAcceptanceQualityFoodCard;
@@ -402,23 +401,21 @@ public class AcceptanceQualityFoodCard {
 		this.idManagerAproof = idManagerAproof;
 	}
 
-	public LocalDateTime getDateTimeAproof() {
+	public Timestamp getDateTimeAproof() {
 		return dateTimeAproof;
 	}
 
-	public void setDateTimeAproof(LocalDateTime dateTimeAproof) {
+	public void setDateTimeAproof(Timestamp dateTimeAproof) {
 		this.dateTimeAproof = dateTimeAproof;
 	}
 
-	public LocalDateTime getDateTimeEndCard() {
+	public Timestamp getDateTimeEndCard() {
 		return dateTimeEndCard;
 	}
 
-	public void setDateTimeEndCard(LocalDateTime dateTimeEndCard) {
+	public void setDateTimeEndCard(Timestamp dateTimeEndCard) {
 		this.dateTimeEndCard = dateTimeEndCard;
 	}
-	
-	
 
 	public String getCommentAproof() {
 		return commentAproof;

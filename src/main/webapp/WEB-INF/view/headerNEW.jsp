@@ -83,7 +83,6 @@
 										<a class="dropdown-item" href="<spring:url value="/main/procurement/orders" />">Контроль заявок</a>
 										<a class="dropdown-item" href="<spring:url value="/main/order-support/orders" />">Остаток товара</a>
 										<a class="dropdown-item" href="<spring:url value="/main/order-support/control" />">Загрузить отчёт</a>
-										<!-- <a class="dropdown-item" href="<spring:url value="/main/stock-support/orders" />">Таблица Башкиров</a> -->
 										<a class="dropdown-item" href="<spring:url value="/main/procurement/permission/list" />">История решений по заказам</a>
 										<a class="dropdown-item" href="<spring:url value="/main/acceptanceQuality" />">Подтверждение качества</a>
 										<a class="dropdown-item" href="<spring:url value="/main/procurement/price-protocol/list" />">Протокол согласования цены</a>
@@ -164,10 +163,10 @@
 										<a class="dropdown-item" href="<spring:url value="/main/procurement/orders" />">Контроль заявок</a>
 										<a class="dropdown-item" href="<spring:url value="/main/order-support/orders" />">Остаток товара</a>
 										<a class="dropdown-item" href="<spring:url value="/main/order-support/control" />">Загрузить отчёт</a>
-										<!-- <a class="dropdown-item" href="<spring:url value="/main/stock-support/orders" />">Таблица Башкиров</a> -->
 										<a class="dropdown-item" href="<spring:url value="/main/procurement/permission/list" />">История решений по заказам</a>
 										<a class="dropdown-item" href="<spring:url value="/main/acceptanceQuality" />">Подтверждение качества</a>
-										<!-- <a class="dropdown-item" href="<spring:url value="/main/procurement/price-protocol/list" />">Протокол согласования цены</a> -->
+										<a class="dropdown-item" href="<spring:url value="/main/procurement/price-protocol/list" />">Протокол согласования цены</a>
+										<a class="dropdown-item" href="<spring:url value="/main/procurement/create-accommodation" />">Управление разрешениями товар-склад</a>
 									</div>
 								</li>
 								<li class="dropdown">

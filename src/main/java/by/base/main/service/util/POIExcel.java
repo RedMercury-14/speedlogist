@@ -179,6 +179,35 @@ public class POIExcel {
 	}
 	
 	/**
+	 * Временны парсин одной столбца
+	 * @param file
+	 * @throws IOException
+	 */
+	public void parseSchedules(File file) throws IOException {
+	    XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
+	    XSSFSheet sheet = wb.getSheetAt(0);
+	    int count = 0;
+	    for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+	       Row row = sheet.getRow(i);
+	       Long numContract = Double.valueOf(row.getCell(3).getNumericCellValue()).longValue();
+	       Integer numStock = Double.valueOf(row.getCell(20).getNumericCellValue()).intValue();
+	       Schedule schedule = scheduleService.getScheduleByNumContract(numContract);
+	       if (schedule != null) {
+	          if (!schedule.getNumStock().equals(numStock)) {
+	             schedule.setNumStock(numStock);
+	             scheduleService.updateSchedule(schedule);
+	          }
+	       } else {
+	          System.out.println("График не найден: " + numContract);
+	          count++;
+	       }
+	    }
+	    System.out.println("Счётчик " + count);
+	    wb.close();
+
+	}
+	
+	/**
 	 * Импорт данных по товарам на складах с екселя
 	 * @param file
 	 * @throws IOException

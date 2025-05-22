@@ -81,6 +81,9 @@ const gridOptions = {
 	onColumnPinned: debouncedSaveColumnState,
 	getContextMenuItems: getContextMenuItems,
 	getRowId: (params) => params.data.idGoodAccommodation,
+	defaultExcelExportParams: {
+		processCellCallback: ({ value, formatValue }) => formatValue(value)
+	},
 	sideBar: {
 		toolPanels: [
 			{

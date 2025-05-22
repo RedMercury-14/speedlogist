@@ -42,6 +42,12 @@ public class AcceptanceFoodQualityServiceImpl implements AcceptanceFoodQualitySe
     public AcceptanceFoodQuality getByIdAcceptanceFoodQuality(Long idAcceptanceFoodQuality) {
         return acceptanceQualityDAO.getByIdAcceptanceFoodQuality(idAcceptanceFoodQuality);
     }
+
+	@Override
+	public void update(AcceptanceFoodQuality acceptanceFoodQuality) {
+		acceptanceQualityDAO.update(acceptanceFoodQuality);
+		
+	}
 }
 
 

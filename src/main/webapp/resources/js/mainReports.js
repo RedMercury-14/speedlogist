@@ -159,6 +159,9 @@ const gridOptions = {
 	onColumnVisible: debouncedSaveColumnState,
 	onColumnPinned: debouncedSaveColumnState,
 	getContextMenuItems: getContextMenuItems,
+	defaultExcelExportParams: {
+		processCellCallback: ({ value, formatValue }) => formatValue(value)
+	},
 	sideBar: {
 		toolPanels: [
 			{

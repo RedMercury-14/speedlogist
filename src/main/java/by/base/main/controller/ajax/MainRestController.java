@@ -395,8 +395,31 @@ public class MainRestController {
         return resultRoutes;
     }
     
+    /**
+     * <br>Нужно ли уведомлять о новом тендере</br>.
+     * @author Ira
+     */
+    @GetMapping("/user/get-new-tender-notification")
+    public Boolean getNewTenderNotification(HttpServletRequest request) throws ParseException, IOException {
+        return getThisUser().getNewTenderNotification();
+    }
     
-    
+    /**
+     * <br>Внести в инфу в БД, нужно ли уведомлять о новых тендерах</br>.
+     * @author Ira
+     */
+    @PostMapping("/user/new-tender-notification")
+    public Map<String, Object> getNewTenderNotification(@RequestBody String str) throws ParseException {
+        Map<String, Object> response = new HashMap<String, Object>();
+        JSONParser parser = new JSONParser();
+        JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+        Boolean newTenderNotification =  jsonMainObject.get("newTenderNotification") == null ? null : Boolean.parseBoolean(jsonMainObject.get("newTenderNotification").toString());
+        User user = getThisUser();
+        user.setNewTenderNotification(newTenderNotification);
+        userService.saveOrUpdateUser(user, 0);
+        response.put("status", "200");
+        return response;
+    }
     
     /**
      * <br>Метод для превращения закрытого тендера в тендер на понижение</br>.
@@ -3137,6 +3160,15 @@ public class MainRestController {
                 createMessage.setWSPath("carrier-tenders");
                 carrierTenderWebSocket.broadcast(createMessage);
 
+                CarrierTenderMessage messageForCarriers = new CarrierTenderMessage();
+                messageForCarriers.setIdRoute(route.getIdRoute().toString());
+                messageForCarriers.setUrl("/speedlogist/main/carrier/tender/tenderpage?routeId=" + route.getIdRoute());
+                messageForCarriers.setAction("new-tender");
+                messageForCarriers.setText("<b>Открыт новый тендер</b> для маршрута №" + route.getIdRoute() + " " + route.getRouteDirection().substring(0, 100) + "...");
+                messageForCarriers.setStatus("200");
+                messageForCarriers.setWSPath("carrier-tenders");
+                carrierTenderWebSocket.broadcast(messageForCarriers);
+
                 //отправляем письмо, запускаем его в отдельном потоке, т.к. отправка проходит в среднем 2 секунды
                 new Thread(new Runnable() {
                     @Override
@@ -4693,17 +4725,21 @@ public class MainRestController {
 	public Map<String, Object> getSendEmailRC(HttpServletRequest request) {
 		// Получаем текущую дату для имени файла
 		Map<String, Object> response = new HashMap<String, Object>();
+		User user = getThisUser();
+		
+		// Получаем текущую дату для имени файла
         LocalDate currentTime = LocalDate.now();
         String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-        String appPath = request.getServletContext().getRealPath("");
-        User user = getThisUser();
-		List<String> emails = propertiesUtils.getValuesByPartialKey(request.getServletContext(), "email.orl.rc");
-		List<String> emailsSupport = propertiesUtils.getValuesByPartialKey(request.getServletContext(), "email.orderSupport");
+        
+		List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.rc");
+		List<String> emailsSupport = propertiesUtils.getValuesByPartialKey(servletContext, "email.orderSupport");
 		emails.addAll(emailsSupport);
+		String appPath = servletContext.getRealPath("/");
 		
 		String fileName1200 = "1200.xlsx";
 		String fileName1250 = "1250.xlsx";
 		String fileName1700 = "1700.xlsx";
+		String fileName1800 = "1800.xlsx";
 		
 		try {
 			poiExcel.exportToExcelScheduleListRC(scheduleService.getSchedulesByStock(1200).stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
@@ -4712,6 +4748,8 @@ public class MainRestController {
 					appPath + "resources/others/" + fileName1250);
 			poiExcel.exportToExcelScheduleListRC(scheduleService.getSchedulesByStock(1700).stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
 					appPath + "resources/others/" + fileName1700);
+			poiExcel.exportToExcelScheduleListRC(scheduleService.getSchedulesByStock(1800).stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()), 
+					appPath + "resources/others/" + fileName1800);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.err.println("Ошибка формирование EXCEL");
@@ -4722,12 +4760,11 @@ public class MainRestController {
 		files.add(new File(appPath + "resources/others/" + fileName1200));
 		files.add(new File(appPath + "resources/others/" + fileName1250));
 		files.add(new File(appPath + "resources/others/" + fileName1700));
-		
+		files.add(new File(appPath + "resources/others/" + fileName1800));
 		
 		mailService.sendEmailWithFilesToUsers(request.getServletContext(), "Графики поставок (РЦ) на " + currentTimeString, "Сообщение отправлено вручную пользователем : " + user.getSurname() + " " + user.getName() , files, emails);
 		response.put("status", "200");
-		response.put("message", "Сообщение отправлено");
-		
+		response.put("message", "Сообщение отправлено");		
 		return response;		
 	}
 	
@@ -6077,6 +6114,7 @@ public class MainRestController {
 		MarketRequestDto requestDto = new MarketRequestDto("", packetDto);
 		//запрашиваем jwt
 		String str;
+		System.err.println(gson.toJson(requestDto));
 		try {
 			str = postRequest(marketUrl, gson.toJson(requestDto));
 		} catch (Exception e) {
@@ -7303,54 +7341,57 @@ public class MainRestController {
 		 * тут происходит проверка по разрешению на склады для каждого кода товара
 		 */
 		if(!stockBalanceRun) {
-			List<Long> codeProductList = new ArrayList<Long>(order.getOrderLinesMap().keySet());
-			Map<Long,GoodAccommodation> mapOfPermissionOnStock = goodAccommodationService.getActualGoodAccommodationByCodeProductList(codeProductList);
-			StringBuilder stopMessage = new StringBuilder();
-			StringBuilder allertMessage = new StringBuilder();
-			StringBuilder listOfCodeProduct = new StringBuilder();
-			
-			for (Long long1 : codeProductList) {
-				if(mapOfPermissionOnStock.containsKey(long1)) {
-					if(mapOfPermissionOnStock.get(long1).getStatus() == 10) {//если ожидает пождтверждения
-						GoodAccommodation goodAccommodation = mapOfPermissionOnStock.get(long1);
-						String text = "Товар " + goodAccommodation.getGoodName() + " ("+ long1 +") Ожидает подтверждения специалистами отдела ОСиУЗ.";
+			if(getTrueStock(order).equals("1700") || getTrueStock(order).equals("1800")) {
+				List<Long> codeProductList = new ArrayList<Long>(order.getOrderLinesMap().keySet());
+				Map<Long,GoodAccommodation> mapOfPermissionOnStock = goodAccommodationService.getActualGoodAccommodationByCodeProductList(codeProductList);
+				StringBuilder stopMessage = new StringBuilder();
+				StringBuilder allertMessage = new StringBuilder();
+				StringBuilder listOfCodeProduct = new StringBuilder();
+				
+				for (Long long1 : codeProductList) {
+					if(mapOfPermissionOnStock.containsKey(long1)) {
+						if(mapOfPermissionOnStock.get(long1).getStatus() == 10) {//если ожидает пождтверждения
+							GoodAccommodation goodAccommodation = mapOfPermissionOnStock.get(long1);
+							String text = "Товар " + goodAccommodation.getGoodName() + " ("+ long1 +") Ожидает подтверждения специалистами отдела ОСиУЗ.";
+							allertMessage.append(text+"<br>");
+						}else if(!mapOfPermissionOnStock.get(long1).getStocks().contains(";"+getTrueStock(order)+";")) {
+							GoodAccommodation goodAccommodation = mapOfPermissionOnStock.get(long1);
+							String text = "Товар " + goodAccommodation.getProductCode() + " ("+ goodAccommodation.getGoodName() +") запрещен к доставке на " + getTrueStock(order)+" склад!";
+							if(stopMessage.toString().isEmpty()) {
+								stopMessage.append("<b>Действие заблокировано!</b><br>");
+							}
+							stopMessage.append(text+"<br>"); //разрешения нет, записываем в запрет							
+						}				
+					}else {				
+						OrderLine orderLine = order.getOrderLinesMapFull().get(long1);
+						String goodName = orderLine.getGoodsName();
+						String text = "Товар " + goodName + " ("+ long1 +") отсутствует в системе разрешений по складам. Создана заявка на добавление. Ожидайте подтверждения специалистами отдела ОСиУЗ.";
 						allertMessage.append(text+"<br>");
-					}else if(!mapOfPermissionOnStock.get(long1).getStocks().contains(";"+getTrueStock(order)+";")) {
-						GoodAccommodation goodAccommodation = mapOfPermissionOnStock.get(long1);
-						String text = "Товар " + goodAccommodation.getProductCode() + " ("+ goodAccommodation.getGoodName() +") запрещен к доставке на " + getTrueStock(order)+" склад!";
-						if(stopMessage.isEmpty()) {
-							stopMessage.append("<b>Действие заблокировано!</b><br>");
-						}
-						stopMessage.append(text+"<br>"); //разрешения нет, записываем в запрет							
-					}				
-				}else {				
-					OrderLine orderLine = order.getOrderLinesMapFull().get(long1);
-					String goodName = orderLine.getGoodsName();
-					String text = "Товар " + goodName + " ("+ long1 +") отсутствует в системе разрешений по складам. Создана заявка на добавление. Ожидайте подтверждения специалистами отдела ОСиУЗ.";
-					allertMessage.append(text+"<br>");
-					GoodAccommodation newGoodAccommodation = new GoodAccommodation(long1, getTrueStock(order)+";", 10, user.getSurname()+" " + user.getName(), user.geteMail(), Date.valueOf(LocalDate.now()), goodName);
-					newGoodAccommodation.setBarcode(Long.parseLong(orderLine.getBarcode()));
-					newGoodAccommodation.setProductGroup(orderLine.getGoodsGroupName());
-					goodAccommodationService.save(newGoodAccommodation);//создаём строку
-					listOfCodeProduct.append(long1.toString()+" - "+goodName+"\n");
-					//записываем в данные для создания письма
+						GoodAccommodation newGoodAccommodation = new GoodAccommodation(long1, getTrueStock(order)+";", 10, user.getSurname()+" " + user.getName(), user.geteMail(), Date.valueOf(LocalDate.now()), goodName);
+						newGoodAccommodation.setBarcode(Long.parseLong(orderLine.getBarcode()));
+						newGoodAccommodation.setProductGroup(orderLine.getGoodsGroupName());
+						goodAccommodationService.save(newGoodAccommodation);//создаём строку
+						listOfCodeProduct.append(long1.toString()+" - "+goodName+"\n");
+						//записываем в данные для создания письма
+					}
+				}	
+				
+				if(!listOfCodeProduct.toString().isEmpty()) {//тут отправляем сообщение на мыло
+					StringBuilder emailText = new StringBuilder();
+					emailText.append("Пользователь " + user.getSurname()+" " + user.getName() + " пытается поставить на склад поставку со сл. товарами, на которые нет разрешения: \n");
+					emailText.append(listOfCodeProduct.toString());
+					List<String> emails = propertiesUtils.getValuesByPartialKey(request.getServletContext(), "email.accommodation");
+					mailService.sendAsyncEmailToUsers(request, "Поставка товара на склад: отсутствует правило", emailText.toString(), emails);
 				}
-			}	
-			
-			if(!listOfCodeProduct.isEmpty()) {//тут отправляем сообщение на мыло
-				StringBuilder emailText = new StringBuilder();
-				emailText.append("Пользователь " + user.getSurname()+" " + user.getName() + " пытается поставить на склад поставку со сл. товарами, на которые нет разрешения: \n");
-				emailText.append(listOfCodeProduct.toString());
-				List<String> emails = propertiesUtils.getValuesByPartialKey(request.getServletContext(), "email.accommodation");
-				mailService.sendAsyncEmailToUsers(request, "Поставка товара на склад: отсутствует правило", emailText.toString(), emails);
+				
+				if(!stopMessage.toString().isEmpty() || !allertMessage.toString().isEmpty()) {
+					response.put("status", "105");
+					response.put("message", stopMessage.toString() + "\n" + allertMessage.toString());
+					response.put("info", stopMessage.toString() + "\n" + allertMessage.toString());
+					return response;
+				}
 			}
 			
-			if(!stopMessage.isEmpty() || !allertMessage.isEmpty()) {
-				response.put("status", "105");
-				response.put("message", stopMessage.toString() + "\n" + allertMessage.toString());
-				response.put("info", stopMessage.toString() + "\n" + allertMessage.toString());
-				return response;
-			}
 		}
 		
 		/*
@@ -7444,7 +7485,8 @@ public class MainRestController {
 		Map<String, String> response = new HashMap<String, String>();	
 
 //		File file1 = poiExcel.getFileByMultipart(excel);
-		poiExcel.importGoodAccommodation(excel.getInputStream());		
+		poiExcel.importGoodAccommodation(excel.getInputStream());	
+		
 		return response;
 	}
 	

@@ -6,6 +6,7 @@
 }
 .my-container {
     margin-top: 66px;
+    font-family: var(--font-family-sans-serif);
 }
 .title {
     margin-bottom: 5px;

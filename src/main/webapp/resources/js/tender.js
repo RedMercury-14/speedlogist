@@ -2,11 +2,15 @@ import { wsTenderMessagesUrl } from './global.js';
 import { AG_GRID_LOCALE_RU } from '../js/AG-Grid/ag-grid-locale-RU.js'
 import { cookieHelper, dateHelper, debounce, getData, isMobileDevice, SmartWebSocket } from './utils.js';
 import { dateComparator, gridFilterLocalState } from './AG-Grid/ag-grid-utils.js';
-import { getActiveTendersUrl, getThisUserUrl } from './globalConstants/urls.js';
+import { getActiveTendersUrl, getNewTenderNotificationFlagUrl, getThisUserUrl, setNewTenderNotificationFlagUrl } from './globalConstants/urls.js';
 import { createToast, playNewToastSound } from './Toast.js';
+import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js';
+import { ajaxUtils } from './ajaxUtils.js';
+import { snackbar } from './snackbar/snackbar.js';
 
 const login = document.querySelector('#login')?.value
 let user
+let newTenderNotificationFlag = false
 
 const LOCAL_STORAGE_KEY = 'tenders_page'
 
@@ -179,8 +183,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 	const tendersData = await getData(getActiveTendersUrl)
 	const tenders = tendersData.routes
 
+	newTenderNotificationFlag = await getData(getNewTenderNotificationFlagUrl)
 	user = await getData(getThisUserUrl)
 	await updateTable(gridOptions, tenders)
+
+	const newTenderNotificationCheckbox = document.getElementById('newTenderNotification')
+	newTenderNotificationCheckbox.checked = newTenderNotificationFlag
+	newTenderNotificationCheckbox.addEventListener('change', onNewTenderCheckboxChange)
 
 	restoreFilterState()
 
@@ -405,7 +414,9 @@ async function tenderSocketOnMessage(e) {
 		}
 
 		// уведомления перевозчикам
-		else if (action === 'notification') {
+		else if (action === 'notification' || action === 'new-tender') {
+
+			if (action === 'new-tender' && !newTenderNotificationFlag) return
 
 			const toastOption = {
 				date: new Date().getTime(),
@@ -518,4 +529,37 @@ function getUnloadDateTimeToView(tender) {
 	}
 
 	return ''
+}
+
+function onNewTenderCheckboxChange(e) {
+	const flag = e.target.checked
+
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 300)
+
+	ajaxUtils.postJSONdata({
+		url: setNewTenderNotificationFlagUrl,
+		data: { newTenderNotification: flag },
+		successCallback: async (res) => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+
+			if (res.status === '200') {
+				newTenderNotificationFlag = flag
+				return
+			}
+
+			if (res.status === '100') {
+				const message = res.message ? res.message : 'Неизвестная ошибка'
+				e.target.checked = !flag
+				newTenderNotificationFlag = !flag
+				snackbar.show(message)
+				return
+			}
+		},
+		errorCallback: () => {
+			e.target.checked = !flag
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+		}
+	})
 }

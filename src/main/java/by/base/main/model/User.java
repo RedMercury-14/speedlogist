@@ -237,6 +237,9 @@ public class User implements Serializable{
 	@Column(name = "tg_bot_status")
 	private Integer tgBotStatus;
 	
+	@Column(name = "new_tender_notification")
+	private Boolean newTenderNotification;
+	
 	@Transient
 	private String confirmPassword;
 	
@@ -273,6 +276,16 @@ public class User implements Serializable{
 		this.address = address;
 		this.enablet = enablet;
 		this.department = departament;
+	}
+	
+	
+
+	public Boolean getNewTenderNotification() {
+		return newTenderNotification;
+	}
+
+	public void setNewTenderNotification(Boolean newTenderNotification) {
+		this.newTenderNotification = newTenderNotification;
 	}
 
 	public Integer getTgBotStatus() {

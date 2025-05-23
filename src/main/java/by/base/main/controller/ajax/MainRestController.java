@@ -471,7 +471,8 @@ public class MainRestController {
             messageForWinner.setIdRoute(routeId.toString());
             messageForWinner.setToUser(carrierBid.getCarrier().getLogin());
             messageForWinner.setAction("notification");
-            messageForWinner.setText("Тендер для маршрута №" + route.getIdRoute() + " : " + route.getRouteDirection().substring(0, 100)
+            messageForWinner.setText("Тендер для маршрута №" + routeId + " : "
+                    + (carrierBid.getRouteDirection().length() > 100 ? carrierBid.getRouteDirection().substring(0, 100) : carrierBid.getRouteDirection())
                     + "... переведён в формат понижения ставки."
                     + "<br>Ваша ставка установлена как начальная цена этого тендера.");
             messageForWinner.setStatus("200");
@@ -482,7 +483,8 @@ public class MainRestController {
             messageForLoosers.setUrl("/speedlogist/main/carrier/tender/tenderpage?routeId=" + routeId);
             messageForLoosers.setIdRoute(routeId.toString());
             messageForLoosers.setAction("notification");
-            messageForLoosers.setText("Тендер для маршрута №" + route.getIdRoute() + " : " + route.getRouteDirection().substring(0, 100)
+            messageForLoosers.setText("Тендер для маршрута №" + routeId + " : "
+                    + (carrierBid.getRouteDirection().length() > 100 ? carrierBid.getRouteDirection().substring(0, 100) : carrierBid.getRouteDirection())
                     + "... переведён в формат понижения ставки."
                     + "<br>Ваша предыдущая ставка отменена — подайте новую, чтобы участвовать.");
             messageForLoosers.setStatus("200");
@@ -620,7 +622,23 @@ public class MainRestController {
        goodAccommodation.setProductGroup(jsonMainObject.get("productGroup").toString());
        goodAccommodation.setStatus(Integer.parseInt(jsonMainObject.get("status").toString()));
        goodAccommodation.setStocks(jsonMainObject.get("stocks").toString());
-       goodAccommodationService.update(goodAccommodation);       
+       goodAccommodationService.update(goodAccommodation);   
+       
+       String statusValue = "";
+       switch (goodAccommodation.getStatus()) {
+		case 10:
+			statusValue = "ожидает подтверждения";
+			break;
+			
+		case 20:
+			statusValue = "действует";
+			break;
+
+		}
+       
+       String eMailMessage = "Данные по товару изменены: статус - " + statusValue + "; определен на склад: " + goodAccommodation.getStocks();
+       List<String> emails = Arrays.asList(goodAccommodation.getInitiatorEmail());
+       mailService.sendAsyncEmailToUsers(request, "Статус по товару", eMailMessage, emails);
        response.put("status", "200");
        response.put("object", goodAccommodation);
        return response;
@@ -755,7 +773,8 @@ public class MainRestController {
             messageForWinner.setIdRoute(idRoute.toString());
             messageForWinner.setToUser(carrierBid.getCarrier().getLogin());
             messageForWinner.setAction("notification");
-            messageForWinner.setText("Ваше предложение к маршруту №" + routeTarget.getIdRoute() + " : " + routeTarget.getRouteDirection().substring(0, 100)
+            messageForWinner.setText("Ваше предложение к маршруту №" + idRoute + " : "
+                    + (carrierBid.getRouteDirection().length() > 100 ? carrierBid.getRouteDirection().substring(0, 100) : carrierBid.getRouteDirection())
                     + "... с ценой " + cost + " " + currency + " <b>одобрено!</b>"
                     + "<br>Необходимо назначить машину и водителя.");
             messageForWinner.setStatus("200");
@@ -769,8 +788,8 @@ public class MainRestController {
         messageForLooser.setIdRoute(idRoute.toString());
         messageForLooser.setToUser(carrierBid.getCarrier().getLogin());
         messageForLooser.setAction("notification");
-        messageForLooser.setText("К сожалению, предложенная Вами цена для маршрута №"
-                + routeTarget.getIdRoute() + " : " + routeTarget.getRouteDirection().substring(0, 100)
+        messageForLooser.setText("К сожалению, предложенная Вами цена для маршрута №" + idRoute + " : "
+                + (carrierBid.getRouteDirection().length() > 100 ? carrierBid.getRouteDirection().substring(0, 100) : carrierBid.getRouteDirection())
                 + "... нам <b>не подходит</b>.");
         messageForLooser.setStatus("200");
         messageForLooser.setWSPath("carrier-tenders");
@@ -816,7 +835,7 @@ public class MainRestController {
         Integer routeId = jsonMainObject.get("idRoute") == null ? null : Integer.parseInt(jsonMainObject.get("idRoute").toString());
         Route route = routeService.getRouteById(routeId);
         if(!route.getForReduction()) {
-        	response.put("status", "100");
+            response.put("status", "100");
             response.put("message", "Запрещено! Только для тендеров на понижение");
             return response;
         }
@@ -837,8 +856,8 @@ public class MainRestController {
         messageForCancelled.setIdRoute(routeId.toString());
         messageForCancelled.setToUser(carrierBid.getCarrier().getLogin());
         messageForCancelled.setAction("notification");
-        messageForCancelled.setText("Ваша ставка для маршрута №"
-                + route.getIdRoute() + " : " + route.getRouteDirection().substring(0, 100)
+        messageForCancelled.setText("Ваша ставка для маршрута №" + routeId + " : "
+                + (carrierBid.getRouteDirection().length() > 100 ? carrierBid.getRouteDirection().substring(0, 100) : carrierBid.getRouteDirection())
                 + "... была <b>удалена логистом</b>.");
         messageForCancelled.setStatus("200");
         messageForCancelled.setWSPath("carrier-tenders");
@@ -856,8 +875,8 @@ public class MainRestController {
                     messageForWinnerAgain.setIdRoute(routeId.toString());
                     messageForWinnerAgain.setToUser(latestBid.getCarrier().getLogin());
                     messageForWinnerAgain.setAction("notification");
-                    messageForWinnerAgain.setText("Ваша ставка для маршрута №"
-                            + route.getIdRoute() + " : " + route.getRouteDirection().substring(0, 100)
+                    messageForWinnerAgain.setText("Ваша ставка для маршрута №" + routeId + " : "
+                            + (carrierBid.getRouteDirection().length() > 100 ? carrierBid.getRouteDirection().substring(0, 100) : carrierBid.getRouteDirection())
                             + "... <b>снова актуальна</b>.");
                     messageForWinnerAgain.setStatus("200");
                     messageForWinnerAgain.setWSPath("carrier-tenders");
@@ -873,8 +892,9 @@ public class MainRestController {
                     messageForOthers.setIdRoute(routeId.toString());
                     messageForOthers.setToUser(bid.getCarrier().getLogin());
                     messageForOthers.setAction("notification");
-                    messageForOthers.setText("Лидирующая ставка для маршрута №"
-                            + route.getIdRoute() + " : " + route.getRouteDirection().substring(0, 100) + "... <b>отменена</b>."
+                    messageForOthers.setText("Лидирующая ставка для маршрута №" + routeId + " : "
+                            + (bid.getRouteDirection().length() > 100 ? bid.getRouteDirection().substring(0, 100) : bid.getRouteDirection())
+                            + "... <b>отменена</b>."
                             + "<br>Актуальная цена <b>" + bid.getPrice() + " " + bid.getCurrency() + "</b>.");
                     messageForOthers.setStatus("200");
                     messageForOthers.setWSPath("carrier-tenders");
@@ -931,7 +951,8 @@ public class MainRestController {
                     messageForWinnerAgain.setIdRoute(routeId.toString());
                     messageForWinnerAgain.setToUser(latestBid.getCarrier().getLogin());
                     messageForWinnerAgain.setAction("notification");
-                    messageForWinnerAgain.setText("Ваша ставка для маршрута №" + route.getIdRoute() + " : " + route.getRouteDirection().substring(0, 100)
+                    messageForWinnerAgain.setText("Ваша ставка для маршрута №" + routeId + " : "
+                            + (latestBid.getRouteDirection().length() > 100 ? latestBid.getRouteDirection().substring(0, 100) : latestBid.getRouteDirection())
                             + "... <b>снова актуальна</b>.");
                     messageForWinnerAgain.setStatus("200");
                     messageForWinnerAgain.setWSPath("carrier-tenders");
@@ -944,8 +965,9 @@ public class MainRestController {
                         messageForOthers.setIdRoute(routeId.toString());
                         messageForOthers.setToUser(bid.getCarrier().getLogin());
                         messageForOthers.setAction("notification");
-                        messageForOthers.setText("Лидирующая ставка для маршрута №"
-                                + route.getIdRoute() + " : " + route.getRouteDirection().substring(0, 100) + "... <b>отменена</b>." +
+                        messageForOthers.setText("Лидирующая ставка для маршрута №" + routeId + " : "
+                                + (latestBid.getRouteDirection().length() > 100 ? latestBid.getRouteDirection().substring(0, 100) : latestBid.getRouteDirection())
+                                + "... <b>отменена</b>." +
                                 "<br>Актуальная цена <b>" + bid.getPrice() + " " + bid.getCurrency() + "</b>.");
                         messageForOthers.setStatus("200");
                         messageForOthers.setWSPath("carrier-tenders");
@@ -1088,8 +1110,9 @@ public class MainRestController {
                        messageForLooser.setIdRoute(routeId.toString());
                        messageForLooser.setToUser(actualBids.get(0).getCarrier().getLogin());
                        messageForLooser.setAction("notification");
-                       messageForLooser.setText("Ваша ставка по маршруту №"
-                               + route.getIdRoute() + " : " + route.getRouteDirection().substring(0, 100) + "... была <b>перебита</b>."
+                       messageForLooser.setText("Ваша ставка по маршруту №" + routeId + " : "
+                               + (carrierBid.getRouteDirection().length() > 100 ? carrierBid.getRouteDirection().substring(0, 100) : carrierBid.getRouteDirection())
+                               + "... была <b>перебита</b>."
                                + "<br>Текущая ставка: <b>" + carrierBid.getPrice() + " " + carrierBid.getCurrency() + "</b>"
                                + "<br>Вы можете снизить свою ставку.");
                        messageForLooser.setStatus("200");
@@ -3164,7 +3187,8 @@ public class MainRestController {
                 messageForCarriers.setIdRoute(route.getIdRoute().toString());
                 messageForCarriers.setUrl("/speedlogist/main/carrier/tender/tenderpage?routeId=" + route.getIdRoute());
                 messageForCarriers.setAction("new-tender");
-                messageForCarriers.setText("<b>Открыт новый тендер</b> для маршрута №" + route.getIdRoute() + " " + route.getRouteDirection().substring(0, 100) + "...");
+                messageForCarriers.setText("<b>Открыт новый тендер</b> для маршрута №" + route.getIdRoute() + " " +
+                        (route.getRouteDirection().length() > 100 ? route.getRouteDirection().substring(0, 100) : route.getRouteDirection()) + "...");
                 messageForCarriers.setStatus("200");
                 messageForCarriers.setWSPath("carrier-tenders");
                 carrierTenderWebSocket.broadcast(messageForCarriers);
@@ -3203,7 +3227,9 @@ public class MainRestController {
                 messagAboutCancelling.setIdRoute(idRoute.toString());
                 messagAboutCancelling.setUrl("/speedlogist/main/carrier/tender");
                 messagAboutCancelling.setAction("notification");
-                messagAboutCancelling.setText("Тендер для маршрута №" + route.getIdRoute() + " : " + route.getRouteDirection().substring(0, 100) + "... был <b>отменён</b>.");
+                messagAboutCancelling.setText("Тендер для маршрута №" + route.getIdRoute() + " : "
+                        + (route.getRouteDirection().length() > 100 ? route.getRouteDirection().substring(0, 100) : route.getRouteDirection())
+                        + "... был <b>отменён</b>.");
                 messagAboutCancelling.setStatus("200");
                 messagAboutCancelling.setWSPath("carrier-tenders");
                 Set<CarrierBid> carrierBids = route.getCarrierBids();
@@ -7368,7 +7394,7 @@ public class MainRestController {
 						String text = "Товар " + goodName + " ("+ long1 +") отсутствует в системе разрешений по складам. Создана заявка на добавление. Ожидайте подтверждения специалистами отдела ОСиУЗ.";
 						allertMessage.append(text+"<br>");
 						GoodAccommodation newGoodAccommodation = new GoodAccommodation(long1, getTrueStock(order)+";", 10, user.getSurname()+" " + user.getName(), user.geteMail(), Date.valueOf(LocalDate.now()), goodName);
-						newGoodAccommodation.setBarcode(Long.parseLong(orderLine.getBarcode()));
+						newGoodAccommodation.setBarcode(orderLine.getBarcode() != null ? Long.parseLong(orderLine.getBarcode()) : null);
 						newGoodAccommodation.setProductGroup(orderLine.getGoodsGroupName());
 						goodAccommodationService.save(newGoodAccommodation);//создаём строку
 						listOfCodeProduct.append(long1.toString()+" - "+goodName+"\n");

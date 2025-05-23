@@ -7394,7 +7394,7 @@ public class MainRestController {
 						String text = "Товар " + goodName + " ("+ long1 +") отсутствует в системе разрешений по складам. Создана заявка на добавление. Ожидайте подтверждения специалистами отдела ОСиУЗ.";
 						allertMessage.append(text+"<br>");
 						GoodAccommodation newGoodAccommodation = new GoodAccommodation(long1, getTrueStock(order)+";", 10, user.getSurname()+" " + user.getName(), user.geteMail(), Date.valueOf(LocalDate.now()), goodName);
-						newGoodAccommodation.setBarcode(Long.parseLong(orderLine.getBarcode()));
+						newGoodAccommodation.setBarcode(orderLine.getBarcode() != null ? Long.parseLong(orderLine.getBarcode()) : null);
 						newGoodAccommodation.setProductGroup(orderLine.getGoodsGroupName());
 						goodAccommodationService.save(newGoodAccommodation);//создаём строку
 						listOfCodeProduct.append(long1.toString()+" - "+goodName+"\n");

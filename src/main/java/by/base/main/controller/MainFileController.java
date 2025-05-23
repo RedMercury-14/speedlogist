@@ -35,6 +35,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -69,7 +70,9 @@ import by.base.main.model.Rotation;
 import by.base.main.model.Route;
 import by.base.main.model.RouteHasShop;
 import by.base.main.model.Truck;
+import by.base.main.model.User;
 import by.base.main.service.ActService;
+import by.base.main.service.FileService;
 import by.base.main.service.MarketAPI;
 import by.base.main.service.OrderProductService;
 import by.base.main.service.OrderService;
@@ -84,7 +87,7 @@ import by.base.main.service.util.POIExcel;
 
 //@Controller
 @RestController
-@RequestMapping(path = "file")
+@RequestMapping(path = "file", produces = "application/json")
 public class MainFileController {
 	
 	@Autowired
@@ -118,6 +121,9 @@ public class MainFileController {
 	private ActService actService;
 	
 	@Autowired
+	private FileService fileService;
+	
+	@Autowired
 	private OrderCreater orderCreater;
 	private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(Date.class, new JsonSerializer<Date>() {
@@ -128,6 +134,17 @@ public class MainFileController {
             })
             .create();
 	
+//	@PostMapping("/loadFileTest")
+	@RequestMapping(value = "/loadFileTest", method = RequestMethod.POST, consumes = {MediaType.MULTIPART_FORM_DATA_VALUE })
+	public Map<String, Object> handleFileUpload(@RequestParam("excel") MultipartFile file) throws IOException {
+	    Map<String, Object> response = new HashMap<>();
+	    fileService.saveMultipartFile(file);
+	    response.put("fileName", file.getOriginalFilename());
+	    response.put("size", file.getSize());
+	    response.put("contentType", file.getContentType());
+	    response.put("success", true);
+	    return response;
+	}
 	
 	/**
      * @param request

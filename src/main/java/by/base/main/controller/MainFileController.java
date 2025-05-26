@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
@@ -30,7 +31,9 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -64,6 +67,7 @@ import by.base.main.dto.ReportRow;
 import by.base.main.dto.RoadTransportDto;
 import by.base.main.model.Act;
 import by.base.main.model.Message;
+import by.base.main.model.MyFile;
 import by.base.main.model.Order;
 import by.base.main.model.OrderProduct;
 import by.base.main.model.Rotation;
@@ -134,7 +138,12 @@ public class MainFileController {
             })
             .create();
 	
-//	@PostMapping("/loadFileTest")
+	/**
+	 * Сохранени одного файлав БД
+	 * @param file
+	 * @return
+	 * @throws IOException
+	 */
 	@RequestMapping(value = "/loadFileTest", method = RequestMethod.POST, consumes = {MediaType.MULTIPART_FORM_DATA_VALUE })
 	public Map<String, Object> handleFileUpload(@RequestParam("excel") MultipartFile file) throws IOException {
 	    Map<String, Object> response = new HashMap<>();
@@ -145,6 +154,51 @@ public class MainFileController {
 	    response.put("success", true);
 	    return response;
 	}
+	
+	/**
+	 * охранение нескольких файлов в БД
+	 * @param files
+	 * @return
+	 * @throws IOException
+	 */
+	@RequestMapping(value = "/loadArrayFilesTest", method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public Map<String, Object> handleMultipleFilesUpload(@RequestParam("excel") MultipartFile[] files) throws IOException {
+	    Map<String, Object> response = new HashMap<>();
+	    List<String> uploadedFileNames = new ArrayList<>();
+
+	    for (MultipartFile file : files) {
+	        if (!file.isEmpty()) {
+	            fileService.saveMultipartFile(file);
+	            uploadedFileNames.add(file.getOriginalFilename());
+	        }
+	    }
+
+	    response.put("uploadedFiles", uploadedFileNames);
+	    response.put("total", uploadedFileNames.size());
+	    response.put("success", true);
+	    return response;
+	}
+	
+	/**
+	 * тестовая скачка файлов
+	 * @param id
+	 * @return
+	 */
+	@GetMapping("/testFile/{id}")
+	@TimedExecution
+    public ResponseEntity<byte[]> downloadFile(@PathVariable Long id) {
+    	
+    	MyFile file = fileService.getFileById(id);
+
+        if (file == null) {
+            return ResponseEntity.noContent().build();
+        }
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(file.getContentType()))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFileName() + "\"")
+                .body(file.getData());
+    }
 	
 	/**
      * @param request

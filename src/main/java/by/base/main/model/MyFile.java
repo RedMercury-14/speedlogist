@@ -14,7 +14,7 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "files")
-public class File {
+public class MyFile {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -160,7 +160,7 @@ public class File {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		File other = (File) obj;
+		MyFile other = (MyFile) obj;
 		return Objects.equals(comment, other.comment) && Objects.equals(contentType, other.contentType)
 				&& Arrays.equals(data, other.data) && Objects.equals(dateCreate, other.dateCreate)
 				&& Objects.equals(fileName, other.fileName) && Objects.equals(idFiles, other.idFiles)

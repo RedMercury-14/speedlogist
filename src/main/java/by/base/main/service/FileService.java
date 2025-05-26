@@ -4,17 +4,17 @@ import java.util.List;
 
 import org.springframework.web.multipart.MultipartFile;
 
-import by.base.main.model.File;
+import by.base.main.model.MyFile;
 
 public interface FileService {
 
-	List<File> getAllFile();
+	List<MyFile> getAllFile();
 	
-	int save (File file);
+	int save (MyFile file);
 	
 	int saveMultipartFile (MultipartFile file);
 	
-	void update (File file);	
+	void update (MyFile file);	
 	
-	File getFileById(Long id);
+	MyFile getFileById(Long id);
 }

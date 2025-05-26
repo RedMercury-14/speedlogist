@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import by.base.main.dao.FileDAO;
-import by.base.main.model.File;
+import by.base.main.model.MyFile;
 import by.base.main.service.FileService;
 
 @Service
@@ -19,25 +19,25 @@ public class FileServiceImpl implements FileService{
 
 	@Override
 	@Transactional(transactionManager = "myTransactionManagerLogistFile")
-	public List<File> getAllFile() {
+	public List<MyFile> getAllFile() {
 		return fileDAO.getAllFile();
 	}
 
 	@Override
 	@Transactional(transactionManager = "myTransactionManagerLogistFile")
-	public int save(File file) {
+	public int save(MyFile file) {
 		return fileDAO.save(file);
 	}
 
 	@Override
 	@Transactional(transactionManager = "myTransactionManagerLogistFile")
-	public void update(File file) {
+	public void update(MyFile file) {
 		fileDAO.update(file);
 	}
 
 	@Override
 	@Transactional(transactionManager = "myTransactionManagerLogistFile")
-	public File getFileById(Long id) {
+	public MyFile getFileById(Long id) {
 		return fileDAO.getFileById(id);
 	}
 

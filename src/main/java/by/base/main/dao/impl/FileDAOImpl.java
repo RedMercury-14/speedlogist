@@ -13,7 +13,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.web.multipart.MultipartFile;
 
 import by.base.main.dao.FileDAO;
-import by.base.main.model.File;
+import by.base.main.model.MyFile;
 
 @Repository
 public class FileDAOImpl implements FileDAO{
@@ -25,22 +25,22 @@ public class FileDAOImpl implements FileDAO{
 	 
 	private static final String queryGetList = "from File order by idFeedback";
 	@Override
-	public List<File> getAllFile() {
+	public List<MyFile> getAllFile() {
 		Session currentSession = sessionFactoryLogistFile.getCurrentSession();
-		Query<File> theObject = currentSession.createQuery(queryGetList, File.class);
-		List <File> objects = theObject.getResultList();
+		Query<MyFile> theObject = currentSession.createQuery(queryGetList, MyFile.class);
+		List <MyFile> objects = theObject.getResultList();
 		return objects;
 	}
 
 	@Override
-	public int save(File file) {
+	public int save(MyFile file) {
 		Session currentSession = sessionFactoryLogistFile.getCurrentSession();
 		currentSession.save(currentSession);
 		return Integer.parseInt(currentSession.getIdentifier(file).toString());
 	}
 
 	@Override
-	public void update(File file) {
+	public void update(MyFile file) {
 		Session currentSession = sessionFactoryLogistFile.getCurrentSession();
 		currentSession.update(currentSession);
 		
@@ -48,9 +48,9 @@ public class FileDAOImpl implements FileDAO{
 
 //	private static final String queryGetFileById = "from File WHERE idFiles=:idFiles";
 	@Override
-	public File getFileById(Long id) {
+	public MyFile getFileById(Long id) {
 		Session currentSession = sessionFactoryLogistFile.getCurrentSession();
-		File object = currentSession.get(File.class, id);
+		MyFile object = currentSession.get(MyFile.class, id);
 		currentSession.flush();
 		return object;
 	}
@@ -58,7 +58,7 @@ public class FileDAOImpl implements FileDAO{
 	@Override
 	public int saveMultipartFile(MultipartFile file) {
         try {
-            File entity = new File();
+            MyFile entity = new MyFile();
             entity.setFileName(file.getOriginalFilename());
             entity.setContentType(file.getContentType());
             entity.setData(file.getBytes());

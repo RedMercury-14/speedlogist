@@ -1331,7 +1331,6 @@ public class MainRestController {
      * @author Ira
      */
     @PostMapping("/carrier-application/create")
-    @TimedExecution
     public Map<String, Object> createCarrierApplication(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
         Map<String, Object> response = new HashMap<>();
         JSONParser parser = new JSONParser();
@@ -1340,6 +1339,7 @@ public class MainRestController {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
         String dateTime = LocalDateTime.now().format(formatter);
         String market = jsonMainObject.get("market") == null ? null : jsonMainObject.get("market").toString();
+        String comment = jsonMainObject.get("comment") == null ? null : jsonMainObject.get("comment").toString();
         String ownership = jsonMainObject.get("ownership") == null ? null : jsonMainObject.get("ownership").toString();
         String organization = jsonMainObject.get("organization") == null ? null : jsonMainObject.get("organization").toString();
         int vehicleCount = jsonMainObject.get("vehicleCount") == null ? null : Integer.parseInt(jsonMainObject.get("vehicleCount").toString());
@@ -1419,6 +1419,10 @@ public class MainRestController {
               "  <tr>\n" +
               "    <td>Адрес эл. почты</td>\n" +
               "    <td>" + email + "</td>\n" +
+              "  </tr>\n" +
+              "  <tr>\n" +
+              "    <td>Комментарий</td>\n" +
+              "    <td>" + comment + "</td>\n" +
               "  </tr>\n" +
               "</table>";
         List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.carrier.cooperation");

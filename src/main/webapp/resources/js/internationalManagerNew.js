@@ -11,17 +11,26 @@ import {
 	cancelOfferForLogistUrl,
 	checkOrderForStatusBaseUrl,
 	confirmTenderOfferUrl,
-	getInfoRouteMessageBaseUrl,
+	deleteFileUrl,
+	downloadZipByRouteUrl,
+	getFileBaseUrl,
+	getFilesByRouteBaseUrl,
+	getImagesByRouteBaseUrl,
 	getMemoryRouteMessageBaseUrl,
 	getNumMessageBaseUrl,
 	getOffersForReductionByIdRouteBaseUrl,
 	getProposalBaseUrl,
 	getRoutesBaseUrl,
+	loadArrayFilesForRouteUrl,
 	makeTenderForReductionUrl,
 	makeWinnerTenderForReductionOfferUrl,
 	nbrbExratesRatesBaseUrl,
 	routeUpdateBaseUrl
 } from "./globalConstants/urls.js"
+import PhotoSwipeLightbox from './photoSwipe/photoswipe-lightbox.esm.min.js'
+import PhotoSwipeDynamicCaption  from './photoSwipe/photoswipe-dynamic-caption-plugin.esm.js'
+import PhotoSwipe from './photoSwipe/photoswipe.esm.min.js'
+import { buttons, caption, thumbnails } from './photoSwipe/photoSwipeHelper.js'
 
 const token = $("meta[name='_csrf']").attr("content")
 const PAGE_NAME = 'internationalManagerNew'
@@ -57,6 +66,28 @@ let table
 let isInitDataLoaded = false
 let currentOpenRouteId = null
 let cancelUpdateOfferCount = false
+let lightbox
+
+const photoSwipeOptions = {
+	pswpModule: PhotoSwipe,
+	bgOpacity: 1,
+	preloaderDelay: 0,
+	preloadFirstSlide: false,
+	wheelToZoom: true,
+	errorMsg: 'Изображение не загружено',
+	closeTitle: 'Закрыть',
+	zoomTitle: 'Масштаб',
+	arrowPrevTitle: 'Предыдущее изображение',
+	arrowNextTitle: 'Следующее изображение',
+	paddingFn: (viewportSize) => ({
+		top: 30, bottom: 30, left: 70, right: 70
+	}),
+}
+
+const photoSwipeDynamicCaptionOptions = {
+	captionContent: (slide) => slide.data.description,
+	type: 'aside',
+}
 
 const columnDefs = [
 	// {
@@ -69,6 +100,7 @@ const columnDefs = [
 	// },
 	{ headerName: 'ID', field: 'idRoute', minWidth: 60, width: 80, pinned: 'left',},
 	{ headerName: 'Тип', field: 'simpleWay', minWidth: 50, width: 50, },
+	{ headerName: 'Тип тендера', field: 'tenderType', wrapText: true, autoHeight: true, cellClass: 'px-2 text-center font-weight-bold', },
 	{
 		headerName: 'Статус', field: 'statusRoute',
 		cellClass: 'px-2 text-center font-weight-bold',
@@ -361,6 +393,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 		})
 	}
 
+	initGallery()
+
 	// обработчик получения сообщений о предложениях
 	ws.onmessage = onMessageHandler
 
@@ -376,6 +410,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 		currentOpenRouteId = null
 	})
 
+	// предпросмотр изображений к маршруту при добавлении
+	const routeImgInput = document.querySelector("#addRouteImageInput")
+	const routeImgContainer = document.querySelector("#routeImageContainer")
+	routeImgInput.addEventListener("change", (e) => addImgToView(e, routeImgContainer))
+	addFilesToRouteForm.addEventListener('submit', addFilesToRouteFormSubmitHandler)
+
+	// закрытие модалки с формой прикрепления изображений
+	$('#addFilesToRouteModal').on('hidden.bs.modal', () => {
+		addFilesToRouteForm.reset()
+		routeImgContainer.innerHTML = ''
+	})
+
 	// копирование логина и пароля для PBI
 	const pbLoginSpan = document.querySelector('#pbLogin')
 	const pbPassSpan = document.querySelector('#pbPass')
@@ -384,7 +430,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 	copyLoginBtn.onclick = () => copyTextToClipboard(pbLoginSpan.innerText)
 	copyPassBtn.onclick = () => copyTextToClipboard(pbPassSpan.innerText)
 
-	// открытие модалки с анализом цен
+	// закрытие модалки с анализом цен
 	$('#priceAnalisysModal').on('hidden.bs.modal', () => {
 		document.getElementById('priceAnalisysReportFrame').src = ''
 	})
@@ -713,14 +759,6 @@ function getContextMenuItems(params) {
 				displayTenderOffer(routeData)
 			},
 		},
-		// {
-		// 	name: `Истоpия предложений (отдельная страница)`,
-		// 	icon: uiIcons.offer,
-		// 	disabled: routeData.forReduction,
-		// 	action: () => {
-		// 		displayTenderOfferOld(idRoute, status)
-		// 	},
-		// },
 		{
 			name: `Отправить тендер`,
 			disabled: status !== '0' || isObserver(role),
@@ -786,6 +824,41 @@ function getContextMenuItems(params) {
 			action: () => {
 				showPriceAnalisys(routeDirection)
 			},
+		},
+		"separator",
+		{
+			name: `Файлы`,
+			icon: uiIcons.files,
+			disabled: !isAdmin(role),
+			subMenu: [
+				{
+					name: `Прикрепить файлы`,
+					icon: uiIcons.filePlus,
+					action: () => {
+						addFilesToRouteForm.idRoute.value = idRoute
+						addFilesToRouteForm.routeDirection.textContent = routeDirection
+						$('#addFilesToRouteModal').modal('show')
+					},
+				},
+				{
+					name: `Показать прикрепленные файлы`,
+					icon: uiIcons.images,
+					action: async () => {
+						const imageIds = await getData(getFilesByRouteBaseUrl + idRoute)
+						const images = imageIds && imageIds.length
+							? imageIds.map(id => getFileBaseUrl + id)
+							: []
+						showGalleryItems(images)
+					},
+				},
+				{
+					name: `Скачать архив файлов`,
+					icon: uiIcons.fileArrowDown,
+					action: () => {
+						downloadZipFiles(idRoute)
+					},
+				},
+			]
 		},
 	]
 
@@ -1786,6 +1859,203 @@ function makeTenderForReduction(data) {
 		errorCallback: () => {
 			clearTimeout(timeoutId)
 			bootstrap5overlay.hideOverlay()
+		}
+	})
+}
+
+//======================================================================
+//======================================================================
+//======================================================================
+
+// инициализация галереи
+function initGallery() {
+	lightbox = new PhotoSwipeLightbox(photoSwipeOptions)
+	new PhotoSwipeDynamicCaption(lightbox, photoSwipeDynamicCaptionOptions)
+	lightbox.on('uiRegister', () => {
+		buttons.registerDeleteButton(lightbox, deleteFile)
+		buttons.registerDownloadButton(lightbox)
+		buttons.registerRotateLeftBtn(lightbox)
+		buttons.registerRotateRightBtn(lightbox)
+		thumbnails.registerThumbnails(lightbox)
+		caption.registerCaption(lightbox)
+	})
+	lightbox.on('afterInit', () => {
+		thumbnails.createThumbnails(lightbox)
+	})
+	lightbox.on('destroy', () => {
+		thumbnails.destroyThumbnails(lightbox)
+	})
+	lightbox.init()
+}
+
+// отображение галереи с изображениями
+async function showGalleryItems(galleryItems) {
+	if (!galleryItems || !galleryItems.length) {
+		snackbar.show('Фото отсутствуют')
+		return
+	}
+
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 300)
+
+	const description = ''
+	const itemsWithSizes = await Promise.all(
+		galleryItems.map(async (src, i) => {
+			try {
+				const size = await getImageSize(src)
+				return {
+					src: src,
+					title: `Файл ${i+1}`,
+					alt: `Файл ${i+1}`,
+					width: size.width,
+					height: size.height,
+					description: description,
+				}
+			} catch (error) {
+				// Запасные значения, если изображение не загрузилось
+				return {
+					src: src,
+					title: `Файл ${i+1}`,
+					alt: `Файл ${i+1}`,
+					width: 1500,
+					height: 900,
+					description: description,
+				}
+			}
+		})
+	)
+
+	clearTimeout(timeoutId)
+	bootstrap5overlay.hideOverlay()
+	lightbox.loadAndOpen(0, itemsWithSizes)
+}
+
+// получение размера картинки
+function getImageSize(src) {
+	return new Promise((resolve, reject) => {
+		const img = new Image()
+		img.onload = (e) => resolve({ width: img.width, height: img.height })
+		img.onerror = () => reject(new Error('Не удалось загрузить изображение'))
+		img.src = src
+	})
+}
+
+// добавление изображения в форму
+function addImgToView(event, imgContainer) {
+	imgContainer.innerHTML = ''
+
+	const files = event.target.files
+	if (!files) return
+
+	for (let i = 0; i < files.length; i++) {
+		const file = files[i]
+		const reader = new FileReader()
+		reader.readAsDataURL(file)
+		reader.onload = () => {
+			const newImg = document.createElement("img")
+			newImg.src = reader.result
+			imgContainer.append(newImg)
+		}
+	}
+
+	return
+}
+
+// обработка прикрепления файлов
+async function addFilesToRouteFormSubmitHandler(e) {
+	e.preventDefault()
+
+	const formData = new FormData(e.target)
+
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 300)
+
+	ajaxUtils.postMultipartFformData({
+		url: loadArrayFilesForRouteUrl,
+		data: formData,
+		successCallback: async (res) => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+			snackbar.show('Данные успешно загружены')
+			$(`#addFilesToRouteModal`).modal('hide')
+
+			if (res.status === '200') {
+				return
+			}
+
+			if (res.status === '100') {
+				const errorMessage = res.message || 'Ошибка загрузки данных'
+				snackbar.show(errorMessage)
+				return
+			}
+		},
+		errorCallback: () => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+		}
+	})
+}
+// скачивание архива файлов
+async function downloadZipFiles(idRoute) {
+	const link = document.createElement('a')
+	link.href = downloadZipByRouteUrl + idRoute
+	link.click()
+}
+// удаление изображения
+async function deleteFile(e, el, pswp) {
+	if (!confirm('Вы действительно хотите удалить данный файл?')) {
+		return
+	}
+
+	if (isObserver(role)) {
+		snackbar.show('Недостаточно прав')
+		return
+	}
+
+	const currentSlide = pswp.currSlide
+	if (!currentSlide) return
+	
+	const imgSrc = currentSlide.data.src
+	const fileId = imgSrc.split('/').pop()
+
+	const formData = new FormData()
+	formData.append('id', +fileId)
+
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 300)
+
+	ajaxUtils.postMultipartFformData({
+		url: deleteFileUrl,
+		data: formData,
+		successCallback: async (res) => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+
+			if (res.status === '200') {
+				snackbar.show('Файл удален')
+
+				const indexToDelete = pswp.currIndex
+				const newDataSource = [...pswp.options.dataSource]
+				newDataSource.splice(indexToDelete, 1)
+				pswp.close()
+
+				setTimeout(() => {
+					if (newDataSource.length) {
+						const newIndex = indexToDelete >= newDataSource.length ? newDataSource.length - 1 : indexToDelete
+						lightbox.loadAndOpen(newIndex, newDataSource)
+					}
+				}, 500)
+
+				return
+			}
+
+			if (res.status === '100') {
+				const errorMessage = res.message || 'Ошибка удаления файла'
+				snackbar.show(errorMessage)
+				return
+			}
+		},
+		errorCallback: () => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+			snackbar.show('Ошибка удаления файла')
 		}
 	})
 }

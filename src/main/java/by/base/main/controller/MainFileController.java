@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -32,6 +33,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -51,6 +53,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.util.UriUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -194,7 +197,7 @@ public class MainFileController {
     }
 	
 	/**
-	 * Метод, который отдаёт ID изображений по маршруту
+	 * Метод, который отдаёт ID ИЗОБРАЖЕНИЙ по маршруту
 	 * @param idRoute
 	 * @return
 	 */
@@ -204,6 +207,23 @@ public class MainFileController {
 	    List<MyFile> files = fileService.getFilesByIdRoute(idRoute);
 	    List<Long> imageIds = files.stream()
 	            .filter(f -> f.getContentType() != null && f.getContentType().startsWith("image/"))
+	            .map(MyFile::getIdFiles)
+	            .collect(Collectors.toList());
+
+	    return ResponseEntity.ok(imageIds);
+	}
+	
+	/**
+	 * Метод, который отдаёт ID файлов по маршруту
+	 * @param idRoute
+	 * @return
+	 */
+	@GetMapping("/files/byRoute/{idRoute}")
+	@TimedExecution
+	public ResponseEntity<List<Long>> getFilesIdsByRoute(@PathVariable Integer idRoute) {
+	    List<MyFile> files = fileService.getFilesByIdRoute(idRoute);
+	    List<Long> imageIds = files.stream()
+	            .filter(f -> f.getContentType() != null)
 	            .map(MyFile::getIdFiles)
 	            .collect(Collectors.toList());
 
@@ -298,28 +318,48 @@ public class MainFileController {
 	 * @param id
 	 * @return
 	 */
+//	@GetMapping("/downloadFile/{id}")
+//    public ResponseEntity<byte[]> downloadFile(@PathVariable Long id) {
+//    	
+//    	MyFile file = fileService.getFileById(id);
+//
+//        if (file == null) {
+//            return ResponseEntity.noContent().build();
+//        }
+//
+//        return ResponseEntity.ok()
+//                .contentType(MediaType.parseMediaType(file.getContentType()))
+//                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFileName() + "\"")
+//                .body(file.getData());
+//    }
 	@GetMapping("/downloadFile/{id}")
-    public ResponseEntity<byte[]> downloadFile(@PathVariable Long id) {
-    	
-    	MyFile file = fileService.getFileById(id);
+	public ResponseEntity<byte[]> downloadFile(@PathVariable Long id) {
+	    MyFile file = fileService.getFileById(id);
 
-        if (file == null) {
-            return ResponseEntity.noContent().build();
-        }
-
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(file.getContentType()))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFileName() + "\"")
-                .body(file.getData());
-    }
+	    if (file == null) {
+	        return ResponseEntity.noContent().build();
+	    }
+	    
+	    HttpHeaders headers = new HttpHeaders();
+	    headers.setContentType(MediaType.parseMediaType(file.getContentType()));
+//	    headers.setContentDisposition(ContentDisposition.attachment().filename(file.getFileName()).build());
+	    headers.setContentDisposition(ContentDisposition.attachment().filename(file.getFileName(), StandardCharsets.UTF_8).build());
+	    headers.setCacheControl("public, max-age=3600");
+	    return new ResponseEntity<>(file.getData(), headers, HttpStatus.OK);
+	}
     
-    @GetMapping("/deleteFile/{id}")
-    public ResponseEntity<?> deleteFileById(@PathVariable Long id) {
+    @PostMapping("/deleteFile")
+    public Map<String, Object> deleteFileById(@RequestParam("id") Long id) {
+    	Map<String, Object> responce = new HashMap<String, Object>();
         boolean deleted = fileService.deleteByIdFromStatus(id, getThisUser());
         if (deleted) {
-            return ResponseEntity.ok("Файл успешно удалён");
+        	responce.put("status", "200");
+        	responce.put("message", "Файл успешно удалён");        	
+            return responce;
         } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Файл не найден");
+        	responce.put("status", "100");
+        	responce.put("message", "Файл не найден");        	
+            return responce;
         }
     }
 	

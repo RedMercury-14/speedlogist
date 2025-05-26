@@ -15,6 +15,12 @@
 	<title>Менеджер международных маршрутов</title>
 	<script async src="${pageContext.request.contextPath}/resources/js/getInitData.js" type="module"></script>
 	<script src="${pageContext.request.contextPath}/resources/js/AG-Grid/ag-grid-enterprise.min.js"></script>
+	<script src="${pageContext.request.contextPath}/resources/js/jszip/jszip.min.js"></script>
+	<script src="${pageContext.request.contextPath}/resources/js/FileSaver/FileSaver.min.js"></script>
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/js/photoSwipe/photoswipe.css">
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/js/photoSwipe/photoswipe-custom-caption.css">
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/js/photoSwipe/photoswipe-thumbnails.css">
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/js/photoSwipe/photoswipe-dynamic-caption-plugin.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/variables.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/internationalManagerNew.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/snackbar.css">
@@ -148,6 +154,42 @@
 				<div class="modal-footer">
 					<button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
 				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Модальное окно для добавления изображений -->
+	<div class="modal fade" id="addFilesToRouteModal" tabindex="-1" data-backdrop="static" data-keyboard="false" aria-labelledby="addFilesToRouteModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-xl">
+			<div class="modal-content">
+				<div class="modal-header align-items-center bg-primary text-white">
+					<h5 class="modal-title" id="addFilesToRouteModalLabel">Прикрепить изображения к маршруту</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<form id="addFilesToRouteForm">
+					<div class="modal-body">
+						<textarea class="form-control border-0 bg-transparent mb-2 h-auto" rows="4" name="routeDirection" disabled></textarea>
+						<input type="number" name="idRoute" hidden>
+						<div class="form-group">
+							<!-- <label class="col-form-label text-muted font-weight-bold">Прикрепите изображения</label> -->
+							<input type="file"
+								multiple
+								class="form-control btn btn-outline-secondary"
+								name="files"
+								id="addRouteImageInput"
+								required
+							>
+						</div>
+						<div class="text-muted mb-2">Предпросмотр:</div>
+						<div id="routeImageContainer"></div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">Отменить</button>
+						<button type="submit" class="btn btn-primary">Сохранить данные</button>
+					</div>
+				</form>
 			</div>
 		</div>
 	</div>

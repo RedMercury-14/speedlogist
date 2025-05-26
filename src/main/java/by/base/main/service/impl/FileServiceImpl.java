@@ -89,6 +89,7 @@ public class FileServiceImpl implements FileService{
             entity.setUserEmail(user.geteMail());
             entity.setStatus(1);
             entity.setIdRoute(idRoute);
+            entity.setType("файл маршрута");
 
             long sizeInBytes = file.getSize();
             double sizeInMB = sizeInBytes / (1024.0 * 1024.0);

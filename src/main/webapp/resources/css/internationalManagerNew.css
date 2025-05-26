@@ -13,6 +13,25 @@ footer.to-bottom {
 	font-family: var(--font-family-sans-serif);
 }
 
+.modal .form-control {
+	height: calc(1.5em + 0.75rem + 8px);
+}
+
+#routeImageContainer {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	justify-content: flex-start;
+	align-items: center;
+	gap: 10px;
+}
+#routeImageContainer img {
+	width: 240px;
+	height: 180px;
+	object-fit: cover;
+	border: 1px solid lightgray;
+}
+
 .title-container,
 .search-form-container {
 	min-height: 30px;

@@ -73,7 +73,7 @@ footer.to-bottom {
 
 #myGrid {
     width: 100%;
-    height: calc(100vh - 238px);
+    height: calc(100vh - 270px);
 }
 @media (max-width: 767px) {
     .my-container {

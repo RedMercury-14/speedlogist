@@ -720,6 +720,7 @@ public class MainRestController {
      * @author Ira
      */
     @PostMapping("/logistics/tenders/make-bid-winner")
+    @TimedExecution
     public Map<String, Object> makeBidWinner(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
         Map<String, Object> response = new HashMap<String, Object>();
         JSONParser parser = new JSONParser();
@@ -744,7 +745,9 @@ public class MainRestController {
             response.put("message", "Заявка не найдена");
             return response;
         }
-        User user = userService.getUserById(idUser);
+//        User user = userService.getUserById(idUser);
+        User user = new User();
+        user.setIdUser(idUser);
         if (status == null) {
             status = "4";
             routeService.updateRouteInBase(idRoute, cost, currency, user, status);
@@ -11614,27 +11617,6 @@ public class MainRestController {
 		truck.setVerify(false);
 		truck.setNumTrailer(numTrailer);
 		truck.setBrandTrailer(brandTrailer);
-		if (mulFile2 != null) {
-//			mailService.sendEmailWhithFile(request, "Техапаспорт от " + user.getCompanyName(), "техпаспорт авто",
-//					mulFile2);
-			final String num = numTruck;
-			new Thread(new Runnable() {
-				@Override
-				public void run() {
-					try {
-						mailService.sendEmailWhithFileToAnyUsers(request,
-								user.getCompanyName() + " - Техпаспорт авто " + num,
-								user.getCompanyName() + " - Техпаспорт авто " + num,
-								convertMultiPartToFile(mulFile2, request), "ArtyuhevichO@dobronom.by",
-								"StrizhakA@dobronom.by");
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				}
-			}).start();
-
-		}
 		return truckService.saveNewTruck(truck);
 	}
 

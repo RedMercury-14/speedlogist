@@ -1,5 +1,5 @@
 import { ajaxUtils } from "./ajaxUtils.js"
-import { send487ReportUrl, send490ReportUrl, sendTempSchedulesReportUrl } from "./globalConstants/urls.js"
+import { loadFileTestUrl, send487ReportUrl, send490ReportUrl, sendTempSchedulesReportUrl } from "./globalConstants/urls.js"
 import { hideLoadingSpinner, showLoadingSpinner } from "./utils.js"
 
 const token = $("meta[name='_csrf']").attr("content")
@@ -19,6 +19,7 @@ function reportFormSubmitHandler(e) {
 	if (submitButton.dataset.type === '487') url = send487ReportUrl
 	if (submitButton.dataset.type === 'stockBalance') url = send490ReportUrl
 	if (submitButton.dataset.type === 'tempSchedules') url = sendTempSchedulesReportUrl
+	if (submitButton.dataset.type === 'fileLoad') url = loadFileTestUrl
 
 	const submitButtonText = submitButton.innerText
 	const file = new FormData(e.target)

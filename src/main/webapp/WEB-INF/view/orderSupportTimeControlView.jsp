@@ -23,7 +23,7 @@
 				<label class="col-form-label text-muted font-weight-bold">Загрузите файл Excel</label>
 				<input type="file" class="form-control btn-outline-secondary"
 						name="excel" id="excel"
-						accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+						
 						required
 				>
 			</div>
@@ -32,6 +32,7 @@
 				<button class="btn btn-primary" data-type="487" type="submit">Загрузить 487 отчет</button>
 				<button class="btn btn-primary" data-type="stockBalance" type="submit">Загрузить отчет остатков на складах</button>
 				<button class="btn btn-primary" data-type="tempSchedules" type="submit">Загрузить отчет с акциями</button>
+				<button class="btn btn-warning" data-type="fileLoad" type="submit">Загрузить файл</button>
 			</div>
 		</form>
 

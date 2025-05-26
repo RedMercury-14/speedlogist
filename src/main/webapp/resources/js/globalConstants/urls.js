@@ -294,6 +294,7 @@ export const send487ReportUrl = `/speedlogist/api/order-support/control/487` // 
 export const send490ReportUrl = `/speedlogist/api/order-support/control/490` // загрузка на сервер 490 отчета
 export const sendPromotionsReportUrl = `/speedlogist/api/order-support/control/promotions`
 export const sendTempSchedulesReportUrl = `/speedlogist/api/order-support/control/loadSchedules`
+export const loadFileTestUrl = `/speedlogist/file/loadFileTest`
 
 
 ///////////////////////////////////////////////

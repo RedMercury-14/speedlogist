@@ -2,6 +2,8 @@ package by.base.main.dao.impl;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import org.hibernate.Session;
@@ -14,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import by.base.main.dao.FileDAO;
 import by.base.main.model.MyFile;
+import by.base.main.model.Order;
 
 @Repository
 public class FileDAOImpl implements FileDAO{
@@ -35,14 +38,51 @@ public class FileDAOImpl implements FileDAO{
 	@Override
 	public int save(MyFile file) {
 		Session currentSession = sessionFactoryLogistFile.getCurrentSession();
-		currentSession.save(currentSession);
-		return Integer.parseInt(currentSession.getIdentifier(file).toString());
+
+	    // Генерация уникального имени файла
+	    String originalName = file.getFileName();
+	    String uniqueName = generateUniqueFileName(originalName, currentSession);
+	    file.setFileName(uniqueName);
+
+	    currentSession.save(file);
+	    return Integer.parseInt(currentSession.getIdentifier(file).toString());
 	}
+	
+	private String generateUniqueFileName(String originalName, Session session) {
+	    String baseName = originalName;
+	    String extension = "";
+
+	    int dotIndex = originalName.lastIndexOf('.');
+	    if (dotIndex != -1) {
+	        baseName = originalName.substring(0, dotIndex);
+	        extension = originalName.substring(dotIndex); // включая точку
+	    }
+
+	    String newName = originalName;
+	    int counter = 1;
+
+	    while (fileNameExists(newName, session)) {
+	        newName = baseName + " (" + counter + ")" + extension;
+	        counter++;
+	    }
+
+	    return newName;
+	}
+	
+	private boolean fileNameExists(String fileName, Session session) {
+	    String hql = "SELECT count(f.id) FROM MyFile f WHERE f.fileName = :name";
+	    Long count = (Long) session.createQuery(hql)
+	            .setParameter("name", fileName)
+	            .uniqueResult();
+	    return count != null && count > 0;
+	}
+
+
 
 	@Override
 	public void update(MyFile file) {
 		Session currentSession = sessionFactoryLogistFile.getCurrentSession();
-		currentSession.update(currentSession);
+		currentSession.update(file);
 		
 	}
 
@@ -54,6 +94,46 @@ public class FileDAOImpl implements FileDAO{
 		currentSession.flush();
 		return object;
 	}
+	
+	@Override
+	public boolean deleteById(Long id) {
+	    Session currentSession = sessionFactoryLogistFile.getCurrentSession();
+	    MyFile file = currentSession.get(MyFile.class, id);
+	    if (file != null) {
+	        currentSession.delete(file);
+	        return true;
+	    }
+	    return false;
+	}
+	
+	@Override
+	public boolean deleteByIds(List<Long> ids) {
+	    Session currentSession = sessionFactoryLogistFile.getCurrentSession();
+	    boolean allDeleted = true;
+	
+	    for (Long id : ids) {
+	        MyFile file = currentSession.get(MyFile.class, id);
+	        if (file != null) {
+	            currentSession.delete(file);
+	        } else {
+	            allDeleted = false; // хотя бы один файл не найден — значит не все удалены
+	        }
+	    }
+	
+	    return allDeleted;
+	}
+
+	
+	/**
+	 * этот метод быстрее
+	 */
+//	@Override
+//	public void deleteByIds(List<Long> ids) {
+//	    Session currentSession = sessionFactoryLogistFile.getCurrentSession();
+//	    Query<?> query = currentSession.createQuery("delete from MyFile where idFiles in (:ids)");
+//	    query.setParameter("ids", ids);
+//	    query.executeUpdate();
+//	}
 	
 	@Override
 	public int saveMultipartFile(MultipartFile file) {
@@ -72,6 +152,12 @@ public class FileDAOImpl implements FileDAO{
             entity.setStatus(1);
             entity.setComment("ЗАГЛУШКА");
 
+            long sizeInBytes = file.getSize();
+            double sizeInMB = sizeInBytes / (1024.0 * 1024.0);
+//            String sizeFormatted = String.format("%.2f MB", sizeInMB);
+            entity.setSize(sizeInMB);
+            entity.setSizeType("МБ");
+
             Session currentSession = sessionFactoryLogistFile.getCurrentSession();
     		currentSession.save(entity);
     		return Integer.parseInt(currentSession.getIdentifier(entity).toString());
@@ -79,5 +165,18 @@ public class FileDAOImpl implements FileDAO{
             throw new RuntimeException("Ошибка при сохранении файла", e);
         }
     }
+
+
+	private static final String queryGetFilesByIdRoute = "from MyFile o "
+			+ "where idRoute=:idRoute "
+			+ "AND status = 1";
+	@Override
+	public List<MyFile> getFilesByIdRoute(Integer idRoute) {
+		Session currentSession = sessionFactoryLogistFile.getCurrentSession();
+		Query<MyFile> theObject = currentSession.createQuery(queryGetFilesByIdRoute, MyFile.class);
+		theObject.setParameter("idRoute", idRoute);
+		List<MyFile> trucks = theObject.getResultList();		
+		return new ArrayList<MyFile>(new HashSet<MyFile>(trucks));
+	}
 
 }

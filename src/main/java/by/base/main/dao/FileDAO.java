@@ -19,4 +19,15 @@ public interface FileDAO {
 
 	int saveMultipartFile(MultipartFile file);
 	
+	boolean deleteById(Long id);	
+	
+	boolean deleteByIds(List<Long> ids);
+	
+	/**
+	 * получение файлов по idRoute
+	 * @param idRoute
+	 * @return
+	 */
+	List<MyFile> getFilesByIdRoute(Integer idRoute);
+	
 }

@@ -15,7 +15,6 @@ import {
 	downloadZipByRouteUrl,
 	getFileBaseUrl,
 	getFilesByRouteBaseUrl,
-	getImagesByRouteBaseUrl,
 	getMemoryRouteMessageBaseUrl,
 	getNumMessageBaseUrl,
 	getOffersForReductionByIdRouteBaseUrl,
@@ -39,6 +38,41 @@ const DATES_KEY = `searchDates_to_${PAGE_NAME}`
 const ROW_INDEX_KEY = `AG_Grid_rowIndex_to_${PAGE_NAME}`
 const role = document.querySelector('#role')?.value
 const login = document.querySelector('#login')?.value
+
+const fileTypeIcons = {
+	// Документы
+	'application/pdf': '/speedlogist/resources/img/fileIcons/pdf.png',
+	'application/msword': '/speedlogist/resources/img/fileIcons/word.png',
+	'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '/speedlogist/resources/img/fileIcons/word.png',
+	'application/vnd.ms-excel': '/speedlogist/resources/img/fileIcons/excel.png',
+	'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '/speedlogist/resources/img/fileIcons/excel.png',
+	'application/vnd.ms-powerpoint': '/speedlogist/resources/img/fileIcons/ppt.png',
+	'application/vnd.openxmlformats-officedocument.presentationml.presentation': '/speedlogist/resources/img/fileIcons/ppt.png',
+	'text/plain': '/speedlogist/resources/img/fileIcons/txt.png',
+
+	// Архивы
+	'application/zip': '/speedlogist/resources/img/fileIcons/zip.png',
+	'application/x-rar-compressed': '/speedlogist/resources/img/fileIcons/zip.png',
+	'application/x-7z-compressed': '/speedlogist/resources/img/fileIcons/zip.png',
+	'application/x-tar': '/speedlogist/resources/img/fileIcons/zip.png',
+	'application/gzip': '/speedlogist/resources/img/fileIcons/zip.png',
+
+	// Аудио
+	'audio/mpeg': '/speedlogist/resources/img/fileIcons/audio.png',
+	'audio/mp3': '/speedlogist/resources/img/fileIcons/audio.png',
+	'audio/wav': '/speedlogist/resources/img/fileIcons/audio.png',
+	'audio/ogg': '/speedlogist/resources/img/fileIcons/audio.png',
+	'audio/webm': '/speedlogist/resources/img/fileIcons/audio.png',
+
+	// Видео
+	'video/mp4': '/speedlogist/resources/img/fileIcons/video.png',
+	'video/webm': '/speedlogist/resources/img/fileIcons/video.png',
+	'video/x-msvideo': '/speedlogist/resources/img/fileIcons/video.png',
+	'video/x-matroska': '/speedlogist/resources/img/fileIcons/video.png',
+
+	// По умолчанию
+	'default': '/speedlogist/resources/img/fileIcons/file.png',
+}
 
 
 const currencyDict = {
@@ -829,7 +863,7 @@ function getContextMenuItems(params) {
 		{
 			name: `Файлы`,
 			icon: uiIcons.files,
-			disabled: !isAdmin(role),
+			disabled: isObserver(role),
 			subMenu: [
 				{
 					name: `Прикрепить файлы`,
@@ -1901,24 +1935,49 @@ async function showGalleryItems(galleryItems) {
 	const itemsWithSizes = await Promise.all(
 		galleryItems.map(async (src, i) => {
 			try {
-				const size = await getImageSize(src)
-				return {
-					src: src,
-					title: `Файл ${i+1}`,
-					alt: `Файл ${i+1}`,
-					width: size.width,
-					height: size.height,
-					description: description,
+				const response = await fetch(src, { method: 'HEAD' }) // HEAD запрос — только заголовки
+				const contentType = response.headers.get('Content-Type') || ''
+				const contentDisposition = response.headers.get('Content-Disposition') || ''
+				const isImage = contentType.startsWith('image/')
+
+				let fileName = extractFileNameFromContentDisposition(contentDisposition)
+				if (!fileName) {
+					fileName = decodeURIComponent(src.split('/').pop().split('?')[0])
+				}
+
+				if (isImage) {
+					const size = await getImageSize(src)
+					return {
+						src: src,
+						title: fileName,
+						alt: fileName,
+						width: size.width,
+						height: size.height,
+						description: description,
+					}
+				} else {
+					// Не изображение
+					const iconSrc = fileTypeIcons[contentType] || fileTypeIcons['default']
+					return {
+						src: iconSrc,
+						downloadLink: src,
+						title: fileName,
+						alt: fileName,
+						width: 500,
+						height: 500,
+						description: description,
+					}
 				}
 			} catch (error) {
-				// Запасные значения, если изображение не загрузилось
+				console.error('Ошибка загрузки:', error)
 				return {
-					src: src,
-					title: `Файл ${i+1}`,
-					alt: `Файл ${i+1}`,
-					width: 1500,
-					height: 900,
-					description: description,
+					src: fileTypeIcons['default'],
+					downloadLink: src,
+					title: `Файл ${i + 1}`,
+					alt: `Файл ${i + 1}`,
+					width: 500,
+					height: 500,
+					description: 'Ошибка загрузки файла',
 				}
 			}
 		})
@@ -2058,4 +2117,16 @@ async function deleteFile(e, el, pswp) {
 			snackbar.show('Ошибка удаления файла')
 		}
 	})
+}
+
+function extractFileNameFromContentDisposition(disposition) {
+	const match = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition)
+	if (match != null) {
+		let filename = match[1]
+		if (filename.startsWith('"') || filename.startsWith("'")) {
+			filename = filename.slice(1, -1)
+		}
+		return decodeURIComponent(filename)
+	}
+	return null
 }

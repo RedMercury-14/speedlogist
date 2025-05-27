@@ -14,13 +14,13 @@ export const buttons = {
 				const currentSlide = lightbox.pswp.currSlide
 				if (currentSlide) {
 					try {
-						const imgSrc = currentSlide.data.src
+						const imgSrc = currentSlide.data.downloadLink || currentSlide.data.src
 						const image = await fetch(imgSrc)
 						const imageBlog = await image.blob()
 						const imageURL = URL.createObjectURL(imageBlog)
 						const a = document.createElement('a')
 						a.href = imageURL
-						a.download = imageURL.split('/').pop()
+						a.download = currentSlide.data.title || imageURL.split('/').pop()
 						document.body.appendChild(a)
 						a.click()
 						document.body.removeChild(a)

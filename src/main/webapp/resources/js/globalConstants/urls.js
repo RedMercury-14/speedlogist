@@ -505,3 +505,16 @@ export const getAllProductControlUrl = '/speedlogist/api/procurement/product-con
 export const loadProductControlExcelUrl = '/speedlogist/api/procurement/product-control/load'
 export const editProductControlUrl = '/speedlogist/api/procurement/product-control/edit'
 
+
+///////////////////////////////////////////////
+// API файлов
+///////////////////////////////////////////////
+export const loadFileForRouteUrl = '/speedlogist/file/loadFileForRoute' // - сохранение файла с привязкой к маршруту. Важно: в параметрах должно быть поле idRoute = 123; поле для файла должно называтсья file
+export const loadArrayFilesForRouteUrl = '/speedlogist/file/loadArrayFilesForRoute' // - сохранение НЕСКОЛЬКИХ файлов с привязкой к маршруту. Важно: в параметрах должно быть поле idRoute = 123; поле для файла должно называтсья files
+export const loadArrayFilesUrl = '/speedlogist/file/loadArrayFiles' // - сохранение нескольких файлов.  поле для файла должно называтсья files
+export const deleteFileUrl = '/speedlogist/file/deleteFile' // - удаление по id путём смены статуса. Нужно поле id
+export const getImagesByRouteBaseUrl = '/speedlogist/file/images/byRoute/' // {idRoute} - эндпоинт, который отдаёт id изображений для последющей скачки
+export const getFilesByRouteBaseUrl = '/speedlogist/file/files/byRoute/' // {idRoute} - эндпоинт, который отдаёт id всех файлов для последющей скачки
+export const downloadZipByRouteUrl = '/speedlogist/file/downloadFileByRoute/zip/' // {idRoute} - скачивание изображений одним архивом 
+export const getFileBaseUrl = '/speedlogist/file/downloadFile/' // {id} - скачивание одного файла
+export const getImagesByRouteBase64BaseUrl = '/speedlogist/file/images/base64/byRoute/' // {idRoute} - возвращает массив json где все изображения в base64

@@ -14,7 +14,7 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "files")
-public class File {
+public class MyFile {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -51,8 +51,96 @@ public class File {
 
     @Column(name = "comment", columnDefinition = "TEXT")
     private String comment;
+    
+    @Column(name = "size", columnDefinition = "TEXT")
+    private Double size;
+    
+    @Column(name = "size_type", columnDefinition = "TEXT")
+    private String sizeType;
+    
+    @Column(name = "type", columnDefinition = "TEXT")
+    private String type;
+    
+    @Column(name = "application", columnDefinition = "TEXT")
+    private String application;
+    
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+    
+    @Column(name = "id_route")
+    private Integer idRoute;
+    
+    @Column(name = "id_order")
+    private Integer idOrder;
+    
+    @Column(name = "id_object")
+    private Long idObject;
 
 	
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public String getSizeType() {
+		return sizeType;
+	}
+
+	public void setSizeType(String sizeType) {
+		this.sizeType = sizeType;
+	}
+
+	public Double getSize() {
+		return size;
+	}
+
+	public void setSize(Double size) {
+		this.size = size;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	public String getApplication() {
+		return application;
+	}
+
+	public void setApplication(String application) {
+		this.application = application;
+	}
+
+	public Integer getIdRoute() {
+		return idRoute;
+	}
+
+	public void setIdRoute(Integer idRoute) {
+		this.idRoute = idRoute;
+	}
+
+	public Integer getIdOrder() {
+		return idOrder;
+	}
+
+	public void setIdOrder(Integer idOrder) {
+		this.idOrder = idOrder;
+	}
+
+	public Long getIdObject() {
+		return idObject;
+	}
+
+	public void setIdObject(Long idObject) {
+		this.idObject = idObject;
+	}
 
 	public Long getIdFiles() {
 		return idFiles;
@@ -160,7 +248,7 @@ public class File {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		File other = (File) obj;
+		MyFile other = (MyFile) obj;
 		return Objects.equals(comment, other.comment) && Objects.equals(contentType, other.contentType)
 				&& Arrays.equals(data, other.data) && Objects.equals(dateCreate, other.dateCreate)
 				&& Objects.equals(fileName, other.fileName) && Objects.equals(idFiles, other.idFiles)

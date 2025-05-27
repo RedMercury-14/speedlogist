@@ -395,6 +395,18 @@ public class MainRestController {
         return resultRoutes;
     }
     
+	/*
+	 * мой старый метод
+	 */
+	@GetMapping("/test")
+	public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException{
+		Map<String, Object> map = new HashMap<String, Object>();
+		
+//		User user = getThisUser();
+//		map.put("user", user);
+		return map;
+    }
+    
     /**
      * <br>Нужно ли уведомлять о новом тендере</br>.
      * @author Ira
@@ -1319,7 +1331,6 @@ public class MainRestController {
      * @author Ira
      */
     @PostMapping("/carrier-application/create")
-    @TimedExecution
     public Map<String, Object> createCarrierApplication(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
         Map<String, Object> response = new HashMap<>();
         JSONParser parser = new JSONParser();
@@ -1328,6 +1339,7 @@ public class MainRestController {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
         String dateTime = LocalDateTime.now().format(formatter);
         String market = jsonMainObject.get("market") == null ? null : jsonMainObject.get("market").toString();
+        String comment = jsonMainObject.get("comment") == null ? null : jsonMainObject.get("comment").toString();
         String ownership = jsonMainObject.get("ownership") == null ? null : jsonMainObject.get("ownership").toString();
         String organization = jsonMainObject.get("organization") == null ? null : jsonMainObject.get("organization").toString();
         int vehicleCount = jsonMainObject.get("vehicleCount") == null ? null : Integer.parseInt(jsonMainObject.get("vehicleCount").toString());
@@ -1407,6 +1419,10 @@ public class MainRestController {
               "  <tr>\n" +
               "    <td>Адрес эл. почты</td>\n" +
               "    <td>" + email + "</td>\n" +
+              "  </tr>\n" +
+              "  <tr>\n" +
+              "    <td>Комментарий</td>\n" +
+              "    <td>" + comment + "</td>\n" +
               "  </tr>\n" +
               "</table>";
         List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.carrier.cooperation");
@@ -2811,84 +2827,7 @@ public class MainRestController {
 		return deliveryDate;
 	}
 
-	/*
-	 * мой старый метод
-	 */
-//	@GetMapping("/test")
-//	public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException{
-//		java.util.Date t1 = new java.util.Date();
-//		Map<String, Object> responseMap = new HashMap<>();
-//		// Получаем текущую дату для имени файла
-//        LocalDate currentTime = LocalDate.now();
-//        String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-//
-//		List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
-////		List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to");
-////		List<String> emailsSupport = propertiesUtils.getValuesByPartialKey(servletContext, "email.orderSupport");
-////		emails.addAll(emailsSupport);
-//		String appPath = servletContext.getRealPath("/");
-//
-//		String fileName1200 = "1200 (----Холодный----).xlsm";
-//		String fileName1100 = "1100 График прямой сухой.xlsm";
-//		String fileNameSample = "График для шаблоново.xlsx";
-//
-//		try {
-//			poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()),
-//					appPath + "resources/others/" + fileName1200);
-//			poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesByTOType("сухой").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()),
-//					appPath + "resources/others/" + fileName1100);
-//			poiExcel.exportToExcelSampleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()),
-//					appPath + "resources/others/" + fileNameSample);
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//			System.err.println("Ошибка формирование EXCEL");
-//		}
-//
-////		response.setHeader("content-disposition", "attachment;filename="+fileName+".xlsx");
-//		List<File> files = new ArrayList<File>();
-//		files.add(new File(appPath + "resources/others/" + fileName1200));
-//		files.add(new File(appPath + "resources/others/" + fileName1100));
-//		files.add(new File(appPath + "resources/others/" + fileNameSample));
-//
-//		 File zipFile = createZipFile(files, appPath + "resources/others/TO.zip");
-//		 List<File> filesZip = new ArrayList<File>();
-//		 filesZip.add(zipFile);
-//
-////		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от TEST" + currentTimeString, "Тестовая отправка сообщения.\nНе обращайте внимания / игнорируте это сообщение", files, emails);
-//		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от TEST" + currentTimeString, "Тестовая отправка сообщения.\nНе обращайте внимания / игнорируте это сообщение \nВерсия с макросом выделений (Ctr+t)", filesZip, emails);
-//		java.util.Date t2 = new java.util.Date();
-//		System.out.println(t2.getTime()-t1.getTime() + " ms - testNewMethod" );
-//		return responseMap;
-//	}
-//
-//    public static File createZipFile(List<File> files, String zipFilePath) throws IOException {
-//        File zipFile = new File(zipFilePath);
-//        try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile))) {
-//            for (File file : files) {
-//                if (file.exists() && !file.isDirectory()) {
-//                    addFileToZip(file, zos);
-//                } else {
-//                    System.err.println("File not found or is a directory: " + file.getAbsolutePath());
-//                }
-//            }
-//        }
-//        return zipFile; // Возвращаем объект File архива
-//    }
-//
-//    private static void addFileToZip(File file, ZipOutputStream zos) throws IOException {
-//        try (FileInputStream fis = new FileInputStream(file)) {
-//            ZipEntry zipEntry = new ZipEntry(file.getName());
-//            zos.putNextEntry(zipEntry);
-//
-//            byte[] buffer = new byte[1024];
-//            int length;
-//            while ((length = fis.read(buffer)) > 0) {
-//                zos.write(buffer, 0, length);
-//            }
-//
-//            zos.closeEntry();
-//        }
-//    }
+
 
 
     /**

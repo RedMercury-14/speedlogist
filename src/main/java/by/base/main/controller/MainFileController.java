@@ -6,15 +6,18 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
@@ -30,8 +33,14 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,6 +53,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.util.UriUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -53,6 +63,7 @@ import com.google.gson.JsonSerializer;
 
 import by.base.main.aspect.TimedExecution;
 import by.base.main.controller.ajax.MainRestController;
+import by.base.main.dto.ImageDTO;
 import by.base.main.dto.MarketDataFor330Request;
 import by.base.main.dto.MarketDataFor330Responce;
 import by.base.main.dto.MarketDataForRequestDto;
@@ -64,6 +75,7 @@ import by.base.main.dto.ReportRow;
 import by.base.main.dto.RoadTransportDto;
 import by.base.main.model.Act;
 import by.base.main.model.Message;
+import by.base.main.model.MyFile;
 import by.base.main.model.Order;
 import by.base.main.model.OrderProduct;
 import by.base.main.model.Rotation;
@@ -80,6 +92,7 @@ import by.base.main.service.RotationService;
 import by.base.main.service.RouteService;
 import by.base.main.service.ServiceException;
 import by.base.main.service.TruckService;
+import by.base.main.service.UserService;
 import by.base.main.service.util.CustomJSONParser;
 import by.base.main.service.util.MailService;
 import by.base.main.service.util.OrderCreater;
@@ -124,6 +137,9 @@ public class MainFileController {
 	private FileService fileService;
 	
 	@Autowired
+	private UserService userService;
+	
+	@Autowired
 	private OrderCreater orderCreater;
 	private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(Date.class, new JsonSerializer<Date>() {
@@ -134,8 +150,94 @@ public class MainFileController {
             })
             .create();
 	
-//	@PostMapping("/loadFileTest")
+	/**
+	 * Возвращает изображения по idRoute в формате json, изображения в base64
+	 * @param idRoute
+	 * @return
+	 */
+	@GetMapping("/images/base64/byRoute/{idRoute}")
+	public ResponseEntity<List<ImageDTO>> getBase64ImagesByRoute(@PathVariable Integer idRoute) {
+	    List<MyFile> files = fileService.getFilesByIdRoute(idRoute);
+
+	    List<ImageDTO> images = files.stream()
+	        .filter(f -> f.getContentType() != null && f.getContentType().startsWith("image/"))
+	        .map(f -> new ImageDTO(
+	            f.getFileName(),
+	            f.getContentType(),
+	            Base64.getEncoder().encodeToString(f.getData())
+	        ))
+	        .collect(Collectors.toList());
+
+	    return ResponseEntity.ok(images);
+	}
+
+	
+	/**
+	 * скачка одного файла
+	 * @param id
+	 * @return
+	 */
+	@GetMapping("/downloadFileByRoute/zip/{id}")
+	public void downloadMultipleFilesAsZip(@PathVariable Integer id, HttpServletResponse response) throws IOException {
+    	
+    	List<MyFile> files = fileService.getFilesByIdRoute(id);
+
+        response.setContentType("application/zip");
+        response.setHeader("Content-Disposition", "attachment; filename=\"files.zip\"");
+
+        try (ZipOutputStream zipOut = new ZipOutputStream(response.getOutputStream())) {
+            for (MyFile file : files) {
+                ZipEntry zipEntry = new ZipEntry(file.getFileName());
+                zipOut.putNextEntry(zipEntry);
+                zipOut.write(file.getData());
+                zipOut.closeEntry();
+            }
+            zipOut.finish();
+        }
+    }
+	
+	/**
+	 * Метод, который отдаёт ID ИЗОБРАЖЕНИЙ по маршруту
+	 * @param idRoute
+	 * @return
+	 */
+	@GetMapping("/images/byRoute/{idRoute}")
+	@TimedExecution
+	public ResponseEntity<List<Long>> getImageIdsByRoute(@PathVariable Integer idRoute) {
+	    List<MyFile> files = fileService.getFilesByIdRoute(idRoute);
+	    List<Long> imageIds = files.stream()
+	            .filter(f -> f.getContentType() != null && f.getContentType().startsWith("image/"))
+	            .map(MyFile::getIdFiles)
+	            .collect(Collectors.toList());
+
+	    return ResponseEntity.ok(imageIds);
+	}
+	
+	/**
+	 * Метод, который отдаёт ID файлов по маршруту
+	 * @param idRoute
+	 * @return
+	 */
+	@GetMapping("/files/byRoute/{idRoute}")
+	@TimedExecution
+	public ResponseEntity<List<Long>> getFilesIdsByRoute(@PathVariable Integer idRoute) {
+	    List<MyFile> files = fileService.getFilesByIdRoute(idRoute);
+	    List<Long> imageIds = files.stream()
+	            .filter(f -> f.getContentType() != null)
+	            .map(MyFile::getIdFiles)
+	            .collect(Collectors.toList());
+
+	    return ResponseEntity.ok(imageIds);
+	}
+	
+	/**
+	 * Сохранение одного файла БД
+	 * @param file
+	 * @return
+	 * @throws IOException
+	 */
 	@RequestMapping(value = "/loadFileTest", method = RequestMethod.POST, consumes = {MediaType.MULTIPART_FORM_DATA_VALUE })
+	@TimedExecution
 	public Map<String, Object> handleFileUpload(@RequestParam("excel") MultipartFile file) throws IOException {
 	    Map<String, Object> response = new HashMap<>();
 	    fileService.saveMultipartFile(file);
@@ -145,6 +247,121 @@ public class MainFileController {
 	    response.put("success", true);
 	    return response;
 	}
+	
+	/**
+	 * Сохранение файла с привязкой к маршруту
+	 * @param file
+	 * @return
+	 * @throws IOException
+	 */
+	@RequestMapping(value = "/loadFileForRoute", method = RequestMethod.POST, consumes = {MediaType.MULTIPART_FORM_DATA_VALUE })
+	@TimedExecution
+	public Map<String, Object> loadFileForRoute(@RequestParam("file") MultipartFile file, @RequestParam("idRoute") Integer idRoute) throws IOException {
+	    Map<String, Object> response = new HashMap<>();
+	    Long id = fileService.saveFileByRoute(file, idRoute, getThisUser());
+	    response.put("status", "200");
+	    response.put("idFile", id);
+	    return response;
+	}
+	
+	/**
+	 * Сохранение нескольких  файлов с привязкой к маршруту
+	 * @param file
+	 * @return
+	 * @throws IOException
+	 */
+	@RequestMapping(value = "/loadArrayFilesForRoute", method = RequestMethod.POST, consumes = {MediaType.MULTIPART_FORM_DATA_VALUE })
+	@TimedExecution
+	public Map<String, Object> loadArrayFileForRoute(@RequestParam("files") MultipartFile[] files, @RequestParam("idRoute") Integer idRoute) throws IOException {
+	    Map<String, Object> response = new HashMap<>();
+	    List<String> uploadedFileNames = new ArrayList<>();
+
+	    for (MultipartFile file : files) {
+	        if (!file.isEmpty()) {
+	        	fileService.saveFileByRoute(file, idRoute, getThisUser());
+	            uploadedFileNames.add(file.getOriginalFilename());
+	        }
+	    }
+	    
+	    response.put("uploadedFiles", uploadedFileNames);
+	    response.put("total", uploadedFileNames.size());
+	    return response;
+	}
+	
+	/**
+	 * охранение нескольких файлов в БД
+	 * @param files
+	 * @return
+	 * @throws IOException
+	 */
+	@RequestMapping(value = "/loadArrayFiles", method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public Map<String, Object> handleMultipleFilesUpload(@RequestParam("files") MultipartFile[] files) throws IOException {
+	    Map<String, Object> response = new HashMap<>();
+	    List<String> uploadedFileNames = new ArrayList<>();
+
+	    for (MultipartFile file : files) {
+	        if (!file.isEmpty()) {
+	            fileService.saveMultipartFile(file);
+	            uploadedFileNames.add(file.getOriginalFilename());
+	        }
+	    }
+
+	    response.put("status", "200");
+	    response.put("uploadedFiles", uploadedFileNames);
+	    response.put("total", uploadedFileNames.size());
+	    response.put("success", true);
+	    return response;
+	}
+	
+	/**
+	 * скачка одного файла
+	 * @param id
+	 * @return
+	 */
+//	@GetMapping("/downloadFile/{id}")
+//    public ResponseEntity<byte[]> downloadFile(@PathVariable Long id) {
+//    	
+//    	MyFile file = fileService.getFileById(id);
+//
+//        if (file == null) {
+//            return ResponseEntity.noContent().build();
+//        }
+//
+//        return ResponseEntity.ok()
+//                .contentType(MediaType.parseMediaType(file.getContentType()))
+//                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFileName() + "\"")
+//                .body(file.getData());
+//    }
+	@GetMapping("/downloadFile/{id}")
+	public ResponseEntity<byte[]> downloadFile(@PathVariable Long id) {
+	    MyFile file = fileService.getFileById(id);
+
+	    if (file == null) {
+	        return ResponseEntity.noContent().build();
+	    }
+	    
+	    HttpHeaders headers = new HttpHeaders();
+	    headers.setContentType(MediaType.parseMediaType(file.getContentType()));
+//	    headers.setContentDisposition(ContentDisposition.attachment().filename(file.getFileName()).build());
+	    headers.setContentDisposition(ContentDisposition.attachment().filename(file.getFileName(), StandardCharsets.UTF_8).build());
+	    headers.setCacheControl("public, max-age=3600");
+	    return new ResponseEntity<>(file.getData(), headers, HttpStatus.OK);
+	}
+    
+    @PostMapping("/deleteFile")
+    public Map<String, Object> deleteFileById(@RequestParam("id") Long id) {
+    	Map<String, Object> responce = new HashMap<String, Object>();
+        boolean deleted = fileService.deleteByIdFromStatus(id, getThisUser());
+        if (deleted) {
+        	responce.put("status", "200");
+        	responce.put("message", "Файл успешно удалён");        	
+            return responce;
+        } else {
+        	responce.put("status", "100");
+        	responce.put("message", "Файл не найден");        	
+            return responce;
+        }
+    }
 	
 	/**
      * @param request
@@ -1201,7 +1418,11 @@ public class MainFileController {
 	    }
 	}
 
-
+	private User getThisUser() {
+		String name = SecurityContextHolder.getContext().getAuthentication().getName();
+		User user = userService.getUserByLoginV2(name);
+		return user;
+	}
 	
 	private File convertMultiPartToFile(MultipartFile file, HttpServletRequest request ) throws IOException {
 		String appPath = request.getServletContext().getRealPath("");

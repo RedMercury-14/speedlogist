@@ -2120,13 +2120,33 @@ async function deleteFile(e, el, pswp) {
 }
 
 function extractFileNameFromContentDisposition(disposition) {
-	const match = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition)
-	if (match != null) {
-		let filename = match[1]
-		if (filename.startsWith('"') || filename.startsWith("'")) {
-			filename = filename.slice(1, -1)
+	if (!disposition) return null
+
+	// 1. Пытаемся получить filename* (UTF-8 с url-кодировкой)
+	const utf8Match = disposition.match(/filename\*\s*=\s*UTF-8''([^;\n]*)/i)
+	if (utf8Match) {
+		try {
+			return decodeURIComponent(utf8Match[1])
+		} catch (e) {
+			console.warn('Ошибка decodeURIComponent для filename*', e)
 		}
-		return decodeURIComponent(filename)
 	}
+
+	// 2. Пытаемся получить обычный filename
+	const fallbackMatch = disposition.match(/filename="?([^"]+)"?/i)
+	if (fallbackMatch) {
+		let rawName = fallbackMatch[1]
+
+		try {
+			// Пробуем перекодировать из latin1 → utf8
+			const bytes = new Uint8Array([...rawName].map(c => c.charCodeAt(0)))
+			const decoded = new TextDecoder('utf-8').decode(bytes)
+			return decoded
+		} catch (e) {
+			console.warn('Ошибка перекодировки filename', e)
+			return rawName // как fallback
+		}
+	}
+
 	return null
 }

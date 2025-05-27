@@ -334,6 +334,9 @@ public class MainRestController {
 	@Autowired
 	private GoodAccommodationService goodAccommodationService;
 	
+	@Autowired
+	private InfoCarrierService infoCarrierService;
+	
 	
 	private static String classLog;
 	public static String marketJWT;
@@ -406,6 +409,16 @@ public class MainRestController {
 //		map.put("user", user);
 		return map;
     }
+	
+	@GetMapping("/logistics/info-carrier/list")
+	public Map<String, Object> testGetInfoCarrier(HttpServletRequest request, HttpServletResponse response) throws IOException{
+		Map<String, Object> responce = new HashMap<String, Object>();
+		responce.put("status", "200");
+		responce.put("objects", infoCarrierService.getAll());		
+		return responce;
+    }
+	
+	
     
     /**
      * <br>Нужно ли уведомлять о новом тендере</br>.
@@ -1332,6 +1345,7 @@ public class MainRestController {
      */
     @PostMapping("/carrier-application/create")
     public Map<String, Object> createCarrierApplication(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+    	System.err.println(str);
         Map<String, Object> response = new HashMap<>();
         JSONParser parser = new JSONParser();
         JSONObject jsonMainObject = (JSONObject) parser.parse(str);
@@ -1427,6 +1441,31 @@ public class MainRestController {
               "</table>";
         List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.carrier.cooperation");
         mailService.sendEmailToUsersHTMLContent(request, "Заявка от перевозчика", htmlContent, emailsAdmins);
+        
+        /*
+         * Формируем объект InfoCarrier
+         */
+        InfoCarrier carrier = new InfoCarrier();
+        carrier.setContactCarrier(jsonMainObject.get("fio") == null ? null : jsonMainObject.get("fio").toString());
+        carrier.setDateTimeCreate(Timestamp.valueOf(LocalDateTime.now()));
+        carrier.setCargoTransportMarket(market);
+        carrier.setOwnershipType(ownership);
+        carrier.setCarrierName(organization);
+        carrier.setOfferedVehicleCount(String.valueOf(vehicleCount));
+        carrier.setBodyType(bodyTypesString);
+        carrier.setHasTailLift(tailLift);
+        carrier.setHasNavigation(navigation);
+        carrier.setVehicleLocationCity(city);
+        carrier.setContactPhone(phone);
+        carrier.setEmailAddress(email);
+        carrier.setOfferedRate(null); // в JSON нет тарифа — либо задай по умолчанию
+        carrier.setVehicleCapacity(capacitiesString);
+        carrier.setPalletCapacity(palletsString);
+        carrier.setNotes(comment);
+        carrier.setApplicationStatus("Новая"); // например, дефолтный статус
+        carrier.setCarrierContactDate(null); // пока не звонили
+        carrier.setStatus(10);
+        infoCarrierService.save(carrier);
 
         response.put("status", "200");
         response.put("message", "Ваша заявка принята, спасибо.");

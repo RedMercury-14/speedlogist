@@ -194,6 +194,70 @@
 		</div>
 	</div>
 
+	<!-- Модальное окно для регистрации и редактирования машины на Прилесье -->
+	<div class="modal fade" id="regTruckInPrilesieModal" tabindex="-1" data-backdrop="static" data-keyboard="false" aria-labelledby="regTruckInPrilesieModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-xl">
+			<div class="modal-content">
+				<div class="modal-header align-items-center bg-primary text-white">
+					<h5 class="modal-title" id="regTruckInPrilesieModalLabel">Регистрация машины на Прилесье</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<form id="regTruckInPrilesieForm">
+					<div class="modal-body">
+						<textarea class="form-control border-0 bg-transparent mb-2 h-auto" rows="3" name="routeDirection" disabled></textarea>
+						<input type="number" name="idRoute" hidden>
+						<input type="number" name="actionType" hidden>
+						<div class="text-center text-muted h5">Укажите продежуток времени для заезда машины:</div>
+						<div class="d-flex justify-content-center">
+							<div class="input-row-container mr-2">
+								<label class="text-muted font-weight-bold">С</label>
+								<input class="form-control" type="datetime-local" name="dateStart" required>
+							</div>
+							<div class="input-row-container">
+								<label class="text-muted font-weight-bold">по</label>
+								<input class="form-control" type="datetime-local" name="dateEnd" required>
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">Отменить</button>
+						<button type="submit" class="btn btn-primary">Сохранить данные</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<!-- Модалка -->
+	<div class="modal fade" id="prilesieDataModal" tabindex="-1" role="dialog" aria-labelledby="prilesieDataModalLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header bg-color">
+					<h5 class="modal-title" id="prilesieDataModalLabel">Информация о въезде</h5>
+					<button type="button" class="close text-white" data-dismiss="modal" aria-label="Закрыть">
+					<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<p><strong>ID:</strong> <span id="modal-id"></span></p>
+					<p><strong>Номер машины:</strong> <span id="modal-plate"></span></p>
+					<p><strong>Поставщик:</strong> <span id="modal-supplier"></span></p>
+					<p><strong>Склад:</strong> <span id="modal-warehouse"></span></p>
+					<p><strong>Рампа:</strong> <span id="modal-ramp"></span></p>
+					<p><strong>Начало:</strong> <span id="modal-start"></span></p>
+					<p><strong>Конец:</strong> <span id="modal-end"></span></p>
+					<p><strong>SMS:</strong> <span id="modal-sms"></span></p>
+					<p><strong>Дата въезда:</strong> <span id="modal-date-on"></span></p>
+					<p><strong>Дата выезда:</strong> <span id="modal-date-exit"></span></p>
+					<p><strong>Статус выезда:</strong> <span id="modal-exit-ok"></span></p>
+				</div>
+			</div>
+		</div>
+	</div>
+
+
 	<script src='${pageContext.request.contextPath}/resources/js/mainPage/nav-fixed-top.js'></script>
 	<script	src="${pageContext.request.contextPath}/resources/js/internationalManagerNew.js" type="module"></script>
 </body>

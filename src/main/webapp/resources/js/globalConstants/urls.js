@@ -493,13 +493,16 @@ export const getTenderPreviewBaseUrl = '/speedlogist/api/get-tender-preview/'
 
 
 ///////////////////////////////////////////////
-// Форма отправки данных о сотрудничестве
+// Заявки на сотрудничество от перевозчиков
 ///////////////////////////////////////////////
 export const createCarrierApplicationUrl = '/speedlogist/api/carrier-application/create'
+export const getCarrierApplicationListUrl = '/speedlogist/api/logistics/info-carrier/list'
+
+
 
 
 ///////////////////////////////////////////////
-// 
+// Управление разрешениями товар-склад
 ///////////////////////////////////////////////
 export const getAllProductControlUrl = '/speedlogist/api/procurement/product-control/getAll'
 export const loadProductControlExcelUrl = '/speedlogist/api/procurement/product-control/load'

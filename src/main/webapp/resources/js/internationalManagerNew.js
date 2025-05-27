@@ -456,6 +456,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 		routeImgContainer.innerHTML = ''
 	})
 
+	regTruckInPrilesieForm.addEventListener('submit', regTruckFormSubmitHandler)
+
 	// копирование логина и пароля для PBI
 	const pbLoginSpan = document.querySelector('#pbLogin')
 	const pbPassSpan = document.querySelector('#pbPass')
@@ -609,6 +611,15 @@ function gridTableClickHandler(e) {
 		showRouteInfoPopup(route)
 		return
 	}
+
+	if (target.id === 'objectPrilesieLink') {
+		e.preventDefault()
+		// получить id объекта
+		// получить данные через api
+		// открыть модалку с данными
+		// openPrilesieDataModal()
+		return
+	}
 }
 
 // отображение модального окна с информацией об ивенте
@@ -687,6 +698,33 @@ function createRouteInfoHTML(route) {
 				<span>${finishPrice} ${startCurrency}</span>
 			</div>
 		`
+}
+
+function regTruckFormSubmitHandler(e) {
+	e.preventDefault()
+
+	const formData = new FormData(e.target)
+	const data = Object.fromEntries(formData)
+
+	console.log(data)
+
+	
+}
+
+function openPrilesieDataModal(data) {
+	document.getElementById("modal-id").textContent = data.id;
+	document.getElementById("modal-plate").textContent = data.plate_number;
+	document.getElementById("modal-supplier").textContent = data.supplier;
+	document.getElementById("modal-warehouse").textContent = data.warehouse;
+	document.getElementById("modal-ramp").textContent = data.ramp;
+	document.getElementById("modal-start").textContent = new Date(data.start_time).toLocaleString();
+	document.getElementById("modal-end").textContent = new Date(data.end_time).toLocaleString();
+	document.getElementById("modal-sms").textContent = data.sms_number;
+	document.getElementById("modal-date-on").textContent = new Date(data.access_log.date_time_on).toLocaleString();
+	document.getElementById("modal-date-exit").textContent = data.access_log.date_time_exit ? new Date(data.access_log.date_time_exit).toLocaleString() : "—";
+	document.getElementById("modal-exit-ok").textContent = data.access_log.exit_ok ? "Да" : "Нет";
+
+	$('#prilesieDataModal').modal('show');
 }
 
 // -------------------------------------------------------------------------------//
@@ -860,6 +898,24 @@ function getContextMenuItems(params) {
 			},
 		},
 		"separator",
+		// {
+		// 	disabled: isObserver(role) || !routeData.truckInfo || status === '5',
+		// 	name: `Регистрация машины на Прилесье`,
+		// 	icon: uiIcons.truck,
+		// 	action: () => {
+		// 		regTruckInPrilesieForm.idRoute.value = idRoute
+		// 		regTruckInPrilesieForm.actionType.value = 'create'
+		// 		regTruckInPrilesieForm.routeDirection.textContent = routeDirection
+
+		// 		if (routeData.idObjectPrilesie) {
+		// 			regTruckInPrilesieForm.actionType.value = 'edit'
+		// 			regTruckInPrilesieForm.dateStart.value = routeData.dateStartPrilesie
+		// 			regTruckInPrilesieForm.dateEnd.value = routeData.dateEndPrilesie
+		// 		}
+		// 		$('#regTruckInPrilesieModal').modal('show')
+		// 	},
+		// },
+		// "separator",
 		{
 			name: `Файлы`,
 			icon: uiIcons.files,
@@ -1963,8 +2019,8 @@ async function showGalleryItems(galleryItems) {
 						downloadLink: src,
 						title: fileName,
 						alt: fileName,
-						width: 500,
-						height: 500,
+						width: 240,
+						height: 240,
 						description: description,
 					}
 				}

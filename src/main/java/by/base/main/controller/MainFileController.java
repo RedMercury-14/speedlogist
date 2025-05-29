@@ -4,14 +4,25 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
@@ -22,6 +33,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 
+import org.apache.tika.Tika;
 import by.base.main.dto.*;
 import by.base.main.model.*;
 import by.base.main.service.*;
@@ -30,11 +42,18 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -43,6 +62,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.util.UriUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -52,6 +72,7 @@ import com.google.gson.JsonSerializer;
 
 import by.base.main.aspect.TimedExecution;
 import by.base.main.controller.ajax.MainRestController;
+import by.base.main.dto.ImageDTO;
 import by.base.main.dto.MarketDataFor330Request;
 import by.base.main.dto.MarketDataFor330Responce;
 import by.base.main.dto.MarketDataForRequestDto;
@@ -63,13 +84,16 @@ import by.base.main.dto.ReportRow;
 import by.base.main.dto.RoadTransportDto;
 import by.base.main.model.Act;
 import by.base.main.model.Message;
+import by.base.main.model.MyFile;
 import by.base.main.model.Order;
 import by.base.main.model.OrderProduct;
 import by.base.main.model.Rotation;
 import by.base.main.model.Route;
 import by.base.main.model.RouteHasShop;
 import by.base.main.model.Truck;
+import by.base.main.model.User;
 import by.base.main.service.ActService;
+import by.base.main.service.FileService;
 import by.base.main.service.MarketAPI;
 import by.base.main.service.OrderProductService;
 import by.base.main.service.OrderService;
@@ -77,6 +101,7 @@ import by.base.main.service.RotationService;
 import by.base.main.service.RouteService;
 import by.base.main.service.ServiceException;
 import by.base.main.service.TruckService;
+import by.base.main.service.UserService;
 import by.base.main.service.util.CustomJSONParser;
 import by.base.main.service.util.MailService;
 import by.base.main.service.util.OrderCreater;
@@ -84,7 +109,7 @@ import by.base.main.service.util.POIExcel;
 
 //@Controller
 @RestController
-@RequestMapping(path = "file")
+@RequestMapping(path = "file", produces = "application/json")
 public class MainFileController {
 	
 	@Autowired
@@ -118,15 +143,13 @@ public class MainFileController {
 	private ActService actService;
 
 	@Autowired
+	private FileService fileService;
+
+	@Autowired
+	private UserService userService;
+
+	@Autowired
 	private OrderCreater orderCreater;
-	private OrderCreater orderCreater;
-
-    @Autowired
-    private ActService actService;
-
-    @Autowired
-    private RotationService rotationService;
-
 	private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(Date.class, new JsonSerializer<Date>() {
 				@Override
@@ -135,7 +158,254 @@ public class MainFileController {
 				}
             })
             .create();
+	
+	/**
+	 * Сохранение нескольких  файлов с привязкой к маршруту
+	 * @param file
+	 * @return
+	 * @throws IOException
+	 */
+	@RequestMapping(value = "/loadArrayFilesForPrilesie", method = RequestMethod.POST, consumes = {MediaType.MULTIPART_FORM_DATA_VALUE })
+	@TimedExecution
+	public Map<String, Object> loadArrayFileForPrilesie(@RequestParam("files") MultipartFile[] files) throws IOException {
+	    Map<String, Object> response = new HashMap<>();
+	    List<String> uploadedFileNames = new ArrayList<>();
 
+	    Tika tika = new Tika();
+
+	    for (MultipartFile file : files) {
+
+
+		    String detectedType = tika.detect(file.getInputStream());
+		    System.out.println(detectedType);
+
+//		    if (!detectedType.startsWith("image/")) {
+//		        throw new IllegalArgumentException("Подозрительный тип файла: " + detectedType);
+//		    }
+//
+//	        if (!file.isEmpty()) {
+//	        	fileService.saveFileByRoute(file, idRoute, getThisUser());
+//	            uploadedFileNames.add(file.getOriginalFilename());
+//	        }
+	    }
+
+	    response.put("uploadedFiles", uploadedFileNames);
+	    response.put("total", uploadedFileNames.size());
+	    return response;
+	}
+
+	/**
+	 * Возвращает изображения по idRoute в формате json, изображения в base64
+	 * @param idRoute
+	 * @return
+	 */
+	@GetMapping("/images/base64/byRoute/{idRoute}")
+	public ResponseEntity<List<ImageDTO>> getBase64ImagesByRoute(@PathVariable Integer idRoute) {
+	    List<MyFile> files = fileService.getFilesByIdRoute(idRoute);
+
+	    List<ImageDTO> images = files.stream()
+	        .filter(f -> f.getContentType() != null && f.getContentType().startsWith("image/"))
+	        .map(f -> new ImageDTO(
+	            f.getFileName(),
+	            f.getContentType(),
+	            Base64.getEncoder().encodeToString(f.getData())
+	        ))
+	        .collect(Collectors.toList());
+
+	    return ResponseEntity.ok(images);
+	}
+
+
+	/**
+	 * скачка одного файла
+	 * @param id
+	 * @return
+	 */
+	@GetMapping("/downloadFileByRoute/zip/{id}")
+	public void downloadMultipleFilesAsZip(@PathVariable Integer id, HttpServletResponse response) throws IOException {
+
+    	List<MyFile> files = fileService.getFilesByIdRoute(id);
+
+        response.setContentType("application/zip");
+        response.setHeader("Content-Disposition", "attachment; filename=\"files.zip\"");
+
+        try (ZipOutputStream zipOut = new ZipOutputStream(response.getOutputStream())) {
+            for (MyFile file : files) {
+                ZipEntry zipEntry = new ZipEntry(file.getFileName());
+                zipOut.putNextEntry(zipEntry);
+                zipOut.write(file.getData());
+                zipOut.closeEntry();
+            }
+            zipOut.finish();
+        }
+    }
+
+	/**
+	 * Метод, который отдаёт ID ИЗОБРАЖЕНИЙ по маршруту
+	 * @param idRoute
+	 * @return
+	 */
+	@GetMapping("/images/byRoute/{idRoute}")
+	@TimedExecution
+	public ResponseEntity<List<Long>> getImageIdsByRoute(@PathVariable Integer idRoute) {
+	    List<MyFile> files = fileService.getFilesByIdRoute(idRoute);
+	    List<Long> imageIds = files.stream()
+	            .filter(f -> f.getContentType() != null && f.getContentType().startsWith("image/"))
+	            .map(MyFile::getIdFiles)
+	            .collect(Collectors.toList());
+
+	    return ResponseEntity.ok(imageIds);
+	}
+
+	/**
+	 * Метод, который отдаёт ID файлов по маршруту
+	 * @param idRoute
+	 * @return
+	 */
+	@GetMapping("/files/byRoute/{idRoute}")
+	@TimedExecution
+	public ResponseEntity<List<Long>> getFilesIdsByRoute(@PathVariable Integer idRoute) {
+	    List<MyFile> files = fileService.getFilesByIdRoute(idRoute);
+	    List<Long> imageIds = files.stream()
+	            .filter(f -> f.getContentType() != null)
+	            .map(MyFile::getIdFiles)
+	            .collect(Collectors.toList());
+
+	    return ResponseEntity.ok(imageIds);
+	}
+
+	/**
+	 * Сохранение одного файла БД
+	 * @param file
+	 * @return
+	 * @throws IOException
+	 */
+	@RequestMapping(value = "/loadFileTest", method = RequestMethod.POST, consumes = {MediaType.MULTIPART_FORM_DATA_VALUE })
+	@TimedExecution
+	public Map<String, Object> handleFileUpload(@RequestParam("excel") MultipartFile file) throws IOException {
+	    Map<String, Object> response = new HashMap<>();
+	    fileService.saveMultipartFile(file);
+	    response.put("fileName", file.getOriginalFilename());
+	    response.put("size", file.getSize());
+	    response.put("contentType", file.getContentType());
+	    response.put("success", true);
+	    return response;
+	}
+
+	/**
+	 * Сохранение файла с привязкой к маршруту
+	 * @param file
+	 * @return
+	 * @throws IOException
+	 */
+	@RequestMapping(value = "/loadFileForRoute", method = RequestMethod.POST, consumes = {MediaType.MULTIPART_FORM_DATA_VALUE })
+	@TimedExecution
+	public Map<String, Object> loadFileForRoute(@RequestParam("file") MultipartFile file, @RequestParam("idRoute") Integer idRoute) throws IOException {
+	    Map<String, Object> response = new HashMap<>();
+	    Long id = fileService.saveFileByRoute(file, idRoute, getThisUser());
+	    response.put("status", "200");
+	    response.put("idFile", id);
+	    return response;
+	}
+
+	/**
+	 * Сохранение нескольких  файлов с привязкой к маршруту
+	 * @param file
+	 * @return
+	 * @throws IOException
+	 */
+	@RequestMapping(value = "/loadArrayFilesForRoute", method = RequestMethod.POST, consumes = {MediaType.MULTIPART_FORM_DATA_VALUE })
+	@TimedExecution
+	public Map<String, Object> loadArrayFileForRoute(@RequestParam("files") MultipartFile[] files, @RequestParam("idRoute") Integer idRoute) throws IOException {
+	    Map<String, Object> response = new HashMap<>();
+	    List<String> uploadedFileNames = new ArrayList<>();
+
+	    for (MultipartFile file : files) {
+	        if (!file.isEmpty()) {
+	        	fileService.saveFileByRoute(file, idRoute, getThisUser());
+	            uploadedFileNames.add(file.getOriginalFilename());
+	        }
+	    }
+
+	    response.put("uploadedFiles", uploadedFileNames);
+	    response.put("total", uploadedFileNames.size());
+	    return response;
+	}
+
+	/**
+	 * охранение нескольких файлов в БД
+	 * @param files
+	 * @return
+	 * @throws IOException
+	 */
+	@RequestMapping(value = "/loadArrayFiles", method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public Map<String, Object> handleMultipleFilesUpload(@RequestParam("files") MultipartFile[] files) throws IOException {
+	    Map<String, Object> response = new HashMap<>();
+	    List<String> uploadedFileNames = new ArrayList<>();
+
+	    for (MultipartFile file : files) {
+	        if (!file.isEmpty()) {
+	            fileService.saveMultipartFile(file);
+	            uploadedFileNames.add(file.getOriginalFilename());
+	        }
+	    }
+
+	    response.put("status", "200");
+	    response.put("uploadedFiles", uploadedFileNames);
+	    response.put("total", uploadedFileNames.size());
+	    response.put("success", true);
+	    return response;
+	}
+
+	/**
+	 * скачка одного файла
+	 * @param id
+	 * @return
+	 */
+//	@GetMapping("/downloadFile/{id}")
+//    public ResponseEntity<byte[]> downloadFile(@PathVariable Long id) {
+//
+//    	MyFile file = fileService.getFileById(id);
+//
+//        if (file == null) {
+//            return ResponseEntity.noContent().build();
+//        }
+//
+//        return ResponseEntity.ok()
+//                .contentType(MediaType.parseMediaType(file.getContentType()))
+//                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFileName() + "\"")
+//                .body(file.getData());
+//    }
+	@GetMapping("/downloadFile/{id}")
+	public ResponseEntity<byte[]> downloadFile(@PathVariable Long id) {
+	    MyFile file = fileService.getFileById(id);
+
+	    if (file == null) {
+	        return ResponseEntity.noContent().build();
+	    }
+
+	    HttpHeaders headers = new HttpHeaders();
+	    headers.setContentType(MediaType.parseMediaType(file.getContentType()));
+//	    headers.setContentDisposition(ContentDisposition.attachment().filename(file.getFileName()).build());
+	    headers.setContentDisposition(ContentDisposition.attachment().filename(file.getFileName(), StandardCharsets.UTF_8).build());
+	    headers.setCacheControl("public, max-age=3600");
+	    return new ResponseEntity<>(file.getData(), headers, HttpStatus.OK);
+	}
+
+    @PostMapping("/deleteFile")
+    public Map<String, Object> deleteFileById(@RequestParam("id") Long id) {
+    	Map<String, Object> responce = new HashMap<String, Object>();
+        boolean deleted = fileService.deleteByIdFromStatus(id, getThisUser());
+        if (deleted) {
+        	responce.put("status", "200");
+        	responce.put("message", "Файл успешно удалён");
+            return responce;
+        } else {
+        	responce.put("status", "100");
+        	responce.put("message", "Файл не найден");
+            return responce;
+        }
+    }
 
 	/**
      * @param request
@@ -320,324 +590,43 @@ public class MainFileController {
 	        e.printStackTrace();
 	    }
 	}
-
-    /**
-     * Метод отвечает за скачивание документа инструкции для ротаций
-     * @param request
-     * @param response
-     * @return
-     * @throws IOException
-     * @author Ira
-     */
-    @RequestMapping("/rotations/download/instruction-rotations")
-    public void downloadRotationsHelp(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String appPath = request.getServletContext().getRealPath("");
-        //File file = new File(appPath + "resources/others/Speedlogist.apk");
-        response.setHeader("content-disposition", "attachment;filename="+"instruction-rotations.docx");
-        response.setContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
-        FileInputStream in = null;
-        OutputStream out = null;
-        try {
-            // Прочтите файл, который нужно загрузить, и сохраните его во входном потоке файла
-            in = new FileInputStream(appPath + "resources/others/docs/instruction-rotations.docx");
-            //  Создать выходной поток
-            out = response.getOutputStream();
-            //  Создать буфер
-            byte buffer[] = new byte[1024];
-            int len = 0;
-            //  Прочитать содержимое входного потока в буфер в цикле
-            while ((len = in.read(buffer)) > 0) {
-                out.write(buffer, 0, len);
-            }
-            in.close();
-            out.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }finally {
-            in.close();
-            out.close();
-        }
-    }
-
-    /**
-     * @param request
-     * @param response
-     * @param dateStart
-     * @param dateFinish
-     * @throws IOException
-     * @throws ParseException
-     * Метод для создания и скачивания excel-файла транспортного отчёта
-     * за заданный период времени
-     * @author Ira
-     */
-    @RequestMapping("/get-road-tarnsport-report/{dateStart}&{dateFinish}")
-    @TimedExecution
-    public void getRoadTransportReport(HttpServletRequest request, HttpServletResponse response,
-                                  @PathVariable String dateStart,
-                                  @PathVariable String dateFinish) throws IOException, ParseException {
-        Date dateFrom = Date.valueOf(dateStart);
-        Date dateTo = Date.valueOf(dateFinish);
-        LocalDate startDate = dateFrom.toLocalDate();
-        LocalDate finishDate = dateTo.toLocalDate();
-
-        java.util.Date routeService1 = new java.util.Date();
-        List <Route> routes = routeService.getRouteListByDatesCreate(dateFrom, dateTo);
-        java.util.Date routeService2 = new java.util.Date();
-        System.out.println(routeService2.getTime() - routeService1.getTime() + " ms - get route list");
-
-        List<String> idRoutes = new ArrayList<>();
-        for (Route route : routes) {
-            idRoutes.add(route.getIdRoute().toString());
-        }
-
-        List<Act> acts = actService.getActsByDates(startDate, finishDate);
-        Set<Act> actsFiltered = new HashSet<>();
-        for (String id : idRoutes) {
-            actsFiltered.addAll(acts.stream().filter(a -> a.getIdRoutes().contains(id)).collect(Collectors.toList()));
-        }
-
-        Map<String, List<Message>> messageMap = routeService.routesWithMessages(idRoutes);
-        List<RoadTransportDto> roadTransportDTOList = new ArrayList<>();
-
-        java.util.Date forRoute1 = new java.util.Date();
-        for (Route route : routes) {
-            RoadTransportDto roadTransportDTO = new RoadTransportDto();
-
-//            java.util.Date actService1 = new java.util.Date();
-
-            List<Act> actsLong = actService.getActsByRouteId(route.getIdRoute().toString(), startDate, finishDate);
-//            java.util.Date actService2 = new java.util.Date();
-//            System.out.println(actService2.getTime() - actService1.getTime() + " ms - act service");
-//            Timestamp timestamp = null;
-            for (Act act: actsFiltered) {
-                if (act.getIdRoutes().contains(route.getIdRoute().toString())) {
-                    if (act.getDocumentsArrived() != null) {
-//                        timestamp = new Timestamp(act.getDocumentsArrived().getTime());
-                        roadTransportDTO.setDocumentsArrived(act.getDocumentsArrived());
-                        break;
-                    }
-                }
-            }
-//            if (!acts.isEmpty() && acts.get(0).getDocumentsArrived() != null) {
-//                roadTransportDTO.setDocumentsArrived(acts.get(0).getDocumentsArrived());
-//            }
-            if (route.getWay() != null) {
-                if (route.getWay().equals("Импортный") || route.getWay().equals("Импорт") || route.getWay().equals("РБ")) {
-                    roadTransportDTO.setImportOrExport("Импорт");
-                } else if (route.getWay().equals("Экспортный") || route.getWay().equals("Экспорт")) {
-                    roadTransportDTO.setImportOrExport("Экспорт");
-                } else if (route.getWay().equals("АХО")) {
-                    roadTransportDTO.setImportOrExport("АХО");
-                }
-            }
-
-            roadTransportDTO.setRouteId(route.getIdRoute().toString());
-
-            if (!route.getOrders().isEmpty()){
-                Set<Order> orders = route.getOrders();
-                List<String> requestIDs = new ArrayList<>();
-                StringBuilder builder = new StringBuilder();
-
-                for (Order order : orders) {
-                    requestIDs.add(order.getIdOrder().toString());
-                }
-                builder.append(String.join(", ", requestIDs));
-                roadTransportDTO.setRequestId(builder.toString());
-                roadTransportDTO.setSupplier(route.getOrders().stream().toList().get(0).getCounterparty());
-                roadTransportDTO.setRequestInitiator(route.getOrders().stream().toList().get(0).getManager().split(";")[0]);
-                roadTransportDTO.setDateRequestReceiving(route.getOrders().stream().toList().get(0).getDateCreate());
-                roadTransportDTO.setCargoReadiness(route.getOrders().stream().toList().get(0).getFirstLoadSlot());
-                roadTransportDTO.setLoadingOnRequest(route.getOrders().stream().toList().get(0).getFirstLoadSlot());
-                roadTransportDTO.setUKZ(route.getOrders().stream().toList().get(0).getControl() ? "Необходима сверка УКЗ" : "Нет");
-                Set<RouteHasShop> routeHasShops = route.getRoteHasShop();
-                for (RouteHasShop routeHasShop : routeHasShops) {
-                    if(routeHasShop.getPosition().contains("Выгрузка")){
-                        roadTransportDTO.setUnloadingWarehouse(routeHasShop.getAddress());
-                    }
-                }
-            }
-
-            roadTransportDTO.setResponsibleLogist(route.getLogistInfo() != null ? route.getLogistInfo().split(";")[0] : null);
-            roadTransportDTO.setActualLoading(route.getDateLoadActually());
-            roadTransportDTO.setCarrier(route.getUser() == null ? null : route.getUser().getCompanyName());
-            List<Message> messages = messageMap.get(route.getIdRoute().toString());
-            if (messages != null) {
-                int participants = 0;
-
-                for (Message message: messages) {
-                    if (message.getStatus()!= null && message.getStatus().equals("1")) {
-                        participants++;
-                    }
-                }
-                roadTransportDTO.setTenderParticipants(participants == 0 ? null : String.valueOf(participants));
-            } else {
-                roadTransportDTO.setTenderParticipants(null);
-            }
-
-            if (messageMap.get(route.getIdRoute().toString()) != null) {
-                for (Message message : messageMap.get(route.getIdRoute().toString())) {
-                    if (message.getStatus().equals("1") && message.getIdRoute() != null && message.getCurrency() != null) {
-                        roadTransportDTO.setBid(message.getText());
-                        roadTransportDTO.setBidCurrency(message.getCurrency());
-                        roadTransportDTO.setBidComment(message.getComment());
-                        break;
-                    }
-                }
-            }
-
-            roadTransportDTO.setTruckNumber(route.getTruck() == null ? null : route.getTruck().getNumTruck());
-            roadTransportDTO.setTruckType(route.getTruck() == null ? null : route.getTruck().getTypeTrailer());
-            roadTransportDTO.setTemperature(route.getTemperature());
-            roadTransportDTO.setWeight(route.getTotalCargoWeight());
-            roadTransportDTOList.add(roadTransportDTO);
-        }
-        java.util.Date forRoute2 = new java.util.Date();
-        System.out.println(forRoute2.getTime() - forRoute1.getTime() + " ms - routes filling for");
-
-        String appPath = request.getServletContext().getRealPath("");
-        String folderPath = appPath + "resources/others/roadTransportReport.xlsx";
-
-        java.util.Date poiexcel1 = new java.util.Date();
-
-        try {
-            poiExcel.generateRoadTransportReport(roadTransportDTOList, folderPath);
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        java.util.Date poiexcel2 = new java.util.Date();
-        System.out.println(poiexcel2.getTime() - poiexcel1.getTime() + " ms - excel");
-
-        java.util.Date write1 = new java.util.Date();
-
-        response.setHeader("content-disposition", "attachment;filename="+"roadTransportReport.xlsx");
-        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        try (FileInputStream in = new FileInputStream(appPath + "resources/others/roadTransportReport.xlsx"); OutputStream out = response.getOutputStream()) {
-            // Прочтите файл, который нужно загрузить, и сохраните его во входном потоке файла
-            //  Создать выходной поток
-            //  Создать буфер
-            byte buffer[] = new byte[1024];
-            int len = 0;
-            //  Прочитать содержимое входного потока в буфер в цикле
-            while ((len = in.read(buffer)) > 0) {
-                out.write(buffer, 0, len);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        java.util.Date write2 = new java.util.Date();
-        System.out.println(write2.getTime() - write1.getTime() + " ms - write");
-
-
-    }
-
+	
 	/**
+	 * Метод отвечает за скачивание документа инструкции для ротаций
 	 * @param request
 	 * @param response
-	 * @param dateStart
-	 * @param dateFinish
+	 * @return
 	 * @throws IOException
-	 * @throws ParseException
-	 * Метод для создания и скачивания excel-файла с информацией по статистике ордеров
-	 * по дням недели и общей за заданный период времени
 	 * @author Ira
 	 */
-	@RequestMapping("/get-order-statistic/{dateStart}&{dateFinish}")
-	public void getOrderStatistic(HttpServletRequest request, HttpServletResponse response,
-												 @PathVariable String dateStart,
-												 @PathVariable String dateFinish) throws IOException, ParseException {
-		Map<String, Object> responseMap = new HashMap<>();
-		Date dateFrom = Date.valueOf(dateStart);
-		Date dateTo = Date.valueOf(dateFinish);
-		List<Order> orders = orderService.getOrderByTimeDelivery(dateFrom, dateTo);
-		Map<Long, List<Order>> ordersByContract = new HashMap<>();
-
-		for (Order order: orders) {
-			if (order.getMarketContractType() != null && !order.getMarketContractType().equals("0")) {
-				Long counterpartyContractCode = Long.valueOf(order.getMarketContractType());
-				if (ordersByContract.containsKey(counterpartyContractCode)){
-					ordersByContract.get(counterpartyContractCode).add(order);
-				} else {
-					List<Order> orderList = new ArrayList<>();
-					orderList.add(order);
-					ordersByContract.put(counterpartyContractCode, orderList);
-				}
-			}
-		}
-
-		Map<List<String>, Map<DayOfWeek, Integer>> dailyStatistic = new HashMap<>();
-
-		for (Map.Entry<Long, List<Order>> entry: ordersByContract.entrySet()) {
-			Map<DayOfWeek, Integer> mapForContract = new TreeMap<>();
-			mapForContract.put(DayOfWeek.MONDAY, null);
-			mapForContract.put(DayOfWeek.TUESDAY, null);
-			mapForContract.put(DayOfWeek.WEDNESDAY, null);
-			mapForContract.put(DayOfWeek.THURSDAY, null);
-			mapForContract.put(DayOfWeek.FRIDAY, null);
-			mapForContract.put(DayOfWeek.SATURDAY, null);
-			mapForContract.put(DayOfWeek.SUNDAY, null);
-			Set<LocalDate> checkedDates = new HashSet<>();
-			List<String> key = new ArrayList<>();
-			key.add(entry.getKey().toString());
-			for (Order order: entry.getValue()) {
-				DayOfWeek currentDay = order.getTimeDelivery().toLocalDateTime().getDayOfWeek();
-				LocalDate date = order.getTimeDelivery()
-						.toInstant()
-						.atZone(ZoneId.systemDefault())
-						.toLocalDate();
-				if (!checkedDates.contains(date)) {
-					int counter = mapForContract.get(currentDay) == null ? 0 : mapForContract.get(currentDay);
-					counter++;
-					mapForContract.put(currentDay, counter);
-					checkedDates.add(date);
-				}
-				key.add(order.getCounterparty());
-			}
-
-			dailyStatistic.put(key, mapForContract);
-		}
-
-
-		Map <List<String>, Integer> ordersCount = new HashMap<>();
-		for (Map.Entry<Long, List<Order>> entry: ordersByContract.entrySet()) {
-			Set<LocalDate> checkedDates = new HashSet<>();
-			int count = 0;
-			List<String> key = new ArrayList<>();
-			key.add(entry.getKey().toString());
-			for(Order order: entry.getValue()) {
-				LocalDate date = order.getTimeDelivery()
-						.toInstant()
-						.atZone(ZoneId.systemDefault())
-						.toLocalDate();
-				if (!checkedDates.contains(date)) {
-					count++;
-					checkedDates.add(date);
-				}
-				key.add(order.getCounterparty());
-
-			}
-			ordersCount.put(key, count);
-		}
-
-		poiExcel.createExcelOrderStatistic(dateFrom, dateTo, ordersCount, dailyStatistic);
-
-		String appPath = request.getServletContext().getRealPath("");
-
-		response.setHeader("content-disposition", "attachment;filename="+"order-statistic.xlsx");
-		response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        try (FileInputStream in = new FileInputStream(appPath + "resources/others/order-statistic.xlsx"); OutputStream out = response.getOutputStream()) {
-            // Прочтите файл, который нужно загрузить, и сохраните его во входном потоке файла
-            //  Создать выходной поток
-            //  Создать буфер
-            byte buffer[] = new byte[1024];
-            int len = 0;
-            //  Прочитать содержимое входного потока в буфер в цикле
-            while ((len = in.read(buffer)) > 0) {
-                out.write(buffer, 0, len);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+	@RequestMapping("/rotations/download/instruction-rotations")
+	public void downloadRotationsHelp(HttpServletRequest request, HttpServletResponse response) throws IOException {
+	    String appPath = request.getServletContext().getRealPath("");
+	    //File file = new File(appPath + "resources/others/Speedlogist.apk");
+	    response.setHeader("content-disposition", "attachment;filename="+"instruction-rotations.docx");
+	    response.setContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+	    FileInputStream in = null;
+	    OutputStream out = null;
+	    try {
+	        // Прочтите файл, который нужно загрузить, и сохраните его во входном потоке файла
+	        in = new FileInputStream(appPath + "resources/others/docs/instruction-rotations.docx");
+	        //  Создать выходной поток
+	        out = response.getOutputStream();
+	        //  Создать буфер
+	        byte buffer[] = new byte[1024];
+	        int len = 0;
+	        //  Прочитать содержимое входного потока в буфер в цикле
+	        while ((len = in.read(buffer)) > 0) {
+	            out.write(buffer, 0, len);
+	        }
+	        in.close();
+	        out.close();
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }finally {
+	        in.close();
+	        out.close();
+	    }
 	}
 	
     @RequestMapping(value="/echo", method=RequestMethod.GET)
@@ -1473,7 +1462,11 @@ public class MainFileController {
 	    }
 	}
 
-
+	private User getThisUser() {
+		String name = SecurityContextHolder.getContext().getAuthentication().getName();
+		User user = userService.getUserByLoginV2(name);
+		return user;
+	}
 	
 	private File convertMultiPartToFile(MultipartFile file, HttpServletRequest request ) throws IOException {
 		String appPath = request.getServletContext().getRealPath("");

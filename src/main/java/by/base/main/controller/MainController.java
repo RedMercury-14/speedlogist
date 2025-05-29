@@ -360,15 +360,10 @@ public class MainController {
 	    return "goodAccommodations";
 	}
 
-	@GetMapping("/main/carrier-application-form")
-	public String getCarrierApplicationForm(Model model, HttpServletRequest request) {
-	    return "carrierApplicationForm";
+	@GetMapping("/main/logistics/info-carrier-list")
+	public String getInfoCarrierList(Model model, HttpServletRequest request) {
+		return "infoCarrierList";
 	}
-	
-	 @GetMapping("/main/tender-preview")
-	 public String getTenderPreview(Model model, HttpServletRequest request) {
-		 return "tenderPreview";
-	    }
 	
 	/**
 	 * Переход на страницу с качеством (от двора)

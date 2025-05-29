@@ -1,9 +1,15 @@
 package by.base.main.util;
 
 import by.base.main.model.Message;
+import by.base.main.model.Role;
+import by.base.main.model.User;
+import by.base.main.service.UserService;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
@@ -20,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Component
 public class CarrierTenderWebSocket extends TextWebSocketHandler {
@@ -28,6 +35,24 @@ public class CarrierTenderWebSocket extends TextWebSocketHandler {
 
     private static final Set<WebSocketSession> sessions = ConcurrentHashMap.newKeySet();
     private static ObjectMapper mapper = new ObjectMapper();
+    
+    @Autowired
+    private UserService userService;
+    
+    /**
+     * отправляет всем кроме перевозов
+     * @param message
+     */
+    public void broadcastWithoutCarriers(Message message) {
+        Set<String> userLogins = userSessions.keySet();
+        for (String userLogin : userLogins) {
+            User user = userService.getUserByLogin(userLogin);
+            Set<Role> roles = user.getRoles().stream().filter(r -> r.getAuthority().equals("ROLE_CARRIER")).collect(Collectors.toSet());
+            if(roles.isEmpty()) {
+                sendToUser(userLogin, message);
+            }
+        }
+    }
 
     /**
      * Метод, который используется при начале WebSocket сессии

@@ -50,12 +50,12 @@
 	
 	<bean id="myDataSourceYard" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
 		<property name="driverClassName" value="com.mysql.cj.jdbc.Driver" />
-<!-- 		<property name="jdbcUrl" value="jdbc:mysql://localhost:3306/test?useSSL=false&amp;serverTimezone=Europe/Moscow&amp;characterEncoding=utf8" /> -->
-<!-- 		<property name="username" value="root" /> -->
-<!-- 		<property name="password" value="5001020" /> -->
-		<property name="jdbcUrl" value="jdbc:mysql://10.10.1.21:3306/test?useSSL=false&amp;serverTimezone=Europe/Moscow&amp;characterEncoding=utf8" />
-		<property name="username" value="speedlogist" />
-		<property name="password" value="eps6sh" />
+		<property name="jdbcUrl" value="jdbc:mysql://localhost:3306/test?useSSL=false&amp;serverTimezone=Europe/Moscow&amp;characterEncoding=utf8" />
+		<property name="username" value="root" />
+		<property name="password" value="5001020" />
+<!-- 		<property name="jdbcUrl" value="jdbc:mysql://10.10.1.21:3306/test?useSSL=false&amp;serverTimezone=Europe/Moscow&amp;characterEncoding=utf8" /> -->
+<!-- 		<property name="username" value="speedlogist" /> -->
+<!-- 		<property name="password" value="eps6sh" /> -->
 		
 <!-- 		<property name="jdbcUrl" value="jdbc:mysql://10.200.0.102:3306/test?useSSL=false&amp;serverTimezone=Europe/Moscow&amp;characterEncoding=utf8" /> -->
 <!-- 		<property name="username" value="speedlogist" /> -->
@@ -71,6 +71,20 @@
 
 		<!-- Включаем регистрацию MBeans -->
 		<property name="registerMbeans" value="true" />
+	</bean>
+	
+	<bean id="myDataSourceLogistFile" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
+	    <property name="driverClassName" value="com.mysql.cj.jdbc.Driver" />
+	    <property name="jdbcUrl" value="jdbc:mysql://localhost:3306/logist_file?useSSL=false&amp;serverTimezone=Europe/Moscow&amp;characterEncoding=utf8" />
+	    <property name="username" value="root" />
+	    <property name="password" value="5001020" />
+	    <property name="maximumPoolSize" value="30" />
+	    <property name="minimumIdle" value="5" />
+	    <property name="idleTimeout" value="300000" />
+	    <property name="connectionTimeout" value="30000" />
+	    <property name="maxLifetime" value="1800000" />
+	    <property name="poolName" value="HikariCP-LogistFile" />
+	    <property name="registerMbeans" value="true" />
 	</bean>
 
 	
@@ -101,6 +115,19 @@
 			</props>
 		</property>
 	</bean>
+	
+	<bean id="sessionFactoryLogistFile" class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+	    <property name="dataSource" ref="myDataSourceLogistFile" />
+	    <property name="packagesToScan" value="by.base.main.model" />
+	    <property name="hibernateProperties">
+	        <props>
+	            <prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+	            <prop key="hibernate.show_sql">false</prop>
+	            <prop key="hibernate.connection.autocommit">false</prop>
+	            <prop key="hibernate.ddl-auto">update</prop>
+	        </props>
+	    </property>
+	</bean>
    
    <bean id="XSSFilter" class="by.base.main.util.XSSFilter">
 	</bean>
@@ -111,6 +138,10 @@
     
     <bean id="myTransactionManagerYard" class="org.springframework.orm.hibernate5.HibernateTransactionManager">
 		<property name="sessionFactory" ref="sessionFactoryYard"/>
+	</bean>
+	
+	<bean id="myTransactionManagerLogistFile" class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+	    <property name="sessionFactory" ref="sessionFactoryLogistFile" />
 	</bean>
     
     

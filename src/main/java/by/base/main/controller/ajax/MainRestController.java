@@ -68,6 +68,17 @@ import javax.servlet.http.HttpSession;
 import by.base.main.dto.*;
 import by.base.main.model.*;
 import by.base.main.service.*;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPatch;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -163,6 +174,7 @@ import by.base.main.service.util.ORLExcelException;
 import by.base.main.service.util.OrderCreater;
 import by.base.main.service.util.PDFWriter;
 import by.base.main.service.util.POIExcel;
+import by.base.main.service.util.PrilesieService;
 import by.base.main.service.util.PropertiesUtils;
 import by.base.main.service.util.ReaderSchedulePlan;
 import by.base.main.service.util.ServiceLevel;
@@ -334,6 +346,12 @@ public class MainRestController {
 	@Autowired
 	private GoodAccommodationService goodAccommodationService;
 	
+	@Autowired
+	private InfoCarrierService infoCarrierService;
+	
+	@Autowired
+	private PrilesieService prilesieService;
+	
 	
 	private static String classLog;
 	public static String marketJWT;
@@ -367,6 +385,15 @@ public class MainRestController {
 	@Value("${stockBalance.run}")
 	public Boolean stockBalanceRun;
 	
+	@Value("${api.prilesie.url}")
+	private String SERVER_URL;
+	
+	@Value("${api.prilesie.username}")
+	private String USERNAME;
+	
+	@Value("${api.prilesie.passeord}")
+	private String PASSWORD;
+	
 	@PostConstruct
     public void init() {
 		marketUrl = marketUrlProp;
@@ -386,6 +413,234 @@ public class MainRestController {
 	@Autowired
     private ServletContext servletContext;
 	
+	/**
+	 * <br>Сохраняет машину в прилесье</br>.
+	 * @author Ira
+	 */
+	@PostMapping("/save-route-to-prilesie")
+	public Map<String, Object> saveRouteToPrilesie(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+	    Map<String, Object> response = new HashMap<>();
+	    JsonObject jsonObject = new JsonObject();
+	    String serverUrlMethod = SERVER_URL+"/allowedlist/";
+
+
+	    String credentials = USERNAME + ":" + PASSWORD;
+	    String credentialsBasic = "Basic " + Base64.getEncoder().encodeToString(credentials.getBytes(StandardCharsets.UTF_8));
+
+	    JSONParser parser = new JSONParser();
+	    JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+	    Integer routeId = jsonMainObject.get("idRoute") == null ? null : Integer.parseInt(jsonMainObject.get("idRoute").toString());
+	    DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+	    LocalDateTime startTime = LocalDateTime.parse(jsonMainObject.get("dateTimeStartPrilesie").toString(), dtf).withSecond(0).withNano(0);
+	    LocalDateTime endTime = LocalDateTime.parse(jsonMainObject.get("dateTimeEndPrilesie").toString(), dtf).withSecond(0).withNano(0);
+
+	    Route route = routeService.getRouteById(routeId);
+	    String carNumber = prilesieService.transliterateToVisualLatin(route.getTruck().getNumTruck()).replaceAll("[ *-]+", "");
+	    String driverPhone = route.getDriver().getTelephone() == null ? "" : prilesieService.phoneConverter(route.getDriver().getTelephone());
+	    Integer warehouse = null;
+	    Integer allowCompany = null;
+	    List<Order> orders = route.getOrders().stream().collect(Collectors.toList());
+
+	    if (!orders.isEmpty()) {
+	        if (orders.get(0).getNumStockDelivery().equals("1800")) {
+	            warehouse = 7;
+	            allowCompany = 15;
+	        } else if (orders.get(0).getNumStockDelivery().equals("1700")) {
+	            warehouse = 5;
+	            allowCompany = 10;
+	        } else {
+	            response.put("status", "100");
+	            response.put("message", "Данная функция работает только для 1700 и 1800 склада");
+	            return response;
+	        }
+	    }
+	    String supplier = route.getRouteDirection().split(">")[0].substring(1);
+
+	    jsonObject.addProperty("id", routeId);
+	    jsonObject.addProperty("plate_number", carNumber);
+	    jsonObject.addProperty("sms_number", driverPhone);
+	    jsonObject.addProperty("start_time", startTime.toString());
+	    jsonObject.addProperty("end_time", endTime.toString());
+	    jsonObject.addProperty("status", 2);
+	    jsonObject.addProperty("allow_company", allowCompany);
+	    jsonObject.addProperty("warehouse", warehouse);
+	    jsonObject.addProperty("ramp", 20);
+	    jsonObject.addProperty("supplier", supplier);
+
+	    Gson gson = new Gson();
+	    String jsonData = gson.toJson(jsonObject);
+	    StringEntity entity = new StringEntity(jsonData, ContentType.APPLICATION_JSON);
+
+	    CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+	    HttpPost httpPost = new HttpPost(serverUrlMethod);
+	    httpPost.setEntity(entity);
+	    httpPost.setHeader("Authorization", credentialsBasic);
+	    httpPost.setHeader("Accept", "application/json");
+	    httpPost.setHeader("Content-type", "application/json");
+	    CloseableHttpResponse httpResponse = httpClient.execute(httpPost);
+
+	    int statusCode = httpResponse.getStatusLine().getStatusCode();
+	    HttpEntity responseEntity = httpResponse.getEntity();
+	    String responseBody = EntityUtils.toString(responseEntity, "UTF-8");
+	    JSONObject jsonResponseObject = (JSONObject) parser.parse(responseBody);
+	    if (statusCode >= 200 && statusCode < 300) {
+	        Long idObjectPrilesie = jsonResponseObject.get("id") == null ? null : Long.parseLong(jsonResponseObject.get("id").toString());
+	        if (idObjectPrilesie == null) {
+	            response.put("status", "100");
+	            response.put("message", "Объект не был сохранён");
+	            return response;
+	        }
+	        route.setIdObjectPrilesie(idObjectPrilesie);
+	        Timestamp timestampStartTime = Timestamp.valueOf(startTime);
+	        route.setDateTimeStartPrilesie(timestampStartTime);
+	        Timestamp timestampEndTime = Timestamp.valueOf(endTime);
+	        route.setDateTimeEndPrilesie(timestampEndTime);
+	        routeService.updateRoute(route);
+	        response.put("status", "200");
+	        response.put("idObjectPrilesie", idObjectPrilesie);
+	        response.put("route", route);
+	        return response;
+	    } else {
+	        String prilesieresponse = jsonResponseObject.get("error").toString();
+	        response.put("status", "100");
+	        response.put("message", "Ответ с Прилесья: " + prilesieresponse);
+	        return response;
+	    }
+
+	}
+	
+	/**
+	 * <br>Обновляет в прилесье данные о времени для машины</br>.
+	 * @author Ira
+	 */
+	@PostMapping("/update-route-to-prilesie")
+	public Map<String, Object> updateRouteToPrilesie(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+		String serverUrlMethod = SERVER_URL+"/allowedlist/";
+
+	    Map<String, Object> response = new HashMap<>();
+
+	    JSONParser parser = new JSONParser();
+	    JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+	    Integer routeId = jsonMainObject.get("idRoute") == null ? null : Integer.parseInt(jsonMainObject.get("idRoute").toString());
+	    DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+	    LocalDateTime startTime = LocalDateTime.parse(jsonMainObject.get("dateTimeStartPrilesie").toString(), dtf).withSecond(0).withNano(0);
+	    LocalDateTime endTime = LocalDateTime.parse(jsonMainObject.get("dateTimeEndPrilesie").toString(), dtf).withSecond(0).withNano(0);
+	    Route route = routeService.getRouteById(routeId);
+	    String carNumber = prilesieService.transliterateToVisualLatin(route.getTruck().getNumTruck()).replaceAll("[ *-]+", "");
+	    String driverPhone = route.getDriver().getTelephone() == null ? "" : prilesieService.phoneConverter(route.getDriver().getTelephone());
+	    Integer warehouse = null;
+	    Integer allowCompany = null;
+	    List<Order> orders = route.getOrders().stream().collect(Collectors.toList());
+
+	    if (!orders.isEmpty()) {
+	        if (orders.get(0).getNumStockDelivery().equals("1800")) {
+	            warehouse = 7;
+	            allowCompany = 15;
+	        } else if (orders.get(0).getNumStockDelivery().equals("1700")) {
+	            warehouse = 5;
+	            allowCompany = 10;
+	        }
+	    }
+	    String supplier = route.getRouteDirection().split(">")[0].substring(1);
+
+	    JsonObject jsonObjectForPrilesie = new JsonObject();
+	    jsonObjectForPrilesie.addProperty("id", routeId);
+	    jsonObjectForPrilesie.addProperty("plate_number", carNumber);
+	    jsonObjectForPrilesie.addProperty("sms_number", driverPhone);
+	    jsonObjectForPrilesie.addProperty("start_time", startTime.toString());
+	    jsonObjectForPrilesie.addProperty("end_time", endTime.toString());
+	    jsonObjectForPrilesie.addProperty("status", 2);
+	    jsonObjectForPrilesie.addProperty("allow_company", allowCompany);
+	    jsonObjectForPrilesie.addProperty("warehouse", warehouse);
+	    jsonObjectForPrilesie.addProperty("ramp", 20);
+	    jsonObjectForPrilesie.addProperty("supplier", supplier);
+
+	    Gson gson = new Gson();
+	    String jsonData = gson.toJson(jsonObjectForPrilesie);
+	    StringEntity entity = new StringEntity(jsonData, ContentType.APPLICATION_JSON);
+
+	    CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+	    String credentials = USERNAME + ":" + PASSWORD;
+	    String credentialsBasic = "Basic " + Base64.getEncoder().encodeToString(credentials.getBytes(StandardCharsets.UTF_8));
+	    HttpPatch httpPatch = new HttpPatch(serverUrlMethod + route.getIdObjectPrilesie() + "/");
+	    httpPatch.setHeader("Authorization", credentialsBasic);
+	    httpPatch.setHeader("Accept", "application/json");
+	    httpPatch.setHeader("Content-type", "application/json");
+	    httpPatch.setEntity(entity);
+	    CloseableHttpResponse httpResponse = httpClient.execute(httpPatch);
+
+	    int statusCode = httpResponse.getStatusLine().getStatusCode();
+	    HttpEntity responseEntity = httpResponse.getEntity();
+	    String responseBody = EntityUtils.toString(responseEntity, "UTF-8");
+	    JSONObject jsonResponseObject = (JSONObject) parser.parse(responseBody);
+	    if (statusCode >= 200 && statusCode < 300) {
+	        Long idObjectPrilesie = jsonResponseObject.get("id") == null ? null : Long.parseLong(jsonResponseObject.get("id").toString());
+	        if (idObjectPrilesie == null) {
+	            response.put("status", "100");
+	            response.put("message", "Объект не был обновлён");
+	            return response;
+	        }
+	        route.setIdObjectPrilesie(idObjectPrilesie);
+	        Timestamp timestampStartTime = Timestamp.valueOf(startTime);
+	        route.setDateTimeStartPrilesie(timestampStartTime);
+	        Timestamp timestampEndTime = Timestamp.valueOf(endTime);
+	        route.setDateTimeEndPrilesie(timestampEndTime);
+	        routeService.updateRoute(route);
+	        response.put("status", "200");
+	        response.put("idObjectPrilesie", idObjectPrilesie);
+	        response.put("route", route);
+	        return response;
+	    } else {
+	        String prilesieresponse = jsonResponseObject.get("error").toString();
+	        response.put("status", "100");
+	        response.put("message", "Ответ с Прилесья: " + prilesieresponse);
+	        return response;
+	    }
+	}
+	
+	/**
+	 * <br>Получает из прилесья данные о машине по idObjectPrilesie</br>.
+	 * @author Ira
+	 */
+	@GetMapping("/get-route-prilesie/{idObjectPrilesie}")
+	public Map<String, Object> getRoutePrilesie(@PathVariable String idObjectPrilesie) throws ParseException, IOException {
+	    Map<String, Object> response = new HashMap<>();
+	    String serverUrlMethod = SERVER_URL+"/allowedlist/";
+	    JSONParser parser = new JSONParser();
+
+	    JsonObject jsonObjectForPrilesie = new JsonObject();
+	    jsonObjectForPrilesie.addProperty("id", idObjectPrilesie);
+
+	    CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+	    String credentials = USERNAME + ":" + PASSWORD;
+	    String credentialsBasic = "Basic " + Base64.getEncoder().encodeToString(credentials.getBytes(StandardCharsets.UTF_8));
+	    HttpGet httpGet = new HttpGet(serverUrlMethod + idObjectPrilesie + "/");
+	    httpGet.setHeader("Authorization", credentialsBasic);
+	    httpGet.setHeader("Accept", "application/json");
+	    httpGet.setHeader("Content-type", "application/json");
+	    CloseableHttpResponse httpResponse = httpClient.execute(httpGet);
+
+	    int statusCode = httpResponse.getStatusLine().getStatusCode();
+	    HttpEntity responseEntity = httpResponse.getEntity();
+	    String responseBody = EntityUtils.toString(responseEntity, "UTF-8");
+	    JSONObject jsonResponseObject = (JSONObject) parser.parse(responseBody);
+	    if (statusCode >= 200 && statusCode < 300) {
+	        response.put("status", "200");
+	        response.put("response", jsonResponseObject);
+	        return response;
+	    } else {
+	        String prilesieResponse = jsonResponseObject.get("error").toString();
+	        if (prilesieResponse.equals("No AllowedList matches the given query.")) {
+	            response.put("status", "100");
+	            response.put("message", "Маршрут с таким ID не найден");
+	            return response;
+	        }
+	        response.put("status", "100");
+	        response.put("message", "Ответ с Прилесья: " + prilesieResponse);
+	        return response;
+	    }
+	}
+	
 	 //получение страницы с маршрутами перевозчика!
     @GetMapping("/carrier/get-actual-carrier-routes")
     public List<Route> transportationGet(HttpServletRequest request) {
@@ -394,6 +649,28 @@ public class MainRestController {
 		routes.stream().filter(r-> Integer.parseInt(r.getStatusRoute())<=4).filter(r-> !resultRoutes.contains(r)).forEach(r->resultRoutes.add(r));
         return resultRoutes;
     }
+    
+	/*
+	 * мой старый метод
+	 */
+	@GetMapping("/test")
+	public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException{
+		Map<String, Object> map = new HashMap<String, Object>();
+		
+//		User user = getThisUser();
+//		map.put("user", user);
+		return map;
+    }
+	
+	@GetMapping("/logistics/info-carrier/list")
+	public Map<String, Object> testGetInfoCarrier(HttpServletRequest request, HttpServletResponse response) throws IOException{
+		Map<String, Object> responce = new HashMap<String, Object>();
+		responce.put("status", "200");
+		responce.put("objects", infoCarrierService.getAll());		
+		return responce;
+    }
+	
+	
     
     /**
      * <br>Нужно ли уведомлять о новом тендере</br>.
@@ -471,7 +748,8 @@ public class MainRestController {
             messageForWinner.setIdRoute(routeId.toString());
             messageForWinner.setToUser(carrierBid.getCarrier().getLogin());
             messageForWinner.setAction("notification");
-            messageForWinner.setText("Тендер для маршрута №" + route.getIdRoute() + " : " + route.getRouteDirection().substring(0, 100)
+            messageForWinner.setText("Тендер для маршрута №" + routeId + " : "
+                    + (carrierBid.getRouteDirection().length() > 100 ? carrierBid.getRouteDirection().substring(0, 100) : carrierBid.getRouteDirection())
                     + "... переведён в формат понижения ставки."
                     + "<br>Ваша ставка установлена как начальная цена этого тендера.");
             messageForWinner.setStatus("200");
@@ -482,7 +760,8 @@ public class MainRestController {
             messageForLoosers.setUrl("/speedlogist/main/carrier/tender/tenderpage?routeId=" + routeId);
             messageForLoosers.setIdRoute(routeId.toString());
             messageForLoosers.setAction("notification");
-            messageForLoosers.setText("Тендер для маршрута №" + route.getIdRoute() + " : " + route.getRouteDirection().substring(0, 100)
+            messageForLoosers.setText("Тендер для маршрута №" + routeId + " : "
+                    + (carrierBid.getRouteDirection().length() > 100 ? carrierBid.getRouteDirection().substring(0, 100) : carrierBid.getRouteDirection())
                     + "... переведён в формат понижения ставки."
                     + "<br>Ваша предыдущая ставка отменена — подайте новую, чтобы участвовать.");
             messageForLoosers.setStatus("200");
@@ -620,7 +899,23 @@ public class MainRestController {
        goodAccommodation.setProductGroup(jsonMainObject.get("productGroup").toString());
        goodAccommodation.setStatus(Integer.parseInt(jsonMainObject.get("status").toString()));
        goodAccommodation.setStocks(jsonMainObject.get("stocks").toString());
-       goodAccommodationService.update(goodAccommodation);       
+       goodAccommodationService.update(goodAccommodation);   
+       
+       String statusValue = "";
+       switch (goodAccommodation.getStatus()) {
+		case 10:
+			statusValue = "ожидает подтверждения";
+			break;
+			
+		case 20:
+			statusValue = "действует";
+			break;
+
+		}
+       
+       String eMailMessage = "Данные по товару изменены: статус - " + statusValue + "; определен на склад: " + goodAccommodation.getStocks();
+       List<String> emails = Arrays.asList(goodAccommodation.getInitiatorEmail());
+       mailService.sendAsyncEmailToUsers(request, "Статус по товару", eMailMessage, emails);
        response.put("status", "200");
        response.put("object", goodAccommodation);
        return response;
@@ -702,6 +997,7 @@ public class MainRestController {
      * @author Ira
      */
     @PostMapping("/logistics/tenders/make-bid-winner")
+    @TimedExecution
     public Map<String, Object> makeBidWinner(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
         Map<String, Object> response = new HashMap<String, Object>();
         JSONParser parser = new JSONParser();
@@ -726,7 +1022,9 @@ public class MainRestController {
             response.put("message", "Заявка не найдена");
             return response;
         }
-        User user = userService.getUserById(idUser);
+//        User user = userService.getUserById(idUser);
+        User user = new User();
+        user.setIdUser(idUser);
         if (status == null) {
             status = "4";
             routeService.updateRouteInBase(idRoute, cost, currency, user, status);
@@ -755,7 +1053,8 @@ public class MainRestController {
             messageForWinner.setIdRoute(idRoute.toString());
             messageForWinner.setToUser(carrierBid.getCarrier().getLogin());
             messageForWinner.setAction("notification");
-            messageForWinner.setText("Ваше предложение к маршруту №" + routeTarget.getIdRoute() + " : " + routeTarget.getRouteDirection().substring(0, 100)
+            messageForWinner.setText("Ваше предложение к маршруту №" + idRoute + " : "
+                    + (carrierBid.getRouteDirection().length() > 100 ? carrierBid.getRouteDirection().substring(0, 100) : carrierBid.getRouteDirection())
                     + "... с ценой " + cost + " " + currency + " <b>одобрено!</b>"
                     + "<br>Необходимо назначить машину и водителя.");
             messageForWinner.setStatus("200");
@@ -769,8 +1068,8 @@ public class MainRestController {
         messageForLooser.setIdRoute(idRoute.toString());
         messageForLooser.setToUser(carrierBid.getCarrier().getLogin());
         messageForLooser.setAction("notification");
-        messageForLooser.setText("К сожалению, предложенная Вами цена для маршрута №"
-                + routeTarget.getIdRoute() + " : " + routeTarget.getRouteDirection().substring(0, 100)
+        messageForLooser.setText("К сожалению, предложенная Вами цена для маршрута №" + idRoute + " : "
+                + (carrierBid.getRouteDirection().length() > 100 ? carrierBid.getRouteDirection().substring(0, 100) : carrierBid.getRouteDirection())
                 + "... нам <b>не подходит</b>.");
         messageForLooser.setStatus("200");
         messageForLooser.setWSPath("carrier-tenders");
@@ -816,7 +1115,7 @@ public class MainRestController {
         Integer routeId = jsonMainObject.get("idRoute") == null ? null : Integer.parseInt(jsonMainObject.get("idRoute").toString());
         Route route = routeService.getRouteById(routeId);
         if(!route.getForReduction()) {
-        	response.put("status", "100");
+            response.put("status", "100");
             response.put("message", "Запрещено! Только для тендеров на понижение");
             return response;
         }
@@ -837,8 +1136,8 @@ public class MainRestController {
         messageForCancelled.setIdRoute(routeId.toString());
         messageForCancelled.setToUser(carrierBid.getCarrier().getLogin());
         messageForCancelled.setAction("notification");
-        messageForCancelled.setText("Ваша ставка для маршрута №"
-                + route.getIdRoute() + " : " + route.getRouteDirection().substring(0, 100)
+        messageForCancelled.setText("Ваша ставка для маршрута №" + routeId + " : "
+                + (carrierBid.getRouteDirection().length() > 100 ? carrierBid.getRouteDirection().substring(0, 100) : carrierBid.getRouteDirection())
                 + "... была <b>удалена логистом</b>.");
         messageForCancelled.setStatus("200");
         messageForCancelled.setWSPath("carrier-tenders");
@@ -856,8 +1155,8 @@ public class MainRestController {
                     messageForWinnerAgain.setIdRoute(routeId.toString());
                     messageForWinnerAgain.setToUser(latestBid.getCarrier().getLogin());
                     messageForWinnerAgain.setAction("notification");
-                    messageForWinnerAgain.setText("Ваша ставка для маршрута №"
-                            + route.getIdRoute() + " : " + route.getRouteDirection().substring(0, 100)
+                    messageForWinnerAgain.setText("Ваша ставка для маршрута №" + routeId + " : "
+                            + (carrierBid.getRouteDirection().length() > 100 ? carrierBid.getRouteDirection().substring(0, 100) : carrierBid.getRouteDirection())
                             + "... <b>снова актуальна</b>.");
                     messageForWinnerAgain.setStatus("200");
                     messageForWinnerAgain.setWSPath("carrier-tenders");
@@ -873,8 +1172,9 @@ public class MainRestController {
                     messageForOthers.setIdRoute(routeId.toString());
                     messageForOthers.setToUser(bid.getCarrier().getLogin());
                     messageForOthers.setAction("notification");
-                    messageForOthers.setText("Лидирующая ставка для маршрута №"
-                            + route.getIdRoute() + " : " + route.getRouteDirection().substring(0, 100) + "... <b>отменена</b>."
+                    messageForOthers.setText("Лидирующая ставка для маршрута №" + routeId + " : "
+                            + (bid.getRouteDirection().length() > 100 ? bid.getRouteDirection().substring(0, 100) : bid.getRouteDirection())
+                            + "... <b>отменена</b>."
                             + "<br>Актуальная цена <b>" + bid.getPrice() + " " + bid.getCurrency() + "</b>.");
                     messageForOthers.setStatus("200");
                     messageForOthers.setWSPath("carrier-tenders");
@@ -931,7 +1231,8 @@ public class MainRestController {
                     messageForWinnerAgain.setIdRoute(routeId.toString());
                     messageForWinnerAgain.setToUser(latestBid.getCarrier().getLogin());
                     messageForWinnerAgain.setAction("notification");
-                    messageForWinnerAgain.setText("Ваша ставка для маршрута №" + route.getIdRoute() + " : " + route.getRouteDirection().substring(0, 100)
+                    messageForWinnerAgain.setText("Ваша ставка для маршрута №" + routeId + " : "
+                            + (latestBid.getRouteDirection().length() > 100 ? latestBid.getRouteDirection().substring(0, 100) : latestBid.getRouteDirection())
                             + "... <b>снова актуальна</b>.");
                     messageForWinnerAgain.setStatus("200");
                     messageForWinnerAgain.setWSPath("carrier-tenders");
@@ -944,8 +1245,9 @@ public class MainRestController {
                         messageForOthers.setIdRoute(routeId.toString());
                         messageForOthers.setToUser(bid.getCarrier().getLogin());
                         messageForOthers.setAction("notification");
-                        messageForOthers.setText("Лидирующая ставка для маршрута №"
-                                + route.getIdRoute() + " : " + route.getRouteDirection().substring(0, 100) + "... <b>отменена</b>." +
+                        messageForOthers.setText("Лидирующая ставка для маршрута №" + routeId + " : "
+                                + (latestBid.getRouteDirection().length() > 100 ? latestBid.getRouteDirection().substring(0, 100) : latestBid.getRouteDirection())
+                                + "... <b>отменена</b>." +
                                 "<br>Актуальная цена <b>" + bid.getPrice() + " " + bid.getCurrency() + "</b>.");
                         messageForOthers.setStatus("200");
                         messageForOthers.setWSPath("carrier-tenders");
@@ -1088,8 +1390,9 @@ public class MainRestController {
                        messageForLooser.setIdRoute(routeId.toString());
                        messageForLooser.setToUser(actualBids.get(0).getCarrier().getLogin());
                        messageForLooser.setAction("notification");
-                       messageForLooser.setText("Ваша ставка по маршруту №"
-                               + route.getIdRoute() + " : " + route.getRouteDirection().substring(0, 100) + "... была <b>перебита</b>."
+                       messageForLooser.setText("Ваша ставка по маршруту №" + routeId + " : "
+                               + (carrierBid.getRouteDirection().length() > 100 ? carrierBid.getRouteDirection().substring(0, 100) : carrierBid.getRouteDirection())
+                               + "... была <b>перебита</b>."
                                + "<br>Текущая ставка: <b>" + carrierBid.getPrice() + " " + carrierBid.getCurrency() + "</b>"
                                + "<br>Вы можете снизить свою ставку.");
                        messageForLooser.setStatus("200");
@@ -1293,8 +1596,8 @@ public class MainRestController {
      * @author Ira
      */
     @PostMapping("/carrier-application/create")
-    @TimedExecution
     public Map<String, Object> createCarrierApplication(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+    	System.err.println(str);
         Map<String, Object> response = new HashMap<>();
         JSONParser parser = new JSONParser();
         JSONObject jsonMainObject = (JSONObject) parser.parse(str);
@@ -1302,6 +1605,7 @@ public class MainRestController {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
         String dateTime = LocalDateTime.now().format(formatter);
         String market = jsonMainObject.get("market") == null ? null : jsonMainObject.get("market").toString();
+        String comment = jsonMainObject.get("comment") == null ? null : jsonMainObject.get("comment").toString();
         String ownership = jsonMainObject.get("ownership") == null ? null : jsonMainObject.get("ownership").toString();
         String organization = jsonMainObject.get("organization") == null ? null : jsonMainObject.get("organization").toString();
         int vehicleCount = jsonMainObject.get("vehicleCount") == null ? null : Integer.parseInt(jsonMainObject.get("vehicleCount").toString());
@@ -1382,9 +1686,38 @@ public class MainRestController {
               "    <td>Адрес эл. почты</td>\n" +
               "    <td>" + email + "</td>\n" +
               "  </tr>\n" +
+              "  <tr>\n" +
+              "    <td>Комментарий</td>\n" +
+              "    <td>" + comment + "</td>\n" +
+              "  </tr>\n" +
               "</table>";
         List<String> emailsAdmins = propertiesUtils.getValuesByPartialKey(servletContext, "email.carrier.cooperation");
         mailService.sendEmailToUsersHTMLContent(request, "Заявка от перевозчика", htmlContent, emailsAdmins);
+        
+        /*
+         * Формируем объект InfoCarrier
+         */
+        InfoCarrier carrier = new InfoCarrier();
+        carrier.setContactCarrier(jsonMainObject.get("fio") == null ? null : jsonMainObject.get("fio").toString());
+        carrier.setDateTimeCreate(Timestamp.valueOf(LocalDateTime.now()));
+        carrier.setCargoTransportMarket(market);
+        carrier.setOwnershipType(ownership);
+        carrier.setCarrierName(organization);
+        carrier.setOfferedVehicleCount(String.valueOf(vehicleCount));
+        carrier.setBodyType(bodyTypesString);
+        carrier.setHasTailLift(tailLift);
+        carrier.setHasNavigation(navigation);
+        carrier.setVehicleLocationCity(city);
+        carrier.setContactPhone(phone);
+        carrier.setEmailAddress(email);
+        carrier.setOfferedRate(null); // в JSON нет тарифа — либо задай по умолчанию
+        carrier.setVehicleCapacity(capacitiesString);
+        carrier.setPalletCapacity(palletsString);
+        carrier.setNotes(comment);
+        carrier.setApplicationStatus("Новая"); // например, дефолтный статус
+        carrier.setCarrierContactDate(null); // пока не звонили
+        carrier.setStatus(10);
+        infoCarrierService.save(carrier);
 
         response.put("status", "200");
         response.put("message", "Ваша заявка принята, спасибо.");
@@ -2785,84 +3118,7 @@ public class MainRestController {
 		return deliveryDate;
 	}
 
-	/*
-	 * мой старый метод
-	 */
-//	@GetMapping("/test")
-//	public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException{
-//		java.util.Date t1 = new java.util.Date();
-//		Map<String, Object> responseMap = new HashMap<>();
-//		// Получаем текущую дату для имени файла
-//        LocalDate currentTime = LocalDate.now();
-//        String currentTimeString = currentTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-//
-//		List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
-////		List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.orl.to");
-////		List<String> emailsSupport = propertiesUtils.getValuesByPartialKey(servletContext, "email.orderSupport");
-////		emails.addAll(emailsSupport);
-//		String appPath = servletContext.getRealPath("/");
-//
-//		String fileName1200 = "1200 (----Холодный----).xlsm";
-//		String fileName1100 = "1100 График прямой сухой.xlsm";
-//		String fileNameSample = "График для шаблоново.xlsx";
-//
-//		try {
-//			poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()),
-//					appPath + "resources/others/" + fileName1200);
-//			poiExcel.exportToExcelScheduleListTOWithMacro(scheduleService.getSchedulesByTOType("сухой").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()),
-//					appPath + "resources/others/" + fileName1100);
-//			poiExcel.exportToExcelSampleListTO(scheduleService.getSchedulesByTOType("холодный").stream().filter(s-> s.getStatus() == 20).collect(Collectors.toList()),
-//					appPath + "resources/others/" + fileNameSample);
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//			System.err.println("Ошибка формирование EXCEL");
-//		}
-//
-////		response.setHeader("content-disposition", "attachment;filename="+fileName+".xlsx");
-//		List<File> files = new ArrayList<File>();
-//		files.add(new File(appPath + "resources/others/" + fileName1200));
-//		files.add(new File(appPath + "resources/others/" + fileName1100));
-//		files.add(new File(appPath + "resources/others/" + fileNameSample));
-//
-//		 File zipFile = createZipFile(files, appPath + "resources/others/TO.zip");
-//		 List<File> filesZip = new ArrayList<File>();
-//		 filesZip.add(zipFile);
-//
-////		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от TEST" + currentTimeString, "Тестовая отправка сообщения.\nНе обращайте внимания / игнорируте это сообщение", files, emails);
-//		mailService.sendEmailWithFilesToUsers(servletContext, "TEST Графики поставок на TO от TEST" + currentTimeString, "Тестовая отправка сообщения.\nНе обращайте внимания / игнорируте это сообщение \nВерсия с макросом выделений (Ctr+t)", filesZip, emails);
-//		java.util.Date t2 = new java.util.Date();
-//		System.out.println(t2.getTime()-t1.getTime() + " ms - testNewMethod" );
-//		return responseMap;
-//	}
-//
-//    public static File createZipFile(List<File> files, String zipFilePath) throws IOException {
-//        File zipFile = new File(zipFilePath);
-//        try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile))) {
-//            for (File file : files) {
-//                if (file.exists() && !file.isDirectory()) {
-//                    addFileToZip(file, zos);
-//                } else {
-//                    System.err.println("File not found or is a directory: " + file.getAbsolutePath());
-//                }
-//            }
-//        }
-//        return zipFile; // Возвращаем объект File архива
-//    }
-//
-//    private static void addFileToZip(File file, ZipOutputStream zos) throws IOException {
-//        try (FileInputStream fis = new FileInputStream(file)) {
-//            ZipEntry zipEntry = new ZipEntry(file.getName());
-//            zos.putNextEntry(zipEntry);
-//
-//            byte[] buffer = new byte[1024];
-//            int length;
-//            while ((length = fis.read(buffer)) > 0) {
-//                zos.write(buffer, 0, length);
-//            }
-//
-//            zos.closeEntry();
-//        }
-//    }
+
 
 
     /**
@@ -3164,7 +3420,8 @@ public class MainRestController {
                 messageForCarriers.setIdRoute(route.getIdRoute().toString());
                 messageForCarriers.setUrl("/speedlogist/main/carrier/tender/tenderpage?routeId=" + route.getIdRoute());
                 messageForCarriers.setAction("new-tender");
-                messageForCarriers.setText("<b>Открыт новый тендер</b> для маршрута №" + route.getIdRoute() + " " + route.getRouteDirection().substring(0, 100) + "...");
+                messageForCarriers.setText("<b>Открыт новый тендер</b> для маршрута №" + route.getIdRoute() + " " +
+                        (route.getRouteDirection().length() > 100 ? route.getRouteDirection().substring(0, 100) : route.getRouteDirection()) + "...");
                 messageForCarriers.setStatus("200");
                 messageForCarriers.setWSPath("carrier-tenders");
                 carrierTenderWebSocket.broadcast(messageForCarriers);
@@ -3203,7 +3460,9 @@ public class MainRestController {
                 messagAboutCancelling.setIdRoute(idRoute.toString());
                 messagAboutCancelling.setUrl("/speedlogist/main/carrier/tender");
                 messagAboutCancelling.setAction("notification");
-                messagAboutCancelling.setText("Тендер для маршрута №" + route.getIdRoute() + " : " + route.getRouteDirection().substring(0, 100) + "... был <b>отменён</b>.");
+                messagAboutCancelling.setText("Тендер для маршрута №" + route.getIdRoute() + " : "
+                        + (route.getRouteDirection().length() > 100 ? route.getRouteDirection().substring(0, 100) : route.getRouteDirection())
+                        + "... был <b>отменён</b>.");
                 messagAboutCancelling.setStatus("200");
                 messagAboutCancelling.setWSPath("carrier-tenders");
                 Set<CarrierBid> carrierBids = route.getCarrierBids();
@@ -7368,7 +7627,7 @@ public class MainRestController {
 						String text = "Товар " + goodName + " ("+ long1 +") отсутствует в системе разрешений по складам. Создана заявка на добавление. Ожидайте подтверждения специалистами отдела ОСиУЗ.";
 						allertMessage.append(text+"<br>");
 						GoodAccommodation newGoodAccommodation = new GoodAccommodation(long1, getTrueStock(order)+";", 10, user.getSurname()+" " + user.getName(), user.geteMail(), Date.valueOf(LocalDate.now()), goodName);
-						newGoodAccommodation.setBarcode(Long.parseLong(orderLine.getBarcode()));
+						newGoodAccommodation.setBarcode(orderLine.getBarcode() != null ? Long.parseLong(orderLine.getBarcode()) : null);
 						newGoodAccommodation.setProductGroup(orderLine.getGoodsGroupName());
 						goodAccommodationService.save(newGoodAccommodation);//создаём строку
 						listOfCodeProduct.append(long1.toString()+" - "+goodName+"\n");
@@ -11588,27 +11847,6 @@ public class MainRestController {
 		truck.setVerify(false);
 		truck.setNumTrailer(numTrailer);
 		truck.setBrandTrailer(brandTrailer);
-		if (mulFile2 != null) {
-//			mailService.sendEmailWhithFile(request, "Техапаспорт от " + user.getCompanyName(), "техпаспорт авто",
-//					mulFile2);
-			final String num = numTruck;
-			new Thread(new Runnable() {
-				@Override
-				public void run() {
-					try {
-						mailService.sendEmailWhithFileToAnyUsers(request,
-								user.getCompanyName() + " - Техпаспорт авто " + num,
-								user.getCompanyName() + " - Техпаспорт авто " + num,
-								convertMultiPartToFile(mulFile2, request), "ArtyuhevichO@dobronom.by",
-								"StrizhakA@dobronom.by");
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				}
-			}).start();
-
-		}
 		return truckService.saveNewTruck(truck);
 	}
 

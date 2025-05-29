@@ -33,6 +33,11 @@
 	    <security:csrf disabled="true"/>
 	</security:http>
 	
+	<security:http pattern="/file/**" entry-point-ref="restAuthenticationEntryPoint">
+	    <security:csrf disabled="true"/>
+	    <security:intercept-url pattern="/file/loadArrayFilesForPrilesie/**" access="permitAll"/>
+	</security:http>
+	
 	      
 <!-- 	<security:http pattern="/api/**" create-session="stateless" entry-point-ref="restAuthenticationEntryPoint">  не используем сессии для аутентификации!-->
 	<security:http pattern="/api/**" entry-point-ref="restAuthenticationEntryPoint">

@@ -3,6 +3,7 @@ package by.base.main.model;
 import java.io.Serializable;
 import java.sql.Date;
 import java.sql.Time;
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -40,269 +41,265 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @DynamicInsert
 @Entity(name = "Route")
 @Table(name = "route")
-public class Route implements Serializable{
+public class Route implements Serializable {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -650717876587103650L;
-	
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "idroute")
 	private Integer idRoute;
-	
+
 	@Column(name = "numStock")
 	private Integer numStock;
-	
+
 	@Column(name = "dateLoad_previously")
 	@JsonFormat(pattern = "yyyy-MM-dd", timezone = "Europe/Moscow")
 	private LocalDate dateLoadPreviously;
-	
+
 	@Column(name = "timeLoad_previously")
 	@JsonFormat(pattern = "HH:mm")
 	private LocalTime timeLoadPreviously;
-	
+
 	@Column(name = "timeLoad_previouslyStock")
 	@JsonFormat(pattern = "HH:mm")
 	private LocalTime timeLoadPreviouslyStock;
-	
+
 	@Column(name = "actualTimeArrival")
 	private LocalDateTime actualTimeArrival;
-	
+
 	@Column(name = "startLoad")
 	private LocalDateTime startLoad;
-	
+
 	@Column(name = "finishLoad")
 	private LocalDateTime finishLoad;
-	
+
 	@Column(name = "deliveryDocuments")
 	private LocalDateTime deliveryDocuments;
-	
+
 	@Column(name = "sanitization")
 	private boolean isSanitization;
-	
+
 	@Column(name = "temperature")
 	private String temperature;
-	
+
 	@Column(name = "nameloader")
 	private String nameLoader;
-	
+
 	@Column(name = "rump")
 	private Integer ramp;
-	
+
 	@Column(name = "loadPall_total")
 	private String totalLoadPall;
-	
+
 	@Column(name = "cargoWeight_total")
 	private String totalCargoWeight;
-	
+
 	@Column(name = "`lines`")
 	private String lines;
-	
+
 	@Column(name = "comments")
 	private String comments;
-	
+
 	@Column(name = "routeDirection")
 	private String routeDirection;
-	
+
 	@Column(name = "startPrice")
 	private Integer startPrice;
-	
+
 	@Column(name = "finishPrice")
 	private Integer finishPrice;
-	
+
 	@Column(name = "time")
 	@JsonFormat(pattern = "HH-mm")
 	private LocalTime time;
-	
+
 	@Column(name = "statusRoute")
 	private String statusRoute;
-	
+
 	@Column(name = "statusStock")
 	private String statusStock;
-	
+
 	@Column(name = "typeTrailer")
 	private String typeTrailer;
-	
+
 	@Column(name = "startCurrency")
 	private String startCurrency;
-	
+
 	@Column(name = "userComments")
 	private String userComments;
-	
+
 	@Column(name = "stepCost")
 	private String stepCost;
-	
+
 	@Column(name = "optimalCost")
 	private String optimalCost;
-	
+
 	@Column(name = "customer")
 	private String customer;
-	
+
 	@Column(name = "run")
 	private String run;
-	
+
 	@Column(name = "logist_info")
 	private String logistInfo;
-	
+
 	@Column(name = "tnvd")
 	private String tnvd;
-	
-	@Column(name="way")
+
+	@Column(name = "way")
 	private String way;
-	
-	@Column(name="expedition_cost")
+
+	@Column(name = "expedition_cost")
 	private Integer expeditionCost;
-	
+
 	@Column(name = "load_number")
 	private String loadNumber;
-	
+
 	/**
 	 * дата загрузки от перевозчика
 	 */
 	@Column(name = "dateLoad_actually")
 	@JsonFormat(pattern = "yyyy-MM-dd", timezone = "Europe/Moscow")
 	private LocalDate dateLoadActually;
-	
+
 	/**
 	 * время загрузки от перевозчика
 	 */
 	@Column(name = "timeLoad_actually")
 	@JsonFormat(pattern = "HH-mm")
 	private LocalTime timeLoadActually;
-	
+
 	/**
 	 * дата выгрузки от перевозчика
 	 */
 	@Column(name = "dateUnload_actually")
 	@JsonFormat(pattern = "yyyy-MM-dd", timezone = "Europe/Moscow")
 	private LocalDate dateUnloadActually;
-	
+
 	/**
 	 * время выгрузки от перевозчика
 	 */
 	@Column(name = "timeUnload_actually")
 	@JsonFormat(pattern = "HH-mm")
 	private LocalTime timeUnloadActually;
-	
-	@ManyToOne(fetch = FetchType.LAZY, 
-			cascade = { CascadeType.PERSIST, 
-						CascadeType.MERGE, 
-						CascadeType.DETACH,
-						CascadeType.REFRESH })
+
+	@ManyToOne(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH,
+			CascadeType.REFRESH })
 	@JoinColumn(name = "truck_idtruck")
-	//@JsonBackReference
+	// @JsonBackReference
 	private Truck truck;
-	
-	@ManyToOne(fetch = FetchType.LAZY, 
-			cascade = { CascadeType.PERSIST, 
-						CascadeType.MERGE, 
-						CascadeType.DETACH,
-						CascadeType.REFRESH })
+
+	@ManyToOne(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH,
+			CascadeType.REFRESH })
 	@JoinColumn(name = "user_iduser_manager") // перевозчик
 //	@JsonBackReference
 //	@JsonManagedReference
 //	@JsonIgnore
 	private User user;
-	
-	@OneToMany(fetch=FetchType.LAZY, orphanRemoval = true,
-			   mappedBy="route",
-			   cascade= {CascadeType.ALL})
+
+	@OneToMany(fetch = FetchType.LAZY, orphanRemoval = true, mappedBy = "route", cascade = { CascadeType.ALL })
 	private Set<RouteHasShop> roteHasShop;
-	
-	@OneToOne(cascade=CascadeType.ALL) // не просто так не стоит fetch=FetchType.LAZY
-	@JoinColumn(name="user_iduser_driver")
+
+	@OneToOne(cascade = CascadeType.ALL) // не просто так не стоит fetch=FetchType.LAZY
+	@JoinColumn(name = "user_iduser_driver")
 //	@JsonBackReference
 //	@JsonIgnore 
 	// СТАЛ ПОКАЗЫВАТЬ DRIVER!!!!!!!!!!!!!!
 	private User driver;
-	
-	@ManyToMany(fetch = FetchType.LAZY, 
+
+	@ManyToMany(fetch = FetchType.LAZY,
 //			cascade = { CascadeType.ALL }
-			cascade = {CascadeType.MERGE, CascadeType.PERSIST}
-	)
+			cascade = { CascadeType.MERGE, CascadeType.PERSIST })
 	@JoinTable(name = "route_has_order", joinColumns = @JoinColumn(name = "route_idroute"), inverseJoinColumns = @JoinColumn(name = "order_idorder"))
 //	@JsonBackReference // ТУТ БЫЛО ВКЛЮЧЕНО!!!!
 	@JsonIgnore
 	private Set<Order> orders;
-	
-	
-	
-	@Column(name="timeUnload_previouslyStock")
+
+	@Column(name = "timeUnload_previouslyStock")
 	@JsonFormat(pattern = "HH-mm")
 	private Time timeUnloadPreviouslyStock;
-	
-	@Column(name="dateUnload_previouslyStock")
+
+	@Column(name = "dateUnload_previouslyStock")
 	@JsonFormat(pattern = "yyyy-MM-dd", timezone = "Europe/Moscow")
 	private Date dateUnloadPreviouslyStock;
-	
-	@Column(name="create_date")
+
+	@Column(name = "create_date")
 	private Date createDate;
-	
-	@Column(name="create_time")
+
+	@Column(name = "create_time")
 	private Time createTime;
-	
+
 	/**
 	 * окно на выгрузку от Карины
 	 */
 	@Column(name = "onload_window_date")
 	private Date onloadWindowDate;
-	
+
 	/**
 	 * окно на выгрузку от Карины
 	 */
 	@Column(name = "onload_window_time")
 	private Time onloadWindowTime;
-	
+
 	/**
 	 * непосредственно сколько времени занимает сама выгрузка
 	 */
 	@Column(name = "onload_time")
 	private Time onloadTime;
-	
-	@Column(name="logist_comment")
+
+	@Column(name = "logist_comment")
 	private String logistComment;
-	
-	@Column(name="truck_info")
+
+	@Column(name = "truck_info")
 	private String truckInfo;
-	
-	@Column(name="km_info")
+
+	@Column(name = "km_info")
 	private Integer kmInfo;
-	
-	@Column(name="cargo_info")
+
+	@Column(name = "cargo_info")
 	private String cargoInfo;
-	
-	@Column(name="routeDirectionInternational")
+
+	@Column(name = "routeDirectionInternational")
 	private String routeDirectionInternational;
-	
-	@Column(name="type_load")
+
+	@Column(name = "type_load")
 	private String typeLoad;
-	
-	@Column(name="method_load")
+
+	@Column(name = "method_load")
 	private String methodLoad;
 
-	@OneToMany (fetch=FetchType.LAZY, orphanRemoval = true,
-			mappedBy="route",
-			cascade= {CascadeType.MERGE,
-					CascadeType.PERSIST})
+	@OneToMany(fetch = FetchType.LAZY, orphanRemoval = true, mappedBy = "route", cascade = { CascadeType.MERGE,
+			CascadeType.PERSIST })
 	private Set<CarrierBid> carrierBids;
 
-	@Column (name = "for_reduction")
+	@Column(name = "for_reduction")
 	private Boolean forReduction;
 
-	@Column (name = "start_price_for_reduction")
+	@Column(name = "start_price_for_reduction")
 	private Integer startPriceForReduction;
 
-	@Column (name = "currency_for_reduction")
+	@Column(name = "currency_for_reduction")
 	private String currencyForReduction;
+
+	@Column(name = "id_object_prilesie")
+	private Long idObjectPrilesie;
+
+	@Column(name = "date_time_start_prilesie")
+	private Timestamp dateTimeStartPrilesie;
+
+	@Column(name = "date_time_end_prilesie")
+	private Timestamp dateTimeEndPrilesie;
 
 	@Transient
 	private Map<String, String> cost = new HashMap<String, String>();
 	/**
-	 * хранит в себе значения цен, где ключ - это номер касты, значение - цена для данной касты.
-	 * для каждорого вызова маршрута, если нужна цена - она просчитывается. в бд записывается уже
-	 * окончательная цена.
+	 * хранит в себе значения цен, где ключ - это номер касты, значение - цена для
+	 * данной касты. для каждорого вызова маршрута, если нужна цена - она
+	 * просчитывается. в бд записывается уже окончательная цена.
 	 */
 	@Transient
 	private Double nds;
@@ -318,14 +315,12 @@ public class Route implements Serializable{
 	private String dateUnload;
 	@Transient
 	private String cargoWeightForAct;
-	
+
 	@Transient
 	private Set<OrderDTO> ordersDTO;
-	
+
 	@Transient
 	private Integer numOffer;
-	
-
 
 	/**
 	 * форматер для простого отображения дат во view
@@ -336,48 +331,60 @@ public class Route implements Serializable{
 	private DateTimeFormatter mainFormatterDate = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 	@Transient
 	private DateTimeFormatter mainFormatterTime = DateTimeFormatter.ofPattern("HH-mm");
-	
-	
-	
+
 	/**
 	 * 
 	 */
 	public Route() {
 		Date dateNow = Date.valueOf(LocalDate.now());
 		Time timeNow = Time.valueOf(LocalTime.now());
-		if(createDate == null) {
+		if (createDate == null) {
 			this.createDate = dateNow;
 		}
-		if(createTime == null) {
+		if (createTime == null) {
 			this.createTime = timeNow;
 		}
 	}
 
-	
-	
+	public Long getIdObjectPrilesie() {
+		return idObjectPrilesie;
+	}
+
+	public void setIdObjectPrilesie(Long idObjectPrilesie) {
+		this.idObjectPrilesie = idObjectPrilesie;
+	}
+
+	public Timestamp getDateTimeStartPrilesie() {
+		return dateTimeStartPrilesie;
+	}
+
+	public void setDateTimeStartPrilesie(Timestamp dateTimeStartPrilesie) {
+		this.dateTimeStartPrilesie = dateTimeStartPrilesie;
+	}
+
+	public Timestamp getDateTimeEndPrilesie() {
+		return dateTimeEndPrilesie;
+	}
+
+	public void setDateTimeEndPrilesie(Timestamp dateTimeEndPrilesie) {
+		this.dateTimeEndPrilesie = dateTimeEndPrilesie;
+	}
+
 	public Set<OrderDTO> getOrdersDTO() {
 		return ordersDTO;
 	}
-
-
 
 	public void setOrdersDTO(Set<OrderDTO> ordersDTO) {
 		this.ordersDTO = ordersDTO;
 	}
 
-
-
 	public Integer getNumOffer() {
 		return numOffer;
 	}
 
-
-
 	public void setNumOffer(Integer numOffer) {
 		this.numOffer = numOffer;
 	}
-
-
 
 	public String getTypeLoad() {
 		return typeLoad;
@@ -407,41 +414,33 @@ public class Route implements Serializable{
 		return logistComment;
 	}
 
-
 	public String getCargoInfo() {
 		return cargoInfo;
 	}
-
 
 	public void setCargoInfo(String cargoInfo) {
 		this.cargoInfo = cargoInfo;
 	}
 
-
 	public Integer getKmInfo() {
 		return kmInfo;
 	}
-
 
 	public void setKmInfo(Integer kmInfo) {
 		this.kmInfo = kmInfo;
 	}
 
-
 	public void setLogistComment(String logistComment) {
 		this.logistComment = logistComment;
 	}
-
 
 	public String getTruckInfo() {
 		return truckInfo;
 	}
 
-
 	public void setTruckInfo(String truckInfo) {
 		this.truckInfo = truckInfo;
 	}
-
 
 	public Integer getIdRoute() {
 		return idRoute;
@@ -466,7 +465,7 @@ public class Route implements Serializable{
 	public Date getOnloadWindowDate() {
 		return onloadWindowDate;
 	}
-	
+
 	public Integer getExpeditionCost() {
 		return expeditionCost;
 	}
@@ -495,13 +494,15 @@ public class Route implements Serializable{
 		this.onloadWindowTime = onloadWindowTime;
 	}
 
-	public void setDateLoadPreviously(LocalDate dateLoadPreviously) {		
+	public void setDateLoadPreviously(LocalDate dateLoadPreviously) {
 		this.dateLoadPreviously = dateLoadPreviously;
 	}
-	public void setDateLoadPreviously(Date dateLoadPreviously) {		
+
+	public void setDateLoadPreviously(Date dateLoadPreviously) {
 		this.dateLoadPreviously = dateLoadPreviously.toLocalDate();
 	}
-	public void setDateLoadPreviously(String dateLoadPreviously) {		
+
+	public void setDateLoadPreviously(String dateLoadPreviously) {
 		this.dateLoadPreviously = LocalDate.parse(dateLoadPreviously);
 	}
 
@@ -519,6 +520,7 @@ public class Route implements Serializable{
 
 	/**
 	 * непосредственно сколько времени занимает сама выгрузка
+	 * 
 	 * @return
 	 */
 	public Time getOnloadTime() {
@@ -527,6 +529,7 @@ public class Route implements Serializable{
 
 	/**
 	 * непосредственно сколько времени занимает сама выгрузка
+	 * 
 	 * @param onloadTime
 	 */
 	public void setOnloadTime(Time onloadTime) {
@@ -572,7 +575,7 @@ public class Route implements Serializable{
 	public boolean isSanitization() {
 		return isSanitization;
 	}
-	
+
 	public boolean getIsSanitization() {
 		return isSanitization;
 	}
@@ -646,7 +649,7 @@ public class Route implements Serializable{
 	}
 
 	public String getRouteDirection() {
-		if(way != null && routeDirectionInternational!= null && way.equals("Импорт")) {
+		if (way != null && routeDirectionInternational != null && way.equals("Импорт")) {
 			return routeDirectionInternational.trim();
 		}
 		return routeDirection.trim().replaceAll(" +", " ");
@@ -699,14 +702,14 @@ public class Route implements Serializable{
 	public User getUser() {
 		return user;
 	}
-	
+
 	public String getNumPoint() {
-		if(getRoteHasShop() !=null) {
-			return getRoteHasShop().size()+"";
-		}else {
+		if (getRoteHasShop() != null) {
+			return getRoteHasShop().size() + "";
+		} else {
 			return null;
 		}
-		
+
 	}
 
 	public void setUser(User userManager) {
@@ -720,8 +723,6 @@ public class Route implements Serializable{
 	public void setRoteHasShop(Set<RouteHasShop> roteHasShopList) {
 		this.roteHasShop = roteHasShopList;
 	}
-	
-	
 
 	public String getStatusStock() {
 		return statusStock;
@@ -746,7 +747,6 @@ public class Route implements Serializable{
 	public void setFinishPrice(Integer finishPrice) {
 		this.finishPrice = finishPrice;
 	}
-	
 
 	public User getDriver() {
 		return driver;
@@ -755,7 +755,7 @@ public class Route implements Serializable{
 	public void setDriver(User driver) {
 		this.driver = driver;
 	}
-	
+
 	public Map<String, String> getCost() {
 		return cost;
 	}
@@ -771,7 +771,7 @@ public class Route implements Serializable{
 	public void setTypeTrailer(String typeTrailer) {
 		this.typeTrailer = typeTrailer;
 	}
-	
+
 	public String getStartCurrency() {
 		return startCurrency;
 	}
@@ -779,7 +779,7 @@ public class Route implements Serializable{
 	public void setStartCurrency(String startCurrency) {
 		this.startCurrency = startCurrency;
 	}
-	
+
 	public String getUserComments() {
 		return userComments;
 	}
@@ -808,19 +808,20 @@ public class Route implements Serializable{
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 		return dateLoadPreviously.format(formatter);
 	}
+
 	public void setSimpleDateStart(String simpleDateStart) {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 		this.dateLoadPreviously = LocalDate.parse(simpleDateStart, formatter);
 	}
-	
+
 	public Double getNds() {
 		if (finishPrice != null) {
-			nds = (double) (finishPrice*20.0/100.0);
+			nds = (double) (finishPrice * 20.0 / 100.0);
 			return nds;
-		}else {
+		} else {
 			return null;
-		}		
-	}	
+		}
+	}
 
 	public String getNumWayList() {
 		return numWayList;
@@ -844,7 +845,7 @@ public class Route implements Serializable{
 
 	public void setCmr(String cmr) {
 		this.cmr = cmr;
-	}	
+	}
 
 	public String getCostWay() {
 		return costWay;
@@ -852,7 +853,7 @@ public class Route implements Serializable{
 
 	public void setCostWay(String costWay) {
 		this.costWay = costWay;
-	}	
+	}
 
 	public String getDateUnload() {
 		return dateUnload;
@@ -860,7 +861,7 @@ public class Route implements Serializable{
 
 	public void setDateUnload(String dateUnload) {
 		this.dateUnload = dateUnload;
-	}	
+	}
 
 	public String getCustomer() {
 		return customer;
@@ -884,17 +885,17 @@ public class Route implements Serializable{
 	public LocalDate getDateLoadActually() {
 		return dateLoadActually;
 	}
-	
+
 	/**
 	 * дата загрузки от перевозчика STRING
 	 */
 	public String getDateLoadActuallySimple() {
-		if(dateLoadActually != null) {
+		if (dateLoadActually != null) {
 			return dateLoadActually.format(simpleFormatterDate);
-		}else {
+		} else {
 			return null;
 		}
-		
+
 	}
 
 	/**
@@ -903,33 +904,34 @@ public class Route implements Serializable{
 	public void setDateLoadActually(LocalDate dateLoadActually) {
 		this.dateLoadActually = dateLoadActually;
 	}
-	
+
 	public void setDateLoadActually(Date dateLoadActually) {
 		this.dateLoadActually = dateLoadActually.toLocalDate();
 	}
-	
+
 	public void setDateLoadActually(String dateLoadActually) {
 		this.dateLoadActually = LocalDate.parse(dateLoadActually);
 	}
-	
+
 	public String getSimpleDateActually() { // отдаёт стринг даты в удобном формате
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 		if (dateLoadActually == null) {
 			return null;
-		}else {
+		} else {
 			return dateLoadActually.format(formatter);
 		}
-		
+
 	}
+
 	public void setSimpleDateActually(String simpleDateActually) {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 		this.dateLoadActually = LocalDate.parse(simpleDateActually, formatter);
 	}
-	
+
 	public String getWay() {
 		if (way == null) {
 			return null;
-		}else {	
+		} else {
 			return way;
 		}
 	}
@@ -937,17 +939,17 @@ public class Route implements Serializable{
 	public void setWay(String way) {
 		this.way = way;
 	}
-	
+
 	public String getSimpleWay() {
 		if (way == null) {
 			return null;
-		}else if(way.length()<3){	
+		} else if (way.length() < 3) {
 			return way;
-		}else {
+		} else {
 			return way.substring(0, 3);
 		}
 	}
-	
+
 	public SimpleRoute getSimpleRoute() {
 		return new SimpleRoute(idRoute, dateLoadPreviously, routeDirection, finishPrice, startCurrency);
 	}
@@ -972,16 +974,16 @@ public class Route implements Serializable{
 	public LocalDate getDateUnloadActually() {
 		return dateUnloadActually;
 	}
-	
+
 	/**
 	 * дата выгрузки от перевозчика STRING
 	 */
 	public String getDateUnloadActuallySimple() {
-		if(dateUnloadActually != null) {
+		if (dateUnloadActually != null) {
 			return dateUnloadActually.format(simpleFormatterDate);
-		}else {
+		} else {
 			return null;
-		}		
+		}
 	}
 
 	/**
@@ -1016,7 +1018,7 @@ public class Route implements Serializable{
 	public Time getTimeUnloadPreviouslyStock() {
 		return timeUnloadPreviouslyStock;
 	}
-	
+
 	public String getCargoWeightForAct() {
 		return cargoWeightForAct;
 	}
@@ -1026,36 +1028,34 @@ public class Route implements Serializable{
 	}
 
 	public void setTimeUnloadPreviouslyStock(String timeUnloadPreviouslyStock) {
-		if(timeUnloadPreviouslyStock == null || timeUnloadPreviouslyStock.isEmpty()) {
+		if (timeUnloadPreviouslyStock == null || timeUnloadPreviouslyStock.isEmpty()) {
 			this.timeUnloadPreviouslyStock = null;
-		}else {
-			if(timeUnloadPreviouslyStock.split(":").length<3) {
-				this.timeUnloadPreviouslyStock = Time.valueOf(timeUnloadPreviouslyStock+":00");
-			}else {
+		} else {
+			if (timeUnloadPreviouslyStock.split(":").length < 3) {
+				this.timeUnloadPreviouslyStock = Time.valueOf(timeUnloadPreviouslyStock + ":00");
+			} else {
 				this.timeUnloadPreviouslyStock = Time.valueOf(timeUnloadPreviouslyStock);
 			}
-			
+
 		}
-		
+
 	}
 
 	public Date getDateUnloadPreviouslyStock() {
 		return dateUnloadPreviouslyStock;
 	}
-	
 
 //	public void setDateUnloadPreviouslyStock(Date dateUnloadPreviouslyStock) {
 //		this.dateUnloadPreviouslyStock = dateUnloadPreviouslyStock;
 //	}
 
-
 	public void setDateUnloadPreviouslyStock(String dateUnloadPreviouslyStock) {
-		if(dateUnloadPreviouslyStock == null || dateUnloadPreviouslyStock.isEmpty()) {
+		if (dateUnloadPreviouslyStock == null || dateUnloadPreviouslyStock.isEmpty()) {
 			this.dateUnloadPreviouslyStock = null;
-		}else {
+		} else {
 			this.dateUnloadPreviouslyStock = Date.valueOf(dateUnloadPreviouslyStock);
 		}
-		
+
 	}
 
 	public Date getCreateDate() {
@@ -1139,13 +1139,7 @@ public class Route implements Serializable{
 				+ ", totalCargoWeight=" + totalCargoWeight + ", comments=" + comments + ", routeDirection="
 				+ routeDirection + ", startPrice=" + startPrice + ", finishPrice=" + finishPrice + ", time=" + time
 				+ ", statusRoute=" + statusRoute + ", statusStock=" + statusStock + ", typeTrailer=" + typeTrailer
-				+ "User="+user+"]";
+				+ "User=" + user + "]";
 	}
 
-	
-
-
-	
-	
-	
 }

@@ -67,6 +67,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -101,6 +102,7 @@ import by.base.main.service.ProductService;
 import by.base.main.service.RouteService;
 import by.base.main.service.ScheduleService;
 import by.base.main.service.ServiceException;
+import by.base.main.service.UserService;
 
 /**
  * 
@@ -140,6 +142,12 @@ public class POIExcel {
 	
 	@Autowired
 	private GoodAccommodationService goodAccommodationService;
+	
+	@Autowired
+	private MailService mailService;
+	
+	@Autowired
+	private UserService userService;
 
 	private ArrayList<Shop> shops;
 	private ArrayList<RouteHasShop> arrayRouteHasShop;
@@ -5654,9 +5662,20 @@ public class POIExcel {
 //			  		fos.flush();
 			book.write(new FileOutputStream(file));
 			book.close();
+			//тут же отправляем на почту
+			//остановился тут
+			User user = getThisUser();
+			List<String> emailsORL = Arrays.asList(user.geteMail());
+			mailService.sendEmailWithFilesToUsers(servletContext, "Развоз", " ", Arrays.asList(file), emailsORL);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	private User getThisUser() {
+		String name = SecurityContextHolder.getContext().getAuthentication().getName();
+		User user = userService.getUserByLoginV2(name);
+		return user;
 	}
 	
 	public void createRazvozForJa(Map<Long, MapResponse> mapResult, HttpServletRequest request) {

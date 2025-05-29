@@ -687,6 +687,7 @@ public class YardManagementRestController {
             processDefectGroup("Некондиция", acceptanceQualityFoodCard.getLightDefectsQualityCardList(), isImport, withPC, sampleSize, message, finalProductCard, false);
             processDefectGroup("Брак / гниль", acceptanceQualityFoodCard.getTotalDefectQualityCardList(), isImport, withPC, sampleSize, message, finalProductCard, true);
             finalProductCard.append("\n");
+            finalProductCard.append("Рассчёты устаревшие! Ожидается обновление.");
 			if(isRunTelegrammBot) {
 				telegrammBotQuantityYard.sendMessageWithPhotos(chatIds, message.toString(), photoIds, tags);				
 			}else {

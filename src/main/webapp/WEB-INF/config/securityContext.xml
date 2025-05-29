@@ -35,6 +35,7 @@
 	
 	<security:http pattern="/file/**" entry-point-ref="restAuthenticationEntryPoint">
 	    <security:csrf disabled="true"/>
+	    <security:intercept-url pattern="/file/loadArrayFilesForPrilesie/**" access="permitAll"/>
 	</security:http>
 	
 	      

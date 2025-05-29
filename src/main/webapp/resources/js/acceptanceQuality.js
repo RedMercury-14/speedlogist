@@ -86,7 +86,7 @@ const detailColumnDefs = [
 		headerName: 'ВД (вес/процент)', field: 'totalInternalDefectPercentage',
 		valueGetter: (params) => {
 			const data = params.data
-			return `${data.totalInternalDefectWeight} ${params.data?.unit || "кг"} / ${data.totalInternalDefectPercentage}%`
+			return `${data.totalInternalDefectWeight} шт / ${data.totalInternalDefectPercentage}%`
 		},
 	},
 	{
@@ -672,12 +672,11 @@ function getCardsData (params) {
 
 function recalculateCard(card) {
 	const sampleSize = parseFloat(card.sampleSize) || 0
-	const withPC = card.unit !== "шт"
 	return {
 		...card,
-		...recalculateDefects("internalDefectsQualityCardList", sampleSize, card.internalDefectsQualityCardList, card.isImport, withPC),
-		...recalculateDefects("totalDefectQualityCardList", sampleSize, card.totalDefectQualityCardList, card.isImport, withPC),
-		...recalculateDefects("lightDefectsQualityCardList", sampleSize, card.lightDefectsQualityCardList, card.isImport, withPC),
+		...recalculateDefects("internalDefectsQualityCardList", sampleSize, card.internalDefectsQualityCardList, card),
+		...recalculateDefects("totalDefectQualityCardList", sampleSize, card.totalDefectQualityCardList, card),
+		...recalculateDefects("lightDefectsQualityCardList", sampleSize, card.lightDefectsQualityCardList, card),
 	}
 }
 
@@ -802,9 +801,9 @@ function showCardModal(card) {
 	document.querySelectorAll('.sampleSizeUnit').forEach((el) => (el.textContent = sampleSizeUnit))
 
 	// Заполнение таблиц с дефектами
-	fillDefectsTable('#internalDefectsList', card.internalDefectsQualityCardList, ['weight', 'percentage', 'description'])
-	fillDefectsTable('#lightDefectsList', card.lightDefectsQualityCardList, ['weight', 'percentage', 'description'])
-	fillDefectsTable('#totalDefectsList', card.totalDefectQualityCardList, ['weight', 'percentage', 'percentageWithPC', 'description'])
+	fillDefectsTable('#internalDefectsList', card.internalDefectsQualityCardList, ['weight', 'sampleSizeInternalDefect', 'percentage', 'description'], card)
+	fillDefectsTable('#lightDefectsList', card.lightDefectsQualityCardList, ['weight', 'percentage', 'description'], card)
+	fillDefectsTable('#totalDefectsList', card.totalDefectQualityCardList, ['weight', 'percentage', 'percentageWithPC', 'description'], card)
 
 	// кнопка просмотра фото
 	const showImagesBtnContainer = document.getElementById('showImagesBtnContainer')
@@ -828,7 +827,11 @@ function showApproveCardModal(card) {
 }
 
 // расчет суммы отдельных дефектов
-function recalculateDefects(type, sampleSize, defects, isImport, withPC) {
+function recalculateDefects(type, sampleSize, defects, cardData) {
+	const { sampleSizeInternalDefect, isImport, unit } = cardData
+	const withPC = unit !== "шт";
+	const sampleSizeInternalDefectUsed = sampleSizeInternalDefect || sampleSize
+
 	let totalWeight = 0
 	let totalPercentage = 0
 	let totalPercentageWithPC = 0
@@ -852,6 +855,10 @@ function recalculateDefects(type, sampleSize, defects, isImport, withPC) {
 			totalPercentage += percentage
 			totalPercentageWithPC += percentageWithPC
 			return { ...defect, percentage: percentage.toFixed(2), percentageWithPC: percentageWithPC.toFixed(2) }
+		} else if (type === "internalDefectsQualityCardList") {
+			const percentage = sampleSizeInternalDefectUsed ? getPercentage(weight, sampleSizeInternalDefectUsed, defaultPercentageFactor) : 0
+			totalPercentage += percentage;
+			return { ...defect, percentage: percentage.toFixed(2) }
 		} else {
 			const percentage = sampleSize ? getPercentage(weight, sampleSize, defaultPercentageFactor) : 0
 			totalPercentage += percentage
@@ -882,14 +889,18 @@ function fillField(fieldId, data) {
 }
 
 // заполнение таблицы дефектов
-function fillDefectsTable(tableId, defects, columns) {
+function fillDefectsTable(tableId, defects, columns, card) {
+	const sampleSizeUnit = tableId === '#internalDefectsList' ? 'шт' : card.unit === 'шт' ? 'шт' : 'кг'
+	const sampleSizeInternalDefect = card.sampleSizeInternalDefect === null || card.sampleSizeInternalDefect === undefined
+		? card.sampleSize : card.sampleSizeInternalDefect
 	const $tableBody = $(tableId)
 	$tableBody.empty()
 	
 	defects.forEach(defect => {
 		const $row = $('<tr>')
 		columns.forEach(col => {
-			if (col === 'weight') $row.append($('<td>').text(`${defect[col]} кг`))
+			if (col === 'weight') $row.append($('<td>').text(`${defect[col]} ${sampleSizeUnit}`))
+			else if (col === 'sampleSizeInternalDefect') $row.append($('<td>').text(`${sampleSizeInternalDefect} шт`))
 			else if (col === 'percentage' || col === 'percentageWithPC') $row.append($('<td>').text(`${defect[col]}%`))
 			else $row.append($('<td>').text(defect[col]))
 		})
@@ -903,12 +914,12 @@ function getCardDescriptionText(card) {
 		card.productName ? card.productName : '',
 		card.sampleSize ? `Выборка ${card.sampleSize} кг` : '',
 		card.totalInternalDefectWeight
-			? `ВД: ${card.totalInternalDefectWeight} кг / ${card.totalInternalDefectPercentage}%`
+			? `ВД: ${card.totalInternalDefectWeight} шт / ${card.totalInternalDefectPercentage}%`
 			: '',
 		card.totalDefectWeight
-			? `Брак: ${card.totalDefectWeight} кг / ${card.totalDefectPercentage}% / ${card.totalDefectPercentageWithPC}%` : '',
+			? `Брак: ${card.totalDefectWeight} ${card.unit} / ${card.totalDefectPercentage}% / ${card.totalDefectPercentageWithPC}%` : '',
 		card.totalLightDefectWeight
-			? `ЛН: ${card.totalLightDefectWeight}кг / ${card.totalLightDefectPercentage}%` : '',
+			? `ЛН: ${card.totalLightDefectWeight} ${card.unit} / ${card.totalLightDefectPercentage}%` : '',
 	].filter(Boolean).join('<br>')
 }
 

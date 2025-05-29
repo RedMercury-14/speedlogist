@@ -73,8 +73,7 @@ public class FileServiceImpl implements FileService{
 
 	@Override
 	@Transactional(transactionManager = "myTransactionManagerLogistFile")
-	public Long saveFileByRoute(MultipartFile file, int idRoute, User user) {
-		
+	public Long saveFileByRoute(MultipartFile file, int idRoute, User user) {		
 		try {
             MyFile entity = new MyFile();
             entity.setFileName(file.getOriginalFilename());
@@ -122,6 +121,37 @@ public class FileServiceImpl implements FileService{
 	    file.setStatus(0); // "удалили"
 	    update(file); // сохраняем изменения
 	    return true;
+	}
+
+	@Override
+	public Long saveFileByPrilesie(MultipartFile file, User user) {
+		try {
+            MyFile entity = new MyFile();
+            entity.setFileName(file.getOriginalFilename());
+            entity.setContentType(file.getContentType());
+            entity.setData(file.getBytes());
+            entity.setDateCreate(Timestamp.from(Instant.now()));
+
+            // Здесь пока заполним вручную или заглушками
+            entity.setUserName(user.getSurname() + " " + user.getName());
+            entity.setUserCompanyName(user.getCompanyName());
+            // сюда запишем номер авто user.getCharacteristicsOfTruks()
+            //записываем телефон для связи
+            //записываей ip
+            entity.setStatus(1);
+            entity.setType("файл проверки Прилесья");
+
+            long sizeInBytes = file.getSize();
+            double sizeInMB = sizeInBytes / (1024.0 * 1024.0);
+//            String sizeFormatted = String.format("%.2f MB", sizeInMB);
+            entity.setSize(sizeInMB);
+            entity.setSizeType("МБ");
+            
+            Integer idMyFile = fileDAO.save(entity);
+    		return idMyFile.longValue();
+        } catch (Exception e) {
+            throw new RuntimeException("Ошибка при сохранении файла", e);
+        }
 	}
 
 }

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
@@ -28,6 +29,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 
+import org.apache.tika.Tika;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -149,6 +151,41 @@ public class MainFileController {
 				}
             })
             .create();
+	
+	/**
+	 * Сохранение нескольких  файлов с привязкой к маршруту
+	 * @param file
+	 * @return
+	 * @throws IOException
+	 */
+	@RequestMapping(value = "/loadArrayFilesForPrilesie", method = RequestMethod.POST, consumes = {MediaType.MULTIPART_FORM_DATA_VALUE })
+	@TimedExecution
+	public Map<String, Object> loadArrayFileForPrilesie(@RequestParam("files") MultipartFile[] files) throws IOException {
+	    Map<String, Object> response = new HashMap<>();
+	    List<String> uploadedFileNames = new ArrayList<>();
+	    
+	    Tika tika = new Tika();
+
+	    for (MultipartFile file : files) {
+	    	
+	    	
+		    String detectedType = tika.detect(file.getInputStream());
+		    System.out.println(detectedType);
+
+//		    if (!detectedType.startsWith("image/")) {
+//		        throw new IllegalArgumentException("Подозрительный тип файла: " + detectedType);
+//		    }	    	
+//	    	
+//	        if (!file.isEmpty()) {
+//	        	fileService.saveFileByRoute(file, idRoute, getThisUser());
+//	            uploadedFileNames.add(file.getOriginalFilename());
+//	        }
+	    }
+	    
+	    response.put("uploadedFiles", uploadedFileNames);
+	    response.put("total", uploadedFileNames.size());
+	    return response;
+	}
 	
 	/**
 	 * Возвращает изображения по idRoute в формате json, изображения в base64

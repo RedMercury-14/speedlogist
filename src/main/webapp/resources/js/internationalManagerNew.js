@@ -13,6 +13,7 @@ import {
 	confirmTenderOfferUrl,
 	deleteFileUrl,
 	downloadZipByRouteUrl,
+	getDataRouteToPrilesieBaseUrl,
 	getFileBaseUrl,
 	getFilesByRouteBaseUrl,
 	getMemoryRouteMessageBaseUrl,
@@ -24,12 +25,16 @@ import {
 	makeTenderForReductionUrl,
 	makeWinnerTenderForReductionOfferUrl,
 	nbrbExratesRatesBaseUrl,
-	routeUpdateBaseUrl
+	routeUpdateBaseUrl,
+	saveRouteToPrilesieUrl,
+	updateRouteToPrilesieUrl
 } from "./globalConstants/urls.js"
 import PhotoSwipeLightbox from './photoSwipe/photoswipe-lightbox.esm.min.js'
 import PhotoSwipeDynamicCaption  from './photoSwipe/photoswipe-dynamic-caption-plugin.esm.js'
 import PhotoSwipe from './photoSwipe/photoswipe.esm.min.js'
 import { buttons, caption, thumbnails } from './photoSwipe/photoSwipeHelper.js'
+import { showGalleryItems } from "./fileManager/showGalleryItems.js"
+import { addImgToView } from "./fileManager/addImgToView.js"
 
 const token = $("meta[name='_csrf']").attr("content")
 const PAGE_NAME = 'internationalManagerNew'
@@ -38,42 +43,6 @@ const DATES_KEY = `searchDates_to_${PAGE_NAME}`
 const ROW_INDEX_KEY = `AG_Grid_rowIndex_to_${PAGE_NAME}`
 const role = document.querySelector('#role')?.value
 const login = document.querySelector('#login')?.value
-
-const fileTypeIcons = {
-	// Документы
-	'application/pdf': '/speedlogist/resources/img/fileIcons/pdf.png',
-	'application/msword': '/speedlogist/resources/img/fileIcons/word.png',
-	'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '/speedlogist/resources/img/fileIcons/word.png',
-	'application/vnd.ms-excel': '/speedlogist/resources/img/fileIcons/excel.png',
-	'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '/speedlogist/resources/img/fileIcons/excel.png',
-	'application/vnd.ms-powerpoint': '/speedlogist/resources/img/fileIcons/ppt.png',
-	'application/vnd.openxmlformats-officedocument.presentationml.presentation': '/speedlogist/resources/img/fileIcons/ppt.png',
-	'text/plain': '/speedlogist/resources/img/fileIcons/txt.png',
-
-	// Архивы
-	'application/zip': '/speedlogist/resources/img/fileIcons/zip.png',
-	'application/x-rar-compressed': '/speedlogist/resources/img/fileIcons/zip.png',
-	'application/x-7z-compressed': '/speedlogist/resources/img/fileIcons/zip.png',
-	'application/x-tar': '/speedlogist/resources/img/fileIcons/zip.png',
-	'application/gzip': '/speedlogist/resources/img/fileIcons/zip.png',
-
-	// Аудио
-	'audio/mpeg': '/speedlogist/resources/img/fileIcons/audio.png',
-	'audio/mp3': '/speedlogist/resources/img/fileIcons/audio.png',
-	'audio/wav': '/speedlogist/resources/img/fileIcons/audio.png',
-	'audio/ogg': '/speedlogist/resources/img/fileIcons/audio.png',
-	'audio/webm': '/speedlogist/resources/img/fileIcons/audio.png',
-
-	// Видео
-	'video/mp4': '/speedlogist/resources/img/fileIcons/video.png',
-	'video/webm': '/speedlogist/resources/img/fileIcons/video.png',
-	'video/x-msvideo': '/speedlogist/resources/img/fileIcons/video.png',
-	'video/x-matroska': '/speedlogist/resources/img/fileIcons/video.png',
-
-	// По умолчанию
-	'default': '/speedlogist/resources/img/fileIcons/file.png',
-}
-
 
 const currencyDict = {
 	'EUR': EUR,
@@ -179,6 +148,19 @@ const columnDefs = [
 	{ headerName: 'Температурные условия', field: 'temperature', wrapText: true, autoHeight: true, },
 	{ headerName: 'Контактное лицо контрагента', field: 'contact', wrapText: true, autoHeight: true, },
 	{ headerName: 'Общий вес', field: 'totalCargoWeight', valueFormatter: params => params.value + ' кг' },
+	{ headerName: 'ID заявки на машину из Прилесья', field: 'idObjectPrilesie', cellRenderer: objectPrilesieRenderer, },
+	{
+		headerName: 'Въезд на Прилесье с', field: 'dateTimeStartPrilesie',
+		wrapText: true, autoHeight: true,
+		valueFormatter: dateTimeValueFormatter, comparator: dateComparator,
+		filterParams: { valueFormatter: dateTimeValueFormatter, },
+	},
+	{
+		headerName: 'Въезд на Прилесье по', field: 'dateTimeEndPrilesie',
+		wrapText: true, autoHeight: true,
+		valueFormatter: dateTimeValueFormatter, comparator: dateComparator,
+		filterParams: { valueFormatter: dateTimeValueFormatter, },
+	},
 	{ headerName: 'Комментарии', field: 'userComments', filter: 'agTextColumnFilter', wrapText: true, autoHeight: true, minWidth: 240, width: 640, },
 	{ headerName: 'Логист', field: 'logistInfo', wrapText: true, autoHeight: true, },
 	{ headerName: 'Комментарий логиста', field: 'logistComment', wrapText: true, autoHeight: true,},
@@ -456,6 +438,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 		routeImgContainer.innerHTML = ''
 	})
 
+	// регистрация авто на ПРилесье
+	regTruckInPrilesieForm.addEventListener('submit', regTruckFormSubmitHandler)
+	$('#regTruckInPrilesieModal').on('hidden.bs.modal', () => regTruckInPrilesieForm.reset())
+
 	// копирование логина и пароля для PBI
 	const pbLoginSpan = document.querySelector('#pbLogin')
 	const pbPassSpan = document.querySelector('#pbPass')
@@ -609,6 +595,13 @@ function gridTableClickHandler(e) {
 		showRouteInfoPopup(route)
 		return
 	}
+
+	if (target.id === 'objectPrilesieLink') {
+		e.preventDefault()
+		const idObjectPrilesie = target.textContent
+		getTruckDataFromPrilesie(idObjectPrilesie)
+		return
+	}
 }
 
 // отображение модального окна с информацией об ивенте
@@ -687,6 +680,132 @@ function createRouteInfoHTML(route) {
 				<span>${finishPrice} ${startCurrency}</span>
 			</div>
 		`
+}
+
+// отображение можалки с формой устаовки времени авто на Прилесье
+function showRegTruckToPrilesieForm(routeData, regTruckInPrilesieLabel, ) {
+	const { idRoute, idObjectPrilesie, routeDirection, dateTimeStartPrilesie, dateTimeEndPrilesie } = routeData
+	const today = new Date()
+	const minDate = today.toISOString().slice(0, 16)
+
+	regTruckInPrilesieForm.idRoute.value = idRoute
+	regTruckInPrilesieForm.actionType.value = idObjectPrilesie ? 'update' : 'create'
+	regTruckInPrilesieForm.routeDirection.textContent = routeDirection
+
+	document.getElementById('regTruckInPrilesieModalLabel').textContent = regTruckInPrilesieLabel
+
+	regTruckInPrilesieForm.dateStart.min = minDate
+	regTruckInPrilesieForm.dateEnd.min = minDate
+
+	if (idObjectPrilesie) {
+		regTruckInPrilesieForm.actionType.value = 'update'
+		regTruckInPrilesieForm.idObjectPrilesie.value = idObjectPrilesie
+		regTruckInPrilesieForm.dateStart.value = dateHelper.getISODateTime(dateTimeStartPrilesie)
+		regTruckInPrilesieForm.dateEnd.value = dateHelper.getISODateTime(dateTimeEndPrilesie)
+	}
+	$('#regTruckInPrilesieModal').modal('show')
+}
+
+// отправка формы регистрации машины на Прилесье
+function regTruckFormSubmitHandler(e) {
+	e.preventDefault()
+
+	const formData = new FormData(e.target)
+	const data = Object.fromEntries(formData)
+	const payload = {
+		idRoute: +data.idRoute,
+		dateTimeStartPrilesie: data.dateStart.replace('T', ' ') + ':00',
+		dateTimeEndPrilesie: data.dateEnd.replace('T', ' ') + ':00',
+	}
+
+	if (new Date(data.dateStart).getTime() >= new Date(data.dateEnd).getTime()) {
+		snackbar.show('Время начала не может быть больше времени окончания!')
+		return
+	}
+
+	const url = data.actionType === 'update' ? updateRouteToPrilesieUrl : saveRouteToPrilesieUrl
+
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 300)
+
+	ajaxUtils.postJSONdata({
+		url: url,
+		data: payload,
+		successCallback: async (res) => {
+			console.log("🚀 ~ successCallback: ~ res:", res)
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+
+			if (res.status === '200') {
+				updateCellData(data.idRoute, 'idObjectPrilesie', res.idObjectPrilesie)
+				updateCellData(data.idRoute, 'dateTimeStartPrilesie', res.route.dateTimeStartPrilesie)
+				updateCellData(data.idRoute, 'dateTimeEndPrilesie', res.route.dateTimeEndPrilesie)
+				snackbar.show('Машина зарегистрирована')
+				$('#regTruckInPrilesieModal').modal('hide')
+				return
+			}
+
+			if (res.status === '100') {
+				const errorMessage = res.message || 'Ошибка обработки данных'
+				snackbar.show(errorMessage)
+				return
+			}
+		},
+		errorCallback: () => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+			snackbar.show('Ошибка обработки данных')
+		}
+	})
+}
+// получение данных о машине из Прилесья
+function getTruckDataFromPrilesie(idObjectPrilesie) {
+	ajaxUtils.get({
+		url: getDataRouteToPrilesieBaseUrl + idObjectPrilesie,
+		successCallback: (res) => {
+			if (res.status === '200') {
+				openPrilesieDataModal(res.response)
+				return
+			}
+
+			if (res.status === '100') {
+				const errorMessage = res.message || 'Ошибка получения данных'
+				snackbar.show(errorMessage)
+				return
+			}
+		},
+		errorCallback: () => {
+			snackbar.show('Ошибка получения данных')
+		}
+	})
+}
+
+// отображение модального окна с информацией из Прилесья
+function openPrilesieDataModal(data) {
+	const id = data.id || 'н/д'
+	const plateNumber = data.plate_number || 'н/д'
+	const supplier = data.supplier || 'н/д'
+	const warehouse = data.warehouse || 'н/д'
+	const ramp = data.ramp || 'н/д'
+	const startTime = data.start_time ? new Date(data.start_time).toLocaleString() : 'н/д'
+	const endTime = data.end_time ? new Date(data.end_time).toLocaleString() : 'н/д'
+	const smsNumber = data.sms_number || 'н/д'
+	// const dateOn = data.access_log && data.access_log.date_time_on ? new Date(data.access_log.date_time_on).toLocaleString() : 'н/д'
+	// const dateExit = data.access_log && data.access_log.date_time_exit ? new Date(data.access_log.date_time_exit).toLocaleString() : 'н/д'
+	const exitOk = data.access_log && data.access_log.exit_ok ? 'Да' : 'Нет'
+
+	document.getElementById("prilesieDataModal-id").textContent = id
+	document.getElementById("prilesieDataModal-plate").textContent = plateNumber
+	document.getElementById("prilesieDataModal-supplier").textContent = supplier
+	document.getElementById("prilesieDataModal-warehouse").textContent = warehouse
+	document.getElementById("prilesieDataModal-ramp").textContent = ramp
+	document.getElementById("prilesieDataModal-start").textContent = startTime
+	document.getElementById("prilesieDataModal-end").textContent = endTime
+	document.getElementById("prilesieDataModal-sms").textContent = smsNumber
+	// document.getElementById("prilesieDataModal-date-on").textContent = dateOn
+	// document.getElementById("prilesieDataModal-date-exit").textContent = dateExit
+	document.getElementById("prilesieDataModal-exit-ok").textContent = exitOk
+
+	$('#prilesieDataModal').modal('show');
 }
 
 // -------------------------------------------------------------------------------//
@@ -780,10 +899,12 @@ function getContextMenuItems(params) {
 	const idRoute = routeData.idRoute
 	const routeDirection = routeData.routeDirection
 	const status = routeData.statusRoute
-	const forReduction = routeData.forReduction
 
 	const selectedRowsData = params.api.getSelectedRows()
 	const isVerifySelectedRoutes = !selectedRowsData.filter(route => route.statusRoute !== '0').length
+
+	const idObjectPrilesie = routeData.idObjectPrilesie
+	const regTruckInPrilesieLabel = idObjectPrilesie ? 'Редактирование времени машины на Прилесье' : `Регистрация машины на Прилесье`
 
 	const result = [
 		{
@@ -861,6 +982,15 @@ function getContextMenuItems(params) {
 		},
 		"separator",
 		{
+			disabled: isObserver(role) || !routeData.truckInfo || status === '5',
+			name: regTruckInPrilesieLabel,
+			icon: uiIcons.truck,
+			action: () => {
+				showRegTruckToPrilesieForm(routeData, regTruckInPrilesieLabel)
+			},
+		},
+		"separator",
+		{
 			name: `Файлы`,
 			icon: uiIcons.files,
 			disabled: isObserver(role),
@@ -882,7 +1012,7 @@ function getContextMenuItems(params) {
 						const images = imageIds && imageIds.length
 							? imageIds.map(id => getFileBaseUrl + id)
 							: []
-						showGalleryItems(images)
+						showGalleryItems(lightbox, images)
 					},
 				},
 				{
@@ -897,6 +1027,16 @@ function getContextMenuItems(params) {
 	]
 
 	return result
+}
+
+// рендерер заявки на машину из Прилесья
+function objectPrilesieRenderer(params) {
+	const data = params.node.data
+	const idRoute = data.idRoute
+	const idObjectPrilesie = data.idObjectPrilesie
+	if (!idObjectPrilesie) return ''
+	const html = `<a class="text-primary" data-idroute="${idRoute}" id="objectPrilesieLink" href="">${idObjectPrilesie}</a>`
+	return html
 }
 
 // рендерер информации о машине
@@ -1922,103 +2062,6 @@ function initGallery() {
 	lightbox.init()
 }
 
-// отображение галереи с изображениями
-async function showGalleryItems(galleryItems) {
-	if (!galleryItems || !galleryItems.length) {
-		snackbar.show('Фото отсутствуют')
-		return
-	}
-
-	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 300)
-
-	const description = ''
-	const itemsWithSizes = await Promise.all(
-		galleryItems.map(async (src, i) => {
-			try {
-				const response = await fetch(src, { method: 'HEAD' }) // HEAD запрос — только заголовки
-				const contentType = response.headers.get('Content-Type') || ''
-				const contentDisposition = response.headers.get('Content-Disposition') || ''
-				const isImage = contentType.startsWith('image/')
-
-				let fileName = extractFileNameFromContentDisposition(contentDisposition)
-				if (!fileName) {
-					fileName = decodeURIComponent(src.split('/').pop().split('?')[0])
-				}
-
-				if (isImage) {
-					const size = await getImageSize(src)
-					return {
-						src: src,
-						title: fileName,
-						alt: fileName,
-						width: size.width,
-						height: size.height,
-						description: description,
-					}
-				} else {
-					// Не изображение
-					const iconSrc = fileTypeIcons[contentType] || fileTypeIcons['default']
-					return {
-						src: iconSrc,
-						downloadLink: src,
-						title: fileName,
-						alt: fileName,
-						width: 500,
-						height: 500,
-						description: description,
-					}
-				}
-			} catch (error) {
-				console.error('Ошибка загрузки:', error)
-				return {
-					src: fileTypeIcons['default'],
-					downloadLink: src,
-					title: `Файл ${i + 1}`,
-					alt: `Файл ${i + 1}`,
-					width: 500,
-					height: 500,
-					description: 'Ошибка загрузки файла',
-				}
-			}
-		})
-	)
-
-	clearTimeout(timeoutId)
-	bootstrap5overlay.hideOverlay()
-	lightbox.loadAndOpen(0, itemsWithSizes)
-}
-
-// получение размера картинки
-function getImageSize(src) {
-	return new Promise((resolve, reject) => {
-		const img = new Image()
-		img.onload = (e) => resolve({ width: img.width, height: img.height })
-		img.onerror = () => reject(new Error('Не удалось загрузить изображение'))
-		img.src = src
-	})
-}
-
-// добавление изображения в форму
-function addImgToView(event, imgContainer) {
-	imgContainer.innerHTML = ''
-
-	const files = event.target.files
-	if (!files) return
-
-	for (let i = 0; i < files.length; i++) {
-		const file = files[i]
-		const reader = new FileReader()
-		reader.readAsDataURL(file)
-		reader.onload = () => {
-			const newImg = document.createElement("img")
-			newImg.src = reader.result
-			imgContainer.append(newImg)
-		}
-	}
-
-	return
-}
-
 // обработка прикрепления файлов
 async function addFilesToRouteFormSubmitHandler(e) {
 	e.preventDefault()
@@ -2072,8 +2115,7 @@ async function deleteFile(e, el, pswp) {
 	const currentSlide = pswp.currSlide
 	if (!currentSlide) return
 	
-	const imgSrc = currentSlide.data.src
-	const fileId = imgSrc.split('/').pop()
+	const fileId = currentSlide.data.id
 
 	const formData = new FormData()
 	formData.append('id', +fileId)
@@ -2117,36 +2159,4 @@ async function deleteFile(e, el, pswp) {
 			snackbar.show('Ошибка удаления файла')
 		}
 	})
-}
-
-function extractFileNameFromContentDisposition(disposition) {
-	if (!disposition) return null
-
-	// 1. Пытаемся получить filename* (UTF-8 с url-кодировкой)
-	const utf8Match = disposition.match(/filename\*\s*=\s*UTF-8''([^;\n]*)/i)
-	if (utf8Match) {
-		try {
-			return decodeURIComponent(utf8Match[1])
-		} catch (e) {
-			console.warn('Ошибка decodeURIComponent для filename*', e)
-		}
-	}
-
-	// 2. Пытаемся получить обычный filename
-	const fallbackMatch = disposition.match(/filename="?([^"]+)"?/i)
-	if (fallbackMatch) {
-		let rawName = fallbackMatch[1]
-
-		try {
-			// Пробуем перекодировать из latin1 → utf8
-			const bytes = new Uint8Array([...rawName].map(c => c.charCodeAt(0)))
-			const decoded = new TextDecoder('utf-8').decode(bytes)
-			return decoded
-		} catch (e) {
-			console.warn('Ошибка перекодировки filename', e)
-			return rawName // как fallback
-		}
-	}
-
-	return null
 }

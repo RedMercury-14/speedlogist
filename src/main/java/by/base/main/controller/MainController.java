@@ -360,6 +360,11 @@ public class MainController {
 	    return "goodAccommodations";
 	}
 	
+	@GetMapping("/main/logistics/info-carrier-list")
+	public String getInfoCarrierList(Model model, HttpServletRequest request) {
+		return "infoCarrierList";
+	}
+	
 	@GetMapping("/main/carrier-application-form")
 	public String getCarrierApplicationForm(Model model, HttpServletRequest request) {
 	    return "carrierApplicationForm";

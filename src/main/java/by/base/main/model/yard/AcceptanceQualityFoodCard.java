@@ -132,12 +132,21 @@ public class AcceptanceQualityFoodCard {
     @Column(name = "id_mother_card")
     private Long idMotherCard;
     
-    
+    @Column(name = "sample_size_internal_defect")
+    private Integer sampleSizeInternalDefect;
 
     // Getters and Setters   
 
     public Timestamp getDateTimeCreate() {
 		return dateTimeCreate;
+	}
+
+	public Integer getSampleSizeInternalDefect() {
+		return sampleSizeInternalDefect;
+	}
+
+	public void setSampleSizeInternalDefect(Integer sampleSizeInternalDefect) {
+		this.sampleSizeInternalDefect = sampleSizeInternalDefect;
 	}
 
 	public void setDateTimeCreate(Timestamp dateTimeCreate) {

@@ -208,6 +208,9 @@ export const getOffersForReductionByIdRouteBaseUrl = '/speedlogist/api/logistics
 export const makeWinnerTenderForReductionOfferUrl = '/speedlogist/api/logistics/tenders/make-bid-winner' // подтверждение предложения тендера на понижение
 export const makeTenderForReductionUrl = '/speedlogist/api/logistics/tenders/make-tender-for-reduction' // превращение обычного тендера в тендер на понижение
 export const cancelOfferForLogistUrl = '/speedlogist/api/logistics/tenders/delete-bid' // отмена предложения по тендеру логистом
+export const saveRouteToPrilesieUrl = '/speedlogist/api/save-route-to-prilesie' // регистрация машины на Прилесье
+export const updateRouteToPrilesieUrl = '/speedlogist/api/update-route-to-prilesie' // обновление данных машины на Прилесье
+export const getDataRouteToPrilesieBaseUrl = '/speedlogist/api/get-route-prilesie/' // получение данных машины на Прилесье
 
 ///////////////////////////////////////////////
 // internationalStockSopport.js - Таблица Башкирова

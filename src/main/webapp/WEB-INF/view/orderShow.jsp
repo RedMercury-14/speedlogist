@@ -141,6 +141,15 @@
 							</c:when>
 						</c:choose>
 
+						<c:choose>
+							<c:when test="${order.timeDelivery != null && order.idRamp != null}">
+								<div class="font-weight-bold text-danger">
+									<span>Слот на выгрузку:</span>
+									<span>Рампа ${order.idRamp}, время ${order.timeDelivery}</span>
+								</div>
+							</c:when>
+						</c:choose>
+
 					</div>
 
 					<div class="order-section right">

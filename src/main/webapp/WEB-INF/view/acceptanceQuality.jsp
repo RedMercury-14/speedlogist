@@ -119,6 +119,7 @@
 									<thead>
 										<tr>
 											<th class="text-muted font-weight-bold text-nowrap">Кол-во</th>
+											<th class="text-muted font-weight-bold text-nowrap">Выборка для ВД</th>
 											<th class="text-muted font-weight-bold">Процент</th>
 											<th class="text-muted font-weight-bold">Описание</th>
 										</tr>
@@ -128,7 +129,7 @@
 							</div>
 							<div class="row">
 								<div class="col-lg-6">
-									<p class="font-weight-bold">Всего: <span id="totalInternalDefectWeight"></span> <span class="sampleSizeUnit"></span></p>
+									<p class="font-weight-bold">Всего: <span id="totalInternalDefectWeight"></span> шт</p>
 								</div>
 								<div class="col-lg-6">
 									<p class="font-weight-bold">Общий процент: <span id="totalInternalDefectPercentage"></span>%</p>

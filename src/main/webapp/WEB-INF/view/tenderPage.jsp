@@ -171,6 +171,14 @@
 							<div class="route-info-container">
 								<h5 class="route-subtitle">Данные о заказе</h5>
 								<c:choose>
+									<c:when test="${route.dateTimeStartPrilesie != null && route.dateTimeEndPrilesie != null}">
+										<div class="dateUnloadInfo text-danger">
+											<span>Промежуток для заезда на Прилесье:</span>
+											<span>${route.dateTimeStartPrilesie} - ${route.dateTimeEndPrilesie}</span>
+										</div>
+									</c:when>
+								</c:choose>
+								<c:choose>
 									<c:when test="${route.dateUnloadPreviouslyStock != null}">
 										<c:choose>
 											<c:when test="${route.way == 'РБ'}">
@@ -365,6 +373,14 @@
 							<div class="route-info-container">
 								<h5 class="route-subtitle">Данные о заказе</h5>
 								<c:choose>
+									<c:when test="${route.dateTimeStartPrilesie != null && route.dateTimeEndPrilesie != null}">
+										<div class="dateUnloadInfo text-danger">
+											<span>Промежуток для заезда на Прилесье:</span>
+											<span>${route.dateTimeStartPrilesie} - ${route.dateTimeEndPrilesie}</span>
+										</div>
+									</c:when>
+								</c:choose>
+								<c:choose>
 									<c:when test="${route.dateUnloadPreviouslyStock != null}">
 										<c:choose>
 											<c:when test="${route.way == 'РБ'}">
@@ -533,6 +549,14 @@
 						<div class="card-body pt-2 pb-2">
 							<div class="route-info-container">
 								<h5 class="route-subtitle">Данные о заказе</h5>
+								<c:choose>
+									<c:when test="${route.dateTimeStartPrilesie != null && route.dateTimeEndPrilesie != null}">
+										<div class="dateUnloadInfo text-danger">
+											<span>Промежуток для заезда на Прилесье:</span>
+											<span>${route.dateTimeStartPrilesie} - ${route.dateTimeEndPrilesie}</span>
+										</div>
+									</c:when>
+								</c:choose>
 								<c:choose>
 									<c:when test="${route.dateUnloadPreviouslyStock != null}">
 										<c:choose>
@@ -844,6 +868,14 @@
 						<div class="card-body pt-2 pb-2">
 							<div class="route-info-container">
 								<h5 class="route-subtitle">Данные о заказе</h5>
+								<c:choose>
+									<c:when test="${route.dateTimeStartPrilesie != null && route.dateTimeEndPrilesie != null}">
+										<div class="dateUnloadInfo text-danger">
+											<span>Промежуток для заезда на Прилесье:</span>
+											<span>${route.dateTimeStartPrilesie} - ${route.dateTimeEndPrilesie}</span>
+										</div>
+									</c:when>
+								</c:choose>
 								<c:choose>
 									<c:when test="${route.dateUnloadPreviouslyStock != null}">
 										<c:choose>

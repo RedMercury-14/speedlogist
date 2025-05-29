@@ -44,6 +44,7 @@ const columnDefs = [
 	{ headerName: 'Информация', field: 'cargoInfo', flex: 10, minWidth: 200, },
 	{ headerName: 'Дата загрузки', field: 'dateLoadToView', },
 	{ headerName: 'Дата выгрузки', field: 'dateUnloadToView', },
+	{ headerName: 'Промежуток для заезда на Прилесье', field: 'dateRangePrilesie', minWidth: 160, },
 	{
 		headerName: 'Стоимость перевозки', field: 'cost',
 		cellClass: 'px-2 text-center',
@@ -90,6 +91,8 @@ const gridOptions = {
 		floatingFilter: true,
 		wrapText: true,
 		autoHeight: true,
+		wrapHeaderText: true,
+		autoHeaderHeight: true,
 	},
 	getRowId: (params) => params.data.idRoute,
 	singleClickEdit: true,
@@ -274,6 +277,7 @@ function mapCallback(route) {
 	const dateLoadTruck = getDateLoadTruck(route)
 	const dateDelivery = getDateDelivery(route)
 	const withActionBtns = !route.driver
+	const dateRangePrilesie = getDateRangePrilesie(route)
 
 	return {
 		...route,
@@ -286,7 +290,16 @@ function mapCallback(route) {
 		dateLoadTruck,
 		dateDelivery,
 		withActionBtns,
+		dateRangePrilesie,
 	}
+}
+function getDateRangePrilesie(route) {
+	if (!route) return ''
+	const { dateTimeStartPrilesie, dateTimeEndPrilesie } = route
+	if (!dateTimeStartPrilesie || !dateTimeEndPrilesie) return ''
+	const dateStartToView = dateHelper.getFormatDateTime(dateTimeStartPrilesie)
+	const dateEndToView = dateHelper.getFormatDateTime(dateTimeEndPrilesie)
+	return `${dateStartToView} - ${dateEndToView}`
 }
 function rowBtnsOnClickHandler(e, params) {
 	if (e.buttonId === 'approveTruck') {

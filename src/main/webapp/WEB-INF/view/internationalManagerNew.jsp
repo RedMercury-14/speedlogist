@@ -209,7 +209,7 @@
 						<input type="number" name="idRoute" hidden>
 						<input type="number" name="idObjectPrilesie" hidden>
 						<input type="text" name="actionType" hidden>
-						<div class="text-center text-muted h5">Укажите продежуток времени для заезда машины:</div>
+						<div class="text-center text-muted h5">Укажите промежуток времени для заезда машины:</div>
 						<div class="d-flex justify-content-center">
 							<div class="input-row-container mr-2">
 								<label class="text-muted font-weight-bold">С</label>
@@ -235,7 +235,7 @@
 		<div class="modal-dialog" role="document">
 			<div class="modal-content">
 				<div class="modal-header bg-color">
-					<h5 class="modal-title" id="prilesieDataModalLabel">Информация о въезде</h5>
+					<h5 class="modal-title" id="prilesieDataModalLabel">Информация из Прилесья</h5>
 					<button type="button" class="close text-white" data-dismiss="modal" aria-label="Закрыть">
 					<span aria-hidden="true">&times;</span>
 					</button>
@@ -246,11 +246,11 @@
 					<p><strong>Поставщик:</strong> <span id="prilesieDataModal-supplier"></span></p>
 					<p><strong>Склад:</strong> <span id="prilesieDataModal-warehouse"></span></p>
 					<p><strong>Рампа:</strong> <span id="prilesieDataModal-ramp"></span></p>
-					<p><strong>Начало:</strong> <span id="prilesieDataModal-start"></span></p>
-					<p><strong>Конец:</strong> <span id="prilesieDataModal-end"></span></p>
-					<p><strong>SMS:</strong> <span id="prilesieDataModal-sms"></span></p>
-					<p><strong>Дата въезда:</strong> <span id="prilesieDataModal-date-on"></span></p>
-					<p><strong>Дата выезда:</strong> <span id="prilesieDataModal-date-exit"></span></p>
+					<p><strong>Въезд с:</strong> <span id="prilesieDataModal-start"></span></p>
+					<p><strong>Въезд по:</strong> <span id="prilesieDataModal-end"></span></p>
+					<p><strong>Телефон:</strong> <span id="prilesieDataModal-sms"></span></p>
+					<!-- <p><strong>Дата въезда:</strong> <span id="prilesieDataModal-date-on"></span></p> -->
+					<!-- <p><strong>Дата выезда:</strong> <span id="prilesieDataModal-date-exit"></span></p> -->
 					<p><strong>Статус выезда:</strong> <span id="prilesieDataModal-exit-ok"></span></p>
 				</div>
 			</div>

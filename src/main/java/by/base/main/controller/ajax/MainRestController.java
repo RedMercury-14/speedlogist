@@ -68,6 +68,17 @@ import javax.servlet.http.HttpSession;
 import by.base.main.dto.*;
 import by.base.main.model.*;
 import by.base.main.service.*;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPatch;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -163,6 +174,7 @@ import by.base.main.service.util.ORLExcelException;
 import by.base.main.service.util.OrderCreater;
 import by.base.main.service.util.PDFWriter;
 import by.base.main.service.util.POIExcel;
+import by.base.main.service.util.PrilesieService;
 import by.base.main.service.util.PropertiesUtils;
 import by.base.main.service.util.ReaderSchedulePlan;
 import by.base.main.service.util.ServiceLevel;
@@ -337,6 +349,9 @@ public class MainRestController {
 	@Autowired
 	private InfoCarrierService infoCarrierService;
 	
+	@Autowired
+	private PrilesieService prilesieService;
+	
 	
 	private static String classLog;
 	public static String marketJWT;
@@ -370,6 +385,15 @@ public class MainRestController {
 	@Value("${stockBalance.run}")
 	public Boolean stockBalanceRun;
 	
+	@Value("${api.prilesie.url}")
+	private String SERVER_URL;
+	
+	@Value("${api.prilesie.username}")
+	private String USERNAME;
+	
+	@Value("${api.prilesie.passeord}")
+	private String PASSWORD;
+	
 	@PostConstruct
     public void init() {
 		marketUrl = marketUrlProp;
@@ -388,6 +412,234 @@ public class MainRestController {
 
 	@Autowired
     private ServletContext servletContext;
+	
+	/**
+	 * <br>Сохраняет машину в прилесье</br>.
+	 * @author Ira
+	 */
+	@PostMapping("/save-route-to-prilesie")
+	public Map<String, Object> saveRouteToPrilesie(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+	    Map<String, Object> response = new HashMap<>();
+	    JsonObject jsonObject = new JsonObject();
+	    String serverUrlMethod = SERVER_URL+"/allowedlist/";
+
+
+	    String credentials = USERNAME + ":" + PASSWORD;
+	    String credentialsBasic = "Basic " + Base64.getEncoder().encodeToString(credentials.getBytes(StandardCharsets.UTF_8));
+
+	    JSONParser parser = new JSONParser();
+	    JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+	    Integer routeId = jsonMainObject.get("idRoute") == null ? null : Integer.parseInt(jsonMainObject.get("idRoute").toString());
+	    DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+	    LocalDateTime startTime = LocalDateTime.parse(jsonMainObject.get("dateTimeStartPrilesie").toString(), dtf).withSecond(0).withNano(0);
+	    LocalDateTime endTime = LocalDateTime.parse(jsonMainObject.get("dateTimeEndPrilesie").toString(), dtf).withSecond(0).withNano(0);
+
+	    Route route = routeService.getRouteById(routeId);
+	    String carNumber = prilesieService.transliterateToVisualLatin(route.getTruck().getNumTruck()).replaceAll("[ *-]+", "");
+	    String driverPhone = route.getDriver().getTelephone() == null ? "" : prilesieService.phoneConverter(route.getDriver().getTelephone());
+	    Integer warehouse = null;
+	    Integer allowCompany = null;
+	    List<Order> orders = route.getOrders().stream().collect(Collectors.toList());
+
+	    if (!orders.isEmpty()) {
+	        if (orders.get(0).getNumStockDelivery().equals("1800")) {
+	            warehouse = 7;
+	            allowCompany = 15;
+	        } else if (orders.get(0).getNumStockDelivery().equals("1700")) {
+	            warehouse = 5;
+	            allowCompany = 10;
+	        } else {
+	            response.put("status", "100");
+	            response.put("message", "Данная функция работает только для 1700 и 1800 склада");
+	            return response;
+	        }
+	    }
+	    String supplier = route.getRouteDirection().split(">")[0].substring(1);
+
+	    jsonObject.addProperty("id", routeId);
+	    jsonObject.addProperty("plate_number", carNumber);
+	    jsonObject.addProperty("sms_number", driverPhone);
+	    jsonObject.addProperty("start_time", startTime.toString());
+	    jsonObject.addProperty("end_time", endTime.toString());
+	    jsonObject.addProperty("status", 2);
+	    jsonObject.addProperty("allow_company", allowCompany);
+	    jsonObject.addProperty("warehouse", warehouse);
+	    jsonObject.addProperty("ramp", 20);
+	    jsonObject.addProperty("supplier", supplier);
+
+	    Gson gson = new Gson();
+	    String jsonData = gson.toJson(jsonObject);
+	    StringEntity entity = new StringEntity(jsonData, ContentType.APPLICATION_JSON);
+
+	    CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+	    HttpPost httpPost = new HttpPost(serverUrlMethod);
+	    httpPost.setEntity(entity);
+	    httpPost.setHeader("Authorization", credentialsBasic);
+	    httpPost.setHeader("Accept", "application/json");
+	    httpPost.setHeader("Content-type", "application/json");
+	    CloseableHttpResponse httpResponse = httpClient.execute(httpPost);
+
+	    int statusCode = httpResponse.getStatusLine().getStatusCode();
+	    HttpEntity responseEntity = httpResponse.getEntity();
+	    String responseBody = EntityUtils.toString(responseEntity, "UTF-8");
+	    JSONObject jsonResponseObject = (JSONObject) parser.parse(responseBody);
+	    if (statusCode >= 200 && statusCode < 300) {
+	        Long idObjectPrilesie = jsonResponseObject.get("id") == null ? null : Long.parseLong(jsonResponseObject.get("id").toString());
+	        if (idObjectPrilesie == null) {
+	            response.put("status", "100");
+	            response.put("message", "Объект не был сохранён");
+	            return response;
+	        }
+	        route.setIdObjectPrilesie(idObjectPrilesie);
+	        Timestamp timestampStartTime = Timestamp.valueOf(startTime);
+	        route.setDateTimeStartPrilesie(timestampStartTime);
+	        Timestamp timestampEndTime = Timestamp.valueOf(endTime);
+	        route.setDateTimeEndPrilesie(timestampEndTime);
+	        routeService.updateRoute(route);
+	        response.put("status", "200");
+	        response.put("idObjectPrilesie", idObjectPrilesie);
+	        response.put("route", route);
+	        return response;
+	    } else {
+	        String prilesieresponse = jsonResponseObject.get("error").toString();
+	        response.put("status", "100");
+	        response.put("message", "Ответ с Прилесья: " + prilesieresponse);
+	        return response;
+	    }
+
+	}
+	
+	/**
+	 * <br>Обновляет в прилесье данные о времени для машины</br>.
+	 * @author Ira
+	 */
+	@PostMapping("/update-route-to-prilesie")
+	public Map<String, Object> updateRouteToPrilesie(HttpServletRequest request, @RequestBody String str) throws ParseException, IOException {
+		String serverUrlMethod = SERVER_URL+"/allowedlist/";
+
+	    Map<String, Object> response = new HashMap<>();
+
+	    JSONParser parser = new JSONParser();
+	    JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+	    Integer routeId = jsonMainObject.get("idRoute") == null ? null : Integer.parseInt(jsonMainObject.get("idRoute").toString());
+	    DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+	    LocalDateTime startTime = LocalDateTime.parse(jsonMainObject.get("dateTimeStartPrilesie").toString(), dtf).withSecond(0).withNano(0);
+	    LocalDateTime endTime = LocalDateTime.parse(jsonMainObject.get("dateTimeEndPrilesie").toString(), dtf).withSecond(0).withNano(0);
+	    Route route = routeService.getRouteById(routeId);
+	    String carNumber = prilesieService.transliterateToVisualLatin(route.getTruck().getNumTruck()).replaceAll("[ *-]+", "");
+	    String driverPhone = route.getDriver().getTelephone() == null ? "" : prilesieService.phoneConverter(route.getDriver().getTelephone());
+	    Integer warehouse = null;
+	    Integer allowCompany = null;
+	    List<Order> orders = route.getOrders().stream().collect(Collectors.toList());
+
+	    if (!orders.isEmpty()) {
+	        if (orders.get(0).getNumStockDelivery().equals("1800")) {
+	            warehouse = 7;
+	            allowCompany = 15;
+	        } else if (orders.get(0).getNumStockDelivery().equals("1700")) {
+	            warehouse = 5;
+	            allowCompany = 10;
+	        }
+	    }
+	    String supplier = route.getRouteDirection().split(">")[0].substring(1);
+
+	    JsonObject jsonObjectForPrilesie = new JsonObject();
+	    jsonObjectForPrilesie.addProperty("id", routeId);
+	    jsonObjectForPrilesie.addProperty("plate_number", carNumber);
+	    jsonObjectForPrilesie.addProperty("sms_number", driverPhone);
+	    jsonObjectForPrilesie.addProperty("start_time", startTime.toString());
+	    jsonObjectForPrilesie.addProperty("end_time", endTime.toString());
+	    jsonObjectForPrilesie.addProperty("status", 2);
+	    jsonObjectForPrilesie.addProperty("allow_company", allowCompany);
+	    jsonObjectForPrilesie.addProperty("warehouse", warehouse);
+	    jsonObjectForPrilesie.addProperty("ramp", 20);
+	    jsonObjectForPrilesie.addProperty("supplier", supplier);
+
+	    Gson gson = new Gson();
+	    String jsonData = gson.toJson(jsonObjectForPrilesie);
+	    StringEntity entity = new StringEntity(jsonData, ContentType.APPLICATION_JSON);
+
+	    CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+	    String credentials = USERNAME + ":" + PASSWORD;
+	    String credentialsBasic = "Basic " + Base64.getEncoder().encodeToString(credentials.getBytes(StandardCharsets.UTF_8));
+	    HttpPatch httpPatch = new HttpPatch(serverUrlMethod + route.getIdObjectPrilesie() + "/");
+	    httpPatch.setHeader("Authorization", credentialsBasic);
+	    httpPatch.setHeader("Accept", "application/json");
+	    httpPatch.setHeader("Content-type", "application/json");
+	    httpPatch.setEntity(entity);
+	    CloseableHttpResponse httpResponse = httpClient.execute(httpPatch);
+
+	    int statusCode = httpResponse.getStatusLine().getStatusCode();
+	    HttpEntity responseEntity = httpResponse.getEntity();
+	    String responseBody = EntityUtils.toString(responseEntity, "UTF-8");
+	    JSONObject jsonResponseObject = (JSONObject) parser.parse(responseBody);
+	    if (statusCode >= 200 && statusCode < 300) {
+	        Long idObjectPrilesie = jsonResponseObject.get("id") == null ? null : Long.parseLong(jsonResponseObject.get("id").toString());
+	        if (idObjectPrilesie == null) {
+	            response.put("status", "100");
+	            response.put("message", "Объект не был обновлён");
+	            return response;
+	        }
+	        route.setIdObjectPrilesie(idObjectPrilesie);
+	        Timestamp timestampStartTime = Timestamp.valueOf(startTime);
+	        route.setDateTimeStartPrilesie(timestampStartTime);
+	        Timestamp timestampEndTime = Timestamp.valueOf(endTime);
+	        route.setDateTimeEndPrilesie(timestampEndTime);
+	        routeService.updateRoute(route);
+	        response.put("status", "200");
+	        response.put("idObjectPrilesie", idObjectPrilesie);
+	        response.put("route", route);
+	        return response;
+	    } else {
+	        String prilesieresponse = jsonResponseObject.get("error").toString();
+	        response.put("status", "100");
+	        response.put("message", "Ответ с Прилесья: " + prilesieresponse);
+	        return response;
+	    }
+	}
+	
+	/**
+	 * <br>Получает из прилесья данные о машине по idObjectPrilesie</br>.
+	 * @author Ira
+	 */
+	@GetMapping("/get-route-prilesie/{idObjectPrilesie}")
+	public Map<String, Object> getRoutePrilesie(@PathVariable String idObjectPrilesie) throws ParseException, IOException {
+	    Map<String, Object> response = new HashMap<>();
+	    String serverUrlMethod = SERVER_URL+"/allowedlist/";
+	    JSONParser parser = new JSONParser();
+
+	    JsonObject jsonObjectForPrilesie = new JsonObject();
+	    jsonObjectForPrilesie.addProperty("id", idObjectPrilesie);
+
+	    CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+	    String credentials = USERNAME + ":" + PASSWORD;
+	    String credentialsBasic = "Basic " + Base64.getEncoder().encodeToString(credentials.getBytes(StandardCharsets.UTF_8));
+	    HttpGet httpGet = new HttpGet(serverUrlMethod + idObjectPrilesie + "/");
+	    httpGet.setHeader("Authorization", credentialsBasic);
+	    httpGet.setHeader("Accept", "application/json");
+	    httpGet.setHeader("Content-type", "application/json");
+	    CloseableHttpResponse httpResponse = httpClient.execute(httpGet);
+
+	    int statusCode = httpResponse.getStatusLine().getStatusCode();
+	    HttpEntity responseEntity = httpResponse.getEntity();
+	    String responseBody = EntityUtils.toString(responseEntity, "UTF-8");
+	    JSONObject jsonResponseObject = (JSONObject) parser.parse(responseBody);
+	    if (statusCode >= 200 && statusCode < 300) {
+	        response.put("status", "200");
+	        response.put("response", jsonResponseObject);
+	        return response;
+	    } else {
+	        String prilesieResponse = jsonResponseObject.get("error").toString();
+	        if (prilesieResponse.equals("No AllowedList matches the given query.")) {
+	            response.put("status", "100");
+	            response.put("message", "Маршрут с таким ID не найден");
+	            return response;
+	        }
+	        response.put("status", "100");
+	        response.put("message", "Ответ с Прилесья: " + prilesieResponse);
+	        return response;
+	    }
+	}
 	
 	 //получение страницы с маршрутами перевозчика!
     @GetMapping("/carrier/get-actual-carrier-routes")

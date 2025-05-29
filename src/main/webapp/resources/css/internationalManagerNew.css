@@ -17,21 +17,6 @@ footer.to-bottom {
 	height: calc(1.5em + 0.75rem + 8px);
 }
 
-#routeImageContainer {
-	display: flex;
-	flex-direction: row;
-	flex-wrap: wrap;
-	justify-content: flex-start;
-	align-items: center;
-	gap: 10px;
-}
-#routeImageContainer img {
-	width: 240px;
-	height: 180px;
-	object-fit: cover;
-	border: 1px solid lightgray;
-}
-
 .title-container,
 .search-form-container {
 	min-height: 30px;
@@ -408,4 +393,26 @@ footer.to-bottom {
 #priceAnalisysReportFrame {
 	width: 100%;
 	height: 61vh;
+}
+
+#routeImageContainer {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	justify-content: flex-start;
+	align-items: flex-start;
+	gap: 10px;
+}
+#routeImageContainer img {
+	width: 240px;
+	height: 180px;
+	object-fit: contain;
+	border: 1px solid lightgray;
+}
+#routeImageContainer .img-title {
+	max-width: 240px;
+}
+#routeImageContainer .img-delete-btn {
+	top: 5px;
+	right: 5px;
 }

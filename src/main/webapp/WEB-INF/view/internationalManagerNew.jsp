@@ -170,10 +170,9 @@
 				</div>
 				<form id="addFilesToRouteForm">
 					<div class="modal-body">
-						<textarea class="form-control border-0 bg-transparent mb-2 h-auto" rows="4" name="routeDirection" disabled></textarea>
+						<textarea class="form-control border-0 bg-transparent mb-2 h-auto" rows="3" name="routeDirection" disabled></textarea>
 						<input type="number" name="idRoute" hidden>
 						<div class="form-group">
-							<!-- <label class="col-form-label text-muted font-weight-bold">Прикрепите изображения</label> -->
 							<input type="file"
 								multiple
 								class="form-control btn btn-outline-secondary"
@@ -182,7 +181,7 @@
 								required
 							>
 						</div>
-						<div class="text-muted mb-2">Предпросмотр:</div>
+						<div class="text-muted mb-2">Выбранные файлы:</div>
 						<div id="routeImageContainer"></div>
 					</div>
 					<div class="modal-footer">
@@ -208,7 +207,8 @@
 					<div class="modal-body">
 						<textarea class="form-control border-0 bg-transparent mb-2 h-auto" rows="3" name="routeDirection" disabled></textarea>
 						<input type="number" name="idRoute" hidden>
-						<input type="number" name="actionType" hidden>
+						<input type="number" name="idObjectPrilesie" hidden>
+						<input type="text" name="actionType" hidden>
 						<div class="text-center text-muted h5">Укажите продежуток времени для заезда машины:</div>
 						<div class="d-flex justify-content-center">
 							<div class="input-row-container mr-2">
@@ -241,17 +241,17 @@
 					</button>
 				</div>
 				<div class="modal-body">
-					<p><strong>ID:</strong> <span id="modal-id"></span></p>
-					<p><strong>Номер машины:</strong> <span id="modal-plate"></span></p>
-					<p><strong>Поставщик:</strong> <span id="modal-supplier"></span></p>
-					<p><strong>Склад:</strong> <span id="modal-warehouse"></span></p>
-					<p><strong>Рампа:</strong> <span id="modal-ramp"></span></p>
-					<p><strong>Начало:</strong> <span id="modal-start"></span></p>
-					<p><strong>Конец:</strong> <span id="modal-end"></span></p>
-					<p><strong>SMS:</strong> <span id="modal-sms"></span></p>
-					<p><strong>Дата въезда:</strong> <span id="modal-date-on"></span></p>
-					<p><strong>Дата выезда:</strong> <span id="modal-date-exit"></span></p>
-					<p><strong>Статус выезда:</strong> <span id="modal-exit-ok"></span></p>
+					<p><strong>ID:</strong> <span id="prilesieDataModal-id"></span></p>
+					<p><strong>Номер машины:</strong> <span id="prilesieDataModal-plate"></span></p>
+					<p><strong>Поставщик:</strong> <span id="prilesieDataModal-supplier"></span></p>
+					<p><strong>Склад:</strong> <span id="prilesieDataModal-warehouse"></span></p>
+					<p><strong>Рампа:</strong> <span id="prilesieDataModal-ramp"></span></p>
+					<p><strong>Начало:</strong> <span id="prilesieDataModal-start"></span></p>
+					<p><strong>Конец:</strong> <span id="prilesieDataModal-end"></span></p>
+					<p><strong>SMS:</strong> <span id="prilesieDataModal-sms"></span></p>
+					<p><strong>Дата въезда:</strong> <span id="prilesieDataModal-date-on"></span></p>
+					<p><strong>Дата выезда:</strong> <span id="prilesieDataModal-date-exit"></span></p>
+					<p><strong>Статус выезда:</strong> <span id="prilesieDataModal-exit-ok"></span></p>
 				</div>
 			</div>
 		</div>

@@ -700,29 +700,76 @@ function createRouteInfoHTML(route) {
 		`
 }
 
+// отправка формы регистрации машины на Прилесье
 function regTruckFormSubmitHandler(e) {
 	e.preventDefault()
 
 	const formData = new FormData(e.target)
 	const data = Object.fromEntries(formData)
+	const payload = {
+		...data,
+		idRoute: +data.idRoute,
+		idObjectPrilesie: data.idObjectPrilesie ? +data.idObjectPrilesie : null
+	}
 
-	console.log(data)
+	const url = data.actionType === 'edit' ? '' : ''
 
-	
+	console.log(payload)
+
+	// const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 300)
+
+	// ajaxUtils.postJSONdata({
+	// 	url: url,
+	// 	data: payload,
+	// 	successCallback: async (res) => {
+	// 		clearTimeout(timeoutId)
+	// 		bootstrap5overlay.hideOverlay()
+
+	// 		if (res.status === '200') {
+	// 			snackbar.show('Машина зарегистрирована')
+
+	// 			return
+	// 		}
+
+	// 		if (res.status === '100') {
+	// 			const errorMessage = res.message || 'Ошибка удаления файла'
+	// 			snackbar.show(errorMessage)
+	// 			return
+	// 		}
+	// 	},
+	// 	errorCallback: () => {
+	// 		clearTimeout(timeoutId)
+	// 		bootstrap5overlay.hideOverlay()
+	// 		snackbar.show('Ошибка удаления файла')
+	// 	}
+	// })
 }
 
+// отображение модального окна с информацией из Прилесья
 function openPrilesieDataModal(data) {
-	document.getElementById("modal-id").textContent = data.id;
-	document.getElementById("modal-plate").textContent = data.plate_number;
-	document.getElementById("modal-supplier").textContent = data.supplier;
-	document.getElementById("modal-warehouse").textContent = data.warehouse;
-	document.getElementById("modal-ramp").textContent = data.ramp;
-	document.getElementById("modal-start").textContent = new Date(data.start_time).toLocaleString();
-	document.getElementById("modal-end").textContent = new Date(data.end_time).toLocaleString();
-	document.getElementById("modal-sms").textContent = data.sms_number;
-	document.getElementById("modal-date-on").textContent = new Date(data.access_log.date_time_on).toLocaleString();
-	document.getElementById("modal-date-exit").textContent = data.access_log.date_time_exit ? new Date(data.access_log.date_time_exit).toLocaleString() : "—";
-	document.getElementById("modal-exit-ok").textContent = data.access_log.exit_ok ? "Да" : "Нет";
+	const id = data.id || 'н/д'
+	const plateNumber = data.plate_number || 'н/д'
+	const supplier = data.supplier || 'н/д'
+	const warehouse = data.warehouse || 'н/д'
+	const ramp = data.ramp || 'н/д'
+	const startTime = data.start_time ? new Date(data.start_time).toLocaleString() : 'н/д'
+	const endTime = data.end_time ? new Date(data.end_time).toLocaleString() : 'н/д'
+	const smsNumber = data.sms_number || 'н/д'
+	const dateOn = data.access_log && data.access_log.date_time_on ? new Date(data.access_log.date_time_on).toLocaleString() : 'н/д'
+	const dateExit = data.access_log && data.access_log.date_time_exit ? new Date(data.access_log.date_time_exit).toLocaleString() : 'н/д'
+	const exitOk = data.access_log && data.access_log.exit_ok ? 'Да' : 'Нет'
+
+	document.getElementById("prilesieDataModal-id").textContent = id
+	document.getElementById("prilesieDataModal-plate").textContent = plateNumber
+	document.getElementById("prilesieDataModal-supplier").textContent = supplier
+	document.getElementById("prilesieDataModal-warehouse").textContent = warehouse
+	document.getElementById("prilesieDataModal-ramp").textContent = ramp
+	document.getElementById("prilesieDataModal-start").textContent = startTime
+	document.getElementById("prilesieDataModal-end").textContent = endTime
+	document.getElementById("prilesieDataModal-sms").textContent = smsNumber
+	document.getElementById("prilesieDataModal-date-on").textContent = dateOn
+	document.getElementById("prilesieDataModal-date-exit").textContent = dateExit
+	document.getElementById("prilesieDataModal-exit-ok").textContent = exitOk
 
 	$('#prilesieDataModal').modal('show');
 }
@@ -907,10 +954,17 @@ function getContextMenuItems(params) {
 		// 		regTruckInPrilesieForm.actionType.value = 'create'
 		// 		regTruckInPrilesieForm.routeDirection.textContent = routeDirection
 
+		// 		const today = new Date()
+		// 		const minDate = today.toISOString().slice(0, 16)
+
+		// 		regTruckInPrilesieForm.dateStart.min = minDate
+		// 		regTruckInPrilesieForm.dateEnd.min = minDate
+
 		// 		if (routeData.idObjectPrilesie) {
 		// 			regTruckInPrilesieForm.actionType.value = 'edit'
-		// 			regTruckInPrilesieForm.dateStart.value = routeData.dateStartPrilesie
-		// 			regTruckInPrilesieForm.dateEnd.value = routeData.dateEndPrilesie
+		// 			regTruckInPrilesieForm.idObjectPrilesie.value = idObjectPrilesie
+		// 			regTruckInPrilesieForm.dateStart.value = routeData.dateTimeStartPrilesie
+		// 			regTruckInPrilesieForm.dateEnd.value = routeData.dateTimeEndPrilesie
 		// 		}
 		// 		$('#regTruckInPrilesieModal').modal('show')
 		// 	},
@@ -2001,9 +2055,12 @@ async function showGalleryItems(galleryItems) {
 					fileName = decodeURIComponent(src.split('/').pop().split('?')[0])
 				}
 
+				const id = Number(src.split('/').pop())
+
 				if (isImage) {
 					const size = await getImageSize(src)
 					return {
+						id: id,
 						src: src,
 						title: fileName,
 						alt: fileName,
@@ -2015,6 +2072,7 @@ async function showGalleryItems(galleryItems) {
 					// Не изображение
 					const iconSrc = fileTypeIcons[contentType] || fileTypeIcons['default']
 					return {
+						id: id,
 						src: iconSrc,
 						downloadLink: src,
 						title: fileName,
@@ -2027,6 +2085,7 @@ async function showGalleryItems(galleryItems) {
 			} catch (error) {
 				console.error('Ошибка загрузки:', error)
 				return {
+					id: id,
 					src: fileTypeIcons['default'],
 					downloadLink: src,
 					title: `Файл ${i + 1}`,
@@ -2063,16 +2122,51 @@ function addImgToView(event, imgContainer) {
 
 	for (let i = 0; i < files.length; i++) {
 		const file = files[i]
+		const fileType = file.type
+
+		if (!fileType.startsWith('image/')) {
+			const src = fileTypeIcons[fileType] || fileTypeIcons['default']
+			const imgCard = createImgCard(file, src, files)
+			imgContainer.append(imgCard)
+			continue
+		}
+
 		const reader = new FileReader()
 		reader.readAsDataURL(file)
 		reader.onload = () => {
-			const newImg = document.createElement("img")
-			newImg.src = reader.result
-			imgContainer.append(newImg)
+			const src = reader.result
+			const imgCard = createImgCard(file, src, files)
+			imgContainer.append(imgCard)
 		}
 	}
 
 	return
+}
+function createImgCard(file, src, files) {
+	const imgCard = document.createElement('div')
+	imgCard.className = 'position-relative'
+
+	const imgCardTitle = document.createElement('div')
+	imgCardTitle.className = 'img-title text-center p-1 text-muted text-wrap'
+	imgCardTitle.textContent = file.name
+
+	const newImg = document.createElement("img")
+	newImg.src = src
+
+	const deleteBtn = document.createElement('button')
+	deleteBtn.type = 'button'
+	deleteBtn.className = 'img-delete-btn btn btn-danger btn-sm position-absolute h5 m-0 px-2 py-0'
+	deleteBtn.innerHTML = '&times;'
+
+	deleteBtn.addEventListener('click', (e) => {
+		e.preventDefault()
+		const deleteIndex = [...files].findIndex((f) => f.name === file.name)
+		// files.splice(deleteIndex, 1) // error
+		// imgCard.remove()
+	})
+
+	imgCard.append(newImg, imgCardTitle)
+	return imgCard
 }
 
 // обработка прикрепления файлов
@@ -2128,8 +2222,7 @@ async function deleteFile(e, el, pswp) {
 	const currentSlide = pswp.currSlide
 	if (!currentSlide) return
 	
-	const imgSrc = currentSlide.data.src
-	const fileId = imgSrc.split('/').pop()
+	const fileId = currentSlide.data.id
 
 	const formData = new FormData()
 	formData.append('id', +fileId)

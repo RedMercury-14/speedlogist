@@ -15,6 +15,8 @@ public interface FileService {
 	
 	Long saveFileByRoute (MultipartFile file, int idRoute, User user);
 	
+	Long saveFileByPrilesie (MultipartFile file, User user);
+	
 	int saveMultipartFile (MultipartFile file);
 	
 	void update (MyFile file);	

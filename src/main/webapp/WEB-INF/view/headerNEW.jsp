@@ -142,6 +142,7 @@
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/shopControl" />">Список магазинов</a>
 										<!-- <a class="dropdown-item" href="<spring:url value="/main/logistics/counterpartiesList" />">Список поставщиков</a> -->
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/maintenance " />">Менеджер маршрутов АХО/СГИ</a>
+										<a class="dropdown-item" href="<spring:url value="/main/logistics/info-carrier-list " />">Менеджер заявок на сотрудничество</a>
 									</div>
 								</li>
 								<li class="dropdown">
@@ -212,6 +213,7 @@
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/shopControl" />">Список магазинов</a>
 										<!-- <a class="dropdown-item" href="<spring:url value="/main/logistics/counterpartiesList" />">Список поставщиков</a> -->
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/maintenance " />">Менеджер маршрутов АХО/СГИ</a>
+										<a class="dropdown-item" href="<spring:url value="/main/logistics/info-carrier-list " />">Менеджер заявок на сотрудничество</a>
 									</div>
 								</li>
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/depot" />">Маршрутизатор</a></li>
@@ -234,6 +236,7 @@
 										<a class="dropdown-item" href="<spring:url value="/main/analytics?pageName=logistic" />">Аналитика Биржи</a>
 										<a class="dropdown-item" href="<spring:url value="/main/analytics?pageName=rc" />">Аналитика: Нехватка товаров на РЦ</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/maintenance " />">Менеджер маршрутов АХО/СГИ</a>
+										<a class="dropdown-item" href="<spring:url value="/main/logistics/info-carrier-list " />">Менеджер заявок на сотрудничество</a>
 									</div>
 								</li>
 								<li class="dropdown">

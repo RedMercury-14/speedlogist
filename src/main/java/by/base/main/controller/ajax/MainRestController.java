@@ -429,6 +429,11 @@ public class MainRestController {
 	       }
 	    Date dateStart = jsonMainObject.get("dateStart") != null && !jsonMainObject.get("dateStart").toString().isEmpty() ? Date.valueOf(jsonMainObject.get("dateStart").toString()) : null;
 	    Date dateFinish = jsonMainObject.get("dateFinish") != null && !jsonMainObject.get("dateFinish").toString().isEmpty() ? Date.valueOf(jsonMainObject.get("dateFinish").toString()) : null;
+	    if(dateStart.after(dateFinish)) {	    	
+	    	response.put("message", "Дата старта не может быть позже даты финиша");
+	    	response.put("status", "100");
+		    return response;
+	    }
 	    for (Integer code: codes) {
 	       Product product = productService.getProductByCode(code);
 	       if (product != null) {

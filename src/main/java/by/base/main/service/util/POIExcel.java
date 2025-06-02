@@ -3145,13 +3145,13 @@ public class POIExcel {
 
 	                Double stockInDay111 = product.getBalanceStockInDay1700();
 	                Double balanceStockAndReserves222 = product.getBalanceStockAndReserves1700();
-	                product.setBalanceStockInDay1700(getCellValue(cellOstOnRCInDays1700) == null ? stockInDay111 : Double.parseDouble(getCellValue(cellOstOnRCInDays1700)) + stockInDay111);
-	                product.setBalanceStockAndReserves1700(getCellValue(cellOstOnRCInDays1700) == null ? balanceStockAndReserves222 : Double.parseDouble(getCellValue(cellOstOnRCInDays1700)) + balanceStockAndReserves222);
+	                product.setBalanceStockInDay1700(getCellValue(cellOstOnRCInDays1700) == null ? (stockInDay111 == null ? 0 : stockInDay111) : Double.parseDouble(getCellValue(cellOstOnRCInDays1700)) + (stockInDay111 == null ? 0 : stockInDay111));
+	                product.setBalanceStockAndReserves1700(getCellValue(cellOstOnRCInDays1700) == null ? (balanceStockAndReserves222 == null ? balanceStockAndReserves22 : balanceStockAndReserves222) : Double.parseDouble(getCellValue(cellOstOnRCInDays1700)) + (balanceStockAndReserves222 == null ? balanceStockAndReserves22 : balanceStockAndReserves222));
 
 	                Double stockInDay1111 = product.getBalanceStockInDay1800();
 	                Double balanceStockAndReserves2222 = product.getBalanceStockAndReserves1800();
-	                product.setBalanceStockInDay1800(getCellValue(cellOstOnRCInDays1800) == null ? stockInDay1111 : Double.parseDouble(getCellValue(cellOstOnRCInDays1800)) + stockInDay1111);
-	                product.setBalanceStockAndReserves1800(getCellValue(cellOstOnRCInDays1800) == null ? balanceStockAndReserves2222 : Double.parseDouble(getCellValue(cellOstOnRCInDays1800)) + balanceStockAndReserves2222);
+	                product.setBalanceStockInDay1800(getCellValue(cellOstOnRCInDays1800) == null ? (stockInDay1111 == null ? 0 : stockInDay1111) : Double.parseDouble(getCellValue(cellOstOnRCInDays1800)) + (stockInDay1111 == null ? 0 : stockInDay1111));
+	                product.setBalanceStockAndReserves1800(getCellValue(cellOstOnRCInDays1800) == null ? (balanceStockAndReserves2222 == null ? 0 : balanceStockAndReserves2222) : Double.parseDouble(getCellValue(cellOstOnRCInDays1800)) + (balanceStockAndReserves2222 == null ? 0 : balanceStockAndReserves2222));
 	            }
 
 	            productService.updateProduct(product);

@@ -429,7 +429,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 	// предпросмотр изображений к маршруту при добавлении
 	const routeImgInput = document.querySelector("#addRouteImageInput")
 	const routeImgContainer = document.querySelector("#routeImageContainer")
-	routeImgInput.addEventListener("change", (e) => addImgToView(e, routeImgContainer))
+	routeImgInput.addEventListener("change", (e) => addImgToView(e, routeImgContainer, 'addRouteImageInput'))
 	addFilesToRouteForm.addEventListener('submit', addFilesToRouteFormSubmitHandler)
 
 	// закрытие модалки с формой прикрепления изображений

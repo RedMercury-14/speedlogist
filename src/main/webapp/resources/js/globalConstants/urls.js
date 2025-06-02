@@ -288,6 +288,7 @@ export const setNewBalanceBaseUrl = '/speedlogist/api/order-support/setNewBalanc
 export const setMaxDayBaseUrl = '/speedlogist/api/order-support/setMaxDay/'
 export const changeExceptionBaseUrl = '/speedlogist/api/order-support/changeException/'
 export const blockProductUrl = '/speedlogist/api/order-support/blockProduct'
+export const blockManyProductsUrl = '/speedlogist/api/order-support/block-many-products'
 
 
 ///////////////////////////////////////////////
@@ -524,3 +525,9 @@ export const getFilesByRouteBaseUrl = '/speedlogist/file/files/byRoute/' // {idR
 export const downloadZipByRouteUrl = '/speedlogist/file/downloadFileByRoute/zip/' // {idRoute} - скачивание изображений одним архивом 
 export const getFileBaseUrl = '/speedlogist/file/downloadFile/' // {id} - скачивание одного файла
 export const getImagesByRouteBase64BaseUrl = '/speedlogist/file/images/base64/byRoute/' // {idRoute} - возвращает массив json где все изображения в base64
+
+
+///////////////////////////////////////////////
+// API файлов
+///////////////////////////////////////////////
+export const createNewSupplierUrl = '/speedlogist/api/new-supplier'

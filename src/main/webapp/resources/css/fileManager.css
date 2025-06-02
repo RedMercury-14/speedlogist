@@ -1,0 +1,24 @@
+#filesPreviewContainer {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	justify-content: flex-start;
+	align-items: flex-start;
+	gap: 10px;
+}
+#filesPreviewContainer img {
+	width: 240px;
+	height: 180px;
+	object-fit: contain;
+	border: 1px solid lightgray;
+}
+#filesPreviewContainer .img-title {
+	max-width: 240px;
+}
+#filesPreviewContainer .img-delete-btn {
+	top: 5px;
+	right: 5px;
+}
+#addFilesForm .form-control {
+	height: calc(1.5em + 0.75rem + 8px);
+}

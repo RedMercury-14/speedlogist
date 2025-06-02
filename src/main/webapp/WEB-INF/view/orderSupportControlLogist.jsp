@@ -65,18 +65,22 @@
 				<form class="" id="blockProductForm">
 					<div class="modal-body">
 						<input type="hidden" name="idProduct" id="idProduct">
-
+						<input type="hidden" name="actionType" id="actionType">
+						<div class="form-group">
+							<label class="text-muted font-weight-bold mb-2" for="codes">Коды тововаров для блокировки:</label>
+							<textarea class="form-control" rows="4" name="codes" placeholder="Коды тововаров для блокировки" readonly></textarea>
+						</div>
 						<div class="row">
 							<div class="col-md-6">
 								<div class="form-group">
 									<label class="text-muted font-weight-bold mb-1" for="dateStart">Дата начала блокировки</label>
-									<input type="date" name="dateStart" id="dateStart" class="form-control">
+									<input type="date" name="dateStart" id="dateStart" class="form-control" required>
 								</div>
 							</div>
 							<div class="col-md-6">
 								<div class="form-group">
 									<label class="text-muted font-weight-bold mb-1" for="dateFinish">Дата окончания блокировки</label>
-									<input type="date" name="dateFinish" id="dateFinish" class="form-control">
+									<input type="date" name="dateFinish" id="dateFinish" class="form-control" required>
 								</div>
 							</div>
 						</div>

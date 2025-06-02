@@ -251,6 +251,119 @@ export class ResetStateToolPanel {
 	}
 }
 
+export class MultiColumnFilterToolPanel {
+	init(params) {
+		this.params = params;
+		this.eGui = document.createElement("div");
+		this.eGui.style.width = "100%"
+		this.eGui.style.padding = "10px";
+		this.eGui.style.display = "flex";
+		this.eGui.style.flexDirection = "column";
+		this.eGui.style.gap = "10px";
+
+		this.eGui.append(this.getElements());
+	}
+
+	getGui() {
+		return this.eGui;
+	}
+
+	refresh() {}
+
+	getElements() {
+		const container = document.createElement("div")
+		container.className = "d-flex flex-column"
+		container.style.gap = "10px"
+
+		const title = document.createElement("h4")
+		title.textContent = "Мультифильтр"
+		title.className = "text-center mb-2"
+
+		const columnLabel = document.createElement("label")
+		columnLabel.textContent = "Выберите колонку:"
+		columnLabel.className = "font-weight-bold"
+
+		const columnSelect = document.createElement("select")
+		columnSelect.className = "form-control p-1"
+
+		const columns = this.params.columnDefs.filter(col => col.field)
+		columns.forEach(col => {
+			const option = document.createElement("option")
+			option.value = col.field
+			option.textContent = col.headerName || col.field
+			columnSelect.appendChild(option)
+		})
+
+		const valueLabel = document.createElement("label")
+		valueLabel.textContent = "Введите значения через запятую или с новой строки:"
+		valueLabel.className = "font-weight-bold"
+
+		const valueTextarea = document.createElement("textarea")
+		valueTextarea.className = "form-control"
+		valueTextarea.rows = 8
+		valueTextarea.placeholder = "например:\nЯблоко, Банан, Апельсин\nили\nЯблоко,Банан,Апельсин\nили\nЯблоко\nБанан\nАпельсин"
+
+		const buttonsContainer = document.createElement("div")
+		buttonsContainer.className = "d-flex justify-content-center"
+		buttonsContainer.style.gap = "5px"
+
+		const applyBtn = document.createElement("button")
+		applyBtn.className = "btn btn-info"
+		applyBtn.textContent = "Применить"
+
+		const clearBtn = document.createElement("button")
+		clearBtn.className = "btn btn-outline-secondary"
+		clearBtn.textContent = "Сбросить"
+
+		const applyHint = document.createElement("small")
+		applyHint.textContent = "Применить - Применяет фильтр к ВЫБРАННОЙ колонке"
+		applyHint.style.color = "#666"
+		applyHint.style.fontSize = "12px"
+
+		const clearHint = document.createElement("small")
+		clearHint.textContent = "Сбросить - Очищает фильтр ВЫБРАННОЙ колонки и сбрасывает поле ввода"
+		clearHint.style.color = "#666"
+		clearHint.style.fontSize = "12px"
+
+		applyBtn.addEventListener("click", () => {
+			const colId = columnSelect.value
+			const raw = valueTextarea.value
+			const values = raw.split(/[\n,]/).map(v => v.trim()).filter(Boolean)
+
+			const filterInstance = this.params.api.getFilterInstance(colId)
+			if (filterInstance && filterInstance.setModel) {
+				filterInstance.setModel({ values })
+				this.params.api.onFilterChanged()
+			}
+		})
+
+		clearBtn.addEventListener("click", () => {
+			const colId = columnSelect.value
+			const filterInstance = this.params.api.getFilterInstance(colId)
+			if (filterInstance && filterInstance.setModel) {
+				filterInstance.setModel(null)
+				this.params.api.onFilterChanged()
+			}
+			valueTextarea.value = ''
+		})
+
+		buttonsContainer.append(applyBtn, clearBtn)
+
+		container.append(
+			title,
+			columnLabel,
+			columnSelect,
+			valueLabel,
+			valueTextarea,
+			buttonsContainer,
+			applyHint,
+			clearHint
+		)
+
+		return container
+	}
+}
+
 export function cell(text, styleId) {
 	return {
 		styleId: styleId,

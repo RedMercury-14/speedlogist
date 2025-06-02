@@ -1,15 +1,16 @@
 import { AG_GRID_LOCALE_RU } from './AG-Grid/ag-grid-locale-RU.js'
 import {
+	MultiColumnFilterToolPanel,
 	ResetStateToolPanel,
 	dateComparator,
 	gridColumnLocalState,
 	gridFilterLocalState,
 	highlightRow,
 } from "./AG-Grid/ag-grid-utils.js"
-import { debounce, getData, dateHelper, isAdmin, isOrderSupport, } from './utils.js'
+import { debounce, getData, dateHelper, isAdmin, isOrderSupport, isObserver, } from './utils.js'
 import { ajaxUtils } from './ajaxUtils.js'
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
-import { blockProductUrl, changeExceptionBaseUrl, getStockRemainderUrl, setMaxDayBaseUrl, setNewBalanceBaseUrl } from './globalConstants/urls.js'
+import { blockManyProductsUrl, blockProductUrl, changeExceptionBaseUrl, getStockRemainderUrl, setMaxDayBaseUrl, setNewBalanceBaseUrl } from './globalConstants/urls.js'
 import { snackbar } from './snackbar/snackbar.js'
 
 const token = $("meta[name='_csrf']").attr("content")
@@ -144,6 +145,11 @@ const gridOptions = {
 	defaultExcelExportParams: {
 		processCellCallback: ({ value, formatValue }) => formatValue(value)
 	},
+	statusBar: {
+		statusPanels: [
+			{ statusPanel: 'agTotalAndFilteredRowCountComponent', align: 'left' },
+		],
+	},
 	sideBar: {
 		toolPanels: [
 			{
@@ -167,6 +173,16 @@ const gridOptions = {
 				toolPanel: 'agFiltersToolPanel',
 			},
 			{
+				id: 'customFilters',
+				iconKey: 'filter',
+				labelKey: 'customFilters',
+				labelDefault: 'Мультифильтр',
+				toolPanel: MultiColumnFilterToolPanel,
+				toolPanelParams: {
+					columnDefs: columnDefs,
+				},
+			},
+			{
 				id: 'resetState',
 				iconKey: 'menu',
 				labelDefault: 'Сброс настроек',
@@ -184,43 +200,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 	const gridDiv = document.querySelector('#myGrid')
 	renderTable(gridDiv, gridOptions)
 
-	blockProductForm.addEventListener('submit', async (e) => {
-		e.preventDefault()
-		const formData = new FormData(e.target)
-		const data = Object.fromEntries(formData)
-		data.idProduct = Number(data.idProduct)
-
-		const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 300)
-
-		ajaxUtils.postJSONdata({
-			url: blockProductUrl,
-			data: data,
-			successCallback: (res) => {
-				clearTimeout(timeoutId)
-				bootstrap5overlay.hideOverlay()
-
-				if (res.status === '200') {
-					const updatedReview = getMappingItem(res.object)
-					updateTableRow(gridOptions, updatedReview)
-					res.message && snackbar.show(res.message)
-					$('#blockProductModal').modal('hide')
-					return
-				}
-
-				if (res.status === '100') {
-					
-					const message = res.message ? res.message : 'Неизвестная ошибка'
-					snackbar.show(message)
-					return
-				}
-			},
-			errorCallback: () => {
-				clearTimeout(timeoutId)
-				bootstrap5overlay.hideOverlay()
-			}
-		})
-		
-	})
+	blockProductForm.addEventListener('submit', blockProductFormSubmitHandler)
 
 	$('#blockProductModal').on('hidden.bs.modal', (e) => {
 		blockProductForm.reset()
@@ -273,14 +253,31 @@ async function updateTable(gridOptions, data) {
 }
 function getContextMenuItems(params) {
 	const rowNode = params.node
+	if (!rowNode) return []
+
 	const data = rowNode.data
 
 	const result = [
 		{
+			disabled: isObserver(role),
 			name: `Блокировать товар на период`,
 			action: () => {
 				blockProductForm.idProduct.value = data.codeProduct
+				blockProductForm.codes.value = data.codeProduct
+				blockProductForm.actionType.value = 'blockOneProduct'
 				$('#blockProductModal').modal('show')
+			},
+		},
+		{
+			disabled: isObserver(role),
+			name: `Блокировать товар (по отфильтрованным строкам таблицы)`,
+			action: () => {
+				const filteredRows = getFiltredAndSortedRows(params)
+				const strCodes = filteredRows.map(item => item.codeProduct).join(', ')
+				blockProductForm.codes.value = strCodes
+				blockProductForm.actionType.value = 'blockManyProducts'
+				$('#blockProductModal').modal('show')
+				
 			},
 		},
 		"separator",
@@ -316,7 +313,78 @@ function getPromotionsInfo(product) {
 	return promotionDateStartStr + promotionDateEndStr
 }
 
+function getFiltredAndSortedRows(params) {
+	const filteredData = [];
+	const rowCount = params.api.getDisplayedRowCount();
 
+	for (let i = 0; i < rowCount; i++) {
+		const rowNode = params.api.getDisplayedRowAtIndex(i);
+		filteredData.push(rowNode.data);
+	}
+
+	return filteredData
+}
+
+// блокировка продукта на период
+async function blockProductFormSubmitHandler(e) {
+	e.preventDefault()
+
+	if (isObserver(role)) {
+		snackbar.show('Недостаточно прав для выполнения операции')
+		return
+	}
+
+	const formData = new FormData(e.target)
+	const data = Object.fromEntries(formData)
+
+	const isBlockManyProducts = data.actionType === 'blockManyProducts'
+	const url = isBlockManyProducts ? blockManyProductsUrl : blockProductUrl
+	const payload = isBlockManyProducts
+		? {
+			codes: data.codes.split(',').map(code => Number(code.trim())),
+			dateStart: data.dateStart,
+			dateFinish: data.dateFinish,
+		}
+		: {
+			idProduct: Number(data.idProduct),
+			dateStart: data.dateStart,
+			dateFinish: data.dateFinish,
+		}
+
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 300)
+
+	ajaxUtils.postJSONdata({
+		url: url,
+		data: payload,
+		successCallback: async (res) => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+
+			if (res.status === '200') {
+				res.message && snackbar.show(res.message)
+				$('#blockProductModal').modal('hide')
+
+				if (isBlockManyProducts) {
+					await updateTable(gridOptions, null)
+				} else {
+					const updatedReview = getMappingItem(res.object)
+					updateTableRow(gridOptions, updatedReview)
+				}
+				return
+			}
+
+			if (res.status === '100') {
+				const message = res.message ? res.message : 'Неизвестная ошибка'
+				snackbar.show(message)
+				return
+			}
+		},
+		errorCallback: () => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+		}
+	})
+}
 
 // обработчики изменения ячеек
 function editBalanceStockAndReserves(agGridParams) {

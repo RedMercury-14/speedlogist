@@ -414,6 +414,43 @@ public class MainRestController {
     private ServletContext servletContext;
 	
 	/**
+	 * <br>Метод для массовой блокировки кодов товаров</br>.
+	 * @author Ira
+	 */
+	@PostMapping("/order-support/block-many-products")
+	public Map<String, Object> blockManyProducts(HttpServletRequest request, @RequestBody String str) throws IOException, ParseException {
+	    Map<String, Object> response = new HashMap<String, Object>();
+	    JSONParser parser = new JSONParser();
+	    JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+	    JSONArray jsonCodes = (JSONArray) jsonMainObject.get("codes");
+	    List<Integer> codes = new ArrayList<>();
+	       for (Object jsonCode : jsonCodes) {
+	           codes.add(Integer.parseInt(jsonCode.toString()));
+	       }
+	    Date dateStart = jsonMainObject.get("dateStart") != null && !jsonMainObject.get("dateStart").toString().isEmpty() ? Date.valueOf(jsonMainObject.get("dateStart").toString()) : null;
+	    Date dateFinish = jsonMainObject.get("dateFinish") != null && !jsonMainObject.get("dateFinish").toString().isEmpty() ? Date.valueOf(jsonMainObject.get("dateFinish").toString()) : null;
+	    if(dateStart.after(dateFinish)) {	    	
+	    	response.put("message", "Дата старта не может быть позже даты финиша");
+	    	response.put("status", "100");
+		    return response;
+	    }
+	    for (Integer code: codes) {
+	       Product product = productService.getProductByCode(code);
+	       if (product != null) {
+	          product.setBlockDateStart(dateStart);
+	          product.setBlockDateFinish(dateFinish);
+	          productService.updateProduct(product);
+	       } else {
+	          response.put("status", "100");
+	          response.put("message", "Товара с кодом " + code + " не существует.");
+	          return response;
+	       }
+	    }
+	    response.put("status", "200");
+	    return response;
+	}
+	
+	/**
 	 * <br>Сохраняет машину в прилесье</br>.
 	 * @author Ira
 	 */

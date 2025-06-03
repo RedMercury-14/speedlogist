@@ -251,11 +251,11 @@ function getMappingData(data) {
 		const tir = user.tir ? 'Да' : 'Нет'
 		const check = user.check
 
-		const userType = check.includes('international')
-			? 'Международный' : check.includes('regional')
+		const userType = check && check.includes('international')
+			? 'Международный' : check && check.includes('regional')
 				? 'Региональный' : check
 
-		const isConfirmed = check.includes('&new') ? 'Нет' : 'Да'
+		const isConfirmed = check && check.includes('&new') ? 'Нет' : 'Да'
 
 		return {
 			...user,

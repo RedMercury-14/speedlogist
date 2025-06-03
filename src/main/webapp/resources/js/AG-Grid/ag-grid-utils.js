@@ -88,7 +88,6 @@ export function autoSizeAll(gridOptions, skipHeader) {
 
 export class DateTimeEditor {
 	eInput
-	cancelBeforeStart
 
 	init(params) {
 		this.eInput = document.createElement("input")
@@ -97,12 +96,9 @@ export class DateTimeEditor {
 		this.eInput.classList.add("datetime-input")
 
 		if (params.value) {
-			const [ date, time ] = params.value.split(' ')
-			this.eInput.value = 
-				`${dateHelper.changeFormatToInput(date)}T${time.slice(0, 5)}`
+			this.eInput.value = dateHelper.getISODateTime(params.value)
 		}
 	}
-
 
 	getGui() {
 		return this.eInput
@@ -115,12 +111,10 @@ export class DateTimeEditor {
 	isCancelAfterEnd() {}
 
 	getValue() {
-		const value = this.eInput.value
-		if (value) {
-			const [ date, time ] = this.eInput.value.split('T')
-			return `${dateHelper.changeFormatToView(date)} ${time}`
+		if (this.eInput.value) {
+			return new Date(this.eInput.value).getTime()
 		} else {
-			return ''
+			return null
 		}
 	}
 

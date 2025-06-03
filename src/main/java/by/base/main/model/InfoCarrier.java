@@ -10,8 +10,11 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 @Entity
 @Table(name = "info_carrier")
+@JsonIgnoreProperties(ignoreUnknown = true) // игнорировать неизвестные поля
 public class InfoCarrier {
 	
 	@Id
@@ -82,7 +85,18 @@ public class InfoCarrier {
     @Column(name = "status", columnDefinition = "TEXT")
     private Integer status; // паллетовместимость
 
+    @Column(name = "date_send_reg_link")
+    private Timestamp dateSendRegLink; // дата отправки ссылки на регистрацию
     
+    
+	public Timestamp getDateSendRegLink() {
+		return dateSendRegLink;
+	}
+
+	public void setDateSendRegLink(Timestamp dateSendRegLink) {
+		this.dateSendRegLink = dateSendRegLink;
+	}
+
 	public Integer getStatus() {
 		return status;
 	}

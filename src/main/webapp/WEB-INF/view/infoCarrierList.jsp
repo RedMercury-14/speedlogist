@@ -11,7 +11,6 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Список заявок на сотрудничество</title>
 	<link rel="icon" href="${pageContext.request.contextPath}/resources/img/favicon.ico">
-	<script async src="${pageContext.request.contextPath}/resources/js/getInitData.js" type="module"></script>
 	<script src="${pageContext.request.contextPath}/resources/js/AG-Grid/ag-grid-enterprise.min.js"></script>
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/variables.css">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/snackbar.css">
@@ -32,7 +31,7 @@
 		<div class="search-form-container">
 			<form class="" action="" id="searchDataForm">
 				<span class="font-weight-bold text-muted mb-0">Заявки на сотрудничество</span>
-				<!-- <div class="input-row-container">
+				<div class="input-row-container">
 					<label class="text-muted font-weight-bold">с</label>
 					<input class="form-control" type="date" name="date_from" id="date_from" required>
 				</div>
@@ -40,7 +39,7 @@
 					<label class="text-muted font-weight-bold">по</label>
 					<input class="form-control" type="date" name="date_to" id="date_to" required>
 				</div>
-				<button class="btn btn-outline-secondary font-weight-bold" type="submit">Отобразить</button> -->
+				<button class="btn btn-outline-secondary font-weight-bold" type="submit">Отобразить</button>
 			</form>
 		</div>
 

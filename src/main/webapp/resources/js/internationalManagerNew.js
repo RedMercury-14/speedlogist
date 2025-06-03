@@ -700,8 +700,8 @@ function showRegTruckToPrilesieForm(routeData, regTruckInPrilesieLabel, ) {
 	if (idObjectPrilesie) {
 		regTruckInPrilesieForm.actionType.value = 'update'
 		regTruckInPrilesieForm.idObjectPrilesie.value = idObjectPrilesie
-		regTruckInPrilesieForm.dateStart.value = dateHelper.getISODateTime(dateTimeStartPrilesie)
-		regTruckInPrilesieForm.dateEnd.value = dateHelper.getISODateTime(dateTimeEndPrilesie)
+		regTruckInPrilesieForm.dateStart.value = dateTimeStartPrilesie ? dateHelper.getISODateTime(dateTimeStartPrilesie) : ''
+		regTruckInPrilesieForm.dateEnd.value = dateTimeEndPrilesie ? dateHelper.getISODateTime(dateTimeEndPrilesie): ''
 	}
 	$('#regTruckInPrilesieModal').modal('show')
 }

@@ -1,5 +1,6 @@
 package by.base.main.service.impl;
 
+import java.sql.Date;
 import java.util.List;
 
 import javax.transaction.Transactional;
@@ -39,6 +40,12 @@ public class InfoCarrierServiceImpl implements InfoCarrierService{
 	@Transactional
 	public void update(InfoCarrier infoCarrier) {
 		infoCarrierDAO.update(infoCarrier);
+	}
+
+	@Override
+	@Transactional
+	public List<InfoCarrier> getFromDate(Date start, Date end) {
+		return infoCarrierDAO.getFromDate(start, end);
 	}
 
 }

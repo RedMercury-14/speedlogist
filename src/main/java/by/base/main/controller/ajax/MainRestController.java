@@ -112,6 +112,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.dto.OrderDTO;
 import com.dto.PlanResponce;
 import com.dto.RouteDTO;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
@@ -414,6 +415,43 @@ public class MainRestController {
     private ServletContext servletContext;
 	
 	/**
+	 * <br>Метод для массовой блокировки кодов товаров</br>.
+	 * @author Ira
+	 */
+	@PostMapping("/order-support/block-many-products")
+	public Map<String, Object> blockManyProducts(HttpServletRequest request, @RequestBody String str) throws IOException, ParseException {
+	    Map<String, Object> response = new HashMap<String, Object>();
+	    JSONParser parser = new JSONParser();
+	    JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+	    JSONArray jsonCodes = (JSONArray) jsonMainObject.get("codes");
+	    List<Integer> codes = new ArrayList<>();
+	       for (Object jsonCode : jsonCodes) {
+	           codes.add(Integer.parseInt(jsonCode.toString()));
+	       }
+	    Date dateStart = jsonMainObject.get("dateStart") != null && !jsonMainObject.get("dateStart").toString().isEmpty() ? Date.valueOf(jsonMainObject.get("dateStart").toString()) : null;
+	    Date dateFinish = jsonMainObject.get("dateFinish") != null && !jsonMainObject.get("dateFinish").toString().isEmpty() ? Date.valueOf(jsonMainObject.get("dateFinish").toString()) : null;
+	    if(dateStart.after(dateFinish)) {	    	
+	    	response.put("message", "Дата старта не может быть позже даты финиша");
+	    	response.put("status", "100");
+		    return response;
+	    }
+	    for (Integer code: codes) {
+	       Product product = productService.getProductByCode(code);
+	       if (product != null) {
+	          product.setBlockDateStart(dateStart);
+	          product.setBlockDateFinish(dateFinish);
+	          productService.updateProduct(product);
+	       } else {
+	          response.put("status", "100");
+	          response.put("message", "Товара с кодом " + code + " не существует.");
+	          return response;
+	       }
+	    }
+	    response.put("status", "200");
+	    return response;
+	}
+	
+	/**
 	 * <br>Сохраняет машину в прилесье</br>.
 	 * @author Ira
 	 */
@@ -663,12 +701,132 @@ public class MainRestController {
     }
 	
 	@GetMapping("/logistics/info-carrier/list")
-	public Map<String, Object> testGetInfoCarrier(HttpServletRequest request, HttpServletResponse response) throws IOException{
+	public Map<String, Object> getInfoCarrier(HttpServletRequest request, HttpServletResponse response) throws IOException{
 		Map<String, Object> responce = new HashMap<String, Object>();
 		responce.put("status", "200");
 		responce.put("objects", infoCarrierService.getAll());		
 		return responce;
     }
+	
+	@GetMapping("/logistics/info-carrier/list/{dateStart}&{dateFinish}")
+	public Map<String, Object> getInfoCarrierHasDates(HttpServletRequest request, HttpServletResponse response,
+			@PathVariable Date dateStart, @PathVariable Date dateFinish) throws IOException{
+		Map<String, Object> responce = new HashMap<String, Object>();		
+		responce.put("status", "200");
+		responce.put("objects", infoCarrierService.getFromDate(dateStart, dateFinish));		
+		return responce;
+    }
+	
+	@GetMapping("/logistics/info-carrier/sendEmail/{id}")
+	public Map<String, Object> getInfoCarrierHasDates(HttpServletRequest request, HttpServletResponse response,
+			@PathVariable Integer id) throws IOException{
+		Map<String, Object> responce = new HashMap<String, Object>();
+		InfoCarrier infoCarrier = infoCarrierService.getById(id);
+		if(infoCarrier == null) {
+        	responce.put("status", "100");
+        	responce.put("message", "Объект не найден");
+        	return responce;
+        }
+		User user = getThisUser();
+		List <String> emails = Arrays.asList(infoCarrier.getEmailAddress(), user.geteMail());
+		mailService.sendAsyncEmailToUsers(request, "Регистрация на грузовой платформе ЗАО «ДОБРОНОМ»", "Пройдите по ссылке-приглашению https://boxlogs.net/speedlogist/main/registration для регистрации на грузовой платформе ЗАО» ДОБРОНОМ»\n\n\nС уважением, команда\r\n"
+				+ "ЗАО «ДОБРОНОМ»", emails);
+		infoCarrier.setStatus(20);
+		infoCarrier.setOtlResponsibleSpecialist(user.getSurname() + " " + user.getName() + "; " + user.getTelephone());
+		infoCarrier.setDateSendRegLink(Timestamp.valueOf(LocalDateTime.now()));
+		infoCarrierService.update(infoCarrier);
+		responce.put("status", "200");
+		responce.put("object", infoCarrier);		
+		return responce;
+    }
+	
+	@PostMapping("/logistics/info-carrier/update")
+	public Map<String, Object> postInfoCarrierUpdate(@RequestBody JsonNode jsonNode) {
+	    Map<String, Object> response = new HashMap<>();
+
+	    int id = jsonNode.get("id").asInt();
+	    InfoCarrier info = infoCarrierService.getById(id);
+	    if (info == null) {
+	        response.put("status", "100");
+	        response.put("message", "Объект не найден");
+	        return response;
+	    }
+
+	    if (jsonNode.has("dateTimeCreate")) {
+	        info.setDateTimeCreate(jsonNode.get("dateTimeCreate").isNull() ? null : new Timestamp(jsonNode.get("dateTimeCreate").asLong()));
+	    }
+	    if (jsonNode.has("cargoTransportMarket")) {
+	        info.setCargoTransportMarket(jsonNode.get("cargoTransportMarket").isNull() ? null : jsonNode.get("cargoTransportMarket").asText());
+	    }
+	    if (jsonNode.has("ownershipType")) {
+	        info.setOwnershipType(jsonNode.get("ownershipType").isNull() ? null : jsonNode.get("ownershipType").asText());
+	    }
+	    if (jsonNode.has("carrierName")) {
+	        info.setCarrierName(jsonNode.get("carrierName").isNull() ? null : jsonNode.get("carrierName").asText());
+	    }
+	    if (jsonNode.has("offeredVehicleCount")) {
+	        info.setOfferedVehicleCount(jsonNode.get("offeredVehicleCount").isNull() ? null : jsonNode.get("offeredVehicleCount").asText());
+	    }
+	    if (jsonNode.has("bodyType")) {
+	        info.setBodyType(jsonNode.get("bodyType").isNull() ? null : jsonNode.get("bodyType").asText());
+	    }
+	    if (jsonNode.has("hasTailLift")) {
+	        info.setHasTailLift(jsonNode.get("hasTailLift").isNull() ? null : jsonNode.get("hasTailLift").asText());
+	    }
+	    if (jsonNode.has("hasNavigation")) {
+	        info.setHasNavigation(jsonNode.get("hasNavigation").isNull() ? null : jsonNode.get("hasNavigation").asText());
+	    }
+	    if (jsonNode.has("vehicleLocationCity")) {
+	        info.setVehicleLocationCity(jsonNode.get("vehicleLocationCity").isNull() ? null : jsonNode.get("vehicleLocationCity").asText());
+	    }
+	    if (jsonNode.has("contactPhone")) {
+	        info.setContactPhone(jsonNode.get("contactPhone").isNull() ? null : jsonNode.get("contactPhone").asText());
+	    }
+	    if (jsonNode.has("emailAddress")) {
+	        info.setEmailAddress(jsonNode.get("emailAddress").isNull() ? null : jsonNode.get("emailAddress").asText());
+	    }
+	    if (jsonNode.has("offeredRate")) {
+	        info.setOfferedRate(jsonNode.get("offeredRate").isNull() ? null : jsonNode.get("offeredRate").asText());
+	    }
+	    if (jsonNode.has("notes")) {
+	        info.setNotes(jsonNode.get("notes").isNull() ? null : jsonNode.get("notes").asText());
+	    }
+	    if (jsonNode.has("applicationStatus")) {
+	        info.setApplicationStatus(jsonNode.get("applicationStatus").isNull() ? null : jsonNode.get("applicationStatus").asText());
+	    }
+	    if (jsonNode.has("carrierContactDate")) {
+	        info.setCarrierContactDate(jsonNode.get("carrierContactDate").isNull() ? null : new Timestamp(jsonNode.get("carrierContactDate").asLong()));
+	    }
+	    if (jsonNode.has("otlResponsibleSpecialist")) {
+	        info.setOtlResponsibleSpecialist(jsonNode.get("otlResponsibleSpecialist").isNull() ? null : jsonNode.get("otlResponsibleSpecialist").asText());
+	    }
+	    if (jsonNode.has("comment")) {
+	        info.setComment(jsonNode.get("comment").isNull() ? null : jsonNode.get("comment").asText());
+	    }
+	    if (jsonNode.has("contactCarrier")) {
+	        info.setContactCarrier(jsonNode.get("contactCarrier").isNull() ? null : jsonNode.get("contactCarrier").asText());
+	    }
+	    if (jsonNode.has("vehicleCapacity")) {
+	        info.setVehicleCapacity(jsonNode.get("vehicleCapacity").isNull() ? null : jsonNode.get("vehicleCapacity").asText());
+	    }
+	    if (jsonNode.has("palletCapacity")) {
+	        info.setPalletCapacity(jsonNode.get("palletCapacity").isNull() ? null : jsonNode.get("palletCapacity").asText());
+	    }
+	    if (jsonNode.has("status")) {
+	        info.setStatus(jsonNode.get("status").isNull() ? null : jsonNode.get("status").asInt());
+	    }
+	    if (jsonNode.has("dateSendRegLink")) {
+	        info.setDateSendRegLink(jsonNode.get("dateSendRegLink").isNull() ? null : new Timestamp(jsonNode.get("dateSendRegLink").asLong()));
+	    }
+
+	    infoCarrierService.update(info);
+
+	    response.put("status", "200");
+	    response.put("object", info);
+	    return response;
+	}
+
+
 	
 	
     

@@ -288,6 +288,7 @@ export const setNewBalanceBaseUrl = '/speedlogist/api/order-support/setNewBalanc
 export const setMaxDayBaseUrl = '/speedlogist/api/order-support/setMaxDay/'
 export const changeExceptionBaseUrl = '/speedlogist/api/order-support/changeException/'
 export const blockProductUrl = '/speedlogist/api/order-support/blockProduct'
+export const blockManyProductsUrl = '/speedlogist/api/order-support/block-many-products'
 
 
 ///////////////////////////////////////////////
@@ -499,8 +500,10 @@ export const getTenderPreviewBaseUrl = '/speedlogist/api/get-tender-preview/'
 // Заявки на сотрудничество от перевозчиков
 ///////////////////////////////////////////////
 export const createCarrierApplicationUrl = '/speedlogist/api/carrier-application/create'
-export const getCarrierApplicationListUrl = '/speedlogist/api/logistics/info-carrier/list'
-
+export const getAllInfoCarrierListUrl = '/speedlogist/api/logistics/info-carrier/list'
+export const getInfoCarrierListBaseUrl = '/speedlogist/api/logistics/info-carrier/list/'
+export const updateInfoCarrierUrl = '/speedlogist/api/logistics/info-carrier/update'
+export const sendEmailInfoCarrierBaseUrl = '/speedlogist/api/logistics/info-carrier/sendEmail/'
 
 
 
@@ -524,3 +527,10 @@ export const getFilesByRouteBaseUrl = '/speedlogist/file/files/byRoute/' // {idR
 export const downloadZipByRouteUrl = '/speedlogist/file/downloadFileByRoute/zip/' // {idRoute} - скачивание изображений одним архивом 
 export const getFileBaseUrl = '/speedlogist/file/downloadFile/' // {id} - скачивание одного файла
 export const getImagesByRouteBase64BaseUrl = '/speedlogist/file/images/base64/byRoute/' // {idRoute} - возвращает массив json где все изображения в base64
+
+
+///////////////////////////////////////////////
+// поставщики
+///////////////////////////////////////////////
+export const createNewSupplierUrl = '/speedlogist/api/new-supplier'
+export const getAllSuppliersUrl = '/speedlogist/api/order-support/get-all-suppliers'

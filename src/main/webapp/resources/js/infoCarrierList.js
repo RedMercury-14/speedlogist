@@ -1,10 +1,13 @@
 import { AG_GRID_LOCALE_RU } from './AG-Grid/ag-grid-locale-RU.js'
-import { dateComparator, dateTimeValueFormatter, gridColumnLocalState, gridFilterLocalState, ResetStateToolPanel } from './AG-Grid/ag-grid-utils.js'
+import {
+	dateComparator, DateTimeEditor, dateTimeValueFormatter, gridColumnLocalState,
+	gridFilterLocalState, ResetStateToolPanel, SubmitButtonTextEditor
+} from './AG-Grid/ag-grid-utils.js'
 import { snackbar } from './snackbar/snackbar.js'
-import { dateHelper, debounce, getData, } from './utils.js'
+import { dateHelper, debounce, getData, isObserver, } from './utils.js'
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 import { ajaxUtils } from './ajaxUtils.js'
-import { getCarrierApplicationListUrl } from './globalConstants/urls.js'
+import { getInfoCarrierListBaseUrl, sendEmailInfoCarrierBaseUrl, updateInfoCarrierUrl } from './globalConstants/urls.js'
 
 const PAGE_NAME = 'infoCarrierList'
 const LOCAL_STORAGE_KEY = `AG_Grid_settings_to_${PAGE_NAME}`
@@ -16,7 +19,7 @@ const debouncedSaveColumnState = debounce(saveColumnState, 300)
 const debouncedSaveFilterState = debounce(saveFilterState, 300)
 
 const rowClassRules = {
-	'grey-row': params => params.data && params.data.status === 10,
+	'green-row': params => params.data && params.data.status === 20,
 	'red-row': params => params.data && params.data.status === 30,
 }
 
@@ -56,20 +59,61 @@ const columnDefs = [
 	{ headerName: "Телефон для связи", field: "contactPhone", },
 	{ headerName: "ФИО", field: "contactCarrier", },
 	{ headerName: "Адрес эл. почты", field: "emailAddress", },
-	{ headerName: "Предлагаемый нам тариф", field: "offeredRate", },
-	{ headerName: "Примечание (тарификация и прочая важная информация)", field: "notes", flex: 6, },
-	{ headerName: "Выслать ссылку на регистрацию", field: "", },
+	{ headerName: "Примечание пользователя", field: "notes", minWidth: 240, },
 	{
-		headerName: "Статус заявки", field: "statusToView",
-		cellClass: statusToViewClasses,
+		headerName: "Статус заявки", field: "status",
+		cellClass: 'px-2 text-center font-weight-bold',
+		valueFormatter: params => getStatusToView(params.value),
+		filterParams: { valueFormatter: params => getStatusToView(params.value), },
+	},
+	{
+		headerName: "Предлагаемый тариф", field: "offeredRate",
+		cellClass: 'px-2 text-center editCell',
+		editable: !isObserver(role),
+		cellEditor: SubmitButtonTextEditor,
+		cellEditorPopup: true,
+		cellEditorParams: {
+			maxLength: 10000000,
+		},
 	},
 	{
 		headerName: "Дата связи с перевозчиком", field: "carrierContactDate",
+		cellClass: 'px-2 text-center editCell',
 		valueFormatter: dateTimeValueFormatter,
 		comparator: dateComparator,
 		filterParams: { valueFormatter: dateTimeValueFormatter, },
+		editable: !isObserver(role), cellEditor: DateTimeEditor, cellEditorPopup: true,
 	},
-	{ headerName: "Ответственный специалист ОТЛ", field: "", },
+	{
+		headerName: "Cсылка на регистрацию", field: "dateSendRegLink",
+		minWidth: 140,
+		cellClass: 'px-0 text-center',
+		// valueFormatter: dateTimeValueFormatter,
+		comparator: dateComparator,
+		filterParams: { valueFormatter: dateTimeValueFormatter, },
+		cellRenderer: params => {
+			if (params.data.dateSendRegLink) return dateHelper.getFormatDateTime(params.data.dateSendRegLink)
+			if (!params.data.emailAddress) return null
+
+			const sendRegLinkBtn = document.createElement("button")
+			sendRegLinkBtn.textContent = 'Выслать'
+			sendRegLinkBtn.className = 'btn btn-success btn-sm'
+			sendRegLinkBtn.addEventListener("click", () => sendRegLink(params))
+			return sendRegLinkBtn
+		}
+	},
+	{ headerName: "Ответственный специалист ОТЛ", field: "otlResponsibleSpecialist", },
+	{
+		headerName: "Примечание специалиста ОТЛ", field: "comment",
+		minWidth: 240,
+		cellClass: 'px-2 text-center editCell',
+		editable: !isObserver(role),
+		cellEditor: SubmitButtonTextEditor,
+		cellEditorPopup: true,
+		cellEditorParams: {
+			maxLength: 10000000,
+		},
+	},
 ]
 const gridOptions = {
 	columnDefs: columnDefs,
@@ -102,6 +146,7 @@ const gridOptions = {
 	onColumnPinned: debouncedSaveColumnState,
 	getContextMenuItems: getContextMenuItems,
 	getRowId: (params) => params.data.id,
+	onCellValueChanged: updateCarrierInfo,
 	defaultExcelExportParams: {
 		processCellCallback: ({ value, formatValue }) => formatValue(value)
 	},
@@ -157,24 +202,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 	const date_fromInput = document.querySelector('#date_from')
 	const date_toInput = document.querySelector('#date_to')
 	const { dateStart, dateEnd } = dateHelper.getDatesToFetch(DATES_KEY, 7, 0)
-	// date_fromInput.value = dateStart
-	// date_toInput.value = dateEnd
+	date_fromInput.value = dateStart
+	date_toInput.value = dateEnd
 
 	const reviews = await getCarrierInfoData(dateStart, dateEnd)
 	updateTable(gridOptions, reviews)
 
 	// листнер на отправку формы поиска заявок
 	searchDataForm.addEventListener('submit',searchFormSubmitHandler)
-
-	// отображение стартовых данных
-	if (window.initData) {
-		await initStartData()
-	} else {
-		// подписка на кастомный ивент загрузки стартовых данных
-		document.addEventListener('initDataLoaded', async () => {
-			await initStartData()
-		})
-	}
 })
 
 window.addEventListener("unload", () => {
@@ -186,17 +221,9 @@ window.addEventListener("unload", () => {
 })
 
 
-// установка стартовых данных
-async function initStartData() {
-	// const reviews = window.initData.reviews ? window.initData.reviews : []
-	// updateTable(gridOptions, reviews)
-	window.initData = null
-}
-
 // получение данных
 async function getCarrierInfoData(dateStart, dateEnd) {
-	// const url = `${getCarrierApplicationListUrl}${dateStart}&${dateEnd}`
-	const url = `${getCarrierApplicationListUrl}`
+	const url = `${getInfoCarrierListBaseUrl}${dateStart}&${dateEnd}`
 	const res = await getData(url)
 	if (!res) return []
 	return res.objects ? res.objects : []
@@ -217,16 +244,20 @@ async function searchFormSubmitHandler(e) {
 }
 
 // обновление данных обращения обратной связи
-function updateReview(params) {
+function updateCarrierInfo(params) {
 	const rowData = params.data
-	const fildName = params.colDef.field
+	const fieldName = params.colDef.field
 	const oldValue = params.oldValue
+	const newValue = getValueForUpdate(fieldName, params.value)
+	const oldStatus = params.data.status
+	const newStatus = oldStatus === 20 || fieldName === 'carrierContactDate' ? 20 : 10
+	const newRowData = { ...rowData, [fieldName]: newValue, status: newStatus }
 
 	gridOptions.api.showLoadingOverlay()
 
 	ajaxUtils.postJSONdata({
-		url: updateUserReviewUrl,
-		data: rowData,
+		url: updateInfoCarrierUrl,
+		data: newRowData,
 		successCallback: (res) => {
 			gridOptions.api.hideOverlay()
 
@@ -238,19 +269,51 @@ function updateReview(params) {
 			}
 
 			if (res.status === '100') {
-				const oldRowData = { ...rowData }
-				oldRowData[fildName] = oldValue
+				const oldRowData = { ...rowData, [fieldName]: oldValue }
 				updateTableRow(gridOptions, oldRowData)
-				const message = res.message ? res.message : 'Неизвестная ошибка'
+				const message = res.message ? res.message : 'Неизвестная ошибка, значение не изменено'
 				snackbar.show(message)
 				return
 			}
 		},
 		errorCallback: () => {
-			const oldRowData = { ...rowData }
-			oldRowData[fildName] = oldValue
+			const oldRowData = { ...rowData, [fieldName]: oldValue }
 			updateTableRow(gridOptions, oldRowData)
 			gridOptions.api.hideOverlay()
+		}
+	})
+}
+
+
+function sendRegLink(params) {
+	const id = params.data.id
+
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 300)
+
+	ajaxUtils.get({
+		url: sendEmailInfoCarrierBaseUrl + id,
+		successCallback: (res) => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+
+			if (res.status === '200') {
+				const updatedReview = res.object
+				updateTableRow(gridOptions, updatedReview)
+				const successMessage = res.message || 'Ссылка на регистрацию отправлена'
+				snackbar.show(successMessage)
+				return
+			}
+
+			if (res.status === '100') {
+				const errorMessage = res.message || 'Ошибка получения данных'
+				snackbar.show(errorMessage)
+				return
+			}
+		},
+		errorCallback: () => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+			snackbar.show('Ошибка получения данных')
 		}
 	})
 }
@@ -280,7 +343,7 @@ function mapCallback(item) {
 	const statusToView = getStatusToView(item.status)
 	return {
 		...item,
-		statusToView
+		statusToView,
 	}
 }
 function getContextMenuItems (params) {
@@ -290,31 +353,6 @@ function getContextMenuItems (params) {
 	const status = rowNode.data.status
 
 	const items = [
-		// {
-		// 	name: "Подтвердить",
-		// 	disabled: isObserver(role) || status === 20,
-		// 	action: () => {
-		// 		confirmProductControl(rowNode.data)
-		// 	},
-		// 	icon: uiIcons.check,
-		// },
-		// {
-		// 	name: "Отменить",
-		// 	disabled: isObserver(role) || status === 30,
-		// 	action: () => {
-		// 		cancelProductControl(rowNode.data)
-		// 	},
-		// 	icon: uiIcons.trash,
-		// },
-		// {
-		// 	name: "Редактировать",
-		// 	disabled: (!isAdmin(role) && !isOrderSupport(role)),
-		// 	action: () => {
-		// 		openEditProductControlForm(rowNode.data)
-		// 	},
-		// 	icon: uiIcons.pencil,
-		// },
-		// "separator",
 		{
 			name: "Сбросить настройки колонок",
 			action: () => {
@@ -332,6 +370,22 @@ function getContextMenuItems (params) {
 	]
 
 	return items
+}
+
+// коллбэк бля редактирования ячеек таблицы
+function getValueForUpdate(fieldName, value) {
+	if (!value) return null
+	switch (fieldName) {
+		case 'carrierContactDate':
+			// return dateHelper.getISODateTime(value)
+			return value
+		case 'comment':
+			return value.trim()
+		case 'offeredRate':
+			return value.trim()
+		default:
+			return null
+	}
 }
 
 function updateTableRow(gridOptions, rowData) {
@@ -376,16 +430,6 @@ function getStatusToView(status) {
 		default:
 			return `Неизвестный статус (${status})`
 	}
-}
-
-function statusToViewClasses(params) {
-	const defaultClasses = 'px-2 text-center'
-	if (!params) return defaultClasses
-	const data = params.data
-	if (!data) return defaultClasses
-	if (data.status === 20) return `text-success font-weight-bold ${defaultClasses}`
-	if (data.status === 30) return `text-danger font-weight-bold ${defaultClasses}`
-	return defaultClasses
 }
 
 function stringifyListValueFormatter(params) {

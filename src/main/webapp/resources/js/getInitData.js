@@ -4,6 +4,7 @@ import {
 	getAhoRouteForCarrierBaseUrl,
 	getAllCarrierUrl,
 	getAllShopsUrl,
+	getAllSuppliersUrl,
 	getOrderBaseUrl,
 	getOrdersForLogistBaseUrl,
 	getOrdersForSlotsBaseUrl,
@@ -159,6 +160,11 @@ function getInitDataUrl(url) {
 		const DATES_KEY = `searchDates_to_${PAGE_NAME}`
 		const { dateStart, dateEnd } = dateHelper.getDatesToFetch(DATES_KEY, 14, 0)
 		return`${getActsBaseUrl}${dateStart}&${dateEnd}`
+	}
+
+	// Менеджер аккаунтов поставщиков
+	if (url.includes('order-support/suppliers-list')) {
+		return getAllSuppliersUrl
 	}
 
 	return ''

@@ -330,12 +330,17 @@ async function blockProductFormSubmitHandler(e) {
 	e.preventDefault()
 
 	if (isObserver(role)) {
-		snackbar.show('Недостаточно прав для выполнения операции')
+		snackbar.show('Недостаточно прав!')
 		return
 	}
 
 	const formData = new FormData(e.target)
 	const data = Object.fromEntries(formData)
+
+	if (new Date(data.dateStart).getTime() > new Date(data.dateFinish).getTime()) {
+		snackbar.show('Дата начала блокировки не может быть больше даты её окончания!')
+		return
+	}
 
 	const isBlockManyProducts = data.actionType === 'blockManyProducts'
 	const url = isBlockManyProducts ? blockManyProductsUrl : blockProductUrl

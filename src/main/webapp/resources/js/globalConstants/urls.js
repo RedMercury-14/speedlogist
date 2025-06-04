@@ -500,8 +500,10 @@ export const getTenderPreviewBaseUrl = '/speedlogist/api/get-tender-preview/'
 // Заявки на сотрудничество от перевозчиков
 ///////////////////////////////////////////////
 export const createCarrierApplicationUrl = '/speedlogist/api/carrier-application/create'
-export const getCarrierApplicationListUrl = '/speedlogist/api/logistics/info-carrier/list'
-
+export const getAllInfoCarrierListUrl = '/speedlogist/api/logistics/info-carrier/list'
+export const getInfoCarrierListBaseUrl = '/speedlogist/api/logistics/info-carrier/list/'
+export const updateInfoCarrierUrl = '/speedlogist/api/logistics/info-carrier/update'
+export const sendEmailInfoCarrierBaseUrl = '/speedlogist/api/logistics/info-carrier/sendEmail/'
 
 
 
@@ -528,6 +530,7 @@ export const getImagesByRouteBase64BaseUrl = '/speedlogist/file/images/base64/by
 
 
 ///////////////////////////////////////////////
-// API файлов
+// поставщики
 ///////////////////////////////////////////////
 export const createNewSupplierUrl = '/speedlogist/api/new-supplier'
+export const getAllSuppliersUrl = '/speedlogist/api/order-support/get-all-suppliers'

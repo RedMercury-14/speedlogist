@@ -316,27 +316,11 @@
 					<h3 class="modal-title text-center" id="slotNewsModalLabel">Что нового</h3>
 				</div>
 				<div class="modal-body">
-					<h5 class="text-center text-muted font-weight-bold">Рампа 6 на 1700 складе закрывается</h5>
+					<h5 class="text-center text-muted font-weight-bold">Паллетовместимость с 00:00 до 07:00 на 1800 складе</h5>
 					<p class="text-justify">
-						<b>Рампа 6 на 1700 складе</b> будет закрыта с <b>8 марта 2025 года</b>. Устанавливать заказы с указанной 
-						даты на эту рампу запрещено. Заказы, которые уже установлены на эту рампу, убирать не нужно. 
-						До указанной даты рампа будет в работе без изменений.
+						Проверка паллетовместимости на <b>1800 складе с 00:00 до 07:00</b> снова функционирует. 
+						Устанавливать заказы заказы сверх лимита в этот временной промежутов запрещено. 
 					</p>
-					<p class="text-justify">
-						<b>7 марта 2025 года</b> на <b>1800 складе</b> будет открыта <b>рампа 5</b>.
-					</p>
-					<br>
-					<br>
-					<h5 class="text-center text-muted font-weight-bold">Добавлена информация о маршрутах</h5>
-					<p class="text-justify">
-						В окне <b>Информация о слоте</b> (открывается нажатием на кнопку <b>(i)</b>) появилась новая 
-						вкладка - <b>Логистика</b>. Эта вкладка содержит информацию о маршрутах по заказу.
-					</p>
-					<div class="text-center px-5">
-						<img src="${pageContext.request.contextPath}/resources/img/slotNews/routesInfo.gif"
-							alt="кнопка Помощь"
-							class="img-fluid mb-3" style="max-width: 100%; height: auto;">
-					</div>
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-secondary" data-dismiss="modal">Ок, понятно</button>

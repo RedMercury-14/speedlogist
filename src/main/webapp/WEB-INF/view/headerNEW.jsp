@@ -88,6 +88,7 @@
 										<a class="dropdown-item" href="<spring:url value="/main/acceptanceQuality" />">Подтверждение качества</a>
 										<a class="dropdown-item" href="<spring:url value="/main/procurement/price-protocol/list" />">Протокол согласования цены</a>
 										<a class="dropdown-item" href="<spring:url value="/main/procurement/create-accommodation" />">Управление разрешениями товар-склад</a>
+										<a class="dropdown-item" href="<spring:url value="/main/order-support/suppliers-list" />">Менеджер аккаунтов поставщиков</a>
 									</div>
 								</li>
 								<li class="dropdown">
@@ -437,6 +438,10 @@
 
 							<c:when test="${roles == '[ROLE_RETAIL]'}">
 								<li><a class="nav-item nav-link" href="<spring:url value="/main/orl/rotations" />">Ротации</a></li>
+							</c:when>
+
+							<c:when test="${roles == '[ROLE_SUPPLIER]'}">
+								<li><a class="nav-item nav-link" href="<spring:url value="/main/supplier" />">Кабинет поставщика</a></li>
 							</c:when>
 
 							<c:otherwise>

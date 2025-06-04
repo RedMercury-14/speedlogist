@@ -792,6 +792,9 @@ export function isQualityManagerAndProcurement(role) {
 export function isRetail(role) {
 	return role === '[ROLE_RETAIL]'
 }
+export function isSupplier(role) {
+	return role === '[ROLE_SUPPLIER]'
+}
 
 export function isLogisticsDeliveryPage() {
 	return window.location.href.includes('logistics-delivery')

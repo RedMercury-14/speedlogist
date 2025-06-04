@@ -126,79 +126,79 @@ export const backgroundEvents = [
 
 
 	// зона отмены проверки паллетовместимости
-	{
-		id: `extraPallZone180001`,
-		resourceId: `180001`,
-		display: 'background',
-		startTime: '00:00',
-		endTime: '07:00',
-		eventOverlap: true,
-		title: '',
-		backgroundColor: '#03A9F4',
-		extendedProps: {
-			data: {
-				pall: 0,
-			}
-		},
-	},
-	{
-		id: `extraPallZone180002`,
-		resourceId: `180002`,
-		display: 'background',
-		startTime: '00:00',
-		endTime: '07:00',
-		eventOverlap: true,
-		title: '',
-		backgroundColor: '#03A9F4',
-		extendedProps: {
-			data: {
-				pall: 0,
-			}
-		},
-	},
-	{
-		id: `extraPallZone180003`,
-		resourceId: `180003`,
-		display: 'background',
-		startTime: '00:00',
-		endTime: '07:00',
-		eventOverlap: true,
-		title: '',
-		backgroundColor: '#03A9F4',
-		extendedProps: {
-			data: {
-				pall: 0,
-			}
-		},
-	},
-	{
-		id: `extraPallZone180004`,
-		resourceId: `180004`,
-		display: 'background',
-		startTime: '00:00',
-		endTime: '07:00',
-		eventOverlap: true,
-		title: '',
-		backgroundColor: '#03A9F4',
-		extendedProps: {
-			data: {
-				pall: 0,
-			}
-		},
-	},
-	{
-		id: `extraPallZone180005`,
-		resourceId: `180005`,
-		display: 'background',
-		startTime: '00:00',
-		endTime: '07:00',
-		eventOverlap: true,
-		title: '',
-		backgroundColor: '#03A9F4',
-		extendedProps: {
-			data: {
-				pall: 0,
-			}
-		},
-	},
+	// {
+	// 	id: `extraPallZone180001`,
+	// 	resourceId: `180001`,
+	// 	display: 'background',
+	// 	startTime: '00:00',
+	// 	endTime: '07:00',
+	// 	eventOverlap: true,
+	// 	title: '',
+	// 	backgroundColor: '#03A9F4',
+	// 	extendedProps: {
+	// 		data: {
+	// 			pall: 0,
+	// 		}
+	// 	},
+	// },
+	// {
+	// 	id: `extraPallZone180002`,
+	// 	resourceId: `180002`,
+	// 	display: 'background',
+	// 	startTime: '00:00',
+	// 	endTime: '07:00',
+	// 	eventOverlap: true,
+	// 	title: '',
+	// 	backgroundColor: '#03A9F4',
+	// 	extendedProps: {
+	// 		data: {
+	// 			pall: 0,
+	// 		}
+	// 	},
+	// },
+	// {
+	// 	id: `extraPallZone180003`,
+	// 	resourceId: `180003`,
+	// 	display: 'background',
+	// 	startTime: '00:00',
+	// 	endTime: '07:00',
+	// 	eventOverlap: true,
+	// 	title: '',
+	// 	backgroundColor: '#03A9F4',
+	// 	extendedProps: {
+	// 		data: {
+	// 			pall: 0,
+	// 		}
+	// 	},
+	// },
+	// {
+	// 	id: `extraPallZone180004`,
+	// 	resourceId: `180004`,
+	// 	display: 'background',
+	// 	startTime: '00:00',
+	// 	endTime: '07:00',
+	// 	eventOverlap: true,
+	// 	title: '',
+	// 	backgroundColor: '#03A9F4',
+	// 	extendedProps: {
+	// 		data: {
+	// 			pall: 0,
+	// 		}
+	// 	},
+	// },
+	// {
+	// 	id: `extraPallZone180005`,
+	// 	resourceId: `180005`,
+	// 	display: 'background',
+	// 	startTime: '00:00',
+	// 	endTime: '07:00',
+	// 	eventOverlap: true,
+	// 	title: '',
+	// 	backgroundColor: '#03A9F4',
+	// 	extendedProps: {
+	// 		data: {
+	// 			pall: 0,
+	// 		}
+	// 	},
+	// },
 ]

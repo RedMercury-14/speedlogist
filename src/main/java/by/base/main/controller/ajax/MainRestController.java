@@ -48,6 +48,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
@@ -691,14 +692,118 @@ public class MainRestController {
 	/*
 	 * мой старый метод
 	 */
-	@GetMapping("/test")
-	public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response) throws IOException{
+	@GetMapping("/getPallHasOwerPlan/{date}&{stock}")
+	public Map<String, Object> testNewMethod(HttpServletRequest request, HttpServletResponse response,
+			@PathVariable Date date,
+			@PathVariable Integer stock) throws IOException{
 		Map<String, Object> map = new HashMap<String, Object>();
-		
-//		User user = getThisUser();
-//		map.put("user", user);
+		Map<String, Object> map2 = new HashMap<String, Object>();
+		int pall = 0;
+		int pallOut = 0;
+		int pallEternalMowment = 0;
+		StringBuilder message = new StringBuilder();
+		Set<Order> ordersNow = new HashSet<Order>(orderService.getOrderByTimeDeliveryAndNumStock(date, date, stock));
+		Map<Long, Schedule> schedulesMap = scheduleService.getSchedulesListRC().stream()
+			    .filter(s -> s.getStatus() == 20)
+			    .collect(Collectors.toMap(
+			        Schedule::getCounterpartyContractCode,
+			        Function.identity()
+			    ));
+		for (Order order : ordersNow) {
+			if(order.getIsInternalMovement() != null && order.getIsInternalMovement().equals("true")) {
+				pallEternalMowment = pallEternalMowment + Integer.parseInt(order.getPall().trim());	
+				if(map2.containsKey(order.getCounterparty())) {
+					Integer old = (Integer) map2.get(order.getCounterparty());
+					map2.put("внутренние перемещения: " + order.getCounterparty(), old + Integer.parseInt(order.getPall().trim()));					
+				}else {
+					map2.put("внутренние перемещения: " + order.getCounterparty(), Integer.parseInt(order.getPall().trim()));
+				}
+				continue;
+			};
+			
+//			DateRange dateRange = readerSchedulePlan.getDateRangeV2(schedulesMap.get(Long.parseLong(order.getMarketContractType())), order);
+			DateRange dateRange = null;
+			try {
+				dateRange = readerSchedulePlan.getDateRangeV2(schedulesMap.get(Long.parseLong(order.getMarketContractType())), order);				
+			} catch (NullPointerException e) {
+				RangeCheckResult dateInRangeWithNote = new RangeCheckResult(false, "График поставок был изменен");
+				System.out.println(dateRange + " ->"+dateInRangeWithNote + ";  pall = " +order.getPall().trim());
+				if(!dateInRangeWithNote.inRange) {
+					pall = pall +  Integer.parseInt(order.getPall().trim());
+					pallOut = pallOut +  Integer.parseInt(order.getPall().trim());
+					if(map2.containsKey(order.getCounterparty())) {
+						Integer old = (Integer) map2.get(order.getCounterparty());
+						map2.put(order.getCounterparty(), old + Integer.parseInt(order.getPall().trim()));					
+					}else {
+						map2.put(order.getCounterparty(), Integer.parseInt(order.getPall().trim()));
+					}
+				}
+				continue;
+			}
+			
+			RangeCheckResult dateInRangeWithNote = isDateInRangeWithNote(order.getTimeDelivery().toLocalDateTime().toLocalDate(), dateRange);
+			System.out.println(dateRange + " ->"+dateInRangeWithNote + ";  pall = " +order.getPall().trim());
+//			message.append(" ->"+dateInRangeWithNote + ";  pall = " +order.getPall().trim() + "\n");
+			if(!dateInRangeWithNote.inRange) {
+				pall = pall +  Integer.parseInt(order.getPall().trim());
+				if(map2.containsKey(order.getCounterparty())) {
+					Integer old = (Integer) map2.get(order.getCounterparty());
+					map2.put(order.getCounterparty(), old + Integer.parseInt(order.getPall().trim()));					
+				}else {
+					map2.put(order.getCounterparty(), Integer.parseInt(order.getPall().trim()));
+				}
+				
+			}
+			
+		}
+		map.put("finalPall", pall);
+		map.put("finalEternalMowmentPall", pallEternalMowment);
+		map.put("finalPallOut", pallOut);
+		map.put("description", map2);
+//		map.put("message", message.toString());
 		return map;
     }
+	
+	public RangeCheckResult isDateInRangeWithNote(LocalDate targetDate, DateRange range) {
+	    if (targetDate == null) {
+	        return new RangeCheckResult(false, "Целевая дата отсутствует");
+	    }
+	    
+	    if(range == null) {
+	    	return new RangeCheckResult(false, "тсутствует просчёт DateRange");
+	    }
+
+	    boolean inRange = !targetDate.isBefore(range.start.toLocalDate()) &&
+	                      !targetDate.isAfter(range.end.toLocalDate());
+
+	    if (!inRange) {
+	        return new RangeCheckResult(false, "Дата вне диапазона");
+	    }
+
+	    if (!targetDate.equals(range.end.toLocalDate())) {
+	        return new RangeCheckResult(true, "Дата входит в диапазон, но не совпадает с датой окончания");
+	    }
+
+	    return new RangeCheckResult(true, null); // Всё ок, без пометки
+	}
+
+	
+	public class RangeCheckResult {
+	    public final boolean inRange;
+	    public final String note;
+
+	    public RangeCheckResult(boolean inRange, String note) {
+	        this.inRange = inRange;
+	        this.note = note;
+	    }
+
+	    @Override
+	    public String toString() {
+	        return "inRange=" + inRange + (note != null ? ", note=" + note : "");
+	    }
+	    
+	}
+
 	
 	@GetMapping("/logistics/info-carrier/list")
 	public Map<String, Object> getInfoCarrier(HttpServletRequest request, HttpServletResponse response) throws IOException{
@@ -2586,15 +2691,15 @@ public class MainRestController {
 		return response;
 	}
 
-	@GetMapping("/test/{orderId}")
-	 @TimedExecution
-	 public Map<String, Object> getTEST(@PathVariable String orderId, HttpServletRequest request) throws ParseException, IOException {
-	    Map<String, Object> responseMap = new HashMap<>();
-	    Integer id = Integer.parseInt(orderId);
-	    orderService.deleteSlot(id);
-	    responseMap.put("id", id);
-	    return responseMap;
-	}
+//	@GetMapping("/test/{orderId}")
+//	 @TimedExecution
+//	 public Map<String, Object> getTEST(@PathVariable String orderId, HttpServletRequest request) throws ParseException, IOException {
+//	    Map<String, Object> responseMap = new HashMap<>();
+//	    Integer id = Integer.parseInt(orderId);
+//	    orderService.deleteSlot(id);
+//	    responseMap.put("id", id);
+//	    return responseMap;
+//	}
 	
 	/**
 	 * Выдёт актуальные Orders

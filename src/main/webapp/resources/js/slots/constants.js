@@ -18,7 +18,9 @@ export const userMessages = {
 	contractCodeNotFound: 'Не найден код контракта в заказе',
 	errorReadingSchedule: 'Ошибка при чтении графика поставок',
 	contractCodeIsMissing: 'Код контракта отсутствует в графике поставок',
-	noImportOverlapMessage: (noImportTimes) => `Невозможно установить заказ на это время! Импортные заказы запрещено устанавливать с ${noImportTimes[0]} до ${noImportTimes[1]}!`
+	noImportOverlapMessage: (noImportTimes) => `Невозможно установить заказ на это время! Импортные заказы запрещено устанавливать с ${noImportTimes[0]} до ${noImportTimes[1]}!`,
+	dateNotFound: 'Дата не найдена!',
+	stockNotFound: 'Номер склада не найден!',
 }
 
 export const stocks24h = ['1700', '1800']

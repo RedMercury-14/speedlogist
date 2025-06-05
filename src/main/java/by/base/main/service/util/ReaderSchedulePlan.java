@@ -56,6 +56,7 @@ import com.itextpdf.text.pdf.PdfStructTreeController.returnType;
 
 import by.base.main.aspect.TimedExecution;
 import by.base.main.controller.ajax.MainRestController;
+import by.base.main.dto.DateRange;
 import by.base.main.dto.MarketDataFor325Request;
 import by.base.main.dto.MarketDataFor325Responce;
 import by.base.main.dto.MarketPacketDto;
@@ -226,7 +227,7 @@ public class ReaderSchedulePlan {
                 || m.getValue().contains("пятница")
                 || m.getValue().contains("суббота")
                 || m.getValue().contains("воскресенье")).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-		System.err.println("Расчёта заказов getDateRangeV2");
+//		System.err.println("Расчёта заказов getDateRangeV2");
 		//мы всё равно считаем график поставок, для определения лог плеча (days)
 		
 		
@@ -244,6 +245,9 @@ public class ReaderSchedulePlan {
 					}
 				}
 		long i = 0;
+//		System.err.println(schedule);
+//		daysStep2.entrySet().forEach(a-> System.err.println(a));
+//		System.err.println("dayOfPlanOrder ->"+dayOfPlanOrder);
 		
 		i = parseWeekNumber(targetValue);			
 		LocalDate datePostavForCalc = LocalDate.of(2024, 7, DayOfWeek.valueOf(targetKey).getValue());			
@@ -255,9 +259,9 @@ public class ReaderSchedulePlan {
 		if(j < 0 && i == 0) {
 			j = j + 7;
 		}
-//		if(j==0) {
-//			j=7;
-//		}			
+		if(j==0) {
+			j=7;
+		}			
 		i = i+j;
 		Date finish = Date.valueOf(order.getDateOrderOrl().toLocalDate().plusDays(i));
 		return new DateRange(order.getDateOrderOrl(), finish, i, targetKey, order.getMarketContractType());
@@ -551,6 +555,7 @@ public class ReaderSchedulePlan {
     
     /**
      * Новый метод предоставления дат заказов, на фронт. Берет даты согласно графику поставок.
+     * @see getPlanResponce
      * @param order
      * @return
      */
@@ -1541,64 +1546,7 @@ public class ReaderSchedulePlan {
     }
 	
 	
-	/**
-	 *  Объект, котоырй определяет сколько дней стока долно быть минимально а так же лог плечо и диапазон дат поставок
-	 * <br> Отдаёт количество дней стока (stock), начиная от заказа согласно графику поставок
-	 * <br> т.е. Если заказ в понедельник а поставка в среду, то он берет плече с понедельника по среду
-	 * <br> и до второй поставки, т.е. до сл. среды <b>(лог плечо + неделя)</b>
-	 */
-	class DateRange{
-		/**
-		 * Дата начала лог плеча
-		 * <br>Она же дата заказа
-		 */
-		public Date start;
-		
-		/**
-		 * Дата окончания лог плеча
-		 * <br>Она же дата поставки
-		 */
-		public Date end;
-		
-		/**
-		 * Непосредственно лог плечо
-		 */
-		public Long days;
-		
-		/**
-		 * Жинамический сток для текущего лог плеча (запас товара в днях до второй поставки)
-		 */
-		public Long stock; // динамический сток от даты заказа
-		
-		/**
-		 * Дата заказа согласно графику поставок
-		 */
-		public String dayOfWeekHasOrder;
-		
-		/**
-		 * Номер контракта
-		 */
-		public String numContruct;
-		
-		        
-        public DateRange(Date start, Date end, Long days, String dayOfWeekHasOrder, String numContruct) {
-        	this.start = start;
-            this.end = end;
-            this.days = days;
-            this.dayOfWeekHasOrder = dayOfWeekHasOrder;;
-            this.stock = days + 8;
-            this.numContruct = numContruct;
-        }
-
-
-		@Override
-		public String toString() {
-			return "DateRange [start=" + start + ", end=" + end + ", days=" + days + ", stock=" + stock
-					+ ", dayOfWeekHasOrder=" + dayOfWeekHasOrder + ", numContruct=" + numContruct + "]";
-		}
-        
-        
-	}
+	
 	
 	/**
 	 * Класс реализхует сумму продуктов и историю с каких заказов суммируется строки продуктов
@@ -1645,6 +1593,7 @@ public class ReaderSchedulePlan {
     public int parseWeekNumber(String targetValue) {
         // Регулярное выражение для поиска "н" с числом от 1 до 9
         Pattern pattern = Pattern.compile("н(\\d)");
+//        System.out.println("-->>>>>"+targetValue);
         Matcher matcher = pattern.matcher(targetValue);
 
         // Если найдена соответствующая подстрока, вычисляем значение i

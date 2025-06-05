@@ -83,6 +83,7 @@
 						<option value="checkBookingForCurrentDate">Брони на текущую дату</option>
 						<option value="1700to1800">Рекомендации по перемещениям с 1700 на 1800</option>
 						<option value="1800to1700">Рекомендации по перемещениям с 1800 на 1700</option>
+						<option value="getPallHasOwerPlan">Паллеты вне графика на текущую дату</option>
 					</select>
 				</div>
 			</c:when>
@@ -207,6 +208,7 @@
 					<div id="yardInfo" class="eventInfo none"></div>
 				</div>
 				<div class="modal-footer">
+					<!-- <button id="sendSlotToSupplier" type="button" class="btn btn-warning d-none">Отправить поставщику</button> -->
 					<button id="confirmSlot" data-action="save" type="button" class="btn btn-secondary"></button>
 					<button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
 				</div>
@@ -345,6 +347,29 @@
 						<a href="../file/slot/downdoad/instruction-join" class="list-group-item list-group-item-action text-info">
 							Инструкция по связыванию заказов
 						</a>
+					</div>
+					<br>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Модальное окно отображения инструкций -->
+	<div class="modal fade" id="pallHasOwerPlanModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="pallHasOwerPlanModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-xl">
+			<div class="modal-content">
+				<div class="modal-header bg-color justify-content-center">
+					<h3 class="modal-title text-center text-white" id="pallHasOwerPlanModalLabel">Паллеты вне плана</h3>
+					<button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<div id="pallHasOwerPlanContainer">
+
 					</div>
 					<br>
 				</div>

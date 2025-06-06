@@ -825,12 +825,15 @@ public class ReaderSchedulePlan {
 		 }
 		 
 		 //реализация специальной проверки на запрет постановки слотов, которые блокируются спец полями
-		 LocalDate dateNow = LocalDate.now();
+		 LocalDate dateHasSlot = order.getTimeDelivery().toLocalDateTime().toLocalDate();
 		 for (Entry<Integer,Product> entry : products.entrySet()) {
 			 if(entry.getValue().getBlockDateStart() != null && entry.getValue().getBlockDateFinish() != null) {
 				 LocalDate dateStart = entry.getValue().getBlockDateStart().toLocalDate();
 				 LocalDate dateFinish = entry.getValue().getBlockDateFinish().toLocalDate();
-				 if (!dateNow.isBefore(dateStart) && !dateNow.isAfter(dateFinish)) {
+				 System.err.println(!dateHasSlot.isBefore(dateStart));
+				 System.err.println(!dateHasSlot.isAfter(dateFinish));
+				 System.err.println(dateHasSlot + "  " + dateStart +  "  " + dateFinish);
+				 if (!dateHasSlot.isBefore(dateStart) && !dateHasSlot.isAfter(dateFinish)) {
 					    return new PlanResponce(0, "Действие заблокировано!\n Создание слота на товар " + entry.getValue().getCodeProduct() + " - " + entry.getValue().getName() + " запрещено с "
 					    		+ dateStart.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + " по "
 					    		+ dateFinish.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + " в связи с проведением инвентаризации для разделения 1 товар - 1 GTIN.");

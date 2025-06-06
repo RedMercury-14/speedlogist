@@ -91,6 +91,7 @@ export function getOrderDataForAjax(info, currentStock, currentLogin, currentRol
 	if (method === 'delete') status = eventData.status === 8 || eventData.status === 100 ? 5 : 6
 	if (method === 'confirm') status = eventData.status
 	if (method === 'editMarketInfo') status = eventData.status
+	if (method === 'sendSlotToSupplier') status = eventData.status
 
 	return {
 		idOrder,

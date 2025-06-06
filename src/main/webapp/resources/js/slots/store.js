@@ -209,6 +209,7 @@ export const store = {
 			loginManager: orderData.loginManager,
 			marketInfo,
 			link: orderData.link,
+			// statusForSupplier: orderData.statusForSupplier
 		}
 		// для сообщений от Двора
 		if (orderData.hasOwnProperty('statusYard')) {

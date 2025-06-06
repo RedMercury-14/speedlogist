@@ -67,6 +67,11 @@ export function confitmSlotBtnListner(handler) {
 	confirmSlotBtn.addEventListener('click', handler)
 }
 
+export function sendSlotToSupplierBtnListner(handler) {
+	const sendSlotToSupplierBtn = document.querySelector('#sendSlotToSupplier')
+	sendSlotToSupplierBtn.addEventListener('click', handler)
+}
+
 export function copySlotInfoBtnListner(handler) {
 	const copySlotInfoBtn = document.querySelector('#copySlotInfo')
 	copySlotInfoBtn.addEventListener('click', handler)

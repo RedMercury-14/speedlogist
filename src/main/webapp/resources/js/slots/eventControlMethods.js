@@ -114,7 +114,7 @@ export function deleteCalendarEventFromTable(gridOptions, orderData) {
 	changePallCapacity(orderData, currentStock, order)
 }
 export function updateOrderAndEvent(order, currentLogin, currentRole, method) {
-	const stockId = order.idRamp.slice(0, -2)
+	const stockId = `${order.idRamp}`.slice(0, -2)
 	// обновляем заказ в сторе
 	const updatedOrder = store.updateOrder(order)
 	// получение ивента календаря (слота)

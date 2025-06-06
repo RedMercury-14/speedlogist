@@ -4,6 +4,8 @@ import java.util.List;
 
 import by.base.main.model.User;
 
+import javax.transaction.Transactional;
+
 public interface UserService {
 	
 	List<User> getUserList();
@@ -51,4 +53,6 @@ public interface UserService {
 	User getUserByLoginV2(String login);
 	
 	List<User> getUserLoginList();
+
+    List<User> getAllSuppliers();
 }

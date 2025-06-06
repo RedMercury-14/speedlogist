@@ -5,6 +5,7 @@ import by.base.main.model.Schedule;
 
 import java.sql.Date;
 import java.util.List;
+import java.util.Set;
 
 public interface OrderCalculationService {
 
@@ -46,4 +47,6 @@ public interface OrderCalculationService {
 
 
     int gelLogShoulder(OrderCalculation orderCalculation, Schedule schedule);
+
+    List<OrderCalculation> getOrderCalculationsByContract(Set<Long> counterpartyContractCodes);
 }

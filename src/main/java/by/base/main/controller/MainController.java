@@ -354,6 +354,14 @@ public class MainController {
 		}	
 		return "main";		
 	}
+
+	@RequestMapping("/main/supplier")
+	public String supplierPage(Model model, HttpSession session, HttpServletRequest request,
+							   @SessionAttribute(name = "errorMessage", required = false) String message) {
+		request.setAttribute("errorMessage", message);
+		session.removeAttribute("errorMessage");
+		return "supplier";
+	}
 	
 	@GetMapping("/main/procurement/create-accommodation")
 	public String getGoodAccommodations(Model model, HttpServletRequest request) {
@@ -462,6 +470,11 @@ public class MainController {
 	public String tender(Model model, HttpServletRequest request, HttpSession session,
 							 @RequestParam(value = "routeId", required = false) Integer routeId) {
 		return "tender";
+	}
+
+	@GetMapping("/main/order-support/suppliers-list")
+	public String getSuppliersList(Model model, HttpServletRequest request) {
+		return "suppliersList";
 	}
 
 	@GetMapping("/carrier/tenders")

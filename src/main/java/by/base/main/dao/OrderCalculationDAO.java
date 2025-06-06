@@ -4,6 +4,7 @@ import by.base.main.model.OrderCalculation;
 
 import java.sql.Date;
 import java.util.List;
+import java.util.Set;
 
 public interface OrderCalculationDAO {
 
@@ -43,4 +44,5 @@ public interface OrderCalculationDAO {
      */
     List<OrderCalculation> getOrderCalculationsForPeriod (Date dateFrom, Date dateTo);
 
+    List<OrderCalculation> getOrderCalculationsByContract(Set<Long> counterpartyContractCodes);
 }

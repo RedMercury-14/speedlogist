@@ -48,4 +48,5 @@ public interface UserDAO {
 	
 	List<User> getUserLoginList();
 
+    List<User> getAllSuppliers();
 }

@@ -239,6 +239,12 @@ public class User implements Serializable{
 	
 	@Column(name = "new_tender_notification")
 	private Boolean newTenderNotification;
+
+	@Column(name = "feature")
+	private String feature;
+
+	@Column(name = "counterparty_code")
+	private Long counterpartyCode;
 	
 	@Transient
 	private String confirmPassword;
@@ -286,6 +292,22 @@ public class User implements Serializable{
 
 	public void setNewTenderNotification(Boolean newTenderNotification) {
 		this.newTenderNotification = newTenderNotification;
+	}
+
+	public Long getCounterpartyCode() {
+		return counterpartyCode;
+	}
+
+	public void setCounterpartyCode(Long counterpartyCode) {
+		this.counterpartyCode = counterpartyCode;
+	}
+
+	public String getFeature() {
+		return feature;
+	}
+
+	public void setFeature(String feature) {
+		this.feature = feature;
 	}
 
 	public Integer getTgBotStatus() {

@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -147,6 +148,12 @@ public class OrderCalculationServiceImpl implements OrderCalculationService {
             logShoulder = (int) ChronoUnit.DAYS.between(orderLocalDate, date) + 1;
         }
         return logShoulder;
+    }
+
+    @Transactional
+    @Override
+    public List<OrderCalculation> getOrderCalculationsByContract(Set<Long> counterpartyContractCodes){
+        return orderCalculationDAO.getOrderCalculationsByContract(counterpartyContractCodes);
     }
 
 

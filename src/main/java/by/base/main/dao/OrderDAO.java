@@ -2,7 +2,6 @@ package by.base.main.dao;
 
 import java.sql.Date;
 import java.sql.Time;
-import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -291,4 +290,6 @@ public interface OrderDAO {
 	List<Order> getOrderProductNotJOIN(Long goodsIds);
 
 	List<Order> getSpecialOrdersByListGoodId(List<Long> goodsIds);
+
+	List<Order> getAllOrdersForSupplier(String counterpartyCode, Integer statusForSupplier);
 }

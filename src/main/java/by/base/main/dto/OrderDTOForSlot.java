@@ -144,7 +144,7 @@ public class OrderDTOForSlot {
 	
 	private Timestamp registrationFactYard;
 
-	
+	private Integer statusForSupplier;
 	
 	public OrderDTOForSlot() {
 		
@@ -617,6 +617,14 @@ public class OrderDTOForSlot {
 		this.registrationFactYard = registrationFactYard;
 	}
 
+	public Integer getStatusForSupplier() {
+		return statusForSupplier;
+	}
+
+	public void setStatusForSupplier(Integer statusForSupplier) {
+		this.statusForSupplier = statusForSupplier;
+	}
+
 	@Override
 	public int hashCode() {
 		return Objects.hash(idOrder);
@@ -661,12 +669,4 @@ public class OrderDTOForSlot {
 				+ "\", \"unloadStartYard\":\"" + unloadStartYard + "\", \"unloadFinishYard\":\"" + unloadFinishYard
 				+ "\", \"pallFactYard\":\"" + pallFactYard + "\", \"weightFactYard\":\"" + weightFactYard + "\"}";
 	}
-	
-	
-		
-	
-	
-
-	
-	
 }

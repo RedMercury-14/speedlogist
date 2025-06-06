@@ -25,15 +25,6 @@ public interface ActDAO {
 	 */
 	   List<Act> getActsByRouteId(String id, LocalDate startDate, LocalDate finishDate);
 
-	/**
-	 * <br>Возвращает список актов по указанному id и за указанный диапазон времени</br>
-	 * @param id
-	 * @param startDate
-	 * @param finishDate
-	 * @return
-	 * @author Ira
-	 */
-    List<Act> getActsByRouteId(String id, LocalDate startDate, LocalDate finishDate);
 
 	List<Act> getActsByDates(LocalDate startDate, LocalDate finishDate);
 }

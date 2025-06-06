@@ -1,0 +1,29 @@
+@charset "UTF-8";
+
+#toasts {
+    position: fixed !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    z-index: 100 !important;
+    padding: 1rem! important;
+}
+
+.toast {
+    font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans","Liberation Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
+    border: 2px solid #0e377b;
+}
+.toast a {
+    color: #007bff;
+}
+.toast .close {
+    float: right;
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    color: #000;
+    text-shadow: 0 1px 0 #fff;
+    opacity: .5;
+}
+.toast .close:focus {
+    outline: none;
+}

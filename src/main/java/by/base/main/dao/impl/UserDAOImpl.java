@@ -3,10 +3,6 @@ package by.base.main.dao.impl;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import javax.persistence.TemporalType;
-import javax.transaction.Transactional;
-
-import org.hibernate.NonUniqueObjectException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
@@ -14,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import by.base.main.dao.UserDAO;
-import by.base.main.model.Route;
 import by.base.main.model.User;
 
 @Repository
@@ -221,6 +216,16 @@ public class UserDAOImpl implements UserDAO{
 		Session currentSession = sessionFactory.getCurrentSession();
 		Query<User> theRole = currentSession.createQuery(queryGetUserLoginList, User.class);
 		List <User> users = theRole.getResultList();
+		return users;
+	}
+
+	private static final String queryGetAllSuppliers = "from User u LEFT JOIN FETCH u.roles r where r.authority = :authority";
+	@Override
+	public List<User> getAllSuppliers() {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<User> query = currentSession.createQuery(queryGetAllSuppliers, User.class);
+		query.setParameter("authority", "ROLE_SUPPLIER");
+		List <User> users = query.getResultList();
 		return users;
 	}
 

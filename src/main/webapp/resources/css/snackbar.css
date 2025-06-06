@@ -1,0 +1,77 @@
+@charset "UTF-8";
+
+/* Снэк-бар - расположите ее внизу и в середине экрана */
+#snackbar {
+	visibility: hidden;/* Скрыто по умолчанию. Видимый по щелчку мыши */
+	min-width: 250px;/* Установите минимальную ширину по умолчанию */
+	background-color: #333;/* Черный цвет фона */
+	color: #fff;/* Белый цвет текста */
+	text-align: center;/* Центрированный текст */
+	border-radius: 5px;/* Округленные границы */
+	padding: 16px;/* Отступ */
+	position: fixed;/* Сядьте на верхнюю часть экрана */
+	z-index: 99999;/* Добавить z-индекс при необходимости */
+	left: 50%;/* Центр, снэк-бар */
+	transform: translateX(-50%);/* Центр, снэк-бар */
+	bottom: 70px;/* 70 пикселей снизу */
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji" !important;
+}
+
+/* Показывать снэк-бар при нажатии на кнопку (Класс добавлен с помощью JavaScript) */
+#snackbar.show {
+	visibility: visible;
+	/* Покажите снэк-бар */
+	/* Добавить анимацию: Возьмите 0,5 секунды, чтобы исчезать и выходить из закусочной.
+	   Однако задержите процесс затухания на 2,5 секунды */
+	-webkit-animation: fadein 0.5s, fadeout 0.5s 3.5s;
+	animation: fadein 0.5s, fadeout 0.5s 3.5s;
+}
+
+/* Анимация, чтобы исчезать снэк-бар в и из */
+@-webkit-keyframes fadein {
+	from {
+		bottom: 0;
+		opacity: 0;
+	}
+
+	to {
+		bottom: 70px;
+		opacity: 1;
+	}
+}
+
+@keyframes fadein {
+	from {
+		bottom: 0;
+		opacity: 0;
+	}
+
+	to {
+		bottom: 70px;
+		opacity: 1;
+	}
+}
+
+@-webkit-keyframes fadeout {
+	from {
+		bottom: 70px;
+		opacity: 1;
+	}
+
+	to {
+		bottom: 0;
+		opacity: 0;
+	}
+}
+
+@keyframes fadeout {
+	from {
+		bottom: 70px;
+		opacity: 1;
+	}
+
+	to {
+		bottom: 0;
+		opacity: 0;
+	}
+}

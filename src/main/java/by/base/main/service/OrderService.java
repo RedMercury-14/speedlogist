@@ -288,4 +288,6 @@ public interface OrderService {
      * @author Ira
      */
     Order deleteSlot(Integer orderId);
+
+	List<Order> getAllOrdersForSupplier(String counterpartyCode, Integer statusForSupplier);
 }

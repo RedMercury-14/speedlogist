@@ -565,7 +565,8 @@ public class OrderDAOImpl implements OrderDAO{
 	        "o.lastDatetimePointLoad,"+
 	        "o.dateOrderOrl,"+ // добавлено 27,09,2024
 	        "o.link,"+// добавлен 26,11,2024
-	        "o.slotMessageHistory)"; // добавлен 06,02,2025
+	        "o.slotMessageHistory," +
+			"o.statusForSupplier)"; // добавлен 06,02,2025
 	
 	private static final String queryGetOrderDTOByPeriodDeliveryAndSlots = orderConstruct + " from Order o LEFT JOIN o.addresses a where \r\n"
 			+ "(CASE \r\n"
@@ -1014,6 +1015,30 @@ public class OrderDAOImpl implements OrderDAO{
 		query.setParameterList("goodsIds", goodsIds);
 		List<Order> orders = query.getResultList();
 		return orders;
+	}
+
+	private static final String queryGetOrdersCounterpartyCodeAndStatus = "from Order o "
+			+ "LEFT JOIN FETCH o.orderLines ol "
+			+ "LEFT JOIN FETCH o.routes r "
+			+ "LEFT JOIN FETCH r.roteHasShop rhs "
+			+ "LEFT JOIN FETCH r.user ru "
+			+ "LEFT JOIN FETCH r.truck rt "
+			+ "LEFT JOIN FETCH r.driver rd "
+			+ "LEFT JOIN FETCH r.truck t "
+			+ "LEFT JOIN FETCH r.roteHasShop rhs "
+			+ "LEFT JOIN FETCH o.addresses a "
+			+ "LEFT JOIN FETCH r.carrierBids rc "
+			+ "where o.marketContractType =: counterpartyCode "
+			+ "and o.statusForSupplier =: statusForSupplier ";
+	@Override
+	public List<Order> getAllOrdersForSupplier(String counterpartyCode, Integer statusForSupplier) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Order> query = currentSession.createQuery(queryGetOrdersCounterpartyCodeAndStatus, Order.class);
+		query.setParameter("counterpartyCode", counterpartyCode);
+		query.setParameter("statusForSupplier", statusForSupplier);
+		List<Order> orders = query.getResultList();
+		return orders;
+
 	}
 
 }

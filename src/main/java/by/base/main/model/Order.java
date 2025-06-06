@@ -245,7 +245,13 @@ public class Order {
 	
 	@Column(name = "slot_message_history")
 	private String slotMessageHistory;
-	
+
+	@Column(name = "status_for_supplier")
+	private Integer statusForSupplier;
+
+	@Column (name = "counterparty_code")
+	private Long counterpartyCode;
+
 	@Transient
 	private List<Address> addressesSort;
 	
@@ -684,7 +690,24 @@ public class Order {
 	public void setIdRamp(Integer idRamp) {
 		this.idRamp = idRamp;
 	}
-	
+
+	public Integer getStatusForSupplier() {
+		return statusForSupplier;
+	}
+
+	public void setStatusForSupplier(Integer statusForSupplier) {
+		this.statusForSupplier = statusForSupplier;
+	}
+
+
+	public Long getCounterpartyCode() {
+		return counterpartyCode;
+	}
+
+	public void setCounterpartyCode(Long counterpartyCode) {
+		this.counterpartyCode = counterpartyCode;
+	}
+
 	/**
 	 * дата и Время начала выгрузки
 	 * @return

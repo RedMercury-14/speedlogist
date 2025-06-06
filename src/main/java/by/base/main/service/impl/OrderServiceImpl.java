@@ -17,6 +17,7 @@ import com.dto.OrderDTO;
 import by.base.main.aspect.TimedExecution;
 import by.base.main.dao.OrderDAO;
 import by.base.main.service.OrderService;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -501,5 +502,11 @@ public class OrderServiceImpl implements OrderService {
         orderDAO.updateOrder(order);
         return order;
     }
+
+	@Transactional
+	@Override
+	public List<Order> getAllOrdersForSupplier(String counterpartyCode, Integer statusForSupplier) {
+		return orderDAO.getAllOrdersForSupplier(counterpartyCode, statusForSupplier);
+	}
 
 }

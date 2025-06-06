@@ -154,6 +154,8 @@ public class OrderDTO {
 	private Integer link;
 	
 	private String slotMessageHistory;
+
+	private Integer statusForSupplier;
 	
 	public OrderDTO() {
 		
@@ -172,7 +174,7 @@ public class OrderDTO {
 			String marketContractorId, String numProduct, Integer statusYard, Object unloadStartYard,
 			Object unloadFinishYard, Integer pallFactYard, Double weightFactYard, Double marketOrderSumFirst,
 			Double marketOrderSumFinal, Object arrivalFactYard, Object registrationFactYard, String addressLoading, Object lastDatetimePointLoad, Object dateOrderOrl,
-			Integer link, String slotMessageHistory) {
+			Integer link, String slotMessageHistory, Integer statusForSupplier) {
 		super();
 		this.idOrder = idOrder;
 		this.counterparty = counterparty;
@@ -234,6 +236,7 @@ public class OrderDTO {
 		this.dateOrderOrl = (Date) dateOrderOrl;
 		this.link = link;
 		this.slotMessageHistory = slotMessageHistory;
+		this.statusForSupplier = statusForSupplier;
 	}
 	
 	@Deprecated
@@ -835,6 +838,14 @@ public class OrderDTO {
 
 	public void setRegistrationFactYard(Timestamp registrationFactYard) {
 		this.registrationFactYard = registrationFactYard;
+	}
+
+	public Integer getStatusForSupplier() {
+		return statusForSupplier;
+	}
+
+	public void setStatusForSupplier(Integer statusForSupplier) {
+		this.statusForSupplier = statusForSupplier;
 	}
 
 	@Override

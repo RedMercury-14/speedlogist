@@ -51,12 +51,6 @@ public class ActServiceImpl implements ActService{
 	public List<Act> getActBySecretCode(String code) {
 		return actDAO.getActBySecretCode(code);
 	}
-	
-	@Override
-	@Transactional
-	public List<Act> getActsByRouteId(String id, LocalDate startDate, LocalDate finishDate) {
-	    return actDAO.getActsByRouteId(id,startDate, finishDate);
-	}
 
 	@Override
 	@Transactional

@@ -9,12 +9,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.TemporalType;
-import javax.transaction.Transactional;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Set;
 
 @Repository
 public class OrderCalculationDAOImpl implements OrderCalculationDAO {
@@ -70,5 +70,16 @@ public class OrderCalculationDAOImpl implements OrderCalculationDAO {
         List <OrderCalculation> orderCalculations = theObject.getResultList();
 
         return orderCalculations.isEmpty() ? new OrderCalculation() : orderCalculations.get(0);
+    }
+
+    private static final String queryGetOrderCalculationsByContract = "from OrderCalculation oc where oc.counterpartyContractCode IN :contract";
+    @Override
+    public List<OrderCalculation> getOrderCalculationsByContract(Set<Long> counterpartyContractCodes){
+        Session currentSession = sessionFactory.getCurrentSession();
+        Query<OrderCalculation> theObject = currentSession.createQuery(queryGetOrderCalculationsByContract, OrderCalculation.class);
+        theObject.setParameterList("contract", counterpartyContractCodes);
+        List<OrderCalculation> orderCalculations = theObject.getResultList();
+        return orderCalculations;
+
     }
 }

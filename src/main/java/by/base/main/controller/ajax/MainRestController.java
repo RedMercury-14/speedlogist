@@ -9484,7 +9484,7 @@ public class MainRestController {
 		response.put("/map/downloadmatrix", "Скачивает матрицу расстояний в виде двумерного массива");
 		return response;
 	}
-
+	
 	@GetMapping("/map/calcmatrix/{i}")
 	public Integer getCalcMatrix(HttpServletRequest request, @PathVariable Integer i) {
 		System.out.println("на вход получил " + i);
@@ -9492,6 +9492,17 @@ public class MainRestController {
 			return matrixMachine.calculationDistance(null);
 		} else {
 			return matrixMachine.calculationDistance(i);
+		}
+	}
+
+	@GetMapping("/map/calcmatrixV2/{i}&{thread}")
+	public Integer getCalcMatrix(HttpServletRequest request, @PathVariable Integer i, @PathVariable Integer thread) {
+		System.out.println("на вход получил " + i);
+		if (i == 0) {
+			return matrixMachine.calculationDistanceToDB(null, thread);
+//			return matrixMachine.calculationDistanceNew(null, Runtime.getRuntime().availableProcessors());
+		} else {
+			return matrixMachine.calculationDistanceToDB(i, thread);
 		}
 	}
 

@@ -123,6 +123,12 @@ public class MatrixMachine {
 			        ResponsePath path = rsp.getBest();
 			        sum = path.getDistance();
 			        time = path.getTime();
+			     // Создаем и сохраняем объект
+                    DistanceMatrix dm = new DistanceMatrix();
+                    dm.setIdDistanceMatrix(from.getNumshop()+"-"+to.getNumshop()); // Генерация ID
+                    dm.setDistance(sum);
+                    dm.setTime(time.doubleValue());                    
+                    distanceMatrixService.save(dm);			        
 			        matrix.put(from.getNumshop()+"-"+to.getNumshop(), sum);
 			        matrixTime.put(from.getNumshop()+"-"+to.getNumshop(), time);
 				}
@@ -436,17 +442,7 @@ public class MatrixMachine {
 	}
 	
 	public Map<String, Double> loadMatrixOfDistance() {
-		try {
-			FileInputStream fis = new FileInputStream(mainController.path + "resources/distance/matrixMain.ser");
-		         ObjectInputStream ois = new ObjectInputStream(fis);
-		         this.matrix = (HashMap) ois.readObject();
-		         ois.close();
-		         fis.close();
-			}catch (FileNotFoundException e) {
-				System.err.println("ОШибка в методе loadMatrixOfDistance");
-			}catch (Exception e) {
-				e.printStackTrace();
-			}
+		this.matrix = distanceMatrixService.getDistanceMatrix();
 		return matrix;		
 	}
 	

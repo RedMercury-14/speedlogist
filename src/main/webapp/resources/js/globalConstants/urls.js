@@ -45,6 +45,10 @@ export const getBalanceBaseUrl = '/speedlogist/api/balance2/'
 export const getRoutesHasOrderBaseUrl = `/speedlogist/api/manager/getRoutesHasOrder/`
 /** проверка совпадения заказа с графика поставок */
 export const checkScheduleBaseUrl = '/speedlogist/api/slots/delivery-schedule/checkSchedule/'
+/** изменение статуса от поставзика в заказе */
+export const changeStatusForSupplierUrl = '/speedlogist/api/slots/change-status-for-supplier'
+/** получение количества паллет вне графика из слотов {date}&{stock} */
+export const getPallHasOwerPlanBaseUrl = '/speedlogist/api/getPallHasOwerPlan/'
 
 
 ///////////////////////////////////////////////
@@ -534,3 +538,4 @@ export const getImagesByRouteBase64BaseUrl = '/speedlogist/file/images/base64/by
 ///////////////////////////////////////////////
 export const createNewSupplierUrl = '/speedlogist/api/new-supplier'
 export const getAllSuppliersUrl = '/speedlogist/api/order-support/get-all-suppliers'
+export const getOrdersForSupplierUrl = '/speedlogist/api/supplier/get-orders-for-supplier'

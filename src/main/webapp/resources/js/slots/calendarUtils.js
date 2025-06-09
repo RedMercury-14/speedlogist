@@ -216,7 +216,8 @@ export async function showEventInfoPopup(fcEvent, currentLogin, currentRole) {
 	const { data } = extendedProps
 	const status = data.status
 	const orderLogin = data.loginManager
-	const isConfirmedSlot = status > 8 
+	const isConfirmedSlot = status > 8
+	const isSupplierOrder = status === 8 || status === 100
 	const text = isConfirmedSlot ? 'Снять подтверждение слота' : 'Подтвердить слот'
 	const isNotAnimated = isConfirmedSlot || isAnotherUser(orderLogin, currentLogin)
 	const action = isConfirmedSlot ? 'unSave' : 'save'
@@ -224,17 +225,25 @@ export async function showEventInfoPopup(fcEvent, currentLogin, currentRole) {
 	const withRoutes = status >= 30 && status <= 70
 	const routes = withRoutes ? await getRoutesInfo(data.idOrder) : []
 
+	// вкладки с информацией
 	const eventInfo = document.querySelector('#eventInfo')
 	const routesInfo = document.querySelector('#routesInfo')
 	const yardInfo = document.querySelector('#yardInfo')
-	const confirmSlotBtn = document.querySelector('#confirmSlot')
 	eventInfo.innerHTML = createEventInfoHTML(fcEvent)
 	routesInfo.innerHTML = createRoutesInfoHTML(routes)
 	yardInfo.innerHTML = createYardInfoHTML(fcEvent)
+
+	// кнопка подтверждения/снятия подтверждения слота
+	const confirmSlotBtn = document.querySelector('#confirmSlot')
 	confirmSlotBtn.innerText = text
 	confirmSlotBtn.className = isNotAnimated ? 'btn btn-secondary' : 'btn btn-secondary animation__small-pulse'
 	confirmSlotBtn.dataset.action = action
 	confirmSlotBtn.disabled = !editableRulesToConfirmBtn(data, currentLogin, currentRole)
+
+	// кнопка отправки слота поставщику (изменение статуса поставщика)
+	// const sendSlotToSupplierBtn = document.querySelector('#sendSlotToSupplier')
+	// sendSlotToSupplierBtn.className = isSupplierOrder ? 'btn btn-warning' : 'btn btn-warning d-none'
+	// sendSlotToSupplierBtn.disabled = data.statusForSupplier !== 10 || !isConfirmedSlot
 
 	$('#eventInfoModal').modal('show')
 }
@@ -611,4 +620,47 @@ export function getMultiplicity() {
 	}
 
 	return multiplicity
+}
+
+// отображение модального окна с информацией о паллетах вне плана на дату и склад
+export function showPallHasOwerPlanModal(palletData) {
+	const container = document.getElementById("pallHasOwerPlanContainer")
+	container.innerHTML = ""
+
+	const total = document.createElement("p")
+	total.innerHTML = `<strong>Общее количество паллет вне плана:</strong> ${palletData.finalPall}`
+	container.appendChild(total)
+
+	const totalInternalMovement = document.createElement("p")
+	totalInternalMovement.innerHTML = `<strong>Общее количество паллет вне плана (перемещения):</strong> ${palletData.finalEternalMowmentPall}`
+	container.appendChild(totalInternalMovement)
+
+	const totalOut = document.createElement("p")
+	totalOut.innerHTML = `<strong> Количество паллет вне плана без учета графиков поставок:</strong> ${palletData.finalPallOut}`
+	container.appendChild(totalOut)
+
+
+	const table = document.createElement("table")
+	table.className = "table table-bordered table-striped"
+
+	const thead = document.createElement("thead")
+	thead.innerHTML = `
+		<tr class="font-weight-bold">
+			<th>Контрагент</th>
+			<th>Кол-во паллет</th>
+		</tr>
+	`
+
+	const tbody = document.createElement("tbody")
+	palletData.pallData.forEach(item => {
+		const row = document.createElement("tr")
+		row.innerHTML = `<td>${item.counterparty}</td><td>${item.pallCount}</td>`
+		tbody.appendChild(row)
+	})
+
+	table.appendChild(thead)
+	table.appendChild(tbody)
+	container.appendChild(table)
+
+	$('#pallHasOwerPlanModal').modal('show')
 }

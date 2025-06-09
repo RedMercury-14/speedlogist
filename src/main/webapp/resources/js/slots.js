@@ -13,6 +13,7 @@ import {
 	createCalendarDateInput,
 	searchSlot,
 	showReloadWindowModal,
+	showPallHasOwerPlanModal,
 } from "./slots/calendarUtils.js"
 import {
 	blurActiveElem, cookieHelper, debounce, isAdmin, isLogist, isObserver,
@@ -45,6 +46,7 @@ import {
 	copySlotInfoBtnListner,
 	eventInfoModalClosedListner,
 	reloadBtnListner,
+	sendSlotToSupplierBtnListner,
 	sidebarListners,
 	slotInfoListners,
 	slotSearchFormListner,
@@ -61,7 +63,9 @@ import {
 	editMarketInfo,
 	getMoveOrdersReport,
 	getOrderFromMarket,
+	getPallHasOwerPlanData,
 	loadOrder,
+	sendSlotToSupplier,
 	setOrderLinking,
 	updateOrder,
 } from "./slots/api.js"
@@ -256,6 +260,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 	sidebarListners()
 	// кнопка подтверждения слота
 	confitmSlotBtnListner(confirmSlotBtnClickHandler)
+	// кнопка отправки слота поставщику
+	// sendSlotToSupplierBtnListner(sendSlotToSupplierBtnClickHandler)
 	// кнопка перезагрузки страницы
 	reloadBtnListner()
 	// кнопка копирования информации о слоте
@@ -292,7 +298,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 	$('#pallChartModal').on('hide.bs.modal', blurActiveElem)
 	$('#updateSlotReasonModal').on('hide.bs.modal', blurActiveElem)
 
-	showSlotNewsModal()
+	// showSlotNewsModal()
 })
 
 
@@ -506,9 +512,17 @@ function confirmSlotBtnClickHandler(e) {
 		}
 	}
 
-	// 
+	// блокировка действия, если статус заказа 20
 	if (action === 'unSave' && status === 20) return
-	confirmSlot(fcEvent, action, orderTableGridOption)
+
+	confirmSlot(fcEvent, action)
+}
+
+// обработчик нажатия на кнопку отправки слота поставщику
+function sendSlotToSupplierBtnClickHandler(e) {
+	const fcEvent = store.getSlotToConfirm()
+	const statusForSupplier = 20
+	sendSlotToSupplier(fcEvent, statusForSupplier)
 }
 
 // обработчик нажатия на кнопку копирования информации о слоте
@@ -580,6 +594,19 @@ async function doAdminAction(e) {
 		select.value = ''
 		select.blur()
 		getMoveOrdersReport(action)
+		return
+	}
+
+	// паллеты вне графика на текущую дату и склад
+	if (action === 'getPallHasOwerPlan') {
+		select.value = ''
+		select.blur()
+		const date = store.getCurrentDate()
+		const stock = store.getCurrentStock()
+		const stockId = stock?.id
+		const pallOwnerPlan = await getPallHasOwerPlanData(date, stockId)
+		if (!pallOwnerPlan) return
+		showPallHasOwerPlanModal(pallOwnerPlan)
 		return
 	}
 }

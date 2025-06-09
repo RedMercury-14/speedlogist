@@ -14,6 +14,11 @@ public interface ScheduleService {
 
 	Schedule getScheduleById(Integer id);
 	
+	/**
+	 * Возвращает <b>все</b> графики поставок на РЦ <br>
+	 * <pre>from Schedule where type='РЦ'</pre>
+	 * @return List<Schedule>
+	 */
 	List<Schedule> getSchedulesListRC();
 	
 	List<Schedule> getSchedulesListTO();

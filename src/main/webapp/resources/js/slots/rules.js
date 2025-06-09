@@ -144,6 +144,7 @@ export function methodAccessRules(method, order, currentLogin, currentRole) {
 		case 'checkBooking': return (isAdmin(currentRole) || currentLogin === 'romashkok%!dobronom.by')
 		case 'editMarketInfo': return !isSlotsObserver(currentRole) && !isObserver(currentRole)
 		case 'getOrderFromMarket': return !isSlotsObserver(currentRole) && !isObserver(currentRole)
+		case 'sendSlotToSupplier': return confirmMethodAccessRules(order, currentLogin, currentRole)
 		default: return true
 	}
 }

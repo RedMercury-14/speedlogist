@@ -1,6 +1,7 @@
 import { ajaxUtils } from "../ajaxUtils.js"
 import { bootstrap5overlay } from "../bootstrap5overlay/bootstrap5overlay.js"
 import {
+	changeStatusForSupplierUrl,
 	checkBookingBaseUrl,
 	checkScheduleBaseUrl,
 	checkSlotBaseUrl,
@@ -9,6 +10,7 @@ import {
 	editMarketInfoBaseUrl,
 	getBalanceBaseUrl,
 	getMarketOrderBaseUrl,
+	getPallHasOwerPlanBaseUrl,
 	getRoutesHasOrderBaseUrl,
 	loadOrderUrl,
 	preloadOrderUrl,
@@ -653,4 +655,87 @@ export async function checkSchedule(order, eventDateStr) {
 	}
 
 	return scheduleData
+}
+
+// изменение статуса поставщика в заказе
+export function sendSlotToSupplier(fcEvent, statusForSupplier) {
+	const method = 'sendSlotToSupplier'
+	const currentLogin = store.getLogin()
+	const currentRole = store.getRole()
+
+	const order = fcEvent.extendedProps.data
+	const updatedOrder = { ...order, statusForSupplier }
+
+	// проверка доступа к методу
+	if (!methodAccessRules(method, updatedOrder, currentLogin, currentRole)) {
+		snackbar.show(userMessages.operationNotAllowed)
+		return
+	}
+
+	const payload = {
+		idOrder: order.idOrder,
+		statusForSupplier
+	}
+
+	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
+
+	ajaxUtils.postJSONdata({
+	url: changeStatusForSupplierUrl,
+		data: payload,
+		successCallback: (data) => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+
+			if (data.status === '200') {
+				// обновить данные в сторе
+				updateOrderAndEvent(updatedOrder, currentLogin, currentRole, method)
+				hideEventInfoPopup()
+				return
+			}
+
+			if (data.status === '105') {
+				errorHandler_105status(null, data)
+				return
+			}
+
+			if (data.status === '100') {
+				errorHandler_100status(null, data)
+			} else {
+				snackbar.show(userMessages.actionNotCompleted)
+			}
+		},
+		errorCallback: () => {
+			clearTimeout(timeoutId)
+			bootstrap5overlay.hideOverlay()
+		}
+	})
+}
+
+// получение данных паллет вне графика по дате и складу
+export async function getPallHasOwerPlanData(date, stockId) {
+	if (!date) {
+		snackbar.show(userMessages.dateNotFound)
+		return
+	}
+
+	if (!stockId) {
+		snackbar.show(userMessages.stockNotFound)
+		return
+	}
+
+	const data = await getData(`${getPallHasOwerPlanBaseUrl}${date}&${stockId}`)
+
+	if (!data) {
+		snackbar.show('Нет данных')
+		return null
+	}
+
+	const pallDataObj = data.description
+	const pallData = Object.keys(pallDataObj).map((key) => {
+		const counterparty = key
+		const pallCount = pallDataObj[key]
+		return { counterparty, pallCount }
+	})
+
+	return { ...data, pallData }
 }

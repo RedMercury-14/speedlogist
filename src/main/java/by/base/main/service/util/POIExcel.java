@@ -102,6 +102,7 @@ import by.base.main.service.ProductService;
 import by.base.main.service.RouteService;
 import by.base.main.service.ScheduleService;
 import by.base.main.service.ServiceException;
+import by.base.main.service.ShopService;
 import by.base.main.service.UserService;
 
 /**
@@ -148,6 +149,9 @@ public class POIExcel {
 	
 	@Autowired
 	private UserService userService;
+	
+	@Autowired
+	private ShopService shopService;
 
 	private ArrayList<Shop> shops;
 	private ArrayList<RouteHasShop> arrayRouteHasShop;
@@ -241,6 +245,58 @@ public class POIExcel {
 	            }
 	        }
 	}	
+	
+	/**
+	 * етод отвечает за обновление списка магазинов
+	 * @param file
+	 * @throws IOException
+	 */
+	public void actualRestrictions(InputStream inputStream) throws IOException {
+		try (Workbook wb = new XSSFWorkbook(inputStream)) {
+		    XSSFSheet sheet = (XSSFSheet) wb.getSheetAt(0);
+		    int lastRow = sheet.getLastRowNum();
+		    for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+		       XSSFRow row = sheet.getRow(i);
+		       Cell cell = row.getCell(0);
+		       if (cell == null) {
+		          break;
+		       }
+		       int marketNumber = Double.valueOf(row.getCell(0).getNumericCellValue()).intValue();
+		       Shop shop = shopService.getShopByNum(marketNumber);
+		       
+		       if (shop != null) {
+		          Double pallets = row.getCell(5).getNumericCellValue();
+		          Double width = row.getCell(6).getNumericCellValue();
+		          Double length = row.getCell(7).getNumericCellValue();
+		          Double height = row.getCell(8).getNumericCellValue();
+	
+		          boolean save = false;
+		          if (!pallets.equals(0.0)) {
+		             shop.setMaxPall(pallets.intValue());
+		             save = true;
+		          }
+		          if (!width.equals(0.0)) {
+		             shop.setWidth(width);
+		             save = true;
+		          }
+		          if (!length.equals(0.0)) {
+		             shop.setLength(length);
+		             save = true;
+		          }
+		          if (!height.equals(0.0)) {
+		             shop.setHeight(height);
+		             save = true;
+		          }
+		          if (save) {
+		             shopService.updateShop(shop);
+		          }
+		       }
+	
+		    }
+		    wb.close();
+		}
+	}
+	
 	private String parseStocks(Row row) {
 	    Cell cell = row.getCell(4); // колонка E (индекс 4)
 	    if (cell == null) return null;

@@ -1,8 +1,10 @@
 package by.base.main.dao.impl;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -67,5 +69,72 @@ public class DistanceMatrixDAOImpl implements DistanceMatrixDAO{
         Session currentSession = sessionFactoryLogistFile.getCurrentSession();
         currentSession.update(distanceMatrix);
     }
+
+    
+    StringBuilder hql = new StringBuilder("FROM DistanceMatrix dm WHERE ");
+	@Override
+	public Map<String, Double> getDistanceMatrixInBatches() {
+		
+		Session currentSession = sessionFactoryLogistFile.getCurrentSession();
+
+	    int batchSize = 10000;
+	    int offset = 0;
+
+	    Map<String, Double> distanceMap = new HashMap<>();
+
+	    List<DistanceMatrix> batch;
+
+	    do {
+	        Query<DistanceMatrix> query = currentSession.createQuery(
+	            "FROM DistanceMatrix",
+	            DistanceMatrix.class
+	        );
+	        query.setFirstResult(offset);
+	        query.setMaxResults(batchSize);
+
+	        batch = query.getResultList();
+
+	        for (DistanceMatrix dm : batch) {
+	            distanceMap.put(dm.getIdDistanceMatrix(), dm.getDistance());
+	        }
+
+	        offset += batchSize;
+
+	        // Можно вручную освободить память под загруженные объекты:
+	        currentSession.clear(); // Очищает Persistence Context (1-й уровень кеша Hibernate)
+
+	    } while (!batch.isEmpty());
+
+	    return distanceMap;
+	}
+
+	@Override
+	public Map<String, Double> getDistanceMatrixByShops(List<Integer> shops) {
+		if (shops == null || shops.isEmpty()) {
+	        return Collections.emptyMap();
+	    }
+
+	    // Преобразуем List<Integer> в List<String> для сравнения с текстовыми колонками
+	    List<String> shopIdsAsString = shops.stream()
+	        .map(String::valueOf)
+	        .collect(Collectors.toList());
+
+	    Session currentSession = sessionFactoryLogistFile.getCurrentSession();
+
+	    Query<DistanceMatrix> query = currentSession.createQuery(
+	        "FROM DistanceMatrix dm WHERE dm.shopFrom IN (:shops) AND dm.shopTo IN (:shops)",
+	        DistanceMatrix.class
+	    );
+	    query.setParameter("shops", shopIdsAsString);
+
+	    List<DistanceMatrix> distances = query.getResultList();
+
+	    Map<String, Double> distanceMap = new HashMap<>();
+	    for (DistanceMatrix dm : distances) {
+	        distanceMap.put(dm.getIdDistanceMatrix(), dm.getDistance());
+	    }
+
+	    return distanceMap;
+	}
 
 }

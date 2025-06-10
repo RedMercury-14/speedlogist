@@ -53,7 +53,7 @@
 		<property name="jdbcUrl" value="jdbc:mysql://localhost:3306/test?useSSL=false&amp;serverTimezone=Europe/Moscow&amp;characterEncoding=utf8" />
 		<property name="username" value="root" />
 		<property name="password" value="5001020" />
-<!-- 		<property name="jdbcUrl" value="jdbc:mysql://10.10.1.21:3306/test?useSSL=false&amp;serverTimezone=Europe/Moscow&amp;characterEncoding=utf8" /> -->
+<!-- 		<property name="jdbcUrl" value="jdbc:mysql://10.10.1.28:3306/test?useSSL=false&amp;serverTimezone=Europe/Moscow&amp;characterEncoding=utf8" /> -->
 <!-- 		<property name="username" value="speedlogist" /> -->
 <!-- 		<property name="password" value="eps6sh" /> -->
 		

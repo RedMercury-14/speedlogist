@@ -1,5 +1,5 @@
 import { AG_GRID_LOCALE_RU } from './AG-Grid/ag-grid-locale-RU.js'
-import { BtnCellRenderer, BtnsCellRenderer, gridColumnLocalState, gridFilterLocalState, ResetStateToolPanel } from './AG-Grid/ag-grid-utils.js'
+import { BtnCellRenderer, BtnsCellRenderer, dateComparator, dateTimeValueFormatter, gridColumnLocalState, gridFilterLocalState, ResetStateToolPanel } from './AG-Grid/ag-grid-utils.js'
 import { aproofQualityFoodCardUrl, getAllAcceptanceQualityFoodCardUrl, getClosedAcceptanceQualityBaseUrl } from './globalConstants/urls.js'
 import { snackbar } from './snackbar/snackbar.js'
 import { dateHelper, debounce, getData, isMobileDevice, isObserver } from './utils.js'
@@ -672,7 +672,13 @@ function getCardsData (params) {
 
 function recalculateCard(card) {
 	const sampleSize = parseFloat(card.sampleSize) || 0
-	return {
+	// поле было добавлено в обновлении, в котором реализовано
+	// сохранение рассчитанных данных карточки в базе.
+	// Можно использовать как индикатор до/после обновления
+	const pcFactor = card.pcFactor
+	console.log("🚀 ~ recalculateCard ~ pcFactor:", pcFactor)
+
+	return pcFactor ? card : {
 		...card,
 		...recalculateDefects("internalDefectsQualityCardList", sampleSize, card.internalDefectsQualityCardList, card),
 		...recalculateDefects("totalDefectQualityCardList", sampleSize, card.totalDefectQualityCardList, card),
@@ -697,18 +703,6 @@ function groupChildCards(cards) {
 		.map(card => map.get(card.idAcceptanceQualityFoodCard))
 }
 
-// конверторы дат для таблицы
-function dateComparator(date1, date2) {
-	if (!date1 || !date2) return 0
-	const date1Value = new Date(date1).getTime()
-	const date2Value = new Date(date2).getTime()
-	return date1Value - date2Value
-}
-function dateTimeValueFormatter(params) {
-	const date = params.value
-	if (!date) return ''
-	return dateHelper.getFormatDateTime(date)
-}
 
 // функции управления состоянием колонок
 function saveColumnState() {
@@ -828,52 +822,74 @@ function showApproveCardModal(card) {
 
 // расчет суммы отдельных дефектов
 function recalculateDefects(type, sampleSize, defects, cardData) {
-	const { sampleSizeInternalDefect, isImport, unit } = cardData
-	const withPC = unit !== "шт";
+	const { sampleSizeInternalDefect, isImport, unit, pcFactor } = cardData
+	const withPC = unit !== "шт"
+
 	const sampleSizeInternalDefectUsed = sampleSizeInternalDefect || sampleSize
 
 	let totalWeight = 0
 	let totalPercentage = 0
 	let totalPercentageWithPC = 0
 
-	const pcThreshold = 10 // порог для ПК (%)
 	const defaultPercentageFactor = 100
-	const pcPercentageFactorBeforeTreshold = isImport ? 160 : 140 // процент ПК при браке до 10%
-	const pcPercentageFactorAftertTreshold = 200 // процент ПК при браке свыше 10%
+	const pcPercentageFactor = pcFactor ? pcFactor * 100 : null
 
 	const updatedDefects = defects.map((defect) => {
 		const weight = parseFloat(defect.weight) || 0
 		totalWeight += weight
-
 		if (type === "totalDefectQualityCardList") {
 			const percentage = sampleSize ? getPercentage(weight, sampleSize, defaultPercentageFactor) : 0
-			const percentageWithPC = withPC && sampleSize
-				? percentage <= pcThreshold
-					? getPercentage(weight, sampleSize, pcPercentageFactorBeforeTreshold)
-					: getPercentage(weight, sampleSize, pcPercentageFactorAftertTreshold)
-						: 0
+			const percentageWithPC = calculatePercentageWithPC(withPC, sampleSize, defect, weight, percentage, isImport, pcPercentageFactor)
 			totalPercentage += percentage
 			totalPercentageWithPC += percentageWithPC
-			return { ...defect, percentage: percentage.toFixed(2), percentageWithPC: percentageWithPC.toFixed(2) }
+			return { ...defect, percentage: percentage, percentageWithPC: percentageWithPC }
 		} else if (type === "internalDefectsQualityCardList") {
 			const percentage = sampleSizeInternalDefectUsed ? getPercentage(weight, sampleSizeInternalDefectUsed, defaultPercentageFactor) : 0
-			totalPercentage += percentage;
-			return { ...defect, percentage: percentage.toFixed(2) }
+			totalPercentage += percentage
+			return { ...defect, percentage: percentage }
 		} else {
 			const percentage = sampleSize ? getPercentage(weight, sampleSize, defaultPercentageFactor) : 0
 			totalPercentage += percentage
-			return { ...defect, percentage: percentage.toFixed(2) }
+			return { ...defect, percentage: percentage }
 		}
 	})
 
 	return {
 		[type]: updatedDefects,
-		...(type === "internalDefectsQualityCardList" && { totalInternalDefectWeight: roundNumber(totalWeight, 100), totalInternalDefectPercentage: totalPercentage.toFixed(2) }),
-		...(type === "totalDefectQualityCardList" && { totalDefectWeight: roundNumber(totalWeight, 100), totalDefectPercentage: totalPercentage.toFixed(2), totalDefectPercentageWithPC: totalPercentageWithPC.toFixed(2) }),
-		...(type === "lightDefectsQualityCardList" && { totalLightDefectWeight: roundNumber(totalWeight, 100), totalLightDefectPercentage: totalPercentage.toFixed(2) }),
+		...(type === "internalDefectsQualityCardList" && { totalInternalDefectWeight: roundNumber(totalWeight, 100), totalInternalDefectPercentage: roundNumber(totalPercentage, 100) }),
+		...(type === "totalDefectQualityCardList" && { totalDefectWeight: roundNumber(totalWeight, 100), totalDefectPercentage: roundNumber(totalPercentage, 100), totalDefectPercentageWithPC: roundNumber(totalPercentageWithPC, 100) }),
+		...(type === "lightDefectsQualityCardList" && { totalLightDefectWeight: roundNumber(totalWeight, 100), totalLightDefectPercentage: roundNumber(totalPercentage, 100) }),
 	}
 }
+function calculatePercentageWithPC(
+	withPC,
+	sampleSize,
+	defect,
+	weight,
+	percentage,
+	isImport,
+	pcPercentageFactor
+) {
+	if (!withPC || !sampleSize) return 0
 
+	if (defect && defect.pcCheck !== false) {
+		if (pcPercentageFactor) {
+			return getPercentage(weight, sampleSize, pcPercentageFactor)
+		} else {
+			return getPercentageWithPC(weight, sampleSize, percentage, isImport)
+		}
+	}
+
+	return percentage
+}
+function getPercentageWithPC(weight, sampleSize, percentage, isImport) {
+	const pcThreshold = 10 // порог для ПК (%)
+	const pcPercentageFactorBeforeTreshold = isImport ? 160 : 140 // процент ПК при браке до 10%
+	const pcPercentageFactorAftertTreshold = 200 // процент ПК при браке свыше 10%
+	return percentage <= pcThreshold
+			? getPercentage(weight, sampleSize, pcPercentageFactorBeforeTreshold)
+			: getPercentage(weight, sampleSize, pcPercentageFactorAftertTreshold)
+}
 function getPercentage(weight, sampleSize, percentageFactor) {
 	const percentage = roundNumber(((weight / sampleSize) * percentageFactor), 100)
 	return percentage

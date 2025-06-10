@@ -10950,10 +10950,17 @@ public class MainRestController {
 //           return response;
 //        }
 //     }
+       
+//       orders.forEach(o-> System.out.println(o.getOnloadWindowDate() + "   " + o.getOnloadWindowTime()));
+//       orders.sort(Comparator.comparing(
+//             order -> Optional.ofNullable(order.getTimeDelivery())
+//                   .orElseGet(() -> combineDateAndTime(order.getOnloadWindowDate(), order.getOnloadWindowTime()))
+//       ));
        orders.sort(Comparator.comparing(
-             order -> Optional.ofNullable(order.getTimeDelivery())
-                   .orElseGet(() -> combineDateAndTime(order.getOnloadWindowDate(), order.getOnloadWindowTime()))
-       ));
+    		    order -> Optional.ofNullable(order.getTimeDelivery())
+    		           .orElseGet(() -> combineDateAndTime(order.getOnloadWindowDate(), order.getOnloadWindowTime())),
+    		    Comparator.nullsLast(Comparator.naturalOrder())
+    		));
        
      
        

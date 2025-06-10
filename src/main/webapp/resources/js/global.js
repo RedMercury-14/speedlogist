@@ -2,10 +2,10 @@
 //export let wsHead = new WebSocket("wss://boxlogs.net/speedlogist/system");
 //export const wsSlotUrl = "wss://boxlogs.net/speedlogist/slot"
 //export const wsTenderMessagesUrl = "wss://boxlogs.net/speedlogist/tender-message"
-export let ws = new WebSocket("ws://localhost/speedlogist/chat");
-export let wsHead = new WebSocket("ws://localhost/speedlogist/system");
-export const wsSlotUrl = "ws://localhost/speedlogist/slot"
-export const wsTenderMessagesUrl = "ws://localhost/speedlogist/tender-message"
+export let ws = new WebSocket("ws://localhost:8080/speedlogist/chat");
+export let wsHead = new WebSocket("ws://localhost:8080/speedlogist/system");
+export const wsSlotUrl = "ws://localhost:8080/speedlogist/slot"
+export const wsTenderMessagesUrl = "ws://localhost:8080/speedlogist/tender-message"
 export let USD = '431';
 export let RUB = '456';
 export let EUR = '451';

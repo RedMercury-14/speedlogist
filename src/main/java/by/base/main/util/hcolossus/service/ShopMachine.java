@@ -3,6 +3,7 @@ package by.base.main.util.hcolossus.service;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -24,9 +25,6 @@ import by.base.main.util.hcolossus.exceptions.FatalInsufficientPalletTruckCapaci
  */
 @Service
 public class ShopMachine {
-
-	@Autowired
-	private ShopService shopService;
 	
 	@Autowired
 	private MatrixMachine matrixMachine;
@@ -35,21 +33,23 @@ public class ShopMachine {
 	private Comparator<Shop> shopComparator = (o1, o2) -> Double.compare(o2.getNeedPall(), o1.getNeedPall()); // сортирует от большей потребности к меньшей. Переделал с прошлого (выше)
 
 	
+	public Map<Integer, Shop> getShopMap(List<Shop> shopList) {
+		Map<Integer, Shop> allShop = new HashMap<Integer, Shop>();
+		shopList.forEach(s-> allShop.put(s.getNumshop(), s));
+		return allShop;
+	}
+	
 	/**
 	 * Метод подготавливает лист магазинов уже с потребностями
 	 * <br>Метод сортирует потребность магазов от большего к меньшему
 	 * @return
 	 */
-	public List<Shop> prepareShopList(List<Integer> shopList, List<Double> pallHasShops) {
-		Map<Integer, Shop> allShop =  shopService.getShopMap();
+	public List<Shop> prepareShopList(List<Shop> shopList, List<Double> pallHasShops) {
+		Map<Integer, Shop> allShop =  getShopMap(shopList);
+		
 		List<Shop> result = new ArrayList<Shop>();
-		for (Integer integer : shopList) {
-			int index = shopList.indexOf(integer);
-			Shop shop = allShop.get(integer);
-			if(shop == null) {
-				System.err.println("ShopMachine.prepareShopList: Магазин " + integer + " не найден в базе данных!");
-				return null;
-			}
+		for (Shop shop : shopList) {
+			int index = shopList.indexOf(shop.getIdShop());
 			shop.setNeedPall(pallHasShops.get(index));
 			result.add(shop);
 		}
@@ -67,9 +67,9 @@ public class ShopMachine {
 	 * @throws JsonProcessingException 
 	 * @throws JsonMappingException 
 	 */
-	public List<Shop> prepareShopList3Parameters(List<Integer> shopList, List<Double> pallHasShops, List<Integer> tonnageHasShops,  Integer stock,  Map<Integer, String> shopsWithCrossDockingMap) throws JsonMappingException, JsonProcessingException {
+	public List<Shop> prepareShopList3Parameters(List<Integer> shopList, List<Double> pallHasShops, List<Integer> tonnageHasShops,  Integer stock,  Map<Integer, String> shopsWithCrossDockingMap, List<Shop> shops) throws JsonMappingException, JsonProcessingException {
 		ObjectMapper objectMapper = new ObjectMapper();
-		Map<Integer, Shop> allShop =  shopService.getShopMap();
+		Map<Integer, Shop> allShop =  getShopMap(shops);
 		ComparatorShops comparatorShops = new ComparatorShops();
 		List<Shop> result = new ArrayList<Shop>();
 		for (int i = 0; i < shopList.size(); i++) {
@@ -130,8 +130,8 @@ public class ShopMachine {
 	 * @throws JsonMappingException 
 	 */
 	public List<Shop> prepareShopList5Parameters(List<Integer> shopList, List<Double> pallHasShops, List<Integer> tonnageHasShops,  Integer stock,  Map<Integer, String> shopsWithCrossDockingMap, List<Double> pallReturn
-			, List<Integer> weightDistributionList) throws JsonMappingException, JsonProcessingException {
-		Map<Integer, Shop> allShop =  shopService.getShopMap();
+			, List<Integer> weightDistributionList, List<Shop> shops) throws JsonMappingException, JsonProcessingException {
+		Map<Integer, Shop> allShop =  getShopMap(shops);
 		ComparatorShopsDistanceMain shopComparatorDistanceMain = new ComparatorShopsDistanceMain();
 		List<Shop> result = new ArrayList<Shop>();
 		for (int i = 0; i < shopList.size(); i++) {
@@ -187,8 +187,8 @@ public class ShopMachine {
 	 * @throws JsonProcessingException 
 	 * @throws JsonMappingException 
 	 */
-	public List<Shop> prepareShopList4Parameters(List<Integer> shopList, List<Double> pallHasShops, List<Integer> tonnageHasShops,  Integer stock,  Map<Integer, String> shopsWithCrossDockingMap, List<Double> pallReturn) throws JsonMappingException, JsonProcessingException {
-		Map<Integer, Shop> allShop =  shopService.getShopMap();
+	public List<Shop> prepareShopList4Parameters(List<Integer> shopList, List<Double> pallHasShops, List<Integer> tonnageHasShops,  Integer stock,  Map<Integer, String> shopsWithCrossDockingMap, List<Double> pallReturn, List<Shop> shops) throws JsonMappingException, JsonProcessingException {
+		Map<Integer, Shop> allShop =  getShopMap(shops);
 		ComparatorShopsDistanceMain shopComparatorDistanceMain = new ComparatorShopsDistanceMain();
 		List<Shop> result = new ArrayList<Shop>();
 		for (int i = 0; i < shopList.size(); i++) {
@@ -230,8 +230,8 @@ public class ShopMachine {
 	 * <br> т.е. самый дальний и самый требовательный магаз
 	 * @return
 	 */
-	public List<Shop> prepareShopList2Parameters(List<Integer> shopList, List<Double> pallHasShops, Integer stock) {
-		Map<Integer, Shop> allShop =  shopService.getShopMap();
+	public List<Shop> prepareShopList2Parameters(List<Integer> shopList, List<Double> pallHasShops, Integer stock, List<Shop> shops) {
+		Map<Integer, Shop> allShop =  getShopMap(shops);
 		ComparatorShops comparatorShops = new ComparatorShops();
 		List<Shop> result = new ArrayList<Shop>();
 		for (Integer integer : shopList) {
@@ -268,8 +268,8 @@ public class ShopMachine {
 	 * 
 	 * @return
 	 */
-	public List<Shop> prepareShopList2ParametersDistanceMain(List<Integer> shopList, List<Double> pallHasShops, Integer stock) {
-		Map<Integer, Shop> allShop =  shopService.getShopMap();
+	public List<Shop> prepareShopList2ParametersDistanceMain(List<Integer> shopList, List<Double> pallHasShops, Integer stock, List<Shop> shops) {
+		Map<Integer, Shop> allShop =  getShopMap(shops);
 		ComparatorShopsDistanceMain comparatorShops = new ComparatorShopsDistanceMain();
 		List<Shop> result = new ArrayList<Shop>();
 		for (Integer integer : shopList) {
@@ -300,8 +300,8 @@ public class ShopMachine {
 		
 	}
 	
-	public List<Shop> prepareShopList2ParametersTEST(List<Integer> shopList, List<Double> pallHasShops, Integer stock) {
-		Map<Integer, Shop> allShop =  shopService.getShopMap();
+	public List<Shop> prepareShopList2ParametersTEST(List<Integer> shopList, List<Double> pallHasShops, Integer stock, List<Shop> shops) {
+		Map<Integer, Shop> allShop = getShopMap(shops);
 		ComparatorShopsTEST comparatorShops = new ComparatorShopsTEST();
 		List<Shop> result = new ArrayList<Shop>();
 		for (Integer integer : shopList) {

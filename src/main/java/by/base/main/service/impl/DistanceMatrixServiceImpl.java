@@ -48,4 +48,16 @@ public class DistanceMatrixServiceImpl implements DistanceMatrixService {
 		update(distanceMatrix);		
 	}
 
+	@Override
+	@Transactional(transactionManager = "myTransactionManagerLogistFile")
+	public Map<String, Double> getDistanceMatrixInBatches() {
+		return distanceMatrixDAO.getDistanceMatrixInBatches();
+	}
+
+	@Override
+	@Transactional(transactionManager = "myTransactionManagerLogistFile")
+	public Map<String, Double> getDistanceMatrixByShops(List<Integer> shops) {
+		return distanceMatrixDAO.getDistanceMatrixByShops(shops);
+	}
+
 }

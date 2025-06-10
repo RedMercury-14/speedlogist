@@ -26,6 +26,30 @@ public class DistanceMatrix {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private String id; // PRIMARY KEY
+    
+    @Column(name = "shop_from")
+    private String shopFrom; 
+    
+    @Column(name = "shop_to")
+    private String shopTo; 
+
+    
+    
+	public String getShopFrom() {
+		return shopFrom;
+	}
+
+	public void setShopFrom(String shopFrom) {
+		this.shopFrom = shopFrom;
+	}
+
+	public String getShopTo() {
+		return shopTo;
+	}
+
+	public void setShopTo(String shopTo) {
+		this.shopTo = shopTo;
+	}
 
 	public String getIdDistanceMatrix() {
 		return idDistanceMatrix;

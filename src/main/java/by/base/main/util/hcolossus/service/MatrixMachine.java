@@ -76,8 +76,7 @@ public class MatrixMachine {
 	 * @param stock
 	 * @return
 	 */
-	public Map<String, Double> createMatrixHasList(List<Integer> shopList, Integer stock) {
-		Map<Integer, Shop> allShop =  shopService.getShopMap();
+	public Map<String, Double> createMatrixHasList(List<Integer> shopList, Integer stock, Map<Integer, Shop> allShop) {
 		List<Integer> shopListForDIstance = new ArrayList<Integer>(shopList);
 		shopListForDIstance.add(stock);
 		for (Integer integer : shopListForDIstance) {
@@ -104,6 +103,7 @@ public class MatrixMachine {
 				if(matrix.containsKey(from.getNumshop()+"-"+to.getNumshop())) {
 					sum = matrix.get(from.getNumshop()+"-"+to.getNumshop());
 				}else {
+					System.out.println("Отсутствуют данные " + from.getNumshop()+"-"+to.getNumshop() + " !!");
 					double fromLat = Double.parseDouble(from.getLat());
 			        double fromLng = Double.parseDouble(from.getLng());
 			        
@@ -128,7 +128,7 @@ public class MatrixMachine {
                     dm.setIdDistanceMatrix(from.getNumshop()+"-"+to.getNumshop()); // Генерация ID
                     dm.setDistance(sum);
                     dm.setTime(time.doubleValue());                    
-                    distanceMatrixService.save(dm);			        
+//                    distanceMatrixService.save(dm);			        
 			        matrix.put(from.getNumshop()+"-"+to.getNumshop(), sum);
 			        matrixTime.put(from.getNumshop()+"-"+to.getNumshop(), time);
 				}
@@ -138,9 +138,8 @@ public class MatrixMachine {
 		return matrix;		
 	}
 	
-	public Map<String, Double> createMatrixHasListTEXT(List<Integer> shopList, Integer stock) {
+	public Map<String, Double> createMatrixHasListTEXT(List<Integer> shopList, Integer stock, Map<Integer, Shop> allShop) {
 		Map<String, Double> mapresult = new HashMap<String, Double>();
-		Map<Integer, Shop> allShop =  shopService.getShopMap();
 		List<Integer> shopListForDIstance = new ArrayList<Integer>(shopList);
 		shopListForDIstance.add(stock);
 		for (Integer integer : shopListForDIstance) {
@@ -199,8 +198,7 @@ public class MatrixMachine {
 	 * <br>Если в параметрах указать число, то это будет равно колличеству итераций (для теста). Для работы подать null
 	 * @return колличество элементов в матрице
 	 */
-	public int calculationDistance(Integer j) {
-		List<Shop> allShop =  shopService.getShopList();
+	public int calculationDistance(Integer j, List<Shop> allShop) {
 		int k = 0;
 		for (Shop shop : allShop) {
 			if(j != null && k == j) {
@@ -441,7 +439,14 @@ public class MatrixMachine {
 	    }
 	}
 	
+	@Deprecated
 	public Map<String, Double> loadMatrixOfDistance() {
+		this.matrix = distanceMatrixService.getDistanceMatrix();
+		return matrix;		
+	}
+
+	
+	public Map<String, Double> loadMatrixOfDistanceV2() {
 		this.matrix = distanceMatrixService.getDistanceMatrix();
 		return matrix;		
 	}
@@ -519,6 +524,8 @@ public class MatrixMachine {
 	                        dm.setIdDistanceMatrix(key); // Генерация ID
 	                        dm.setDistance(distance);
 	                        dm.setTime(time);
+	                        dm.setShopFrom(shop.getNumshop()+"");
+	                        dm.setShopTo(shopI.getNumshop()+"");
 	                        
 	                        distanceMatrixService.save(dm);
 	                        newRecords.incrementAndGet();

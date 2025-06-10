@@ -61,9 +61,6 @@ public class ColossusProcessorANDRestrictions5 {
 	private MatrixMachine matrixMachine;
 
 	@Autowired
-	private ShopService shopService;
-
-	@Autowired
 	private LogicAnalyzer logicAnalyzer;
 
 //	private Comparator<Shop> shopComparatorPallOnly = (o1, o2) -> (o2.getNeedPall() - o1.getNeedPall()); // сортирует от большей потребности к меньшей
@@ -152,21 +149,21 @@ public class ColossusProcessorANDRestrictions5 {
 	 * @throws Exception 
 	 */
 	public Solution run(JSONObject jsonMainObject, List<Integer> shopList, List<Double> pallHasShops, List<Integer> tonnageHasShops, Integer stock,
-			Double koeff, String algoritm, Map<Integer, String> shopsWithCrossDockingMap, Integer maxShopInWay, List<Double> pallReturn, List<Integer> weightDistributionList) throws Exception {
+			Double koeff, String algoritm, Map<Integer, String> shopsWithCrossDockingMap, Integer maxShopInWay, List<Double> pallReturn, List<Integer> weightDistributionList, Map<Integer, Shop> allShop) throws Exception {
 		if(tonnageHasShops == null) {
 			System.err.println("Используется старый метод! Нужно использовать /map/myoptimization3");
 			return null;
 		}
 		List<Shop> problemShops = new ArrayList<Shop>(); // проблемные магазины
 		stackTrace = "";
-		Map<Integer, Shop> allShop = shopService.getShopMap();
 		Shop targetStock = allShop.get(stock);
+		List <Shop> shops = new ArrayList<Shop>(allShop.values());
 		this.jsonMainObject = jsonMainObject;
 		whiteWay = new ArrayList<VehicleWay>();
 		vehicleForDelete = new ArrayList<Vehicle>();
 		// блок подготовки
 		// заполняем static матрицу. Пусть хранится там
-		matrixMachine.createMatrixHasList(shopList, stock);
+		matrixMachine.createMatrixHasList(shopList, stock, allShop);
 		trucks = null;
 		try {
 			trucks = vehicleMachine.prepareVehicleListVersion2(jsonMainObject);
@@ -179,7 +176,7 @@ public class ColossusProcessorANDRestrictions5 {
 		/**
 		 * магазины для распределения выстроены в порядке убывания потребностей
 		 */
-		shopsForOptimization = shopMachine.prepareShopList5Parameters(shopList, pallHasShops,tonnageHasShops, stock, shopsWithCrossDockingMap, pallReturn, weightDistributionList); // магазины для распределения выстроены в порядке убывания потребностей TEST
+		shopsForOptimization = shopMachine.prepareShopList5Parameters(shopList, pallHasShops,tonnageHasShops, stock, shopsWithCrossDockingMap, pallReturn, weightDistributionList,shops); // магазины для распределения выстроены в порядке убывания потребностей TEST
 
 		if(trucks.get(0).getPall()>=33.0) {// Делает так, чтобы магазины, которые входят в кроссы были сверху списка, если есть фуры
 			sortedShopsHasKrossingPall(true);

@@ -17,4 +17,18 @@ public interface DistanceMatrixDAO {
 	
 	void update(DistanceMatrix distanceMatrix);
 	
+	/**
+	 * Отдаёт матрицу расстояний, порционно. Для прода!
+	 * @param shops
+	 * @return
+	 */
+	Map<String,Double> getDistanceMatrixInBatches();
+	
+	/**
+	 * Отдаёт усеченную матрицу, только те значения, которые были в листе
+	 * @param shops
+	 * @return
+	 */
+	public Map<String, Double> getDistanceMatrixByShops(List<Integer> shops);
+	
 }

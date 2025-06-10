@@ -289,15 +289,17 @@ public class MainController {
 		
 		
 		//загружаем матрицу, если её нету
-		if(matrixMachine.matrix.size() == 0) {
-			new Thread(new Runnable() {			
-				@Override
-				public void run() {
-					matrixMachine.loadMatrixOfDistance();
-					System.out.println("Матрица расстояний загружена. Всего: " + matrixMachine.matrix.size() + " значений");
-				}
-			}).start();
-		}
+//		if(matrixMachine.matrix.size() == 0) {
+//			new Thread(new Runnable() {			
+//				@Override
+//				public void run() {
+//					java.util.Date t1 = new java.util.Date();
+//					matrixMachine.loadMatrixOfDistanceV2();
+//					java.util.Date t2 = new java.util.Date();
+//					System.out.println("Матрица расстояний загружена. Всего: " + matrixMachine.matrix.size() + " значений. Время: " + (t2.getTime()-t1.getTime()) + " мс");
+//				}
+//			}).start();
+//		}
 		
 		//телеграмм бот!
 		if(isRunTelegrammBot) {

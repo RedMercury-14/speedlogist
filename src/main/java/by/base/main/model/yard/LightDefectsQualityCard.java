@@ -23,9 +23,20 @@ public class LightDefectsQualityCard implements DefectBase{
 
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
+    
+    @Column(name = "percentage")
+    private Double percentage;
+    
 
+    public Double getPercentage() {
+		return percentage;
+	}
 
-    public AcceptanceQualityFoodCard getAcceptanceQualityFoodCard() {
+	public void setPercentage(Double percentage) {
+		this.percentage = percentage;
+	}
+
+	public AcceptanceQualityFoodCard getAcceptanceQualityFoodCard() {
         return acceptanceQualityFoodCard;
     }
 

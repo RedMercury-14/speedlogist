@@ -26,9 +26,43 @@ public class TotalDefectQualityCard implements DefectBase{
 
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
+    
+    @Column(name = "percentage")
+    private Double percentage;
 
+    @Column(name = "percentage_with_pc")
+    private Double percentageWithPC;
 
-    public Long getIdTotalDefectQualityCard() {
+    @Column (name = "pc_check")
+    private Boolean pcCheck;
+
+    
+
+    public Double getPercentage() {
+		return percentage;
+	}
+
+	public void setPercentage(Double percentage) {
+		this.percentage = percentage;
+	}
+
+	public Double getPercentageWithPC() {
+		return percentageWithPC;
+	}
+
+	public void setPercentageWithPC(Double percentageWithPC) {
+		this.percentageWithPC = percentageWithPC;
+	}
+
+	public Boolean getPcCheck() {
+		return pcCheck;
+	}
+
+	public void setPcCheck(Boolean pcCheck) {
+		this.pcCheck = pcCheck;
+	}
+
+	public Long getIdTotalDefectQualityCard() {
         return idTotalDefectQualityCard;
     }
 

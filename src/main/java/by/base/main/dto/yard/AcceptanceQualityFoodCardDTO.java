@@ -50,6 +50,15 @@ public class AcceptanceQualityFoodCardDTO {
     private String type;
     private Long idMotherCard;
     
+    private Double totalInternalDefectWeight;
+    private Double totalInternalDefectPercentage;
+    private Double totalDefectWeight;
+    private Double totalDefectPercentage;
+    private Double totalDefectPercentageWithPC;
+    private Double totalLightDefectWeight;
+    private Double totalLightDefectPercentage;
+    private Double pcFactor;
+    
 
 
     private List<InternalDefectsQualityCard> internalDefectsQualityCardList;
@@ -58,7 +67,71 @@ public class AcceptanceQualityFoodCardDTO {
 
     private List<String> images;
 
-    public String getType() {
+    public Double getTotalInternalDefectWeight() {
+		return totalInternalDefectWeight;
+	}
+
+	public void setTotalInternalDefectWeight(Double totalInternalDefectWeight) {
+		this.totalInternalDefectWeight = totalInternalDefectWeight;
+	}
+
+	public Double getTotalInternalDefectPercentage() {
+		return totalInternalDefectPercentage;
+	}
+
+	public void setTotalInternalDefectPercentage(Double totalInternalDefectPercentage) {
+		this.totalInternalDefectPercentage = totalInternalDefectPercentage;
+	}
+
+	public Double getTotalDefectWeight() {
+		return totalDefectWeight;
+	}
+
+	public void setTotalDefectWeight(Double totalDefectWeight) {
+		this.totalDefectWeight = totalDefectWeight;
+	}
+
+	public Double getTotalDefectPercentage() {
+		return totalDefectPercentage;
+	}
+
+	public void setTotalDefectPercentage(Double totalDefectPercentage) {
+		this.totalDefectPercentage = totalDefectPercentage;
+	}
+
+	public Double getTotalDefectPercentageWithPC() {
+		return totalDefectPercentageWithPC;
+	}
+
+	public void setTotalDefectPercentageWithPC(Double totalDefectPercentageWithPC) {
+		this.totalDefectPercentageWithPC = totalDefectPercentageWithPC;
+	}
+
+	public Double getTotalLightDefectWeight() {
+		return totalLightDefectWeight;
+	}
+
+	public void setTotalLightDefectWeight(Double totalLightDefectWeight) {
+		this.totalLightDefectWeight = totalLightDefectWeight;
+	}
+
+	public Double getTotalLightDefectPercentage() {
+		return totalLightDefectPercentage;
+	}
+
+	public void setTotalLightDefectPercentage(Double totalLightDefectPercentage) {
+		this.totalLightDefectPercentage = totalLightDefectPercentage;
+	}
+
+	public Double getPcFactor() {
+		return pcFactor;
+	}
+
+	public void setPcFactor(Double pcFactor) {
+		this.pcFactor = pcFactor;
+	}
+
+	public String getType() {
 		return type;
 	}
 

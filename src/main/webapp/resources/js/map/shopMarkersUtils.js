@@ -88,6 +88,7 @@ function getCanvasShopMarker(shop) {
 			{
 				img: { url: imgSrc, size: [24, 24], },
 				numshop: shop.numshop,
+				label: shop.numshop,
 			}
 		)
 		.bindPopup(container, { offset: [0, -15] })

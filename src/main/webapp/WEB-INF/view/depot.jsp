@@ -222,7 +222,7 @@
 									<div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
 										<form id="optimizeRouteForm" class="routeArea-form" action="">
 											<c:choose>
-												<c:when test="${roles == '[ROLE_ADMIN]'}">
+												<c:when test="${roles == '[ROLE_ADMIN]' || roles == '[ROLE_SHOW]'}">
 													<div class="form-group row-container stock-container justify-content-between">
 														<div class="row-container">
 															<label class="col-form-label text-muted font-weight-bold">СКЛАД</label>

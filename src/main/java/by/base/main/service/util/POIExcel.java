@@ -32,6 +32,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import by.base.main.dto.RoadTransportDto;
 import by.base.main.model.*;
+import by.base.main.service.*;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.poi.hssf.usermodel.HSSFPrintSetup;
@@ -154,7 +155,7 @@ public class POIExcel {
 	
 	@Autowired
 	private UserService userService;
-	
+
 	@Autowired
 	private ShopService shopService;
 
@@ -162,6 +163,51 @@ public class POIExcel {
 	private ArrayList<RouteHasShop> arrayRouteHasShop;
 
 	public static String classLog;
+
+	public void actualRestrictions(File file, String filePath) throws IOException {
+		XSSFWorkbook wb = new XSSFWorkbook(new FileInputStream(file));
+		XSSFSheet sheet = wb.getSheetAt(0);
+		int lastRow = sheet.getLastRowNum();
+		for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+			XSSFRow row = sheet.getRow(i);
+			Cell cell = row.getCell(0);
+			if (cell == null) {
+				break;
+			}
+			int marketNumber = Double.valueOf(row.getCell(0).getNumericCellValue()).intValue();
+			Shop shop = shopService.getShopByNum(marketNumber);
+
+			if (shop != null) {
+				Double pallets = row.getCell(5).getNumericCellValue();
+				Double width = row.getCell(6).getNumericCellValue();
+				Double length = row.getCell(7).getNumericCellValue();
+				Double height = row.getCell(8).getNumericCellValue();
+
+				boolean save = false;
+				if (!pallets.equals(0.0)) {
+					shop.setMaxPall(pallets.intValue());
+					save = true;
+				}
+				if (!width.equals(0.0)) {
+					shop.setWidth(width);
+					save = true;
+				}
+				if (!length.equals(0.0)) {
+					shop.setLength(length);
+					save = true;
+				}
+				if (!height.equals(0.0)) {
+					shop.setHeight(height);
+					save = true;
+				}
+				if (save) {
+					shopService.updateShop(shop);
+				}
+			}
+
+		}
+		wb.close();
+	}
 
 	public File getFileByMultipart(MultipartFile multipart) throws ServiceException {
 		File convFile = new File(multipart.getOriginalFilename());
@@ -267,58 +313,6 @@ public class POIExcel {
 	            }
 	        }
 	}	
-	
-	/**
-	 * етод отвечает за обновление списка магазинов
-	 * @param file
-	 * @throws IOException
-	 */
-	public void actualRestrictions(InputStream inputStream) throws IOException {
-		try (Workbook wb = new XSSFWorkbook(inputStream)) {
-		    XSSFSheet sheet = (XSSFSheet) wb.getSheetAt(0);
-		    int lastRow = sheet.getLastRowNum();
-		    for (int i = 1; i <= sheet.getLastRowNum(); i++) {
-		       XSSFRow row = sheet.getRow(i);
-		       Cell cell = row.getCell(0);
-		       if (cell == null) {
-		          break;
-		       }
-		       int marketNumber = Double.valueOf(row.getCell(0).getNumericCellValue()).intValue();
-		       Shop shop = shopService.getShopByNum(marketNumber);
-		       
-		       if (shop != null) {
-		          Double pallets = row.getCell(5).getNumericCellValue();
-		          Double width = row.getCell(6).getNumericCellValue();
-		          Double length = row.getCell(7).getNumericCellValue();
-		          Double height = row.getCell(8).getNumericCellValue();
-	
-		          boolean save = false;
-		          if (!pallets.equals(0.0)) {
-		             shop.setMaxPall(pallets.intValue());
-		             save = true;
-		          }
-		          if (!width.equals(0.0)) {
-		             shop.setWidth(width);
-		             save = true;
-		          }
-		          if (!length.equals(0.0)) {
-		             shop.setLength(length);
-		             save = true;
-		          }
-		          if (!height.equals(0.0)) {
-		             shop.setHeight(height);
-		             save = true;
-		          }
-		          if (save) {
-		             shopService.updateShop(shop);
-		          }
-		       }
-	
-		    }
-		    wb.close();
-		}
-	}
-	
 	private String parseStocks(Row row) {
 	    Cell cell = row.getCell(4); // колонка E (индекс 4)
 	    if (cell == null) return null;

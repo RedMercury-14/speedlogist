@@ -148,7 +148,7 @@ public class ColossusProcessorANDRestrictions5 {
 	 * @return
 	 * @throws Exception 
 	 */
-	public Solution run(JSONObject jsonMainObject, List<Integer> shopList, List<Double> pallHasShops, List<Integer> tonnageHasShops, Integer stock,
+	public synchronized Solution run(JSONObject jsonMainObject, List<Integer> shopList, List<Double> pallHasShops, List<Integer> tonnageHasShops, Integer stock,
 			Double koeff, String algoritm, Map<Integer, String> shopsWithCrossDockingMap, Integer maxShopInWay, List<Double> pallReturn, List<Integer> weightDistributionList, Map<Integer, Shop> allShop) throws Exception {
 		if(tonnageHasShops == null) {
 			System.err.println("Используется старый метод! Нужно использовать /map/myoptimization3");
@@ -1767,15 +1767,6 @@ public class ColossusProcessorANDRestrictions5 {
 	    shopsForOptimization.addAll(sortedShops);
 	}
 
-
-
-
-
-
-
-
-
-	
 	
 	/**
 	 * Метод раздеяет число на слогаемые в разных вариациях

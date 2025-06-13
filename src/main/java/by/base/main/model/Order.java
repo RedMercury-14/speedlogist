@@ -190,7 +190,7 @@ public class Order {
 	 * Номер контракта!
 	 */
 	@Column(name = "market_contract_type")
-	private String marketContractType;
+	private String marketContractType; //код контракта - counterpartyContractCode
 	
 	@Column(name = "market_contract_group_id")
 	private String marketContractGroupId;
@@ -199,7 +199,7 @@ public class Order {
 	private String marketContractNumber;
 	
 	@Column(name = "market_contractor_id")
-	private String marketContractorId;
+	private String marketContractorId; //код контрагента - counterpartyCode
 	
 	@Column(name = "num_product")
 	private String numProduct;
@@ -248,9 +248,6 @@ public class Order {
 
 	@Column(name = "status_for_supplier")
 	private Integer statusForSupplier;
-
-	@Column (name = "counterparty_code")
-	private Long counterpartyCode;
 
 	@Transient
 	private List<Address> addressesSort;
@@ -697,15 +694,6 @@ public class Order {
 
 	public void setStatusForSupplier(Integer statusForSupplier) {
 		this.statusForSupplier = statusForSupplier;
-	}
-
-
-	public Long getCounterpartyCode() {
-		return counterpartyCode;
-	}
-
-	public void setCounterpartyCode(Long counterpartyCode) {
-		this.counterpartyCode = counterpartyCode;
 	}
 
 	/**

@@ -1028,7 +1028,7 @@ public class OrderDAOImpl implements OrderDAO{
 			+ "LEFT JOIN FETCH r.roteHasShop rhs "
 			+ "LEFT JOIN FETCH o.addresses a "
 			+ "LEFT JOIN FETCH r.carrierBids rc "
-			+ "where o.marketContractType =: counterpartyCode "
+			+ "where o.marketContractorId =: counterpartyCode "
 			+ "and o.statusForSupplier =: statusForSupplier ";
 	@Override
 	public List<Order> getAllOrdersForSupplier(String counterpartyCode, Integer statusForSupplier) {

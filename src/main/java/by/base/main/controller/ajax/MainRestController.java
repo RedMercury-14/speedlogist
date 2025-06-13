@@ -48,6 +48,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -413,7 +414,24 @@ public class MainRestController {
 
 	@Autowired
     private ServletContext servletContext;
-	
+
+
+	@PostMapping ("/restrictions")
+	public void restrictions(HttpServletRequest request, @RequestParam(value = "excel", required = false) MultipartFile excel) throws IOException {
+		String appPath = servletContext.getRealPath("/");
+		String filepath = appPath + "resources/others/Ограничения.xlsx";
+
+		File file = new File(filepath);
+		String outPath = appPath + "resources/others/restrictions.xlsx";
+		poiExcel.actualRestrictions(file, outPath);
+	}
+
+	@GetMapping ("/supplier/get-orders-for-supplier")
+	public List<Order> getOrdersForSupplier() {
+		String counterpartyCode = getThisUser().getCounterpartyCode().toString();
+		List<Order> orders = orderService.getAllOrdersForSupplier(counterpartyCode, 20);
+		return orders;
+	}
 	/**
 	 * <br>Метод для массовой блокировки кодов товаров</br>.
 	 * @author Ira
@@ -2979,187 +2997,200 @@ public class MainRestController {
 	 * @throws IOException
 	 * @author Ira
 	 */
-    @TimedExecution
-    public void fillOrderCalculation(Map<Integer, OrderProduct> orderProductMap, String dateStr) throws IOException {
+	@TimedExecution
+	public void fillOrderCalculation(Map<Integer, OrderProduct> orderProductMap, String dateStr) throws IOException {
 
-        java.util.Date t1 = new java.util.Date();
+		java.util.Date t1 = new java.util.Date();
 
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        LocalDate date = dateStr == null ? LocalDate.now() : LocalDate.parse(dateStr, dtf);
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+		LocalDate date = dateStr == null ? LocalDate.now() : LocalDate.parse(dateStr, dtf);
 
-        Map<Long, String> goodsWithoutContracts = new HashMap<>();
-        Map<List <String>, Double> contractsWithoutSchedules = new HashMap<>();
-        boolean isFileCreated = false;
+		Map<Long, String> goodsWithoutContracts = new HashMap<>();
+		Map<List<String>, Double> contractsWithoutSchedules = new HashMap<>();
+		boolean isFileCreated = false;
 
-        List <Long> goodsIds = orderProductMap.keySet().stream().map(Long::valueOf).collect(Collectors.toList());
+		List<Long> goodsIds = orderProductMap.keySet().stream().map(Long::valueOf).collect(Collectors.toList());
 
-        Map<Long, Order> resMap = new HashMap<Long, Order>();
-        java.util.Date os1 = new java.util.Date();
-        List <Order> orders = orderService.getSpecialOrdersByListGoodId(goodsIds); //сюда привести лист из OrderDao?
+		Map<Long, Order> resMap = new HashMap<Long, Order>();
+		java.util.Date os1 = new java.util.Date();
+		List<Order> orders = orderService.getSpecialOrdersByListGoodId(goodsIds); //сюда привести лист из OrderDao?
 
-        java.util.Date os2 = new java.util.Date();
-        System.out.println("order service = " + (os2.getTime() - os1.getTime()));
+		java.util.Date os2 = new java.util.Date();
+		System.out.println("order service = " + (os2.getTime() - os1.getTime()));
 
-        List <Long> goodsWithoutOrders = new ArrayList<>(goodsIds);
-        List <Long> goodsWithOrders = new ArrayList<>(goodsIds);
+		List<Long> goodsWithoutOrders = new ArrayList<>(goodsIds);
+		List<Long> goodsWithOrders = new ArrayList<>(goodsIds);
 
-        //распределяем лист ордеров в мапу по кодам товара + создаём лист для товаров ордеров
-        int i = 0;
-        for (long goodId: goodsIds) {
-           i = 0;
-           for (Order order : orders) {
-              if(order.getOrderLinesMap().containsKey(goodId)) {
-                 if(!resMap.containsKey(goodId) ) {
-                    resMap.put(goodId, order);
-                    i++;
-                 } else {
-                    continue;
-                 }
-              } else {
-                 continue;
-              }
-           }
-           if (i == 0) {
-              goodsWithOrders.remove(goodId);
-           } else {
-              goodsWithoutOrders.remove(goodId);
-           }
-        }
+		//распределяем лист ордеров в мапу по кодам товара + создаём лист для товаров ордеров
+		int i = 0;
+		for (long goodId : goodsIds) {
+			i = 0;
+			for (Order order : orders) {
+				if (order.getOrderLinesMap().containsKey(goodId)) {
+					if (!resMap.containsKey(goodId)) {
+						resMap.put(goodId, order);
+						i++;
+					} else {
+						continue;
+					}
+				} else {
+					continue;
+				}
+			}
+			if (i == 0) {
+				goodsWithOrders.remove(goodId);
+			} else {
+				goodsWithoutOrders.remove(goodId);
+			}
+		}
 
-        if (!goodsWithoutOrders.isEmpty()) {
-           isFileCreated = true;
-        }
+		if (!goodsWithoutOrders.isEmpty()) {
+			isFileCreated = true;
+		}
 
-        for (Long goodId: goodsWithOrders) {
-           if (orderProductMap.containsKey(goodId.intValue())) {
-              OrderProduct orderProduct = orderProductMap.get(goodId.intValue());
-              String goodName = orderProduct.getNameProduct();
-              String counterpartyContractCode = orderProduct.getMarketContractType();
+		for (Long goodId : goodsWithOrders) {
+			if (orderProductMap.containsKey(goodId.intValue())) {
+				OrderProduct orderProduct = orderProductMap.get(goodId.intValue());
+				String goodName = orderProduct.getNameProduct();
+				String counterpartyContractCode = orderProduct.getMarketContractType();
 
-              List<Integer> stocks = new ArrayList<>();
-              if (orderProduct.getQuantity1700() != null) {
-                 stocks.add(1700);
-              }
-              if (orderProduct.getQuantity1800() != null) {
-                 stocks.add(1800);
-              }
+				if (Objects.equals(counterpartyContractCode, "5478976")) {
+					int d = 0;
+				}
 
-              for (Integer stock: stocks) {
-                 List<Schedule> schedules = null;
-                 Schedule schedule = null;
-                 LocalDate deliveryDate = null;
-                 OrderCalculation orderCalculation = new OrderCalculation();
-                 schedules = scheduleService.getAllSchedulesByNumContractAndNumStock(Long.valueOf(counterpartyContractCode), 1700);//потому что для 1800 действует такой же график, как и для 1700
+				List<Integer> stocks = new ArrayList<>();
+				if (orderProduct.getQuantity1700() != null) {
+					stocks.add(1700);
+				}
+				if (orderProduct.getQuantity1800() != null) {
+					stocks.add(1800);
+				}
 
-                 schedules.sort(Comparator.comparing(Schedule::getStatus).reversed());
-                 int quantity = 0;
-                 if (stock == 1700) {
-                    quantity = orderProduct.getQuantity1700();
-                 } else if (orderProduct.getQuantity1800() != null) {
-                    quantity = orderProduct.getQuantity1800();
-                 }
+				for (Integer stock : stocks) {
+					List<Schedule> schedules = new ArrayList<>();
+					Schedule schedule = null;
+					LocalDate deliveryDate = null;
+					OrderCalculation orderCalculation = new OrderCalculation();
 
-                 List <OrderLine> orderLines = resMap.get(goodId).getOrderLines().stream().collect(Collectors.toList());
-                 double quantityInPallet = 0;
-                 double currentAmountOfPallets = 0.0;
-                 double amountOfPallets = 0;
+					List<Schedule> schedules1700 = scheduleService.getAllSchedulesByNumContractAndNumStock(Long.valueOf(counterpartyContractCode), 1700);
+					List<Schedule> schedules1800 = scheduleService.getAllSchedulesByNumContractAndNumStock(Long.valueOf(counterpartyContractCode), 1800);
 
-                 OrderLine orderLine = null;
-                 for (OrderLine ol: orderLines) {
-                    if (ol.getGoodsId() == goodId.intValue()) {
-                       orderLine = ol;
-                       break;
-                    }
-                 }
-                 quantityInPallet = orderLine.getQuantityPallet();
-                 currentAmountOfPallets = Math.ceil(quantity/quantityInPallet);
-                 amountOfPallets += currentAmountOfPallets;
-                 orderCalculation.setGoodGroup(orderLine.getGoodsGroupName());
-                 if (schedules.isEmpty()) {
-                    if (contractsWithoutSchedules.containsKey(Arrays.asList(counterpartyContractCode, stock.toString()))) {
-                       Double pallets = contractsWithoutSchedules.get(Arrays.asList(counterpartyContractCode, stock.toString()));
-                       pallets += currentAmountOfPallets;
-                       contractsWithoutSchedules.put(Arrays.asList(counterpartyContractCode, stock.toString(), "Нет графиков для данного товара"), pallets);
-                    } else {
-                       contractsWithoutSchedules.put(Arrays.asList(counterpartyContractCode, stock.toString()), currentAmountOfPallets);
-                    }
-                    continue;
-                 }
-                 for (Schedule checkSchedule: schedules) {
-                    deliveryDate = getDeliveryDate(checkSchedule, date);
-                    if (deliveryDate != null) {
-                       schedule = checkSchedule;
-                       break;
-                    }
+//                 schedules = scheduleService.getAllSchedulesByNumContractAndNumStock(Long.valueOf(counterpartyContractCode), 1700);//потому что для 1800 действует такой же график, как и для 1700
+					schedules.addAll(schedules1700);
+					schedules.addAll(schedules1800);
+					if (schedules.size() > 1) {
+						int d = 0;
+					}
 
-                 }
+					schedules.sort(Comparator.comparing(Schedule::getStatus).reversed());
+					int quantity = 0;
+					if (stock == 1700) {
+						quantity = orderProduct.getQuantity1700();
+					} else if (orderProduct.getQuantity1800() != null) {
+						quantity = orderProduct.getQuantity1800();
+					}
 
-                 if (deliveryDate == null) {
-                    isFileCreated = true;
-                    if (contractsWithoutSchedules.containsKey(Arrays.asList(counterpartyContractCode, stock.toString()))) {
-                       Double pallets = contractsWithoutSchedules.get(Arrays.asList(counterpartyContractCode, stock.toString()));
-                       pallets += currentAmountOfPallets;
+					List<OrderLine> orderLines = resMap.get(goodId).getOrderLines().stream().collect(Collectors.toList());
+					double quantityInPallet = 0;
+					double currentAmountOfPallets = 0.0;
+					double amountOfPallets = 0;
 
-                       contractsWithoutSchedules.put(Arrays.asList(counterpartyContractCode, stock.toString()), pallets);
-                    } else {
-                       contractsWithoutSchedules.put(Arrays.asList(counterpartyContractCode, stock.toString()), currentAmountOfPallets);
-                    }
-                    continue;
-                 }
+					OrderLine orderLine = null;
+					for (OrderLine ol : orderLines) {
+						if (ol.getGoodsId() == goodId.intValue()) {
+							orderLine = ol;
+							break;
+						}
+					}
+					quantityInPallet = orderLine.getQuantityPallet();
+					currentAmountOfPallets = Math.ceil(quantity / quantityInPallet);
+					amountOfPallets += currentAmountOfPallets;
+					orderCalculation.setGoodGroup(orderLine.getGoodsGroupName());
+					if (schedules.isEmpty()) {
+						if (contractsWithoutSchedules.containsKey(Arrays.asList(counterpartyContractCode, stock.toString()))) {
+							Double pallets = contractsWithoutSchedules.get(Arrays.asList(counterpartyContractCode, stock.toString()));
+							pallets += currentAmountOfPallets;
+							contractsWithoutSchedules.put(Arrays.asList(counterpartyContractCode, stock.toString(), "Нет графиков для данного товара"), pallets);
+						} else {
+							contractsWithoutSchedules.put(Arrays.asList(counterpartyContractCode, stock.toString()), currentAmountOfPallets);
+						}
+						continue;
+					}
+					for (Schedule checkSchedule : schedules) {
+						deliveryDate = getDeliveryDate(checkSchedule, date);
+						if (deliveryDate != null) {
+							schedule = checkSchedule;
+							break;
+						}
 
-                 orderCalculation = orderCalculationService.getOrderCalculatiionByContractNumStockGoodIdAndDeliveryDate(Long.valueOf(counterpartyContractCode), stock, Date.valueOf(deliveryDate), goodId);
-                 double oldAmountOfPallets = orderCalculation.getQuantityOfPallets() == null ? 0 : orderCalculation.getQuantityOfPallets();
-                 double oldQuantity = orderCalculation.getQuantityOrder() == null ? 0 : orderCalculation.getQuantityOrder();
-                 orderCalculation.setDeliveryDate(Date.valueOf(deliveryDate));
-                 orderCalculation.setCounterpartyCode(schedule.getCounterpartyCode());
-                 orderCalculation.setCounterpartyName(schedule.getName());
-                 orderCalculation.setGoodsId(goodId);
-                 orderCalculation.setGoodName(goodName);
-                 orderCalculation.setCounterpartyContractCode(Long.valueOf(counterpartyContractCode));
-                 orderCalculation.setNumStock(stock);
-                 orderCalculation.setQuantityOrder((double) quantity + oldQuantity);
-                 orderCalculation.setQuantityInPallet(quantityInPallet);
-                 orderCalculation.setQuantityOfPallets(amountOfPallets + oldAmountOfPallets);
-                 orderCalculation.setStatus(20);
-                 String history = orderCalculation.getHistory() == null ? "" : orderCalculation.getHistory();
-                 history += " " + dateStr + " - " + Math.ceil(quantity/quantityInPallet) + ";";
-                 orderCalculation.setHistory(history);
-                 orderCalculationService.saveOrderCalculation(orderCalculation);
+					}
 
-              }
-           }
-        }
+					if (deliveryDate == null) {
+						isFileCreated = true;
+						if (contractsWithoutSchedules.containsKey(Arrays.asList(counterpartyContractCode, stock.toString()))) {
+							Double pallets = contractsWithoutSchedules.get(Arrays.asList(counterpartyContractCode, stock.toString()));
+							pallets += currentAmountOfPallets;
 
-        String filePath = servletContext.getRealPath("/") + "resources/others/";
+							contractsWithoutSchedules.put(Arrays.asList(counterpartyContractCode, stock.toString()), pallets);
+						} else {
+							contractsWithoutSchedules.put(Arrays.asList(counterpartyContractCode, stock.toString()), currentAmountOfPallets);
+						}
+						continue;
+					}
 
-        String filename = "Товары без расчетов " + dateStr + ".xlsx";
-        poiExcel.fillTableForProblemGoods(contractsWithoutSchedules, goodsWithoutOrders, filePath + filename);
+					orderCalculation = orderCalculationService.getOrderCalculatiionByContractNumStockGoodIdAndDeliveryDate(Long.valueOf(counterpartyContractCode), stock, Date.valueOf(deliveryDate), goodId);
+					double oldAmountOfPallets = orderCalculation.getQuantityOfPallets() == null ? 0 : orderCalculation.getQuantityOfPallets();
+					double oldQuantity = orderCalculation.getQuantityOrder() == null ? 0 : orderCalculation.getQuantityOrder();
+					orderCalculation.setDeliveryDate(Date.valueOf(deliveryDate));
+					orderCalculation.setCounterpartyCode(schedule.getCounterpartyCode());
+					orderCalculation.setCounterpartyName(schedule.getName());
+					orderCalculation.setGoodsId(goodId);
+					orderCalculation.setGoodName(goodName);
+					orderCalculation.setCounterpartyContractCode(Long.valueOf(counterpartyContractCode));
+					orderCalculation.setNumStock(stock);
+					orderCalculation.setQuantityOrder((double) quantity + oldQuantity);
+					orderCalculation.setQuantityInPallet(quantityInPallet);
+					orderCalculation.setQuantityOfPallets(amountOfPallets + oldAmountOfPallets);
+					orderCalculation.setStatus(20);
+					String history = orderCalculation.getHistory() == null ? "" : orderCalculation.getHistory();
+					history += " " + dateStr + " - " + Math.ceil(quantity / quantityInPallet) + ";";
+					orderCalculation.setHistory(history);
+					orderCalculationService.saveOrderCalculation(orderCalculation);
 
-        if (isFileCreated) {
-           List <File> filesForEmail = new ArrayList<>();
-           filesForEmail.add(new File(filePath + filename));
-           File zipFile;
-           List <File> filesToSend = new ArrayList<File>();
+				}
+			}
+		}
 
-           try {
-              zipFile = createZipFile(filesForEmail, filePath + "Товары без расчетов.zip");
-              filesToSend.add(zipFile);
-           } catch (IOException e) {
-              e.printStackTrace();
-           }
+		String filePath = servletContext.getRealPath("/") + "resources/others/";
+
+		String filename = "Товары без расчетов " + dateStr + ".xlsx";
+		poiExcel.fillTableForProblemGoods(contractsWithoutSchedules, goodsWithoutOrders, filePath + filename);
+
+		if (isFileCreated) {
+			List<File> filesForEmail = new ArrayList<>();
+			filesForEmail.add(new File(filePath + filename));
+			File zipFile;
+			List<File> filesToSend = new ArrayList<File>();
+
+			try {
+				zipFile = createZipFile(filesForEmail, filePath + "Товары без расчетов.zip");
+				filesToSend.add(zipFile);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 
 //      responseMap.put("Done", "Done");
 //      responseMap.put("size", orders.size());
 //      responseMap.put("orders", orders);
-           System.out.println("В прикреплённой таблице список товаров, по которым не были созданы расчеты");
-           List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
-           //mailService.sendEmailWithFilesToUsers(servletContext, "Товары без расчетов", В прикреплённой таблице список товаров, по которым не были созданы расчеты, filesToSend, emails);
+			System.out.println("В прикреплённой таблице список товаров, по которым не были созданы расчеты");
+			List<String> emails = propertiesUtils.getValuesByPartialKey(servletContext, "email.test");
+//           mailService.sendEmailWithFilesToUsers(servletContext, "Товары без расчетов", В прикреплённой таблице список товаров, по которым не были созданы расчеты, filesToSend, emails);
 
-        }
-        java.util.Date t2 = new java.util.Date();
-        System.out.println("all method = " + (t2.getTime() - t1.getTime()));
+		}
+		java.util.Date t2 = new java.util.Date();
+		System.out.println("all method = " + (t2.getTime() - t1.getTime()));
 
-     }
+	}
     
        
     @GetMapping("/procurement/permission/testOrbject")
@@ -3215,53 +3246,108 @@ public class MainRestController {
 
 		Date dateFrom = Date.valueOf(dateStart);
 		Date dateTo = Date.valueOf(dateFinish);
-		
+
 
 		List<OrderCalculation> orderCalculations = orderCalculationService.getOrderCalculationsForPeriod(dateFrom, dateTo);
-
-		Set <Integer> stocks = new HashSet<>();
-		Set <Long> counterpartyContractCodes = new HashSet<>();
-		for (OrderCalculation orderCalculation: orderCalculations) {
-			stocks.add(orderCalculation.getNumStock());
+		Set<Long> goodIds = orderCalculations.stream().map(OrderCalculation::getGoodsId).collect(Collectors.toSet());
+		Map<Long, GoodAccommodation> goodAccommodations = goodAccommodationService.getActualGoodAccommodationByCodeProductList(goodIds.stream().collect(Collectors.toList()));
+		Set<Long> counterpartyContractCodes = new HashSet<>();
+		for (OrderCalculation orderCalculation : orderCalculations) {
 			counterpartyContractCodes.add(orderCalculation.getCounterpartyContractCode());
 		}
 		List<AmountOfPalletsDto> amountOfPalletsDtos = new ArrayList<>();
-		for (Long counterpartyContractCode: counterpartyContractCodes) {
-			for (Integer stock: stocks) {
+		for (Long counterpartyContractCode : counterpartyContractCodes) {
+			if (counterpartyContractCode == 517) {
+				int d = 0;
+			}
+			List<OrderCalculation> orderCalculationsForCounterparty = orderCalculations.stream()
+					.filter(o -> o.getCounterpartyContractCode().equals(counterpartyContractCode) && o.getQuantityOfPallets() != 0).collect(Collectors.toList());
+			//Новое за сегодня
+			Date temp = dateFrom;
+			while (temp.before(dateTo)) {
+				Map<Integer, Double> palletsMap = new HashMap<>(); //сколько паллет для каждого склада за дату
 
-				Date temp = dateFrom;
+				Date finalTemp = temp;
+				List<OrderCalculation> orderCalculationsForDate = orderCalculationsForCounterparty.stream()
+						.filter(o -> o.getDeliveryDate().equals(finalTemp)).collect(Collectors.toList());//получили orderCalculations для этой даты
+				Set<Long> goodIdsForDate = orderCalculationsForDate.stream().map(OrderCalculation::getGoodsId).collect(Collectors.toSet());
+				int palletsOutOfRules = 0;
+				for (Long goodId : goodIdsForDate) {
+					List<OrderCalculation> orderCalculationsForId = orderCalculationsForDate.stream()
+							.filter(o -> o.getGoodsId().equals(goodId)).collect(Collectors.toList());
+					GoodAccommodation goodAccommodation = goodAccommodations.get(goodId);
+					Set<Integer> stockFromAccommodation = new HashSet<>();
+					if (goodAccommodation != null) {
+						stockFromAccommodation.addAll(Arrays.stream(goodAccommodation.getStocks().split(";"))
+								.filter(s -> !s.isEmpty())
+								.map(Integer::parseInt)
+								.collect(Collectors.toSet())); //получили склады из правил для этого товара
+					}
 
-				while (temp.before(dateTo)) {
-					boolean addDto = false;
-					AmountOfPalletsDto amountOfPalletsDto = new AmountOfPalletsDto();
-					int amountOfPalletsTotal = 0;
-					for (OrderCalculation orderCalculation: orderCalculations) {
-
-						if (Objects.equals(orderCalculation.getCounterpartyContractCode(), counterpartyContractCode)
-								&& (Objects.equals(orderCalculation.getNumStock(), stock))
-								&& (Objects.equals(orderCalculation.getDeliveryDate(), temp))) {
-							addDto = true;
-							amountOfPalletsTotal += orderCalculation.getQuantityOfPallets();
-							amountOfPalletsDto.setCounterpartyCode(orderCalculation.getCounterpartyCode());
-							amountOfPalletsDto.setCounterpartyName(orderCalculation.getCounterpartyName());
-
+					Set<Integer> stockFromCalculation = orderCalculationsForId.stream().map(OrderCalculation::getNumStock).collect(Collectors.toSet());
+					for (OrderCalculation orderCalculation : orderCalculationsForId) {
+						if (stockFromAccommodation.isEmpty()) {
+							if (palletsMap.containsKey(orderCalculation.getNumStock())) {
+								Double pallets = palletsMap.get(orderCalculation.getNumStock());
+								pallets += orderCalculation.getQuantityOfPallets();
+								palletsMap.put(orderCalculation.getNumStock(), pallets);
+							} else {
+								palletsMap.put(orderCalculation.getNumStock(), orderCalculation.getQuantityOfPallets());
+							}
+						} else {
+							Integer stock = orderCalculation.getNumStock();
+							if (stockFromAccommodation.contains(stock)) {
+								if (stockFromAccommodation.size() > stockFromCalculation.size()) {
+									for (Integer stockAcc : stockFromAccommodation) {
+										if (palletsMap.containsKey(stockAcc)) {
+											Double pallets = palletsMap.get(stockAcc);
+											pallets += orderCalculation.getQuantityOfPallets() / stockFromAccommodation.size();
+											palletsMap.put(stockAcc, pallets);
+										} else {
+											palletsMap.put(stockAcc, orderCalculation.getQuantityOfPallets() / stockFromAccommodation.size());
+										}
+									}
+								} else {
+									if (palletsMap.containsKey(stock)) {
+										Double pallets = palletsMap.get(stock);
+										pallets += orderCalculation.getQuantityOfPallets();
+										palletsMap.put(stock, pallets);
+									} else {
+										palletsMap.put(stock, orderCalculation.getQuantityOfPallets());
+									}
+								}
+							} else {
+								for (Integer stockAcc: stockFromAccommodation) {
+									if (palletsMap.containsKey(stockAcc)){
+										Double pallets = palletsMap.get(stockAcc);
+										pallets += orderCalculation.getQuantityOfPallets() / stockFromAccommodation.size();
+										palletsMap.put(stockAcc, pallets);
+									} else {
+										palletsMap.put(stockAcc, orderCalculation.getQuantityOfPallets() / stockFromAccommodation.size());
+									}
+								}
+								palletsOutOfRules += orderCalculation.getQuantityOfPallets();
+							}
 						}
 					}
-					amountOfPalletsDto.setCounterpartyContractCode(counterpartyContractCode);
-					amountOfPalletsDto.setNumStock(stock);
-					amountOfPalletsDto.setAmountOfPallets(amountOfPalletsTotal);
-					amountOfPalletsDto.setDeliveryDate(temp);
-					if (addDto) {
-						amountOfPalletsDtos.add(amountOfPalletsDto);
-					}
-					temp = Date.valueOf(temp.toLocalDate().plusDays(1));
 				}
+
+				for (Integer stock : palletsMap.keySet()) {
+					AmountOfPalletsDto amountOfPalletsDto = new AmountOfPalletsDto();
+					amountOfPalletsDto.setCounterpartyCode(orderCalculationsForCounterparty.get(0).getCounterpartyCode());
+					amountOfPalletsDto.setCounterpartyName(orderCalculationsForCounterparty.get(0).getCounterpartyName());
+					amountOfPalletsDto.setCounterpartyContractCode(counterpartyContractCode);
+					amountOfPalletsDto.setAmountOfPallets(palletsMap.get(stock).intValue() + palletsOutOfRules / palletsMap.keySet().size());
+					amountOfPalletsDto.setNumStock(stock);
+					amountOfPalletsDto.setDeliveryDate(temp);
+					amountOfPalletsDtos.add(amountOfPalletsDto);
+				}
+
+				temp = Date.valueOf(temp.toLocalDate().plusDays(1));
 			}
 		}
-
 		responseMap.put("body", amountOfPalletsDtos);
 		return responseMap;
-
 	}
 
 
@@ -8013,18 +8099,18 @@ public class MainRestController {
 		return response;
 	}
 	
-	@RequestMapping(value = "/order-support/control/loadSchedules", method = RequestMethod.POST, consumes = {MediaType.MULTIPART_FORM_DATA_VALUE })
-	public Map<String, String> postLoadSchedulesHasTime(Model model, HttpServletRequest request, HttpSession session,
-			@RequestParam(value = "excel", required = false) MultipartFile excel) throws InvalidFormatException, IOException, ServiceException {
-		Map<String, String> response = new HashMap<String, String>();	
-
-//		File file1 = poiExcel.getFileByMultipart(excel);
-//		poiExcel.importGoodAccommodation(excel.getInputStream());	
-		poiExcel.actualRestrictions(excel.getInputStream());
-		response.put("status", "200");
-		response.put("message", "Успех");		
-		return response;
-	}
+//	@RequestMapping(value = "/order-support/control/loadSchedules", method = RequestMethod.POST, consumes = {MediaType.MULTIPART_FORM_DATA_VALUE })
+//	public Map<String, String> postLoadSchedulesHasTime(Model model, HttpServletRequest request, HttpSession session,
+//			@RequestParam(value = "excel", required = false) MultipartFile excel) throws InvalidFormatException, IOException, ServiceException {
+//		Map<String, String> response = new HashMap<String, String>();
+//
+////		File file1 = poiExcel.getFileByMultipart(excel);
+////		poiExcel.importGoodAccommodation(excel.getInputStream());
+//		poiExcel.actualRestrictions(excel.getInputStream());
+//		response.put("status", "200");
+//		response.put("message", "Успех");
+//		return response;
+//	}
 	
 	/**
 	 * Метод отвечает за загрузку и создание Заказов
@@ -8199,10 +8285,344 @@ public class MainRestController {
 		}
 		return isRuningOptimization + "";
 	}
-	
+
+	@TimedExecution
+	@PostMapping("/map/myoptimization6")
+	public Map<String, Object> myOptimization6(@RequestBody String str, HttpServletRequest request) throws Exception {
+		Map<String, Object> responceMap = new HashMap<String, Object>();
+
+		java.util.Date t1 = new java.util.Date();
+//		System.out.println(t2.getTime() - t1.getTime() + "ms poiExcel.getFileByMultipart(excel)");
+
+		try {
+			if(isRuningOptimization) {
+				responceMap.put("status", "105");
+				responceMap.put("solution", null);
+				responceMap.put("message", "Отказано! Процесс занят пользователем : " + getThisUser().getSurname() + " " + getThisUser().getName());
+				responceMap.put("info", "Отказано! Процесс занят пользователем : " + getThisUser().getSurname() + " " + getThisUser().getName());
+				return responceMap;
+			}else {
+				isRuningOptimization = !isRuningOptimization;
+			}
+
+
+			Double maxKoef = 2.0;
+			Integer maxShopInWay;
+
+			JSONParser parser = new JSONParser();
+			JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+			JSONObject jsonParameters = jsonMainObject.get("params") != null ? (JSONObject) parser.parse(jsonMainObject.get("params").toString()) : null;
+			JSONArray numShopsJSON = (JSONArray) jsonMainObject.get("shops");
+			JSONArray pallHasShopsJSON = (JSONArray) jsonMainObject.get("palls");
+			JSONArray tonnageHasShopsJSON = (JSONArray) jsonMainObject.get("tonnage");
+			JSONArray shopsWithCrossDocking = (JSONArray) jsonMainObject.get("shopsWithCrossDocking"); // номера машазинов входящих в кросдокинговые площадки
+			JSONArray shopsWeightDistributionJSONArray = (JSONArray) jsonMainObject.get("shopsWithWeightDistribution"); // номера машазинов считающихся альтернативно
+			JSONArray pallReturnJSON = (JSONArray) jsonMainObject.get("pallReturn");
+
+			Double iterationStr = jsonMainObject.get("iteration") != null ? Double.parseDouble(jsonMainObject.get("iteration").toString().replaceAll(",", ".")) : null;
+			if(iterationStr != null && iterationStr != 0.0) {
+				maxKoef = iterationStr;
+			}
+			Integer maxShopInWayTarget = jsonMainObject.get("maxShopsInRoute") != null ? Integer.parseInt(jsonMainObject.get("maxShopsInRoute").toString()) : null;
+			if(maxShopInWayTarget != null && maxShopInWayTarget != 0) {
+				maxShopInWay = maxShopInWayTarget;
+			} else {
+                maxShopInWay = 22;
+            }
+
+
+            // Список для хранения отфильтрованных магазинов ходящих в полигон (магазы которые входят в кроссовые площадки)
+//	        List<Shop> krossShops = new ArrayList<>();
+//
+//	        // Перебор всех магазинов и фильтрация по polygonName != null
+//	        for (Object shopObject : shopsWithCrossDocking) {
+//	            JSONObject shop = (JSONObject) shopObject;
+//	            if (shop.get("polygonName") != null) {
+//	            	Shop shopObjectHasKross = shopService.getShopByNum(Integer.parseInt(shop.get("numshop").toString()));
+//	            	shopObjectHasKross.setKrossPolugonName(shop.get("polygonName").toString());
+//	                krossShops.add(shopObjectHasKross);
+//	            }
+//	        }
+//	        krossShops.sort((o1,o2) -> o1.getKrossPolugonName().hashCode() - o2.getKrossPolugonName().hashCode()); //сортируемся для удобства
+
+
+			List<Integer> numShops = new ArrayList<Integer>();
+			List<Double> pallHasShops = new ArrayList<Double>();
+			List<Integer> tonnageHasShops = new ArrayList<Integer>();
+			List<Integer> weightDistributionList = new ArrayList<Integer>();
+			List<Double> pallReturn = new ArrayList<Double>();
+			Map<Integer, String> shopsWithCrossDockingMap = new HashMap<Integer, String>(); // мапа где хранятся номера магазинов и название полигонов к ним
+
+			Integer stock = Integer.parseInt(jsonMainObject.get("stock").toString());
+
+			numShopsJSON.forEach(s -> numShops.add(Integer.parseInt(s.toString())));
+			pallHasShopsJSON.forEach(p -> pallHasShops.add(Double.parseDouble(p.toString().replaceAll(",", "."))));
+			tonnageHasShopsJSON.forEach(t-> tonnageHasShops.add(Integer.parseInt(t.toString())));
+			pallReturnJSON.forEach(pr-> pallReturn.add(pr != null ? Double.parseDouble(pr.toString().trim()) : null));
+
+			//прогружаем в кеш усеченный список
+			List<Integer> shops = new ArrayList<Integer>(numShops);
+			shops.add(stock);
+			matrixMachine.matrix = distanceMatrixService.getDistanceMatrixByShops(shops);
+
+			// Перебор всех магазинов и фильтрация по polygonName != null
+			for (Object shopObject : shopsWithCrossDocking) {
+				JSONObject shop = (JSONObject) shopObject;
+				if (shop.get("polygonName") != null) {
+					shopsWithCrossDockingMap.put(Integer.parseInt(shop.get("numshop").toString()), shop.get("polygonName").toString());
+				}
+			}
+
+			//перебор значений JSONArray для получения и записи номеров магазов считающихся альтернативно
+			if(shopsWeightDistributionJSONArray != null) {
+				for (Object string : shopsWeightDistributionJSONArray) {
+					weightDistributionList.add(Integer.parseInt(string.toString().trim()));
+				}
+			}
+
+			List<Solution> solutions = new ArrayList<Solution>();
+			Map<Integer, Shop> allShop = shopService.getShopMap();
+
+			ExecutorService executorService = Executors.newFixedThreadPool(50);
+			List<CompletableFuture<Solution>> futures = new CopyOnWriteArrayList <>();
+			Semaphore semaphore = new Semaphore(10);
+			//реализация перебора первого порядка
+			for (double i = 1.0; i <= maxKoef; i = i + 0.02) {
+				Double koeff = i;
+				//			System.out.println("Коэфф = " + koeff);
+
+				CompletableFuture<Solution> future = CompletableFuture.supplyAsync(() -> {
+					Solution currentSolution;
+					try {
+						currentSolution = colossusProcessorRad.run(jsonMainObject, numShops, pallHasShops, tonnageHasShops, stock, koeff, "fullLoad", shopsWithCrossDockingMap, maxShopInWay, pallReturn, weightDistributionList, allShop);
+						currentSolution.setKoef(koeff);
+					} catch (Exception e) {
+						throw new RuntimeException(e);
+					} finally {
+						semaphore.release(); // освободить слот
+					}
+					return currentSolution;
+				}, executorService);
+
+				futures.add(future);
+			}
+
+			CompletableFuture<Void> allDone = CompletableFuture.allOf(
+					futures.toArray(new CompletableFuture[0])
+			);
+
+			allDone.thenRun(() -> {
+				futures.forEach(f -> {
+					try {
+						f.thenAccept( s ->  {
+							solutions.add(s);
+						});// БЕЗОПАСНО, потому что задачи уже завершены
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				});
+			}).join(); // чтобы main не завершился раньше
+
+			executorService.shutdown();
+			//		System.err.println(solutions.size());
+			//		solutions.forEach(s-> System.out.println(s.getTotalRunSolution()));
+			Double minOwerrun = 999999999999999999.0;
+			int emptyShop = 9999;
+			Solution finalSolution = null;
+			for (Solution solution2 : solutions) {
+
+				//определяем и записываем суммарный пробег маршрута
+				//!!!!!!записываем внутри процессора!
+				//			Double totalRunHasMatrix = 0.0;
+				//			for (VehicleWay way : solution2.getWhiteWay()) {
+				//				//заменяем просчёт расстояний из GH на матричный метод
+				//				for (int j = 0; j < way.getWay().size()-1; j++) {
+				//					String key = way.getWay().get(j).getNumshop()+"-"+way.getWay().get(j+1).getNumshop();
+				//					totalRunHasMatrix = totalRunHasMatrix + matrixMachine.matrix.get(key);
+				//				}
+				//			}
+				//			solution2.setTotalRunKM(totalRunHasMatrix);
+				double summpall = 0;
+				for (VehicleWay way : solution2.getWhiteWay()) {
+					Shop stock123 = way.getWay().get(0);
+					summpall = summpall + calcPallHashHsop(way.getWay(), stock123);
+					way.setSummPall(roundВouble(summpall, 2));
+				}
+				System.err.println("Выбран маршрут с данными: суммарный пробег: " + solution2.getTotalRunKM() + "м, " + solution2.getEmptyShop().size() + " - кол-во неназначенных магазинов; " + solution2.getEmptyTrucks().size() + " - кол-во свободных авто; Итерация = " + solution2.getKoef() + "; Паллеты: " + summpall);
+				if(solution2.getEmptyShop().size() <= emptyShop) {
+					if(solution2.getEmptyShop().size() < emptyShop && minOwerrun < solution2.getTotalRunKM()) {
+						System.out.println("Выбран маршрут с данными: суммарный пробег: " + solution2.getTotalRunKM() + "м, " + solution2.getEmptyShop().size() + " - кол-во неназначенных магазинов; " + solution2.getEmptyTrucks().size() + " - кол-во свободных авто; Итерация = " + solution2.getKoef()+ "; Паллеты: " + summpall);
+						minOwerrun = solution2.getTotalRunKM();
+						emptyShop = solution2.getEmptyShop().size();
+						finalSolution = solution2;
+					}
+
+					if(solution2.getTotalRunKM() < minOwerrun) {
+						System.out.println("Выбран маршрут с данными: суммарный пробег: " + solution2.getTotalRunKM() + "м, " + solution2.getEmptyShop().size() + " - кол-во неназначенных магазинов; " + solution2.getEmptyTrucks().size() + " - кол-во свободных авто; Итерация = " + solution2.getKoef()+ "; Паллеты: " + summpall);
+						minOwerrun = solution2.getTotalRunKM();
+						emptyShop = solution2.getEmptyShop().size();
+						finalSolution = solution2;
+					}
+					//				solution2.setStackTrace(solution2.getStackTrace() + "\n" + "Выбран маршрут с данными: суммарный пробег: " + solution2.getTotalRunKM() + "м, " + solution2.getEmptyShop().size() + " - кол-во неназначенных магазинов; " + solution2.getEmptyTrucks().size() + " - кол-во свободных авто; Итерация = " + solution2.getKoef() + "; Паллеты: " + summpall);
+				}
+			}
+			Map<String, List<MapResponse>> wayHasMap = new HashMap<String, List<MapResponse>>();
+			Double totalKM = 0.0;
+
+			for (VehicleWay way : finalSolution.getWhiteWay()) {
+
+				List<GHRequest> ghRequests = null;
+				List<GHRequest> ghRequestsReturn = null;
+				List<Shop> returnPoint = new ArrayList<Shop>(way.getWay());
+				try {
+					ghRequests = routingMachine.createrListGHRequest(way.getWay());
+
+					Collections.reverse(returnPoint);
+					ghRequestsReturn = routingMachine.createrListGHRequest(returnPoint);
+				} catch (ParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				List<Shop[]> shopPoints = null;
+				List<Shop[]> shopPointsReturn = null;
+				try {
+					shopPoints = routingMachine.getShopAsWay(way.getWay());
+					shopPointsReturn = routingMachine.getShopAsWay(returnPoint);
+				} catch (ParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				GraphHopper hopper = routingMachine.getGraphHopper();
+				//			ghRequests.forEach(r->System.out.println(r.getCustomModel()));
+				List<MapResponse> listResult = new ArrayList<MapResponse>();
+				List<MapResponse> listResultReturn = new ArrayList<MapResponse>();
+				Double distance = 0.0;
+				Double distanceReturn = 0.0;
+				for (GHRequest req : ghRequests) {
+					int index = ghRequests.indexOf(req);
+
+					GHResponse rsp = hopper.route(req);
+					if (rsp.getAll().isEmpty()) {
+						rsp.getErrors().forEach(e -> System.out.println(e));
+						rsp.getErrors().forEach(e -> e.printStackTrace());
+						listResult.add(new MapResponse(null, null, null, 500.0, 500));
+					}
+					//				System.err.println(rsp.getAll().size());
+					if (rsp.getAll().size() > 1) {
+						rsp.getAll().forEach(p -> System.out.println(p.getDistance() + "    " + p.getTime()));
+					}
+					ResponsePath path = rsp.getBest();
+					List<ResponsePath> listPath = rsp.getAll();
+					for (ResponsePath pathI : listPath) {
+						if (pathI.getDistance() < path.getDistance()) {
+							path = pathI;
+						}
+					}
+					//				System.out.println(roundВouble(path.getDistance()/1000, 2) + "km, " + path.getTime() + " time");
+					PointList pointList = path.getPoints();
+					path.getPathDetails();
+					List<Double[]> result = new ArrayList<Double[]>(); // возможна утечка помяти
+					pointList.forEach(p -> result.add(p.toGeoJson()));
+					List<Double[]> resultPoints = new ArrayList<Double[]>();
+					double cash = 0.0;
+					for (Double[] point : result) {
+						cash = point[0];
+						point[0] = point[1];
+						point[1] = cash;
+						resultPoints.add(point);
+					}
+					distance = distance + path.getDistance();
+					listResult.add(new MapResponse(resultPoints, path.getDistance(), path.getTime(),
+							shopPoints.get(index)[0], shopPoints.get(index)[1]));
+				}
+				for (GHRequest req : ghRequestsReturn) {
+					int index = ghRequestsReturn.indexOf(req);
+
+					GHResponse rsp = hopper.route(req);
+					if (rsp.getAll().isEmpty()) {
+						rsp.getErrors().forEach(e -> System.out.println(e));
+						rsp.getErrors().forEach(e -> e.printStackTrace());
+						listResultReturn.add(new MapResponse(null, null, null, 500.0, 500));
+					}
+					//				System.err.println(rsp.getAll().size());
+					if (rsp.getAll().size() > 1) {
+						rsp.getAll().forEach(p -> System.out.println(p.getDistance() + "    " + p.getTime()));
+					}
+					ResponsePath path = rsp.getBest();
+					List<ResponsePath> listPath = rsp.getAll();
+					for (ResponsePath pathI : listPath) {
+						if (pathI.getDistance() < path.getDistance()) {
+							path = pathI;
+						}
+					}
+					//				System.out.println(roundВouble(path.getDistance()/1000, 2) + "km, " + path.getTime() + " time");
+					PointList pointList = path.getPoints();
+					path.getPathDetails();
+					List<Double[]> result = new ArrayList<Double[]>(); // возможна утечка помяти
+					pointList.forEach(p -> result.add(p.toGeoJson()));
+					List<Double[]> resultPoints = new ArrayList<Double[]>();
+					double cash = 0.0;
+					for (Double[] point : result) {
+						cash = point[0];
+						point[0] = point[1];
+						point[1] = cash;
+						resultPoints.add(point);
+					}
+					distanceReturn = distanceReturn + path.getDistance();
+					listResultReturn.add(new MapResponse(resultPoints, path.getDistance(), path.getTime(),
+							shopPointsReturn.get(index)[0], shopPointsReturn.get(index)[1]));
+
+				}
+
+				if(distance < distanceReturn) {
+					wayHasMap.put(way.getId(), listResult);
+					totalKM = totalKM + distance;
+					System.out.println("Выбираем прямой: id = " + way.getId() + " расстояние прямого: " + distance + " м; а обратного: " + distanceReturn);
+				}else {
+					wayHasMap.put(way.getId(), listResultReturn);
+					totalKM = totalKM + distanceReturn;
+					System.out.println("Выбираем обратный: id = " + way.getId() + " расстояние обратного: " + distanceReturn + " м; а прямого: " + distance);
+				}
+
+			}
+			finalSolution.setMapResponses(wayHasMap);
+			finalSolution.setMessage("Готово");
+			finalSolution.setTotalRunKM(totalKM);
+			System.out.println("Всего пробег: " + totalKM + " км.");
+			finalSolution.setStackTrace(finalSolution.getStackTrace() + "\n" + "Всего пробег: " + totalKM + " км. Коэфициент поиска: " + finalSolution.getKoef() );
+
+			responceMap.put("status", "200");
+			responceMap.put("solution", finalSolution);
+			String appPath = request.getServletContext().getRealPath("");
+			System.out.println(appPath + "resources/distance/");
+			if(isRuningOptimization) {
+				isRuningOptimization = !isRuningOptimization;
+			}
+
+
+			java.util.Date t2 = new java.util.Date();
+			System.out.println(t2.getTime() - t1.getTime() + " *************myopt6");
+
+			return responceMap;
+		} catch (FatalInsufficientPalletTruckCapacityException fe) {
+			isRuningOptimization = false;
+
+
+			responceMap.put("status", "105");
+			responceMap.put("solution", null);
+			responceMap.put("message", fe.getMessage());
+			responceMap.put("info", fe.getMessage());
+			return responceMap;
+		}
+
+	}
+
+	@TimedExecution
 	@PostMapping("/map/myoptimization5")
 	public Map<String, Object> myOptimization5(@RequestBody String str, HttpServletRequest request) throws Exception {
 		Map<String, Object> responceMap = new HashMap<String, Object>();
+		java.util.Date t1 = new java.util.Date();
+
 		try {
 			if(isRuningOptimization) {
 				responceMap.put("status", "105");
@@ -8484,7 +8904,9 @@ public class MainRestController {
 			if(isRuningOptimization) {
 				isRuningOptimization = !isRuningOptimization;
 			}
-			
+
+			java.util.Date t2 = new java.util.Date();
+			System.out.println(t2.getTime() - t1.getTime() + " *************myopt6");
 			return responceMap;
 		} catch (FatalInsufficientPalletTruckCapacityException fe) {
 			isRuningOptimization = false;

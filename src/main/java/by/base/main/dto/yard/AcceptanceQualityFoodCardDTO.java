@@ -9,8 +9,6 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import javax.persistence.Column;
-
 
 public class AcceptanceQualityFoodCardDTO {
 
@@ -58,6 +56,7 @@ public class AcceptanceQualityFoodCardDTO {
     private Double totalLightDefectWeight;
     private Double totalLightDefectPercentage;
     private Double pcFactor;
+    private Integer sampleSizeInternalDefect;
     
 
 
@@ -398,5 +397,12 @@ public class AcceptanceQualityFoodCardDTO {
 	public void setUnit(String unit) {
 		this.unit = unit;
 	}
-    
+
+    public Integer getSampleSizeInternalDefect() {
+        return sampleSizeInternalDefect;
+    }
+
+    public void setSampleSizeInternalDefect(Integer sampleSizeInternalDefect) {
+        this.sampleSizeInternalDefect = sampleSizeInternalDefect;
+    }
 }

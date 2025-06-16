@@ -82,13 +82,14 @@ function getCanvasShopMarker(shop) {
 	form && form.addEventListener('submit', shopPopupFormSubmitHandler)
 
 	const imgSrc = getImageSrc(shop)
+	const label = shop.numshop + `${shop.maxPall ? ('_' + shop.maxPall) : '' }`
 
 	return L.canvasMarker(
 			{ lat: shop.lat, lng: shop.lng },
 			{
-				img: { url: imgSrc, size: [24, 24], },
+				img: { url: imgSrc, size: [30, 30], },
 				numshop: shop.numshop,
-				label: shop.numshop,
+				label: label,
 			}
 		)
 		.bindPopup(container, { offset: [0, -15] })

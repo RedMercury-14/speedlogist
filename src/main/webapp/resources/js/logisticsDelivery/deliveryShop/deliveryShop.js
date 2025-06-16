@@ -55,6 +55,7 @@ const gridOptions = {
 	enableBrowserTooltips: true,
 	localeText: AG_GRID_LOCALE_RU,
 	getContextMenuItems: getContextMenuItems,
+	overlayNoRowsTemplate: '<span class="h3">На указанную дату не заявлено ни одно авто</span>',
 	statusBar: {
 		statusPanels: [
 			{ statusPanel: RowLegengStatusBarComponent, align: 'left', },

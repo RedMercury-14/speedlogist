@@ -2,7 +2,7 @@ import { AG_GRID_LOCALE_RU } from './AG-Grid/ag-grid-locale-RU.js'
 import { BtnCellRenderer, BtnsCellRenderer, dateComparator, dateTimeValueFormatter, gridColumnLocalState, gridFilterLocalState, ResetStateToolPanel } from './AG-Grid/ag-grid-utils.js'
 import { aproofQualityFoodCardUrl, getAllAcceptanceQualityFoodCardUrl, getClosedAcceptanceQualityBaseUrl } from './globalConstants/urls.js'
 import { snackbar } from './snackbar/snackbar.js'
-import { dateHelper, debounce, getData, isMobileDevice, isObserver } from './utils.js'
+import { dateHelper, debounce, getData, isAdmin, isMobileDevice, isObserver } from './utils.js'
 import PhotoSwipeLightbox from './photoSwipe/photoswipe-lightbox.esm.min.js'
 import PhotoSwipeDynamicCaption  from './photoSwipe/photoswipe-dynamic-caption-plugin.esm.js'
 import PhotoSwipe from './photoSwipe/photoswipe.esm.min.js'
@@ -56,15 +56,16 @@ const detailColumnDefs = [
 	{
 		headerName: 'Действия', field: 'idAcceptanceQualityFoodCard',
 		cellClass: 'px-1 py-0 text-center small-row',
-		minWidth: 130, flex: 1,
+		minWidth: 170, flex: 1,
 		cellRenderer: BtnsCellRenderer,
 		cellRendererParams: {
 			onClick: cardRowActionOnClickHandler,
 			buttonList: [
 				{ className: 'btn btn-light border btn-sm', id: 'showImages', icon: uiIcons.images, title: 'Показать фото' },
 				{ className: 'btn btn-light border btn-sm', id: 'downloadImages', icon: uiIcons.download, title: 'Скачать все фото' },
+				{ className: 'btn btn-light border btn-sm', id: 'downloadImagesZip', icon: uiIcons.zip, title: 'Скачать архив фото' },
 				{ className: 'btn btn-light border btn-sm', id: 'showInfo', icon: uiIcons.info, title: 'Подробнее' },
-			],
+			]
 		},
 	},
 	{
@@ -86,7 +87,7 @@ const detailColumnDefs = [
 		headerName: 'ВД (вес/процент)', field: 'totalInternalDefectPercentage',
 		valueGetter: (params) => {
 			const data = params.data
-			return `${data.totalInternalDefectWeight} шт / ${data.totalInternalDefectPercentage}%`
+			return `${data.totalInternalDefectWeight || 0} шт / ${data.totalInternalDefectPercentage || 0}%`
 		},
 	},
 	{
@@ -94,14 +95,14 @@ const detailColumnDefs = [
 		flex: 3,
 		valueGetter: (params) => {
 			const data = params.data
-			return `${data.totalDefectWeight} ${params.data?.unit || "кг"} / ${data.totalDefectPercentage}% / ${data.totalDefectPercentageWithPC}%`
+			return `${data.totalDefectWeight || 0} ${params.data?.unit || "кг"} / ${data.totalDefectPercentage || 0}% / ${data.totalDefectPercentageWithPC || 0}%`
 		},
 	},
 	{
 		headerName: 'ЛН (вес/процент)', field: 'totalLightDefectPercentage',
 		valueGetter: (params) => {
 			const data = params.data
-			return `${data.totalLightDefectWeight} ${params.data?.unit || "кг"} / ${data.totalLightDefectPercentage}%`
+			return `${data.totalLightDefectWeight || 0} ${params.data?.unit || "кг"} / ${data.totalLightDefectPercentage || 0}%`
 		},
 	},
 ]
@@ -340,40 +341,32 @@ document.addEventListener('DOMContentLoaded', async () => {
 	approveCardForm2.addEventListener('submit', approveCardFormSubmitHandler)
 
 	const cardStatusSelect = document.getElementById('status')
-	const cardManagerPercentInputsContainer = document.querySelectorAll('.managerPercentInput')
-	const managerPercentTypeSelect = document.getElementById('managerPercent_type')
-	const managerPercentValueInput = document.getElementById('managerPercent_value')
-	cardStatusSelect.addEventListener('change', (e) => {
-		cardStatusSelectChangeHandler(e, managerPercentTypeSelect, managerPercentValueInput, cardManagerPercentInputsContainer)
-	})
+	const defectCheckboxesContainer = approveCardForm.querySelector('.defectCheckboxesContainer')
+	const defectCheckboxes = approveCardForm.querySelectorAll('.defect-checkbox')
+	cardStatusSelect.addEventListener('change', (e) => cardStatusSelectChangeHandler(e, defectCheckboxesContainer, defectCheckboxes, approveCardForm))
+	defectCheckboxes.forEach(checkbox => checkbox.addEventListener('change', () => toggleDefectInputDisable(checkbox, approveCardForm)))
 
 	const cardStatusSelect2 = document.getElementById('status2')
-	const cardManagerPercentInputsContainer2 = document.querySelectorAll('.managerPercentInput2')
-	const managerPercentTypeSelect2 = document.getElementById('managerPercent_type2')
-	const managerPercentValueInput2 = document.getElementById('managerPercent_value2')
-	cardStatusSelect2.addEventListener('change', (e) => {
-		cardStatusSelectChangeHandler(e, managerPercentTypeSelect2, managerPercentValueInput2, cardManagerPercentInputsContainer2)
-	})
+	const defectCheckboxesContainer2 = approveCardForm2.querySelector('.defectCheckboxesContainer')
+	const defectCheckboxes2 = approveCardForm2.querySelectorAll('.defect-checkbox')
+	cardStatusSelect2.addEventListener('change', (e) => cardStatusSelectChangeHandler(e, defectCheckboxesContainer2, defectCheckboxes2, approveCardForm2))
+	defectCheckboxes2.forEach(checkbox => checkbox.addEventListener('change', () => toggleDefectInputDisable(checkbox, approveCardForm2)))
 
 	$('#approveCardModal').on('hidden.bs.modal', (e) => {
 		approveCardForm.reset()
-		managerPercentTypeSelect.setAttribute('disabled', '')
-		managerPercentTypeSelect.removeAttribute('required')
-		managerPercentValueInput.setAttribute('disabled', '')
-		managerPercentValueInput.removeAttribute('required')
-		cardManagerPercentInputsContainer.forEach(container => {
-			container.classList.add('d-none')
-		})
+		defectCheckboxesContainer.classList.add('d-none');
+		defectCheckboxes.forEach(checkbox => {
+			checkbox.checked = false;
+			toggleDefectInputDisable(checkbox, approveCardForm)
+		});
 	})
 	$('#qualityCardInfoModal').on('hidden.bs.modal', (e) => {
 		approveCardForm2.reset()
-		managerPercentTypeSelect2.setAttribute('disabled', '')
-		managerPercentTypeSelect2.removeAttribute('required')
-		managerPercentValueInput2.setAttribute('disabled', '')
-		managerPercentValueInput2.removeAttribute('required')
-		cardManagerPercentInputsContainer2.forEach(container => {
-			container.classList.add('d-none')
-		})
+		defectCheckboxesContainer2.classList.add('d-none');
+		defectCheckboxes2.forEach(checkbox => {
+			checkbox.checked = false;
+			toggleDefectInputDisable(checkbox, approveCardForm2)
+		});
 	})
 })
 
@@ -473,12 +466,16 @@ function approveCardFormSubmitHandler(e) {
 	const formData = new FormData(e.target)
 	const data = Object.fromEntries(formData)
 
+	if (data.status === '154' && !data.defect_vd && !data.defect_brak && !data.defect_ln) {
+		snackbar.show('Необходимо выбрать хотя бы один дефект!')
+		return
+	}
+
 	const payload = {
 		idAcceptanceQualityFoodCard: data.idAcceptanceQualityFoodCard ?  Number(data.idAcceptanceQualityFoodCard) : null,
 		status: data.status ? Number(data.status) : null,
 		comment: data.comment ? data.comment.trim() : null,
-		managerPercent: data.managerPercent_type && data.managerPercent_value
-			? `${data.managerPercent_type} ${data.managerPercent_value}%` : null,
+		managerPercent: getManagerPercent(data),
 	}
 
 	const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 300)
@@ -537,27 +534,47 @@ function approveCardFormSubmitHandler(e) {
 	})
 }
 
+function getManagerPercent(data) {
+	if (!data) return null
+	if (data.status !== '154') return null
+	const percentVd = data.percent_vd
+	const percentBrak = data.percent_brak
+	const percentLn = data.percent_ln
+	const arr = [
+		percentVd ? `ВД ${percentVd}%` : null,
+		percentBrak ? `Брак ${percentBrak}%` : null,
+		percentLn ? `ЛН ${percentLn}%` : null,
+	]
+	return arr.filter(Boolean).join(', ')
+
+}
+
 // обработчик изменения значения статуса карточки в выпадающем списке формы
-function cardStatusSelectChangeHandler(e, typeSelect, valueInput, inputsContainer) {
-	const selectedStatus = e.target.value
+function cardStatusSelectChangeHandler(e, defectCheckboxesContainer, defectCheckboxes, form) {
+	const selectedStatus = e.target.value;
 
 	if (selectedStatus === '154') {
-		typeSelect.removeAttribute('disabled',)
-		typeSelect.setAttribute('required', '')
-		valueInput.removeAttribute('disabled',)
-		valueInput.setAttribute('required', '')
-		inputsContainer.forEach(container => {
-			container.classList.remove('d-none')
-		})
-		typeSelect.focus()
+		defectCheckboxesContainer.classList.remove('d-none');
 	} else {
-		typeSelect.setAttribute('disabled', '')
-		typeSelect.removeAttribute('required')
-		valueInput.setAttribute('disabled', '')
-		valueInput.removeAttribute('required')
-		inputsContainer.forEach(container => {
-			container.classList.add('d-none')
-		})
+		defectCheckboxesContainer.classList.add('d-none');
+		defectCheckboxes.forEach(checkbox => {
+			checkbox.checked = false;
+			toggleDefectInputDisable(checkbox, form)
+		});
+	}
+}
+function toggleDefectInputDisable(checkbox, form) {
+	const targetId = checkbox.dataset.target
+	const wrapper = form.querySelector(`.${targetId}`)
+	const input = wrapper.querySelector('input')
+
+	if (checkbox.checked) {
+		input.removeAttribute('disabled')
+		input.setAttribute('required', '')
+	} else {
+		input.value = ''
+		input.setAttribute('disabled', '')
+		input.removeAttribute('required')
 	}
 }
 
@@ -676,7 +693,6 @@ function recalculateCard(card) {
 	// сохранение рассчитанных данных карточки в базе.
 	// Можно использовать как индикатор до/после обновления
 	const pcFactor = card.pcFactor
-	console.log("🚀 ~ recalculateCard ~ pcFactor:", pcFactor)
 
 	return pcFactor ? card : {
 		...card,
@@ -915,10 +931,10 @@ function fillDefectsTable(tableId, defects, columns, card) {
 	defects.forEach(defect => {
 		const $row = $('<tr>')
 		columns.forEach(col => {
-			if (col === 'weight') $row.append($('<td>').text(`${defect[col]} ${sampleSizeUnit}`))
+			if (col === 'weight') $row.append($('<td>').text(`${defect[col] || 0} ${sampleSizeUnit}`))
 			else if (col === 'sampleSizeInternalDefect') $row.append($('<td>').text(`${sampleSizeInternalDefect} шт`))
-			else if (col === 'percentage' || col === 'percentageWithPC') $row.append($('<td>').text(`${defect[col]}%`))
-			else $row.append($('<td>').text(defect[col]))
+			else if (col === 'percentage' || col === 'percentageWithPC') $row.append($('<td>').text(`${defect[col] || 0}%`))
+			else $row.append($('<td>').text(defect[col] || 0))
 		})
 		$tableBody.append($row)
 	})
@@ -994,8 +1010,15 @@ function cardRowActionOnClickHandler(e, params) {
 		return
 	}
 
+	if (e.buttonId === 'downloadImagesZip') {
+		const fileName = `${params.data.idAcceptanceQualityFoodCard}_${params.data.productName}`
+		downloadImagesAsZip(params.data.images, fileName)
+		return
+	}
+
 	if (e.buttonId === 'downloadImages') {
-		downloadImagesAsZip(params.data.images)
+		const imageName = `${params.data.idAcceptanceQualityFoodCard}_${params.data.productName}`
+		downloadAllImages(params.data.images, imageName)
 		return
 	}
 }
@@ -1007,11 +1030,11 @@ function updateTableRow(gridOptions, rowData) {
 }
 
 // скачивание архива картинок
-async function downloadImagesAsZip(imageUrls) {
+async function downloadImagesAsZip(imageUrls, zipName) {
 	const zip = new JSZip()
 
 	bootstrap5overlay.showOverlay()
-  
+
 	const fetchPromises = imageUrls.map(async (url, i) => {
 		try {
 			const response = await fetch(url)
@@ -1024,18 +1047,80 @@ async function downloadImagesAsZip(imageUrls) {
 				filename = `image_${i + 1}${ext}`
 			}
 			zip.file(filename, blob)
+			return true
 		} catch (err) {
-			bootstrap5overlay.hideOverlay()
 			console.error('Ошибка загрузки файла:', url, err)
+			return false
 		}
 	})
 
-	await Promise.all(fetchPromises)
+	const res = await Promise.all(fetchPromises)
+	
+	if (res.filter(Boolean).length === 0) {
+		bootstrap5overlay.hideOverlay()
+		snackbar.show('Не удалось загрузить изображения')
+		return
+	}
+
+	if (res.filter(Boolean).length !== imageUrls.length) {
+		bootstrap5overlay.hideOverlay()
+		snackbar.show('Некоторые изображения загрузить не удалось')
+	}
 
 	const zipBlob = await zip.generateAsync({ type: 'blob' })
-	saveAs(zipBlob, 'images.zip')
+	const zipNameWithExt = zipName ? `${zipName}.zip` : 'images.zip'
+	saveAs(zipBlob, zipNameWithExt)
 
 	bootstrap5overlay.hideOverlay()
+}
+// скачивание картинок
+async function downloadAllImages(imageUrls, imageName) {
+	bootstrap5overlay.showOverlay()
+	
+	const results = []
+
+	for (let i = 0; i < imageUrls.length; i++) {
+		const result = await downloadImage(imageUrls[i], `${imageName}_${i+1}`)
+		results.push(result)
+	}
+
+	const successCount = results.filter(Boolean).length
+	const total = imageUrls.length
+
+	if (successCount === total) {
+		snackbar.show('Все изображения успешно скачались')
+	} else if (successCount > 0) {
+		snackbar.show(`Скачалось ${successCount} из ${total} изображений.`)
+	} else {
+		snackbar.show('Не удалось скачать ни одного изображения')
+	}
+
+	bootstrap5overlay.hideOverlay()
+}
+// скачивание картинки
+async function downloadImage(url, fileName) {
+	try {
+		const response = await fetch(url)
+		if (!response.ok) {
+			throw new Error(`Ошибка ${response.status}`)
+		}
+
+		const blob = await response.blob()
+		const extension = getExtensionFromContentType(blob.type)
+
+		const a = document.createElement("a")
+		a.href = URL.createObjectURL(blob)
+		a.download = `${fileName || "image"}.${extension}`
+		document.body.appendChild(a)
+		a.click()
+		document.body.removeChild(a)
+		URL.revokeObjectURL(a.href)
+
+		return true
+	} catch (error) {
+		console.error(`Ошибка загрузки изображения:`, error)
+		return false
+	}
 }
 
 // определение типа файла

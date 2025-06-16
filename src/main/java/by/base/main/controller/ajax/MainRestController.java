@@ -10951,21 +10951,13 @@ public class MainRestController {
 //        }
 //     }
        
-//       orders.forEach(o-> System.out.println(o.getOnloadWindowDate() + "   " + o.getOnloadWindowTime()));
-//       orders.sort(Comparator.comparing(
-//             order -> Optional.ofNullable(order.getTimeDelivery())
-//                   .orElseGet(() -> combineDateAndTime(order.getOnloadWindowDate(), order.getOnloadWindowTime()))
-//       ));
+       orders.forEach(o-> System.out.println(o.getOnloadWindowDate() + "   " + o.getOnloadWindowTime()));
        orders.sort(Comparator.comparing(
-    		    order -> Optional.ofNullable(order.getTimeDelivery())
-    		           .orElseGet(() -> combineDateAndTime(order.getOnloadWindowDate(), order.getOnloadWindowTime())),
-    		    Comparator.nullsLast(Comparator.naturalOrder())
-    		));
+             order -> Optional.ofNullable(order.getTimeDelivery())
+                   .orElseGet(() -> combineDateAndTime(order.getOnloadWindowDate(), order.getOnloadWindowTime()))
+       )); 
        
-     
        
-
-
        Order order = orders.stream().findFirst().get();
        //проверяем не отменена ли заявка
        if(order.getStatus() == 10) {

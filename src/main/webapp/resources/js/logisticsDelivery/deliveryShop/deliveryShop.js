@@ -366,58 +366,58 @@ function sendTruckData(truckData, method, submitEvent) {
 	console.log("🚀 ~ sendTruckData ~ truckData:", truckData)
 	console.log("🚀 ~ sendTruckData ~ method:", method)
 
-	// const modal = method === 'addTruck'
-	// 	? $('#addNewTruckModal') : method === 'copyTruckToDate'
-	// 		? $('#copyTruckToDateModal') : null
+	 const modal = method === 'addTruck'
+	 	? $('#addNewTruckModal') : method === 'copyTruckToDate'
+	 		? $('#copyTruckToDateModal') : null
 
-	// disableButton(submitEvent.submitter)
+	 disableButton(submitEvent.submitter)
 
-	// ajaxUtils.postJSONdata({
-	// 	url: addNewTruckUrl,
-	// 	token: token,
-	// 	data: data,
-	// 	successCallback: async (res) => {
-	// 		enableButton(submitEvent.submitter)
-	// 		if (res.status === '200') {
-	// 			modal && modal.modal('hide')
-	// 			res.message && snackbar.show(res.message)
-	// 			// получаем обновленные данные и обновляем таблицу
-	// 			await updateTruckData()
-	// 			return
-	// 		}
+	 ajaxUtils.postJSONdata({
+	 	url: addNewTruckUrl,
+	 	token: token,
+	 	data: truckData,
+	 	successCallback: async (res) => {
+	 		enableButton(submitEvent.submitter)
+	 		if (res.status === '200') {
+	 			modal && modal.modal('hide')
+	 			res.message && snackbar.show(res.message)
+	 			// получаем обновленные данные и обновляем таблицу
+	 			await updateTruckData()
+	 			return
+	 		}
 
-	// 		if (res.status === '100') {
-	// 			const message = res.message ? res.message : 'Неизвестная ошибка'
-	// 			snackbar.show(message)
-	// 			return
-	// 		}
-	// 		if (res.status === '105') {
-	// 			const message = res.message ? res.message : 'Неизвестная ошибка'
-	// 			snackbar.show(message)
-	// 			return
-	// 		}
-	// 	},
-	// 	errorCallback: () => {
-	// 		enableButton(submitEvent.submitter)
-	// 	}
-	// })
+	 		if (res.status === '100') {
+	 			const message = res.message ? res.message : 'Неизвестная ошибка'
+	 			snackbar.show(message)
+	 			return
+	 		}
+	 		if (res.status === '105') {
+	 			const message = res.message ? res.message : 'Неизвестная ошибка'
+	 			snackbar.show(message)
+	 			return
+	 		}
+	 	},
+	 	errorCallback: () => {
+	 		enableButton(submitEvent.submitter)
+	 	}
+	 })
 }
 // удаление машины
 async function deleteTruck(truckId) {
 	console.log("🚀 ~ deleteTruck ~ truckId:", truckId)
 	
-	// const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
-	// const res = await getData(`${deleteTruckUrl}${truckId}`)
-	// clearTimeout(timeoutId)
-	// bootstrap5overlay.hideOverlay()
+	 const timeoutId = setTimeout(() => bootstrap5overlay.showOverlay(), 100)
+	 const res = await getData(`${deleteTruckUrl}${truckId}`)
+	 clearTimeout(timeoutId)
+	 bootstrap5overlay.hideOverlay()
 
-	// if (res && res.status === '200') {
-	// 	snackbar.show('Выполнено!')
-	// 	// получаем обновленные данные и обновляем таблицу
-	// 	await updateTruckData()
-	// } else {
-	// 	console.log(res)
-	// 	const message = res && res.message ? res.message : 'Неизвестная ошибка'
-	// 	snackbar.show(message)
-	// }
+	 if (res && res.status === '200') {
+	 	snackbar.show('Выполнено!')
+	 	// получаем обновленные данные и обновляем таблицу
+	 	await updateTruckData()
+	 } else {
+	 	console.log(res)
+	 	const message = res && res.message ? res.message : 'Неизвестная ошибка'
+	 	snackbar.show(message)
+	 }
 }

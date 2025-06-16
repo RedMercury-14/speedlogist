@@ -126,7 +126,7 @@ public class CarrierTenderWebSocket extends TextWebSocketHandler {
             TextMessage msg = new TextMessage(json);
             for(Map.Entry<String, ArrayList<WebSocketSession>> entry : userSessions.entrySet()) {
                 for (WebSocketSession session : entry.getValue()) {
-                    if (session.isOpen()) {
+                    if (session != null && session.isOpen()) {
                         session.sendMessage(msg);
                     }
                 }

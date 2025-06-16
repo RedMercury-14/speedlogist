@@ -605,7 +605,7 @@ public class YardManagementRestController {
 		if(isRunTelegrammBot) {
 			telegrammBotQuantityYard.sendMessageInBot(message.toString(), null);				
 		}else {
-//			telegramBotRoutingTEST.sendMessageInBot(message.toString(), null);	
+			telegramBotRoutingTEST.sendMessageInBot(message.toString(), null);	
 		}
 		
 		response.put("status", "200");
@@ -656,11 +656,10 @@ public class YardManagementRestController {
 					+ finalCar + "; продукт: "
 					+ acceptanceQualityFoodCard.getProductName() + "; Карточка товара №" + acceptanceQualityFoodCard.getIdAcceptanceQualityFoodCard()
 					+ "\n");
-//			if(acceptanceQualityFoodCard.getTasteQuality() != null) message.append("Вкусовые качества: " + acceptanceQualityFoodCard.getTasteQuality().trim() + "\n");
+			message.append("Внутренние дефекты: \n	  Итого: " + acceptanceQualityFoodCard.getTotalInternalDefectPercentage() + "%\n");
+			message.append("Некондиция: \n	  Итого: " + acceptanceQualityFoodCard.getTotalLightDefectPercentage() + "%;\n	  Итого: "+acceptanceQualityFoodCard.getTotalLightDefectWeight() + "кг\n");
+			message.append("Брак/гниль: \n	  Итого: " + acceptanceQualityFoodCard.getTotalDefectPercentage() + "%;\n	  Итого: "+acceptanceQualityFoodCard.getTotalDefectWeight() + "кг;\n	  Итого % с ПК: "+acceptanceQualityFoodCard.getTotalDefectPercentageWithPC() + "кг;\n");
 			if(acceptanceQualityFoodCard.getCardInfo() != null) message.append("Примечания: " + acceptanceQualityFoodCard.getCardInfo().trim() + "\n");
-//			if(acceptanceQualityFoodCard.getCaliber() != null) message.append("Калибр: " + acceptanceQualityFoodCard.getCaliber().trim() + "\n");
-//			if(acceptanceQualityFoodCard.getMaturityLevel() != null) message.append("Уровень зрелости: " + acceptanceQualityFoodCard.getMaturityLevel().trim() + "\n");
-//			if(acceptanceQualityFoodCard.getAppearanceDefects() != null) message.append("Внешние дефекты: " + acceptanceQualityFoodCard.getAppearanceDefects().trim() + "\n");
 			
 			tags.add(acceptanceQualityFoodCard.getAcceptanceFoodQuality().getAcceptance().getFirmNameAccept());
 			if(!tagsAll.contains(acceptanceQualityFoodCard.getAcceptanceFoodQuality().getAcceptance().getFirmNameAccept())) {				
@@ -683,11 +682,14 @@ public class YardManagementRestController {
             finalProductCard.append("<b>Карточка товара №" + acceptanceQualityFoodCard.getIdAcceptanceQualityFoodCard() +
             		" -> " + acceptanceQualityFoodCard.getProductName() + ":</b>\n");            
             // Обработка трёх типов дефектов
-            processDefectGroup("Внутренние дефекты", acceptanceQualityFoodCard.getInternalDefectsQualityCardList(), isImport, withPC, sampleSize, message, finalProductCard, false);
-            processDefectGroup("Некондиция", acceptanceQualityFoodCard.getLightDefectsQualityCardList(), isImport, withPC, sampleSize, message, finalProductCard, false);
-            processDefectGroup("Брак / гниль", acceptanceQualityFoodCard.getTotalDefectQualityCardList(), isImport, withPC, sampleSize, message, finalProductCard, true);
+//            processDefectGroup("Внутренние дефекты", acceptanceQualityFoodCard.getInternalDefectsQualityCardList(), isImport, withPC, sampleSize, message, finalProductCard, false);
+//            processDefectGroup("Некондиция", acceptanceQualityFoodCard.getLightDefectsQualityCardList(), isImport, withPC, sampleSize, message, finalProductCard, false);
+//            processDefectGroup("Брак / гниль", acceptanceQualityFoodCard.getTotalDefectQualityCardList(), isImport, withPC, sampleSize, message, finalProductCard, true);
+            finalProductCard.append("Внутренние дефекты: \n	  Итого: " + acceptanceQualityFoodCard.getTotalInternalDefectPercentage() + "%\n");
+            finalProductCard.append("Некондиция: \n	  Итого: " + acceptanceQualityFoodCard.getTotalLightDefectPercentage() + "%;\n	  Итого: "+acceptanceQualityFoodCard.getTotalLightDefectWeight() + "кг\n");
+            finalProductCard.append("Брак/гниль: \n	  Итого: " + acceptanceQualityFoodCard.getTotalDefectPercentage() + "%;\n	  Итого: "+acceptanceQualityFoodCard.getTotalDefectWeight() + "кг;\n	  Итого % с ПК: "+acceptanceQualityFoodCard.getTotalDefectPercentageWithPC() + "кг;\n");
+            if(acceptanceQualityFoodCard.getCardInfo() != null) finalProductCard.append("Примечания: " + acceptanceQualityFoodCard.getCardInfo().trim() + "\n");
             finalProductCard.append("\n");
-            finalProductCard.append("Рассчёты устаревшие! Ожидается обновление.");
 			if(isRunTelegrammBot) {
 				telegrammBotQuantityYard.sendMessageWithPhotos(chatIds, message.toString(), photoIds, tags);				
 			}else {

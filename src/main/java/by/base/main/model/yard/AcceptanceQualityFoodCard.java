@@ -134,11 +134,101 @@ public class AcceptanceQualityFoodCard {
     
     @Column(name = "sample_size_internal_defect")
     private Integer sampleSizeInternalDefect;
+    
+    //new
+    
+    @Column(name = "total_internal_defect_weight ")
+    private Double totalInternalDefectWeight;
+
+    @Column(name = "total_internal_defect_percentage")
+    private Double totalInternalDefectPercentage;
+
+    @Column (name = "total_defect_weight")
+    private Double totalDefectWeight;
+
+    @Column(name = "total_defect_percentage")
+    private Double totalDefectPercentage;
+
+    @Column (name = "total_defect_percentage_with_pc")
+    private Double totalDefectPercentageWithPC;
+
+    @Column (name = "total_light_defect_weight")
+    private Double totalLightDefectWeight;
+
+    @Column (name = "total_light_defect_percentage")
+    private Double totalLightDefectPercentage;
+
+    @Column(name = "pc_factor")
+    private Double pcFactor;
 
     // Getters and Setters   
 
     public Timestamp getDateTimeCreate() {
 		return dateTimeCreate;
+	}
+
+	public Double getTotalInternalDefectWeight() {
+		return totalInternalDefectWeight;
+	}
+
+	public void setTotalInternalDefectWeight(Double totalInternalDefectWeight) {
+		this.totalInternalDefectWeight = totalInternalDefectWeight;
+	}
+
+	public Double getTotalInternalDefectPercentage() {
+		return totalInternalDefectPercentage;
+	}
+
+	public void setTotalInternalDefectPercentage(Double totalInternalDefectPercentage) {
+		this.totalInternalDefectPercentage = totalInternalDefectPercentage;
+	}
+
+	public Double getTotalDefectWeight() {
+		return totalDefectWeight;
+	}
+
+	public void setTotalDefectWeight(Double totalDefectWeight) {
+		this.totalDefectWeight = totalDefectWeight;
+	}
+
+	public Double getTotalDefectPercentage() {
+		return totalDefectPercentage;
+	}
+
+	public void setTotalDefectPercentage(Double totalDefectPercentage) {
+		this.totalDefectPercentage = totalDefectPercentage;
+	}
+
+	public Double getTotalDefectPercentageWithPC() {
+		return totalDefectPercentageWithPC;
+	}
+
+	public void setTotalDefectPercentageWithPC(Double totalDefectPercentageWithPC) {
+		this.totalDefectPercentageWithPC = totalDefectPercentageWithPC;
+	}
+
+	public Double getTotalLightDefectWeight() {
+		return totalLightDefectWeight;
+	}
+
+	public void setTotalLightDefectWeight(Double totalLightDefectWeight) {
+		this.totalLightDefectWeight = totalLightDefectWeight;
+	}
+
+	public Double getTotalLightDefectPercentage() {
+		return totalLightDefectPercentage;
+	}
+
+	public void setTotalLightDefectPercentage(Double totalLightDefectPercentage) {
+		this.totalLightDefectPercentage = totalLightDefectPercentage;
+	}
+
+	public Double getPcFactor() {
+		return pcFactor;
+	}
+
+	public void setPcFactor(Double pcFactor) {
+		this.pcFactor = pcFactor;
 	}
 
 	public Integer getSampleSizeInternalDefect() {

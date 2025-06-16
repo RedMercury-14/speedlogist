@@ -259,9 +259,9 @@ public class ReaderSchedulePlan {
 		if(j < 0 && i == 0) {
 			j = j + 7;
 		}
-		if(j==0) {
-			j=7;
-		}			
+//		if(j==0 && i>7) { // остановился тут
+//			j=7;
+//		}		
 		i = i+j;
 		Date finish = Date.valueOf(order.getDateOrderOrl().toLocalDate().plusDays(i));
 		return new DateRange(order.getDateOrderOrl(), finish, i, targetKey, order.getMarketContractType());
@@ -1596,7 +1596,7 @@ public class ReaderSchedulePlan {
     public int parseWeekNumber(String targetValue) {
         // Регулярное выражение для поиска "н" с числом от 1 до 9
         Pattern pattern = Pattern.compile("н(\\d)");
-//        System.out.println("-->>>>>"+targetValue);
+        System.out.println("-->>>>>"+targetValue);
         Matcher matcher = pattern.matcher(targetValue);
 
         // Если найдена соответствующая подстрока, вычисляем значение i

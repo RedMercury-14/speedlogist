@@ -849,11 +849,7 @@ public class ReaderSchedulePlan {
 //		 products.forEach(p-> System.out.println(p));
 		 
 		 DateRange dateRange = getDateRange(schedule, new ArrayList<>(products.values()), order); // тут раелизуются пункты 2 и 3
-		 if(dateRange == null) {
-			 System.err.println("dateRange = " + dateRange);
-		 }else {
-			 System.out.println("dateRange = " + dateRange);			 
-		 }
+		
 		 
 		 /*
 		  * Временный блок
@@ -877,6 +873,12 @@ public class ReaderSchedulePlan {
 			 }else {
 				 dateRange = dateRange2;
 			 }
+		 }
+		 
+		 if(dateRange == null) {
+			 System.err.println("dateRange = " + dateRange);
+		 }else {
+			 System.out.println("dateRange = " + dateRange);			 
 		 }
 		 
 		 
@@ -1594,9 +1596,21 @@ public class ReaderSchedulePlan {
 	 * @return
 	 */
     public int parseWeekNumber(String targetValue) {
+    	
+    	System.out.println("-->>>>>"+targetValue);
+    	if(targetValue.equals("з/понедельник") 
+    			|| targetValue.equals("з/вторник")
+    			|| targetValue.equals("з/среда")
+    			|| targetValue.equals("з/четверг")
+    			|| targetValue.equals("з/пятница")
+    			|| targetValue.equals("з/суббота")
+    			|| targetValue.equals("з/воскресенье")) {
+    		return 7;
+    	}
+    	
         // Регулярное выражение для поиска "н" с числом от 1 до 9
         Pattern pattern = Pattern.compile("н(\\d)");
-        System.out.println("-->>>>>"+targetValue);
+        
         Matcher matcher = pattern.matcher(targetValue);
 
         // Если найдена соответствующая подстрока, вычисляем значение i

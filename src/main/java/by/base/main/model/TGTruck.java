@@ -71,7 +71,18 @@ public class TGTruck implements Serializable{
 	@Column(name = "id_user")
 	private Integer idUser;
 	
+	@Column(name = "type_stock")
+	private String typeStock;
 	
+	
+	public String getTypeStock() {
+		return typeStock;
+	}
+
+	public void setTypeStock(String typeStock) {
+		this.typeStock = typeStock;
+	}
+
 	public Boolean isSecondRound() {
 		return isSecondRound;
 	}

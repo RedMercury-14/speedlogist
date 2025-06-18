@@ -97,5 +97,13 @@ public class TGTruckServiceImpl implements TGTruckService{
 		return tgTruckDAO.getTGTruckByidUserPeriod(idUser, dateStart, dateFinish);
 	}
 
-	
+	@Override
+	public Integer save(TGTruck tgTruck) {
+		return tgTruckDAO.save(tgTruck);
+	}
+
+	@Override
+	public void update(TGTruck tgTruck) {
+		tgTruckDAO.update(tgTruck);
+	}	
 }

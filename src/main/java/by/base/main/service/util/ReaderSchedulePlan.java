@@ -849,7 +849,11 @@ public class ReaderSchedulePlan {
 //		 products.forEach(p-> System.out.println(p));
 		 
 		 DateRange dateRange = getDateRange(schedule, new ArrayList<>(products.values()), order); // тут раелизуются пункты 2 и 3
-		
+		 if(dateRange == null) {
+			 System.err.println("dateRange = " + dateRange);
+		 }else {
+			 System.out.println("dateRange = " + dateRange);			 
+		 }
 		 
 		 /*
 		  * Временный блок
@@ -873,12 +877,6 @@ public class ReaderSchedulePlan {
 			 }else {
 				 dateRange = dateRange2;
 			 }
-		 }
-		 
-		 if(dateRange == null) {
-			 System.err.println("dateRange = " + dateRange);
-		 }else {
-			 System.out.println("dateRange = " + dateRange);			 
 		 }
 		 
 		 

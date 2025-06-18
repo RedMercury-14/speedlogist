@@ -71,5 +71,9 @@ public interface TGTruckService {
 	 * @return
 	 */
 	List<TGTruck> getTGTruckByidUserPeriod(Integer idUser, Date dateStart, Date dateFinish);
+	
+	Integer save(TGTruck tgTruck);
+	
+	void update(TGTruck tgTruck);
 
 }

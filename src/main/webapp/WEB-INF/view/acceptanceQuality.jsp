@@ -234,7 +234,7 @@
 								<input type="hidden" name="idAcceptanceQualityFoodCard">
 		
 								<div class="row">
-									<div class="col-lg-6">
+									<div class="col-lg-8">
 										<div class="form-group">
 											<label class="text-muted font-weight-bold mb-1" for="status2">Действие</label>
 											<select name="status" id="status2" class="form-control" required>
@@ -248,25 +248,45 @@
 										</div>
 									</div>
 		
-									<div class="col-lg-4 managerPercentInput2 d-none">
-										<div class="form-group">
-											<label class="text-muted font-weight-bold mb-1" for="managerPercent_type2">Дефект</label>
-											<select name="managerPercent_type" id="managerPercent_type2" class="form-control">
-												<option value="" selected hidden disabled>Выберите дефект</option>
-												<option value="ВД">Внутренний дефект</option>
-												<option value="Брак">Брак</option>
-												<option value="ЛН">Легкая некондиция</option>
-											</select>
-										</div>
-									</div>
-		
-									<div class="col-lg-2 managerPercentInput2 d-none">
-										<div class="form-group">
-											<label class="text-muted font-weight-bold mb-1" for="managerPercent_value2">Процент</label>
-											<div class="input-group">
-												<input type="number" name="managerPercent_value" id="managerPercent_value2" min="0" max="100" class="form-control" aria-label="Процент брака">
-												<div class="input-group-append">
-													<span class="input-group-text">%</span>
+									<div class="col-lg-12 d-none defectCheckboxesContainer">
+										<span class="text-muted font-weight-bold">Выберите дефекты и укажите проценты</span>
+										<div class="row mt-2">
+											<div class="col-lg-8 defectCheckboxColumn">
+												<div class="form-check mb-0">
+													<input class="form-check-input defect-checkbox" type="checkbox" name="defect_vd" id="defect_vd2" value="ВД" data-target="percent_vd_wrapper" name="defect_vd">
+													<label class="form-check-label" for="defect_vd2">Внутренний дефект</label>
+												</div>
+												<div class="form-group mb-0 percent_vd_wrapper">
+													<div class="input-group">
+														<input type="number" class="form-control" name="percent_vd" min="0" max="100" step="0.1" disabled required>
+														<div class="input-group-append">
+															<span class="input-group-text">%</span>
+														</div>
+													</div>
+												</div>
+												<div class="form-check mb-0">
+													<input class="form-check-input defect-checkbox" type="checkbox" name="defect_brak" id="defect_brak2" value="Брак" data-target="percent_brak_wrapper" name="defect_brak">
+													<label class="form-check-label" for="defect_brak2">Брак</label>
+												</div>
+												<div class="form-group mb-0 percent_brak_wrapper">
+													<div class="input-group">
+														<input type="number" class="form-control" name="percent_brak" min="0" max="100" step="0.1" disabled required>
+														<div class="input-group-append">
+															<span class="input-group-text">%</span>
+														</div>
+													</div>
+												</div>
+												<div class="form-check mb-0">
+													<input class="form-check-input defect-checkbox" type="checkbox" name="defect_ln" id="defect_ln2" value="ЛН" data-target="percent_ln_wrapper" name="defect_ln">
+													<label class="form-check-label" for="defect_ln2">Легкая некондиция</label>
+												</div>
+												<div class="form-group mb-0 percent_ln_wrapper">
+													<div class="input-group">
+														<input type="number" class="form-control" name="percent_ln" min="0" max="100" step="0.1" disabled required>
+														<div class="input-group-append">
+															<span class="input-group-text">%</span>
+														</div>
+													</div>
 												</div>
 											</div>
 										</div>
@@ -295,7 +315,7 @@
 
 	<!-- Модальное окно указания статуса карточки товара -->
 	<div class="modal fade" id="approveCardModal" tabindex="-1" role="dialog" aria-labelledby="approveCardModalLabel" aria-hidden="true">
-		<div class="modal-dialog modal-xl" role="document">
+		<div class="modal-dialog modal-lg" role="document">
 			<div class="modal-content p-0">
 				<div class="modal-header bg-color text-white">
 					<h5 class="modal-title" id="approveCardModalLabel">Подтверждение качества</h5>
@@ -309,7 +329,8 @@
 						<input type="hidden" name="idAcceptanceQualityFoodCard">
 
 						<div class="row">
-							<div class="col-lg-6">
+
+							<div class="col-lg-12">
 								<div class="form-group">
 									<label class="text-muted font-weight-bold mb-1" for="status">Действие</label>
 									<select name="status" id="status" class="form-control" required>
@@ -325,29 +346,50 @@
 								</div>
 							</div>
 
-							<div class="col-lg-4 managerPercentInput d-none">
-								<div class="form-group">
-									<label class="text-muted font-weight-bold mb-1" for="managerPercent_type">Дефект</label>
-									<select name="managerPercent_type" id="managerPercent_type" class="form-control">
-										<option value="" selected hidden disabled>Выберите дефект</option>
-										<option value="ВД">Внутренний дефект</option>
-										<option value="Брак">Брак</option>
-										<option value="ЛН">Легкая некондиция</option>
-									</select>
-								</div>
-							</div>
-
-							<div class="col-lg-2 managerPercentInput d-none">
-								<div class="form-group">
-									<label class="text-muted font-weight-bold mb-1" for="managerPercent_value">Процент</label>
-									<div class="input-group">
-										<input type="number" name="managerPercent_value" id="managerPercent_value" min="0" max="100" step="0.1" class="form-control" aria-label="Процент брака">
-										<div class="input-group-append">
-											<span class="input-group-text">%</span>
+							<div class="col-lg-12 d-none defectCheckboxesContainer">
+								<span class="text-muted font-weight-bold">Выберите дефекты и укажите проценты</span>
+								<div class="row mt-2">
+									<div class="col-lg-8 defectCheckboxColumn">
+										<div class="form-check mb-0">
+											<input class="form-check-input defect-checkbox" type="checkbox" name="defect_vd" id="defect_vd" value="ВД" data-target="percent_vd_wrapper" name="defect_vd">
+											<label class="form-check-label" for="defect_vd">Внутренний дефект</label>
+										</div>
+										<div class="form-group mb-0 percent_vd_wrapper">
+											<div class="input-group">
+												<input type="number" class="form-control" name="percent_vd" min="0" max="100" step="0.1" disabled required>
+												<div class="input-group-append">
+													<span class="input-group-text">%</span>
+												</div>
+											</div>
+										</div>
+										<div class="form-check mb-0">
+											<input class="form-check-input defect-checkbox" type="checkbox" name="defect_brak" id="defect_brak" value="Брак" data-target="percent_brak_wrapper" name="defect_brak">
+											<label class="form-check-label" for="defect_brak">Брак</label>
+										</div>
+										<div class="form-group mb-0 percent_brak_wrapper">
+											<div class="input-group">
+												<input type="number" class="form-control" name="percent_brak" min="0" max="100" step="0.1" disabled required>
+												<div class="input-group-append">
+													<span class="input-group-text">%</span>
+												</div>
+											</div>
+										</div>
+										<div class="form-check mb-0">
+											<input class="form-check-input defect-checkbox" type="checkbox" name="defect_ln" id="defect_ln" value="ЛН" data-target="percent_ln_wrapper" name="defect_ln">
+											<label class="form-check-label" for="defect_ln">Легкая некондиция</label>
+										</div>
+										<div class="form-group mb-0 percent_ln_wrapper">
+											<div class="input-group">
+												<input type="number" class="form-control" name="percent_ln" min="0" max="100" step="0.1" disabled required>
+												<div class="input-group-append">
+													<span class="input-group-text">%</span>
+												</div>
+											</div>
 										</div>
 									</div>
 								</div>
 							</div>
+
 						</div>
 
 						<div class="form-group">

@@ -92,6 +92,37 @@ footer.to-bottom {
 	font-weight: bold;
 }
 
+#addNewTruckBtn,
+#addNewTrucksBtn,
+#setTgTelNumberBtn {
+	position: relative;
+}
+#addNewTruckBtn:hover::after,
+#addNewTrucksBtn:hover::after,
+#setTgTelNumberBtn:hover::after {
+	position: absolute;
+	top: 110%;
+	left: 50%;
+	transform: translateX(-50%);
+	font-size: 0.75em;
+	text-wrap: nowrap;
+	color: white;
+	background-color: #000;
+	padding: 2px 5px;
+	z-index: 10;
+	border-radius: 3px;
+	opacity: 0.6;
+}
+#addNewTruckBtn:hover::after {
+	content: "Заявить авто";
+}
+#addNewTrucksBtn:hover::after {
+	content: "Заявить несколько авто";
+}
+#setTgTelNumberBtn:hover::after {
+	content: "Привязать ТГ-аккаунт";
+}
+
 .modal input::-webkit-outer-spin-button,
 .modal input::-webkit-inner-spin-button {
 	-webkit-appearance: none;

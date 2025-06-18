@@ -66,6 +66,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.validation.ConstraintViolationException;
 
 import by.base.main.dto.*;
 import by.base.main.model.*;
@@ -177,6 +178,7 @@ import by.base.main.service.util.ORLExcelException;
 import by.base.main.service.util.OrderCreater;
 import by.base.main.service.util.PDFWriter;
 import by.base.main.service.util.POIExcel;
+import by.base.main.service.util.PasswordGenerator;
 import by.base.main.service.util.PrilesieService;
 import by.base.main.service.util.PropertiesUtils;
 import by.base.main.service.util.ReaderSchedulePlan;
@@ -354,6 +356,9 @@ public class MainRestController {
 	@Autowired
 	private DistanceMatrixService distanceMatrixService;
 	
+	@Autowired
+	private PasswordGenerator passwordGenerator;
+	
 	
 	private static String classLog;
 	public static String marketJWT;
@@ -432,6 +437,99 @@ public class MainRestController {
 		List<Order> orders = orderService.getAllOrdersForSupplier(counterpartyCode, 20);
 		return orders;
 	}
+	/**
+	 * Метод предварительной заявки авто на определенную дату (TgTruck)
+	 * @param request
+	 * @param str
+	 * @return
+	 * @throws IOException
+	 * @throws ParseException
+	 */
+	@PostMapping("/carrier/razv/preorder")
+	public Map<String, Object> postRazvPreorder(HttpServletRequest request, @RequestBody String str) throws IOException, ParseException {
+	    Map<String, Object> response = new HashMap<String, Object>();
+	    JSONParser parser = new JSONParser();
+	    JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+	    User user = getThisUser();
+	    int countCar = Integer.parseInt(jsonMainObject.get("count").toString());
+	    List<TGTruck> tgTrucks = new ArrayList<TGTruck>();	    
+	    
+	    for (int i = 0; i < countCar; i++) {
+	    	TGTruck tgTruck = new TGTruck();
+		    tgTruck.setNumTruck(user.getCompanyName());
+		    tgTruck.setPall(Integer.parseInt(jsonMainObject.get("pall").toString()));
+		    tgTruck.setTypeTrailer(jsonMainObject.get("typeTrailer").toString());
+		    tgTruck.setDateRequisition(Date.valueOf(jsonMainObject.get("dateRequisition").toString()));
+		    tgTruck.setCargoCapacity(jsonMainObject.get("cargoCapacity").toString());
+		    tgTruck.setStatus(10);
+		    tgTruck.setCompanyName(user.getCompanyName());	
+		    tgTruck.setTypeStock(jsonMainObject.get("typeStock").toString());
+	    	int id = tgTruckService.save(tgTruck);
+	    	tgTruck.setIdTGTruck(id);
+	    	tgTrucks.add(tgTruck);
+		}
+	    
+	    response.put("status", "200");
+	    response.put("objects", tgTrucks);
+	    return response;
+	}
+	
+	@PostMapping ("/logistics/registration-fast")
+    public Map<String, Object> createNewSupplier(HttpServletRequest request, @RequestBody String str) throws ParseException {
+       Map<String, Object> response = new HashMap<>();
+       JSONParser parser = new JSONParser();
+       JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+       User adminUser = getThisUser();
+       String login = jsonMainObject.get("login") == null ? null : jsonMainObject.get("login").toString();
+       String name = jsonMainObject.get("name") == null ? null : jsonMainObject.get("name").toString();
+       String surname = jsonMainObject.get("surname") == null ? null : jsonMainObject.get("surname").toString();
+       String patronymic = jsonMainObject.get("patronymic") == null ? null : jsonMainObject.get("patronymic").toString();
+       String phone = jsonMainObject.get("phone") == null ? null : jsonMainObject.get("phone").toString();
+       String email = jsonMainObject.get("email") == null ? null : jsonMainObject.get("email").toString();
+       String companyName = jsonMainObject.get("companyName") == null ? getThisUser().getCompanyName() : jsonMainObject.get("companyName").toString();
+       String propertySize = jsonMainObject.get("propertySize") == null ? null : jsonMainObject.get("propertySize").toString();
+       String countryOfRegistration = jsonMainObject.get("countryOfRegistration") == null ? null : jsonMainObject.get("countryOfRegistration").toString();
+       String numcontract = jsonMainObject.get("numcontract") == null ? null : jsonMainObject.get("numcontract").toString();
+
+       String password = passwordGenerator.generatePassword(12);
+       User user = new User();
+       user.setLogin(login);
+       user.setPassword(password);
+       user.setName(name);
+       user.setSurname(surname);
+       user.setPatronymic(patronymic);
+       user.setCompanyName(companyName);
+       user.setTelephone(phone);
+       user.seteMail(email);
+       user.setDateRegistration(new Date(System.currentTimeMillis()));
+       user.setPropertySize(propertySize);
+       user.setCountryOfRegistration(countryOfRegistration);
+       user.setNewTenderNotification(false);
+       user.setBlock(false);
+       user.setNumContract(numcontract);
+       user.setCheck("razv");
+
+       try {
+          userService.saveOrUpdateUser(user, 7);
+       } catch (ConstraintViolationException e) {
+          response.put("status", "100");
+          response.put("message", "Такой логин уже существует");
+          return response;
+       }
+
+       String emailText = "Добрый день!" +
+             "<br>Ваш аккаунт создан." +
+             "<br>Логин: " + login +
+             "<br>Пароль: " + password +
+             "<br>Войти в личный кабинет можно <a href=https://boxlogs.net/speedlogist/main/supplier>здесь</a>";
+
+       List<String> emails = Arrays.asList(email, adminUser.geteMail());
+       mailService.sendEmailToUsersHTMLContent(request, "Регистрация", emailText, emails);
+       response.put("status", "200");
+       response.put("message", "Аккаунт создан. Письмо отправлено на почты: " + email + " " + adminUser.geteMail());
+       return response;
+    }
+	
 	/**
 	 * <br>Метод для массовой блокировки кодов товаров</br>.
 	 * @author Ira
@@ -7832,9 +7930,10 @@ public class MainRestController {
 		order.setIdRamp(idRamp);
 		order.setLoginManager(user.getLogin());
 		order.setStatus(jsonMainObject.get("status") == null ? 7 : Integer.parseInt(jsonMainObject.get("status").toString()));
-		if(order.getDateOrderOrl() == null){
-			order.setDateOrderOrl(jsonMainObject.get("dateOrderOrl") == null ? null : Date.valueOf(jsonMainObject.get("dateOrderOrl").toString()));			
-		}
+		order.setDateOrderOrl(jsonMainObject.get("dateOrderOrl") == null ? null : Date.valueOf(jsonMainObject.get("dateOrderOrl").toString())); // c 17.06.2025 всегда перезаписываем дату заказа 
+//		if(order.getDateOrderOrl() == null){
+//			order.setDateOrderOrl(jsonMainObject.get("dateOrderOrl") == null ? null : Date.valueOf(jsonMainObject.get("dateOrderOrl").toString()));			
+//		}
 		//главные проверки
 		//проверка на лимит приемки паллет	
 		if(order.getIsInternalMovement() == null || order.getIsInternalMovement().equals("false")) { // проверяем всё кроме вн перемещений
@@ -11373,21 +11472,13 @@ public class MainRestController {
 //        }
 //     }
        
-//       orders.forEach(o-> System.out.println(o.getOnloadWindowDate() + "   " + o.getOnloadWindowTime()));
-//       orders.sort(Comparator.comparing(
-//             order -> Optional.ofNullable(order.getTimeDelivery())
-//                   .orElseGet(() -> combineDateAndTime(order.getOnloadWindowDate(), order.getOnloadWindowTime()))
-//       ));
+       orders.forEach(o-> System.out.println(o.getOnloadWindowDate() + "   " + o.getOnloadWindowTime()));
        orders.sort(Comparator.comparing(
-    		    order -> Optional.ofNullable(order.getTimeDelivery())
-    		           .orElseGet(() -> combineDateAndTime(order.getOnloadWindowDate(), order.getOnloadWindowTime())),
-    		    Comparator.nullsLast(Comparator.naturalOrder())
-    		));
+             order -> Optional.ofNullable(order.getTimeDelivery())
+                   .orElseGet(() -> combineDateAndTime(order.getOnloadWindowDate(), order.getOnloadWindowTime()))
+       )); 
        
-     
        
-
-
        Order order = orders.stream().findFirst().get();
        //проверяем не отменена ли заявка
        if(order.getStatus() == 10) {

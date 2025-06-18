@@ -34,21 +34,32 @@ L.Canvas.include({
 
 		// Рисуем подпись снизу, если задана
 		if (label) {
-			ctx.font = '12px Arial'
-			ctx.fillStyle = 'white'
+			const fontSize = 15
+			const paddingX = 4
+			const paddingY = 2
+			const text = label.toString()
+
+			ctx.font = `bold ${fontSize}px Arial`
 			ctx.textAlign = 'center'
 			ctx.textBaseline = 'top'
-			ctx.lineWidth = 2
 
-			// Смещение текста вниз от нижнего края иконки
-			const textY = p.y + img.size[1] / 2 + 2
+			// Измерим ширину текста
+			const textWidth = ctx.measureText(text).width
+			const textHeight = fontSize
 
-			// Обводка (для читаемости)
-			ctx.strokeStyle = 'black'
-			ctx.strokeText(label.toString(), p.x, textY)
+			const bgWidth = textWidth + paddingX * 2
+			const bgHeight = textHeight + paddingY * 2
 
-			// Основной текст
-			ctx.fillText(label.toString(), p.x, textY)
+			const bgX = p.x - bgWidth / 2
+			const bgY = p.y + img.size[1] / 2 + 2
+
+			// Подложка
+			ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'
+			ctx.fillRect(bgX, bgY, bgWidth, bgHeight)
+
+			// Текст
+			ctx.fillStyle = 'white'
+			ctx.fillText(text, p.x, bgY + paddingY)
 		}
 	},
 })

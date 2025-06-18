@@ -365,6 +365,11 @@ public class MainController {
 		return "supplier";
 	}
 	
+	@RequestMapping("/main/logistics/registration-fast")
+	public String supplierPage(Model model, HttpSession session, HttpServletRequest request) {
+	    return "registrationFast";
+	}
+	
 	@GetMapping("/main/procurement/create-accommodation")
 	public String getGoodAccommodations(Model model, HttpServletRequest request) {
 	    return "goodAccommodations";

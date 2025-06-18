@@ -200,4 +200,19 @@ public class TGTruckDAOImpl  implements TGTruckDAO {
 			return new ArrayList<TGTruck>(theObject.getResultList().stream().collect(Collectors.toSet()));			
 		}
 	}
+
+	@Override
+	@Transactional
+	public Integer save(TGTruck tgTruck) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		currentSession.save(tgTruck);
+		return Integer.parseInt(currentSession.getIdentifier(tgTruck).toString());
+	}
+
+	@Override
+	@Transactional
+	public void update(TGTruck tgTruck) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		currentSession.update(tgTruck);		
+	}
 }

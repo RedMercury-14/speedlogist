@@ -215,4 +215,15 @@ public class TGTruckDAOImpl  implements TGTruckDAO {
 		Session currentSession = sessionFactory.getCurrentSession();
 		currentSession.update(tgTruck);		
 	}
+
+	private static final String queryDeleteTGTruckByIdTruck = "delete from TGTruck where idTGTruck=:idTGTruck";
+	@Override
+	@Transactional
+	public void deleteTGTruckByIdTruck(Integer id) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query theQuery = 
+				currentSession.createQuery(queryDeleteTGTruckByIdTruck);
+		theQuery.setParameter("idTGTruck", id);
+		theQuery.executeUpdate();
+	}
 }

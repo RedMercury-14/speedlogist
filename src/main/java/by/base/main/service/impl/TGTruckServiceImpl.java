@@ -105,5 +105,10 @@ public class TGTruckServiceImpl implements TGTruckService{
 	@Override
 	public void update(TGTruck tgTruck) {
 		tgTruckDAO.update(tgTruck);
+	}
+
+	@Override
+	public void deleteTGTruckByIdTruck(Integer id) {
+		tgTruckDAO.deleteTGTruckByIdTruck(id);		
 	}	
 }

@@ -446,6 +446,8 @@ public class MainRestController {
 		    tgTruck.setStatus(10);
 		    tgTruck.setCompanyName(user.getCompanyName());	
 		    tgTruck.setTypeStock(jsonMainObject.get("typeStock").toString());
+		    tgTruck.setIdUser(user.getIdUser());
+		    tgTruck.setSecondRound(jsonMainObject.get("isSecondRound").toString().equals("true"));
 	    	int id = tgTruckService.save(tgTruck);
 	    	tgTruck.setIdTGTruck(id);
 	    	tgTrucks.add(tgTruck);
@@ -453,6 +455,17 @@ public class MainRestController {
 	    
 	    response.put("status", "200");
 	    response.put("objects", tgTrucks);
+	    return response;
+	}
+	
+	@PostMapping("/carrier/razv/del-preorder")
+	public Map<String, Object> postRazvDelPreorder(HttpServletRequest request, @RequestBody String str) throws IOException, ParseException {
+	    Map<String, Object> response = new HashMap<String, Object>();
+	    JSONParser parser = new JSONParser();
+	    JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+	    tgTruckService.deleteTGTruckByIdTruck(Integer.parseInt(jsonMainObject.get("idTGTruck").toString()));
+	    response.put("status", "200");
+	    response.put("message", "Заявка удалена");
 	    return response;
 	}
 	

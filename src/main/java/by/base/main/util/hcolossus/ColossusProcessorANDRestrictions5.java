@@ -294,7 +294,7 @@ public class ColossusProcessorANDRestrictions5 {
 			// проверяем, есть ли ограничения и записываем
 			
 			if (shopPall >= maxPallTruck && pallRestrictionIdeal == null) {
-			// логика создания идеального маршрута если нет ограничений
+			// логика создания идеального маршрута если нет ограничений				
 				createIdealWay(i+"", firstShop, targetStock);
 				i++;
 				continue;
@@ -332,6 +332,7 @@ public class ColossusProcessorANDRestrictions5 {
 			
 			// создаём виртуальную машину
 			Vehicle virtualTruck = new Vehicle();
+			
 			//тут проверяем, есть ли в этом магазе паллеты для возврата. Если есть и машина подходит, то ок.
 			if(firstShop.getPallReturn() == null || firstShop.getPallReturn()!= null && firstShop.getPallReturn() <= trucks.get(0).getPall()) {
 				virtualTruck = trucks.get(0);
@@ -355,6 +356,7 @@ public class ColossusProcessorANDRestrictions5 {
 			int countRadiusMap = 0;
 			int maxCountRadiusMap = radiusMap.size()-1;
 			boolean isRestrictions = false;
+			System.err.println("кладём --->" + points); // остановился тут
 			for (Shop shop2 : radiusMap) {
 				
 				//если попался магазин с возвратом и он не подходит для этой виртуальной машины - пропускаем этот магаз
@@ -451,8 +453,6 @@ public class ColossusProcessorANDRestrictions5 {
 					shopsForOptimization.add(shop2);
 					points.remove(points.size() - 1);	
 				}
-				
-				
 			}
 			
 			
@@ -666,6 +666,7 @@ public class ColossusProcessorANDRestrictions5 {
 						
 						
 					}
+					
 				} while (flag);
 
 			}
@@ -674,6 +675,7 @@ public class ColossusProcessorANDRestrictions5 {
 			if(points.size() == 2 && points.get(0).equals(targetStock) && points.get(1).getNumshop() != points.get(0).getNumshop()) {
 				points.add(targetStock);
 			}
+			
 			
 			if(points.size() >= 3) {//тут делаем проверку на то что не ломаный ли маршрут (типо 1700-1700)
 				
@@ -692,6 +694,7 @@ public class ColossusProcessorANDRestrictions5 {
 				
 				VehicleWay vehicleWayVirtual = new VehicleWay(idStr, points, 0.0, 30, virtualTruck);
 				vehicleWayVirtual.setDistanceFromStock(firstShop.getDistanceFromStock());	
+				
 				
 				
 				//методы постобработки маршрутов

@@ -37,6 +37,8 @@ public interface TGTruckDAO {
 	
 	void deleteTGTruckByNumTruck(String numTruck, Date date);
 	
+	void deleteTGTruckByIdTruck(Integer id);
+	
 	boolean checkListName(String name, Date date);
 	
 	/**

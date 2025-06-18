@@ -76,4 +76,5 @@ public interface TGTruckService {
 	
 	void update(TGTruck tgTruck);
 
+	void deleteTGTruckByIdTruck(Integer id);
 }

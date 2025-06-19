@@ -250,7 +250,8 @@ public class ColossusProcessorJSpirit {
 
 		// 2. При создании матрицы используем координаты
 		VehicleRoutingTransportCostsMatrix.Builder matrixBuilder = VehicleRoutingTransportCostsMatrix.Builder
-				.newInstance(true);
+				.newInstance(false); // если true - матрица симметричная. т.е. в одну и другую сторону одно и тоже
+										// расстояние!!!
 
 		for (Location fromCoord : coordinateToId.keySet()) {
 			for (Location toCoord : coordinateToId.keySet()) {
@@ -279,15 +280,11 @@ public class ColossusProcessorJSpirit {
 
 		// 2. Добавляем все машины
 		for (VehicleImpl vehicle : vehicleImpls) {
-			System.out.println(vehicle);
 			vrpBuilder.addVehicle(vehicle);
 		}
 
-		System.out.println("=================");
-
 		// 3. Добавляем все заказы (магазины)
 		for (Service shipment : shopsService) {
-			System.out.println(shipment);
 			vrpBuilder.addJob(shipment);
 		}
 
@@ -347,32 +344,45 @@ public class ColossusProcessorJSpirit {
 	/**
 	 * Подготовка данных для CSV файла
 	 */
-
 	private List<String[]> prepareCSVData(VehicleRoutingProblem problem, VehicleRoutingProblemSolution solution,
 			List<Service> services, Location depotLocation, Shop stock) {
 		List<String[]> csvData = new ArrayList<>();
 
-		// Заголовок CSV
+// Заголовок CSV
 		csvData.add(new String[] { "Маршрут", "Транспорт", "ID точки", "Тип точки", "Вес, кг", "Паллеты", "Широта",
 				"Долгота", "Расстояние до след. точки, км" });
 
-		// Для каждого маршрута
+// Собираем ID распределённых магазинов
+		Set<String> assignedShopIds = new HashSet<>();
+		for (VehicleRoute route : solution.getRoutes()) {
+			for (TourActivity activity : route.getActivities()) {
+				if (activity instanceof TourActivity.JobActivity) {
+					assignedShopIds.add(((TourActivity.JobActivity) activity).getJob().getId());
+				}
+			}
+		}
+
+// Собираем ID использованных машин
+		Set<String> usedVehicleIds = solution.getRoutes().stream().map(route -> route.getVehicle().getId())
+				.collect(Collectors.toSet());
+
+// Для каждого маршрута
 		for (VehicleRoute route : solution.getRoutes()) {
 			Vehicle vehicle = route.getVehicle();
 			String vehicleId = vehicle.getId();
 
-			// Характеристики транспорта
+// Характеристики транспорта
 			double maxLoadWeight = vehicle.getType().getCapacityDimensions().get(0);
 			double maxPallets = vehicle.getType().getCapacityDimensions().get(1);
 			double usedWeight = 0;
 			double usedPallets = 0;
 
-			// Добавляем строку с информацией о транспорте
+// Добавляем строку с информацией о транспорте
 			csvData.add(new String[] { "Маршрут " + vehicleId, vehicleId, vehicleId, "Транспорт", "", "",
 					String.valueOf(depotLocation.getCoordinate().getX()),
 					String.valueOf(depotLocation.getCoordinate().getY()), "" });
 
-			// Стартовая точка - депо
+// Стартовая точка - депо
 			csvData.add(new String[] { "Маршрут " + vehicleId, vehicleId, String.valueOf(stock.getNumshop()),
 					"Депо (старт)", "", "", String.valueOf(depotLocation.getCoordinate().getX()),
 					String.valueOf(depotLocation.getCoordinate().getY()), "" });
@@ -386,28 +396,28 @@ public class ColossusProcessorJSpirit {
 					Job job = ((TourActivity.JobActivity) activity).getJob();
 					String shopId = job.getId();
 
-					// Находим сервис (магазин) по ID
+// Находим сервис (магазин) по ID
 					Service shopService = findServiceById(services, shopId);
 					Location shopLocation = shopService != null ? shopService.getLocation() : null;
 
-					// Расчет расстояния
+// Расчет расстояния
 					double distance = problem.getTransportCosts().getTransportCost(prevActivity.getLocation(),
 							activity.getLocation(), 0, null, null);
 
-					// Для первой активности добавляем расстояние от депо
+// Для первой активности добавляем расстояние от депо
 					if (firstActivity) {
 						distanceFromDepot = problem.getTransportCosts().getTransportCost(depotLocation,
 								activity.getLocation(), 0, null, null);
 						firstActivity = false;
 					}
 
-					// Обновляем суммарные показатели
+// Обновляем суммарные показатели
 					int jobWeight = job.getSize().get(0);
 					int jobPallets = job.getSize().get(1);
 					usedWeight += jobWeight;
 					usedPallets += jobPallets;
 
-					// Добавляем строку с магазином
+// Добавляем строку с магазином
 					csvData.add(new String[] { "Маршрут " + vehicleId, vehicleId, shopId, "Магазин",
 							String.valueOf(jobWeight), String.valueOf(jobPallets),
 							shopLocation != null ? String.valueOf(shopLocation.getCoordinate().getX()) : "",
@@ -419,151 +429,158 @@ public class ColossusProcessorJSpirit {
 				}
 			}
 
-			// Добавляем расстояние от последней точки до депо
+// Добавляем расстояние от последней точки до депо
 			double distanceToDepot = 0;
 			if (prevActivity != null) {
 				distanceToDepot = problem.getTransportCosts().getTransportCost(prevActivity.getLocation(),
 						depotLocation, 0, null, null);
 			}
 
-			// Депо как конечная точка маршрута
+// Депо как конечная точка маршрута
 			csvData.add(new String[] { "Маршрут " + vehicleId, vehicleId, String.valueOf(stock.getNumshop()),
 					"Депо (финиш)", "", "", String.valueOf(depotLocation.getCoordinate().getX()),
 					String.valueOf(depotLocation.getCoordinate().getY()), String.format("%.2f", distanceToDepot) });
 
-			// Итоговая строка по маршруту
+// Итоговая строка по маршруту
 			csvData.add(new String[] { "Маршрут " + vehicleId, vehicleId, "ИТОГО", "",
 					String.format("%.0f/%.0f", usedWeight, maxLoadWeight),
 					String.format("%.0f/%.0f", usedPallets, maxPallets), "", "", "" });
 
-			// Пустая строка для разделения маршрутов
+// Пустая строка для разделения маршрутов
 			csvData.add(new String[] { "", "", "", "", "", "", "", "", "" });
 		}
 
-		// Добавляем общие итоги
+// Добавляем информацию о нераспределённых магазинах
+		List<Service> unassignedShops = services.stream().filter(service -> !assignedShopIds.contains(service.getId()))
+				.collect(Collectors.toList());
+
+		if (!unassignedShops.isEmpty()) {
+			csvData.add(new String[] { "НЕРАСПРЕДЕЛЁННЫЕ МАГАЗИНЫ", "", "", "", "", "", "", "", "" });
+			for (Service shop : unassignedShops) {
+				csvData.add(new String[] { "Не распределён", "", shop.getId(), "Магазин",
+						String.valueOf(shop.getSize().get(0)), String.valueOf(shop.getSize().get(1)),
+						String.valueOf(shop.getLocation().getCoordinate().getX()),
+						String.valueOf(shop.getLocation().getCoordinate().getY()), "" });
+			}
+			csvData.add(new String[] { "", "", "", "", "", "", "", "", "" });
+		}
+
+// Добавляем информацию о неиспользованных машинах
+		List<Vehicle> unusedVehicles = problem.getVehicles().stream()
+				.filter(vehicle -> !usedVehicleIds.contains(vehicle.getId())).collect(Collectors.toList());
+
+		if (!unusedVehicles.isEmpty()) {
+			csvData.add(new String[] { "НЕИСПОЛЬЗОВАННЫЕ МАШИНЫ", "", "", "", "", "", "", "", "" });
+			for (Vehicle vehicle : unusedVehicles) {
+				csvData.add(new String[] { "Не использована", vehicle.getId(), "", "Транспорт", "", "",
+						String.valueOf(depotLocation.getCoordinate().getX()),
+						String.valueOf(depotLocation.getCoordinate().getY()), "" });
+			}
+			csvData.add(new String[] { "", "", "", "", "", "", "", "", "" });
+		}
+
+// Добавляем общие итоги
 		addSummaryInfo(csvData, solution);
 
 		return csvData;
 	}
 
 //	private List<String[]> prepareCSVData(VehicleRoutingProblem problem, VehicleRoutingProblemSolution solution,
-//	                                    List<Service> services, Location depotLocation, Shop stock) {
-//	    List<String[]> csvData = new ArrayList<>();
-//	    
-//	    // Заголовок CSV
-//	    csvData.add(new String[]{"Маршрут", "Транспорт", "ID точки", "Тип точки", "Вес, кг", "Паллеты", 
-//	                            "Широта", "Долгота", "Расстояние до след. точки, км"});
-//	    
-//	    // Для каждого маршрута
-//	    for (VehicleRoute route : solution.getRoutes()) {
-//	        Vehicle vehicle = route.getVehicle();
-//	        String vehicleId = vehicle.getId();
-//	        
-//	        // Характеристики транспорта
-//	        double maxLoadWeight = vehicle.getType().getCapacityDimensions().get(0);
-//	        double maxPallets = vehicle.getType().getCapacityDimensions().get(1);
-//	        double usedWeight = 0;
-//	        double usedPallets = 0;
-//	        
-//	        // Добавляем строку с информацией о транспорте
-//	        csvData.add(new String[]{
-//	            "Маршрут " + vehicleId,
-//	            vehicleId,
-//	            vehicleId,
-//	            "Транспорт",
-//	            "",
-//	            "",
-//	            String.valueOf(depotLocation.getCoordinate().getX()),
-//	            String.valueOf(depotLocation.getCoordinate().getY()),
-//	            ""
-//	        });
-//	        
-//	        // Для каждой активности в маршруте
-//	        csvData.add(new String[]{
-//	        	    "Маршрут " + vehicleId,
-//	        	    vehicleId,
-//	        	    String.valueOf(stock.getNumshop()+""),
-//	        	    "Депо (старт)",
-//	        	    "",
-//	        	    "",
-//	        	    String.valueOf(depotLocation.getCoordinate().getX()),
-//	        	    String.valueOf(depotLocation.getCoordinate().getY()),
-//	        	    ""
-//	        	});
-//	        TourActivity prevActivity = null;
-//	        for (TourActivity activity : route.getActivities()) {
-//	            if (activity instanceof TourActivity.JobActivity) {
-//	                Job job = ((TourActivity.JobActivity) activity).getJob();
-//	                String shopId = job.getId();
-//	                
-//	                // Находим сервис (магазин) по ID
-//	                Service shopService = findServiceById(services, shopId);
-//	                Location shopLocation = shopService != null ? shopService.getLocation() : null;
-//	                
-//	                // Расчет расстояния между точками
-//	                double distance = 0;
-//	                if (prevActivity != null) {
-//	                    distance = problem.getTransportCosts().getTransportCost(
-//	                        prevActivity.getLocation(), 
-//	                        activity.getLocation(), 
-//	                        0, null, null);
-//	                }
-//	                
-//	                // Обновляем суммарные показатели
-//	                int jobWeight = job.getSize().get(0);
-//	                int jobPallets = job.getSize().get(1);
-//	                usedWeight += jobWeight;
-//	                usedPallets += jobPallets;
-//	                
-//	                // Добавляем строку с магазином
-//	                csvData.add(new String[]{
-//	                    "Маршрут " + vehicleId,
-//	                    vehicleId,
-//	                    shopId,
-//	                    "Магазин",
-//	                    String.valueOf(jobWeight),
-//	                    String.valueOf(jobPallets),
-//	                    shopLocation != null ? String.valueOf(shopLocation.getCoordinate().getX()) : "",
-//	                    shopLocation != null ? String.valueOf(shopLocation.getCoordinate().getY()) : "",
-//	                    String.format("%.2f", distance)
-//	                });
-//	                
-//	                prevActivity = activity;
-//	            }
-//	        }
-//	     // Депо как конечная точка маршрута
-//	        csvData.add(new String[]{
-//	            "Маршрут " + vehicleId,
-//	            vehicleId,
-//	            String.valueOf(stock.getNumshop()+""),
-//	            "Депо (финиш)",
-//	            "",
-//	            "",
-//	            String.valueOf(depotLocation.getCoordinate().getX()),
-//	            String.valueOf(depotLocation.getCoordinate().getY()),
-//	            ""
-//	        });
-//	        // Итоговая строка по маршруту
-//	        csvData.add(new String[]{
-//	            "Маршрут " + vehicleId,
-//	            vehicleId,
-//	            "ИТОГО",
-//	            "",
-//	            String.format("%.0f/%.0f", usedWeight, maxLoadWeight),
-//	            String.format("%.0f/%.0f", usedPallets, maxPallets),
-//	            "",
-//	            "",
-//	            ""
-//	        });
-//	        
-//	        // Пустая строка для разделения маршрутов
-//	        csvData.add(new String[]{"", "", "", "", "", "", "", "", ""});
-//	    }
-//	    
-//	    // Добавляем общие итоги
-//	    addSummaryInfo(csvData, solution);
-//	    
-//	    return csvData;
+//			List<Service> services, Location depotLocation, Shop stock) {
+//		List<String[]> csvData = new ArrayList<>();
+//
+//		// Заголовок CSV
+//		csvData.add(new String[] { "Маршрут", "Транспорт", "ID точки", "Тип точки", "Вес, кг", "Паллеты", "Широта",
+//				"Долгота", "Расстояние до след. точки, км" });
+//
+//		// Для каждого маршрута
+//		for (VehicleRoute route : solution.getRoutes()) {
+//			Vehicle vehicle = route.getVehicle();
+//			String vehicleId = vehicle.getId();
+//
+//			// Характеристики транспорта
+//			double maxLoadWeight = vehicle.getType().getCapacityDimensions().get(0);
+//			double maxPallets = vehicle.getType().getCapacityDimensions().get(1);
+//			double usedWeight = 0;
+//			double usedPallets = 0;
+//
+//			// Добавляем строку с информацией о транспорте
+//			csvData.add(new String[] { "Маршрут " + vehicleId, vehicleId, vehicleId, "Транспорт", "", "",
+//					String.valueOf(depotLocation.getCoordinate().getX()),
+//					String.valueOf(depotLocation.getCoordinate().getY()), "" });
+//
+//			// Стартовая точка - депо
+//			csvData.add(new String[] { "Маршрут " + vehicleId, vehicleId, String.valueOf(stock.getNumshop()),
+//					"Депо (старт)", "", "", String.valueOf(depotLocation.getCoordinate().getX()),
+//					String.valueOf(depotLocation.getCoordinate().getY()), "" });
+//
+//			TourActivity prevActivity = route.getStart();
+//			double distanceFromDepot = 0;
+//			boolean firstActivity = true;
+//
+//			for (TourActivity activity : route.getActivities()) {
+//				if (activity instanceof TourActivity.JobActivity) {
+//					Job job = ((TourActivity.JobActivity) activity).getJob();
+//					String shopId = job.getId();
+//
+//					// Находим сервис (магазин) по ID
+//					Service shopService = findServiceById(services, shopId);
+//					Location shopLocation = shopService != null ? shopService.getLocation() : null;
+//
+//					// Расчет расстояния
+//					double distance = problem.getTransportCosts().getTransportCost(prevActivity.getLocation(),
+//							activity.getLocation(), 0, null, null);
+//
+//					// Для первой активности добавляем расстояние от депо
+//					if (firstActivity) {
+//						distanceFromDepot = problem.getTransportCosts().getTransportCost(depotLocation,
+//								activity.getLocation(), 0, null, null);
+//						firstActivity = false;
+//					}
+//
+//					// Обновляем суммарные показатели
+//					int jobWeight = job.getSize().get(0);
+//					int jobPallets = job.getSize().get(1);
+//					usedWeight += jobWeight;
+//					usedPallets += jobPallets;
+//
+//					// Добавляем строку с магазином
+//					csvData.add(new String[] { "Маршрут " + vehicleId, vehicleId, shopId, "Магазин",
+//							String.valueOf(jobWeight), String.valueOf(jobPallets),
+//							shopLocation != null ? String.valueOf(shopLocation.getCoordinate().getX()) : "",
+//							shopLocation != null ? String.valueOf(shopLocation.getCoordinate().getY()) : "",
+//							firstActivity ? String.format("%.2f", distanceFromDepot)
+//									: String.format("%.2f", distance) });
+//
+//					prevActivity = activity;
+//				}
+//			}
+//
+//			// Добавляем расстояние от последней точки до депо
+//			double distanceToDepot = 0;
+//			if (prevActivity != null) {
+//				distanceToDepot = problem.getTransportCosts().getTransportCost(prevActivity.getLocation(),
+//						depotLocation, 0, null, null);
+//			}
+//
+//			// Депо как конечная точка маршрута
+//			csvData.add(new String[] { "Маршрут " + vehicleId, vehicleId, String.valueOf(stock.getNumshop()),
+//					"Депо (финиш)", "", "", String.valueOf(depotLocation.getCoordinate().getX()),
+//					String.valueOf(depotLocation.getCoordinate().getY()), String.format("%.2f", distanceToDepot) });
+//
+//			// Итоговая строка по маршруту
+//			csvData.add(new String[] { "Маршрут " + vehicleId, vehicleId, "ИТОГО", "",
+//					String.format("%.0f/%.0f", usedWeight, maxLoadWeight),
+//					String.format("%.0f/%.0f", usedPallets, maxPallets), "", "", "" });
+//
+//			// Пустая строка для разделения маршрутов
+//			csvData.add(new String[] { "", "", "", "", "", "", "", "", "" });
+//		}
+//
+//		// Добавляем общие итоги
+//		addSummaryInfo(csvData, solution);
+//
+//		return csvData;
 //	}
 
 	/**

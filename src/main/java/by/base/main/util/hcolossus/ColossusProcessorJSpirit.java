@@ -7,70 +7,51 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
-import java.util.TreeMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import org.apache.commons.collections4.map.HashedMap;
-import org.apache.commons.lang3.builder.CompareToBuilder;
+import javax.swing.SpringLayout.Constraints;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.graphhopper.jsprit.core.algorithm.VehicleRoutingAlgorithm;
 import com.graphhopper.jsprit.core.algorithm.box.Jsprit;
-import com.graphhopper.jsprit.core.algorithm.listener.VehicleRoutingAlgorithmListener;
 import com.graphhopper.jsprit.core.algorithm.state.StateManager;
-import com.graphhopper.jsprit.core.problem.Capacity;
 import com.graphhopper.jsprit.core.problem.Location;
 import com.graphhopper.jsprit.core.problem.VehicleRoutingProblem;
 import com.graphhopper.jsprit.core.problem.constraint.ConstraintManager;
+import com.graphhopper.jsprit.core.problem.constraint.HardActivityConstraint;
+import com.graphhopper.jsprit.core.problem.constraint.ConstraintManager.Priority;
+import com.graphhopper.jsprit.core.problem.constraint.HardActivityConstraint.ConstraintsStatus;
+import com.graphhopper.jsprit.core.problem.constraint.HardRouteConstraint;
+import com.graphhopper.jsprit.core.problem.constraint.SoftActivityConstraint;
+import com.graphhopper.jsprit.core.problem.constraint.SoftRouteConstraint;
 import com.graphhopper.jsprit.core.problem.cost.VehicleRoutingTransportCosts;
-import com.graphhopper.jsprit.core.problem.job.Activity;
 import com.graphhopper.jsprit.core.problem.job.Job;
 import com.graphhopper.jsprit.core.problem.job.Service;
 import com.graphhopper.jsprit.core.problem.job.Shipment;
+import com.graphhopper.jsprit.core.problem.misc.JobInsertionContext;
 import com.graphhopper.jsprit.core.problem.solution.VehicleRoutingProblemSolution;
 import com.graphhopper.jsprit.core.problem.solution.route.VehicleRoute;
-import com.graphhopper.jsprit.core.problem.solution.route.activity.DeliveryActivity;
-import com.graphhopper.jsprit.core.problem.solution.route.activity.Start;
-import com.graphhopper.jsprit.core.problem.solution.route.activity.TimeWindow;
 import com.graphhopper.jsprit.core.problem.solution.route.activity.TourActivity;
-import com.graphhopper.jsprit.core.problem.solution.route.activity.TourActivity.JobActivity;
 import com.graphhopper.jsprit.core.problem.vehicle.Vehicle;
 import com.graphhopper.jsprit.core.problem.vehicle.VehicleImpl;
 import com.graphhopper.jsprit.core.problem.vehicle.VehicleType;
 import com.graphhopper.jsprit.core.problem.vehicle.VehicleTypeImpl;
 import com.graphhopper.jsprit.core.reporting.SolutionPrinter;
-import com.graphhopper.jsprit.core.util.Coordinate;
 import com.graphhopper.jsprit.core.util.Solutions;
 import com.graphhopper.jsprit.core.util.VehicleRoutingTransportCostsMatrix;
-import com.graphhopper.jsprit.analysis.toolbox.Plotter;
 
 import by.base.main.model.Shop;
-import by.base.main.service.ShopService;
-import by.base.main.util.hcolossus.exceptions.FatalInsufficientPalletTruckCapacityException;
-import by.base.main.util.hcolossus.exceptions.InsufficientPalletTruckCapacityException;
 import by.base.main.util.hcolossus.pojo.Solution;
-import by.base.main.util.hcolossus.pojo.MyVehicle;
-import by.base.main.util.hcolossus.pojo.VehicleWay;
-import by.base.main.util.hcolossus.service.ComparatorShops;
-import by.base.main.util.hcolossus.service.ComparatorShopsDistanceMain;
-import by.base.main.util.hcolossus.service.ComparatorShopsWhithRestrict;
-import by.base.main.util.hcolossus.service.LogicAnalyzer;
 import by.base.main.util.hcolossus.service.MatrixMachine;
 import by.base.main.util.hcolossus.service.ShopMachine;
 import by.base.main.util.hcolossus.service.VehicleMachine;
@@ -99,104 +80,10 @@ public class ColossusProcessorJSpirit {
 
 	@Autowired
 	private MatrixMachine matrixMachine;
+	
+	private static final double MAX_JUMP_DISTANCE_KM = 40.0;   // порог "нормального" скачка
+    private static final double PENALTY_MULTIPLIER = 40.0;      // множитель штрафа
 
-	@Autowired
-	private LogicAnalyzer logicAnalyzer;
-
-//	private Comparator<Shop> shopComparatorPallOnly = (o1, o2) -> (o2.getNeedPall() - o1.getNeedPall()); // сортирует от большей потребности к меньшей
-	private Comparator<Shop> shopComparatorPallOnly = (o1, o2) -> Double.compare(o2.getNeedPall(), o1.getNeedPall());// сортирует
-																														// от
-																														// большей
-																														// потребности
-																														// к
-																														// меньшей.
-																														// Переделка
-																														// прошлго
-																														// метода
-																														// под
-																														// double
-
-//	private Comparator<Vehicle> vehicleComparatorFromMax = (o1, o2) -> (o2.getPall() - o1.getPall()); // сортирует от большей потребности к меньшей без учёта веса
-
-//	private Comparator<Vehicle> vehicleComparatorFromMax = (o1, o2) -> { // этот метод сортирует от большей потребности к меньшей без учёта веса b отправляет вним списка машины помоченные на вторйо круг
-//	    // Сначала проверяем isTwiceRound() и перемещаем такие элементы вниз всего списка
-//	    if (o1.isTwiceRound() && !o2.isTwiceRound()) {
-//	        return 1;  // o1 опускаем вниз
-//	    } else if (!o1.isTwiceRound() && o2.isTwiceRound()) {
-//	        return -1; // o2 опускаем вниз
-//	    }
-//
-//	    // Если оба элемента имеют одинаковый статус isTwiceRound, сортируем по pall
-//	    return Integer.compare(o2.getPall(), o1.getPall());
-//	};
-
-	private Comparator<MyVehicle> vehicleComparatorFromMax = (o1, o2) -> { // этот метод сортирует от большей
-																			// потребности к меньшей без учёта веса и
-																			// отправляет вниз списка машины помоченные
-																			// как КЛОНЫ!
-		// Сначала проверяем isTwiceRound() и перемещаем такие элементы вниз всего
-		// списка
-		if (o1.isClone() && !o2.isClone()) {
-			return 1; // o1 опускаем вниз
-		} else if (!o1.isClone() && o2.isClone()) {
-			return -1; // o2 опускаем вниз
-		}
-
-		// Если оба элемента имеют одинаковый статус isTwiceRound, сортируем по pall
-		return Double.compare(o2.getPall(), o1.getPall());
-	};
-
-//	private Comparator<Vehicle> vehicleComparatorFromMin = (o1, o2) -> (o1.getPall() - o2.getPall()); // сортирует от меньшей потребности к большей без учёта веса
-	private Comparator<MyVehicle> vehicleComparatorFromMin = (o1, o2) -> Double.compare(o1.getPall(), o2.getPall());// сортирует
-																													// от
-																													// меньшей
-																													// потребности
-																													// к
-																													// большей
-																													// без
-																													// учёта
-																													// веса
-																													// Переделка
-																													// прошлго
-																													// метода
-																													// под
-																													// double
-//	
-//	private Comparator<Vehicle> vehicleComparatorFromMinAndMass = (o1, o2) -> (o1.getWeigth() / o1.getPall() - o2.getWeigth() / o2.getPall());// сортирует от меньшей потребности к большей C УЧЁТОМ веса
-//	
-//	private Comparator<Vehicle> vehicleComparatorFromMaxAndMass = (o1, o2) -> (o2.getWeigth() / o2.getPall() - o1.getWeigth() / o1.getPall());// сортирует от большей потребности к меньшей C УЧЁТОМ веса
-
-	private ComparatorShops shopComparatorForIdealWay = new ComparatorShops(); // сортирует от большей потребности к
-																				// меньшей и от большего расстояния от
-																				// склада к меньшему
-	private ComparatorShopsDistanceMain shopComparatorDistanceMain = new ComparatorShopsDistanceMain(); // сортирует от
-																										// большего
-																										// расстояния от
-																										// склада к
-																										// меньшему и от
-																										// большей
-																										// потребности к
-																										// меньшей
-	private ComparatorShops shopComparator = new ComparatorShops(); // сортирует от большей потребности к меньшей и от
-																	// большего расстояния от склада к меньшему
-
-	private ComparatorShopsWhithRestrict comparatorShopsWhithRestrict = new ComparatorShopsWhithRestrict(); //
-
-	private List<Shop> shopsForOptimization;
-	private List<Shop> shopsForDelite;
-	private List<MyVehicle> trucks;
-	/**
-	 * Список тачек, которые подходят для вывоза товара из магазина
-	 */
-	private List<MyVehicle> trucksForShopReturn;
-	private List<MyVehicle> vehicleForDelete;
-	private String stackTrace;
-	private List<VehicleWay> whiteWay;
-
-	private Double maxDistanceInRoute = 100000.0;
-	private Double minimumPercentageOfCarFilling = 95.0;
-
-	private List<Shop> shopsForAddNewNeedPall;
 
 	/**
 	 * Основной метод расчёта первочной оптимизации
@@ -219,7 +106,6 @@ public class ColossusProcessorJSpirit {
 			List<Integer> tonnageHasShops, Integer stock, Double koeff, String algoritm,
 			Map<Integer, String> shopsWithCrossDockingMap, Integer maxShopInWay, List<Double> pallReturn,
 			List<Integer> weightDistributionList, Map<Integer, Shop> allShop) throws Exception {
-		Logger.getLogger("jsprit").setLevel(Level.FINE);
 		// блок подготовки
 		// заполняем static матрицу. Пусть хранится там
 		matrixMachine.createMatrixHasList(shopList, stock, allShop);
@@ -233,6 +119,73 @@ public class ColossusProcessorJSpirit {
 				Double.parseDouble(targetStock.getLng()));
 		List<Service> shopsService = createServicesFromShops(shopsForOptimization);
 
+		VehicleRoutingTransportCosts costMatrix = prepairMatrixForJspirit(stock, targetStock, shopsService);
+
+		List<VehicleImpl> vehicleImpls = createVehiclesFromJson(jsonMainObject, depotLocation);
+
+		// 1. Создаём объект задачи VRP
+		VehicleRoutingProblem.Builder vrpBuilder = VehicleRoutingProblem.Builder.newInstance();
+		vrpBuilder.setFleetSize(VehicleRoutingProblem.FleetSize.FINITE);
+		vrpBuilder.setRoutingCost(costMatrix); // Указываем кастомную матрицу
+
+		// 2. Добавляем все машины
+		for (VehicleImpl vehicle : vehicleImpls) {
+			vrpBuilder.addVehicle(vehicle);
+		}
+
+		// 3. Добавляем все заказы (магазины)
+		for (Service shipment : shopsService) {
+			vrpBuilder.addJob(shipment);
+		}
+
+		// 4. Собираем задачу
+		VehicleRoutingProblem problem = vrpBuilder.build();
+
+		// 4 создаём кастомный наполнитель
+		StateManager stateManager = new StateManager(problem);
+		ConstraintManager constraintManager = new ConstraintManager(problem, stateManager);
+		
+
+		// 1. Обязательные ограничения грузоподъемности
+		constraintManager.addLoadConstraint(); // Включает проверку загрузки по всем измерениям
+		
+		// 5. Настройка алгоритма с ограничением времени
+		VehicleRoutingAlgorithm algorithm = Jsprit.Builder.newInstance(problem)
+				.setStateAndConstraintManager(stateManager, constraintManager) // Важно!
+				.setProperty(Jsprit.Parameter.THREADS, "4")
+//				.setProperty(Jsprit.Parameter.FAST_REGRET, "true")
+//				.setProperty(Jsprit.Parameter.CONSTRUCTION, "BEST_INSERTION") // Оптимальная вставка
+				.setProperty(Jsprit.Parameter.CONSTRUCTION, "FARTHEST_INSERTION") // Начнёт с самых дальних точек
+				.setProperty(Jsprit.Parameter.ITERATIONS, "3000")
+				.setProperty(Jsprit.Strategy.RADIAL_BEST, "0.9") // Локальный поиск (40%)
+				.setProperty(Jsprit.Strategy.RANDOM_BEST, "0.1") // Случайный поиск (30%)
+//				.setProperty(Jsprit.Strategy.WORST_BEST, "0.1") // "Плохие" решения (30%)
+				.buildAlgorithm();
+
+		// 6. Запускаем расчёт
+		Collection<VehicleRoutingProblemSolution> solutions = algorithm.searchSolutions();
+
+		// 7. Выбираем лучшее решение
+		VehicleRoutingProblemSolution bestSolution = Solutions.bestOf(solutions);
+
+		// 8. Печатаем отчёт
+		SolutionPrinter.print(problem, bestSolution, SolutionPrinter.Print.VERBOSE);
+//		new Plotter(problem, bestSolution).plot("D:\\result/route.png", "Route");
+		exportSolutionToCSV(problem, bestSolution, shopsService, depotLocation, "D:\\result", targetStock);
+
+		return null;
+
+	}
+
+	/**
+	 * Метод отвечает за подготовку матрицы для Jspirit
+	 * @param stock
+	 * @param targetStock
+	 * @param shopsService
+	 * @return
+	 */
+	private VehicleRoutingTransportCosts prepairMatrixForJspirit(Integer stock, Shop targetStock,
+			List<Service> shopsService) {
 		// 1. Создаём маппинг координат → ID
 		Map<Location, Integer> coordinateToId = new HashMap<>();
 
@@ -270,57 +223,7 @@ public class ColossusProcessorJSpirit {
 		}
 
 		VehicleRoutingTransportCosts costMatrix = matrixBuilder.build();
-
-		List<VehicleImpl> vehicleImpls = createVehiclesFromJson(jsonMainObject, depotLocation);
-
-		// 1. Создаём объект задачи VRP
-		VehicleRoutingProblem.Builder vrpBuilder = VehicleRoutingProblem.Builder.newInstance();
-		vrpBuilder.setFleetSize(VehicleRoutingProblem.FleetSize.FINITE);
-		vrpBuilder.setRoutingCost(costMatrix); // Указываем кастомную матрицу
-
-		// 2. Добавляем все машины
-		for (VehicleImpl vehicle : vehicleImpls) {
-			vrpBuilder.addVehicle(vehicle);
-		}
-
-		// 3. Добавляем все заказы (магазины)
-		for (Service shipment : shopsService) {
-			vrpBuilder.addJob(shipment);
-		}
-
-		// 4. Собираем задачу
-		VehicleRoutingProblem problem = vrpBuilder.build();
-
-		// 4 создаём кастомный наполнитель
-		StateManager stateManager = new StateManager(problem);
-		ConstraintManager constraintManager = new ConstraintManager(problem, stateManager);
-
-		// 1. Обязательные ограничения грузоподъемности
-		constraintManager.addLoadConstraint(); // Включает проверку загрузки по всем измерениям
-
-		// 5. Настройка алгоритма с ограничением времени
-		VehicleRoutingAlgorithm algorithm = Jsprit.Builder.newInstance(problem)
-				.setStateAndConstraintManager(stateManager, constraintManager) // Важно!
-				.setProperty(Jsprit.Parameter.THREADS, "4").setProperty(Jsprit.Parameter.FAST_REGRET, "true")
-				.setProperty(Jsprit.Parameter.CONSTRUCTION, "BEST_INSERTION") // Оптимальная вставка
-				.setProperty(Jsprit.Parameter.ITERATIONS, "500").setProperty(Jsprit.Strategy.RADIAL_BEST, "0.4")
-				.setProperty(Jsprit.Strategy.RANDOM_BEST, "0.3").setProperty(Jsprit.Strategy.WORST_BEST, "0.3")
-				.buildAlgorithm();
-
-		// 6. Запускаем расчёт
-		Collection<VehicleRoutingProblemSolution> solutions = algorithm.searchSolutions();
-
-		// 7. Выбираем лучшее решение
-		VehicleRoutingProblemSolution bestSolution = Solutions.bestOf(solutions);
-
-		// 8. Печатаем отчёт
-		SolutionPrinter.print(problem, bestSolution, SolutionPrinter.Print.VERBOSE);
-		new Plotter(problem, bestSolution).plot("D:\\result/route.png", "Route");
-//		printSolutionVerbose(problem, bestSolution);
-		exportSolutionToCSV(problem, bestSolution, shopsService, depotLocation, "D:\\result", targetStock);
-
-		return null;
-
+		return costMatrix;
 	}
 
 	/**

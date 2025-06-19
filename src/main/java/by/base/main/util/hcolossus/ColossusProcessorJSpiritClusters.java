@@ -24,6 +24,7 @@ import org.springframework.stereotype.Component;
 
 import com.graphhopper.jsprit.core.algorithm.VehicleRoutingAlgorithm;
 import com.graphhopper.jsprit.core.algorithm.box.Jsprit;
+import com.graphhopper.jsprit.core.algorithm.listener.VehicleRoutingAlgorithmListener;
 import com.graphhopper.jsprit.core.algorithm.state.StateManager;
 import com.graphhopper.jsprit.core.problem.Location;
 import com.graphhopper.jsprit.core.problem.VehicleRoutingProblem;
@@ -69,7 +70,7 @@ import smile.clustering.KMeans;
  * генерит исключения! Все сообщения будут передаваться через исключения
  */
 @Component
-public class ColossusProcessorJSpirit {
+public class ColossusProcessorJSpiritClusters {
 
 	private JSONObject jsonMainObject;
 
@@ -83,7 +84,7 @@ public class ColossusProcessorJSpirit {
 	private MatrixMachine matrixMachine;
 	
 	private static final double MAX_JUMP_DISTANCE_KM = 40.0;   // порог "нормального" скачка
-    private static final double PENALTY_MULTIPLIER = 40.0;      // множитель штрафа
+    private static final double PENALTY_MULTIPLIER = 400000000.0;      // множитель штрафа
 
 
 	/**
@@ -110,7 +111,24 @@ public class ColossusProcessorJSpirit {
 		// блок подготовки
 		// заполняем static матрицу. Пусть хранится там
 		matrixMachine.createMatrixHasList(shopList, stock, allShop);
+		
+		//создаём кластеры
+		Map<Integer, List<Integer>> clusters = clusterShopsKMeans(allShop, shopList, 2);
+		
+		Map<String, Integer> shopIdToCluster = new HashMap<>();
 
+		for (Map.Entry<Integer, List<Integer>> entry : clusters.entrySet()) {
+		    int clusterId = entry.getKey();
+		    for (Integer shopId : entry.getValue()) {
+		    	String shopCoord = "[x="+allShop.get(shopId).getLat()+"][y="+allShop.get(shopId).getLng()+"]";
+		        shopIdToCluster.put(shopCoord, clusterId);
+		    }
+		}
+		
+		System.err.println(shopIdToCluster);
+		
+//		clusters.entrySet().forEach(c-> c.getValue().forEach(s-> System.out.println(c + " -- " + s)));
+//
 		// 1. Получаем targetStock и готовим данные
 		Shop targetStock = allShop.get(stock);
 		List<Shop> shops = new ArrayList<>(allShop.values());
@@ -146,23 +164,82 @@ public class ColossusProcessorJSpirit {
 		StateManager stateManager = new StateManager(problem);
 		ConstraintManager constraintManager = new ConstraintManager(problem, stateManager);
 		
+//		constraintManager.addConstraint(new HardActivityConstraint() {
+//
+//		    private final double MAX_DISTANCE_METERS = 40;
+//
+//		    @Override
+//		    public ConstraintsStatus fulfilled(JobInsertionContext iFacts,
+//		                                       TourActivity prevAct,
+//		                                       TourActivity newAct,
+//		                                       TourActivity nextAct,
+//		                                       double prevActEndTime) {
+//
+//		    	// Получаем расстояние
+//		        double distance = costMatrix.getDistance(prevAct.getLocation(), newAct.getLocation(), 0.0, null);
+//		        
+//		        if(newAct.getLocation() != depotLocation && prevAct.getLocation() != depotLocation || newAct.getLocation() != depotLocation && prevAct.getLocation() != depotLocation && nextAct.getLocation() == depotLocation) {
+//		        	if (distance > MAX_DISTANCE_METERS) {
+////			            System.out.printf("[HARD CONSTRAINT BLOCKED] %s → %s : %.1f м > %.1f м%n",
+////			                    prevAct.getLocation().getId(),
+////			                    newAct.getLocation().getId(),
+////			                    distance, MAX_DISTANCE_METERS);
+//
+//			            return ConstraintsStatus.NOT_FULFILLED;
+//			        }
+//		        }
+//
+//		        
+//
+//		        return ConstraintsStatus.FULFILLED;
+//		    }
+//		}, ConstraintManager.Priority.CRITICAL);
+		
+//		constraintManager.addConstraint(new SoftActivityConstraint() {
+//		    private final double CLUSTER_PENALTY = 100000000; // штраф за переход между кластерами
+//
+//		    @Override
+//		    public double getCosts(JobInsertionContext ctx,
+//		                           TourActivity prev,
+//		                           TourActivity next,
+//		                           TourActivity after,
+//		                           double prevEndTime) {
+//		    	String prevId = prev.getLocation().getId();
+//		        String nextId = next.getLocation().getId();
+//
+//		        Integer clusterA = shopIdToCluster.getOrDefault(prevId, -1);
+//		        Integer clusterB = shopIdToCluster.getOrDefault(nextId, -1);
+//
+//		        if (!clusterA.equals(clusterB)) {
+////		            System.out.printf("[CLUSTER PENALTY] %s (c%d) → %s (c%d) = %.1f%n",
+////		                prevId, clusterA, nextId, clusterB, CLUSTER_PENALTY);
+////		            return CLUSTER_PENALTY;
+//		        }
+//
+//		        return 0;
+//		    }
+//		});
+		
 
 		// 1. Обязательные ограничения грузоподъемности
 		constraintManager.addLoadConstraint(); // Включает проверку загрузки по всем измерениям
 		
 		// 5. Настройка алгоритма с ограничением времени
 		VehicleRoutingAlgorithm algorithm = Jsprit.Builder.newInstance(problem)
-				.setStateAndConstraintManager(stateManager, constraintManager) // Важно!
-				.setProperty(Jsprit.Parameter.THREADS, "4")
-//				.setProperty(Jsprit.Parameter.FAST_REGRET, "true")
-//				.setProperty(Jsprit.Parameter.CONSTRUCTION, "BEST_INSERTION") // Оптимальная вставка
-				.setProperty(Jsprit.Parameter.CONSTRUCTION, "FARTHEST_INSERTION") // Начнёт с самых дальних точек
-				.setProperty(Jsprit.Parameter.ITERATIONS, "3000")
-				.setProperty(Jsprit.Strategy.RADIAL_BEST, "0.9") // Локальный поиск (40%)
-				.setProperty(Jsprit.Strategy.RANDOM_BEST, "0.1") // Случайный поиск (30%)
-//				.setProperty(Jsprit.Strategy.WORST_BEST, "0.1") // "Плохие" решения (30%)
-				.buildAlgorithm();
-
+			    .setStateAndConstraintManager(stateManager, constraintManager)
+			    .setProperty(Jsprit.Parameter.THREADS, "4")
+			    .setProperty(Jsprit.Parameter.CONSTRUCTION, "REGRET_INSERTION") // 1. Начинаем с дальних точек
+			    .setProperty(Jsprit.Parameter.ITERATIONS, "2000")
+			    .setProperty(Jsprit.Strategy.RADIAL_BEST, "0.7") // 2. Увеличиваем локальный поиск
+			    .setProperty(Jsprit.Strategy.RANDOM_BEST, "0.2")
+			    .setProperty(Jsprit.Strategy.WORST_BEST, "0.1")
+			    .setProperty(Jsprit.Parameter.THRESHOLD_ALPHA, "0.4") // 3. Жёстче отбор решений
+			    .setProperty(Jsprit.Parameter.VEHICLE_SWITCH, "false") // 4. Не пересаживаем на другие машины
+			    .setProperty("insertion.additional_distance_factor", "2.5") // 5. Жёстче штраф за удлинение
+			    .setProperty("insertion.regret_factor", "3.0") // Более жадный выбор
+			    .buildAlgorithm();
+				
+		
 		// 6. Запускаем расчёт
 		Collection<VehicleRoutingProblemSolution> solutions = algorithm.searchSolutions();
 
@@ -177,6 +254,7 @@ public class ColossusProcessorJSpirit {
 		return null;
 
 	}
+
 
 	/**
 	 * Метод отвечает за подготовку матрицы для Jspirit
@@ -225,30 +303,6 @@ public class ColossusProcessorJSpirit {
 
 		VehicleRoutingTransportCosts costMatrix = matrixBuilder.build();
 		return costMatrix;
-	}
-	
-	public Map<Integer, List<Integer>> clusterShopsKMeans(Map<Integer, Shop> allShops, List<Integer> shopList, int k) {
-	    List<double[]> coords = new ArrayList<>();
-	    List<Integer> ids = new ArrayList<>();
-
-	    for (Integer id : shopList) {
-	        Shop shop = allShops.get(id);
-	        double lat = Double.parseDouble(shop.getLat());
-	        double lng = Double.parseDouble(shop.getLng());
-	        coords.add(new double[]{lat, lng});
-	        ids.add(id);
-	    }
-
-	    double[][] data = coords.toArray(new double[0][]);
-	    KMeans km = KMeans.fit(data, k); // k — число кластеров
-
-	    Map<Integer, List<Integer>> result = new HashMap<>();
-	    for (int i = 0; i < data.length; i++) {
-	        int cluster = km.y[i];
-	        result.computeIfAbsent(cluster, c -> new ArrayList<>()).add(ids.get(i));
-	    }
-
-	    return result;
 	}
 
 	/**
@@ -526,7 +580,8 @@ public class ColossusProcessorJSpirit {
 			for (int j = 1; j <= carCount; j++) {
 				String vehicleId = String.format("%s_%d", carName, j);
 
-				VehicleImpl.Builder vehicleBuilder = VehicleImpl.Builder.newInstance(vehicleId).setReturnToDepot(true)
+				VehicleImpl.Builder vehicleBuilder = VehicleImpl.Builder.newInstance(vehicleId)
+						.setReturnToDepot(false)
 						.setStartLocation(depotLocation) // депо (координаты)
 						.setType(vehicleType);
 
@@ -619,6 +674,30 @@ public class ColossusProcessorJSpirit {
 		}
 
 		return services;
+	}
+	
+	public Map<Integer, List<Integer>> clusterShopsKMeans(Map<Integer, Shop> allShops, List<Integer> shopList, int k) {
+	    List<double[]> coords = new ArrayList<>();
+	    List<Integer> ids = new ArrayList<>();
+
+	    for (Integer id : shopList) {
+	        Shop shop = allShops.get(id);
+	        double lat = Double.parseDouble(shop.getLat());
+	        double lng = Double.parseDouble(shop.getLng());
+	        coords.add(new double[]{lat, lng});
+	        ids.add(id);
+	    }
+
+	    double[][] data = coords.toArray(new double[0][]);
+	    KMeans km = KMeans.fit(data, k); // k — число кластеров
+
+	    Map<Integer, List<Integer>> result = new HashMap<>();
+	    for (int i = 0; i < data.length; i++) {
+	        int cluster = km.y[i];
+	        result.computeIfAbsent(cluster, c -> new ArrayList<>()).add(ids.get(i));
+	    }
+
+	    return result;
 	}
 
 }

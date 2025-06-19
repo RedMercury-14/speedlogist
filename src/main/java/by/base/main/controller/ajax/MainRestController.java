@@ -193,6 +193,7 @@ import by.base.main.util.GraphHopper.RoutingMachine;
 import by.base.main.util.bots.TelegramBot;
 import by.base.main.util.hcolossus.ColossusProcessorANDRestrictions5;
 import by.base.main.util.hcolossus.ColossusProcessorJSpirit;
+import by.base.main.util.hcolossus.ColossusProcessorJSpirit2;
 import by.base.main.util.hcolossus.ColossusProcessorJSpiritClusters;
 import by.base.main.util.hcolossus.exceptions.FatalInsufficientPalletTruckCapacityException;
 import by.base.main.util.hcolossus.pojo.Solution;
@@ -279,8 +280,11 @@ public class MainRestController {
 //	@Autowired
 //	private ColossusProcessorJSpirit colossusProcessorJSpirit;
 	
+//	@Autowired
+//	private ColossusProcessorJSpiritClusters colossusProcessorJSpirit;
+	
 	@Autowired
-	private ColossusProcessorJSpiritClusters colossusProcessorJSpirit;
+	private ColossusProcessorJSpirit2 colossusProcessorJSpirit;
 
 	@Autowired
 	private MatrixMachine matrixMachine;

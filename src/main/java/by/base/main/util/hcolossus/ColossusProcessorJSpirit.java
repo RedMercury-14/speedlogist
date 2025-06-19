@@ -347,12 +347,12 @@ public class ColossusProcessorJSpirit {
 	private List<String[]> prepareCSVData(VehicleRoutingProblem problem, VehicleRoutingProblemSolution solution,
 			List<Service> services, Location depotLocation, Shop stock) {
 		List<String[]> csvData = new ArrayList<>();
-
-// Заголовок CSV
+		double totalDistance = 0.0;
+		// Заголовок CSV
 		csvData.add(new String[] { "Маршрут", "Транспорт", "ID точки", "Тип точки", "Вес, кг", "Паллеты", "Широта",
 				"Долгота", "Расстояние до след. точки, км" });
 
-// Собираем ID распределённых магазинов
+		// Собираем ID распределённых магазинов
 		Set<String> assignedShopIds = new HashSet<>();
 		for (VehicleRoute route : solution.getRoutes()) {
 			for (TourActivity activity : route.getActivities()) {
@@ -362,27 +362,27 @@ public class ColossusProcessorJSpirit {
 			}
 		}
 
-// Собираем ID использованных машин
+		// Собираем ID использованных машин
 		Set<String> usedVehicleIds = solution.getRoutes().stream().map(route -> route.getVehicle().getId())
 				.collect(Collectors.toSet());
 
-// Для каждого маршрута
+		// Для каждого маршрута
 		for (VehicleRoute route : solution.getRoutes()) {
 			Vehicle vehicle = route.getVehicle();
 			String vehicleId = vehicle.getId();
 
-// Характеристики транспорта
+			// Характеристики транспорта
 			double maxLoadWeight = vehicle.getType().getCapacityDimensions().get(0);
 			double maxPallets = vehicle.getType().getCapacityDimensions().get(1);
 			double usedWeight = 0;
 			double usedPallets = 0;
 
-// Добавляем строку с информацией о транспорте
+			// Добавляем строку с информацией о транспорте
 			csvData.add(new String[] { "Маршрут " + vehicleId, vehicleId, vehicleId, "Транспорт", "", "",
 					String.valueOf(depotLocation.getCoordinate().getX()),
 					String.valueOf(depotLocation.getCoordinate().getY()), "" });
 
-// Стартовая точка - депо
+			// Стартовая точка - депо
 			csvData.add(new String[] { "Маршрут " + vehicleId, vehicleId, String.valueOf(stock.getNumshop()),
 					"Депо (старт)", "", "", String.valueOf(depotLocation.getCoordinate().getX()),
 					String.valueOf(depotLocation.getCoordinate().getY()), "" });
@@ -396,28 +396,30 @@ public class ColossusProcessorJSpirit {
 					Job job = ((TourActivity.JobActivity) activity).getJob();
 					String shopId = job.getId();
 
-// Находим сервис (магазин) по ID
+					// Находим сервис (магазин) по ID
 					Service shopService = findServiceById(services, shopId);
 					Location shopLocation = shopService != null ? shopService.getLocation() : null;
 
-// Расчет расстояния
+					// Расчет расстояния
 					double distance = problem.getTransportCosts().getTransportCost(prevActivity.getLocation(),
 							activity.getLocation(), 0, null, null);
+					totalDistance = totalDistance + distance;
 
-// Для первой активности добавляем расстояние от депо
+					// Для первой активности добавляем расстояние от депо
 					if (firstActivity) {
 						distanceFromDepot = problem.getTransportCosts().getTransportCost(depotLocation,
 								activity.getLocation(), 0, null, null);
+//						totalDistance = totalDistance + distanceFromDepot;
 						firstActivity = false;
 					}
 
-// Обновляем суммарные показатели
+					// Обновляем суммарные показатели
 					int jobWeight = job.getSize().get(0);
 					int jobPallets = job.getSize().get(1);
 					usedWeight += jobWeight;
 					usedPallets += jobPallets;
 
-// Добавляем строку с магазином
+					// Добавляем строку с магазином
 					csvData.add(new String[] { "Маршрут " + vehicleId, vehicleId, shopId, "Магазин",
 							String.valueOf(jobWeight), String.valueOf(jobPallets),
 							shopLocation != null ? String.valueOf(shopLocation.getCoordinate().getX()) : "",
@@ -429,28 +431,29 @@ public class ColossusProcessorJSpirit {
 				}
 			}
 
-// Добавляем расстояние от последней точки до депо
+			// Добавляем расстояние от последней точки до депо
 			double distanceToDepot = 0;
 			if (prevActivity != null) {
 				distanceToDepot = problem.getTransportCosts().getTransportCost(prevActivity.getLocation(),
 						depotLocation, 0, null, null);
+				totalDistance = totalDistance + distanceToDepot;
 			}
 
-// Депо как конечная точка маршрута
+			// Депо как конечная точка маршрута
 			csvData.add(new String[] { "Маршрут " + vehicleId, vehicleId, String.valueOf(stock.getNumshop()),
 					"Депо (финиш)", "", "", String.valueOf(depotLocation.getCoordinate().getX()),
 					String.valueOf(depotLocation.getCoordinate().getY()), String.format("%.2f", distanceToDepot) });
 
-// Итоговая строка по маршруту
+			// Итоговая строка по маршруту
 			csvData.add(new String[] { "Маршрут " + vehicleId, vehicleId, "ИТОГО", "",
 					String.format("%.0f/%.0f", usedWeight, maxLoadWeight),
 					String.format("%.0f/%.0f", usedPallets, maxPallets), "", "", "" });
 
-// Пустая строка для разделения маршрутов
+			// Пустая строка для разделения маршрутов
 			csvData.add(new String[] { "", "", "", "", "", "", "", "", "" });
 		}
 
-// Добавляем информацию о нераспределённых магазинах
+		// Добавляем информацию о нераспределённых магазинах
 		List<Service> unassignedShops = services.stream().filter(service -> !assignedShopIds.contains(service.getId()))
 				.collect(Collectors.toList());
 
@@ -465,7 +468,7 @@ public class ColossusProcessorJSpirit {
 			csvData.add(new String[] { "", "", "", "", "", "", "", "", "" });
 		}
 
-// Добавляем информацию о неиспользованных машинах
+		// Добавляем информацию о неиспользованных машинах
 		List<Vehicle> unusedVehicles = problem.getVehicles().stream()
 				.filter(vehicle -> !usedVehicleIds.contains(vehicle.getId())).collect(Collectors.toList());
 
@@ -479,109 +482,12 @@ public class ColossusProcessorJSpirit {
 			csvData.add(new String[] { "", "", "", "", "", "", "", "", "" });
 		}
 
-// Добавляем общие итоги
-		addSummaryInfo(csvData, solution);
+		// Добавляем общие итоги
+		addSummaryInfo(csvData, solution, totalDistance);
 
 		return csvData;
 	}
 
-//	private List<String[]> prepareCSVData(VehicleRoutingProblem problem, VehicleRoutingProblemSolution solution,
-//			List<Service> services, Location depotLocation, Shop stock) {
-//		List<String[]> csvData = new ArrayList<>();
-//
-//		// Заголовок CSV
-//		csvData.add(new String[] { "Маршрут", "Транспорт", "ID точки", "Тип точки", "Вес, кг", "Паллеты", "Широта",
-//				"Долгота", "Расстояние до след. точки, км" });
-//
-//		// Для каждого маршрута
-//		for (VehicleRoute route : solution.getRoutes()) {
-//			Vehicle vehicle = route.getVehicle();
-//			String vehicleId = vehicle.getId();
-//
-//			// Характеристики транспорта
-//			double maxLoadWeight = vehicle.getType().getCapacityDimensions().get(0);
-//			double maxPallets = vehicle.getType().getCapacityDimensions().get(1);
-//			double usedWeight = 0;
-//			double usedPallets = 0;
-//
-//			// Добавляем строку с информацией о транспорте
-//			csvData.add(new String[] { "Маршрут " + vehicleId, vehicleId, vehicleId, "Транспорт", "", "",
-//					String.valueOf(depotLocation.getCoordinate().getX()),
-//					String.valueOf(depotLocation.getCoordinate().getY()), "" });
-//
-//			// Стартовая точка - депо
-//			csvData.add(new String[] { "Маршрут " + vehicleId, vehicleId, String.valueOf(stock.getNumshop()),
-//					"Депо (старт)", "", "", String.valueOf(depotLocation.getCoordinate().getX()),
-//					String.valueOf(depotLocation.getCoordinate().getY()), "" });
-//
-//			TourActivity prevActivity = route.getStart();
-//			double distanceFromDepot = 0;
-//			boolean firstActivity = true;
-//
-//			for (TourActivity activity : route.getActivities()) {
-//				if (activity instanceof TourActivity.JobActivity) {
-//					Job job = ((TourActivity.JobActivity) activity).getJob();
-//					String shopId = job.getId();
-//
-//					// Находим сервис (магазин) по ID
-//					Service shopService = findServiceById(services, shopId);
-//					Location shopLocation = shopService != null ? shopService.getLocation() : null;
-//
-//					// Расчет расстояния
-//					double distance = problem.getTransportCosts().getTransportCost(prevActivity.getLocation(),
-//							activity.getLocation(), 0, null, null);
-//
-//					// Для первой активности добавляем расстояние от депо
-//					if (firstActivity) {
-//						distanceFromDepot = problem.getTransportCosts().getTransportCost(depotLocation,
-//								activity.getLocation(), 0, null, null);
-//						firstActivity = false;
-//					}
-//
-//					// Обновляем суммарные показатели
-//					int jobWeight = job.getSize().get(0);
-//					int jobPallets = job.getSize().get(1);
-//					usedWeight += jobWeight;
-//					usedPallets += jobPallets;
-//
-//					// Добавляем строку с магазином
-//					csvData.add(new String[] { "Маршрут " + vehicleId, vehicleId, shopId, "Магазин",
-//							String.valueOf(jobWeight), String.valueOf(jobPallets),
-//							shopLocation != null ? String.valueOf(shopLocation.getCoordinate().getX()) : "",
-//							shopLocation != null ? String.valueOf(shopLocation.getCoordinate().getY()) : "",
-//							firstActivity ? String.format("%.2f", distanceFromDepot)
-//									: String.format("%.2f", distance) });
-//
-//					prevActivity = activity;
-//				}
-//			}
-//
-//			// Добавляем расстояние от последней точки до депо
-//			double distanceToDepot = 0;
-//			if (prevActivity != null) {
-//				distanceToDepot = problem.getTransportCosts().getTransportCost(prevActivity.getLocation(),
-//						depotLocation, 0, null, null);
-//			}
-//
-//			// Депо как конечная точка маршрута
-//			csvData.add(new String[] { "Маршрут " + vehicleId, vehicleId, String.valueOf(stock.getNumshop()),
-//					"Депо (финиш)", "", "", String.valueOf(depotLocation.getCoordinate().getX()),
-//					String.valueOf(depotLocation.getCoordinate().getY()), String.format("%.2f", distanceToDepot) });
-//
-//			// Итоговая строка по маршруту
-//			csvData.add(new String[] { "Маршрут " + vehicleId, vehicleId, "ИТОГО", "",
-//					String.format("%.0f/%.0f", usedWeight, maxLoadWeight),
-//					String.format("%.0f/%.0f", usedPallets, maxPallets), "", "", "" });
-//
-//			// Пустая строка для разделения маршрутов
-//			csvData.add(new String[] { "", "", "", "", "", "", "", "", "" });
-//		}
-//
-//		// Добавляем общие итоги
-//		addSummaryInfo(csvData, solution);
-//
-//		return csvData;
-//	}
 
 	/**
 	 * Поиск сервиса по ID
@@ -593,11 +499,9 @@ public class ColossusProcessorJSpirit {
 	/**
 	 * Добавление сводной информации по решению
 	 */
-	private void addSummaryInfo(List<String[]> csvData, VehicleRoutingProblemSolution solution) {
+	private void addSummaryInfo(List<String[]> csvData, VehicleRoutingProblemSolution solution, double totalDistance) {
 		int totalShops = solution.getRoutes().stream().mapToInt(
 				r -> (int) r.getActivities().stream().filter(a -> a instanceof TourActivity.JobActivity).count()).sum();
-
-		double totalDistance = solution.getRoutes().stream().mapToDouble(this::calculateRouteDistance).sum();
 
 		csvData.add(new String[] { "ОБЩИЕ ИТОГИ", "", "", "", "", "", "", "", "" });
 		csvData.add(new String[] { "Всего маршрутов", String.valueOf(solution.getRoutes().size()), "", "", "", "", "",
@@ -605,31 +509,6 @@ public class ColossusProcessorJSpirit {
 		csvData.add(new String[] { "Всего магазинов", String.valueOf(totalShops), "", "", "", "", "", "", "" });
 		csvData.add(
 				new String[] { "Общий пробег, км", String.format("%.2f", totalDistance), "", "", "", "", "", "", "" });
-	}
-
-	private double calculateRouteDistance(VehicleRoute route) {
-		double distance = 0;
-		TourActivity prevActivity = route.getStart();
-
-		for (TourActivity activity : route.getActivities()) {
-			distance += getDistanceBetweenActivities(prevActivity, activity);
-			prevActivity = activity;
-		}
-
-		// Добавляем расстояние от последней активности до конца маршрута
-		distance += getDistanceBetweenActivities(prevActivity, route.getEnd());
-
-		return distance;
-	}
-
-	private double getDistanceBetweenActivities(TourActivity from, TourActivity to) {
-		// Здесь нужно использовать вашу матрицу расстояний или другой способ расчета
-		// В простейшем случае можно использовать евклидово расстояние:
-		Location fromLoc = from.getLocation();
-		Location toLoc = to.getLocation();
-
-		return Math.sqrt(Math.pow(fromLoc.getCoordinate().getX() - toLoc.getCoordinate().getX(), 2)
-				+ Math.pow(fromLoc.getCoordinate().getY() - toLoc.getCoordinate().getY(), 2));
 	}
 
 	/**

@@ -55,7 +55,7 @@ import by.base.main.util.GraphHopper.RoutingMachine;
 @Service
 public class MatrixMachine {
 	
-	public static Map<String, Double> matrix = new HashMap<String, Double>(); // матрица расстояний
+	public Map<String, Double> matrix = new HashMap<String, Double>(); // матрица расстояний
 	public static Map<String, Long> matrixTime = new HashMap<String, Long>(); // матрица времени
 	
 	@Autowired

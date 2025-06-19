@@ -45,7 +45,7 @@ public class VehicleWay {
 	 */
 	private int status;
 	
-	private Vehicle vehicle;
+	private MyVehicle vehicle;
 
 	private Double freePallInVehicle = null;
 	
@@ -76,7 +76,7 @@ public class VehicleWay {
 	 * @param status
 	 * @param vehicle
 	 */
-	public VehicleWay(List<Shop> way, Double overrun, int status, Vehicle vehicle) {
+	public VehicleWay(List<Shop> way, Double overrun, int status, MyVehicle vehicle) {
 		super();
 		if(way == null || way.isEmpty()) {
 			System.err.println("Объект VehicleWay не может быть создан без порядка прохождения точек");
@@ -103,7 +103,7 @@ public class VehicleWay {
 	 * @param status
 	 * @param vehicle
 	 */
-	public VehicleWay(String id, List<Shop> way, Double overrun, int status, Vehicle vehicle) {
+	public VehicleWay(String id, List<Shop> way, Double overrun, int status, MyVehicle vehicle) {
 		super();
 		if(way == null || way.isEmpty()) {
 			System.err.println("Объект VehicleWay не может быть создан без порядка прохождения точек");
@@ -129,7 +129,7 @@ public class VehicleWay {
 	 * @param status
 	 * @param vehicle
 	 */
-	public VehicleWay(List<Shop> way, Double overrun, int status, Vehicle vehicle, Boolean isRestriction) {
+	public VehicleWay(List<Shop> way, Double overrun, int status, MyVehicle vehicle, Boolean isRestriction) {
 		super();
 		if(way == null || way.isEmpty()) {
 			System.err.println("Объект VehicleWay не может быть создан без порядка прохождения точек");
@@ -218,7 +218,7 @@ public class VehicleWay {
 		this.id = id;
 	}
 
-	public Vehicle getVehicle() {
+	public MyVehicle getVehicle() {
 		return vehicle;
 	}
 	
@@ -230,7 +230,7 @@ public class VehicleWay {
 		this.summPall = summPall;
 	}
 
-	public void setVehicle(Vehicle vehicle) {
+	public void setVehicle(MyVehicle vehicle) {
 		this.vehicle = vehicle;
 	}
 

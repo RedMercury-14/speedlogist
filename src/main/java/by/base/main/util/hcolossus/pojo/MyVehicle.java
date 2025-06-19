@@ -10,7 +10,7 @@ import com.itextpdf.text.pdf.PdfStructTreeController.returnType;
  * важен тип, перевозимое кол-во паллет и перевозимый вес.
  * 
  */
-public class Vehicle{
+public class MyVehicle{
 	
 	private int id;
 	private String name;
@@ -35,7 +35,7 @@ public class Vehicle{
 	 * @param type
 	 * @param pall
 	 */
-	public Vehicle(int id, String name, String type, Double pall) {
+	public MyVehicle(int id, String name, String type, Double pall) {
 		super();
 		this.id = id;
 		this.name = name;
@@ -55,7 +55,7 @@ public class Vehicle{
 	 * @param pall
 	 * @param weigth
 	 */
-	public Vehicle(int id, String name, String type, Double pall, Integer weigth) {
+	public MyVehicle(int id, String name, String type, Double pall, Integer weigth) {
 		super();
 		this.id = id;
 		this.name = name;
@@ -68,7 +68,7 @@ public class Vehicle{
 		this.targetPall = 0.0;
 	}
 
-	public Vehicle() {
+	public MyVehicle() {
 		super();
 		this.isFull = false;
 		this.isTwiceRound = false;
@@ -270,8 +270,8 @@ public class Vehicle{
 	 * @return
 	 */
 	@JsonIgnore
-	public Vehicle getVirtualVehicle() {
-		Vehicle vehicle = new Vehicle();
+	public MyVehicle getVirtualVehicle() {
+		MyVehicle vehicle = new MyVehicle();
 		vehicle.setId(this.id*(-1));
 		vehicle.setName(this.name);
 		vehicle.setType(this.type);
@@ -293,8 +293,8 @@ public class Vehicle{
 	 * @return
 	 */
 	@JsonIgnore
-	public Vehicle cloneForSecondRound() {
-	    Vehicle clonedVehicle = new Vehicle();
+	public MyVehicle cloneForSecondRound() {
+	    MyVehicle clonedVehicle = new MyVehicle();
 	    
 	    clonedVehicle.setId(this.getId());
 	    clonedVehicle.setName(this.getName());
@@ -328,7 +328,7 @@ public class Vehicle{
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		Vehicle other = (Vehicle) obj;
+		MyVehicle other = (MyVehicle) obj;
 		return id == other.id && isClone == other.isClone && Objects.equals(pall, other.pall)
 				&& Objects.equals(weigth, other.weigth);
 	}

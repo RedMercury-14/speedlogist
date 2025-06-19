@@ -264,7 +264,8 @@ export const clearMileageForCarrierBaseUrl = `/speedlogist/api/carrier/maintenan
 // Маршрутизатор
 ///////////////////////////////////////////////
 export const mapOptimization3Url = `/speedlogist/api/map/myoptimization3`
-export const mapOptimization5Url = `/speedlogist/api/map/myoptimization5`
+//export const mapOptimization5Url = `/speedlogist/api/map/myoptimization5`
+export const mapOptimization5Url = `/speedlogist/api/map/myoptimization6`
 export const saveOptimizeRouteParamsUrl = `/speedlogist/api/map/set`
 export const getAllPolygonsUrl = `/speedlogist/api/map/getAllPolygons`
 export const sendGeojsonDataUrl = `/speedlogist/api/map/savePolygon`

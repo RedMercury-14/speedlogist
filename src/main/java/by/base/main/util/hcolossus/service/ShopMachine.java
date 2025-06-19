@@ -19,6 +19,7 @@ import com.google.gson.Gson;
 import by.base.main.model.Shop;
 import by.base.main.service.ShopService;
 import by.base.main.util.hcolossus.exceptions.FatalInsufficientPalletTruckCapacityException;
+import scala.annotation.bridge;
 
 /**
  * Класс подготовки и обработки магазинов
@@ -136,6 +137,7 @@ public class ShopMachine {
 		List<Shop> result = new ArrayList<Shop>();
 		for (int i = 0; i < shopList.size(); i++) {
 			Integer integer = shopList.get(i);
+			if(integer == stock) break;
 			Shop shop = (Shop) SerializationUtils.clone(allShop.get(integer));
 			if(shop == null) {
 				System.err.println("ShopMachine.prepareShopList5Parameters: Магазин " + integer + " не найден в базе данных!");

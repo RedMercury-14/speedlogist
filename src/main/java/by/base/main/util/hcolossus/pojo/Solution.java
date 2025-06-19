@@ -33,7 +33,7 @@ public class Solution {
 	/**
 	 * Пустые машины
 	 */
-	private List<Vehicle> emptyTrucks;
+	private List<MyVehicle> emptyTrucks;
 	
 	/**
 	 * Проблемные магазины (которые подзодят к нескольким маршрутам, но с отрицательной логичностью)
@@ -97,11 +97,11 @@ public class Solution {
 		this.inProcessWay = inProcessWay;
 	}
 
-	public List<Vehicle> getEmptyTrucks() {
+	public List<MyVehicle> getEmptyTrucks() {
 		return emptyTrucks;
 	}
 
-	public void setEmptyTrucks(List<Vehicle> emptyTrucks) {
+	public void setEmptyTrucks(List<MyVehicle> emptyTrucks) {
 		this.emptyTrucks = emptyTrucks;
 	}
 
@@ -194,7 +194,7 @@ public class Solution {
 		}
 		
 		String emptyTrucksStr = "";
-		for (Vehicle truck : emptyTrucks) {
+		for (MyVehicle truck : emptyTrucks) {
 			emptyTrucksStr = emptyTrucksStr + truck.toString() + "\n";
 		}
 		

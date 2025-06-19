@@ -10,7 +10,7 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.stereotype.Service;
 
-import by.base.main.util.hcolossus.pojo.Vehicle;
+import by.base.main.util.hcolossus.pojo.MyVehicle;
 
 /**
  * Класс подготовки и обработки машин
@@ -20,7 +20,7 @@ public class VehicleMachine {
 
 //	private Comparator<Vehicle> vehicleComparator = (o1, o2) -> (o2.getPall() - o1.getPall()); // сортирует от большей
 																								// потребности к меньшей
-	private Comparator<Vehicle> vehicleComparator = (o1, o2) -> Double.compare(o2.getPall(), o1.getPall());
+	private Comparator<MyVehicle> vehicleComparator = (o1, o2) -> Double.compare(o2.getPall(), o1.getPall());
 
 
 	/**
@@ -30,9 +30,9 @@ public class VehicleMachine {
 	 * @return
 	 * @throws ParseException 
 	 */
-	public List<Vehicle> prepareVehicleList(JSONObject jsonMainObject) throws ParseException {
+	public List<MyVehicle> prepareVehicleList(JSONObject jsonMainObject) throws ParseException {
 		JSONParser parser = new JSONParser();
-		List<Vehicle> result = new ArrayList<Vehicle>();
+		List<MyVehicle> result = new ArrayList<MyVehicle>();
 		// создаём машины
 		// фуры
 		JSONObject big = (JSONObject) parser.parse(jsonMainObject.get("big").toString());
@@ -41,7 +41,7 @@ public class VehicleMachine {
 		double maxDurationBig = Double.parseDouble(big.get("maxMileage").toString()); // это тоннаж
 		int id = 1;
 		for (int i = 0; i < nuOfBig; i++) {
-			Vehicle vehicle = new Vehicle(id, "фура", "фура", capacityBig);
+			MyVehicle vehicle = new MyVehicle(id, "фура", "фура", capacityBig);
 			result.add(vehicle);
 			id++;
 		}
@@ -51,7 +51,7 @@ public class VehicleMachine {
 		double capacityMiddle = Integer.parseInt(middle.get("tonnage").toString());
 		double maxDurationMiddle = Double.parseDouble(middle.get("maxMileage").toString());
 		for (int i = 0; i < nuOfVehiclesMiddle; i++) {
-			Vehicle vehicle = new Vehicle(id, "средняя", "средняя", capacityMiddle);
+			MyVehicle vehicle = new MyVehicle(id, "средняя", "средняя", capacityMiddle);
 			result.add(vehicle);
 			id++;
 		}
@@ -61,7 +61,7 @@ public class VehicleMachine {
 		double capacityLittle = Integer.parseInt(little.get("tonnage").toString());
 		double maxDurationLittle = Double.parseDouble(little.get("maxMileage").toString());
 		for (int i = 0; i < nuOfVehiclesLittle; i++) {
-			Vehicle vehicle = new Vehicle(id, "маленькая", "маленькая", capacityLittle);
+			MyVehicle vehicle = new MyVehicle(id, "маленькая", "маленькая", capacityLittle);
 			result.add(vehicle);
 			id++;
 		}
@@ -75,9 +75,9 @@ public class VehicleMachine {
 	 * @return
 	 * @throws ParseException
 	 */
-	public List<Vehicle> prepareVehicleListVersion2(JSONObject jsonMainObject) throws ParseException {
+	public List<MyVehicle> prepareVehicleListVersion2(JSONObject jsonMainObject) throws ParseException {
 		JSONParser parser = new JSONParser();
-		List<Vehicle> result = new ArrayList<Vehicle>();
+		List<MyVehicle> result = new ArrayList<MyVehicle>();
 		JSONArray carsArrayJSON = (JSONArray) jsonMainObject.get("cars");
 		int id = 1;
 		for (Object object : carsArrayJSON) {
@@ -88,12 +88,12 @@ public class VehicleMachine {
 			int weightOfCars = Integer.parseInt(jsonCarObject.get("maxTonnage").toString()); //это вес
 			boolean isTwiceRound = Boolean.parseBoolean(jsonCarObject.get("secondRound").toString());
 			for (int i = 0; i < numOfCars; i++) {
-				Vehicle vehicle = new Vehicle(id, nameCar, nameCar, pallOfCars, weightOfCars);
+				MyVehicle vehicle = new MyVehicle(id, nameCar, nameCar, pallOfCars, weightOfCars);
 				vehicle.setTwiceRound(isTwiceRound);
 				result.add(vehicle);
 				id++;
 				if(vehicle.isTwiceRound()) {
-					Vehicle cloneTruck = vehicle.cloneForSecondRound();
+					MyVehicle cloneTruck = vehicle.cloneForSecondRound();
 					cloneTruck.setClone(true);
 					cloneTruck.setTwiceRound(false);
 					cloneTruck.setId(cloneTruck.getId()*(-1));

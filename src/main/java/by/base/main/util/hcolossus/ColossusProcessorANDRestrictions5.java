@@ -22,7 +22,7 @@ import by.base.main.service.ShopService;
 import by.base.main.util.hcolossus.exceptions.FatalInsufficientPalletTruckCapacityException;
 import by.base.main.util.hcolossus.exceptions.InsufficientPalletTruckCapacityException;
 import by.base.main.util.hcolossus.pojo.Solution;
-import by.base.main.util.hcolossus.pojo.Vehicle;
+import by.base.main.util.hcolossus.pojo.MyVehicle;
 import by.base.main.util.hcolossus.pojo.VehicleWay;
 import by.base.main.util.hcolossus.service.ComparatorShops;
 import by.base.main.util.hcolossus.service.ComparatorShopsDistanceMain;
@@ -81,7 +81,7 @@ public class ColossusProcessorANDRestrictions5 {
 //	    return Integer.compare(o2.getPall(), o1.getPall());
 //	};
 	
-	private Comparator<Vehicle> vehicleComparatorFromMax = (o1, o2) -> { // этот метод сортирует от большей потребности к меньшей без учёта веса и отправляет вниз списка машины помоченные как КЛОНЫ!
+	private Comparator<MyVehicle> vehicleComparatorFromMax = (o1, o2) -> { // этот метод сортирует от большей потребности к меньшей без учёта веса и отправляет вниз списка машины помоченные как КЛОНЫ!
     // Сначала проверяем isTwiceRound() и перемещаем такие элементы вниз всего списка
     if (o1.isClone() && !o2.isClone()) {
         return 1;  // o1 опускаем вниз
@@ -94,7 +94,7 @@ public class ColossusProcessorANDRestrictions5 {
 };
 	
 //	private Comparator<Vehicle> vehicleComparatorFromMin = (o1, o2) -> (o1.getPall() - o2.getPall()); // сортирует от меньшей потребности к большей без учёта веса
-	private Comparator<Vehicle> vehicleComparatorFromMin = (o1, o2) -> Double.compare(o1.getPall(), o2.getPall());//сортирует от меньшей потребности к большей без учёта веса Переделка прошлго метода под double
+	private Comparator<MyVehicle> vehicleComparatorFromMin = (o1, o2) -> Double.compare(o1.getPall(), o2.getPall());//сортирует от меньшей потребности к большей без учёта веса Переделка прошлго метода под double
 //	
 //	private Comparator<Vehicle> vehicleComparatorFromMinAndMass = (o1, o2) -> (o1.getWeigth() / o1.getPall() - o2.getWeigth() / o2.getPall());// сортирует от меньшей потребности к большей C УЧЁТОМ веса
 //	
@@ -118,12 +118,12 @@ public class ColossusProcessorANDRestrictions5 {
 	
 	private List<Shop> shopsForOptimization;
 	private List<Shop> shopsForDelite;
-	private List<Vehicle> trucks;
+	private List<MyVehicle> trucks;
 	/**
 	 * Список тачек, которые подходят для вывоза товара из магазина
 	 */
-	private List<Vehicle> trucksForShopReturn;
-	private List<Vehicle> vehicleForDelete;
+	private List<MyVehicle> trucksForShopReturn;
+	private List<MyVehicle> vehicleForDelete;
 	private String stackTrace;
 	private List<VehicleWay> whiteWay;
 	
@@ -160,7 +160,7 @@ public class ColossusProcessorANDRestrictions5 {
 		List <Shop> shops = new ArrayList<Shop>(allShop.values());
 		this.jsonMainObject = jsonMainObject;
 		whiteWay = new ArrayList<VehicleWay>();
-		vehicleForDelete = new ArrayList<Vehicle>();
+		vehicleForDelete = new ArrayList<MyVehicle>();
 		// блок подготовки
 		// заполняем static матрицу. Пусть хранится там
 		matrixMachine.createMatrixHasList(shopList, stock, allShop);
@@ -212,7 +212,7 @@ public class ColossusProcessorANDRestrictions5 {
 		Double pallReturnInWay = null; //
 		
 		stackTrace = stackTrace +  "Начальное распределение машин слеюущее: \n";
-		for (Vehicle v : trucks) {
+		for (MyVehicle v : trucks) {
 			String answer = !v.isTwiceRound() ? "НЕТ" : "ДА";
 			String answer2 = !v.isClone() ? "НЕТ" : "ДА";
 			stackTrace = stackTrace + "Машина : " + v.getId()+"/"+v.getName() + ", паллеты : "+ v.getPall() +", второй круг : " + answer + ", клон : " + answer2 +"!\n";
@@ -228,10 +228,10 @@ public class ColossusProcessorANDRestrictions5 {
 		 * 2 броним под них машины по принципу = или боольше.
 		 * 3 когда доходим до магазина: проверяем если машина больше потребности, то бронь возвращаем, если меньше - меняем тачку
 		 */
-		Map<Integer, Vehicle> reservationTruck = new HashedMap<Integer, Vehicle>(); // ключ - это магазин, значение - заброненая тачка
+		Map<Integer, MyVehicle> reservationTruck = new HashedMap<Integer, MyVehicle>(); // ключ - это магазин, значение - заброненая тачка
 		for (Shop shop : shopsForOptimization) {
 			if(shop.getPallReturn() != null) {
-				for (Vehicle truck : trucks) {
+				for (MyVehicle truck : trucks) {
 					if(truck.getPall()>=shop.getPallReturn()) {
 						reservationTruck.put(shop.getNumshop(), truck);
 					}
@@ -281,7 +281,7 @@ public class ColossusProcessorANDRestrictions5 {
 			Double maxPallTruck = trucks.get(0).getPall();
 			Double maxPallTruckRestriction = null;
 			if(pallRestrictionIdeal != null) {
-				for (Vehicle truck : trucks) {
+				for (MyVehicle truck : trucks) {
 					if (truck.getPall() <= pallRestrictionIdeal) {
 						maxPallTruckRestriction = truck.getPall();
 						break;
@@ -331,7 +331,7 @@ public class ColossusProcessorANDRestrictions5 {
 						
 			
 			// создаём виртуальную машину
-			Vehicle virtualTruck = new Vehicle();
+			MyVehicle virtualTruck = new MyVehicle();
 			
 			//тут проверяем, есть ли в этом магазе паллеты для возврата. Если есть и машина подходит, то ок.
 			if(firstShop.getPallReturn() == null || firstShop.getPallReturn()!= null && firstShop.getPallReturn() <= trucks.get(0).getPall()) {
@@ -493,7 +493,7 @@ public class ColossusProcessorANDRestrictions5 {
 					flag = false;
 					
 					Integer specialPall = specialShop.getMaxPall();
-					List<Vehicle> specialTrucks = new ArrayList<Vehicle>();
+					List<MyVehicle> specialTrucks = new ArrayList<MyVehicle>();
 					trucks.stream().filter(t-> t.getPall()<=specialPall).forEach(t->specialTrucks.add(t));
 					if(specialTrucks.isEmpty()) {
 						System.err.println("Отсутствуют машины с паллетовместимостью " + specialPall + " и ниже!");
@@ -709,7 +709,7 @@ public class ColossusProcessorANDRestrictions5 {
 				
 				
 				if(vehicleWayVirtual.getVehicle().isTwiceRound() && !vehicleWayVirtual.getVehicle().isClone() && vehicleWayVirtual.calcTotalRun(matrixMachine) > 250000.0 ) {//если тачка помечена готовой для второго круга - создаём её клон
-					Vehicle cloneTruck = vehicleWayVirtual.getVehicle().cloneForSecondRound();
+					MyVehicle cloneTruck = vehicleWayVirtual.getVehicle().cloneForSecondRound();
 					cloneTruck.setClone(true);
 					cloneTruck.setTwiceRound(false);
 					cloneTruck.setId(cloneTruck.getId()*(-1));
@@ -735,7 +735,7 @@ public class ColossusProcessorANDRestrictions5 {
 			stackTrace = stackTrace + v + "\n";
 		}
 		stackTrace = stackTrace + "========= Свободные авто ==========\n";
-		for (Vehicle v : trucks) {
+		for (MyVehicle v : trucks) {
 			stackTrace = stackTrace + v + "\n";
 		}
 		stackTrace = stackTrace + "+++++++++ Оставшиеся магазины +++++++++++\n";
@@ -977,7 +977,7 @@ public class ColossusProcessorANDRestrictions5 {
 	 * @param targetStock
 	 */
 	private void superProcessingWay(VehicleWay vehicleWayVirtual, Shop targetStock) {
-		Vehicle truck = vehicleWayVirtual.getVehicle();
+		MyVehicle truck = vehicleWayVirtual.getVehicle();
 		List<Shop> mainPoints = new ArrayList<Shop>(vehicleWayVirtual.getWay());
 		if(mainPoints.get(0).equals(targetStock)) mainPoints.remove(0);
 		if(mainPoints.get(mainPoints.size()-1).equals(targetStock)) mainPoints.remove(mainPoints.size()-1);
@@ -1105,11 +1105,11 @@ public class ColossusProcessorANDRestrictions5 {
 				}
 			}
 			
-			Vehicle oldTruck = vehicleWayVirtual.getVehicle();
+			MyVehicle oldTruck = vehicleWayVirtual.getVehicle();
 			Double pallHasOldTruck = vehicleWayVirtual.getVehicle().getPall();
 			trucks.forEach(t-> System.out.println(t));
 			trucks.sort(vehicleComparatorFromMin);
-			for (Vehicle truck : trucks) {
+			for (MyVehicle truck : trucks) {
 //				System.err.println(truck + " <----> " + oldTruck);
 				if(truck.getWeigth() >= oldTruck.getTargetWeigth()) {
 					if (truck.getPall() >= oldTruck.getTargetPall() && truck.getPall() < pallHasOldTruck && extraPall > truck.getPall() && truck.getPall() >= pallReturnInWay) {
@@ -1179,7 +1179,7 @@ public class ColossusProcessorANDRestrictions5 {
 							processWayNew.add(targetStock);
 							processWayNew.add(e.getValue());
 							processWayNew.addAll(processWay);							
-							Vehicle truck = vehicleWayVirtual.getVehicle();
+							MyVehicle truck = vehicleWayVirtual.getVehicle();
 							truck.setTargetPall(calcPallHashHsop(processWayNew, targetStock));
 							truck.setTargetWeigth(truck.getTargetWeigth() + e.getValue().getWeight());
 							vehicleWayVirtual.setVehicle(truck);
@@ -1394,7 +1394,7 @@ public class ColossusProcessorANDRestrictions5 {
 		//&& shopWeight < maxWeighTruck
 		if (shopPall == maxPallTruck && maxWeighTruck >= shopWeight) {
 			System.err.println("Блок распределения идеальных маршрутов: Распределяем магазин по паллетам, при том что паллеты проходят ровно!");
-			Vehicle targetTruck = trucks.remove(0);
+			MyVehicle targetTruck = trucks.remove(0);
 			targetTruck.setTargetPall(targetTruck.getPall()); // загружаем машину полностью
 			targetTruck.setTargetWeigth(shop.getWeight()); //загружаем машину по весу
 			List<Shop> points = new ArrayList<Shop>();
@@ -1409,7 +1409,7 @@ public class ColossusProcessorANDRestrictions5 {
 		}else if(shopPall == maxPallTruck && maxWeighTruck < shopWeight) {
 			System.err.println("Блок распределения идеальных маршрутов: Распределяем магазин по весу, при том что паллеты проходят ровно!");
 			//делим магаз по весу
-			Vehicle targetTruck = trucks.remove(0);
+			MyVehicle targetTruck = trucks.remove(0);
 			double oneWidthPall = (double) (shop.getWeight()/shop.getNeedPall());
 			double widthNewShop = oneWidthPall*targetTruck.getPall();						
 			double newNeedPall = targetTruck.getWeigth()/(int) oneWidthPall; // определяем сколько паллет (по ср. весу) поместится в эту машину
@@ -1442,7 +1442,7 @@ public class ColossusProcessorANDRestrictions5 {
 																		// оставшейся машины - он загружает
 																		// машину полностью и создаёт магаз
 																		// с остатком от потребности
-			Vehicle targetTruck = trucks.remove(0);
+			MyVehicle targetTruck = trucks.remove(0);
 			
 			//проверяем, поместится ли данный магазин в фуру по весу!
 			//делим паллеты на вес, находим приблизительный вес паллеты и ссумируем по паллетам в машине
@@ -1553,7 +1553,7 @@ public class ColossusProcessorANDRestrictions5 {
 		
 		if (shopPall <= pallRestrictionIdeal && shopPall == maxPallTruck && maxWeighTruck >= shopWeight) {
 			System.err.println("Блок распределения идеальных маршрутов: Распределяем магазин БЕЗ ограничениями по весу, при том что паллеты проходят ровно!");
-			Vehicle targetTruck = trucks.remove(0);
+			MyVehicle targetTruck = trucks.remove(0);
 			targetTruck.setTargetPall(targetTruck.getPall()); // загружаем машину полностью
 			targetTruck.setTargetWeigth(shopWeight); // загружаем авто по весу
 			List<Shop> points = new ArrayList<Shop>();
@@ -1568,7 +1568,7 @@ public class ColossusProcessorANDRestrictions5 {
 		}else if(shopPall <= pallRestrictionIdeal && shopPall == maxPallTruck && maxWeighTruck < shopWeight) {
 			System.err.println("Блок распределения идеальных маршрутов: Распределяем магазин с ограничениями по весу, при том что паллеты проходят ровно!");
 			//делим магаз по весу
-			Vehicle targetTruck = trucks.remove(0);
+			MyVehicle targetTruck = trucks.remove(0);
 			double oneWidthPall = (double) (shop.getWeight()/shop.getNeedPall());
 			double widthNewShop = oneWidthPall*targetTruck.getPall();						
 			double newNeedPall = targetTruck.getWeigth()/(int) oneWidthPall; // определяем сколько паллет (по ср. весу) поместится в эту машину
@@ -1597,8 +1597,8 @@ public class ColossusProcessorANDRestrictions5 {
 			whiteWay.add(vehicleWay);
 		}
 		if (pallRestrictionIdeal != null && shopPall >= pallRestrictionIdeal || pallRestrictionIdeal != null && pallRestrictionIdeal < maxPallTruck) {
-			Vehicle targetTruck = null;
-			for (Vehicle truck : trucks) {
+			MyVehicle targetTruck = null;
+			for (MyVehicle truck : trucks) {
 				if (truck.getPall() <= pallRestrictionIdeal) {
 					targetTruck = truck;
 					break;
@@ -1866,13 +1866,13 @@ public class ColossusProcessorANDRestrictions5 {
 		 * @return {@code true}, если вместимость грузовиков достаточна для всех требуемых паллет магазинов;
 		 *         {@code false}, если вместимости грузовиков недостаточно
 		 */
-		public boolean checkPallets(List<Shop> shopsForOptimization, List<Vehicle> trucks) {
+		public boolean checkPallets(List<Shop> shopsForOptimization, List<MyVehicle> trucks) {
 		    double totalNeedPall = shopsForOptimization.stream()
 		        .mapToDouble(Shop::getNeedPall)
 		        .sum();
 
 		    double totalPall = trucks.stream()
-		        .mapToDouble(Vehicle::getPall)
+		        .mapToDouble(MyVehicle::getPall)
 		        .sum();
 
 		    return totalPall >= totalNeedPall;

@@ -3,7 +3,7 @@ package by.base.main.util.hcolossus.exceptions;
 import java.util.List;
 
 import by.base.main.model.Shop;
-import by.base.main.util.hcolossus.pojo.Vehicle;
+import by.base.main.util.hcolossus.pojo.MyVehicle;
 
 /**
  * Исключение, возникающее в случае, если требуемая вместимость паллет для магазинов
@@ -20,7 +20,7 @@ public class InsufficientPalletTruckCapacityException extends RuntimeException {
 	
 	private List<Shop> shopsForOptimization;
 	
-	private List<Vehicle> trucks;
+	private List<MyVehicle> trucks;
 	
 	private Double mainKoef;
 
@@ -38,7 +38,7 @@ public class InsufficientPalletTruckCapacityException extends RuntimeException {
 	 * @param mainKoef
 	 */
 	public InsufficientPalletTruckCapacityException(String message, List<Shop> shopsForOptimization,
-			List<Vehicle> trucks, Double mainKoef) {
+			List<MyVehicle> trucks, Double mainKoef) {
 		super(message);
 		this.message = message;
 		this.shopsForOptimization = shopsForOptimization;
@@ -62,11 +62,11 @@ public class InsufficientPalletTruckCapacityException extends RuntimeException {
 		this.shopsForOptimization = shopsForOptimization;
 	}
 
-	public List<Vehicle> getTrucks() {
+	public List<MyVehicle> getTrucks() {
 		return trucks;
 	}
 
-	public void setTrucks(List<Vehicle> trucks) {
+	public void setTrucks(List<MyVehicle> trucks) {
 		this.trucks = trucks;
 	}
 

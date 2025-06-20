@@ -60,4 +60,11 @@ public class DistanceMatrixServiceImpl implements DistanceMatrixService {
 		return distanceMatrixDAO.getDistanceMatrixByShops(shops);
 	}
 
+	@Override
+	@Transactional(transactionManager = "myTransactionManagerLogistFile")
+	public List<Map<String, Double>> getMatrixByShopsDistanceAndTime(List<Integer> shops) {
+		// TODO Auto-generated method stub
+		return distanceMatrixDAO.getMatrixByShopsDistanceAndTime(shops);
+	}
+
 }

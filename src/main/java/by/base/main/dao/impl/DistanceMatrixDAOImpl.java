@@ -1,5 +1,6 @@
 package by.base.main.dao.impl;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -135,6 +136,39 @@ public class DistanceMatrixDAOImpl implements DistanceMatrixDAO{
 	    }
 
 	    return distanceMap;
+	}
+
+	@Override
+	public List<Map<String, Double>> getMatrixByShopsDistanceAndTime(List<Integer> shops) {
+		if (shops == null || shops.isEmpty()) {
+	        return Collections.emptyList();
+	    }
+
+	    // Преобразуем List<Integer> в List<String> для сравнения с текстовыми колонками
+	    List<String> shopIdsAsString = shops.stream()
+	        .map(String::valueOf)
+	        .collect(Collectors.toList());
+
+	    Session currentSession = sessionFactoryLogistFile.getCurrentSession();
+
+	    Query<DistanceMatrix> query = currentSession.createQuery(
+	        "FROM DistanceMatrix dm WHERE dm.shopFrom IN (:shops) AND dm.shopTo IN (:shops)",
+	        DistanceMatrix.class
+	    );
+	    query.setParameter("shops", shopIdsAsString);
+
+	    List<DistanceMatrix> distances = query.getResultList();
+
+	    Map<String, Double> distanceMap = new HashMap<>();
+	    Map<String, Double> timeMap = new HashMap<>();
+	    for (DistanceMatrix dm : distances) {
+	        distanceMap.put(dm.getIdDistanceMatrix(), dm.getDistance());
+	        timeMap.put(dm.getIdDistanceMatrix(), dm.getTime());
+	    }
+	    
+	    List<Map<String, Double>> result = Arrays.asList(distanceMap,timeMap);
+
+	    return result;
 	}
 
 }

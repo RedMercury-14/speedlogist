@@ -8,6 +8,7 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -20,53 +21,59 @@ import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.graphhopper.jsprit.core.algorithm.PrettyAlgorithmBuilder;
+import com.graphhopper.jsprit.core.algorithm.SearchStrategy;
 import com.graphhopper.jsprit.core.algorithm.VehicleRoutingAlgorithm;
+import com.graphhopper.jsprit.core.algorithm.acceptor.GreedyAcceptance;
 import com.graphhopper.jsprit.core.algorithm.box.Jsprit;
+import com.graphhopper.jsprit.core.algorithm.module.RuinAndRecreateModule;
+import com.graphhopper.jsprit.core.algorithm.recreate.AbstractInsertionStrategy;
+import com.graphhopper.jsprit.core.algorithm.recreate.BestInsertion;
+import com.graphhopper.jsprit.core.algorithm.recreate.InsertionBuilder;
+import com.graphhopper.jsprit.core.algorithm.recreate.InsertionStrategyBuilder;
+import com.graphhopper.jsprit.core.algorithm.recreate.RegretInsertion;
+import com.graphhopper.jsprit.core.algorithm.ruin.RuinStrategy;
+import com.graphhopper.jsprit.core.algorithm.ruin.listener.RuinListener;
+import com.graphhopper.jsprit.core.algorithm.selector.SelectBest;
 import com.graphhopper.jsprit.core.algorithm.state.StateManager;
+import com.graphhopper.jsprit.core.analysis.SolutionAnalyser;
 import com.graphhopper.jsprit.core.problem.Location;
 import com.graphhopper.jsprit.core.problem.VehicleRoutingProblem;
 import com.graphhopper.jsprit.core.problem.constraint.ConstraintManager;
+import com.graphhopper.jsprit.core.problem.cost.TransportDistance;
 import com.graphhopper.jsprit.core.problem.cost.VehicleRoutingTransportCosts;
 import com.graphhopper.jsprit.core.problem.job.Job;
 import com.graphhopper.jsprit.core.problem.job.Service;
 import com.graphhopper.jsprit.core.problem.job.Shipment;
+import com.graphhopper.jsprit.core.problem.solution.SolutionCostCalculator;
 import com.graphhopper.jsprit.core.problem.solution.VehicleRoutingProblemSolution;
 import com.graphhopper.jsprit.core.problem.solution.route.VehicleRoute;
 import com.graphhopper.jsprit.core.problem.solution.route.activity.TourActivity;
+import com.graphhopper.jsprit.core.problem.vehicle.FiniteFleetManagerFactory;
 import com.graphhopper.jsprit.core.problem.vehicle.Vehicle;
+import com.graphhopper.jsprit.core.problem.vehicle.VehicleFleetManager;
 import com.graphhopper.jsprit.core.problem.vehicle.VehicleImpl;
 import com.graphhopper.jsprit.core.problem.vehicle.VehicleType;
 import com.graphhopper.jsprit.core.problem.vehicle.VehicleTypeImpl;
 import com.graphhopper.jsprit.core.reporting.SolutionPrinter;
 import com.graphhopper.jsprit.core.util.Solutions;
 import com.graphhopper.jsprit.core.util.VehicleRoutingTransportCostsMatrix;
-
 import by.base.main.model.Shop;
+import by.base.main.util.GraphHopper.ExampleManyRouteCustomAlgorinm.MyBestStrategy;
 import by.base.main.util.hcolossus.algorithm.ClusterConstraint;
+import by.base.main.util.hcolossus.algorithm.MaxDistanceConstraint;
+import by.base.main.util.hcolossus.algorithm.MaxDistanceConstraintCritical;
 import by.base.main.util.hcolossus.pojo.Solution;
 import by.base.main.util.hcolossus.service.MatrixMachine;
 import by.base.main.util.hcolossus.service.ShopMachine;
-import by.base.main.util.hcolossus.service.VehicleMachine;
 import smile.clustering.KMeans;
 
 /**
- * Самый основной оптимизатор! БАЗА! Изменение запрещено! Прямое продолжение 3
- * -й версии Особенность метода в том, что он принимает еще потребность магазина
- * по вывозу паллет и подбирает машину с учётом этих паллет. Этот метод
- * полностью не протестирован. Главное - не реализована ситуация, когда
- * несколько потребностей попадает в машину (а должна ли?!) Прямое продолжение 4
- * -й версии Особенность этого метода в том, что он оценивает оставшиеся машины
- * (суммарно паллеты) с суммой паллет потребностей магазинов. Если меньше -
- * останавливает итерацию на текущей трубе и переходит к следующей. Важно: метод
- * генерит исключения! Все сообщения будут передаваться через исключения
+ * Версия оптимизатора Jspirit с собственным алгоритмом вставки
+ * 
  */
 @Component
-public class ColossusProcessorJSpirit2 {
-
-	private JSONObject jsonMainObject;
-
-	@Autowired
-	private VehicleMachine vehicleMachine;
+public class ColossusProcessorJSpirit3CustomAlgoritm {
 
 	@Autowired
 	private ShopMachine shopMachine;
@@ -108,6 +115,8 @@ public class ColossusProcessorJSpirit2 {
 		List<Shop> shops = new ArrayList<>(allShop.values());
 		List<Shop> shopsForOptimization = shopMachine.prepareShopList5Parameters(shopList, pallHasShops,
 				tonnageHasShops, stock, shopsWithCrossDockingMap, pallReturn, weightDistributionList, shops);
+		
+		
 		Location depotLocation = Location.newInstance(Double.parseDouble(targetStock.getLat()),
 				Double.parseDouble(targetStock.getLng()));
 		List<Service> shopsService = createServicesFromShops(shopsForOptimization);
@@ -120,28 +129,6 @@ public class ColossusProcessorJSpirit2 {
 		VehicleRoutingProblem.Builder vrpBuilder = VehicleRoutingProblem.Builder.newInstance();
 		vrpBuilder.setFleetSize(VehicleRoutingProblem.FleetSize.FINITE);
 		vrpBuilder.setRoutingCost(costMatrix); // Указываем кастомную матрицу
-			
-
-		// Данные: координаты заказов
-		//делаем кластеры
-		double[][] coordinates = shopsService.stream()
-		    .map(job -> new double[]{ job.getActivities().get(0).getLocation().getCoordinate().getX(), job.getActivities().get(0).getLocation().getCoordinate().getY() })
-		    .toArray(double[][]::new);
-
-		// K-means кластеризация (5 кластеров)
-		KMeans kmeans = KMeans.fit(coordinates, 2);
-		int[] clusterLabels = kmeans.y; // Метки кластеров для каждого заказа
-
-		// Группируем заказы по кластерам
-		Map<Integer, List<Job>> clusters = new HashMap<>();
-		for (int i = 0; i < shopsService.size(); i++) {
-		    clusters.computeIfAbsent(clusterLabels[i], k -> new ArrayList<>()).add(shopsService.get(i));
-		}
-		
-//		clusters.forEach((k,v) -> {
-//			v.forEach(o-> System.out.println(o.getName()));
-//			System.out.println();
-//		});
 		
 
 		// 2. Добавляем все машины
@@ -150,8 +137,9 @@ public class ColossusProcessorJSpirit2 {
 		}
 
 		// 3. Добавляем все заказы (магазины)
-		// Добавляем ВСЕ заказы из всех кластеров
-		clusters.values().forEach(clusterJobs -> clusterJobs.forEach(vrpBuilder::addJob));
+		for (Service shipment : shopsService) {
+			vrpBuilder.addJob(shipment);
+		}
 
 		// 4. Собираем задачу
 		VehicleRoutingProblem problem = vrpBuilder.build();
@@ -160,30 +148,23 @@ public class ColossusProcessorJSpirit2 {
 		StateManager stateManager = new StateManager(problem);
 		ConstraintManager constraintManager = new ConstraintManager(problem, stateManager);
 		
-		//подготавливаем данные для определения кластеров
-		Map<Location, Integer> jobClusterMap = new HashMap<>();
-		for (Map.Entry<Integer, List<Job>> entry : clusters.entrySet()) {
-		    int clusterId = entry.getKey();
-		    for (Job job : entry.getValue()) {
-		        jobClusterMap.put(job.getActivities().get(0).getLocation(), clusterId);
-		    }
-		}
-		constraintManager.addConstraint(new ClusterConstraint(jobClusterMap, targetStock), ConstraintManager.Priority.CRITICAL); //запрет пересекать кластеры
-		
+//		constraintManager.addConstraint(new MaxDistanceConstraintCritical(40.0, costMatrix, depotLocation), ConstraintManager.Priority.CRITICAL);	
+//		constraintManager.addConstraint(new MaxDistanceConstraint(40.0, 15.0, costMatrix, depotLocation));
 
 		// 1. Обязательные ограничения грузоподъемности
 		constraintManager.addLoadConstraint(); // Включает проверку загрузки по всем измерениям
 		
-		VehicleRoutingAlgorithm algorithm = Jsprit.Builder.newInstance(problem)
-			    .setStateAndConstraintManager(stateManager, constraintManager)
-			    .setProperty(Jsprit.Parameter.THREADS, "4")
-			    .setProperty(Jsprit.Parameter.CONSTRUCTION, "FARTHEST_INSERTION") // Начнёт с самых дальних точек
-			    .setProperty(Jsprit.Parameter.ITERATIONS, "3000")
-			    
-			    .setProperty(Jsprit.Strategy.RADIAL_BEST, "0.9")  // Локальная оптимизация внутри кластеров
-			    .setProperty(Jsprit.Strategy.CLUSTER_BEST, "0.1")  // Основная стратегия — кластеры
-//			    .setProperty(Jsprit.Strategy.RANDOM_BEST, "0.1")  // Добавляем случайность
-			    .buildAlgorithm();
+//		VehicleRoutingAlgorithm algorithm = Jsprit.Builder.newInstance(problem)
+//			    .setStateAndConstraintManager(stateManager, constraintManager)
+//			    .setProperty(Jsprit.Parameter.THREADS, "4")
+//			    .setProperty(Jsprit.Parameter.CONSTRUCTION, "FARTHEST_INSERTION") // Начнёт с самых дальних точек
+//			    .setProperty(Jsprit.Parameter.ITERATIONS, "4000")
+//			    
+//			    .setProperty(Jsprit.Strategy.RADIAL_BEST, "0.5")  // Локальная оптимизация внутри кластеров
+//			    .setProperty(Jsprit.Strategy.CLUSTER_BEST, "0.5")  // Основная стратегия — кластеры
+////			    .setProperty(Jsprit.Strategy.RANDOM_BEST, "0.1")  // Добавляем случайность
+//			    .buildAlgorithm();
+		VehicleRoutingAlgorithm algorithm = createAlgorithm(problem, costMatrix, depotLocation);
 
 		// 6. Запускаем расчёт
 		Collection<VehicleRoutingProblemSolution> solutions = algorithm.searchSolutions();
@@ -199,6 +180,114 @@ public class ColossusProcessorJSpirit2 {
 		return null;
 
 	}
+	
+	public static VehicleRoutingAlgorithm createAlgorithm(final VehicleRoutingProblem vrp, VehicleRoutingTransportCosts costMatrix, Location depotLocation) {
+
+		VehicleFleetManager fleetManager = new FiniteFleetManagerFactory(vrp.getVehicles()).createFleetManager();
+	    StateManager stateManager = new StateManager(vrp);
+	    ConstraintManager constraintManager = new ConstraintManager(vrp, stateManager);
+	    
+//	    constraintManager.addConstraint(new MaxDistanceConstraintCritical(40.0, costMatrix, depotLocation), ConstraintManager.Priority.CRITICAL);
+//	    constraintManager.addConstraint(new MaxDistanceConstraint(40.0, 15.0, costMatrix, depotLocation));
+
+	    MyBestStrategy myBestStrategy = new MyBestStrategy(vrp, fleetManager, stateManager, constraintManager);
+	    SolutionCostCalculator objectiveFunction = getObjectiveFunction(vrp);
+
+	    // 👇 создаём "RecreateModule", где ruin = пусто	    
+	    RuinAndRecreateModule onlyInsertModule = new RuinAndRecreateModule("insertOnly", myBestStrategy, new RuinStrategy() {
+			
+	    	private final List<RuinListener> listeners = new ArrayList<>();
+			@Override
+			public Collection<Job> ruin(Collection<VehicleRoute> vehicleRoutes) {
+				return Collections.emptyList();
+			}
+			
+			@Override
+			public void removeListener(RuinListener ruinListener) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public Collection<RuinListener> getListeners() {
+				// TODO Auto-generated method stub
+				return listeners;
+			}
+			
+			@Override
+			public void addListener(RuinListener ruinListener) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+
+	    SearchStrategy myOnlyStrategy = new SearchStrategy(
+	        "onlyInsert",
+	        new SelectBest(),
+	        new GreedyAcceptance(1),
+	        objectiveFunction
+	    );
+
+	    myOnlyStrategy.addModule(onlyInsertModule);
+	    
+	    BestInsertion bestInsertion = (BestInsertion) new InsertionBuilder(vrp, fleetManager, stateManager, constraintManager)
+	    	    .setInsertionStrategy(InsertionBuilder.Strategy.BEST)
+	    	    .considerFixedCosts(1000.0) // или твой параметр
+	    	    .setAllowVehicleSwitch(true)
+	    	    .build();
+	    RegretInsertion regretInsertion = (RegretInsertion) new InsertionBuilder(vrp, fleetManager, stateManager, constraintManager)
+	    	    .setInsertionStrategy(InsertionBuilder.Strategy.REGRET)
+	    	    .considerFixedCosts(1000.0)  // если хочешь
+	    	    .setAllowVehicleSwitch(true)
+	    	    .build();
+	    SearchStrategy bestStrategy = new SearchStrategy(
+	    	    "myBestStrategy",
+	    	    new SelectBest(),
+	    	    new GreedyAcceptance(1),
+	    	    getObjectiveFunction(vrp)  // твоя цель
+	    	);
+	    bestStrategy.addModule(new RuinAndRecreateModule("bestInsertionModule", regretInsertion, new RuinStrategy() {
+	        @Override
+	        public Collection<Job> ruin(Collection<VehicleRoute> vehicleRoutes) {
+	            return Collections.emptyList(); // без разрушения
+	        }
+	        @Override public void removeListener(RuinListener l) {}
+	        @Override public Collection<RuinListener> getListeners() { return new ArrayList<>(); }
+	        @Override public void addListener(RuinListener l) {}
+	    }));
+	    
+
+	    VehicleRoutingAlgorithm vra = PrettyAlgorithmBuilder
+	    	.newInstance(vrp, fleetManager, stateManager, constraintManager)
+	    	.addCoreStateAndConstraintStuff()
+	        .withStrategy(myOnlyStrategy, 1.0)
+//	        .constructInitialSolutionWith(myBestStrategy, objectiveFunction)
+	        .constructInitialSolutionWith(bestInsertion, objectiveFunction)
+	        .build();
+	    
+	    //constraintManager.addLoadConstraint();
+	    //constraintManager.addTimeWindowConstraint();
+
+	    return vra;
+	}
+	
+	private static SolutionCostCalculator getObjectiveFunction(final VehicleRoutingProblem vrp) {
+        return new SolutionCostCalculator() {
+
+
+            @Override
+            public double getCosts(VehicleRoutingProblemSolution solution) {
+                SolutionAnalyser analyser = new SolutionAnalyser(vrp,solution,new TransportDistance() {
+					@Override
+					public double getDistance(Location from, Location to, double departureTime, Vehicle vehicle) {
+						return vrp.getTransportCosts().getTransportCost(from, to,0.,null,null);
+					}
+                });
+                return analyser.getVariableTransportCosts() + solution.getUnassignedJobs().size() * 500.;
+            }
+
+        };
+    }
 
 	/**
 	 * Метод отвечает за подготовку матрицы для Jspirit
@@ -236,12 +325,15 @@ public class ColossusProcessorJSpirit2 {
 
 				String matrixKey = fromId + "-" + toId;
 				double distance = matrixMachine.matrix.getOrDefault(matrixKey, Double.POSITIVE_INFINITY);
-
+				double time = matrixMachine.matrixTime.getOrDefault(matrixKey, Double.POSITIVE_INFINITY);
 				matrixBuilder.addTransportDistance(fromCoord.getCoordinate() + "", // Важно! Передаём координаты
 						toCoord.getCoordinate() + "", distance / 1000.0);
+				double timeInSeconds = time / 1000.0;
+				matrixBuilder.addTransportTime(fromCoord.getCoordinate() + "", // Важно! Передаём координаты
+						toCoord.getCoordinate() + "", timeInSeconds);
 
 				System.out.println(matrixKey + " === " + fromCoord.getCoordinate() + " - " + toCoord.getCoordinate()
-						+ " - " + (distance / 1000.0));
+						+ " - " + (distance / 1000.0) + " time = " + timeInSeconds + " сек");
 			}
 		}
 
@@ -540,7 +632,11 @@ public class ColossusProcessorJSpirit2 {
 			// Создаем тип транспортного средства
 			VehicleTypeImpl.Builder vehicleTypeBuilder = VehicleTypeImpl.Builder.newInstance(carName)
 					.addCapacityDimension(0, maxTonnage) // грузоподъемность (кг)
-					.addCapacityDimension(1, maxPall); // кол-во паллет
+					.addCapacityDimension(1, maxPall) // кол-во паллет
+					.setCostPerDistance(1.0) // Стоимость за каждый километр
+					.setFixedCost(100) // Фиксированная стоимость использования машины (стартовая цена)
+					// Стоимость за каждую секунду движения — включает фактор времени в оптимизацию
+				    .setCostPerTransportTime(1.0);  // Важно для учёта времени маршрута!
 
 			VehicleType vehicleType = vehicleTypeBuilder.build();
 
@@ -548,7 +644,11 @@ public class ColossusProcessorJSpirit2 {
 			for (int j = 1; j <= carCount; j++) {
 				String vehicleId = String.format("%s_%d", carName, j);
 
-				VehicleImpl.Builder vehicleBuilder = VehicleImpl.Builder.newInstance(vehicleId).setReturnToDepot(true)
+				VehicleImpl.Builder vehicleBuilder = VehicleImpl.Builder.newInstance(vehicleId)
+						.setReturnToDepot(true)
+						.setEarliestStart(0) // Устанавливаем допустимое время начала работы — с 0 секунд (00:00)
+						 // Устанавливаем последнее возможное время возвращения — через 10 часов
+					    .setLatestArrival(15 * 3600)  // 15 ч * 3600 = 36000 секунд
 						.setStartLocation(depotLocation) // депо (координаты)
 						.setType(vehicleType);
 
@@ -632,6 +732,7 @@ public class ColossusProcessorJSpirit2 {
 						.addSizeDimension(0, shop.getWeight()) // вес (кг)
 						.addSizeDimension(1, shop.getNeedPall().intValue()) // паллеты
 						.setLocation(deliveryLocation) // точка доставки (без забора!)
+						.setServiceTime(900)  // 15 минут
 						.build();
 
 				services.add(service);

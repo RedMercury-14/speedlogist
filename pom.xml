@@ -129,30 +129,53 @@
 			    <version>0.48.3</version>
 			</dependency>
 <!-- https://mvnrepository.com/artifact/com.graphhopper/jsprit-core -->
+<!--<dependency>-->
+<!--    <groupId>com.graphhopper</groupId>-->
+<!--    <artifactId>jsprit-core</artifactId>-->
+<!--    <version>1.9.0-beta.11</version>-->
+<!--</dependency>-->
+
+<!-- https://mvnrepository.com/artifact/com.graphhopper/jsprit-core -->
 <dependency>
     <groupId>com.graphhopper</groupId>
     <artifactId>jsprit-core</artifactId>
-    <version>1.9.0-beta.11</version>
+    <version>1.8</version>
 </dependency>
 
 <!-- https://mvnrepository.com/artifact/com.graphhopper/jsprit-analysis -->
+<!--<dependency>-->
+<!--    <groupId>com.graphhopper</groupId>-->
+<!--    <artifactId>jsprit-analysis</artifactId>-->
+<!--    <version>1.9.0-beta.11</version>-->
+<!--</dependency>-->
 <dependency>
     <groupId>com.graphhopper</groupId>
     <artifactId>jsprit-analysis</artifactId>
-    <version>1.9.0-beta.11</version>
+    <version>1.8</version>
 </dependency>
 <!-- https://mvnrepository.com/artifact/com.graphhopper/jsprit-instances -->
+<!--<dependency>-->
+<!--    <groupId>com.graphhopper</groupId>-->
+<!--    <artifactId>jsprit-instances</artifactId>-->
+<!--    <version>1.9.0-beta.4</version>-->
+<!--</dependency>-->
 <dependency>
     <groupId>com.graphhopper</groupId>
     <artifactId>jsprit-instances</artifactId>
-    <version>1.9.0-beta.4</version>
+    <version>1.8</version>
 </dependency>
 <!-- https://mvnrepository.com/artifact/com.graphhopper/jsprit-io -->
+<!--<dependency>-->
+<!--    <groupId>com.graphhopper</groupId>-->
+<!--    <artifactId>jsprit-io</artifactId>-->
+<!--    <version>1.9.0-beta.4</version>-->
+<!--</dependency>-->
 <dependency>
     <groupId>com.graphhopper</groupId>
     <artifactId>jsprit-io</artifactId>
-    <version>1.9.0-beta.4</version>
+    <version>1.8</version>
 </dependency>
+
 
 
 

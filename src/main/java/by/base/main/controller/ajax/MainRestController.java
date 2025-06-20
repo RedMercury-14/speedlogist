@@ -194,6 +194,7 @@ import by.base.main.util.bots.TelegramBot;
 import by.base.main.util.hcolossus.ColossusProcessorANDRestrictions5;
 import by.base.main.util.hcolossus.ColossusProcessorJSpirit;
 import by.base.main.util.hcolossus.ColossusProcessorJSpirit2;
+import by.base.main.util.hcolossus.ColossusProcessorJSpirit3CustomAlgoritm;
 import by.base.main.util.hcolossus.ColossusProcessorJSpiritClusters;
 import by.base.main.util.hcolossus.exceptions.FatalInsufficientPalletTruckCapacityException;
 import by.base.main.util.hcolossus.pojo.Solution;
@@ -284,7 +285,7 @@ public class MainRestController {
 //	private ColossusProcessorJSpiritClusters colossusProcessorJSpirit;
 	
 	@Autowired
-	private ColossusProcessorJSpirit2 colossusProcessorJSpirit;
+	private ColossusProcessorJSpirit3CustomAlgoritm colossusProcessorJSpirit;
 
 	@Autowired
 	private MatrixMachine matrixMachine;
@@ -8665,7 +8666,8 @@ public class MainRestController {
 			//прогружаем в кеш усеченный список
 			List<Integer> shops = new ArrayList<Integer>(numShops);
 			shops.add(stock);
-			matrixMachine.matrix = distanceMatrixService.getDistanceMatrixByShops(shops);
+//			matrixMachine.matrix = distanceMatrixService.getDistanceMatrixByShops(shops);
+			matrixMachine.loadMatrix(distanceMatrixService.getMatrixByShopsDistanceAndTime(shops));
 			
 			// Перебор всех магазинов и фильтрация по polygonName != null
 	        for (Object shopObject : shopsWithCrossDocking) {

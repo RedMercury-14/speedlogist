@@ -56,7 +56,7 @@ import by.base.main.util.GraphHopper.RoutingMachine;
 public class MatrixMachine {
 	
 	public Map<String, Double> matrix = new HashMap<String, Double>(); // матрица расстояний
-	public static Map<String, Long> matrixTime = new HashMap<String, Long>(); // матрица времени
+	public Map<String, Double> matrixTime = new HashMap<String, Double>(); // матрица времени
 	
 	@Autowired
 	private RoutingMachine routingMachine;
@@ -69,6 +69,15 @@ public class MatrixMachine {
 	
 	@Autowired
 	private DistanceMatrixService distanceMatrixService;
+	
+	/**
+	 * метод загружает сразу две матрицы, время и расстояния
+	 * @param matrix
+	 */
+	public void loadMatrix(List<Map<String, Double>> matrix) {
+		this.matrix = matrix.get(0);
+		this.matrixTime = matrix.get(1);
+	}
 	
 	/**
 	 * Метод заполняет матрицу по входному листу магазинов и складу
@@ -86,7 +95,7 @@ public class MatrixMachine {
 				}
 				Integer integerTo = shopListForDIstance.get(i);
 				double sum = 0;
-				Long time = 0L;
+				double time = 0;
 				
 //				System.out.println(integer + " --> " + integerTo);
 				Shop from = allShop.get(integer);
@@ -127,7 +136,7 @@ public class MatrixMachine {
                     DistanceMatrix dm = new DistanceMatrix();
                     dm.setIdDistanceMatrix(from.getNumshop()+"-"+to.getNumshop()); // Генерация ID
                     dm.setDistance(sum);
-                    dm.setTime(time.doubleValue());                    
+                    dm.setTime(time);                    
 //                    distanceMatrixService.save(dm);			        
 			        matrix.put(from.getNumshop()+"-"+to.getNumshop(), sum);
 			        matrixTime.put(from.getNumshop()+"-"+to.getNumshop(), time);
@@ -211,7 +220,7 @@ public class MatrixMachine {
 				}
 				String key = shop.getNumshop()+"-"+shopI.getNumshop();
 				double sum = 0;
-				Long time = 0L;
+				double time = 0L;
 				if(!matrix.containsKey(key)) {					
 					double fromLat = Double.parseDouble(shop.getLat());
 			        double fromLng = Double.parseDouble(shop.getLng());
@@ -279,7 +288,7 @@ public class MatrixMachine {
 
 	    // Инициализация структур
 	    ConcurrentMap<String, Double> concurrentMatrix = new ConcurrentHashMap<>(matrix);
-	    ConcurrentMap<String, Long> concurrentMatrixTime = new ConcurrentHashMap<>(matrixTime);
+	    ConcurrentMap<String, Double> concurrentMatrixTime = new ConcurrentHashMap<>(matrixTime);
 	    
 	    // Счетчики прогресса
 	    AtomicInteger totalProcessed = new AtomicInteger(0);
@@ -315,7 +324,7 @@ public class MatrixMachine {
 	                    if (!concurrentMatrix.containsKey(key)) {
 	                        double[] result = calculateDistance(shop, shopI);
 	                        concurrentMatrix.put(key, result[0]);
-	                        concurrentMatrixTime.put(key, (long)result[1]);
+	                        concurrentMatrixTime.put(key, (double)result[1]);
 	                    }
 	                    
 	                    // Обновление прогресса
@@ -372,7 +381,7 @@ public class MatrixMachine {
 
 	private synchronized void conditionalSave(
 		    ConcurrentMap<String, Double> tempMatrix,
-		    ConcurrentMap<String, Long> tempMatrixTime) {
+		    ConcurrentMap<String, Double> tempMatrixTime) {
 		    
 		    long start = System.currentTimeMillis();
 		    Path tempFile = Paths.get(mainController.path + "resources/distance/matrix.temp");
@@ -417,7 +426,7 @@ public class MatrixMachine {
 
 	private synchronized void forceSave(
 	    ConcurrentMap<String, Double> tempMatrix,
-	    ConcurrentMap<String, Long> tempMatrixTime) {
+	    ConcurrentMap<String, Double> tempMatrixTime) {
 	    
 	    System.out.println("Инициировано принудительное сохранение...");
 	    conditionalSave(tempMatrix, tempMatrixTime);

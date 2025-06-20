@@ -31,4 +31,14 @@ public interface DistanceMatrixDAO {
 	 */
 	public Map<String, Double> getDistanceMatrixByShops(List<Integer> shops);
 	
+	/**
+	 * Отдаёт усеченную матрицу, только те значения, которые были в листе
+	 * расстояние и время
+	 * 0 - матрица расстояний
+	 * 1- матрица времени
+	 * @param shops
+	 * @return
+	 */
+	public List<Map<String, Double>> getMatrixByShopsDistanceAndTime(List<Integer> shops);
+	
 }

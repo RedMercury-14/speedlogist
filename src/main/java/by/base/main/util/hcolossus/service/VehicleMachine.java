@@ -75,7 +75,7 @@ public class VehicleMachine {
 	 * @return
 	 * @throws ParseException
 	 */
-	public List<Vehicle> prepareVehicleListVersion2(JSONObject jsonMainObject) throws ParseException {
+	public synchronized List<Vehicle> prepareVehicleListVersion2(JSONObject jsonMainObject) throws ParseException {
 		JSONParser parser = new JSONParser();
 		List<Vehicle> result = new ArrayList<Vehicle>();
 		JSONArray carsArrayJSON = (JSONArray) jsonMainObject.get("cars");
@@ -101,6 +101,9 @@ public class VehicleMachine {
 				}
 				
 			}
+		}
+		if (result.isEmpty()) {
+			int d = 0;
 		}
 		return result;
 	}

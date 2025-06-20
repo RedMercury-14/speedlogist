@@ -1,0 +1,125 @@
+body {
+	height: 100%;
+	background-color: #1e65ac !important;
+}
+.navbar {
+	background-color: #0e377b !important;
+}
+.my-container {
+	margin-top: 60px;
+	margin-bottom: 50px;
+}
+footer.to-bottom {
+	position: fixed;
+}
+
+.text-red {
+	color: red;
+}
+.error-message {
+	color: red;
+	font-size: 12px;
+	padding-top: 5px;
+}
+
+.my-container, 
+.modal {
+	font-family: var(--font-family-sans-serif);
+}
+
+.my-container input::-webkit-outer-spin-button,
+.my-container input::-webkit-inner-spin-button,
+.modal input::-webkit-outer-spin-button,
+.modal input::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+.my-container input[type=number],
+.modal input[type=number] {
+	appearance: textfield;
+	-moz-appearance: textfield;
+}
+.my-container input::placeholder,
+.modal input::placeholder {
+	color: rgb(179, 179, 179);
+}
+
+.modal .close {
+	float: right;
+	font-size: 1.5rem;
+	font-weight: 700;
+	line-height: 1;
+	color: #000;
+	text-shadow: 0 1px 0 #fff;
+	opacity: .5;
+}
+
+.my-container .card {
+	margin-top: 100px;
+}
+
+.nav-card {
+	transition: transform 0.2s;
+	cursor: pointer;
+}
+.nav-card:hover {
+	transform: translateY(-5px);
+}
+.card-icon {
+	font-size: 2.5rem;
+	color: #007bff;
+}
+.card-title {
+	font-size: 1.2rem;
+	font-weight: bold;
+}
+
+.form-check-input {
+	width: 1.5em;
+	height: 1.5em;
+	margin-top: 0.3em;
+}
+.form-check-label {
+	font-size: 1.1em;
+	cursor: pointer;
+	font-weight: 600;
+	opacity: 0.6;
+	padding: 0.2em 0.5em;
+	border-radius: 0.4em;
+	transition: all 0.2s ease;
+	background-color: transparent;
+}
+.form-check-input:checked + .form-check-label {
+	opacity: 1;
+	background-color: #e0f0ff;
+	box-shadow: 0 0 0 2px #007bff40;
+}
+.checkbox-container {
+	row-gap: 15px;
+	column-gap: 4px;
+}
+
+#success-message-container {
+	padding: 1.5rem;
+}
+
+@media (max-width: 767px) {
+	footer.to-bottom {
+		position: relative;
+	}
+	.my-container .card {
+		margin-top: 0;
+	}
+}
+@media (max-width: 576px) {
+	.my-container {
+		margin-bottom: 80px;
+	}
+	.form-check-inline {
+		display: block;
+	}
+	#success-message-container {
+		padding: 0;
+	}
+
+}

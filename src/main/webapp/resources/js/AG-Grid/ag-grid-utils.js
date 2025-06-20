@@ -1,4 +1,5 @@
-import { dateHelper } from "../utils.js";
+import { dateHelper, debounce, isMobileDevice } from "../utils.js";
+import { AG_GRID_LOCALE_RU } from "./ag-grid-locale-RU.js";
 
 // утилиты для преобразования данных
 export function extractKeys(mappings) {
@@ -19,7 +20,7 @@ export function lookupKey(mappings, name) {
 	}
 }
 
-// функции созранения, загрузки и сброса настроек колонок таблицы
+// функции сохранения, загрузки и сброса настроек колонок таблицы
 export const gridColumnLocalState = {
 	saveState(gridOptions, key) {
 		localStorage.setItem(
@@ -564,4 +565,108 @@ export class SubmitButtonTextEditor {
 		this.valueConfirmed = true
 		this.params.api.stopEditing()
 	}
+}
+
+export const getDefaultGridOptions = (options) => {
+	const { localStorageKey, enableColumnStateSaving , enableFilterStateSaving } = options
+
+	const gridOptions = {
+		columnDefs: [],
+		defaultColDef: {
+			headerClass: 'px-2 font-weight-bold',
+			cellClass: 'px-2 text-center',
+			flex: 1,
+			minWidth: 100,
+			resizable: !isMobileDevice(),
+			suppressMenu: true,
+			sortable: true,
+			filter: true,
+			floatingFilter: true,
+			wrapText: true,
+			autoHeight: true,
+			wrapHeaderText: true,
+			autoHeaderHeight: true,
+		},
+		animateRows: true,
+		suppressMovableColumns: isMobileDevice(),
+		suppressDragLeaveHidesColumns: true,
+		suppressRowClickSelection: true,
+		enableBrowserTooltips: true,
+		localeText: AG_GRID_LOCALE_RU,
+		defaultExcelExportParams: {
+			processCellCallback: ({ value, formatValue }) => formatValue(value)
+		},
+		context: {
+			localStorageKey: localStorageKey,
+		}
+	}
+
+	if (enableColumnStateSaving) {
+		const debouncedSaveColumnState = debounce(saveColumnState, 500)
+		gridOptions.onSortChanged = debouncedSaveColumnState
+		gridOptions.onColumnResized = debouncedSaveColumnState
+		gridOptions.onColumnMoved = debouncedSaveColumnState
+		gridOptions.onColumnVisible = debouncedSaveColumnState
+		gridOptions.onColumnPinned = debouncedSaveColumnState
+	}
+
+	if (enableFilterStateSaving) {
+		const debouncedSaveFilterState = debounce(saveFilterState, 300)
+		gridOptions.onFilterChanged = debouncedSaveFilterState
+	}
+
+	return gridOptions
+}
+
+// функции управления состоянием колонок
+export function saveColumnState(params) {
+	gridColumnLocalState.saveState(params, params.context.localStorageKey + params.api.getGridId())
+}
+export function restoreColumnState(params) {
+	gridColumnLocalState.restoreState(params, params.context.localStorageKey + params.api.getGridId())
+}
+export function resetColumnState(params) {
+	gridColumnLocalState.resetState(params, params.context.localStorageKey + params.api.getGridId())
+}
+// функции управления фильтрами колонок
+export function saveFilterState(params) {
+	gridFilterLocalState.saveState(params, params.context.localStorageKey + params.api.getGridId())
+}
+export function restoreFilterState(params) {
+	gridFilterLocalState.restoreState(params, params.context.localStorageKey + params.api.getGridId())
+}
+export function resetFilterState(params) {
+	gridFilterLocalState.resetState(params, params.context.localStorageKey + params.api.getGridId())
+}
+
+
+export function supressInputInLargeTextEditor() {
+	setTimeout(() => {
+		const modal = document.querySelector(".ag-large-text")
+		if (modal) {
+			const textarea = modal.querySelector("textarea")
+			if (textarea) {
+				textarea.readOnly = true
+			}
+		}
+	}, 100)
+}
+
+// рендер таблицы
+export function renderTable(gridDiv, gridOptions) {
+	new agGrid.Grid(gridDiv, gridOptions)
+	gridOptions.api.setRowData([])
+	gridOptions.api.showNoRowsOverlay()
+}
+// обновление таблицы
+export function updateTable(gridOptions, data, mapCallback) {
+	if (!data || !data.length) {
+		gridOptions.api.setRowData([])
+		gridOptions.api.showNoRowsOverlay()
+		return
+	}
+
+	const mappingData = mapCallback ? data.map(mapCallback) : data
+	gridOptions.api.setRowData(mappingData)
+	gridOptions.api.hideOverlay()
 }

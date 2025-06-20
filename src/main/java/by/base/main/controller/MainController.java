@@ -286,7 +286,8 @@ public class MainController {
 			}
 			System.out.println("list after = " + chatEnpoint.internationalMessegeList.size());			
 		}
-		
+
+
 		
 		//загружаем матрицу, если её нету
 //		if(matrixMachine.matrix.size() == 0) {
@@ -357,6 +358,16 @@ public class MainController {
 		return "main";		
 	}
 
+	@RequestMapping("main/logistics-delivery/routes")
+	public String logisticsDeliveryRoutes(Model model, HttpSession session, HttpServletRequest request) {
+		return "logisticsDeliveryRoutes";
+	}
+
+	@RequestMapping("/main/logistics/razv/parse-WMS-excel")
+	public String parseWMSexcel(Model model, HttpSession session, HttpServletRequest request) {
+		return "registrationFast";
+	}
+
 	@RequestMapping("/main/supplier")
 	public String supplierPage(Model model, HttpSession session, HttpServletRequest request,
 							   @SessionAttribute(name = "errorMessage", required = false) String message) {
@@ -364,10 +375,10 @@ public class MainController {
 		session.removeAttribute("errorMessage");
 		return "supplier";
 	}
-	
+
 	@RequestMapping("/main/logistics/registration-fast")
 	public String supplierPage(Model model, HttpSession session, HttpServletRequest request) {
-	    return "registrationFast";
+		return "registrationFast";
 	}
 	
 	@GetMapping("/main/procurement/create-accommodation")

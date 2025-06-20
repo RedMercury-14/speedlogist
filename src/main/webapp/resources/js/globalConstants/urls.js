@@ -12,6 +12,14 @@ export const getTGTrucksUrl = '/speedlogist/api/logistics/deliveryShops/getTGTru
 export const loadTruckUrl = '/speedlogist/api/logistics/deliveryShops/update'
 /** загрузка списка машин на сервер */
 export const loadTruckListUrl = '/speedlogist/api/logistics/deliveryShops/updateList'
+/** предварительная заявка машин на дату от перевозчика */
+export const preorderTrucksForDateUrl = '/speedlogist/api/carrier/razv/preorder'
+/** предварительная заявка машин на дату от перевозчика */
+export const deletePreorderTruckUrl = '/speedlogist/api/carrier/razv/del-preorder'
+/** загрузка экселей по складам для развоза */
+export const uploadStockExcelDataUrl = '/speedlogist/api/logistics/razv/parse-WMS-excel'
+/** загрузка экселя с маршрутами для развоза */
+export const uploadRouteExcelDataUrl = '/speedlogist/api/logistics/razv/parse-route-sheet'
 
 
 ///////////////////////////////////////////////
@@ -539,3 +547,10 @@ export const getImagesByRouteBase64BaseUrl = '/speedlogist/file/images/base64/by
 export const createNewSupplierUrl = '/speedlogist/api/new-supplier'
 export const getAllSuppliersUrl = '/speedlogist/api/order-support/get-all-suppliers'
 export const getOrdersForSupplierUrl = '/speedlogist/api/supplier/get-orders-for-supplier'
+
+
+///////////////////////////////////////////////
+// быстрая регистрация
+///////////////////////////////////////////////
+export const carrierFastRegistrationUrl = '/speedlogist/api/logistics/registration-fast'
+

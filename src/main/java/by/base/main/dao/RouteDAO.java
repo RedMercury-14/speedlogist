@@ -168,4 +168,11 @@ public interface RouteDAO {
 	 * @author Ira
 	 */
 	List<Route> getAllActualRoute(Date date);
+
+	/**
+	 * <br>Возвращает список Route по дате задания</br>
+	 * @return
+	 * @author Ira
+	 */
+	List<Route> getRoutesByDateTask(Date date);
 }

@@ -470,7 +470,18 @@ export const dateHelper = {
 				acc[['h', 'm', 's'][i]] = parseInt(val)
 				return acc
 			}, {})
+	},
+
+	/**
+	 * Метод `getTomorrowDate` возвращает дату следующего дня в формате "YYYY-MM-DD".
+	 * @returns {string} дата следующего дня в формате "YYYY-MM-DD".
+	 */
+	getTomorrowDate() {
+		const currentDateMs = new Date().setHours(0, 0, 0, 0)
+		const tomorrowMs = currentDateMs + this.DAYS_TO_MILLISECONDS
+		return this.getDateForInput(tomorrowMs)
 	}
+ 
 }
 
 export const cookieHelper = {

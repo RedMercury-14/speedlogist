@@ -152,6 +152,6 @@
 	</div>
 
 </body>
-<script src="${pageContext.request.contextPath}/resources/js/logisticsDelivery/trucks/trucks.js" type="module"></script>
+<script src="${pageContext.request.contextPath}/resources/js/logisticsDeliveryTruck.js" type="module"></script>
 <script src='${pageContext.request.contextPath}/resources/js/mainPage/nav-fixed-top.js'></script>
 </html>

@@ -148,7 +148,7 @@ public class ColossusProcessorANDRestrictions5 {
 	 * @return
 	 * @throws Exception 
 	 */
-	public synchronized Solution run(JSONObject jsonMainObject, List<Integer> shopList, List<Double> pallHasShops, List<Integer> tonnageHasShops, Integer stock,
+	public Solution run(JSONObject jsonMainObject, List<Integer> shopList, List<Double> pallHasShops, List<Integer> tonnageHasShops, Integer stock,
 			Double koeff, String algoritm, Map<Integer, String> shopsWithCrossDockingMap, Integer maxShopInWay, List<Double> pallReturn, List<Integer> weightDistributionList, Map<Integer, Shop> allShop) throws Exception {
 		if(tonnageHasShops == null) {
 			System.err.println("Используется старый метод! Нужно использовать /map/myoptimization3");
@@ -178,6 +178,9 @@ public class ColossusProcessorANDRestrictions5 {
 		 */
 		shopsForOptimization = shopMachine.prepareShopList5Parameters(shopList, pallHasShops,tonnageHasShops, stock, shopsWithCrossDockingMap, pallReturn, weightDistributionList,shops); // магазины для распределения выстроены в порядке убывания потребностей TEST
 
+		if(trucks.isEmpty()) {
+			int d = 0;
+		}
 		if(trucks.get(0).getPall()>=33.0) {// Делает так, чтобы магазины, которые входят в кроссы были сверху списка, если есть фуры
 			sortedShopsHasKrossingPall(true);
 		}else {
@@ -219,6 +222,7 @@ public class ColossusProcessorANDRestrictions5 {
 		}
 		
 		//тут проверяем - в принципе хватит паллет по машинам или нет
+
 		if(!checkPallets(shopsForOptimization, trucks)) {
 			throw new FatalInsufficientPalletTruckCapacityException("Недостаточно машин для распределения всех магазинов", shopsForOptimization, trucks, koeff);
 		}
@@ -1855,6 +1859,9 @@ public class ColossusProcessorANDRestrictions5 {
 		 *         {@code false}, если вместимости грузовиков недостаточно
 		 */
 		public boolean checkPallets(List<Shop> shopsForOptimization, List<Vehicle> trucks) {
+			if(trucks.isEmpty()) {
+				int d = 0;
+			}
 		    double totalNeedPall = shopsForOptimization.stream()
 		        .mapToDouble(Shop::getNeedPall)
 		        .sum();

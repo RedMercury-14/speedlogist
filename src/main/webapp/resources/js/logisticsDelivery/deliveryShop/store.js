@@ -7,7 +7,6 @@ const today = dateHelper.getDateForInput(new Date())
 
 export const store = {
 	_state: {
-		lastClickedBtn: null,
 		token,
 		login,
 		role,
@@ -17,7 +16,7 @@ export const store = {
 	_callSubscriber(state) {
 		console.log('subscriber is not defind')
 	},
-	subscribe (observer) {
+	subscribe(observer) {
 		this._callSubscriber = observer
 	},
 
@@ -47,14 +46,6 @@ export const store = {
 		return this._state.role
 	},
 
-	getLastClickedBtn() {
-		return this._state.lastClickedBtn
-	},
-
-	setLastClickedBtn(btn) {
-		this._state.lastClickedBtn = btn
-	},
-
 
 	/**
 	 * @param {string} date
@@ -72,14 +63,6 @@ export const store = {
 	},
 
 
-	/**
-	 * @param {Array<{
-	* 	idTGTruck: number, numTruck: string, modelTruck: string, pall: number,
-	* 	typeTrailer: string, dateRequisition: string, cargoCapacity: string,
-	* 	chatIdUserTruck: number, nameList: string, idList: number, status: number,
-	* 	companyName: string, truckForBot: string, dateRequisitionLocalDate: Array<number>,
-	* }>} trucks
-	 */
 	setTrucks(trucks) {
 		this._state.trucks = trucks
 	},
@@ -87,27 +70,12 @@ export const store = {
 		return this._state.trucks
 	},
 
-	/**
-	 * Возвращает список машин по текущей дате
-	 * @returns {Array<{
-	* 	idTGTruck: number, numTruck: string, modelTruck: string, pall: number,
-	* 	typeTrailer: string, dateRequisition: string, cargoCapacity: string,
-	* 	chatIdUserTruck: number, nameList: string, idList: number, status: number,
-	* 	companyName: string, truckForBot: string, dateRequisitionLocalDate: Array<number>,
-	* }>}
-	 */
 	getTrucksByCurrentDate() {
 		const trucksByCurrentDate = this._state.trucks[this._state.currentDate]
 		return trucksByCurrentDate ? trucksByCurrentDate : []
 	},
 
 	// методы для управления данными машин
-	/**
-	 * @param {{ idTGTruck: number, numTruck: string, modelTruck: string, pall: number,
-	 * 	typeTrailer: string, dateRequisition: string, cargoCapacity: string,
-	 * 	chatIdUserTruck: number, nameList: string, idList: number, status: number,
-	 * 	companyName: string, truckForBot: string, dateRequisitionLocalDate: Array<number>, }} truck
-	 */
 	addTruck(truck) {
 		const truckDate = truck.dateRequisition
 		// создать новый массив по дате, если его нет в this._state.trucks
@@ -116,44 +84,16 @@ export const store = {
 		this._callSubscriber(this._state)
 	},
 
-	/**
-	 * @param {{ idTGTruck: number, numTruck: string, modelTruck: string, pall: number,
-	 * 	typeTrailer: string, dateRequisition: string, cargoCapacity: string,
-	 * 	chatIdUserTruck: number, nameList: string, idList: number, status: number,
-	 * 	companyName: string, truckForBot: string, dateRequisitionLocalDate: Array<number>, }} truck
-	 */
-	updateTruck(truck) {
-		const truckDate = truck.dateRequisition
-		const trucks = this._state.trucks[truckDate]
-		const index = trucks.findIndex(t => t.idTGTruck === truck.idTGTruck)
-		if (index !== -1) trucks[index] = { ...truck }
-		this._callSubscriber(this._state)
-	},
-
-	/**
-	 * @param {Array<{
-	* 	idTGTruck: number, numTruck: string, modelTruck: string, pall: number,
-	* 	typeTrailer: string, dateRequisition: string, cargoCapacity: string,
-	* 	chatIdUserTruck: number, nameList: string, idList: number, status: number,
-	* 	companyName: string, truckForBot: string, dateRequisitionLocalDate: Array<number>,
-	* }>} trucks
-	 */
-	updateTrucks(trucks) {
-		const date = trucks[0].dateRequisition
-		const trucksByDate = this._state.trucks[date]
+	addTrucks(trucks) {
 		trucks.forEach(truck => {
-			const index = trucksByDate.findIndex(t => t.idTGTruck === truck.idTGTruck)
-			if (index !== -1) trucksByDate[index] = { ...truck }
+			const truckDate = truck.dateRequisition
+			// создать новый массив по дате, если его нет в this._state.trucks
+			if (!this._state.trucks[truckDate]) this._state.trucks[truckDate] = []
+			this._state.trucks[truckDate].push(truck)
 		})
 		this._callSubscriber(this._state)
 	},
 
-	/**
-	 * @param {{ idTGTruck: number, numTruck: string, modelTruck: string, pall: number,
-	 * 	typeTrailer: string, dateRequisition: string, cargoCapacity: string,
-	 * 	chatIdUserTruck: number, nameList: string, idList: number, status: number,
-	 * 	companyName: string, truckForBot: string, dateRequisitionLocalDate: Array<number>, }} truck
-	 */
 	removeTruck(truck) {
 		const truckDate = truck.dateRequisition
 		const trucks = this._state.trucks[truckDate]

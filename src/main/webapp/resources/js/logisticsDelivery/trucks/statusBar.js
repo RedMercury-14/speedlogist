@@ -178,7 +178,8 @@ export class RowLegengStatusBarComponent {
 		this.params = params
 
 		this.eGui = document.createElement("div")
-		this.eGui.className = "ag-status-name-value d-flex fs-1rem"
+		this.eGui.style.display = "flex"
+		this.eGui.className = "tg-truck-legend ag-status-name-value fs-1rem"
 
 		const label = document.createElement("span")
 		label.className = 'font-weight-bold fs-1rem'

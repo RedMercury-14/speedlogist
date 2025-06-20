@@ -20,7 +20,7 @@
 		}
 	</style>
 	<meta charset="UTF-8">
-	<title>Настройки профиля</title>
+	<title>Редактирование профиля</title>
 	<link rel="icon" href="${pageContext.request.contextPath}/resources/img/favicon.ico">
 </head>
 <body>
@@ -32,115 +32,90 @@
 	</sec:authorize>
 	<div class="container my-container">
 		<div class="card">
-			<form:form modelAttribute="user" method="POST">
+			<form:form modelAttribute="user" id="editUserForm" method="POST">
 				<div class="card-header d-flex justify-content-between">
-					<h3 class="mb-0">Редатирование профиля</h3>
+					<h3 class="mb-0">Редактирование профиля</h3>
 				</div>
 				<div class="card-body">
 					<input type="hidden" value="${user.numContract}" id="numContractFromServer">
 					<form:hidden path="login" id="login" />
 					<div class="form-group row">
-						<label class="col-sm-3 col-form-label">Новый пароль</label>
+						<span class="col-sm-3 col-form-label text-muted font-weight-bold">Новый пароль</span>
 						<div class="col-sm-9">
-							<input type="text" class="form-control" name="password" id="password" />
+							<input type="text" class="form-control" name="password" />
 							<div class="font-weight-light text-muted">Если оставить поле пустым, то пароль изменен не будет</div>
 						</div>
 					</div>
 					<div class="form-group row">
-						<label class="col-sm-3 col-form-label">Имя</label>
+						<span class="col-sm-3 col-form-label text-muted font-weight-bold">Имя</span>
 						<div class="col-sm-9">
-							<input type="text" class="form-control" name="name" id="name" value="${user.name}" required />
+							<input type="text" class="form-control" name="name"value="${user.name}" required />
 						</div>
 					</div>
 					<div class="form-group row">
-						<label class="col-sm-3 col-form-label">Фамилия</label>
+						<span class="col-sm-3 col-form-label text-muted font-weight-bold">Фамилия</span>
 						<div class="col-sm-9">
-							<input type="text" class="form-control" name="surname" id="surname" value="${user.surname}" required />
+							<input type="text" class="form-control" name="surname" value="${user.surname}" required />
 						</div>
 					</div>
 					<div class="form-group row">
-						<label class="col-sm-3 col-form-label">Отчество</label>
+						<span class="col-sm-3 col-form-label text-muted font-weight-bold">Отчество</span>
 						<div class="col-sm-9">
-							<input type="text" class="form-control" name="patronymic" id="patronymic" value="${user.patronymic}" required />
+							<input type="text" class="form-control" name="patronymic" value="${user.patronymic}" required />
 						</div>
 					</div>
 					<div class="form-group row">
-						<label class="col-sm-3 col-form-label">E-Mail</label>
+						<span class="col-sm-3 col-form-label text-muted font-weight-bold">E-Mail</span>
 						<div class="col-sm-9">
-							<input type="text" class="form-control" name="eMail" id="eMail" value="${user.eMail}" required />
+							<input type="text" class="form-control" name="eMail" value="${user.eMail}" required />
 						</div>
 					</div>
 					<div class="form-group row">
-						<label class="col-sm-3 col-form-label">Номер телефона</label>
+						<span class="col-sm-3 col-form-label text-muted font-weight-bold">Номер телефона</span>
 						<div class="col-sm-9">
-							<input type="text" class="form-control" name="telephone" id="telephone" value="${user.telephone}" required />
-						</div>
-					</div>
-					<div class="form-group row">
-						<label class="col-sm-3 col-form-label">ФИО директора (полностью)</label>
-						<div class="col-sm-9">
-							<input type="text" class="form-control" name="director" id="director" value="${user.director}" required />
+							<input type="text" class="form-control" name="telephone" value="${user.telephone}" required />
 						</div>
 					</div>
 					<c:choose>
-						<c:when test="${roles == '[ROLE_ADMIN]'}">
-							<div class="border-top border-bottom pt-2 mb-2">
-								<div class="form-group row">
-									<label class="col-sm-3 col-form-label">Введите компанию</label>
-									<div class="col-sm-9">
-										<form:input class="form-control" path="companyName" value="Доброном" />
-									</div>
+						<c:when test="${roles == '[ROLE_CARRIER]'}">
+							<div class="form-group row">
+								<span class="col-sm-3 col-form-label text-muted font-weight-bold">ФИО директора (полностью)</span>
+								<div class="col-sm-9">
+									<input type="text" class="form-control" name="director" value="${user.director}" required />
 								</div>
-								<div class="form-group row">
-									<label class="col-sm-3 col-form-label">Введите должность</label>
-									<div class="col-sm-9">
-										<form:input class="form-control" path="companyName" value="Доброном" />
-									</div>
+							</div>
+							<div class="form-group row">
+								<span class="col-sm-3 col-form-label text-muted font-weight-bold">Номер договора</span>
+								<div class="col-5 col-sm-4">
+									<input class="form-control" name="numContract" required />
 								</div>
-								<div class="form-group row">
-									<label class="col-sm-3 col-form-label">Права доступа (роли)</label>
-									<div class="col-sm-9">
-										<select class="form-control"  name="role" required="true">
-											<option>${role.authority}</option>
-											<option value="1">Администратор</option>
-											<option value="2">Топ менеджер</option>
-											<option value="3">Менеджер</option>
-											<option value="4">Магазин</option>
-											<option value="6">Склад(Пока что тест карты)</option>
-											<option value="99">Отдел закупок</option>
-											<option value="10">Отдел сопровождения закупок</option>
-											<option value="11">Слот наблюдатель</option>
-											<option value="12">Аналитик</option>
-											<option value="13">Заказ транспорта для вн. пер-й</option>
-											<option value="14">Специалист ОРЛ</option>
-  											<option value="15">Специалист отдела транспортной логистики (занимается развозом)</option>
-											<option value="16">Роль для наблюдателя за всей системой</option>
-										</select>
-									</div>
+								<span class="col-sm-0 col-form-label ">от</span>
+								<div class="col-6 col-sm-4">
+									<input class="form-control" name="numContract_date" type="date" required />
+									<input class="form-control" name="dateContract" type="hidden" />
+								</div>
+							</div>
+							<div class="form-group row">
+								<span class="col-sm-3 col-form-label text-muted font-weight-bold">УНП</span>
+								<div class="col-sm-9">
+									<c:choose>
+										<c:when test="${user.numYNP != null}">
+											<input type="number" class="form-control" name="numYNP" value="${user.numYNP}" readonly required />
+										</c:when>
+										<c:otherwise>
+											<input type="number" class="form-control" name="numYNP" required />
+										</c:otherwise>
+									</c:choose>
+								</div>
+							</div>
+							<div class="form-group row">
+								<span class="col-sm-3 col-form-label text-muted font-weight-bold">Банковские реквизиты</span>
+								<div class="col-sm-9">
+									<textarea class="form-control" name="requisites" id="requisites" rows="3">${user.requisites}</textarea>
 								</div>
 							</div>
 						</c:when>
-						<c:otherwise>
-							<form:input path="companyName" value="Доброном" type="hidden" />
-							<form:input path="department" type="hidden" />
-						</c:otherwise>
 					</c:choose>
-					<div class="form-group row">
-						<label class="col-sm-3 col-form-label">Номер договора</label>
-						<div class="col-sm-4">
-							<input class="form-control" name="numContract" required />
-						</div>
-						<label class="col-sm-0 col-form-label">от</label>
-						<div class="col-sm-4">
-							<input class="form-control" name="dateContract" type="text" required />
-						</div>
-					</div>
-					<div class="form-group row">
-						<label class="col-sm-3 col-form-label">Банковские реквизиты</label>
-						<div class="col-sm-9">
-							<textarea class="form-control" name="requisites" id="requisites" rows="3">${user.requisites}</textarea>
-						</div>
-					</div>
 				</div>
 				<div class="card-footer d-flex justify-content-end">
 					<button class="btn btn-lg btn-primary mr-2" type="submit">Сохранить</button>

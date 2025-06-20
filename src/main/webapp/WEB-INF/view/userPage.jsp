@@ -29,7 +29,7 @@
 				<!-- <h3><a href="<spring:url value="/main/userpage/userlist" />">Мой персонал</a></h3> -->
 			</c:when>
 		</c:choose>
-		<h3><a href="<spring:url value="/main/userpage/edit" />">Настройки</a></h3>
+		<h3><a href="<spring:url value="/main/userpage/edit" />">Редактирование профиля</a></h3>
 	</div>
 	<script src='${pageContext.request.contextPath}/resources/js/mainPage/nav-fixed-top.js'></script>
 	<script src="${pageContext.request.contextPath}/resources/js/tenderNotifications.js" type="module"></script>

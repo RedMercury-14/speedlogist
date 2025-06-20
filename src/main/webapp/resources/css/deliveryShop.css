@@ -145,6 +145,32 @@ footer.to-bottom {
 	opacity: .5;
 }
 
+.form-check-input {
+	display: flex !important;
+	align-items: center;
+}
+.form-check-input {
+	width: 1.5rem;
+	height: 1.5rem;
+	margin-top: 0 !important;
+}
+.form-check-label {
+	font-size: 1.1rem;
+	cursor: pointer;
+	font-weight: 600;
+	opacity: 0.6;
+	margin-left: 0.5rem;
+	padding: 0.2rem 0.5rem;
+	border-radius: 0.4rem;
+	transition: all 0.2s ease;
+	background-color: transparent;
+}
+.form-check-input:checked + .form-check-label {
+	opacity: 1;
+	background-color: #e0f0ff;
+	box-shadow: 0 0 0 2px #007bff40;
+}
+
 .grid-container {
 	display: grid;
 	grid-template-columns: repeat(2, 1fr);
@@ -181,15 +207,6 @@ footer.to-bottom {
 	white-space: normal !important;
 }
 
-@media (max-width: 991px) {
-	.my-container {
-		margin-top: 60px;
-	}
-	.shopNumber-container {
-		flex-wrap: wrap;
-		gap: 0;
-	}
-}
 @media (max-width: 767px) {
 	#myGrid {
 		height: calc(100vh - 226px);
@@ -198,14 +215,34 @@ footer.to-bottom {
 		padding: 0;
 	}
 }
-@media (max-width: 620px) {
+@media (max-width: 586px) {
 	#myGrid {
-		height: calc(100vh - 306px);
+		height: calc(100vh - 236px);
 	}
+	footer.to-bottom {
+		margin-top: 31px;
+		position: relative;
+	}
+	.title-container {
+		display: flex;
+		flex-direction: column;
+		gap: 0;
+	}
+	.title-container h3 {
+		font-size: 18px;
+	}
+	.tg-truck-legend {
+		display: none !important;
+	}
+
 }
-@media (max-width: 402px) {
+@media (max-width: 387px) {
 	#myGrid {
-		height: calc(100vh - 360px);
+		height: calc(100vh - 239px);
+	}
+	footer.to-bottom {
+		margin-top: 58px;
+		position: relative;
 	}
 }
 

@@ -111,6 +111,8 @@
 									<option>Изотермический</option>
 									<option>Мебельный фургон</option>
 									<option>Рефрижератор</option>
+									<option>Бус</option>
+									<!-- <option>Манипулятор</option> -->
 								</select>
 							</div>
 							<div class="form-group">

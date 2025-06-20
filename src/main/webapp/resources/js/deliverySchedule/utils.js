@@ -283,14 +283,10 @@ export const deliveryScheduleColumnDefs = [
 export const deliveryScheduleColumnDefsForAdmin = [
 	{
 		headerName: 'История', field: 'history',
-		cellClass: 'px-1 py-0 text-center',
+		cellClass: 'px-2 py-2 text-center',
 		width: 500,
-		// cellRenderer: BtnCellRenderer,
-		// cellRendererParams: {
-		// 	onClick: showHistory,
-		// 	label: 'Показать историю',
-		// 	className: 'btn btn-primary',
-		// },
+		wrapText: false, autoHeight: false,
+		editable: true, cellEditorPopup: true, cellEditor: 'agLargeTextCellEditor',
 		filterParams: {
 			valueFormatter: (params) => params.value ? params.value.replaceAll('\n', ' ') : null,
 		},

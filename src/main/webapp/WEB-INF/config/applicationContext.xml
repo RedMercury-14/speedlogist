@@ -125,6 +125,9 @@
 	            <prop key="hibernate.show_sql">false</prop>
 	            <prop key="hibernate.connection.autocommit">false</prop>
 	            <prop key="hibernate.ddl-auto">update</prop>
+<!--				<prop key="hibernate.current_session_context_class">-->
+<!--					org.springframework.orm.hibernate5.SpringSessionContext-->
+<!--				</prop>-->
 	        </props>
 	    </property>
 	</bean>

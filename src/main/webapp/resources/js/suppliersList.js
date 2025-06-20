@@ -1,5 +1,5 @@
 import { AG_GRID_LOCALE_RU } from './AG-Grid/ag-grid-locale-RU.js'
-import { gridColumnLocalState, gridFilterLocalState, ResetStateToolPanel } from './AG-Grid/ag-grid-utils.js'
+import { gridColumnLocalState, gridFilterLocalState, ResetStateToolPanel, supressInputInLargeTextEditor } from './AG-Grid/ag-grid-utils.js'
 import { snackbar } from './snackbar/snackbar.js'
 import { debounce, getData, isObserver, } from './utils.js'
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
@@ -67,15 +67,7 @@ const gridOptions = {
 	// запред ввода в модалке редактирования
 	onCellEditingStarted: (event) => {
 		if (event.colDef.field === "requisites") {
-			setTimeout(() => {
-				const modal = document.querySelector(".ag-large-text")
-				if (modal) {
-					const textarea = modal.querySelector("textarea")
-					if (textarea) {
-						textarea.readOnly = true
-					}
-				}
-			}, 100)
+			supressInputInLargeTextEditor()
 		}
 	},
 	defaultExcelExportParams: {

@@ -4,7 +4,6 @@ import static com.graphhopper.json.Statement.If;
 import static com.graphhopper.json.Statement.Op.LIMIT;
 import static com.graphhopper.json.Statement.Op.MULTIPLY;
 
-import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataOutputStream;
@@ -56,11 +55,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import javax.annotation.PostConstruct;
-import javax.imageio.IIOImage;
-import javax.imageio.ImageIO;
-import javax.imageio.ImageWriteParam;
-import javax.imageio.ImageWriter;
-import javax.imageio.stream.ImageOutputStream;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -70,8 +64,13 @@ import javax.validation.ConstraintViolationException;
 
 import by.base.main.dto.*;
 import by.base.main.model.*;
+import by.base.main.model.yard.Shipment;
+import by.base.main.model.yard.ShopShipment;
 import by.base.main.service.*;
 
+import by.base.main.service.yardService.ShipmentService;
+import by.base.main.service.yardService.ShopShipmentService;
+import by.base.main.util.hcolossus.ColossusProcessorANDRestrictions5Sync;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -97,8 +96,6 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
-import org.springframework.security.access.annotation.Secured;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -169,7 +166,6 @@ import by.base.main.service.TGUserService;
 import by.base.main.service.TaskService;
 import by.base.main.service.TruckService;
 import by.base.main.service.UserService;
-import by.base.main.service.impl.MarketException;
 import by.base.main.service.impl.MarketExceptionBuilder;
 import by.base.main.service.util.CheckOrderNeeds;
 import by.base.main.service.util.CustomJSONParser;
@@ -276,6 +272,9 @@ public class MainRestController {
 	private ColossusProcessorANDRestrictions5 colossusProcessorRad;
 
 	@Autowired
+	private ColossusProcessorANDRestrictions5Sync colossusProcessorRadSync;
+
+	@Autowired
 	private MatrixMachine matrixMachine;
 
 	@Autowired
@@ -358,8 +357,16 @@ public class MainRestController {
 	
 	@Autowired
 	private PasswordGenerator passwordGenerator;
-	
-	
+
+	@Autowired
+	private WarehouseManagementDataService warehouseManagementDataService;
+
+	@Autowired
+	private ShipmentService shipmentService;
+
+	@Autowired
+	private ShopShipmentService shopShipmentService;
+
 	private static String classLog;
 	public static String marketJWT;
 	//в отдельный файл
@@ -420,15 +427,125 @@ public class MainRestController {
 	@Autowired
     private ServletContext servletContext;
 
+	/**
+	 * Экспорт данных из Route и RouteHasShop во двор
+	 * @return
+	 * @throws IOException
+	 * @throws ParseException
+	 * @author Ira
+	 */
+	@PostMapping("/logistics/razv/import-to-yard")
+//	public Map<String, Object> importToYard(@RequestParam(value =  "dateTask", required = false) Date dateTask){
+	public Map<String, Object> importToYard(@RequestBody String str) throws ParseException {
+
+		Map<String, Object> response = new HashMap<>();
+
+		JSONParser parser = new JSONParser();
+		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+		Date dateTask = Date.valueOf(jsonMainObject.get("dateTask").toString());
+		List<Route> routes = routeService.getRoutesByDateTask(dateTask);
+		for(Route route : routes){
+			Shipment shipment = new Shipment();
+			shipment.setDatePlanShip(new Timestamp(route.getDateTask().getTime()));
+			shipment.setRouteValue(route.getRouteDirection());
+			shipment.setFirmName("");
+			Long id = shipmentService.saveShipment(shipment);
+			Set<RouteHasShop> routeHasShops = route.getRoteHasShop();
+			for(RouteHasShop routeHasShop: routeHasShops) {
+				ShopShipment shopShipment = new ShopShipment();
+				shopShipment.setCargoWeight(Double.parseDouble(routeHasShop.getWeight()));
+				shopShipment.setIdShipment(id);
+				shopShipment.setPalletsToShop(((Double)Double.parseDouble(routeHasShop.getPall())).intValue());
+				shopShipment.setCargoWeight(Double.parseDouble(routeHasShop.getWeight()));
+				shopShipment.setOrdinalNumber(routeHasShop.getOrder());
+				shopShipment.setIdShop(routeHasShop.getShop().getIdShop());
+				shopShipmentService.saveShopShipment(shopShipment);
+			}
+		}
+
+		response.put("status", "200");
+		return response;
+	}
+
+	/**
+	 * Метод парсит эксели с маршрутным листои и записывает в Route и RouteHasShop
+	 * @return
+	 * @throws IOException
+	 * @throws ParseException
+	 * @author Ira
+	 */
+	@PostMapping("/logistics/razv/parse-route-sheet")
+	public Map<String, Object> parseRouteSheet(@RequestParam(value = "routesExcel", required = false) MultipartFile excel,
+											   @RequestParam(value =  "dateTask", required = false) Date dateTask) throws IOException {
+		Map<String, Object> response = new HashMap<>();
+		poiExcel.parseRouteSheet(excel.getInputStream(), dateTask);
+		response.put("status", "200");
+		return response;
+	}
+
+	/**
+	 * Метод парсит эксели с заданиями и записывает в WarehouseManagementData
+	 * @return
+	 * @throws IOException
+	 * @throws ParseException
+	 * @author Ira
+	 */
+	@RequestMapping(value ="/logistics/razv/parse-WMS-excel", method = RequestMethod.POST, consumes = {
+			MediaType.MULTIPART_FORM_DATA_VALUE })
+	public Map<String, Object> getDataFromWMSExcel(@RequestParam(value = "excel1700", required = false) MultipartFile excel1700,
+												   @RequestParam(value = "excel1800", required = false) MultipartFile excel1800,
+												   @RequestParam(value =  "dateTask", required = false) Date dateTask) throws IOException, ParseException, ServiceException {
+		Map<String, Object> response = new HashMap<>();
+//		JSONParser parser = new JSONParser();
+//		JSONObject jsonMainObject = (JSONObject) parser.parse(str);
+//		Date date = Date.valueOf(jsonMainObject.get("dateTask").toString());
+		List<List<Double>> excelDataWMS1700 = poiExcel.parseWMSexcel(excel1700.getInputStream());
+		List<List<Double>> excelDataWMS1800 = poiExcel.parseWMSexcel(excel1800.getInputStream());
+
+        for (List<Double> row : excelDataWMS1700) {
+			WarehouseManagementData data = new WarehouseManagementData();
+			data.setNumStock(row.get(0).intValue());
+			data.setPallets(row.get(1));
+			data.setWeight(row.get(2));
+			data.setWarehouse(1700);
+			data.setDateCreate(new Date(System.currentTimeMillis()));
+			data.setDateTask(dateTask);
+			warehouseManagementDataService.saveWarehouseManagementData(data);
+		}
+
+		for (List<Double> row : excelDataWMS1800) {
+			WarehouseManagementData data = new WarehouseManagementData();
+			data.setNumStock(row.get(0).intValue());
+			data.setPallets(row.get(1));
+			data.setWeight(row.get(2));
+			data.setWarehouse(1800);
+			data.setDateCreate(new Date(System.currentTimeMillis()));
+			data.setDateTask(dateTask);
+			warehouseManagementDataService.saveWarehouseManagementData(data);
+		}
+
+		response.put("status", "200");
+		return response;
+	}
+
+	@PostMapping("/logistics/razv/create-route-sheet")
+	public Map<String, Object> createRouteSheets(@RequestParam(value = "excel", required = false) MultipartFile excel,
+												 @RequestBody String str) throws IOException, ParseException, ServiceException {
+		Map<String, Object> response = new HashMap<>();
+
+		return response;
+
+	}
 
 	@PostMapping ("/restrictions")
-	public void restrictions(HttpServletRequest request, @RequestParam(value = "excel", required = false) MultipartFile excel) throws IOException {
+	public void restrictions(@RequestParam(value = "excel", required = false) MultipartFile excel) throws IOException {
 		String appPath = servletContext.getRealPath("/");
 		String filepath = appPath + "resources/others/Ограничения.xlsx";
 
 		File file = new File(filepath);
 		String outPath = appPath + "resources/others/restrictions.xlsx";
 		poiExcel.actualRestrictions(file, outPath);
+
 	}
 
 	@GetMapping ("/supplier/get-orders-for-supplier")
@@ -446,14 +563,14 @@ public class MainRestController {
 	 * @throws ParseException
 	 */
 	@PostMapping("/carrier/razv/preorder")
-	public Map<String, Object> postRazvPreorder(HttpServletRequest request, @RequestBody String str) throws IOException, ParseException {
-	    Map<String, Object> response = new HashMap<String, Object>();
+	public Map<String, Object> postRazvPreorder(@RequestBody String str) throws IOException, ParseException {
+	    Map<String, Object> response = new HashMap<>();
 	    JSONParser parser = new JSONParser();
 	    JSONObject jsonMainObject = (JSONObject) parser.parse(str);
 	    User user = getThisUser();
 	    int countCar = Integer.parseInt(jsonMainObject.get("count").toString());
-	    List<TGTruck> tgTrucks = new ArrayList<TGTruck>();	    
-	    
+	    List<TGTruck> tgTrucks = new ArrayList<TGTruck>();
+
 	    for (int i = 0; i < countCar; i++) {
 	    	TGTruck tgTruck = new TGTruck();
 		    tgTruck.setNumTruck(user.getCompanyName());
@@ -462,18 +579,18 @@ public class MainRestController {
 		    tgTruck.setDateRequisition(Date.valueOf(jsonMainObject.get("dateRequisition").toString()));
 		    tgTruck.setCargoCapacity(jsonMainObject.get("cargoCapacity").toString());
 		    tgTruck.setStatus(10);
-		    tgTruck.setCompanyName(user.getCompanyName());	
+		    tgTruck.setCompanyName(user.getCompanyName());
 		    tgTruck.setTypeStock(jsonMainObject.get("typeStock").toString());
 	    	int id = tgTruckService.save(tgTruck);
 	    	tgTruck.setIdTGTruck(id);
 	    	tgTrucks.add(tgTruck);
 		}
-	    
+
 	    response.put("status", "200");
 	    response.put("objects", tgTrucks);
 	    return response;
 	}
-	
+
 	@PostMapping ("/logistics/registration-fast")
     public Map<String, Object> createNewSupplier(HttpServletRequest request, @RequestBody String str) throws ParseException {
        Map<String, Object> response = new HashMap<>();
@@ -529,7 +646,7 @@ public class MainRestController {
        response.put("message", "Аккаунт создан. Письмо отправлено на почты: " + email + " " + adminUser.geteMail());
        return response;
     }
-	
+
 	/**
 	 * <br>Метод для массовой блокировки кодов товаров</br>.
 	 * @author Ira
@@ -2238,8 +2355,8 @@ public class MainRestController {
        List<File> files = new ArrayList<>();
        files.add(new File(filepath));
 
-       mailService.sendEmailWithFilesToUsers(servletContext, "Актуальные ротации", "Ручная отправка excel-таблицы с ротациями", files, emailsORL);
-//     mailService.sendEmailWithFilesToUsers(servletContext, "Актуальные ротации", "Ручная отправка excel-таблицы с ротациями", files, testEmails);
+//       mailService.sendEmailWithFilesToUsers(servletContext, "Актуальные ротации", "Ручная отправка excel-таблицы с ротациями", files, emailsORL);
+     mailService.sendEmailWithFilesToUsers(servletContext, "Актуальные ротации", "Ручная отправка excel-таблицы с ротациями", files, testEmails);
 
 
        response.put("status", "200");
@@ -3336,7 +3453,6 @@ public class MainRestController {
 	 */
 
 	@GetMapping("/get-pallets/{dateStart}&{dateFinish}")
-	@TimedExecution
 	public Map<String, Object> getAmountOfPallets(HttpServletRequest request, HttpServletResponse response,
 												  @PathVariable String dateStart,
 												  @PathVariable String dateFinish) throws IOException, ParseException {
@@ -6092,6 +6208,7 @@ public class MainRestController {
 		schedule.setType(type);
 		
 		String toType = jsonMainObject.get("toType") == null || jsonMainObject.get("toType").toString().isEmpty() ? null : jsonMainObject.get("toType").toString();
+		String textStart = null;
 		if(toType !=null) {
 			if(!toType.equals("холодный") && !toType.equals("сухой")) {
 				response.put("status", "100");
@@ -6099,7 +6216,13 @@ public class MainRestController {
 				response.put("info", "Ошибка в поле toType: ожидается холодный или сухой");
 				return response;
 			}
+			if(toType.equals("холодный")) {
+				textStart = "Ожидает подтверждения ";
+			} else {
+				textStart = "Создан ";
+			}
 		}
+
 		schedule.setToType(toType);
 		schedule.setOrderFormationSchedule(jsonMainObject.get("orderFormationSchedule") == null || jsonMainObject.get("orderFormationSchedule").toString().isEmpty() ? null : jsonMainObject.get("orderFormationSchedule").toString());
 		schedule.setOrderShipmentSchedule(jsonMainObject.get("orderShipmentSchedule") == null || jsonMainObject.get("orderShipmentSchedule").toString().isEmpty() ? null : jsonMainObject.get("orderShipmentSchedule").toString());
@@ -6179,16 +6302,17 @@ public class MainRestController {
 		}
 
 //		Integer id = scheduleService.saveSchedule(schedule);
-		
 		//тут отправляем на почту сообщение
 		if(isNeedEMail) {
 			String appPath = request.getServletContext().getRealPath("");
 			FileInputStream fileInputStream = new FileInputStream(appPath + "resources/properties/email.properties");
 			properties = new Properties();
 			properties.load(fileInputStream);
-			String text = "Создан новый график поставок на ТО сотрудником: " + user.getSurname() + " " + user.getName() + " \nПоставщик: " + schedule.getName() + "; График номер: " + jsonMainObject.get("counterpartyContractCode").toString();
+			String text = textStart + "новый график поставок на ТО сотрудником: " + user.getSurname() + " " + user.getName() + " \nПоставщик: " + schedule.getName() + "; График номер: " + jsonMainObject.get("counterpartyContractCode").toString();
 			List<String> emails = propertiesUtils.getValuesByPartialKey(request.getServletContext(), "email.orl.head");
-			mailService.sendEmailToUsers(request, "Новый график поставок на ТО", text, emails);
+			List<String> emailsTest = propertiesUtils.getValuesByPartialKey(request.getServletContext(), "email.test");
+
+			mailService.sendEmailToUsers(request, "Новый график поставок на ТО", text, emailsTest);
 //			mailService.sendSimpleEmailTwiceUsers(request, "Новый график поставок", text, properties.getProperty("email.orderSupport.1"), properties.getProperty("email.orderSupport.2"));	--
 		}
 		
@@ -7930,9 +8054,9 @@ public class MainRestController {
 		order.setIdRamp(idRamp);
 		order.setLoginManager(user.getLogin());
 		order.setStatus(jsonMainObject.get("status") == null ? 7 : Integer.parseInt(jsonMainObject.get("status").toString()));
-		order.setDateOrderOrl(jsonMainObject.get("dateOrderOrl") == null ? null : Date.valueOf(jsonMainObject.get("dateOrderOrl").toString())); // c 17.06.2025 всегда перезаписываем дату заказа 
+		order.setDateOrderOrl(jsonMainObject.get("dateOrderOrl") == null ? null : Date.valueOf(jsonMainObject.get("dateOrderOrl").toString())); // c 17.06.2025 всегда перезаписываем дату заказа
 //		if(order.getDateOrderOrl() == null){
-//			order.setDateOrderOrl(jsonMainObject.get("dateOrderOrl") == null ? null : Date.valueOf(jsonMainObject.get("dateOrderOrl").toString()));			
+//			order.setDateOrderOrl(jsonMainObject.get("dateOrderOrl") == null ? null : Date.valueOf(jsonMainObject.get("dateOrderOrl").toString()));
 //		}
 		//главные проверки
 		//проверка на лимит приемки паллет	
@@ -8482,9 +8606,10 @@ public class MainRestController {
 			List<Solution> solutions = new ArrayList<Solution>();
 			Map<Integer, Shop> allShop = shopService.getShopMap();
 
-			ExecutorService executorService = Executors.newFixedThreadPool(50);
+			int availableCores = Runtime.getRuntime().availableProcessors();
+			ExecutorService executorService = Executors.newFixedThreadPool(availableCores);
 			List<CompletableFuture<Solution>> futures = new CopyOnWriteArrayList <>();
-			Semaphore semaphore = new Semaphore(10);
+//			Semaphore semaphore = new Semaphore(10);
 			//реализация перебора первого порядка
 			for (double i = 1.0; i <= maxKoef; i = i + 0.02) {
 				Double koeff = i;
@@ -8493,12 +8618,12 @@ public class MainRestController {
 				CompletableFuture<Solution> future = CompletableFuture.supplyAsync(() -> {
 					Solution currentSolution;
 					try {
-						currentSolution = colossusProcessorRad.run(jsonMainObject, numShops, pallHasShops, tonnageHasShops, stock, koeff, "fullLoad", shopsWithCrossDockingMap, maxShopInWay, pallReturn, weightDistributionList, allShop);
+						currentSolution = colossusProcessorRadSync.run(jsonMainObject, numShops, pallHasShops, tonnageHasShops, stock, koeff, "fullLoad", shopsWithCrossDockingMap, maxShopInWay, pallReturn, weightDistributionList, allShop);
 						currentSolution.setKoef(koeff);
 					} catch (Exception e) {
 						throw new RuntimeException(e);
 					} finally {
-						semaphore.release(); // освободить слот
+//						semaphore.release();
 					}
 					return currentSolution;
 				}, executorService);
@@ -8523,24 +8648,12 @@ public class MainRestController {
 			}).join(); // чтобы main не завершился раньше
 
 			executorService.shutdown();
-			//		System.err.println(solutions.size());
-			//		solutions.forEach(s-> System.out.println(s.getTotalRunSolution()));
+
 			Double minOwerrun = 999999999999999999.0;
 			int emptyShop = 9999;
 			Solution finalSolution = null;
 			for (Solution solution2 : solutions) {
 
-				//определяем и записываем суммарный пробег маршрута
-				//!!!!!!записываем внутри процессора!
-				//			Double totalRunHasMatrix = 0.0;
-				//			for (VehicleWay way : solution2.getWhiteWay()) {
-				//				//заменяем просчёт расстояний из GH на матричный метод
-				//				for (int j = 0; j < way.getWay().size()-1; j++) {
-				//					String key = way.getWay().get(j).getNumshop()+"-"+way.getWay().get(j+1).getNumshop();
-				//					totalRunHasMatrix = totalRunHasMatrix + matrixMachine.matrix.get(key);
-				//				}
-				//			}
-				//			solution2.setTotalRunKM(totalRunHasMatrix);
 				double summpall = 0;
 				for (VehicleWay way : solution2.getWhiteWay()) {
 					Shop stock123 = way.getWay().get(0);
@@ -8562,7 +8675,6 @@ public class MainRestController {
 						emptyShop = solution2.getEmptyShop().size();
 						finalSolution = solution2;
 					}
-					//				solution2.setStackTrace(solution2.getStackTrace() + "\n" + "Выбран маршрут с данными: суммарный пробег: " + solution2.getTotalRunKM() + "м, " + solution2.getEmptyShop().size() + " - кол-во неназначенных магазинов; " + solution2.getEmptyTrucks().size() + " - кол-во свободных авто; Итерация = " + solution2.getKoef() + "; Паллеты: " + summpall);
 				}
 			}
 			Map<String, List<MapResponse>> wayHasMap = new HashMap<String, List<MapResponse>>();
@@ -8592,7 +8704,6 @@ public class MainRestController {
 					e.printStackTrace();
 				}
 				GraphHopper hopper = routingMachine.getGraphHopper();
-				//			ghRequests.forEach(r->System.out.println(r.getCustomModel()));
 				List<MapResponse> listResult = new ArrayList<MapResponse>();
 				List<MapResponse> listResultReturn = new ArrayList<MapResponse>();
 				Double distance = 0.0;
@@ -8606,7 +8717,7 @@ public class MainRestController {
 						rsp.getErrors().forEach(e -> e.printStackTrace());
 						listResult.add(new MapResponse(null, null, null, 500.0, 500));
 					}
-					//				System.err.println(rsp.getAll().size());
+
 					if (rsp.getAll().size() > 1) {
 						rsp.getAll().forEach(p -> System.out.println(p.getDistance() + "    " + p.getTime()));
 					}
@@ -8617,7 +8728,6 @@ public class MainRestController {
 							path = pathI;
 						}
 					}
-					//				System.out.println(roundВouble(path.getDistance()/1000, 2) + "km, " + path.getTime() + " time");
 					PointList pointList = path.getPoints();
 					path.getPathDetails();
 					List<Double[]> result = new ArrayList<Double[]>(); // возможна утечка помяти
@@ -8643,7 +8753,6 @@ public class MainRestController {
 						rsp.getErrors().forEach(e -> e.printStackTrace());
 						listResultReturn.add(new MapResponse(null, null, null, 500.0, 500));
 					}
-					//				System.err.println(rsp.getAll().size());
 					if (rsp.getAll().size() > 1) {
 						rsp.getAll().forEach(p -> System.out.println(p.getDistance() + "    " + p.getTime()));
 					}
@@ -8654,7 +8763,6 @@ public class MainRestController {
 							path = pathI;
 						}
 					}
-					//				System.out.println(roundВouble(path.getDistance()/1000, 2) + "km, " + path.getTime() + " time");
 					PointList pointList = path.getPoints();
 					path.getPathDetails();
 					List<Double[]> result = new ArrayList<Double[]>(); // возможна утечка помяти
@@ -11476,9 +11584,9 @@ public class MainRestController {
        orders.sort(Comparator.comparing(
              order -> Optional.ofNullable(order.getTimeDelivery())
                    .orElseGet(() -> combineDateAndTime(order.getOnloadWindowDate(), order.getOnloadWindowTime()))
-       )); 
-       
-       
+       ));
+
+
        Order order = orders.stream().findFirst().get();
        //проверяем не отменена ли заявка
        if(order.getStatus() == 10) {

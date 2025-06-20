@@ -1,5 +1,4 @@
-import { AG_GRID_LOCALE_RU } from './AG-Grid/ag-grid-locale-RU.js'
-import { gridColumnLocalState, gridFilterLocalState } from './AG-Grid/ag-grid-utils.js'
+import { getDefaultGridOptions, restoreColumnState, restoreFilterState, supressInputInLargeTextEditor } from './AG-Grid/ag-grid-utils.js'
 import { ajaxUtils } from './ajaxUtils.js'
 import { bootstrap5overlay } from './bootstrap5overlay/bootstrap5overlay.js'
 import { showScheduleItem } from './deliverySchedule/showScheduleItem.js'
@@ -30,7 +29,7 @@ import {
 import { snackbar } from "./snackbar/snackbar.js"
 import { uiIcons } from './uiIcons.js'
 import {
-	blurActiveElem, cookieHelper, dateHelper, debounce, disableButton, enableButton,
+	blurActiveElem, cookieHelper, dateHelper, disableButton, enableButton,
 	getData, getScheduleStatus, hideLoadingSpinner, isAdmin,
 	isObserver, isOrderSupport, isORL, showLoadingSpinner
 } from './utils.js'
@@ -41,9 +40,6 @@ const LOCAL_STORAGE_KEY = `AG_Grid_settings_to_${PAGE_NAME}`
 const token = $("meta[name='_csrf']").attr("content")
 const role = document.querySelector('#role').value
 const login = document.querySelector('#login').value.toLowerCase()
-
-const debouncedSaveColumnState = debounce(saveColumnState, 300)
-const debouncedSaveFilterState = debounce(saveFilterState, 300)
 
 let error = false
 let table
@@ -152,34 +148,31 @@ if (isAdmin(role) || isORL(role) || isOrderSupport(role) ) {
 	)
 }
 
+const defaultGridOptions = getDefaultGridOptions({
+	localStorageKey: LOCAL_STORAGE_KEY,
+	enableColumnStateSaving: true,
+	enableFilterStateSaving: true,
+})
+
 const gridOptions = {
+	...defaultGridOptions,
 	columnDefs: columnDefs,
 	rowClassRules: deliveryScheduleRowClassRules,
 	defaultColDef: {
-		headerClass: 'px-2',
-		resizable: true,
-		suppressMenu: true,
-		sortable: true,
-		filter: true,
-		floatingFilter: true,
-		wrapText: true,
-		autoHeight: true,
-		wrapHeaderText: true,
-		autoHeaderHeight: true,
+		...defaultGridOptions.defaultColDef,
+		flex: null,
+		minWidth: null
 	},
 	rowSelection: 'multiple',
-	suppressRowClickSelection: true,
-	enableBrowserTooltips: true,
-	localeText: AG_GRID_LOCALE_RU,
 	getContextMenuItems: getContextMenuItems,
 	getRowId: (params) => params.data.idSchedule,
-	onSortChanged: debouncedSaveColumnState,
-	onColumnResized: debouncedSaveColumnState,
-	onColumnMoved: debouncedSaveColumnState,
-	onColumnVisible: debouncedSaveColumnState,
-	onColumnPinned: debouncedSaveColumnState,
-	onFilterChanged: debouncedSaveFilterState,
 	sideBar: deliveryScheduleSideBar(LOCAL_STORAGE_KEY),
+	// запред ввода в модалке редактирования
+	onCellEditingStarted: (event) => {
+		if (event.colDef.field === "history") {
+			supressInputInLargeTextEditor()
+		}
+	},
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -325,8 +318,8 @@ async function loadScheduleData(url) {
 	updateTable(gridOptions, scheduleData)
 
 	// получение настроек таблицы из localstorage
-	restoreColumnState()
-	restoreFilterState()
+	restoreColumnState(gridOptions)
+	restoreFilterState(gridOptions)
 
 	// проверка, правильно ли заполнены графики
 	if (isAdmin(role) || isORL(role)) {
@@ -1275,6 +1268,7 @@ function scheduleItemDataFormatter(formData) {
 	const orderFormationSchedule = data.orderFormationSchedule ? data.orderFormationSchedule : null
 	// const orderShipmentSchedule = data.orderShipmentSchedule ? data.orderShipmentSchedule : null
 	const quantum = data.quantum ? Number(data.quantum) : null
+	const status = data.toType === 'холодный' ? 10 : 20
 
 	let res = {
 		...data,
@@ -1294,7 +1288,7 @@ function scheduleItemDataFormatter(formData) {
 		orderFormationSchedule,
 		// orderShipmentSchedule,
 		quantum,
-		status: 10,
+		status,
 		codeNameOfQuantumCounterparty: null,
 		isDayToDay: false,
 	}
@@ -1407,22 +1401,6 @@ function autocompleteCounterpartyInfo(e, autocompleteInput, contractCodeList) {
 // очистка формы
 function clearForm(e, form) {
 	form.reset()
-}
-
-// функции управления состоянием колонок
-function saveColumnState() {
-	gridColumnLocalState.saveState(gridOptions, LOCAL_STORAGE_KEY)
-}
-function restoreColumnState() {
-	gridColumnLocalState.restoreState(gridOptions, LOCAL_STORAGE_KEY)
-}
-
-// функции управления фильтрами колонок
-function saveFilterState() {
-	gridFilterLocalState.saveState(gridOptions, LOCAL_STORAGE_KEY)
-}
-function restoreFilterState() {
-	gridFilterLocalState.restoreState(gridOptions, LOCAL_STORAGE_KEY)
 }
 
 // функции для модального окна обновлений в слотах

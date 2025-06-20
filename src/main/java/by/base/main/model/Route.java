@@ -294,6 +294,9 @@ public class Route implements Serializable {
 	@Column(name = "date_time_end_prilesie")
 	private Timestamp dateTimeEndPrilesie;
 
+	@Column(name = "date_task")
+	private Date dateTask;
+
 	@Transient
 	private Map<String, String> cost = new HashMap<String, String>();
 	/**
@@ -368,6 +371,14 @@ public class Route implements Serializable {
 
 	public void setDateTimeEndPrilesie(Timestamp dateTimeEndPrilesie) {
 		this.dateTimeEndPrilesie = dateTimeEndPrilesie;
+	}
+
+	public Date getDateTask() {
+		return dateTask;
+	}
+
+	public void setDateTask(Date dateTask) {
+		this.dateTask = dateTask;
 	}
 
 	public Set<OrderDTO> getOrdersDTO() {

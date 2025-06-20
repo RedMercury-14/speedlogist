@@ -3,13 +3,10 @@ package by.base.main.service.impl;
 import java.sql.Date;
 import java.sql.Time;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.*;
 
 import javax.transaction.Transactional;
 
@@ -30,20 +27,20 @@ import by.base.main.model.User;
 import by.base.main.service.RouteService;
 import by.base.main.util.ChatEnpoint;
 @Service
-public class RouteServiceImpl implements RouteService{
-	
+public class RouteServiceImpl implements RouteService {
+
 	@Autowired
 	private RouteDAO routeDAO;
-	
+
 	@Autowired
 	private UserDAO userDAO;
-	
+
 	@Autowired
 	private ChatEnpoint chatEnpoint;
-	
+
 	@Autowired
 	private MessageDAO messageDAO;
-	
+
 	@Transactional
 	@Override
 	public List<Route> getRouteList() {
@@ -54,7 +51,7 @@ public class RouteServiceImpl implements RouteService{
 	@Override
 	public void saveOrUpdateRoute(Route route) {
 		routeDAO.saveOrUpdateRoute(route);
-		
+
 	}
 
 	@Transactional
@@ -89,12 +86,12 @@ public class RouteServiceImpl implements RouteService{
 
 	@Transactional
 	@Override
-	public Tender parseTenderByRourte(Route route) {		
-		return new Tender(route.getIdRoute(), route.getNumStock(), route.getDateLoadPreviously(), 
-				route.getTimeLoadPreviously(), route.isSanitization(), route.getTemperature(), 
-				route.getTotalLoadPall(), route.getTotalCargoWeight(), route.getComments(), 
+	public Tender parseTenderByRourte(Route route) {
+		return new Tender(route.getIdRoute(), route.getNumStock(), route.getDateLoadPreviously(),
+				route.getTimeLoadPreviously(), route.isSanitization(), route.getTemperature(),
+				route.getTotalLoadPall(), route.getTotalCargoWeight(), route.getComments(),
 				route.getRouteDirection(), route.getStartPrice(), route.getTime(),
-				route.getStatusRoute(), route.getStatusStock(), route.getUser(), 
+				route.getStatusRoute(), route.getStatusStock(), route.getUser(),
 				route.getTruck(), route.getRoteHasShop());
 	}
 
@@ -104,10 +101,10 @@ public class RouteServiceImpl implements RouteService{
 		Route route = new Route();
 		route.setIdRoute(tender.getIdRoute());
 		route.setNumStock(tender.getNumStock());
-		route.setDateLoadPreviously(tender.getDateLoadPreviously()); 
+		route.setDateLoadPreviously(tender.getDateLoadPreviously());
 		route.setTimeLoadPreviously(tender.getTimeLoadPreviously());
 		route.setSanitization(tender.getIsSanitization());
-		route.setTemperature(tender.getTemperature()); 
+		route.setTemperature(tender.getTemperature());
 		route.setTotalLoadPall(tender.getTotalLoadPall());
 		route.setTotalCargoWeight(tender.getTotalCargoWeight());
 		route.setComments(tender.getComments());
@@ -116,7 +113,7 @@ public class RouteServiceImpl implements RouteService{
 		route.setTime(tender.getTime());
 		route.setStatusRoute(tender.getStatusRoute());
 		route.setStatusStock(tender.getStatusStock());
-		route.setUser(tender.getUser()); 
+		route.setUser(tender.getUser());
 		route.setTruck(tender.getTruck());
 		routeDAO.saveOrUpdateRoute(route);
 	}
@@ -142,7 +139,7 @@ public class RouteServiceImpl implements RouteService{
 	@Transactional
 	@Override
 	public List<Route> getRouteListByUser() {
-		String name = SecurityContextHolder.getContext().getAuthentication().getName();	
+		String name = SecurityContextHolder.getContext().getAuthentication().getName();
 		User user = userDAO.getUserByLogin(name);
 		return routeDAO.getRouteListByUser(user);
 	}
@@ -158,7 +155,7 @@ public class RouteServiceImpl implements RouteService{
 	public void deleteRouteByIdFromMeneger(Integer idRoute) {
 		Route route = routeDAO.getRouteById(idRoute);
 		route.setStatusRoute("9");
-		routeDAO.saveOrUpdateRoute(route);		
+		routeDAO.saveOrUpdateRoute(route);
 	}
 
 	@Transactional
@@ -166,7 +163,7 @@ public class RouteServiceImpl implements RouteService{
 	public int updateRouteInBase(Integer idRoute, Integer finishCost, String currency, User user, String statusRoute) {
 		return routeDAO.updateRouteInBase(idRoute, finishCost, currency, user, statusRoute);
 	}
-	
+
 	@Transactional
 	@Override
 	public int updateRouteInBase(Integer idRoute, String statusRoute) {
@@ -184,7 +181,7 @@ public class RouteServiceImpl implements RouteService{
 	public List<Route> getRouteListAsDateAndUser(Date dateStart, Date dateFinish) {
 		return routeDAO.getRouteListAsDateAndUser(dateStart, dateFinish, getThisUser());
 	}
-	
+
 	private User getThisUser() {
 		String name = SecurityContextHolder.getContext().getAuthentication().getName();
 		User user = userDAO.getUserByLogin(name);
@@ -194,7 +191,7 @@ public class RouteServiceImpl implements RouteService{
 	@Transactional
 	@Override
 	public int updateRouteInBase(Integer idRoute, Date dateLoadActually, Time timeLoadActually, Date dateUnloadActually,
-			Time timeUnloadActually, Truck truck, User driver) {
+								 Time timeUnloadActually, Truck truck, User driver) {
 		return routeDAO.updateRouteInBase(idRoute, dateLoadActually, timeLoadActually, dateUnloadActually, timeUnloadActually, truck, driver);
 	}
 
@@ -229,7 +226,7 @@ public class RouteServiceImpl implements RouteService{
 		// TODO Auto-generated method stub
 		return routeDAO.getRouteListByUserHasPeriod(user, start, end);
 	}
-	
+
 	@Transactional
 	@Override
 	public List<Route> getMaintenanceListAsDate(Date dateStart, Date dateFinish) {
@@ -254,7 +251,7 @@ public class RouteServiceImpl implements RouteService{
 	@Override
 	public void saveRoute(Route route) {
 		routeDAO.saveRoute(route);
-		
+
 	}
 
 	@Transactional
@@ -273,14 +270,14 @@ public class RouteServiceImpl implements RouteService{
 	@Override
 	public Set<Route> getRouteListAsDateForInternational(Date dateStart, Date dateFinish) {
 		Set<Route> routes = new HashSet<Route>();
-		List<Route>targetRoutes = routeDAO.getRouteListAsDateForInternational(dateStart, dateFinish); 
-		
+		List<Route> targetRoutes = routeDAO.getRouteListAsDateForInternational(dateStart, dateFinish);
+
 //		List<Route>testRoutes = routeDAO.getRouteListAsDateForInternational(dateStart, dateFinish); 
 		targetRoutes.stream()
 //			.filter(r-> r.getComments() != null && r.getComments().equals("international") && Integer.parseInt(r.getStatusRoute())<=8)
-			.filter(r-> Integer.parseInt(r.getStatusRoute())<=8)
-			.forEach(r -> routes.add(r)); // проверяет созданы ли точки вручную, и отдаёт только международные маршруты
-		
+				.filter(r -> Integer.parseInt(r.getStatusRoute()) <= 8)
+				.forEach(r -> routes.add(r)); // проверяет созданы ли точки вручную, и отдаёт только международные маршруты
+
 		//подгрузка кол-ва заявок на тендер
 //		List<String> routesId = routes.stream().map(r-> r.getIdRoute().toString()).collect(Collectors.toList());
 //		List <Message> messages = messageDAO.getListMessageByIdRouteList(routesId);	
@@ -321,5 +318,11 @@ public class RouteServiceImpl implements RouteService{
 	@Override
 	public List<Route> getAllActualRoute(Date date) {
 		return routeDAO.getAllActualRoute(date);
+	}
+
+	@Transactional
+	@Override
+	public List<Route> getRoutesByDateTask(Date date) {
+		return routeDAO.getRoutesByDateTask(date);
 	}
 }

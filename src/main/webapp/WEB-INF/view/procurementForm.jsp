@@ -169,7 +169,7 @@
 									<option>Мебельный фургон</option>
 									<option>Рефрижератор</option>
 									<option>Бус</option>
-									<option>Манипулятор</option>
+									<!-- <option>Манипулятор</option> -->
 									<option>Контейнер 20 футов</option>
 									<option>Контейнер 40 футов</option>
 									<!-- <option>Контейнер 20 футов (Dry Freight)</option>

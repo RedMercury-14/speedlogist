@@ -53,7 +53,7 @@
 						<button class="btn btn-outline-secondary font-weight-bold" data-submitType="loadData" type="submit">Загр. задание</button>
 						<c:choose>
 							<c:when test="${roles == '[ROLE_ADMIN]'}">
-								<button class="btn btn-outline-secondary font-weight-bold" data-submitType="sendRequest" type="submit">Отпр. запрос</button>
+								<button class="btn btn-outline-secondary font-weight-bold" data-submitType="sendRequest" type="btn">Отпр. запрос</button>
 							</c:when>
 						</c:choose>
 					</div>

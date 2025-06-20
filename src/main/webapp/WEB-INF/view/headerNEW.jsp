@@ -60,6 +60,7 @@
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/counterpartiesList" />">Список поставщиков</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/maintenance " />">Менеджер маршрутов АХО/СГИ</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics/info-carrier-list " />">Менеджер заявок на сотрудничество</a>
+										<a class="dropdown-item" href="<spring:url value="/main/logistics/registration-fast " />">Регистрация перевозчика</a>
 									</div>
 								</li>
 								<li class="dropdown">
@@ -69,6 +70,7 @@
 									<div class="dropdown-menu">
 										<a class="dropdown-item" href="<spring:url value="/main/logistics-delivery/truck" />">Создание списка машин</a>
 										<a class="dropdown-item" href="<spring:url value="/main/logistics-delivery/router" />">Маршрутизатор</a>
+										<a class="dropdown-item" href="<spring:url value="/main/logistics-delivery/routes" />">Маршруты развоза</a>
 										<a class="dropdown-item" href="<spring:url value="/main/carrier/delivery-shop" />">Кабинет перевозчика</a>
 									</div>
 								</li>
@@ -462,10 +464,10 @@
 									</a>
 									<div class="dropdown-menu">
 										<a class="dropdown-item" href="<spring:url value="/main/userpage"/>">Кабинет пользователя</a>
-										<a class="dropdown-item notification" href="<spring:url value="/main/message" />">
+										<!-- <a class="dropdown-item notification" href="<spring:url value="/main/message" />">
 											<span>Входящие</span>
 											<span class="badge"></span>
-										</a>
+										</a> -->
 										<a id="logout" class="dropdown-item" href="#"> Выход</a>
 										<form id="logout-form" action="<c:url value="/logout"/>" method="POST">
 											<sec:csrfInput />

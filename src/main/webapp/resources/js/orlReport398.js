@@ -288,14 +288,14 @@ async function reportDataFormSubmitHandler(e) {
 
 // валидация номеров магазинов
 function validateShopsField(field) {
-	const regex = /^(\d+)(,\d+)*$/
+	const regex = /^(\d+)((,\s?\d+)*)$/
 	const value = field.value.trim()
 
 	if (regex.test(value)) {
 		field.setCustomValidity('')
 		return true
 	} else {
-		field.setCustomValidity('Введите номера магазинов через запятую, без пробелов (например: 123,456)')
+		field.setCustomValidity('Введите номера магазинов через запятую (например: 123,456 или 123, 456)')
 		field.reportValidity()
 		return false
 	}

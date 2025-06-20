@@ -3,7 +3,6 @@ package by.base.main.dao.impl;
 import java.sql.Date;
 import java.sql.Time;
 import java.time.LocalDate;
-import java.util.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,7 +13,6 @@ import java.util.stream.Collectors;
 
 import javax.persistence.TemporalType;
 
-import by.base.main.model.*;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
@@ -784,4 +782,24 @@ public class RouteDAOImpl implements RouteDAO {
         return new ArrayList<Route>(new HashSet<Route>(objects));
     }
 
+    private static final String queryGetRoutesByDateTask = "from Route r "
+            + "LEFT JOIN FETCH r.orders ord "
+            + "LEFT JOIN FETCH ord.addresses addr "
+            + "LEFT JOIN FETCH r.user u "
+            + "LEFT JOIN FETCH r.truck tr "
+            + "LEFT JOIN FETCH r.roteHasShop rhs "
+            + "LEFT JOIN FETCH r.driver d "
+            + "LEFT JOIN FETCH r.carrierBids c "
+            + "LEFT JOIN FETCH c.carrier crr "
+            + "LEFT JOIN FETCH rhs.shop s "
+            + "where r.dateTask =: date";
+
+    @Override
+    public List<Route> getRoutesByDateTask(Date date) {
+        Session currentSession = sessionFactory.getCurrentSession();
+        Query<Route> theObject = currentSession.createQuery(queryGetRoutesByDateTask, Route.class);
+        theObject.setParameter("date", date, TemporalType.DATE);
+        List<Route> objects = theObject.getResultList();
+        return new ArrayList<Route>(new HashSet<Route>(objects));
+    }
 }
